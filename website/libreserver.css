@@ -93,6 +93,10 @@ td {
     text-align: center;
 }
 
+a:hover {
+    filter: brightness(150%);
+}
+
 @media screen and (min-width: 400px) {
 }
 
