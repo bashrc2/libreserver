@@ -83,6 +83,7 @@ function nginx_security_options {
       echo '    add_header X-XSS-Protection "1; mode=block";';
       echo '    add_header X-Download-Options noopen;';
       echo '    add_header X-Permitted-Cross-Domain-Policies none;';
+      echo '    add_header Permissions-Policy "interest-cohort=(),geolocation=(),midi=(),sync-xhr=(),microphone=(),camera=(),magnetometer=(),gyroscope=(),fullscreen=(self),payment=()";';
       echo ''; } >> "$filename"
 }
 
