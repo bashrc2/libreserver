@@ -1,0 +1,99 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# A recent version of crypto++ is needed by some things
+#
+# License
+# =======
+#
+# Copyright (C) 2014-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+CRYPTOPP_REPO="https://github.com/weidai11/cryptopp"
+CRYPTOPP_COMMIT='65e91a8caa8c1846cb311bc83d8507e12699d6d3'
+
+function mesh_install_cryptopp {
+    # shellcheck disable=SC2154
+    if [ ! -d "$rootdir$INSTALL_DIR" ]; then
+        chroot "$rootdir" mkdir -p "$INSTALL_DIR"
+    fi
+
+    # shellcheck disable=SC2086
+    chroot "$rootdir" INSTALL_PACKAGES build-essential
+
+    git clone "$CRYPTOPP_REPO" "$rootdir$INSTALL_DIR/cryptopp"
+    cd "$rootdir$INSTALL_DIR/cryptopp" || exit 34
+    git checkout $CRYPTOPP_COMMIT -b $CRYPTOPP_COMMIT
+    mkdir "$rootdir$INSTALL_DIR/cryptopp/build"
+
+    cat <<EOF > "$rootdir/root/install_cryptopp"
+cd $INSTALL_DIR/cryptopp/build
+cmake ..
+if ! make; then
+    exit 62
+fi
+make install
+EOF
+    chroot "$rootdir" chmod +x /root/install_cryptopp
+    chroot "$rootdir" /root/install_cryptopp
+    chroot "$rootdir" rm /root/install_cryptopp
+}
+
+function install_cryptopp {
+    if [ "$INSTALLING_MESH" ]; then
+        mesh_install_cryptopp
+        return
+    fi
+
+    if [ -d "$INSTALL_DIR/cryptopp" ]; then
+        if ! grep -q "Crypto++ commit:$CRYPTOPP_COMMIT" "$COMPLETION_FILE"; then
+            set_repo_commit "$INSTALL_DIR/cryptopp" "Crypto++ commit" "$CRYPTOPP_COMMIT" "$CRYPTOPP_REPO"
+            cd "$INSTALL_DIR/cryptopp/build" || exit 27
+            cmake ..
+            if ! make; then
+                exit 72
+            fi
+            make install
+        fi
+    fi
+
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+
+    if [ ! -d "$INSTALL_DIR" ]; then
+        mkdir -p "$INSTALL_DIR"
+    fi
+
+    INSTALL_PACKAGES build-essential
+
+    git_clone "$CRYPTOPP_REPO" "$INSTALL_DIR/cryptopp"
+    cd "$INSTALL_DIR/cryptopp" || exit 25
+    git checkout $CRYPTOPP_COMMIT -b $CRYPTOPP_COMMIT
+    mkdir -p "$INSTALL_DIR/cryptopp/build"
+    cd "$INSTALL_DIR/cryptopp/build" || exit 62
+    cmake ..
+    if ! make; then
+        exit 62
+    fi
+    make install
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+# NOTE: deliberately there is no "exit 0"

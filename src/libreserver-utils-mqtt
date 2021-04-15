@@ -1,0 +1,58 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# MQTT functions
+#
+# License
+# =======
+#
+# Copyright (C) 2014-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+MQTT_ONION_PORT=5741
+MQTT_PORT=1883
+
+function image_install_mqtt {
+    # shellcheck disable=SC2154,SC2086
+    chroot "$rootdir" INSTALL_PACKAGES mosquitto mosquitto-clients
+}
+
+function install_mqtt {
+    if [ -d /etc/mosquitto ]; then
+	if grep -q ":${MQTT_ONION_PORT}" "/etc/torrc.d/${PROJECT_NAME}"; then
+	    if grep -q 'listener' /etc/mosquitto/mosquitto.conf; then
+		return
+	    fi
+	fi
+    fi
+    INSTALL_PACKAGES mosquitto mosquitto-clients
+
+    if [ -f /etc/mosquitto/mosquitto.conf ]; then
+	if ! grep -q 'listener' /etc/mosquitto/mosquitto.conf; then
+	    echo "listener ${MQTT_PORT}" >> /etc/mosquitto/mosquitto.conf
+	    systemctl restart mosquitto
+	fi
+    fi
+
+    if ! grep -q ":${MQTT_ONION_PORT}" "/etc/torrc.d/${PROJECT_NAME}"; then
+	sed -i "/:5783/a HiddenServicePort ${MQTT_PORT} 127.0.0.1:${MQTT_ONION_PORT}" "/etc/torrc.d/${PROJECT_NAME}"
+	restart_tor_daemon
+    fi
+
+    firewall_add mqtt ${MQTT_PORT} tcp
+}

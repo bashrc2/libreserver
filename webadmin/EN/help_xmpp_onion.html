@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <meta charset="utf-8">
+  <style>
+    @import url("libreserver.css");
+
+    * {
+        box-sizing: border-box;
+    }
+
+    .subheadertext {
+        margin-left : 10%;
+        text-align: left;
+        font-size: 110%;
+        font-weight: bold;
+    }
+
+    .subheaderports {
+        margin-left : 10%;
+        text-align: left;
+        font-size: 110%;
+        font-weight: bold;
+    }
+
+    .helptext {
+        width: 80%;
+        text-align: left;
+        font-size: 100%;
+        margin-left : 10%;
+    }
+
+    .portstext {
+        width: 80%;
+        text-align: left;
+        font-size: 100%;
+        margin-left : 10%;
+    }
+
+    .row {
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+        padding: 0 4px;
+    }
+
+    .column {
+        -ms-flex: 25%;
+        flex: 15%;
+        max-width: 25%;
+        padding: 0 4px;
+    }
+
+    .column img {
+        margin-top: 8px;
+        vertical-align: middle;
+    }
+
+    @media screen and (max-width: 800px) {
+        .column {
+            -ms-flex: 50%;
+            flex: 50%;
+            max-width: 50%;
+        }
+    }
+
+    @media screen and (max-width: 200px) {
+        .column {
+            -ms-flex: 100%;
+            flex: 100%;
+            max-width: 100%;
+        }
+    }
+  </style>
+  <body>
+
+    <div class="header">
+      <a href="app_xmpp.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
+    </div>
+
+    <p class="headertext" translate="yes">XMPP</p>
+
+    <p class="subheadertext" translate="yes">Setting up with an Android phone</p>
+
+    <p class="helptext"><b>1.</b> <span translate="yes">Install F-Droid</span></p>
+
+    <p class="helptext"><b>2.</b> <span translate="yes">Open the F-droid app and select 'Settings' then 'Repositories'. Make sure that 'Guardian Project Official Releases' is enabled</span></p>
+
+    <p class="helptext"><b>3.</b> <span translate="yes">Go back to the F-droid initial screen and update the repositories by swiping downwards. You'll see it say "updating repositories". This might take a few minutes.</span></p>
+
+    <p class="helptext"><b>4.</b> <span translate="yes">Select search (magnifying glass icon) and search for 'Orbot' (not the legacy version), then select 'install'</span></p>
+
+    <p class="helptext"><b>5.</b> <span translate="yes">Search for 'Barcode Scanner', then select 'install'</span></p>
+
+    <p class="helptext"><b>6.</b> <span translate="yes">Download the DarkMessenger apk file via the link below, preferably using a Tor based browser, then install it</span></p>
+
+    <p class="helptext" translate="no"><a href="https://libreserver.net/downloads/DarkMessenger-1.1.00.apk">DarkMessenger</a></p>
+
+    <p class="helptext"><b>7.</b> <span translate="yes">Run DarkMessenger and the initial account setup will be shown. DarkMessenger only allows onion addresses to be used to create accounts</span></p>
+
+    <p class="helptext"><b>8.</b> <span translate="yes">You can obtain your onion XMPP address from the Members section within the web interface, usually at http://libreserver/admin or http://libreserver.local/admin. If you can't easily copy and paste it into the account setup within DarkMessenger then you can use the barcode scanner on the QRcode displayed</span></p>
+
+    <p class="helptext"><b>9.</b> <span translate="yes">Enter the password which you stored during initial setup of the system and also the onion domain</span></p>
+
+    <p class="helptext"><b>10.</b> <span translate="yes">You should now be able to connect to your onion XMPP account and set an avatar image if necessary</span></p>
+
+    <p class="helptext"><b>11.</b> <span translate="yes">When sending or receiving pictures or other attachments for the first time you will need to accept the self-signed certificates. Select 'always' twice. This should only happen once per contact</span></p>
+
+    <p class="helptext"><b>12.</b> <span translate="yes">Under Settings/Expert you may want to change the automatic message deletion period. By default this is one day</span></p>
+
+    <p class="helptext"><b>13.</b> <span translate="yes">When setting up a group chat first ensure that you have separately confirmed two way messaging with each of the participants individually</span></p>
+
+  </body>
+</html>

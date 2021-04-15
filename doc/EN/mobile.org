@@ -1,0 +1,102 @@
+#+TITLE: LibreServer
+#+AUTHOR: Bob Mottram
+#+EMAIL: bob@libreserver.org
+#+KEYWORDS: libreserver, mobile
+#+DESCRIPTION: LibreServer mobile setup
+#+OPTIONS: ^:nil toc:nil num:nil
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="libreserver.css" />
+
+#+attr_html: :width 80% :height 10% :align center
+[[file:images/logo.png]]
+
+Mobile phones are insecure devices, but they're regarded as being so essential to modern life that telling people not to use them isn't a viable option. Here are some recommendations on setting up a mobile phone (aka "smartphone") to work with LibreServer.
+
+* Open
+Use a Linux based phone operating system. Typically this will mean Android, but could also mean LineageOS or Replicant. LineageOS is the most preferable, because you can usually get an up to date image with a recent kernel which will give you better security against exploits. If you're buying a phone then look for a model which is supported by LineageOS. Replicant is the most free (as in freedom) but only runs on a small number of phone models. If you have a phone which runs a full GNU/Linux system then that's fantastic, and you can probably use it in much the same way as a desktop system and the rest of the advice on this page won't apply. If you don't have a phone capable of running a Linux based operating system then consider selling, giving away or bartering your existing one.
+
+Why is it so important to run Linux on a phone? Aren't /iThings/ supposed to be highly secure? Don't the "experts" always tell you to just use an iPhone with its supposedly superior secure enclave? Isn't the CEO of Apple a good guy, fighting for freedom against the evil Feds?
+
+In the end it comes down to the fact that /if the source code for the device cannot be independently audited to check for backdoors, bugs and so on, then it can't actually be trusted/. It doesn't matter if there's a supposedly secure enclave on your closed source gadget. No matter how well-meaning or brave people running companies may be, local laws may force them to add backdoors into their systems (sometimes called "technical capabilities order" or "lawful interception") or to give away the encryption keys (Lavabit) or they may also do that purely for business reasons such as being able to sell you to their advertising customers and so on.
+
+* Remove
+
+So maybe you're running Android and the phone came with some apps already installed. Almost certainly they'll be proprietary. Go to Settings/Apps and then uninstall or deactivate any apps which you really don't need. Mostly preinstalled apps are intended to send your data to companies who will then sell it to advertisers or governments under the business model of /surveillance capital/. It's not a good idea to get caught up in that, and to avoid becoming addicted to apps which are surveilling you without consent or installing spyware in the background without your knowledge.
+
+* Encrypt
+
+Encrypt your phone. This can usually be done via *Settings/Security* and you may need to fully charge the phone first. Encryption means that if you lose your phone or it gets stolen then there is less chance that anyone who picks it up will get access to your data, photos and so on.
+
+* Apps
+
+Installing *F-droid* and only adding any new apps via F-droid will ensure that you are always using free and open source software. Open source is not a panacea, since bugs can and do still occur, but it will help you to avoid the worst security and privacy pitfalls.
+
+Avoid using the Open Whisper Systems Signal app if you can, no matter what "experts" say about it. There are multiple reasons for this which you can find in the [[./faq.html][FAQ]].
+
+* Lock
+
+Add a lock screen, preferably with a password which is not easy for other people to guess or for quicker access with a PIN number. Install an app called *Locker*, activate it and set the maximum number of password guesses to ten (or whatever you feel comfortable with). If bad people get hold of your phone then they may try to brute force your lock screen password or PIN (i.e. automatically trying millions of common word and number combinations) and the locker app will prevent them from succeeding by resetting the phone back to its factory default condition and wiping the data.
+
+* Onion
+
+Both governments and corporations want to compile matadata dossiers about you. Who you communicated with, when and how often. They want this so that they can data mine, simulate, predict and then ultimately influence (sometimes also called "nudge") your actions and preferences in the directions they prefer. By routing your connections through a number of proxy servers (Tor routers) you can make it perhaps not /theoretically/ impossible but at least /very hard/ for them to have a complete and accurate list of who your friends are, your religion, politics, likely health issues, sexual orientation and what news sites or books you read.
+
+In F-droid under the *repositories* menu you can enable the *guardian project*, and then install *Orbot*. Within subsequently installed apps, such as those for XMPP chat, there is often a setting which allows the connection to then be routed through Tor. Also you can install *Tor Browser for Android* and use that as your default browser. Within Tor browser, for the sites you regularly use, you can add a NoScript exception via the menu.
+
+* Email
+The easiest way to access email is via the built-in webmail from the administrator screen. If you need to be able to access email from outside of your local network then the webmail is also available via an onion address.
+
+Alternatively if you prefer using an ordinary domain name then install NextCloud and then add the *mail* app. Select *localhost* as the host name for IMAP and SMTP and set security for both to *None*. Enter your username and password for IMAP. Set SMTP port to 25 and don't set any username and password for it. Since both the NextCloud mail app and your email server are on the same machine this is why you don't need TLS/IMAPS security between them.
+* Services
+For information on configuring various apps to work with LibreServer see the [[file:./apps.html][apps section]]. Also see advice on chat apps in the [[file:./faq.html][FAQ]].
+
+* Battery
+Even with free software apps it's not difficult to get into a situation where your battery doesn't last for long. To maximize battery life access RSS feeds via the onion-based mobile reader within a Tor-compatible browser and not from a locally installed RSS app.
+
+If you have Syncthing installed then change the settings so that it only syncs when charging and when on wifi. Avoid any apps which might be continuously polling and preventing the device from going into sleep mode when it's not used.
+
+If you're using the Riot mobile app to access a Matrix homeserver then you can significantly improve battery performance by going to the settings and changing *Sync request timeout* to 30 seconds and *Delay between two sync requests* to 600 seconds.
+
+It's also recommended to disable battery optimisations for Conversations and Orbot. If you don't do that then you may have trouble receiving messages or some parts of the protocol may break. That can be done by going to *Settings*, selecting *Battery* then opening the menu (top right) and selecting *Battery optimisations* then selecting *Not optimised* and *All apps*, then finally choosing Conversations and Orbot not to be optimised.
+
+* Blocking bad domains
+You can block known bad domains by editing the */system/etc/hosts* file on your device. It is possible to use extensive ad-blocking hosts files used by other ad-blocking systems such as pi-hole, but merely blocking Facebook and Google Analytics will protect you against much of the corporate surveillance which goes on. Even if you don't have a Facebook account this may still be useful since they will still try to create a "ghost profile" of you, so the less data they have the better.
+
+On the device enable *Developer Options* by going to *Settings* then *About* then pressing on *Build number* a few times.
+
+Go to *Settings* then *Developer Options* then set *Root access* to *ADB only* and enable *Android debugging*.
+
+On your system (not the device) install the *android-tools* package. For example, on Arch/Parabola:
+
+#+begin_src bash
+sudo pacman -S android-tools
+#+end_src
+
+Connect the device to your system via a USB cable, then:
+
+#+begin_src bash
+adb root
+adb remount
+adb pull /system/etc/hosts
+#+end_src
+
+Now edit the hosts file which was pulled and append:
+
+#+begin_src bash
+127.0.0.1       facebook.com
+127.0.0.1       fbcdn.net
+127.0.0.1       fbcdn.com
+127.0.0.1       google-analytics.com
+127.0.0.1       services.mozilla.org
+127.0.0.1       telemetry.mozilla.org
+127.0.0.1       google.com
+127.0.0.1       gstatic.com
+127.0.0.1       googleapis.com
+#+end_src
+
+Then upload the hosts file back again with:
+
+#+begin_src bash
+adb push hosts /system/etc/hosts
+#+end_src
+
+Once that's done you may want to set *Root access* on the device back to *Disabled* and turn *Android debugging* off.

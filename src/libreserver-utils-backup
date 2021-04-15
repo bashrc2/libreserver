@@ -1,0 +1,689 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Backup functions
+#
+# License
+# =======
+#
+# Copyright (C) 2014-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# whether a given site is being suspended during backup
+SUSPENDED_SITE=
+
+# Dummy password used for the backup key
+BACKUP_DUMMY_PASSWORD='backup'
+
+BACKUP_TEMP_DIRECTORY=/root/.backuptemp
+BACKUP_GPG_OPTIONS="--pinentry-mode loopback"
+
+# Stores a list of drives when the system was first installed.
+# This is used to detect drives later connected
+DRIVES_BASELINE_FILE=/root/.drives_baseline
+
+# timeout used for backups to prevent hangs
+BACKUP_TIMEOUT_SEC=7200
+
+# Files which contain the percentage progress
+backup_progress_file=/root/.backup_progress.txt
+restore_progress_file=/root/.restore_progress.txt
+
+function create_backups_temp_directory {
+    if [ ! -d $BACKUP_TEMP_DIRECTORY ]; then
+        mkdir $BACKUP_TEMP_DIRECTORY
+    fi
+}
+
+function remove_backups_temp_directory {
+    if [ -d $BACKUP_TEMP_DIRECTORY ]; then
+        rm -rf $BACKUP_TEMP_DIRECTORY
+    fi
+}
+
+function suspend_site {
+    # suspends a given website
+    SUSPENDED_SITE="$1"
+    nginx_dissite "$SUSPENDED_SITE"
+    systemctl reload nginx
+}
+
+function restart_site {
+    # restarts a given website
+    if [ ! "$SUSPENDED_SITE" ]; then
+        return
+    fi
+    nginx_ensite "$SUSPENDED_SITE"
+    systemctl reload nginx
+    SUSPENDED_SITE=
+}
+
+function configure_backup_key {
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+    INSTALL_PACKAGES gnupg dirmngr
+    printf '%%Assuan%%\nsocket=/dev/shm/S.dirmngr\n' > ~/.gnupg/S.dirmngr
+
+    if [ ! "$MY_NAME" ]; then
+	MY_NAME="$MY_USERNAME"
+    fi
+
+    BACKUP_KEY_EXISTS=$(gpg_key_exists "root" "${MY_NAME} (backup key)" | tail -n 1)
+    if [[ $BACKUP_KEY_EXISTS == "yes" ]]; then
+        return
+    fi
+
+    # construct email address if it doesn't exist
+    if [[ "${MY_EMAIL_ADDRESS}" == *"@" ]]; then
+	if [[ "${HOSTNAME}" == *".local" ]]; then
+	    if [ -f /var/lib/tor/hidden_service_email/hostname ]; then
+		MY_EMAIL_ADDRESS="${MY_USERNAME}@$(cat /var/lib/tor/hidden_service_email/hostname)"
+	    fi
+	else
+	    MY_EMAIL_ADDRESS="${MY_USERNAME}@${HOSTNAME}"
+	fi
+    fi
+
+    gpg_agent_setup root
+    gpg_agent_setup "${MY_USERNAME}"
+
+    # Generate a GPG key for backups
+    BACKUP_KEY_EXISTS=$(gpg_key_exists "${MY_USERNAME}" "${MY_NAME} (backup key)" | tail -n 1)
+    if [[ $BACKUP_KEY_EXISTS == "no" ]]; then
+        { echo 'Key-Type: rsa';
+          echo 'Key-Length: 2048';
+          echo 'Subkey-Type: rsa';
+          echo 'Subkey-Length: 2048';
+          echo "Name-Real:  ${MY_NAME}";
+          echo "Name-Email: ${MY_EMAIL_ADDRESS}";
+          echo "Name-Comment: backup key";
+          echo 'Expire-Date: 0';
+	  echo '%commit';
+	  echo '%echo gpg backup key generated'; } > "/home/${MY_USERNAME}/gpg-genkey.conf"
+        cat "/home/${MY_USERNAME}/gpg-genkey.conf"
+        chown "${MY_USERNAME}":"${MY_USERNAME}" "/home/${MY_USERNAME}/gpg-genkey.conf"
+
+	gpg_dir="/home/${MY_USERNAME}/.gnupg"
+	if [ -d ${gpg_dir} ]; then
+	    echo "Set backup key permissions on ${gpg_dir}"
+	    find ${gpg_dir} -type d -exec chmod 700 {} \;
+	    find ${gpg_dir} -type f -exec chmod 600 {} \;
+	fi
+
+	echo $'Backup key does not exist. Creating it.'
+	passStr="${BACKUP_DUMMY_PASSWORD}"
+	echo "echo \"passphrase\" | su -m root -c \"gpg --homedir ${gpg_dir} --batch --passphrase-fd 0 --full-gen-key /home/${MY_USERNAME}/gpg-genkey.conf\" - \"${MY_USERNAME}\""
+	echo "${passStr}" | su -m root -c "gpg --homedir ${gpg_dir} --batch --passphrase-fd 0 --full-gen-key /home/${MY_USERNAME}/gpg-genkey.conf" - "${MY_USERNAME}"
+        chown -R "${MY_USERNAME}":"${MY_USERNAME}" "${gpg_dir}"
+
+        echo $'Checking that the Backup key was created'
+        BACKUP_KEY_EXISTS=$(gpg_key_exists "${MY_USERNAME}" "${MY_NAME} (backup key)" | tail -n 1)
+        if [[ ${BACKUP_KEY_EXISTS} == "no" ]]; then
+            echo $'Backup key could not be created'
+            exit 43
+        fi
+        rm "/home/${MY_USERNAME}/gpg-genkey.conf"
+    fi
+
+    MY_BACKUP_KEY_ID=$(su -c "gpg --list-keys \"$MY_NAME (backup key)\"" - "$MY_USERNAME" | sed -n '2p' | sed 's/^[ \t]*//')
+    echo "Backup key: $MY_BACKUP_KEY_ID"
+    MY_BACKUP_KEY=/home/$MY_USERNAME/backup_key
+    su -m root -c "gpg --homedir /home/$MY_USERNAME/.gnupg --armor --export $MY_BACKUP_KEY_ID > ${MY_BACKUP_KEY}_public.asc" - "$MY_USERNAME"
+
+    if [ ! -f "${MY_BACKUP_KEY}_public.asc" ]; then
+        echo 'Public backup key could not be exported'
+        exit 36
+    fi
+
+    su -m root -c "echo '$BACKUP_DUMMY_PASSWORD' | gpg --homedir /home/$MY_USERNAME/.gnupg --output ${MY_BACKUP_KEY}_private.asc --armor --batch --passphrase-fd 0 --export-secret-key $MY_BACKUP_KEY_ID" - "$MY_USERNAME"
+
+    if [ ! -f "${MY_BACKUP_KEY}_private.asc" ]; then
+        echo 'Private backup key could not be exported'
+        exit 29
+    fi
+
+    # import backup key to root user
+    gpg --import --import "${MY_BACKUP_KEY}_public.asc"
+    echo "$BACKUP_DUMMY_PASSWORD" | gpg --batch --passphrase-fd 0 --allow-secret-key-import --import "${MY_BACKUP_KEY}_private.asc"
+
+    rm "${MY_BACKUP_KEY}_public.asc"
+    rm "${MY_BACKUP_KEY}_private.asc"
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function backup_mount_drive {
+    if [ "$1" ]; then
+        if [[ "$1" == "/dev/"* ]]; then
+            USB_DRIVE="$1"
+        else
+            USB_DRIVE=/dev/${1}1
+        fi
+    fi
+
+    # get the admin user
+    ADMIN_USERNAME=$(get_completion_param "Admin user")
+    if [ "$2" ]; then
+        ADMIN_USERNAME="$2"
+    fi
+    ADMIN_NAME=$(getent passwd "$ADMIN_USERNAME" | cut -d: -f5 | cut -d, -f1)
+
+    if [ "$3" ]; then
+        RESTORE_APP="$3"
+    fi
+
+    # check that the backup destination is available
+    if [ ! -b "$USB_DRIVE" ]; then
+        echo $"Please attach a USB drive"
+        exit 1
+    fi
+
+    # unmount if already mounted
+    umount -f "$USB_MOUNT"
+    if [ ! -d "$USB_MOUNT" ]; then
+        mkdir "$USB_MOUNT"
+    fi
+
+    if ! mount "$USB_DRIVE" "$USB_MOUNT"; then
+        echo $"There was a problem mounting the USB drive to $USB_MOUNT"
+        rm -rf "$USB_MOUNT"
+        exit 78
+    fi
+}
+
+function backup_unmount_drive {
+    #if [ $1 ]; then
+    #    USB_DRIVE=${1}
+    #    if [ $2 ]; then
+    #        USB_MOUNT=${2}
+    #    fi
+    #fi
+    sync
+    if ! umount "$USB_MOUNT"; then
+        echo $"Unable to unmount the drive."
+        rm -rf "$USB_MOUNT"
+        exit 9
+    fi
+    rm -rf "$USB_MOUNT"
+}
+
+function backup_database_local_usb {
+    if [ ${#DATABASE_PASSWORD} -lt 2 ]; then
+        echo $"No MariaDB password was given"
+        function_check restart_site
+        restart_site
+        exit 10
+    fi
+    if [ ! -d "$USB_MOUNT/backup/${1}" ]; then
+        mkdir -p "$USB_MOUNT/backup/${1}"
+    fi
+    if [ ! -d "$USB_MOUNT/backup/${1}data" ]; then
+        mkdir -p "$USB_MOUNT/backup/${1}data"
+    fi
+    local_database_dir=/root/temp${1}data
+    if [ ! -d "${local_database_dir}" ]; then
+        mkdir -p "${local_database_dir}"
+    fi
+    echo $"Obtaining ${1} database backup"
+    database_file_extension='sql'
+    if [ $USE_POSTGRESQL ]; then
+        USE_POSTGRESQL=
+        cd /etc/postgresql || exit 67
+        # shellcheck disable=2024
+        sudo -u postgres pg_dump "${1}" > "${local_database_dir}/${1}.${database_file_extension}"
+    fi
+    if [ -f "${local_database_dir}/${1}.${database_file_extension}" ]; then
+        if [ ! -s "${local_database_dir}/${1}.${database_file_extension}" ]; then
+            echo $"${1} database could not be saved"
+            rm -rf "${local_database_dir}"
+            umount "$USB_MOUNT"
+            rm -rf "$USB_MOUNT"
+            restart_site
+            exit 68
+        fi
+    else
+        echo $"${1} database could not be dumped"
+        rm -rf "${local_database_dir}"
+        umount "$USB_MOUNT"
+        rm -rf "$USB_MOUNT"
+        restart_site
+        exit 73
+    fi
+    echo $"Database dump was created for ${1}"
+}
+
+function backup_directory_to_usb_duplicity {
+    create_backups_temp_directory
+    echo "$BACKUP_DUMMY_PASSWORD" | duplicity full --use-agent --gpg-options "$BACKUP_GPG_OPTIONS" --tempdir "$BACKUP_TEMP_DIRECTORY" --encrypt-key "$MY_BACKUP_KEY_ID" --full-if-older-than 4W --exclude-other-filesystems "${1}" "file://$USB_MOUNT/backup/${2}"
+    # shellcheck disable=SC2181
+    if [ ! "$?" = "0" ]; then
+        umount "$USB_MOUNT"
+        rm -rf "$USB_MOUNT"
+        if [[ ${1} == "/root/temp"* || ${1} == *"tempbackup" ]]; then
+            rm -rf "${1}"
+        fi
+        function_check restart_site
+        restart_site
+        remove_backups_temp_directory
+        exit 83
+    fi
+    if [[ $ENABLE_BACKUP_VERIFICATION == "yes" ]]; then
+        echo "$BACKUP_DUMMY_PASSWORD" | duplicity verify --use-agent --gpg-options "$BACKUP_GPG_OPTIONS" --tempdir "$BACKUP_TEMP_DIRECTORY" --encrypt-key "$MY_BACKUP_KEY_ID" --full-if-older-than 4W --exclude-other-filesystems "${1}" "file://$USB_MOUNT/backup/${2}"
+        # shellcheck disable=SC2181
+        if [ ! "$?" = "0" ]; then
+            umount "$USB_MOUNT"
+            rm -rf "$USB_MOUNT"
+            if [[ ${1} == "/root/temp"* || ${1} == *"tempbackup" ]]; then
+                rm -rf "${1}"
+            fi
+            function_check restart_site
+            restart_site
+            remove_backups_temp_directory
+            exit 68
+        fi
+    fi
+    remove_backups_temp_directory
+}
+
+function increment_backup_progress {
+    backup_counter=$((backup_counter + 1))
+    echo -n "$backup_counter" > "$backup_progress_file"
+}
+
+function increment_restore_progress {
+    restore_counter=$((restore_counter + 1))
+    echo -n "$restore_counter" > "$restore_progress_file"
+}
+
+function backup_tor_config_to_usb {
+    # backs up the tor directory for the given app
+    app_name="$1"
+    backup_tor_dir="/var/lib/tor/hidden_service_${app_name}"
+    if [ ! -d "${backup_tor_dir}" ]; then
+	return
+    fi
+    backup_directory_to_usb "${backup_tor_dir}" "${app_name}-tor"
+}
+
+function backup_directory_to_usb {
+    if [ ! -d "${1}" ]; then
+        echo $"WARNING: directory does not exist: ${1}"
+    else
+        BACKUP_KEY_EXISTS=$(gpg --list-keys "$ADMIN_NAME (backup key)")
+        # shellcheck disable=SC2181
+        if [ ! "$?" = "0" ]; then
+            echo $"Backup key could not be found"
+            function_check restart_site
+            restart_site
+            exit 6
+        fi
+
+        MY_BACKUP_KEY_ID=$(gpg --list-keys "$ADMIN_NAME (backup key)" | sed -n '2p' | sed 's/^[ \t]*//')
+        if [ ! -d "$USB_MOUNT/backup/${2}" ]; then
+            mkdir -p "$USB_MOUNT/backup/${2}"
+        fi
+
+        backup_directory_to_usb_duplicity "${1}" "${2}"
+
+        if [[ ${1} == "/root/temp"* || ${1} == *"tempbackup" ]]; then
+            rm -rf "${1}"
+        fi
+
+        increment_backup_progress
+    fi
+}
+
+function restore_directory_from_usb_duplicity {
+    create_backups_temp_directory
+    PASSPHRASE="$BACKUP_DUMMY_PASSWORD" duplicity restore --gpg-options "$BACKUP_GPG_OPTIONS" --tempdir "$BACKUP_TEMP_DIRECTORY" --force "file://$USB_MOUNT/backup/${2}" "${1}"
+    # shellcheck disable=SC2181
+    if [ ! "$?" = "0" ]; then
+        echo "WARNING: failed to restore $USB_MOUNT/backup/${2} to ${1}"
+    fi
+    remove_backups_temp_directory
+}
+
+function restore_tor_config_from_usb {
+    app_name="$1"
+
+    temp_restore_dir="/root/temp${app_name}-tor"
+    local_dir="/var/lib/tor/hidden_service_${app_name}"
+
+    restore_directory_from_usb ${temp_restore_dir} ${app_name}-tor
+    if [ -d $temp_restore_dir ]; then
+        if [ -d "$temp_restore_dir$local_dir" ]; then
+            cp -rp "$temp_restore_dir$epicyon_dir"/* "$local_dir"/
+        else
+            if [ ! -d "$local_dir" ]; then
+                mkdir "$local_dir"
+            fi
+            cp -rp "$temp_restore_dir"/* "$local_dir"/
+        fi
+        chown -R debian-tor:debian-tor "$epicyon_dir"
+        rm -rf $temp_restore_dir
+    fi
+}
+
+function restore_directory_from_usb {
+    if [ ! "${1}" ]; then
+        echo "$USB_MOUNT/backup/${2} -> ${1}"
+        echo $'No restore destination given'
+        return
+    fi
+    if [ ! "${2}" ]; then
+        echo "$USB_MOUNT/backup/${2} -> ${1}"
+        echo $'No restore source given'
+        return
+    fi
+    if [ ! -d "${1}" ]; then
+        mkdir "${1}"
+    fi
+    restore_directory_from_usb_duplicity "${1}" "${2}"
+    increment_restore_progress
+}
+
+function backup_database_to_usb {
+    database_name=$1
+    local_database_dir=/root/temp${1}data
+    backup_database_local_usb "${database_name}"
+    if [ ! -f "${local_database_dir}/${1}.sql" ]; then
+        echo $"Error backing up ${1} database to ${local_database_dir}/${1}.sql"
+        exit 62
+    fi
+    increment_backup_progress
+
+    backup_directory_to_usb "${local_database_dir}" "${database_name}data"
+}
+
+# after user files have been restored permissions may need to be set
+function set_user_permissions {
+    echo $"Setting permissions"
+    for d in /home/*/ ; do
+        USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+        if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+            chown -R "$USERNAME":"$USERNAME" "/home/$USERNAME"
+        fi
+    done
+}
+
+function backup_database_remote {
+    if [ ${#DATABASE_PASSWORD} -lt 2 ]; then
+        echo $"No MariaDB password was given"
+        function_check restart_site
+        restart_site
+        exit 57
+    fi
+    if [ ! -d "$SERVER_DIRECTORY/backup/${1}" ]; then
+        mkdir -p "$SERVER_DIRECTORY/backup/${1}"
+    fi
+    if [ ! -d "$SERVER_DIRECTORY/backup/${1}data" ]; then
+        mkdir -p "$SERVER_DIRECTORY/backup/${1}data"
+    fi
+    local_database_dir=/root/temp${1}data
+    if [ ! -d "${local_database_dir}" ]; then
+        mkdir -p "${local_database_dir}"
+    fi
+
+    echo "Obtaining ${1} database backup"
+    database_file_extension='sql'
+    if [ $USE_POSTGRESQL ]; then
+        USE_POSTGRESQL=
+        cd /etc/postgresql || exit 78
+        # shellcheck disable=SC2024
+        sudo -u postgres pg_dump "${1}" > "${local_database_dir}/${1}.${database_file_extension}"
+    fi
+
+    if [ -f "${local_database_dir}/${1}.${database_file_extension}" ]; then
+        if [ ! -s "${local_database_dir}/${1}.${database_file_extension}" ]; then
+            echo $"${1} database could not be saved"
+            rm -rf "${local_database_dir}"
+            # Send a warning email
+            /bin/bash "/usr/local/bin/${PROJECT_NAME}-notification" -m $"Unable to export ${1} database" -s $"${PROJECT_NAME} backup to friends"
+            function_check restart_site
+            restart_site
+            exit 57
+        fi
+    else
+        echo $"${1} database could not be dumped"
+        rm -rf "${local_database_dir}"
+        # Send a warning email
+        "${PROJECT_NAME}-notification" -m $"Unable to dump ${1} database" -s $"${PROJECT_NAME} backup to friends"
+        function_check restart_site
+        restart_site
+        exit 36
+    fi
+}
+
+function backup_apps {
+    localremote=$1
+
+    BACKUP_APPS_COMPLETED=()
+
+    detect_installable_apps
+    get_apps_installed_names
+
+    # shellcheck disable=SC2068
+    for app_name in ${APPS_INSTALLED_NAMES[@]}
+    do
+        echo $"Backup ${app_name}"
+        app_load_variables "${app_name}"
+        function_check "backup_${localremote}_${app_name}"
+        "backup_${localremote}_${app_name}"
+        BACKUP_APPS_COMPLETED+=("${app_name}")
+        echo $"Backup ${app_name} completed"
+    done
+}
+
+function restore_apps {
+    localremote=$1
+    RESTORE_APP=$2
+
+    RESTORE_APPS_COMPLETED=()
+
+    detect_installable_apps
+    get_apps_installed_names
+
+    # shellcheck disable=SC2068
+    for app_name in ${APPS_INSTALLED_NAMES[@]}
+    do
+        confirm_restore=
+        if [ ! "$2" ]; then
+            confirm_restore=1
+        else
+            if [[ "$RESTORE_APP" == "$app_name" || "$RESTORE_APP" == "all" ]]; then
+                confirm_restore=1
+            fi
+        fi
+        if [ $confirm_restore ]; then
+            echo $"Restoring ${app_name}"
+            app_load_variables "${app_name}"
+            function_check "restore_${localremote}_${app_name}"
+            "restore_${localremote}_${app_name}"
+            RESTORE_APPS_COMPLETED+=("${app_name}")
+            echo $"Restored ${app_name}"
+        fi
+    done
+}
+
+function restore_database {
+    RESTORE_SUBDIR="root"
+    restore_app_name=$1
+    restore_app_domain=$2
+
+    if [ -d "$USB_MOUNT/backup/${restore_app_name}data" ]; then
+        echo $"Restoring ${restore_app_name} database"
+        local_database_dir=/root/temp${restore_app_name}data
+        if [ -d "${local_database_dir}" ]; then
+            rm -rf "${local_database_dir}"
+        fi
+        function_check restore_directory_from_usb
+        restore_directory_from_usb "${local_database_dir}" "${restore_app_name}data"
+        database_file_extension='sql'
+        database_file="${local_database_dir}/${RESTORE_SUBDIR}/temp${restore_app_name}data/${restore_app_name}.${database_file_extension}"
+        if [ ! -f "$database_file" ]; then
+            database_file="${local_database_dir}/${restore_app_name}.${database_file_extension}"
+        fi
+        if [ ! -f "$database_file" ]; then
+            echo $"Unable to restore ${restore_app_name} database"
+            rm -rf "${local_database_dir}"
+            function_check set_user_permissions
+            set_user_permissions
+            function_check backup_unmount_drive
+            backup_unmount_drive
+            exit 78
+        fi
+        if [ $USE_POSTGRESQL ]; then
+            USE_POSTGRESQL=
+            cd /etc/postgresql || exit 63
+            mysqlsuccess=$(sudo -u postgres pg_restore "$database_file")
+        fi
+        # shellcheck disable=SC2181
+        if [ ! "$?" = "0" ]; then
+            echo "$mysqlsuccess"
+            function_check set_user_permissions
+            set_user_permissions
+            function_check set_user_permissions
+            backup_unmount_drive
+            exit 48
+        fi
+        if [ -d "${local_database_dir}/${RESTORE_SUBDIR}/temp${restore_app_name}data" ]; then
+            rm "${local_database_dir}/${RESTORE_SUBDIR}/temp${restore_app_name}data/"*
+        else
+            rm "${local_database_dir}/*.${database_file_extension}"
+        fi
+
+        rm -rf "${local_database_dir}"
+        echo $"Restoring ${restore_app_name} installation"
+        if [ ! -d "/root/temp${restore_app_name}" ]; then
+            mkdir "/root/temp${restore_app_name}"
+        fi
+        function_check restore_directory_from_usb
+        restore_directory_from_usb "/root/temp${restore_app_name}" "${restore_app_name}"
+        RESTORE_SUBDIR="var"
+        if [ "${restore_app_domain}" ]; then
+            # create directory to restore to
+            if [ ! -d "/var/www/${restore_app_domain}/htdocs" ]; then
+                mkdir -p "/var/www/${restore_app_domain}/htdocs"
+                chown www-data:www-data "/var/www/${restore_app_domain}/htdocs"
+            fi
+
+            if [ -d "/var/www/${restore_app_domain}/htdocs" ]; then
+                restore_from_dir="/root/temp${restore_app_name}/${RESTORE_SUBDIR}/www/${restore_app_domain}/htdocs"
+                if [ ! -d "$restore_from_dir" ]; then
+                    restore_from_dir=/root/temp${restore_app_name}
+                fi
+                if [ -d "$restore_from_dir" ]; then
+                    if [ -d "/root/temp${restore_app_name}/${RESTORE_SUBDIR}/www/${restore_app_domain}/htdocs" ]; then
+                        rm -rf "/var/www/${restore_app_domain}/htdocs"
+                        # shellcheck disable=SC2086
+                        mv $restore_from_dir /var/www/${restore_app_domain}/
+                    else
+                        cp -r "$restore_from_dir/"* "/var/www/${restore_app_domain}/htdocs/"
+                    fi
+                    # shellcheck disable=SC2181
+                    if [ ! "$?" = "0" ]; then
+                        set_user_permissions
+                        backup_unmount_drive
+                        exit 78
+                    fi
+                    if [ -d "/etc/letsencrypt/live/${restore_app_domain}" ]; then
+                        ln -s "/etc/letsencrypt/live/${restore_app_domain}/privkey.pem" "/etc/ssl/private/${restore_app_domain}.key"
+                        ln -s "/etc/letsencrypt/live/${restore_app_domain}/fullchain.pem" "/etc/ssl/certs/${restore_app_domain}.pem"
+                    else
+                        # Ensure that the bundled SSL cert is being used
+                        if [ -f "/etc/ssl/certs/${restore_app_domain}.bundle.crt" ]; then
+                            sed -i "s|${restore_app_domain}.crt|${restore_app_domain}.bundle.crt|g" "/etc/nginx/sites-available/${restore_app_domain}"
+                        fi
+                    fi
+                fi
+            fi
+        fi
+    else
+        echo $"No database backup found for ${restore_app_name}"
+        set_user_permissions
+        backup_unmount_drive
+        exit 73
+    fi
+}
+
+function valid_backup_destination {
+    # used to check whether any additional backup directories clash with
+    # exiting apps
+    destination_dir="$1"
+    is_valid="yes"
+
+    available_variants_list=()
+    available_system_variants
+
+    # shellcheck disable=SC2068
+    if ! item_in_array "${destination_dir}" ${available_variants_list[@]}; then
+        is_valid="no"
+    fi
+
+    echo $is_valid
+}
+
+function backup_extra_directories {
+    if [ ! -f "$BACKUP_EXTRA_DIRECTORIES" ]; then
+        return
+    fi
+
+    backup_type="$1"
+
+    echo $"Backing up some additional directories"
+    while read -r backup_line
+    do
+        backup_dir=$(echo "$backup_line" | awk -F ',' '{print $1}' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+        if [ -d "$backup_dir" ]; then
+            destination_dir=$(echo "$backup_line" | awk -F ',' '{print $2}' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+            if [[ $(valid_backup_destination "$destination_dir") == "yes" ]]; then
+                if [[ $backup_type == "local" ]]; then
+                    backup_directory_to_usb "$backup_dir" "$destination_dir"
+                fi
+            else
+                echo $"WARNING: The backup directory $destination_dir is already used."
+                echo $"Choose a different destination name for backing up $backup_dir"
+            fi
+        else
+            echo $"WARNING: Directory $backup_dir does not exist"
+        fi
+    done <"$BACKUP_EXTRA_DIRECTORIES"
+}
+
+function store_drives_baseline {
+    if [ -f $DRIVES_BASELINE_FILE ]; then
+        return
+    fi
+    # shellcheck disable=SC2012
+    ls -gA /dev/sd* | awk -F '/dev/' '{print $2}' > $DRIVES_BASELINE_FILE
+}
+
+function detect_connected_drives {
+    if [ ! -f $DRIVES_BASELINE_FILE ]; then
+        # shellcheck disable=SC2012
+        ls -gA /dev/sd* | awk -F '/dev/' '{print $2}' > $DRIVES_BASELINE_FILE
+        return
+    fi
+    # shellcheck disable=SC2012
+    ls -gA /dev/sd* | awk -F '/dev/' '{print $2}' > /tmp/.drives_current
+
+    diff /tmp/.drives_current ${DRIVES_BASELINE_FILE} | awk -F '< ' '{print $2}'  | sed '/^$/d'  | sed 's/[0-9]*//g' | uniq | head -n 1
+}
+
+# NOTE: deliberately no exit 0

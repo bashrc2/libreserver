@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <style>
+      @import url("libreserver.css");
+
+      #iconpic {
+          width: 20%;
+          height: auto;
+          margin-right : auto;
+          margin-left : auto;
+          min-width : 120px;
+      }
+
+      .appurl {
+          font-size: 100%;
+      }
+
+      .appdesc {
+          font-size: 100%;
+      }
+
+      button {
+          border: none;
+          outline: 0;
+          display: inline-block;
+          padding: 8px;
+          color: white;
+          background-color: #000;
+          text-align: center;
+          cursor: pointer;
+          width: 100%;
+          font-size: 18px;
+      }
+
+      button:hover, a:hover {
+          opacity: 0.7;
+      }
+
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <a href="ssh.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
+
+      <h3 translate="yes">No SSH public key was provided</h3>
+
+      <p class="appdesc" translate="yes">It can be shown using the command:</p>
+
+      <p class="appdesc" translate="no"><b>cat ~/.ssh/id_ed25519.pub</b></p>
+      <p class="appdesc" translate="yes">or</p>
+      <p class="appdesc" translate="no"><b>cat ~/.ssh/id_rsa.pub</b></p>
+
+      <br>
+
+      <form action="ssh.html">
+        <input type="submit" translate="yes" value="Go Back" />
+      </form>
+    </div>
+
+  </body>
+</html>

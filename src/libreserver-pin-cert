@@ -1,0 +1,131 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Performs certificate pinning (HPKP) on a given domain name
+#
+# License
+# =======
+#
+# Copyright (C) 2015-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+PROJECT_NAME='libreserver'
+
+export TEXTDOMAIN=${PROJECT_NAME}-pin-cert
+export TEXTDOMAINDIR="/usr/share/locale"
+
+WEBSITES_DIRECTORY=/etc/nginx/sites-available
+
+# 90 days
+PIN_MAX_AGE=7776000
+
+function pin_all_certs {
+    if [ ! -d $WEBSITES_DIRECTORY ]; then
+        return
+    fi
+
+    cd $WEBSITES_DIRECTORY || exit 24
+    for file in $(dir -d "*") ; do
+        if grep -q "Public-Key-Pins" "$file"; then
+            DOMAIN_NAME=$file
+            KEY_FILENAME=/etc/ssl/private/${DOMAIN_NAME}.key
+            if [ -f "$KEY_FILENAME" ]; then
+                BACKUP_KEY_FILENAME=/etc/ssl/certs/${DOMAIN_NAME}.pem
+                if [ -f "$BACKUP_KEY_FILENAME" ]; then
+                    KEY_HASH=$(openssl rsa -in "$KEY_FILENAME" -outform der -pubout | openssl dgst -sha256 -binary | openssl enc -base64)
+                    BACKUP_KEY_HASH=$(openssl rsa -in "$BACKUP_KEY_FILENAME" -outform der -pubout | openssl dgst -sha256 -binary | openssl enc -base64)
+                    if [ ${#BACKUP_KEY_HASH} -gt 5 ]; then
+
+                        PIN_HEADER="Public-Key-Pins 'pin-sha256=\"${KEY_HASH}\"; pin-sha256=\"${BACKUP_KEY_HASH}\"; max-age=${PIN_MAX_AGE}; includeSubDomains';"
+                        sed -i "s|Public-Key-Pins.*|${PIN_HEADER}|g" "$file"
+                        echo $"Pinned $DOMAIN_NAME with keys $KEY_HASH $BACKUP_KEY_HASH"
+                    fi
+                fi
+            fi
+        fi
+    done
+}
+
+if [[ "$1" == "all" ]]; then
+    pin_all_certs
+    systemctl restart nginx
+    exit 0
+fi
+
+DOMAIN_NAME=$1
+REMOVE=$2
+KEY_FILENAME=/etc/ssl/private/${DOMAIN_NAME}.key
+BACKUP_KEY_FILENAME=/etc/ssl/certs/${DOMAIN_NAME}.pem
+SITE_FILENAME=$WEBSITES_DIRECTORY/${DOMAIN_NAME}
+
+if [ ! "${DOMAIN_NAME}" ]; then
+    exit 0
+fi
+
+if [ ! -f "$SITE_FILENAME" ]; then
+    exit 0
+fi
+
+if [[ $REMOVE == "remove" ]]; then
+    if grep -q "Public-Key-Pins" "$SITE_FILENAME"; then
+        sed -i "/Public-Key-Pins/d" "$SITE_FILENAME"
+        echo $"Removed pinning for ${DOMAIN_NAME}"
+        systemctl restart nginx
+    fi
+    exit 0
+fi
+
+if [ ! -f "$KEY_FILENAME" ]; then
+    echo $"No private key certificate found for $DOMAIN_NAME"
+    exit 1
+fi
+
+if [ ! -f "$BACKUP_KEY_FILENAME" ]; then
+    echo $"No fullchain certificate found for $DOMAIN_NAME"
+    exit 2
+fi
+
+KEY_HASH=$(openssl rsa -in "$KEY_FILENAME" -outform der -pubout | openssl dgst -sha256 -binary | openssl enc -base64)
+BACKUP_KEY_HASH=$(openssl rsa -in "$BACKUP_KEY_FILENAME" -outform der -pubout | openssl dgst -sha256 -binary | openssl enc -base64)
+
+if [ ${#KEY_HASH} -lt 5 ]; then
+    echo 'Pin hash unexpectedly short'
+    exit 3
+fi
+
+if [ ${#BACKUP_KEY_HASH} -lt 5 ]; then
+    echo 'Backup pin hash unexpectedly short'
+    exit 4
+fi
+
+PIN_HEADER="Public-Key-Pins 'pin-sha256=\"${KEY_HASH}\"; pin-sha256=\"${BACKUP_KEY_HASH}\"; max-age=5184000; includeSubDomains';"
+if ! grep -q "Public-Key-Pins" "$SITE_FILENAME"; then
+    sed -i "/ssl_ciphers.*/a     add_header ${PIN_HEADER}" "$SITE_FILENAME"
+else
+    sed -i "s|Public-Key-Pins.*|${PIN_HEADER}|g" "$SITE_FILENAME"
+fi
+
+systemctl restart nginx
+
+if ! grep -q "add_header Public-Key-Pins" "$SITE_FILENAME"; then
+    echo $'Pinning failed'
+fi
+
+echo "Pinned $DOMAIN_NAME with keys $KEY_HASH $BACKUP_KEY_HASH"
+
+exit 0

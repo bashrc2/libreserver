@@ -1,0 +1,243 @@
+=> index.gmi ⯇ Go Back
+
+# Libreserver Developers Guide
+
+``` coffee logo
+                          ██    ██    ██
+                        ██      ██  ██
+                        ██    ██    ██
+                          ██  ██      ██
+                          ██    ██    ██
+
+                      ████████████████████
+                      ██                ██████
+                      ██                ██  ▓▓
+                      ██                ██  ██
+                      ██                ██████
+                        ██            ██
+                    ████████████████████████
+                    ██                    ▓▓
+                      ████████████████████
+```
+
+## Introduction
+
+Libreserver consists almost entirely of bash scripts, with some html, css and php for the web interface. There are many bash scripts, but they're not very complicated. If you're familiar with the GNU/Linux commandline and can hack a bash script then you can probably add a new app or fix a bug in the system. There are no trendy development frameworks to learn or to get in your way. You might also want to consult the Code of Conduct for guidance upon the overall esprit de corps, and there is a Matrix room at #libreserver:matrix.libreserver.org and an XMPP multi-user chat at support@chat.libreserver.org
+
+=> coc.gmi ► Code of Conduct
+
+## Source code
+
+=> https://code.libreserver.org/bashrc/libreserver ► Main repo
+=> https://gitlab.com/bashrc2/libreserver ► Mirror 1
+=> https://codeberg.org/bashrc/libreserver ► Mirror 2
+=> https://libreserver.org/downloads/source.tar.gz ► Compressed archive
+
+## Creating images
+
+Images are an easy way of distributing the software in a manner which avoids problems. These instructions assume that you're running either a Debian or Arch based distro.
+
+    sudo apt-get install git build-essential dialog
+    git clone https://gitlab.com/bashrc2/libreserver
+    cd libreserver
+    git checkout buster
+    sudo make install
+
+Then install packages needed for building images:
+
+    libreserver-image --setup debian
+
+or on an Arch/Parabola system:
+
+    libreserver-image --setup parabola
+
+A typical use case to build an 8GB image for a Beaglebone Black is as follows. You can change the size depending upon the capacity of your microSD card.
+
+    libreserver-image -t beagleboneblack -s 8G
+
+Other supported boards are *beaglebonegreen, beaglex15, cubieboard2, cubietruck, pcduino3, a20-olinuxino-lime, a20-olinuxino-lime2, a20-olinuxino-micro, banana-pro, i386, amd64 and apu.
+
+If the image build fails with an error such as "Error reading from server. Remote end closed connection" then you can specify a debian package mirror repository manually with:
+
+    libreserver-image -t beagleboneblack -s 8G -m http://ftp.de.debian.org/debian
+
+Sometimes the build will fail just because a repo is temporarily unavailable. In that case just trying again may work.
+
+You can also build the onion-only versions by adding an extra option. For example:
+
+    libreserver-image -t beagleboneblack -s 8G --onion yes
+
+## Adding extra apps
+
+Suppose you have some internet application which you want to add to the system. To do this you need to create an app script which tells the system how to install/remove and also backup/restore. The script should be designed to work with the current stable version of Debian.
+
+Avoid apps written in Rust unless you can be sure that cargo will never try to run arbitrary applications from the /tmp directory, which is forbidden for security reasons and attempts to do that will be blocked.
+
+There's a command which you can use to generate scripts for new apps. Some examples are as follows:
+
+To create a script for a generic PHP plus MySql/MariaDB web app with a couple of extra packages:
+
+    libreserver-template --app [name] -e [email] -r [repo url] \
+                         --packages "cowsay libssl-dev" \
+                         -c [commit] --php yes -d mariadb > \
+                         src/libreserver-app-myappname
+
+For a Nodejs app with MySql/MariaDB database:
+
+    libreserver-template --app [name] -e [email] -r [repo url] \
+                         -c [commit] --node yes -d mariadb \
+                         --dir /etc/myappname --daemon yes > \
+                         src/libreserver-app-myappname
+
+For a Python app with Postgresql database:
+
+    libreserver-template --app [name] -e [email] -r [repo url] \
+                         -c [commit] -d postgresql \
+                         --dir /etc/myappname --daemon yes > \
+                         src/libreserver-app-myappname
+
+For a Python app without any database, communicating between the daemon and the web server on port 1234:
+
+    libreserver-template --app [name] -e [email] -r [repo url] \
+                         -c [commit] --dir /etc/myappname \
+                         --daemon yes --portinternal 1234 > \
+                         src/libreserver-app-myappname
+
+For an app without any database which communicates directly on a particular port through the firewall:
+
+    libreserver-template --app [name] -e [email] -r [repo url] \
+                         -c [commit] --dir /etc/myappname \
+                         --daemon yes --port 5000 > \
+                         src/libreserver-app-myappname
+
+A generic PHP plus MySql/MariaDB web app which is only available on an onion address:
+
+    libreserver-template --app [name] -e [email] -r [repo url] \
+                         -c [commit] --php yes -d mariadb \
+                         --onion yes > \
+                         src/libreserver-app-myappname
+
+For more details see the manpage:
+
+    man libreserver-template
+
+The template command won't give you a fully working app, but it will give you a big head start and avoid a lot of potential mistakes. It's highly likely that you'll still need to add extra configuration for your particular app, especially within the install_app function.
+
+When your new script is ready for testing you can install it with:
+
+    make install
+
+Then run the administrator control panel and you should see the new app within Add/Remove apps.
+
+Submit your working app via one of the methods described below.
+
+## ✉ Submitting patches or pull requests
+
+If you've made changes and want to submit them back to the Libreserver project then there are a couple of ways to do this. This project aims not to have prolonged formal debates over patch correctness and they will typically be merged as soon as possible, with any necessary correcting commits being made subsequently.
+
+### Make a patch for a single small change
+
+Commit your changes to your local repo.
+
+    git commit -a -m"My patch description"
+
+Format it as a patch:
+
+    git format-patch -1 HEAD --stdout
+
+HEAD can be replaced by the specific commit hash if needed. Copy and paste the result into an email addressed to bob@libreserver.org or a Matrix message to @bob:matrix.libreserver.org, and you're done.
+
+### Submitting multiple changes over time
+
+If you plan to make many changes over an extended period of time then send an email to bob@libreserver.org or a Matrix message to @bob:matrix.libreserver.org and ask for an account on code.libreserver.org. You'll then be able to fork and make pull requests.
+
+## Architecture
+
+### Apps
+
+Apps are scripts beginning with src/libreserver-app-. New scripts can be created with the template command described above. Each script contains a number of function interfaces which enable the app to be installed, removed, backed up and for logging to be turned on or off. The interfaces are:
+
+* install_appname
+* install_interactive_appname
+* configure_interactive_appname
+* reconfigure_appname
+* remove_appname
+* upgrade_appname
+* backup_local_appname
+* restore_local_appname
+* logging_on_appname
+* logging_off_appname
+* add_user_appname
+* remove_user_appname
+* change_password_appname
+
+install_interactive and configure_interactive are only used by the dialog menu interface accessible via ssh.
+
+change_password is optional because with some apps there isn't any way to do that from the commandline.
+
+reconfigure is used during factory reset to remove and regenerate keys or set the app back to its initial defaults.
+
+### Web interface
+
+The web interface consists of a set of html files within webadmin/EN. These use forms to reference some php files within webadmin and those generate files which are then picked up by a systemd daemon running in the background (webadmin.service) which is implemented by src/libreserver-installer.
+
+Typically the daemon detects the presence of a file, extracts the variables from it, maybe does some additional validation and then does whatever it needs to do with those.
+
+The separate daemon also avoids having php code making any direct changes to the underlying system, which could create security risks. The files created by the php scripts are very small and can typically be fully validated.
+
+The user interface is regenerated by the function install_web_admin within src/libreserver-utils-webadmin.
+
+When installed, the web interface is in /var/www/libreserver.local/htdocs/admin. The directory above that is where a json API exists for use with the FreedomBox Android app.
+
+Although it's tempting and easy, avoid adding javascript into the html files. The policy is to keep the web interface free from javascript, so that if you're using noscript or have javascript turned off then the interface can still be used without any loss of functionality.
+
+It is assumed that only the administrator will be accessing the web interface, so dealing with collisions between multiple users making contradicting changes to the same things at the same time isn't necessary.
+
+The web interface operates in a strictly sequential/synchronous mode. So if you try to install multiple apps it puts them into a queue and does the installs one after another. The same applies for app removals.
+
+### How translations happen
+
+Translations are stored within webadmin/translations. When you select a language html files are copied from webadmin/EN and then the English strings are searched and replaced. Strings to be translated are indicated within the html files with the parameter translate="yes".
+
+Doing it this way avoids having duplicated versions of the many html files for different languages. See the change_language function within src/libreserver-installer for details of how this process works.
+
+## Doing translations
+
+These can be added or edited within the web UI. Navigate to http://libreserver/admin or its onion address, select settings then language. Select the language that you want to translate to then the translate button. In the right hand column you can then manually edit the translated strings. When you are done select the update button.
+
+The format of the translation files is very simple. It's:
+
+English string|Translated string
+
+If you prefer to edit the raw files within your own editor of choice they can be found within the webadmin/translations directory of the repo.
+
+## Icons
+
+If you want to change the icons of the web user interface they can be found within the webadmin/images directory of the repo.
+
+Icons used for the mesh desktop can be found within img and img/avatars directories and their filenames begin with icon_.
+
+## Customising mesh images
+
+If you want to make your own specially branded version of the mesh images, such as for a particular event, then to change the default desktop backgrounds edit the images within img/backgrounds and to change the available avatars and desktop icons edit the images within img/avatars. Re-create disk images using the instructions shown previously.
+
+If you need particular dconf commands to alter desktop appearance or behavior then see the function mesh_client_startup_applications within src/libreserver-image-customise.
+
+## Ideas for improvements
+
+* A lot of the translations are currently automatic. If anyone has language skills then checking that the strings all make sense would be very helpful.
+* Expanding the CI system to include tests that individual apps install correctly. This would be really useful and probably wouldn't take much work.
+* Getting more recent SBCs working with the build system. This can be fairly advanced so might not be a suitable task for people new to Linux.
+* Pentesting to find vulnerabilities. Make a test install. Add a few apps. Try to knock it down. Report the results.
+* Go through the STIG tests and for each try to ensure that if there is a failure then the system makes a best effort to fix it by itself. This already happens to some extent, but there are many tests.
+* Add support for Matrix bridges to IRC or XMPP. Would need some changes to the app and some web interface changes.
+* Icons sets and themes. Currently there is only one set of icons for the web interface, but potentially there could be different themes. If you have artistic skills produce an alternative icon set.
+* If you make a blog post and publish it, and if you have Epicyon installed, then automatically create an ActivityPub post linking to the blog post. Sounds complicated but the implementation is probably fairly straightforward.
+* Check accessibility for the web interface. Fonts, color contrast, layout, use with shell based browsers and screen readers. I've already done some of this, but someone with more experience of accessibility issues could be helpful. Produce an accessibility report for the web interface.
+* Fix the progress bar when installing from menuconfig on Armbian. This doesn't work at all currently, but is probably easy to fix.
+* Make images for recent SBCs. You can use Armbian as a base. Test that all STIG tests pass. Check that HRNGs are being used properly for each board type.
+* Distributed backup. Make a proposal or produce an implementation for a way to do distributed backups. This should require negligible intervention or knowledge from the user. As close to fully automatic as possible. I did have a way of doing this in the past, but it was too complex.
+* Add more community networks. Many cities in Germany now seem to have Freifunk networks, and I don't think they're all supported in Libreserver yet.
+* Are there ways to speed up the community network map updates without using javascript? This is an unknown. Something to research.
+* Add support for I2P to the web interface. Show a QR code for I2P addresses. There's already support for XMPP over I2P in the background, but it hasn't been linked up to the web interface.
+* Make a howto set of instructions for setting up Libreserver with a community Network. To do it at the lowest possible cost you could use Orange Pi Zero, which has wifi. Recommend good antennas and procedures for physical installation. Tools needed, time estimates, etc. Someone with electrical/radio experience would be good for this.

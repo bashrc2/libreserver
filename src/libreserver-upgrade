@@ -1,0 +1,206 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Command to upgrade the system
+#
+# License
+# =======
+#
+# Copyright (C) 2015-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+PROJECT_NAME='libreserver'
+
+PROJECT_DIR="$HOME/${PROJECT_NAME}"
+
+# An optional configuration file which overrides some of these variables
+CONFIGURATION_FILE="$HOME/${PROJECT_NAME}.cfg"
+
+DEFAULT_PROJECT_REPO="https://gitlab.com/bashrc2/${PROJECT_NAME}"
+PROJECT_REPO=$DEFAULT_PROJECT_REPO
+
+CURRENT_BRANCH=bullseye
+
+UPGRADE_PARAM="$1"
+
+# Is letsencrypt updating its certificates?
+# If yes then skip the upgrade to avoid any collisions
+if [ -f ~/temp_renewletsencrypt.txt ]; then
+    if [ -f /tmp/.upgrading ]; then
+        rm /tmp/.upgrading
+    fi
+    exit 0
+fi
+
+# don't do updates if the setup process has not happened
+if [ -f /root/.install_state.txt ]; then
+    curr_install_state=$(cat /root/.install_state.txt)
+    if [ "$curr_install_state" ]; then
+        # shellcheck disable=SC2086
+        if [ $curr_install_state -ne 4 ]; then
+            exit 0
+        fi
+    fi
+fi
+
+source /usr/local/bin/${PROJECT_NAME}-shortcuts
+
+UTILS_FILES="/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-*"
+for f in $UTILS_FILES
+do
+    source "$f"
+done
+
+source "/usr/share/${PROJECT_NAME}/base/${PROJECT_NAME}-base-email"
+source "/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-xmpp"
+
+read_config_param PROJECT_REPO
+if [[ "$PROJECT_REPO" == *"github.com/bashrc/${PROJECT_NAME}" || "$PROJECT_REPO" == *"libreserver.org"* ]]; then
+    PROJECT_REPO=$DEFAULT_PROJECT_REPO
+    write_config_param PROJECT_REPO "$PROJECT_REPO"
+fi
+if [[ "$PROJECT_REPO" == 'none' ]]; then
+    if [ -f /tmp/.upgrading ]; then
+        rm /tmp/.upgrading
+    fi
+    exit 0
+fi
+
+read_config_param ONION_ONLY
+read_config_param DEFAULT_DOMAIN_NAME
+
+read_config_param STABLE_BRANCH
+if [ "$STABLE_BRANCH" ]; then
+    if [ ${#STABLE_BRANCH} -gt 0 ]; then
+        CURRENT_BRANCH="$STABLE_BRANCH"
+    fi
+fi
+
+read_config_param DEVELOPMENT_BRANCH
+if [ "$DEVELOPMENT_BRANCH" ]; then
+    if [ ${#DEVELOPMENT_BRANCH} -gt 0 ]; then
+        CURRENT_BRANCH="$DEVELOPMENT_BRANCH"
+    fi
+fi
+
+# upgrading file prevents USB canary or other jobs from activating
+rm -rf /tmp/*
+touch /tmp/.upgrading
+
+if [ -f /usr/bin/backupdatabases ]; then
+    if grep -q "cat /root/dbpass" /usr/bin/backupdatabases; then
+        # update to using the password manager
+        sed -i "s|cat /root/dbpass|${PROJECT_NAME}-pass -u root -a mariadb|g" /usr/bin/backupdatabases
+    fi
+fi
+
+#update-ca-certificates
+
+if [ ! -d "$PROJECT_DIR" ]; then
+    git_clone "$PROJECT_REPO" "$PROJECT_DIR"
+fi
+
+if [ -d "$PROJECT_DIR" ]; then
+    if [ -f "$CONFIGURATION_FILE" ]; then
+        case "$UPGRADE_PARAM" in
+            "change_domain")
+                change_default_domain_name
+                ;;
+            *)
+                cd "$PROJECT_DIR" || exit 24
+                git config pull.rebase false
+                if [[ "$CURRENT_BRANCH" == *'master' ]]; then
+                    git_pull $PROJECT_REPO
+                else
+                    git_pull $PROJECT_REPO "origin/$CURRENT_BRANCH"
+                fi
+                git checkout "$CURRENT_BRANCH"
+                git pull
+                make install
+                if [ -d /usr/share/${PROJECT_NAME} ]; then
+                    chown -R root:root /usr/share/${PROJECT_NAME}
+                    chmod -R +r /usr/share/${PROJECT_NAME}
+                fi
+
+                if ! ${PROJECT_NAME} -c "$CONFIGURATION_FILE"; then
+		    if [ -f /tmp/.upgrading ]; then
+			rm /tmp/.upgrading
+		    fi
+                    /bin/bash /usr/local/bin/${PROJECT_NAME}-notification -s "LibreServer upgrade" -m "Upgrade failed"
+                    exit 45
+                fi
+
+                update_portscan_defense
+                install_dynamicdns
+                torrc_migrate
+                email_remove_frozen
+                exim_enable_tls
+                add_xmpp_onion_to_email
+                add_xmpp_onion_http_upload
+                configure_dkim
+                email_add_xmpp_headers
+                email_update_riseup_onion_domain
+                upgrade_nodejs
+                if [[ "$ONION_ONLY" == 'no' ]]; then
+                    REINSTALL_PACKAGES python3-pkg-resources python3-setuptools python3-openssl python3-cryptography
+                    INSTALL_PACKAGES certbot
+                fi
+                email_install_tls
+                email_disable_chunking
+                remove_ip_addresses_from_email_logs
+                rm /etc/exim4/exim4.conf.template.bak*
+                email_update_onion_domain
+                prevent_mail_process_overrun
+                android_update_apps nowebadmin
+                populate_keyservers
+                disable_email_encryption_at_rest
+                email_remove_html
+                email_flooding_defense
+                configure_email_i2p
+                if [ -f /var/log/freedns_@_update.log ]; then
+                    rm /var/log/freedns_@_update.log
+                fi
+                upgrade_iptables
+                network_communities_upgrade
+                update_email_onion_dns
+                if [ -d /home/pi ]; then
+                    echo $'Removing default raspberry pi user account'
+                    chmod 600 /etc/shadow
+                    chmod 600 /etc/gshadow
+                    userdel -r pi
+                    groupdel pi
+                    chmod 0000 /etc/shadow
+                    chmod 0000 /etc/gshadow
+                fi
+                #defrag_filesystem
+                ;;
+        esac
+    fi
+fi
+
+systemctl restart webadmin
+
+# upgrading file prevents USB canary from activating
+if [ -f /tmp/.upgrading ]; then
+    rm /tmp/.upgrading
+fi
+
+# If logging was left on then turn it off
+${PROJECT_NAME}-logging off
+
+# deliberately there is no 'exit 0' here

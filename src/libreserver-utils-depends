@@ -1,0 +1,43 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Dependency checking functions
+#
+# License
+# =======
+#
+# Copyright (C) 2014-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+function function_check {
+    if [ ! "$(type "${1}" 2>/dev/null)" ]; then
+        echo $"Dependency error: The function ${1} has not been defined"
+        exit 72
+    fi
+    increment_install_progress "${1}"
+}
+
+function function_exists {
+    if [ ! "$(type "${1}" 2>/dev/null)" ]; then
+        echo "0"
+    else
+        echo "1"
+    fi
+}
+
+# NOTE: deliberately there is no "exit 0"

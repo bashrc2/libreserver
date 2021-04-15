@@ -1,0 +1,159 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Intrusion detection application
+#
+# License
+# =======
+#
+# Copyright (C) 2014-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+function backup_local_tripwire {
+    echo -n ''
+}
+
+function backup_remote_tripwire {
+    echo -n ''
+}
+
+function remove_tripwire {
+    if ! grep -Fxq "tripwire" "$COMPLETION_FILE"; then
+        return
+    fi
+    $REMOVE_PACKAGES_PURGE tripwire
+    if [ -d /etc/tripwire ]; then
+        rm -rf /etc/tripwire
+    fi
+    rm /usr/bin/reset-tripwire
+    sed -i '/tripwire/d' "$COMPLETION_FILE"
+}
+
+function install_tripwire {
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+
+    echo '*** Installing intrusion detection ***'
+
+    debconf-set-selections <<< "tripwire tripwire/use-sitekey boolean false"
+    debconf-set-selections <<< "tripwire tripwire/use-localkey boolean false"
+
+    INSTALL_PACKAGES tripwire qrencode
+    $REMOVE_UNUSED_PACKAGES
+    cd /etc/tripwire || exit 24
+
+    { echo 'ROOT          =/usr/sbin';
+      echo 'POLFILE       =/etc/tripwire/tw.pol';
+      echo "DBFILE        =/var/lib/tripwire/\$(HOSTNAME).twd";
+      echo "REPORTFILE    =/var/lib/tripwire/report/\$(HOSTNAME)-\$(DATE).twr";
+      echo "SITEKEYFILE   =/etc/tripwire/\$(HOSTNAME)-site.key";
+      echo "LOCALKEYFILE  =/etc/tripwire/\$(HOSTNAME)-local.key";
+      echo 'EDITOR        =/usr/bin/editor';
+      echo 'LATEPROMPTING =false';
+      echo 'LOOSEDIRECTORYCHECKING =false';
+      echo 'MAILNOVIOLATIONS =false';
+      echo 'EMAILREPORTLEVEL =3';
+      echo 'REPORTLEVEL   =3';
+      echo 'SYSLOGREPORTING =false';
+      echo 'MAILMETHOD    =SENDMAIL';
+      echo 'MAILPROGRAM   =/usr/lib/sendmail -oi -t';
+      echo 'SMTPHOST      =localhost';
+      echo 'SMTPPORT      =25';
+      echo 'TEMPDIRECTORY =/tmp';
+      echo "MAILFROMADDRESS =tripwire@\$(HOSTNAME)"; } > /etc/tripwire/twcfg.txt
+
+    if [ -f "/etc/tripwire/${HOSTNAME}-local.key" ]; then
+        rm "/etc/tripwire/${HOSTNAME}-local.key"
+    fi
+    echo '
+
+       ' | twadmin --generate-keys -L "/etc/tripwire/${HOSTNAME}-local.key" -S "/etc/tripwire/${HOSTNAME}-site.key"
+
+    if [ -f "/etc/tripwire/${HOSTNAME}-site.key" ]; then
+        rm "/etc/tripwire/${HOSTNAME}-site.key"
+    fi
+
+    echo '
+
+       ' | twadmin --create-cfgfile -S "/etc/tripwire/${HOSTNAME}-site.key" /etc/tripwire/twcfg.txt
+
+    # make a script for easy resetting of the tripwire
+    echo '#!/bin/sh' > /usr/bin/reset-tripwire
+    echo 'tripwire -m i' >> /usr/bin/reset-tripwire
+    chmod +x /usr/bin/reset-tripwire
+
+    sed -i '/# These files change the behavior of the root account/,/}/ s/.*//g' /etc/tripwire/twpol.txt
+    sed -i 's|/etc/rc.boot.*||g' /etc/tripwire/twpol.txt
+    # Don't show any changes to /proc
+    sed -i 's|/proc.*||g' /etc/tripwire/twpol.txt
+    # Don't report log changes
+    sed -i 's|/var/log.*||g' /etc/tripwire/twpol.txt
+    # Ignore /etc/tripwire
+    if ! grep -q '!/etc/tripwire' /etc/tripwire/twpol.txt; then
+        sed -i '\|/etc\t\t->.*|a\    !/etc/tripwire ;' /etc/tripwire/twpol.txt
+    fi
+    # Ignore /etc/libreserver
+    if ! grep -q '!/etc/libreserver' /etc/tripwire/twpol.txt; then
+        sed -i '\|/etc\t\t->.*|a\    !/etc/libreserver ;' /etc/tripwire/twpol.txt
+    fi
+    # Ignore /etc/pihole
+    if ! grep -q '!/etc/pihole' /etc/tripwire/twpol.txt; then
+        sed -i '\|/etc\t\t->.*|a\    !/etc/pihole ;' /etc/tripwire/twpol.txt
+    fi
+    # ignore tt-rss cache
+    if ! grep -q '!/etc/share/tt-rss/cache' /etc/tripwire/twpol.txt; then
+        sed -i '\|/etc\t\t->.*|a\    !/etc/share/tt-rss/cache ;' /etc/tripwire/twpol.txt
+    fi
+    if ! grep -q '!/etc/share/tt-rss/lock' /etc/tripwire/twpol.txt; then
+        sed -i '\|/etc\t\t->.*|a\    !/etc/share/tt-rss/lock ;' /etc/tripwire/twpol.txt
+    fi
+    # ignore global node modules
+    if ! grep -q '!/usr/local/lib/node_modules' /etc/tripwire/twpol.txt; then
+        sed -i '\|/etc\t\t->.*|a\    !/usr/local/lib/node_modules ;' /etc/tripwire/twpol.txt
+    fi
+    # Events here are likely due to USB HRNG activity
+    if ! grep -q '!/dev/char' /etc/tripwire/twpol.txt; then
+        sed -i '\|/dev\t\t->.*|a\    !/dev/char ;' /etc/tripwire/twpol.txt
+    fi
+    if ! grep -q '!/dev/bus/usb' /etc/tripwire/twpol.txt; then
+        sed -i '\|/dev\t\t->.*|a\    !/dev/bus/usb ;' /etc/tripwire/twpol.txt
+    fi
+
+    # Not much is in /usr/local/bin other than project commands and avoiding it removes
+    # problems with updates. This is a tradeoff, but not by much.
+    sed -i '/\/usr\/local\/bin/d' /etc/tripwire/twpol.txt
+
+    # Avoid logging the changed database
+    sed -i "s|\$(TWETC)/tw.pol.*||g" /etc/tripwire/twpol.txt
+    # site key name
+    sed -i "s|\$(TWETC)/site.key|\$(TWETC)/\$(HOSTNAME)-site.key|g" /etc/tripwire/twpol.txt
+
+    if [ -f "/etc/tripwire/${HOSTNAME}-site.key" ]; then
+        rm "/etc/tripwire/${HOSTNAME}-site.key"
+    fi
+
+    # create the policy
+    echo '
+
+       ' | twadmin --create-polfile -S "/etc/tripwire/${HOSTNAME}-site.key" /etc/tripwire/twpol.txt
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+# NOTE: deliberately no exit 0

@@ -1,0 +1,886 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Federated image sharing
+#
+# License
+# =======
+#
+# Copyright (C) 2019-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VARIANTS='full full-vim media'
+
+IN_DEFAULT_INSTALL=0
+SHOW_ON_ABOUT=1
+REQUIRES_APP=
+
+APP_CATEGORY=media
+
+PIXELFED_DOMAIN_NAME=
+PIXELFED_CODE=
+PIXELFED_ONION_PORT=8361
+PIXELFED_REPO="https://github.com/dansup/pixelfed"
+PIXELFED_COMMIT='30b5f43fc05cfd8f1577d8d51c4cc52b2939c8d4'
+PIXELFED_ADMIN_PASSWORD=
+
+PIXELFED_BACKGROUND_IMAGE_URL=
+
+PIXELFED_SHORT_DESCRIPTION=$'Federated image sharing'
+PIXELFED_DESCRIPTION=$'Federated image sharing'
+PIXELFED_MOBILE_APP_URL=
+
+pixelfed_variables=(ONION_ONLY
+                    PIXELFED_DOMAIN_NAME
+                    PIXELFED_CODE
+                    DDNS_PROVIDER
+                    MY_USERNAME
+                    MY_EMAIL_ADDRESS)
+
+function upgrade_distro_pixelfed {
+    target_distro="$1"
+
+    if [[ "$target_distro" == 'bullseye' ]]; then
+        echo -n ''
+    fi
+}
+
+function pixelfed_onion {
+    # don't enforce https on the onion only version
+    if [[ "$ONION_ONLY" == 'no' ]]; then
+        return
+    fi
+    if [ -f "/var/www/$PIXELFED_DOMAIN_NAME/htdocs/app/Providers/AppServiceProvider.php" ]; then
+        sed -i "s|forceScheme('https')|forceScheme('http')|g" "/var/www/$PIXELFED_DOMAIN_NAME/htdocs/app/Providers/AppServiceProvider.php"
+    else
+        echo "app/Providers/AppServiceProvider.php is missing"
+    fi
+}
+
+function pixelfed_remove_bad_links {
+    cd "/var/www/$PIXELFED_DOMAIN_NAME/htdocs" || exit 36
+
+    sed -i '/googleapi/d' vendor/laravel/horizon/resources/views/layout.blade.php
+    sed -i '/googleapi/d' vendor/laravel/ui/src/Presets/bootstrap-stubs/app.scss
+    sed -i '/googleapi/d' vendor/laravel/ui/src/Auth/bootstrap-stubs/layouts/app.stub
+    sed -i '/googleapi/d' vendor/laravel/framework/src/Illuminate/Auth/Console/stubs/make/views/layouts/app.stub
+    sed -i '/googleapi/d' vendor/laravel/framework/src/Illuminate/Foundation/Exceptions/views/minimal.blade.php
+    sed -i '/googleapi/d' vendor/laravel/framework/src/Illuminate/Foundation/Exceptions/views/illustrated-layout.blade.php
+    sed -i '/googleapi/d' vendor/laravel/framework/src/Illuminate/Foundation/Exceptions/views/layout.blade.php
+
+    chown -R www-data:www-data "/var/www/$PIXELFED_DOMAIN_NAME/htdocs"
+}
+
+function pixelfed_setting_registration {
+    allow_registrations="$1"
+
+    read_config_param PIXELFED_DOMAIN_NAME
+    env_filename="/var/www/$PIXELFED_DOMAIN_NAME/htdocs/.env"
+    if [ ! -f "$env_filename" ]; then
+        return
+    fi
+
+    if [[ "$allow_registrations" == '1' ]]; then
+        sed -i "s|OPEN_REGISTRATION=.*|OPEN_REGISTRATION=false|g" "$env_filename"
+    fi
+
+    if [[ "$allow_registrations" == '0' ]]; then
+        sed -i "s|OPEN_REGISTRATION=.*|OPEN_REGISTRATION=true|g" "$env_filename"
+    fi
+
+    cd "/var/www/$PIXELFED_DOMAIN_NAME/htdocs" || return
+    php artisan config:cache
+}
+
+function logging_on_pixelfed {
+    echo -n ''
+}
+
+function logging_off_pixelfed {
+    echo -n ''
+}
+
+function remove_user_pixelfed {
+    remove_username="$1"
+
+    if [ ! "$PIXELFED_DOMAIN_NAME" ]; then
+        read_config_param PIXELFED_DOMAIN_NAME
+    fi
+
+    cd "/var/www/$PIXELFED_DOMAIN_NAME/htdocs" || return
+
+    seeder_file="/var/www/$PIXELFED_DOMAIN_NAME/htdocs/database/seeds/UsersTableSeeder.php"
+
+    { echo '<?php';
+      echo '';
+      echo 'use Illuminate\Database\Seeder;';
+      echo 'use App\User;';
+      echo '';
+      echo 'class UsersTableSeeder extends Seeder';
+      echo '{';
+      echo '    /**';
+      echo '     * Run the database seeds.';
+      echo '     *';
+      echo '     * @return void';
+      echo '     */';
+      echo '    public function run()';
+      echo '    {';
+      echo "        \$user = User::whereUsername(\"${remove_username}\")->first();";
+      echo "        if(\$user) {";
+      echo "            \$profile = \$user->profile;";
+      echo "            \$profile->status = \$user->status = 'deleted';";
+      echo "            \$profile->save();";
+      echo "            \$user->deleted_at = now();";
+      echo "            \$user->save();";
+      echo '        }';
+      echo '    }';
+      echo '}'; } > "$seeder_file"
+    chown www-data:www-data "$seeder_file"
+
+    database_seed="/var/www/$PIXELFED_DOMAIN_NAME/htdocs/database/seeds/DatabaseSeeder.php"
+
+    { echo '<?php';
+      echo '';
+      echo 'use Illuminate\Database\Seeder;';
+      echo '';
+      echo 'class DatabaseSeeder extends Seeder';
+      echo '{';
+      echo '    /**';
+      echo "     * Seed the application's database.";
+      echo '     *';
+      echo '     * @return void';
+      echo '     */';
+      echo '    public function run()';
+      echo '    {';
+      echo "        \$this->call(UsersTableSeeder::class);";
+      echo '    }';
+      echo '}'; } > "$database_seed"
+    chown www-data:www-data "$database_seed"
+
+    cd "/var/www/$PIXELFED_DOMAIN_NAME/htdocs" || return
+    echo "yes" | php composer.phar dump-autoload
+    php artisan db:seed --force
+    sed -i "s|\$this->call(UsersTableSeeder::class);|// \$this->call(UsersTableSeeder::class);|g" "$database_seed"
+    rm "$seeder_file"
+
+    "${PROJECT_NAME}-pass" -u "$remove_username" --rmapp pixelfed
+}
+
+function add_user_pixelfed {
+    new_username="$1"
+    new_user_name="$new_username"
+    new_user_password="$2"
+    new_user_is_admin='false';
+    new_user_email="${new_username}@$(hostname)"
+
+    if [ ! "$PIXELFED_DOMAIN_NAME" ]; then
+        read_config_param PIXELFED_DOMAIN_NAME
+    fi
+    if [ ! "$MY_USERNAME" ]; then
+        read_config_param MY_USERNAME
+    fi
+
+    if [[ "$new_username" == "$MY_USERNAME" ]]; then
+        new_user_is_admin='true';
+
+        if [ ! "$MY_EMAIL_ADDRESS" ]; then
+            read_config_param MY_EMAIL_ADDRESS
+        fi
+        if [ "$MY_EMAIL_ADDRESS" ]; then
+            new_user_email="$MY_EMAIL_ADDRESS"
+        fi
+
+        if [ ! "$MY_NAME" ]; then
+            read_config_param MY_NAME
+        fi
+        if [ "$MY_NAME" ]; then
+            new_user_name="$MY_NAME"
+        fi
+    fi
+
+    cd "/var/www/$PIXELFED_DOMAIN_NAME/htdocs" || return
+
+    seeder_file="/var/www/$PIXELFED_DOMAIN_NAME/htdocs/database/seeds/UsersTableSeeder.php"
+
+    { echo '<?php';
+      echo '';
+      echo 'use Illuminate\Database\Seeder;';
+      echo 'use Illuminate\Support\Facades\DB;';
+      echo 'use App\User;';
+      echo '';
+      echo 'class UsersTableSeeder extends Seeder';
+      echo '{';
+      echo '    /**';
+      echo '     * Run the database seeds.';
+      echo '     *';
+      echo '     * @return void';
+      echo '     */';
+      echo '    public function run()';
+      echo '    {';
+      echo "        \$user = DB::table('users')->where('name', '${new_username}');";
+      echo "        if(\$user->update(array('status' => null))) {";
+      echo "            \$user->update(array('deleted_at' => null));";
+      echo "            \$user->update(array('password' => bcrypt('${new_user_password}')));";
+      echo "            DB::table('profiles')->where('name', '${new_username}')->update(array('status' => null));";
+      echo '        }';
+      echo '        else {';
+      echo "            \$user = new User;";
+      echo "            \$user->username = \"$new_username\";";
+      echo "            \$user->name = \"$new_user_name\";";
+      echo "            \$user->email = \"${new_user_email}\";";
+      echo "            \$user->is_admin = $new_user_is_admin;";
+      echo "            \$user->email_verified_at = now();";
+      echo "            \$user->password = bcrypt(\"$new_user_password\");";
+      echo "            \$user->save();";
+      echo '        }';
+      echo '    }';
+      echo '}'; } > "$seeder_file"
+    chown www-data:www-data "$seeder_file"
+
+    database_seed="/var/www/$PIXELFED_DOMAIN_NAME/htdocs/database/seeds/DatabaseSeeder.php"
+
+    { echo '<?php';
+      echo '';
+      echo 'use Illuminate\Database\Seeder;';
+      echo '';
+      echo 'class DatabaseSeeder extends Seeder';
+      echo '{';
+      echo '    /**';
+      echo "     * Seed the application's database.";
+      echo '     *';
+      echo '     * @return void';
+      echo '     */';
+      echo '    public function run()';
+      echo '    {';
+      echo "        \$this->call(UsersTableSeeder::class);";
+      echo '    }';
+      echo '}'; } > "$database_seed"
+    chown www-data:www-data "$database_seed"
+
+    cd "/var/www/$PIXELFED_DOMAIN_NAME/htdocs" || return
+    echo "yes" | php composer.phar dump-autoload
+    php artisan db:seed --force
+    sed -i "s|\$this->call(UsersTableSeeder::class);|// \$this->call(UsersTableSeeder::class);|g" "$database_seed"
+    rm "$seeder_file"
+
+    "${PROJECT_NAME}-pass" -u "$new_username" -a pixelfed -p "$new_user_password"
+
+    echo '0'
+}
+
+function install_interactive_pixelfed {
+    if [ ! "$ONION_ONLY" ]; then
+        ONION_ONLY='no'
+    fi
+
+    if [[ "$ONION_ONLY" != "no" ]]; then
+        PIXELFED_DOMAIN_NAME='pixelfed.local'
+    else
+        PIXELFED_DETAILS_COMPLETE=
+        while [ ! $PIXELFED_DETAILS_COMPLETE ]
+        do
+            data=$(mktemp 2>/dev/null)
+            dialog --backtitle $"LibreServer Configuration" \
+                   --title $"Pixelfed Configuration" \
+                   --form $"\\nPlease enter your Pixelfed details.\\n\\nIMPORTANT: This should be a domain name which is supported by Let's Encrypt:" 14 65 2 \
+                   $"Domain:" 1 1 "$(grep 'PIXELFED_DOMAIN_NAME' temp.cfg | awk -F '=' '{print $2}')" 1 25 33 40 \
+                   2> "$data"
+            sel=$?
+            case $sel in
+                1) rm -f "$data"
+                   exit 1;;
+                255) rm -f "$data"
+                     exit 1;;
+            esac
+            PIXELFED_DOMAIN_NAME=$(sed -n 1p < "$data")
+            if [ "$PIXELFED_DOMAIN_NAME" ]; then
+                if [[ $PIXELFED_DOMAIN_NAME == "$HUBZILLA_DOMAIN_NAME" ]]; then
+                    PIXELFED_DOMAIN_NAME=""
+                fi
+                TEST_DOMAIN_NAME=$PIXELFED_DOMAIN_NAME
+                validate_domain_name
+                if [[ "$TEST_DOMAIN_NAME" != "$PIXELFED_DOMAIN_NAME" ]]; then
+                    PIXELFED_DOMAIN_NAME=
+                    dialog --title $"Domain name validation" --msgbox "$TEST_DOMAIN_NAME" 15 50
+                fi
+            fi
+            if [ $PIXELFED_DOMAIN_NAME ]; then
+                PIXELFED_DETAILS_COMPLETE="yes"
+            fi
+            rm -f "$data"
+        done
+    fi
+    write_config_param "PIXELFED_DOMAIN_NAME" "$PIXELFED_DOMAIN_NAME"
+    APP_INSTALLED=1
+}
+
+function change_password_pixelfed {
+    curr_username="$1"
+    new_user_password="$2"
+
+    if [ ! "$PIXELFED_DOMAIN_NAME" ]; then
+        read_config_param PIXELFED_DOMAIN_NAME
+    fi
+
+    seeder_file="/var/www/$PIXELFED_DOMAIN_NAME/htdocs/database/seeds/UsersTableSeeder.php"
+
+    { echo '<?php';
+      echo '';
+      echo 'use Illuminate\Database\Seeder;';
+      echo 'use Illuminate\Support\Facades\DB;';
+      echo '';
+      echo 'class UsersTableSeeder extends Seeder';
+      echo '{';
+      echo '    /**';
+      echo '     * Run the database seeds.';
+      echo '     *';
+      echo '     * @return void';
+      echo '     */';
+      echo '    public function run()';
+      echo '    {';
+      echo "        DB::table('users')->where('name', '${curr_username}')->update(array('password' => bcrypt('${new_user_password}')));";
+      echo '    }';
+      echo '}'; } > "$seeder_file"
+    chown www-data:www-data "$seeder_file"
+
+    database_seed="/var/www/$PIXELFED_DOMAIN_NAME/htdocs/database/seeds/DatabaseSeeder.php"
+
+    { echo '<?php';
+      echo '';
+      echo 'use Illuminate\Database\Seeder;';
+      echo '';
+      echo 'class DatabaseSeeder extends Seeder';
+      echo '{';
+      echo '    /**';
+      echo "     * Seed the application's database.";
+      echo '     *';
+      echo '     * @return void';
+      echo '     */';
+      echo '    public function run()';
+      echo '    {';
+      echo "        \$this->call(UsersTableSeeder::class);";
+      echo '    }';
+      echo '}'; } > "$database_seed"
+    chown www-data:www-data "$database_seed"
+
+    cd "/var/www/$PIXELFED_DOMAIN_NAME/htdocs" || return
+    echo "yes" | php composer.phar dump-autoload
+    php artisan db:seed --force
+    sed -i "s|\$this->call(UsersTableSeeder::class);|// \$this->call(UsersTableSeeder::class);|g" "$database_seed"
+    rm "$seeder_file"
+
+    "${PROJECT_NAME}-pass" -u "$curr_username" -a pixelfed -p "$new_user_password"
+}
+
+function pixelfed_create_database {
+    if [ -f "$IMAGE_PASSWORD_FILE" ]; then
+        PIXELFED_ADMIN_PASSWORD="$(printf "%s" "$(cat "$IMAGE_PASSWORD_FILE")")"
+    else
+        if [ ! "$PIXELFED_ADMIN_PASSWORD" ]; then
+            PIXELFED_ADMIN_PASSWORD="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
+        fi
+    fi
+    if [ ! "$PIXELFED_ADMIN_PASSWORD" ]; then
+        return
+    fi
+
+    function_check create_database
+    create_database pixelfed "$PIXELFED_ADMIN_PASSWORD" "$MY_USERNAME"
+}
+
+function reconfigure_pixelfed {
+    echo -n ''
+}
+
+function pixelfed_use_classic_compose {
+    if grep -q "route('compose')" "/var/www/$PIXELFED_DOMAIN_NAME/htdocs/resources/views/layouts/partial/nav.blade.php"; then
+        sed -i "s|<a href=\"{{route('compose')}}.*|<a href=\"/i/compose\" class=\"nav-link\">|g" "/var/www/$PIXELFED_DOMAIN_NAME/htdocs/resources/views/layouts/partial/nav.blade.php"
+    fi
+}
+
+function upgrade_pixelfed {
+    CURR_PIXELFED_COMMIT=$(get_completion_param "pixelfed commit")
+    if [[ "$CURR_PIXELFED_COMMIT" == "$PIXELFED_COMMIT" ]]; then
+        return
+    fi
+
+    if grep -q "pixelfed domain" "$COMPLETION_FILE"; then
+        PIXELFED_DOMAIN_NAME=$(get_completion_param "pixelfed domain")
+    fi
+
+    # update to the next commit
+    function_check set_repo_commit
+    set_repo_commit "/var/www/$PIXELFED_DOMAIN_NAME/htdocs" "pixelfed commit" "$PIXELFED_COMMIT" "$PIXELFED_REPO"
+
+    cd "/var/www/$PIXELFED_DOMAIN_NAME/htdocs" || exit 36
+    if [ -f "/var/www/$PIXELFED_DOMAIN_NAME/htdocs/app/Util/Lexer/RestrictedNames.php" ]; then
+        sed -i "/'admin',/d" "/var/www/$PIXELFED_DOMAIN_NAME/htdocs/app/Util/Lexer/RestrictedNames.php"
+    else
+        echo "app/Util/Lexer/RestrictedNames.php is missing"
+    fi
+    php artisan down
+    pixelfed_remove_bad_links
+    install_composer
+    pixelfed_use_classic_compose
+    php artisan cache:clear
+    php artisan optimize:clear
+    php artisan optimize
+    pixelfed_onion
+    php artisan up
+    chown -R www-data:www-data "/var/www/${PIXELFED_DOMAIN_NAME}/htdocs"
+}
+
+
+function backup_local_pixelfed {
+    pixelfed_path="/var/www/${PIXELFED_DOMAIN_NAME}/htdocs"
+    if [ -d "$pixelfed_path" ]; then
+        suspend_site "${PIXELFED_DOMAIN_NAME}"
+        function_check backup_database_to_usb
+        backup_database_to_usb pixelfed
+        backup_directory_to_usb "$pixelfed_path" pixelfed
+        restart_site
+    fi
+}
+
+function restore_local_pixelfed {
+    temp_restore_dir=/root/temppixelfed
+    pixelfed_dir="/var/www/${PIXELFED_DOMAIN_NAME}/htdocs"
+
+    suspend_site "${PIXELFED_DOMAIN_NAME}"
+
+    function_check pixelfed_create_database
+    pixelfed_create_database
+
+    restore_database pixelfed "${PIXELFED_DOMAIN_NAME}"
+    chown www-data:www-data "$pixelfed_dir"
+
+    restart_site
+}
+
+function backup_remote_pixelfed {
+    echo -n ''
+}
+
+function restore_remote_pixelfed {
+    echo -n ''
+}
+
+function remove_pixelfed {
+    if [ ${#PIXELFED_DOMAIN_NAME} -eq 0 ]; then
+        return
+    fi
+
+    sed -i 's|max_execution_time.*|max_execution_time = 30|g' "/etc/php/$PHP_VERSION/cli/php.ini"
+    sed -i 's|max_execution_time.*|max_execution_time = 30|g' "/etc/php/$PHP_VERSION/fpm/php.ini"
+
+    read_config_param "PIXELFED_DOMAIN_NAME"
+    read_config_param "MY_USERNAME"
+    echo "Removing $PIXELFED_DOMAIN_NAME"
+    nginx_dissite "$PIXELFED_DOMAIN_NAME"
+    remove_certs "$PIXELFED_DOMAIN_NAME"
+
+    if [ -d "/var/www/$PIXELFED_DOMAIN_NAME" ]; then
+        rm -rf "/var/www/$PIXELFED_DOMAIN_NAME"
+    fi
+    if [ -f "/etc/nginx/sites-available/$PIXELFED_DOMAIN_NAME" ]; then
+        rm "/etc/nginx/sites-available/$PIXELFED_DOMAIN_NAME"
+    fi
+    function_check drop_database
+    drop_database pixelfed
+    function_check remove_onion_service
+    remove_onion_service pixelfed "${PIXELFED_ONION_PORT}"
+    if grep -q "pixelfed" /etc/crontab; then
+        sed -i "/pixelfed/d" /etc/crontab
+    fi
+    remove_app pixelfed
+    remove_completion_param install_pixelfed
+    sed -i '/pixelfed/d' "$COMPLETION_FILE"
+
+    function_check remove_ddns_domain
+    remove_ddns_domain "$PIXELFED_DOMAIN_NAME"
+}
+
+function install_pixelfed {
+    if [ ! $ONION_ONLY ]; then
+        ONION_ONLY='no'
+    fi
+
+    if [ ! "$PIXELFED_DOMAIN_NAME" ]; then
+        echo $'No domain name was given for pixelfed'
+        exit 89
+    fi
+
+    increment_app_install_progress
+
+    function_check install_mariadb
+    install_mariadb
+
+    increment_app_install_progress
+
+    function_check get_mariadb_password
+    get_mariadb_password
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES php-php-gettext php-curl php-gd php-mysql git curl
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES php-gd php-mbstring php-xml php-json php-bcmath php-pgsql php-curl
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES memcached php-memcached php-intl exiftool libfcgi0ldbl
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES gosu optipng pngquant jpegoptim gifsicle libfreetype6
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES libjpeg62-turbo libpng16-16 libxpm4 libwebp6 libfreetype6-dev
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES libjpeg62-turbo-dev libpng-dev libxpm-dev libwebp-dev
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES libmagickwand-dev libmagickwand-6.q16-6
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES php-bcmath php-imagick
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES ffmpeg redis-tools redis-server zip unzip imagemagick
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES htop bmon mc pngquant optipng jpegoptim gifsicle
+
+    # shellcheck disable=SC2086
+    INSTALL_PACKAGES php${PHP_VERSION}-curl php${PHP_VERSION}-gd php${PHP_VERSION}-mbstring php${PHP_VERSION}-xml php${PHP_VERSION}-zip
+
+    increment_app_install_progress
+
+    if [ ! -d "/var/www/$PIXELFED_DOMAIN_NAME" ]; then
+        mkdir "/var/www/$PIXELFED_DOMAIN_NAME"
+    fi
+    if [ ! -d "/var/www/$PIXELFED_DOMAIN_NAME/htdocs" ]; then
+        if [ -d /repos/pixelfed ]; then
+            mkdir -p "/var/www/$PIXELFED_DOMAIN_NAME/htdocs"
+            cp -r -p /repos/pixelfed/. "/var/www/$PIXELFED_DOMAIN_NAME/htdocs"
+            cd "/var/www/$PIXELFED_DOMAIN_NAME/htdocs" || exit 23
+            git pull
+        else
+            function_check git_clone
+            git_clone "$PIXELFED_REPO" "/var/www/$PIXELFED_DOMAIN_NAME/htdocs"
+        fi
+
+        if [ ! -d "/var/www/$PIXELFED_DOMAIN_NAME/htdocs" ]; then
+            echo $'Unable to clone pixelfed repo'
+            exit 25
+        fi
+    fi
+
+    increment_app_install_progress
+
+    cd "/var/www/$PIXELFED_DOMAIN_NAME/htdocs" || exit 234
+    git checkout "$PIXELFED_COMMIT" -b "$PIXELFED_COMMIT"
+    set_completion_param "pixelfed commit" "$PIXELFED_COMMIT"
+
+    chmod g+w "/var/www/$PIXELFED_DOMAIN_NAME/htdocs"
+    chown -R www-data:www-data "/var/www/$PIXELFED_DOMAIN_NAME/htdocs"
+
+    increment_app_install_progress
+
+    cd "/var/www/$PIXELFED_DOMAIN_NAME/htdocs" || exit 34
+
+    # change some php settings
+    sed -i 's|max_execution_time.*|max_execution_time = 600|g' "/etc/php/$PHP_VERSION/cli/php.ini"
+    sed -i 's|max_execution_time.*|max_execution_time = 600|g' "/etc/php/$PHP_VERSION/fpm/php.ini"
+
+    increment_app_install_progress
+
+    PIXELFED_ONION_HOSTNAME=$(add_onion_service pixelfed 80 ${PIXELFED_ONION_PORT})
+
+    increment_app_install_progress
+
+    function_check pixelfed_create_database
+    pixelfed_create_database
+
+    increment_app_install_progress
+
+    MARIADB_PASSWORD=$("${PROJECT_NAME}-pass" -u root -a mariadb)
+
+    pixelfed_domain="${PIXELFED_DOMAIN_NAME}"
+    pixelfed_url="https://${PIXELFED_DOMAIN_NAME}"
+    if [[ "$ONION_ONLY" != 'no' ]]; then
+        pixelfed_domain="${PIXELFED_ONION_HOSTNAME}"
+        pixelfed_url="http://${PIXELFED_ONION_HOSTNAME}"
+    fi
+
+    { echo 'APP_NAME="PixelFed"';
+      echo 'APP_ENV=production';
+      echo 'APP_KEY=';
+      echo 'APP_DEBUG=true';
+      echo "APP_URL=${pixelfed_url}";
+      echo '';
+      echo "ADMIN_DOMAIN=${pixelfed_domain}";
+      echo "APP_DOMAIN=${pixelfed_domain}";
+      echo '';
+      echo 'LOG_CHANNEL=stack';
+      echo '';
+      echo 'DB_CONNECTION=mysql';
+      echo 'DB_HOST=localhost';
+      echo 'DB_PORT=3306';
+      echo 'DB_DATABASE=pixelfed';
+      echo 'DB_USERNAME=root';
+      echo "DB_PASSWORD=\"${MARIADB_PASSWORD}\"";
+      echo '';
+      echo 'BROADCAST_DRIVER=log';
+      echo 'CACHE_DRIVER=redis';
+      echo 'SESSION_DRIVER=redis';
+      echo 'SESSION_LIFETIME=120';
+      echo 'QUEUE_DRIVER=redis';
+      echo '';
+      echo 'REDIS_HOST=localhost';
+      echo 'REDIS_PASSWORD=null';
+      echo 'REDIS_PORT=6379';
+      echo '';
+      echo 'MAIL_DRIVER=mail';
+      echo 'MAIL_HOST=localhost';
+      echo 'MAIL_PORT=25';
+      echo 'MAIL_USERNAME=null';
+      echo 'MAIL_PASSWORD=null';
+      echo 'MAIL_ENCRYPTION=null';
+      echo 'MAIL_FROM_NAME=null';
+      echo 'MAIL_FROM_ADDRESS=null';
+      echo '';
+      echo "SESSION_DOMAIN=${pixelfed_domain}";
+      echo 'SESSION_SECURE_COOKIE=true';
+      echo 'API_BASE="/api/1/"';
+      echo 'API_SEARCH="/api/search"';
+      echo '';
+      echo 'OPEN_REGISTRATION=false';
+      echo 'RECAPTCHA_ENABLED=false';
+      echo 'ENFORCE_EMAIL_VERIFICATION=false';
+      echo '';
+      echo 'MAX_PHOTO_SIZE=15000';
+      echo 'MAX_CAPTION_LENGTH=150';
+      echo 'MAX_ALBUM_LENGTH=4';
+      echo '';
+      echo "MIX_PUSHER_APP_KEY=\"\${PUSHER_APP_KEY}\"";
+      echo "MIX_PUSHER_APP_CLUSTER=\"\${PUSHER_APP_CLUSTER}\"";
+      echo "MIX_APP_URL=\"\${APP_URL}\"";
+      echo "MIX_API_BASE=\"\${API_BASE}\"";
+      echo "MIX_API_SEARCH=\"\${API_SEARCH}\"";
+      echo '';
+      echo 'ACTIVITYPUB_INBOX=false';
+      echo 'ACTIVITYPUB_SHAREDINBOX=false';
+      echo '';
+      echo 'ACTIVITY_PUB=true';
+      echo 'REMOTE_FOLLOW=true'; } > "/var/www/$PIXELFED_DOMAIN_NAME/htdocs/.env"
+    chown www-data:www-data "/var/www/$PIXELFED_DOMAIN_NAME/htdocs/.env"
+
+    # allow user with name 'admin'
+    sed -i "/'admin',/d" "/var/www/$PIXELFED_DOMAIN_NAME/htdocs/app/Util/Lexer/RestrictedNames.php"
+
+    increment_app_install_progress
+
+    install_composer
+
+    increment_app_install_progress
+
+    # create the database
+    cd "/var/www/$PIXELFED_DOMAIN_NAME/htdocs" || exit 34
+
+    increment_app_install_progress
+
+    pixelfed_use_classic_compose
+
+    echo "yes" | php artisan key:generate
+
+    increment_app_install_progress
+
+    php artisan storage:link
+
+    increment_app_install_progress
+
+    php artisan migrate:refresh --force
+
+    increment_app_install_progress
+
+    php artisan config:cache
+
+    increment_app_install_progress
+
+    php artisan cache:clear
+
+    increment_app_install_progress
+
+    php artisan optimize:clear
+
+    increment_app_install_progress
+
+    php artisan optimize
+
+    increment_app_install_progress
+
+    pixelfed_onion
+
+    increment_app_install_progress
+
+    function_check add_ddns_domain
+
+    add_ddns_domain "$PIXELFED_DOMAIN_NAME"
+
+    increment_app_install_progress
+
+    pixelfed_nginx_site=/etc/nginx/sites-available/$PIXELFED_DOMAIN_NAME
+    if [[ $ONION_ONLY == "no" ]]; then
+        function_check nginx_http_redirect
+        nginx_http_redirect "$PIXELFED_DOMAIN_NAME" "index index.php"
+        { echo 'server {';
+          echo '  listen 443 ssl;';
+          echo '  #listen [::]:443 ssl;';
+          echo "  server_name $PIXELFED_DOMAIN_NAME;";
+          echo ''; } >> "$pixelfed_nginx_site"
+        function_check nginx_compress
+        nginx_compress "$PIXELFED_DOMAIN_NAME"
+        echo '' >> "$pixelfed_nginx_site"
+        echo '  # Security' >> "$pixelfed_nginx_site"
+        function_check nginx_ssl
+        nginx_ssl "$PIXELFED_DOMAIN_NAME"
+
+        function_check nginx_security_options
+        nginx_security_options "$PIXELFED_DOMAIN_NAME"
+        nginx_robots "$PIXELFED_DOMAIN_NAME"
+
+        { echo '  add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
+          echo "  add_header Onion-Location http://${PIXELFED_ONION_HOSTNAME}\$request_uri;";
+          echo '';
+          echo '  access_log /dev/null;';
+          echo '  error_log /dev/null;';
+          echo '';
+          echo "  root /var/www/$PIXELFED_DOMAIN_NAME/htdocs/public;";
+          echo '';
+          echo '  index index.php;';
+          echo '';
+          echo '  location ~ \.php {';
+          echo '    fastcgi_split_path_info ^(.+\.php)(/.+)$;';
+          echo '    include snippets/fastcgi-php.conf;';
+          echo "    fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
+          echo '    fastcgi_read_timeout 30;';
+          echo '  }';
+          echo '';
+          echo '  location / {'; } >> "$pixelfed_nginx_site"
+        function_check nginx_limits
+        nginx_limits "$PIXELFED_DOMAIN_NAME" '15m'
+        { echo "    try_files \$uri \$uri/ @pixelfed;";
+          echo '  }';
+          echo '';
+          echo '  location @pixelfed {';
+          echo "    rewrite ^(.*)\$ /index.php?p=\$1 last;";
+          echo '  }';
+          echo '';
+          echo '  location ~ /\.(ht|git|env|log) {';
+          echo '    deny all;';
+          echo '  }';
+          echo '';
+          echo '}'; } >> "$pixelfed_nginx_site"
+    else
+        echo -n '' > "$pixelfed_nginx_site"
+    fi
+    { echo 'server {';
+      echo "    listen 127.0.0.1:$PIXELFED_ONION_PORT default_server;";
+      echo '    port_in_redirect off;';
+      echo "    server_name $PIXELFED_ONION_HOSTNAME;";
+      echo ''; } >> "$pixelfed_nginx_site"
+      function_check nginx_compress
+    nginx_compress "$PIXELFED_DOMAIN_NAME"
+    echo '' >> "$pixelfed_nginx_site"
+    function_check nginx_security_options
+    nginx_security_options "$PIXELFED_DOMAIN_NAME"
+    { echo '';
+      echo '  access_log /dev/null;';
+      echo '  error_log /dev/null;';
+      echo '';
+      echo "  root /var/www/$PIXELFED_DOMAIN_NAME/htdocs/public;";
+      echo '';
+      echo '  index index.php;';
+      echo '';
+      echo '  location ~ \.php {';
+      echo '    fastcgi_split_path_info ^(.+\.php)(/.+)$;';
+      echo '    include snippets/fastcgi-php.conf;';
+      echo "    fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
+      echo '    fastcgi_read_timeout 30;';
+      echo '  }';
+      echo '';
+      echo '  location / {'; } >> "$pixelfed_nginx_site"
+    function_check nginx_limits
+    nginx_limits "$PIXELFED_DOMAIN_NAME" '15m'
+    { echo "    try_files \$uri \$uri/ @pixelfed;";
+      echo '  }';
+      echo '';
+      echo '  location @pixelfed {';
+      echo "    rewrite ^(.*)\$ /index.php?p=\$1 last;";
+      echo '  }';
+      echo '';
+      echo '  location ~ /\.(ht|git|env|log) {';
+      echo '    deny all;';
+      echo '  }';
+      echo '}'; } >> "$pixelfed_nginx_site"
+
+    # doesn't like having a CSP
+    sed -i '/Content-Security-Policy/d' "$pixelfed_nginx_site"
+
+    function_check configure_php
+    configure_php
+
+    increment_app_install_progress
+
+    function_check create_site_certificate
+    create_site_certificate "$PIXELFED_DOMAIN_NAME" 'yes'
+
+    increment_app_install_progress
+
+    function_check nginx_ensite
+    nginx_ensite "$PIXELFED_DOMAIN_NAME"
+
+    pixelfed_remove_bad_links
+
+    increment_app_install_progress
+
+    systemctl restart mariadb
+    # shellcheck disable=SC2086
+    systemctl restart php${PHP_VERSION}-fpm
+    systemctl restart nginx
+
+    increment_app_install_progress
+
+    add_user_pixelfed "$MY_USERNAME" "$PIXELFED_ADMIN_PASSWORD"
+
+    set_completion_param "pixelfed domain" "$PIXELFED_DOMAIN_NAME"
+
+    APP_INSTALLED=1
+}
+
+# NOTE: deliberately there is no "exit 0"

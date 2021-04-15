@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <style>
+      @import url("libreserver.css");
+
+      .appurl {
+          font-size: 100%;
+      }
+
+      .welcomeheader {
+          font-size: 200%;
+          font-weight: bold;
+      }
+
+      .descriptiontext {
+          font-size: 90%;
+      }
+
+      .logintext {
+          font-size: 120%;
+          font-weight: bold;
+          color: #981737;
+      }
+
+      button {
+          border: none;
+          outline: 0;
+          display: inline-block;
+          padding: 8px;
+          color: white;
+          background-color: #000;
+          text-align: center;
+          cursor: pointer;
+          width: 100%;
+          font-size: 18px;
+      }
+
+      button:hover, a:hover {
+          opacity: 0.7;
+      }
+
+      .chip {
+          display: inline-block;
+          padding: 0 25px;
+          height: 50px;
+          font-size: 70%;
+          line-height: 50px;
+          border-radius: 25px;
+          background-color: #f1f1f1;
+      }
+
+      .chip img {
+          float: left;
+          margin: 0 10px 0 -25px;
+          height: 50px;
+          width: 50px;
+          border-radius: 50%;
+      }
+
+      .networklist {
+          font-size: 100%;
+          font-weight: bold;
+          color: black;
+          background-color: lightblue;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="header">
+        <a href="settings.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a><br>
+
+        <p class="headertext" translate="yes">Choose your network:</p>
+
+        <form action="network.php" method="post">
+          <select class="networklist" name="network" size="10">
+            <option value="none" translate="yes">None</option>
+            <option value="communitynetwork" translate="yes">Your Community</option>
+            <option value="capetown" translate="yes">Cape Town WUG</option>
+            <option value="ffaachen" translate="yes">Freifunk Aachen</option>
+            <option value="ffberlin" translate="yes">Freifunk Berlin</option>
+            <option value="ffbonn" translate="yes">Freifunk Bonn</option>
+            <option value="ffbremen" translate="yes">Freifunk Bremen</option>
+            <option value="ffdresden" translate="yes">Freifunk Dresden</option>
+            <option value="ffessen" translate="yes">Freifunk Essen</option>
+            <option value="ffmunich" translate="yes">Freifunk Munich</option>
+            <option value="ffmunster" translate="yes">Freifunk Münster</option>
+            <option value="ffstuttgart" translate="yes">Freifunk Stuttgart</option>
+            <option value="guifinetcustom" translate="yes">Guifinet</option>
+            <option value="guifinetasturies" translate="yes">Guifinet Asturies</option>
+            <option value="guifinetbarcelona" translate="yes">Guifinet Barcelona</option>
+            <option value="guifineteuskalherria" translate="yes">Guifinet Euskal Herria</option>
+            <option value="guifinetmadrid" translate="yes">Guifinet Madrid</option>
+            <option value="guifinetplanadevic" translate="yes">Guifinet Plana de Vic</option>
+            <option value="guifinetosonasud" translate="yes">Guifinet Osona Sud</option>
+            <option value="guifinetvalencia" translate="yes">Guifinet Valencia</option>
+            <option value="guifinetvalldelges" translate="yes">Guifinet Vall del Ges</option>
+            <option value="mass" translate="yes">MassMesh</option>
+            <option value="nyc" translate="yes">NYC Mesh</option>
+            <option value="pitt" translate="yes">Pittsburgh Mesh</option>
+            <option value="tomesh" translate="yes">Toronto Mesh</option>
+          </select>
+          <br><br>
+          <input type="submit" name="submitnetworkcancel" translate="yes" value="Go Back">
+          <input type="submit" name="submitnetwork" translate="yes" value="Select">
+        </form>
+
+        <br>
+      </div>
+    </div>
+  </body>
+</html>

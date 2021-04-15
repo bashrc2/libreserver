@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+  <meta charset="utf-8">
+  <style>
+    @import url("libreserver.css");
+
+    * {
+        box-sizing: border-box;
+    }
+
+    .subheadertext {
+        margin-left : 10%;
+        text-align: left;
+        font-size: 110%;
+        font-weight: bold;
+    }
+
+    .subheaderports {
+        margin-left : 10%;
+        text-align: left;
+        font-size: 110%;
+        font-weight: bold;
+    }
+
+    .helptext {
+        width: 80%;
+        text-align: left;
+        font-size: 100%;
+        margin-left : 10%;
+    }
+
+    .codetext {
+        font-family: Courier;
+        width: 80%;
+        text-align: left;
+        font-size: 100%;
+        margin-left : 10%;
+    }
+
+    .portstext {
+        width: 80%;
+        text-align: left;
+        font-size: 100%;
+        margin-left : 10%;
+    }
+
+    .row {
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+        padding: 0 4px;
+    }
+
+    .column {
+        -ms-flex: 25%;
+        flex: 15%;
+        max-width: 25%;
+        padding: 0 4px;
+    }
+
+    .column img {
+        margin-top: 8px;
+        vertical-align: middle;
+    }
+
+    @media screen and (max-width: 800px) {
+        .column {
+            -ms-flex: 50%;
+            flex: 50%;
+            max-width: 50%;
+        }
+    }
+
+    @media screen and (max-width: 200px) {
+        .column {
+            -ms-flex: 100%;
+            flex: 100%;
+            max-width: 100%;
+        }
+    }
+  </style>
+  <body>
+
+    <div class="header">
+      <a href="app_mumble.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
+    </div>
+
+    <p class="headertext" translate="yes">Mumble</p>
+
+    <p class="subheaderports" translate="yes">Ports</p>
+
+    <p class="portstext" translate="yes">Forward the port 64738 from your internet router</p>
+
+    <p class="subheadertext" translate="yes">Setting up on a laptop</p>
+
+    <p class="helptext"><b>1.</b> <span translate="yes">First ensure that tor is installed. Within a terminal:</span></p>
+
+
+    <p class="helptext" translate="no">sudo apt-get install tor</p>
+
+    <p class="helptext"><b>2.</b> <span translate="yes">Within the software center search for "mumble" and install the client then run it. Skip through the audio setup wizard. Cancel the initial connection window.</span></p>
+    <p class="helptext"><b>3.</b> <span translate="yes">From the menu select 'Configure' then 'Settings'. Select the 'Advanced' checkbox then select 'Network'. Select 'Force TCP mode' and proxy type 'Socks5'. Hostname should be set to 'localhost' and port should be 9050.</span></p>
+    <p class="helptext"><b>4.</b> <span translate="yes">Select 'Apply' and 'Ok', then on the menu 'Server' and 'Connect'.</span></p>
+    <p class="helptext"><b>5.</b> <span translate="yes">Click on "add new" to add a new server and enter the domain name or onion address for the LibreServer, your username (which can be anything) and the VoIP server password which is the same as the password you set up the box with. Accept the self-signed SSL certificate if you don't have a Let's Encrypt certificate set up for your default domain. You are now ready to chat.</span></p>
+
+    <p class="subheadertext" translate="yes">Setting up on Android</p>
+
+    <p class="helptext"><b>1.</b> <span translate="yes">Install F-Droid</span></p>
+    <p class="helptext"><b>2.</b> <span translate="yes">If you don't have Orbot installed then enable The Guardian Project repository from the drop down menu and install it.</span></p>
+    <p class="helptext"><b>3.</b> <span translate="yes">Search for and install Plumble.</span></p>
+    <p class="helptext"><b>4.</b> <span translate="yes">Press the plus button to add a Mumble server.</span></p>
+    <p class="helptext"><b>5.</b> <span translate="yes">Enter a label (which can be any name you choose for the server), the default domain name of the LibreServer or preferably the mumble onion address, your username (which can also be anything) and the mumble password which is the same as the one you originally set up the box with. Leave the port number unchanged.</span></p>
+    <p class="helptext"><b>6.</b> <span translate="yes">Open the settings. Select 'General', then 'Connect via Tor'. This will provide better protection, making it more difficult for adversaries to know who is talking to who. If connecting through Tor is unreliable and causes crashes then unselect 'Connect via Tor' on the 'General settings' and then just use your ordinary domain name.</span></p>
+    <p class="helptext"><b>7.</b> <span translate="yes">Selecting the server by pressing on it then connects you to the server so that you can chat with other connected users</span></p>
+
+  </body>
+</html>

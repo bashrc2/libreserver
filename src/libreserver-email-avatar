@@ -1,0 +1,117 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Creates an email avatar
+# https://gitlab.com/muttmua/mutt/-/wikis/MuttGuide/XFace
+#
+# License
+# =======
+#
+# Copyright (C) 2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+SOURCE_IMAGE="$1"
+
+if [ ! "$SOURCE_IMAGE" ]; then
+    echo 'You need to supply an image filename or URL which will be turned into the email avatar'
+    exit 1
+fi
+
+if [ ! -f /usr/bin/ffmpeg ]; then
+    sudo apt-get install -y ffmpeg
+    if [ ! -f /usr/bin/ffmpeg ]; then
+	echo 'Failed to install ffmpeg'
+	exit 2
+    fi
+fi
+
+if [ ! -f /usr/bin/compface ]; then
+    sudo apt-get install -y compface
+    if [ ! -f /usr/bin/compface ]; then
+	echo 'Failed to install compface'
+	exit 3
+    fi
+fi
+
+if [[ "$SOURCE_IMAGE" == 'http'* ]]; then
+    temp_image=~/.avatar_temp
+    if [[ "$SOURCE_IMAGE" == *'.jpg' || "$SOURCE_IMAGE" == *'.jpeg' ]]; then
+	temp_image=~/.avatar_temp.jpg
+    fi
+    if [[ "$SOURCE_IMAGE" == *'.gif' ]]; then
+	temp_image=~/.avatar_temp.gif
+    fi
+    if [[ "$SOURCE_IMAGE" == *'.png' ]]; then
+	temp_image=~/.avatar_temp.png
+    fi
+    if [[ "$SOURCE_IMAGE" == *'.webp' ]]; then
+	temp_image=~/.avatar_temp.webp
+    fi
+    if [ -f $temp_image ]; then
+	rm $temp_image
+    fi
+    wget "$SOURCE_IMAGE" -O $temp_image
+    if [ ! -f $temp_image ]; then
+	echo "Failed to get $SOURCE_IMAGE"
+	exit 6
+    fi
+    SOURCE_IMAGE=$temp_image
+fi
+
+if [ ! -f "$SOURCE_IMAGE" ]; then
+    echo 'No file found to be converted to an email avatar'
+    exit 7
+fi
+
+AVATAR_IMAGE_BMP=~/.avatar.bmp
+AVATAR_IMAGE=~/.avatar.xbm
+
+if [ -f "$AVATAR_IMAGE" ]; then
+    rm "$AVATAR_IMAGE"
+fi
+
+ffmpeg -i "$SOURCE_IMAGE" -s 48x48 "$AVATAR_IMAGE_BMP"
+ffmpeg -i "$SOURCE_IMAGE_BMP" "$AVATAR_IMAGE"
+
+if [ -f "$AVATAR_IMAGE_BMP" ]; then
+    rm "$AVATAR_IMAGE_BMP"
+fi
+
+if [ ! -f "$AVATAR_IMAGE" ]; then
+    echo 'Email avatar could not be created'
+    exit 8
+fi
+
+if [ -f ~/.muttrc ]; then    
+    if grep -q 'X-Face:' ~/.muttrc; then
+	sed -i '/X-Face:/d' ~/.muttrc
+    fi
+    echo -n "my_hdr X-Face: $(compface $AVATAR_IMAGE | muttquote-x-face )" >> ~/.muttrc
+    echo 'Avatar added to mutt header'
+
+    if ! grep -q 'unignore x-face' ~/.muttrc; then
+	echo 'unignore x-face' >> ~/.muttrc
+	echo 'Show x-face header in mutt'
+    fi
+    if ! grep -q 'view-x-face' ~/.muttrc; then
+	echo "macro pager \ef \"|/usr/local/bin/view-x-face<enter>\" \"display the X-Face included in the mail\"" >> ~/.muttrc
+	echo 'Added avatar display to mutt'
+    fi
+fi
+
+exit 0

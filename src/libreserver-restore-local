@@ -1,0 +1,1156 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Restore from local storage - typically a USB drive
+#
+# License
+# =======
+#
+# Copyright (C) 2015-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+PROJECT_NAME='libreserver'
+COMPLETION_FILE=$HOME/${PROJECT_NAME}-completed.txt
+CONFIGURATION_FILE="$HOME/${PROJECT_NAME}.cfg"
+BACKUP_EXTRA_DIRECTORIES=/root/backup-extra-dirs.csv
+
+# whether to restore everything or just a specific application
+RESTORE_APP='all'
+
+# In simple backup mode the USB drive is auto-detected
+# and the backup keys are also stored on the drive,
+# symmetrically encrypted with a password
+simple_backup=
+simple_backup_password=
+
+export TEXTDOMAIN=${PROJECT_NAME}-restore-local
+export TEXTDOMAINDIR="/usr/share/locale"
+
+PROJECT_INSTALL_DIR=/usr/local/bin
+if [ -f /usr/bin/${PROJECT_NAME} ]; then
+    PROJECT_INSTALL_DIR=/usr/bin
+fi
+
+# MariaDB password
+DATABASE_PASSWORD=$(${PROJECT_NAME}-pass -u root -a mariadb)
+
+restore_counter=0
+
+source $PROJECT_INSTALL_DIR/${PROJECT_NAME}-vars
+
+# include utils which allow function_check, go and drive mount
+UTILS_FILES="/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-*"
+for f in $UTILS_FILES
+do
+    source "$f"
+done
+
+clear
+
+USB_DRIVE=/dev/sdb1
+USB_MOUNT=/mnt/usb
+
+ADMIN_USERNAME=''
+ADMIN_NAME=
+
+read_config_param USB_DRIVE
+
+if [ -f "$COMPLETION_FILE" ]; then
+    ADMIN_USERNAME=$(get_completion_param "Admin user")
+fi
+
+function check_backup_exists {
+    if [ ! -d $USB_MOUNT/backup ]; then
+        echo $"No backup directory found on the USB drive."
+        set_user_permissions
+        backup_unmount_drive
+        exit 2
+    fi
+}
+
+function check_admin_user {
+    echo $"Checking that admin user exists"
+    if [ ! "$ADMIN_USERNAME" ]; then
+        echo $'No admin username found'
+        exit 36
+    fi
+    if [ ! -d "/home/$ADMIN_USERNAME" ]; then
+        echo $"Username $ADMIN_USERNAME not found. Reinstall ${PROJECT_NAME} with this username."
+        set_user_permissions
+        backup_unmount_drive
+        exit 29
+    fi
+}
+
+function copy_gpg_keys {
+    echo $"Copying GPG keys from admin user to root"
+    cp -r "/home/$ADMIN_USERNAME/.gnupg" /root
+    gpg_set_permissions root
+}
+
+function restore_blocklist {
+    if [[ $RESTORE_APP != 'all' ]]; then
+        if [[ $RESTORE_APP != 'blocklist' ]]; then
+            return
+        fi
+    fi
+
+    if [ -d $USB_MOUNT/backup/blocklist ]; then
+        echo $"Restoring blocklist"
+        temp_restore_dir=/root/tempblocklist
+        restore_directory_from_usb $temp_restore_dir blocklist
+
+        if [ -d $temp_restore_dir/root/tempbackupblocklist ]; then
+            cp -f $temp_restore_dir/root/tempbackupblocklist/${PROJECT_NAME}-firewall-domains.cfg /root/${PROJECT_NAME}-firewall-domains.cfg
+        else
+            cp -f $temp_restore_dir/${PROJECT_NAME}-firewall-domains.cfg /root/${PROJECT_NAME}-firewall-domains.cfg
+        fi
+
+        rm -rf $temp_restore_dir
+
+        firewall_refresh_blocklist
+    fi
+}
+
+function restore_vpn_peers {
+    if [[ $RESTORE_APP != 'all' ]]; then
+        if [[ $RESTORE_APP != 'vpnpeers' ]]; then
+            return
+        fi
+    fi
+
+    if [ -d $USB_MOUNT/backup/vpnpeers ]; then
+        echo $"Restoring vpn peers"
+        temp_restore_dir=/root/tempvpnpeers
+        restore_directory_from_usb $temp_restore_dir vpnpeers
+
+        if [ -d "$temp_restore_dir/root/tempbackupvpnpeers" ]; then
+
+            if [ -f "$temp_restore_dir/root/tempbackupvpnpeers/${PROJECT_NAME}-vpn-peers.cfg" ]; then
+                cp -f "$temp_restore_dir/root/tempbackupvpnpeers/${PROJECT_NAME}-vpn-peers.cfg" "/root/${PROJECT_NAME}-vpn-peers.cfg"
+            else
+                if [ -f "/root/${PROJECT_NAME}-vpn-peers.cfg" ]; then
+                    rm "/root/${PROJECT_NAME}-vpn-peers.cfg"
+                fi
+            fi
+
+            if [ -f "$temp_restore_dir/root/tempbackupvpnpeers/${PROJECT_NAME}-vpn-remote.cfg" ]; then
+                cp -f "$temp_restore_dir/root/tempbackupvpnpeers/${PROJECT_NAME}-vpn-remote.cfg" "/root/${PROJECT_NAME}-vpn-remote.cfg"
+            else
+                if [ -f "/root/${PROJECT_NAME}-vpn-remote.cfg" ]; then
+                    rm "/root/${PROJECT_NAME}-vpn-remote.cfg"
+                fi
+            fi
+
+        else
+            if [ -f "$temp_restore_dir/${PROJECT_NAME}-vpn-peers.cfg" ]; then
+                cp -f "$temp_restore_dir/${PROJECT_NAME}-vpn-peers.cfg" "/root/${PROJECT_NAME}-vpn-peers.cfg"
+            else
+                if [ -f "/root/${PROJECT_NAME}-vpn-peers.cfg" ]; then
+                    rm "/root/${PROJECT_NAME}-vpn-peers.cfg"
+                fi
+            fi
+
+            if [ -f "$temp_restore_dir/${PROJECT_NAME}-vpn-remote.cfg" ]; then
+                cp -f "$temp_restore_dir/${PROJECT_NAME}-vpn-remote.cfg" "/root/${PROJECT_NAME}-vpn-remote.cfg"
+            else
+                if [ -f "/root/${PROJECT_NAME}-vpn-remote.cfg" ]; then
+                    rm "/root/${PROJECT_NAME}-vpn-remote.cfg"
+                fi
+            fi
+        fi
+
+        rm -rf $temp_restore_dir
+
+        # copy file to a location where it will be picked up by the webadmin daemon
+        local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+        webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+        if [ -f "/root/${PROJECT_NAME}-vpn-remote.cfg" ]; then
+            cp "/root/${PROJECT_NAME}-vpn-remote.cfg" "$webadmin_install_dir/.vpn_remote.txt"
+        else
+            touch "$webadmin_install_dir/.vpn_remote.txt"
+        fi
+        cp /root/${PROJECT_NAME}-vpn-peers.cfg "$webadmin_install_dir/.vpn.txt"
+        chown www-data:www-data "$webadmin_install_dir/.vpn_remote.txt"
+        chown www-data:www-data "$webadmin_install_dir/.vpn.txt"
+    fi
+}
+
+function restore_squirrelmail {
+    if [[ $RESTORE_APP != 'all' ]]; then
+        if [[ $RESTORE_APP != 'squirrelmail' ]]; then
+            return
+        fi
+    fi
+
+    if [ -d $USB_MOUNT/backup/squirrelmail ]; then
+        echo $"Restoring squirrelmail"
+        restore_directory_from_usb /var/local/squirrelmail squirrelmail
+    fi
+}
+
+function restore_dkim {
+    if [[ $RESTORE_APP != 'all' ]]; then
+        if [[ $RESTORE_APP != 'dkim' ]]; then
+            return
+        fi
+    fi
+
+    if [ -d $USB_MOUNT/backup/dkim ]; then
+        echo $'Restoring DKIM keys'
+	DKIM_BACKUP_DIR=/root/dkim
+        restore_directory_from_usb "${DKIM_BACKUP_DIR}" dkim
+	if [ -f "${DKIM_BACKUP_DIR}/dkim_privkey.pem" ]; then
+	    cp "${DKIM_BACKUP_DIR}/dkim_privkey.pem" /etc/exim4/dkim_privkey.pem
+	fi
+	if [ -f "${DKIM_BACKUP_DIR}/dkim_dnskey.txt" ]; then
+	    cp "${DKIM_BACKUP_DIR}/dkim_dnskey.txt" /etc/exim4/dkim_dnskey.txt
+	    local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+	    webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+	    cp "${DKIM_BACKUP_DIR}/dkim_dnskey.txt" "${webadmin_install_dir}/dmarc.txt"
+	    chown www-data:www-data "${webadmin_install_dir}/dmarc.txt"
+	fi
+    fi
+}
+
+function restore_communitynetwork {
+    if [[ $RESTORE_APP != 'all' ]]; then
+        if [[ $RESTORE_APP != 'communitynetwork' ]]; then
+            return
+        fi
+    fi
+
+    if [ -d $USB_MOUNT/backup/communitynetwork ]; then
+        echo $"Restoring communitynetwork"
+        restore_directory_from_usb "$COMMUNITYNETWORK_PATH" communitynetwork
+        resume_communitynetwork
+    fi
+}
+
+function restore_configfiles {
+    if [[ $RESTORE_APP != 'all' ]]; then
+        if [[ $RESTORE_APP != 'configfiles' ]]; then
+            return
+        fi
+    fi
+
+    # this restores *.cfg and COMPLETION_FILE
+    if [ -d $USB_MOUNT/backup/configfiles ]; then
+        echo $"Restoring configuration files"
+        temp_restore_dir=/root/tempconfigfiles
+        restore_directory_from_usb $temp_restore_dir configfiles
+
+        if [ -d $temp_restore_dir/root ]; then
+            if [ -f $temp_restore_dir/root/.nostore ]; then
+                if [ ! -f /root/.nostore ]; then
+                    touch /root/.nostore
+                fi
+            else
+                if [ -f /root/.nostore ]; then
+                    rm /root/.nostore
+                fi
+            fi
+        else
+            if [ -f $temp_restore_dir/.nostore ]; then
+                if [ ! -f /root/.nostore ]; then
+                    touch /root/.nostore
+                fi
+            else
+                if [ -f /root/.nostore ]; then
+                    rm /root/.nostore
+                fi
+            fi
+        fi
+
+        #if [ -f $temp_restore_dir$NODEJS_INSTALLED_APPS_FILE ]; then
+        #    cp -f $temp_restore_dir$NODEJS_INSTALLED_APPS_FILE $NODEJS_INSTALLED_APPS_FILE
+        #fi
+
+        #if [ -f $temp_restore_dir/root/${PROJECT_NAME}.cfg ]; then
+        #    cp -f $temp_restore_dir/root/${PROJECT_NAME}.cfg $CONFIGURATION_FILE
+        #    if [ ! "$?" = "0" ]; then
+        #        set_user_permissions
+        #        backup_unmount_drive
+        #        rm -rf $temp_restore_dir
+        #        exit 52
+        #    fi
+        #fi
+
+        #if [ -f $CONFIGURATION_FILE ]; then
+        #    # install according to the config file
+        #    libreserver -c $CONFIGURATION_FILE
+        #fi
+
+        #if [ -f $temp_restore_dir/root/${PROJECT_NAME}-completed.txt ]; then
+        #    cp -f $temp_restore_dir/root/${PROJECT_NAME}-completed.txt $COMPLETION_FILE
+        #    if [ ! "$?" = "0" ]; then
+        #        set_user_permissions
+        #        backup_unmount_drive
+        #        rm -rf $temp_restore_dir
+        #        exit 63
+        #    fi
+        #fi
+
+        if [ -f "${temp_restore_dir}${BACKUP_EXTRA_DIRECTORIES}" ]; then
+            if ! cp -f "${temp_restore_dir}${BACKUP_EXTRA_DIRECTORIES}" "${BACKUP_EXTRA_DIRECTORIES}"; then
+                set_user_permissions
+                backup_unmount_drive
+                rm -rf "$temp_restore_dir"
+                exit 62
+            fi
+        fi
+
+        # restore nginx password hashes
+        if [ -d $temp_restore_dir/root ]; then
+            if [ -f $temp_restore_dir/root/htpasswd ]; then
+                cp -f $temp_restore_dir/root/htpasswd /etc/nginx/.htpasswd
+            fi
+        else
+            if [ -f $temp_restore_dir/htpasswd ]; then
+                cp -f $temp_restore_dir/htpasswd /etc/nginx/.htpasswd
+            fi
+        fi
+
+        rm -rf $temp_restore_dir
+    fi
+}
+
+function same_admin_user {
+    PREV_ADMIN_USERNAME=$(get_completion_param "Admin user")
+    if [[ "$PREV_ADMIN_USERNAME" != "$ADMIN_USERNAME" ]]; then
+        echo $"The admin username has changed from $PREV_ADMIN_USERNAME to $ADMIN_USERNAME. To restore you will first need to install a new ${PROJECT_NAME} system with an initial admin user named $PREV_ADMIN_USERNAME"
+        set_user_permissions
+        backup_unmount_drive
+        exit 73
+    fi
+}
+
+function restore_mariadb {
+    if [[ $RESTORE_APP != 'all' ]]; then
+        if [[ $RESTORE_APP != 'mariadb' ]]; then
+            return
+        fi
+    fi
+
+    if [[ $(is_completed install_mariadb) == "0" ]]; then
+        function_check install_mariadb
+        install_mariadb
+    fi
+
+    if [ -d $USB_MOUNT/backup/mariadb ]; then
+        echo $"Restoring mysql settings"
+        keep_database_running
+        temp_restore_dir=/root/tempmariadb
+        restore_directory_from_usb $temp_restore_dir mariadb
+
+        store_original_mariadb_password
+
+        echo $'Obtaining original MariaDB password'
+        db_pass=$(cat /root/.mariadboriginal)
+        if [ ${#db_pass} -gt 0 ]; then
+            echo $"Restore the MariaDB user table"
+            if [ -d ${temp_restore_dir}${temp_restore_dir} ]; then
+                mysqlsuccess=$(mysql -u root --password="$db_pass" mysql -o < ${temp_restore_dir}${temp_restore_dir}/mysql.sql)
+            else
+                mysqlsuccess=$(mysql -u root --password="$db_pass" mysql -o < ${temp_restore_dir}/mysql.sql)
+            fi
+            # shellcheck disable=SC2181
+            if [ ! "$?" = "0" ]; then
+                echo $"Try again using the password obtained from backup"
+                db_pass=$(${PROJECT_NAME}-pass -u root -a mariadb)
+                if [ -d ${temp_restore_dir}${temp_restore_dir} ]; then
+                    mysqlsuccess=$(mysql -u root --password="$db_pass" mysql -o < ${temp_restore_dir}${temp_restore_dir}/mysql.sql)
+                else
+                    mysqlsuccess=$(mysql -u root --password="$db_pass" mysql -o < ${temp_restore_dir}/mysql.sql)
+                fi
+            fi
+            # shellcheck disable=SC2181
+            if [ ! "$?" = "0" ]; then
+                echo "$mysqlsuccess"
+                set_user_permissions
+                backup_unmount_drive
+                exit 96
+            fi
+            echo $"Restarting database"
+            systemctl restart mariadb
+            echo $"Ensure MariaDB handles authentication"
+            MARIADB_PASSWORD=$("${PROJECT_NAME}-pass" -u root -a mariadb)
+            mariadb_fix_authentication
+            DATABASE_PASSWORD=$("${PROJECT_NAME}-pass" -u root -a mariadb)
+        fi
+        rm -rf $temp_restore_dir
+    fi
+}
+
+function restore_postgresql {
+    if [[ $RESTORE_APP != 'all' ]]; then
+        if [[ $RESTORE_APP != 'postgresql' ]]; then
+            return
+        fi
+    fi
+
+    if [[ $(is_completed install_postgresql) == "0" ]]; then
+        function_check install_postgresql
+        install_postgresql
+    fi
+
+    if [ -d $USB_MOUNT/backup/postgresql ]; then
+        echo $"Restoring postgresql settings"
+        temp_restore_dir=/root/temppostgresql
+        restore_directory_from_usb $temp_restore_dir postgresql
+
+        store_original_postgresql_password
+
+        echo $'Obtaining original postgresql password'
+        db_pass=$(cat /root/.postgresqloriginal)
+        if [ ${#db_pass} -gt 0 ]; then
+            echo $"Restore the postgresql user table"
+            if [ -d ${temp_restore_dir}${temp_restore_dir} ]; then
+                mysqlsuccess=$(sudo -u postgres pg_restore ${temp_restore_dir}${temp_restore_dir}/postgresql.sql)
+            else
+                mysqlsuccess=$(sudo -u postgres pg_restore ${temp_restore_dir}/postgresql.sql)
+            fi
+            # shellcheck disable=SC2181
+            if [ ! "$?" = "0" ]; then
+                echo $"Try again using the password obtained from backup"
+                db_pass=$(${PROJECT_NAME}-pass -u root -a postgresql)
+                if [ -d ${temp_restore_dir}${temp_restore_dir} ]; then
+                    mysqlsuccess=$(sudo -u postgres pg_restore ${temp_restore_dir}${temp_restore_dir}/postgresql.sql)
+                else
+                    mysqlsuccess=$(sudo -u postgres pg_restore ${temp_restore_dir}/postgresql.sql)
+                fi
+            fi
+            # shellcheck disable=SC2181
+            if [ ! "$?" = "0" ]; then
+                echo "$mysqlsuccess"
+                set_user_permissions
+                backup_unmount_drive
+                exit 73
+            fi
+            echo $"Restarting database"
+            systemctl restart postgresql
+            echo $"Ensure postgresql handles authentication"
+            POSTGRESQL_PASSWORD=$("${PROJECT_NAME}-pass" -u root -a postgresql)
+            DATABASE_PASSWORD=$("${PROJECT_NAME}-pass" -u root -a postgresql)
+        fi
+        rm -rf $temp_restore_dir
+    fi
+}
+
+function restore_letsencrypt {
+    if [[ $RESTORE_APP != 'all' ]]; then
+        if [[ $RESTORE_APP != 'letsencrypt' ]]; then
+            return
+        fi
+    fi
+    if [ -d $USB_MOUNT/backup/letsencrypt ]; then
+        echo $"Restoring Lets Encrypt settings"
+        #restore_directory_from_usb / letsencrypt
+        restore_directory_from_usb /etc/letsencrypt letsencrypt
+        chgrp -R ssl-cert /etc/letsencrypt
+        chmod -R g=rX /etc/letsencrypt
+    fi
+}
+
+function restore_passwordstore {
+    if [[ $RESTORE_APP != 'all' ]]; then
+        if [[ $RESTORE_APP != 'passwords' ]]; then
+            return
+        fi
+    fi
+    if [ -d $USB_MOUNT/backup/passwordstore ]; then
+        store_original_mariadb_password
+        echo $"Restoring password store"
+        #restore_directory_from_usb / passwordstore
+        restore_directory_from_usb /root/.passwords passwordstore
+    fi
+}
+
+function restore_tor {
+    if [[ $RESTORE_APP != 'all' ]]; then
+        if [[ $RESTORE_APP != 'tor' ]]; then
+            return
+        fi
+    fi
+    if [ -d $USB_MOUNT/backup/tor ]; then
+        echo $"Restoring Tor settings"
+        #restore_directory_from_usb / tor
+        restore_directory_from_usb /var/lib/tor tor
+    fi
+}
+
+function restore_mutt_settings {
+    if [[ $RESTORE_APP != 'all' ]]; then
+        if [[ $RESTORE_APP != 'mutt' ]]; then
+            return
+        fi
+    fi
+    if [ -d $USB_MOUNT/backup/mutt ]; then
+        for d in $USB_MOUNT/backup/mutt/*/ ; do
+            USERNAME=$(echo "$d" | awk -F '/' '{print $6}')
+
+            # skip over configurations
+            if [[ "$USERNAME" == *'configs' ]]; then
+                continue
+            fi
+
+            if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+                if [ ! -d "/home/$USERNAME" ]; then
+                    "${PROJECT_NAME}-adduser" "$USERNAME"
+                fi
+                echo $"Restoring Mutt configurations for $USERNAME"
+                restore_directory_from_usb "/home/$USERNAME/.mutt" "mutt/${USERNAME}configs"
+                echo $"Restoring Mutt settings for $USERNAME"
+                temp_restore_dir=/root/tempmutt
+                restore_directory_from_usb "$temp_restore_dir" "mutt/$USERNAME"
+                if [ -d "$temp_restore_dir/home/$USERNAME/tempbackup" ]; then
+                    if [ -f "$temp_restore_dir/home/$USERNAME/tempbackup/.muttrc" ]; then
+                        cp -f "$temp_restore_dir/home/$USERNAME/tempbackup/.muttrc" "/home/$USERNAME/.muttrc"
+                        sed -i '/set sidebar_delim/d' "/home/$USERNAME/.muttrc"
+                        sed -i '/set sidebar_sort/d' "/home/$USERNAME/.muttrc"
+                    fi
+                    if [ -f "$temp_restore_dir/home/$USERNAME/tempbackup/Muttrc" ]; then
+                        cp -f "$temp_restore_dir/home/$USERNAME/tempbackup/Muttrc" /etc/Muttrc
+                        sed -i '/set sidebar_delim/d' /etc/Muttrc
+                        sed -i '/set sidebar_sort/d' /etc/Muttrc
+                    fi
+                else
+                    if [ -f $temp_restore_dir/.muttrc ]; then
+                        cp -f "$temp_restore_dir/.muttrc" "/home/$USERNAME/.muttrc"
+                        sed -i '/set sidebar_delim/d' "/home/$USERNAME/.muttrc"
+                        sed -i '/set sidebar_sort/d' "/home/$USERNAME/.muttrc"
+                    fi
+                    if [ -f $temp_restore_dir/Muttrc ]; then
+                        cp -f $temp_restore_dir/Muttrc /etc/Muttrc
+                        sed -i '/set sidebar_delim/d' /etc/Muttrc
+                        sed -i '/set sidebar_sort/d' /etc/Muttrc
+                    fi
+                fi
+                # shellcheck disable=SC2181
+                if [ ! "$?" = "0" ]; then
+                    rm -rf $temp_restore_dir
+                    set_user_permissions
+                    backup_unmount_drive
+                    exit 27
+                fi
+                rm -rf $temp_restore_dir
+            fi
+        done
+    fi
+}
+
+function restore_gpg {
+    if [[ $RESTORE_APP != 'gpg' ]]; then
+        return
+    fi
+
+    if [ -d $USB_MOUNT/backup/gnupg ]; then
+        for d in $USB_MOUNT/backup/gnupg/*/ ; do
+            USERNAME=$(echo "$d" | awk -F '/' '{print $6}')
+            if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+                if [ ! -d "/home/$USERNAME" ]; then
+                    "${PROJECT_NAME}-adduser" "$USERNAME"
+                fi
+                echo $"Restoring gnupg settings for $USERNAME"
+                temp_restore_dir=/root/tempgnupg
+                restore_directory_from_usb $temp_restore_dir "gnupg/$USERNAME"
+                if [ -d "$temp_restore_dir/home/$USERNAME/.gnupg" ]; then
+                    cp -r "$temp_restore_dir/home/$USERNAME/.gnupg" "/home/$USERNAME/"
+                else
+                    if [ ! -d "/home/$USERNAME/.gnupg" ]; then
+                        mkdir "/home/$USERNAME/.gnupg"
+                    fi
+                    cp -r $temp_restore_dir/* "/home/$USERNAME/.gnupg/"
+                fi
+                # shellcheck disable=SC2181
+                if [ ! "$?" = "0" ]; then
+                    rm -rf $temp_restore_dir
+                    set_user_permissions
+                    backup_unmount_drive
+                    exit 27
+                fi
+                rm -rf $temp_restore_dir
+                gpg_set_permissions "$USERNAME"
+                if [[ "$USERNAME" == "$ADMIN_USERNAME" ]]; then
+                    if ! cp -r "/home/$USERNAME/.gnupg" /root; then
+                        set_user_permissions
+                        backup_unmount_drive
+                        exit 28
+                    fi
+                    gpg_set_permissions root
+                fi
+            fi
+        done
+    fi
+}
+
+function restore_procmail {
+    if [[ $RESTORE_APP != 'all' ]]; then
+        if [[ $RESTORE_APP != 'procmail' ]]; then
+            return
+        fi
+    fi
+    if [ -d $USB_MOUNT/backup/procmail ]; then
+        for d in $USB_MOUNT/backup/procmail/*/ ; do
+            USERNAME=$(echo "$d" | awk -F '/' '{print $6}')
+            if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+                if [ ! -d "/home/$USERNAME" ]; then
+                    ${PROJECT_NAME}-adduser "$USERNAME"
+                fi
+                echo $"Restoring procmail settings for $USERNAME"
+                temp_restore_dir=/root/tempprocmail
+                restore_directory_from_usb $temp_restore_dir "procmail/$USERNAME"
+                if [ -d $temp_restore_dir ]; then
+                    if [ -d "$temp_restore_dir/home/$USERNAME/tempbackup" ]; then
+                        cp -f "$temp_restore_dir/home/$USERNAME/tempbackup/.procmailrc" "/home/$USERNAME/"
+                    else
+                        cp -f "$temp_restore_dir/.procmailrc" "/home/$USERNAME/.procmailrc"
+                    fi
+                    # shellcheck disable=SC2181
+                    if [ ! "$?" = "0" ]; then
+                        rm -rf $temp_restore_dir
+                        set_user_permissions
+                        backup_unmount_drive
+                        exit 27
+                    fi
+                    rm -rf $temp_restore_dir
+                fi
+            fi
+        done
+    fi
+}
+
+function restore_spamassassin {
+    if [[ $RESTORE_APP != 'all' ]]; then
+        if [[ $RESTORE_APP != 'spamassassin' ]]; then
+            return
+        fi
+    fi
+    if [ -d $USB_MOUNT/backup/spamassassin ]; then
+        for d in $USB_MOUNT/backup/spamassassin/*/ ; do
+            USERNAME=$(echo "$d" | awk -F '/' '{print $6}')
+            if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+                if [ -d "$USB_MOUNT/backup/spamassassin/$USERNAME" ]; then
+                    if [ ! -d "/home/$USERNAME" ]; then
+                        ${PROJECT_NAME}-adduser "$USERNAME"
+                    fi
+                    echo $"Restoring spamassassin settings for $USERNAME"
+                    temp_restore_dir=/root/tempspamassassin
+                    restore_directory_from_usb $temp_restore_dir "spamassassin/$USERNAME"
+                    if [ -d "$temp_restore_dir/home/$USERNAME" ]; then
+                        cp -rf "$temp_restore_dir/home/$USERNAME/.spamassassin" "/home/$USERNAME/"
+                    else
+                        if [ ! -d "/home/$USERNAME/.spamassassin" ]; then
+                            mkdir "/home/$USERNAME/.spamassassin"
+                        fi
+                        cp -rf "$temp_restore_dir/"* "/home/$USERNAME/.spamassassin/"
+                    fi
+                    # shellcheck disable=SC2181
+                    if [ ! "$?" = "0" ]; then
+                        rm -rf $temp_restore_dir
+                        set_user_permissions
+                        backup_unmount_drive
+                        exit 27
+                    fi
+                    rm -rf $temp_restore_dir
+                fi
+            fi
+        done
+    fi
+}
+
+function restore_user_ssh_keys {
+    if [[ $RESTORE_APP != 'all' ]]; then
+        if [[ $RESTORE_APP != 'ssh' ]]; then
+            return
+        fi
+    fi
+    if [ -d $USB_MOUNT/backup/ssh ]; then
+        # shellcheck disable=SC2231
+        for d in $USB_MOUNT/backup/ssh/*/ ; do
+            USERNAME=$(echo "$d" | awk -F '/' '{print $6}')
+            if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+                if [ ! -d "/home/$USERNAME" ]; then
+                    ${PROJECT_NAME}-adduser "$USERNAME"
+                fi
+                echo $"Restoring ssh keys for $USERNAME"
+                temp_restore_dir=/root/tempssh
+                restore_directory_from_usb $temp_restore_dir "ssh/$USERNAME"
+                if [ -d "$temp_restore_dir/home/$USERNAME/.ssh" ]; then
+                    cp -r "$temp_restore_dir/home/$USERNAME/.ssh" "/home/$USERNAME/"
+                else
+                    if [ ! -d "/home/$USERNAME/.ssh" ]; then
+                        mkdir "/home/$USERNAME/.ssh"
+                    fi
+                    cp -r "$temp_restore_dir/"* "/home/$USERNAME/.ssh/"
+                fi
+                # shellcheck disable=SC2181
+                if [ ! "$?" = "0" ]; then
+                    rm -rf $temp_restore_dir
+                    set_user_permissions
+                    backup_unmount_drive
+                    exit 66
+                fi
+                rm -rf $temp_restore_dir
+            fi
+        done
+    fi
+}
+
+function restore_user_config {
+    if [[ $RESTORE_APP != 'all' ]]; then
+        if [[ $RESTORE_APP != 'userconfig' ]]; then
+            return
+        fi
+    fi
+    if [ -d $USB_MOUNT/backup/config ]; then
+        # shellcheck disable=SC2231
+        for d in $USB_MOUNT/backup/config/*/ ; do
+            USERNAME=$(echo "$d" | awk -F '/' '{print $6}')
+            if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+                if [ ! -d "/home/$USERNAME" ]; then
+                    ${PROJECT_NAME}-adduser "$USERNAME"
+                fi
+                echo $"Restoring config files for $USERNAME"
+                temp_restore_dir=/root/tempconfig
+                restore_directory_from_usb $temp_restore_dir "config/$USERNAME"
+                if [ -d "$temp_restore_dir/home/$USERNAME/.config" ]; then
+                    cp -r "$temp_restore_dir/home/$USERNAME/.config" "/home/$USERNAME/"
+                else
+                    if [ ! -d "/home/$USERNAME/.config" ]; then
+                        mkdir "/home/$USERNAME/.config"
+                    fi
+                    cp -r $temp_restore_dir/* "/home/$USERNAME/.config/"
+                fi
+                # shellcheck disable=SC2181
+                if [ ! "$?" = "0" ]; then
+                    rm -rf $temp_restore_dir
+                    set_user_permissions
+                    backup_unmount_drive
+                    exit 66
+                fi
+                rm -rf $temp_restore_dir
+            fi
+        done
+    fi
+}
+
+function restore_user_fin {
+    if [[ $RESTORE_APP != 'all' ]]; then
+        if [[ $RESTORE_APP != 'userfin' ]]; then
+            return
+        fi
+    fi
+    if [ -d $USB_MOUNT/backup/fin ]; then
+        # shellcheck disable=SC2231
+        for d in $USB_MOUNT/backup/fin/*/ ; do
+            USERNAME=$(echo "$d" | awk -F '/' '{print $6}')
+            if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+                if [ ! -d "/home/$USERNAME" ]; then
+                    ${PROJECT_NAME}-adduser "$USERNAME"
+                fi
+                echo $"Restoring fin files for $USERNAME"
+                temp_restore_dir=/root/tempfin
+                restore_directory_from_usb $temp_restore_dir "fin/$USERNAME"
+                if [ -d "$temp_restore_dir/home/$USERNAME/.fin" ]; then
+                    cp -r "$temp_restore_dir/home/$USERNAME/.fin" "/home/$USERNAME/"
+                else
+                    if [ ! -d "/home/$USERNAME/.fin" ]; then
+                        mkdir "/home/$USERNAME/.fin"
+                    fi
+                    cp -r "$temp_restore_dir/"* "/home/$USERNAME/.fin/"
+                fi
+                # shellcheck disable=SC2181
+                if [ ! "$?" = "0" ]; then
+                    rm -rf $temp_restore_dir
+                    set_user_permissions
+                    backup_unmount_drive
+                    exit 66
+                fi
+                rm -rf $temp_restore_dir
+            fi
+        done
+    fi
+}
+
+function restore_user_local {
+    if [[ $RESTORE_APP != 'all' ]]; then
+        if [[ $RESTORE_APP != 'userlocal' ]]; then
+            return
+        fi
+    fi
+    if [ -d $USB_MOUNT/backup/local ]; then
+        # shellcheck disable=SC2231
+        for d in $USB_MOUNT/backup/local/*/ ; do
+            USERNAME=$(echo "$d" | awk -F '/' '{print $6}')
+            if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+                if [ ! -d "/home/$USERNAME" ]; then
+                    ${PROJECT_NAME}-adduser "$USERNAME"
+                fi
+                echo $"Restoring local files for $USERNAME"
+                temp_restore_dir=/root/templocal
+                restore_directory_from_usb $temp_restore_dir "local/$USERNAME"
+                if [ -d "$temp_restore_dir/home/$USERNAME/.local" ]; then
+                    cp -r "$temp_restore_dir/home/$USERNAME/.local" "/home/$USERNAME/"
+                else
+                    if [ ! -d "/home/$USERNAME/.local" ]; then
+                        mkdir "/home/$USERNAME/.local"
+                    fi
+                    cp -r $temp_restore_dir/* "/home/$USERNAME/.local/"
+                fi
+                # shellcheck disable=SC2181
+                if [ ! "$?" = "0" ]; then
+                    rm -rf $temp_restore_dir
+                    set_user_permissions
+                    backup_unmount_drive
+                    exit 66
+                fi
+                rm -rf $temp_restore_dir
+            fi
+        done
+    fi
+}
+
+function restore_certs {
+    if [[ $RESTORE_APP != 'all' ]]; then
+        if [[ $RESTORE_APP != 'certs' ]]; then
+            return
+        fi
+    fi
+    if [ -d $USB_MOUNT/backup/ssl ]; then
+        echo $"Restoring certificates"
+        mkdir /root/tempssl
+        restore_directory_from_usb /root/tempssl ssl
+        if [ -d /root/tempssl/etc/ssl ]; then
+            cp -r /root/tempssl/etc/ssl/* /etc/ssl
+        else
+            cp -r /root/tempssl/* /etc/ssl/
+        fi
+        # shellcheck disable=SC2181
+        if [ ! "$?" = "0" ]; then
+            set_user_permissions
+            backup_unmount_drive
+            exit 27
+        fi
+        rm -rf /root/tempssl
+        update-ca-certificates
+
+        # restore ownership
+        if [ -f /etc/ssl/private/xmpp.key ]; then
+            chown prosody:prosody /etc/ssl/private/xmpp.key
+            chown prosody:prosody /etc/ssl/certs/xmpp.*
+        fi
+        if [ -d /etc/dovecot ]; then
+            chown root:dovecot /etc/ssl/private/dovecot.*
+            chown root:dovecot /etc/ssl/certs/dovecot.*
+        fi
+        if [ -f /etc/ssl/private/exim.key ]; then
+            cp /etc/ssl/private/exim.key /etc/exim4
+            cp /etc/ssl/certs/exim.crt /etc/exim4
+            cp /etc/ssl/certs/exim.dhparam /etc/exim4
+            chown root:Debian-exim /etc/exim4/exim.key /etc/exim4/exim.crt /etc/exim4/exim.dhparam
+            chmod 640 /etc/exim4/exim.key /etc/exim4/exim.crt /etc/exim4/exim.dhparam
+        fi
+        if [ -f /etc/ssl/private/mumble.key ]; then
+            if [ -d /var/lib/mumble-server ]; then
+                cp /etc/ssl/certs/mumble.* /var/lib/mumble-server
+                cp /etc/ssl/private/mumble.key /var/lib/mumble-server
+                chown -R mumble-server:mumble-server /var/lib/mumble-server
+            fi
+        fi
+    fi
+}
+
+function restore_personal_settings {
+    if [[ $RESTORE_APP != 'all' ]]; then
+        if [[ $RESTORE_APP != 'personal' ]]; then
+            return
+        fi
+    fi
+    if [ -d $USB_MOUNT/backup/personal ]; then
+        # shellcheck disable=SC2231
+        for d in $USB_MOUNT/backup/personal/*/ ; do
+            USERNAME=$(echo "$d" | awk -F '/' '{print $6}')
+            if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+                if [ -d "$USB_MOUNT/backup/personal/$USERNAME" ]; then
+                    if [ ! -d "/home/$USERNAME" ]; then
+                        ${PROJECT_NAME}-adduser "$USERNAME"
+                    fi
+                    echo $"Restoring personal settings for $USERNAME"
+                    temp_restore_dir=/root/temppersonal
+                    restore_directory_from_usb $temp_restore_dir "personal/$USERNAME"
+                    if [ -d "/home/$USERNAME/personal" ]; then
+                        rm -rf "/home/$USERNAME/personal"
+                    fi
+                    if [ -d "$temp_restore_dir/home/$USERNAME/personal" ]; then
+                        # shellcheck disable=SC2086
+                        mv $temp_restore_dir/home/$USERNAME/personal /home/$USERNAME
+                    else
+                        if [ ! -d "/home/$USERNAME/personal" ]; then
+                            mkdir "/home/$USERNAME/personal"
+                        fi
+                        cp -r $temp_restore_dir/* "/home/$USERNAME/personal/"
+                    fi
+                    # shellcheck disable=SC2181
+                    if [ ! "$?" = "0" ]; then
+                        set_user_permissions
+                        backup_unmount_drive
+                        exit 18
+                    fi
+                    rm -rf $temp_restore_dir
+                fi
+            fi
+        done
+    fi
+}
+
+function restore_email {
+    if [[ $RESTORE_APP != 'all' ]]; then
+        if [[ $RESTORE_APP != 'email' ]]; then
+            return
+        fi
+    fi
+    if [ -d $USB_MOUNT/backup/mail ]; then
+        # shellcheck disable=SC2231
+        for d in $USB_MOUNT/backup/mail/*/ ; do
+            USERNAME=$(echo "$d" | awk -F '/' '{print $6}')
+            if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+                if [ ! -d "/home/$USERNAME" ]; then
+                    ${PROJECT_NAME}-adduser "$USERNAME"
+                fi
+                echo $"Restoring emails for $USERNAME"
+                temp_restore_dir=/root/tempmail
+                restore_directory_from_usb $temp_restore_dir "mail/$USERNAME"
+                if [ ! -d "/home/$USERNAME/Maildir" ]; then
+                    mkdir "/home/$USERNAME/Maildir"
+                fi
+                if [ -d "$temp_restore_dir/root/tempbackupemail/$USERNAME" ]; then
+                    tar -xzvf "$temp_restore_dir/root/tempbackupemail/$USERNAME/maildir.tar.gz" -C /
+                else
+                    tar -xzvf $temp_restore_dir/maildir.tar.gz -C /
+                fi
+                # shellcheck disable=SC2181
+                if [ ! "$?" = "0" ]; then
+                    set_user_permissions
+                    backup_unmount_drive
+                    exit 92
+                fi
+                rm -rf $temp_restore_dir
+            fi
+        done
+    fi
+}
+
+function get_restore_app {
+    if [ "${1}" ]; then
+        if [ ! -d "/home/${1}" ]; then
+            RESTORE_APP="${1}"
+            echo $"Restore $RESTORE_APP"
+        fi
+    fi
+}
+
+function simple_restore_backup_keys {
+    if [ ! $simple_backup ]; then
+        return
+    fi
+    if [ ! "$simple_backup_password" ]; then
+        simple_backup_password=$(${PROJECT_NAME}-pass -u "$ADMIN_USERNAME" -a simplebackup)
+        if [ ! "$simple_backup_password" ]; then
+            if [ -f /root/login.txt ]; then
+                simple_backup_password=$(cat /root/login.txt)
+            else
+                echo $'No restore password given'
+                umount $USB_MOUNT
+                rm -rf $USB_MOUNT
+                exit 74
+            fi
+        fi
+    fi
+    if [ ! "$ADMIN_USERNAME" ]; then
+        echo $'No administrator username'
+        umount $USB_MOUNT
+        rm -rf $USB_MOUNT
+        exit 94
+    fi
+    simple_keys_file=/root/simplebackupkeys.tar.gz
+    if [ -f $simple_keys_file ]; then
+        rm $simple_keys_file
+    fi
+
+    if [ ! -f $USB_MOUNT/config.dat ]; then
+        echo $'No keys were found on the backup drive'
+        umount $USB_MOUNT
+        rm -rf $USB_MOUNT
+        exit 35
+    fi
+    echo -n "$simple_backup_password" | gpg --batch --passphrase-fd 0 --output $simple_keys_file --decrypt $USB_MOUNT/config.dat
+
+    if [ ! -f $simple_keys_file ]; then
+        umount $USB_MOUNT
+        rm -rf $USB_MOUNT
+        exit 87
+    fi
+    cd "/home/${ADMIN_USERNAME}" || return
+    tar -xzvf $simple_keys_file
+    chown -R "${ADMIN_USERNAME}":"${ADMIN_USERNAME}" .gnupg
+
+    rm $simple_keys_file
+    simple_backup_password=
+}
+
+function trust_backup_key {
+    GPG_BACKUP_ID=$(gpg --list-keys "(backup key)" | sed -n '2p' | sed 's/^[ \t]*//')
+    if [ ! "$GPG_BACKUP_ID" ]; then
+        echo $'Unable to get gpg backup key ID'
+        umount $USB_MOUNT
+        rm -rf $USB_MOUNT
+        exit 54
+    fi
+    # shellcheck disable=SC2086
+    (echo trust && echo 5 && echo y && echo quit) | gpg --command-fd 0 --edit-key $GPG_BACKUP_ID
+}
+
+backup_device="$1"
+restore_app_name="$2"
+
+if [[ "$backup_device" == "simple" || "$backup_device" == "detect" || "$backup_device" == "auto"* ]]; then
+    if [[ "$backup_device" == "simple" ]]; then
+        # shellcheck disable=SC2034
+        simple_backup=1
+        simple_backup_password="$2"
+        restore_app_name="$3"
+    fi
+    backup_device=$(detect_connected_drives)
+    if [[ "$backup_device" != 'sd'* ]]; then
+        echo $'No backup device was detected'
+        exit 35
+    fi
+fi
+
+get_restore_app "${restore_app_name}"
+increment_restore_progress
+
+backup_mount_drive "${backup_device}" "${ADMIN_USERNAME}" "${restore_app_name}"
+increment_restore_progress
+
+check_backup_exists
+increment_restore_progress
+
+check_admin_user
+increment_restore_progress
+
+gpg_agent_setup root
+increment_restore_progress
+
+simple_restore_backup_keys
+increment_restore_progress
+
+trust_backup_key
+increment_restore_progress
+
+copy_gpg_keys
+increment_restore_progress
+
+restore_blocklist
+increment_restore_progress
+
+restore_vpn_peers
+increment_restore_progress
+
+restore_dkim
+increment_restore_progress
+
+restore_squirrelmail
+increment_restore_progress
+
+restore_communitynetwork
+increment_restore_progress
+
+restore_configfiles
+increment_restore_progress
+
+same_admin_user
+increment_restore_progress
+
+restore_passwordstore
+increment_restore_progress
+
+restore_mariadb
+increment_restore_progress
+
+restore_postgresql
+increment_restore_progress
+
+restore_letsencrypt
+increment_restore_progress
+
+restore_tor
+increment_restore_progress
+
+restore_mutt_settings
+increment_restore_progress
+
+restore_gpg
+increment_restore_progress
+
+restore_procmail
+increment_restore_progress
+
+restore_spamassassin
+increment_restore_progress
+
+restore_user_ssh_keys
+increment_restore_progress
+
+restore_user_config
+increment_restore_progress
+
+restore_user_fin
+increment_restore_progress
+
+restore_user_local
+increment_restore_progress
+
+restore_certs
+increment_restore_progress
+
+restore_personal_settings
+increment_restore_progress
+
+restore_email
+increment_restore_progress
+
+restore_apps local "$RESTORE_APP"
+increment_restore_progress
+
+set_user_permissions
+increment_restore_progress
+
+update_default_domain
+increment_restore_progress
+
+backup_unmount_drive
+increment_restore_progress
+
+# ensure that all TLS certificates are pinned
+#${PROJECT_NAME}-pin-cert all
+
+echo $"Restore from USB drive is complete. You can now unplug it."
+
+exit 0

@@ -1,0 +1,344 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# mesh utilities used by the batman and bmx commands
+#
+# License
+# =======
+#
+# Copyright (C) 2018-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# File which contains the current protocol in use
+MESH_CURRENT_PROTOCOL=/root/.mesh_protocol
+MESH_DEFAULT_PROTOCOL=/root/.mesh_protocol_default
+
+function mesh_generate_ipv6_address {
+    network=fd66:66:66
+
+    if [ "$1" ]; then
+        search_ipv6=$(ifconfig "$1" | grep "$network")
+        if [ "$search_ipv6" ]; then
+            result=$(ifconfig "$1" | grep "$network" | awk -F ' ' '{print $2}')
+            ip -6 addr add "${result}/128" dev "$1"
+            return
+        fi
+    fi
+
+    ipv6_array=( 1 2 3 4 5 6 7 8 9 0 a b c d e f )
+    a=${ipv6_array[$RANDOM%16]}${ipv6_array[$RANDOM%16]}${ipv6_array[$RANDOM%16]}${ipv6_array[$RANDOM%16]}
+    b=${ipv6_array[$RANDOM%16]}${ipv6_array[$RANDOM%16]}${ipv6_array[$RANDOM%16]}${ipv6_array[$RANDOM%16]}
+    c=${ipv6_array[$RANDOM%16]}${ipv6_array[$RANDOM%16]}${ipv6_array[$RANDOM%16]}${ipv6_array[$RANDOM%16]}
+    d=${ipv6_array[$RANDOM%16]}${ipv6_array[$RANDOM%16]}${ipv6_array[$RANDOM%16]}${ipv6_array[$RANDOM%16]}
+    e=${ipv6_array[$RANDOM%16]}${ipv6_array[$RANDOM%16]}${ipv6_array[$RANDOM%16]}${ipv6_array[$RANDOM%16]}
+    result=$network:$a:$b:$c:$d:$e
+    ip -6 addr add "${result}/128" dev "$1"
+}
+
+function mesh_protocol_init {
+    if [[ $1 == "start" ]]; then
+        # install avahi
+        sed -i "s|#host-name=.*|host-name=$(hostname)|g" /etc/avahi/avahi-daemon.conf
+        sed -i "s|host-name=.*|host-name=$(hostname)|g" /etc/avahi/avahi-daemon.conf
+        sed -i "s|use-ipv4=.*|use-ipv4=no|g" /etc/avahi/avahi-daemon.conf
+        sed -i "s|use-ipv6=.*|use-ipv6=yes|g" /etc/avahi/avahi-daemon.conf
+        sed -i "s|#disallow-other-stacks=.*|disallow-other-stacks=yes|g" /etc/avahi/avahi-daemon.conf
+        sed -i "s|disallow-other-stacks=.*|disallow-other-stacks=yes|g" /etc/avahi/avahi-daemon.conf
+        sed -i "s|hosts:.*|hosts:          files mdns4_minimal mdns4 mdns dns|g" /etc/nsswitch.conf
+    fi
+
+    # Mesh definition
+    WIFI_SSID='mesh'
+    if [ -f "$COMPLETION_FILE" ]; then
+        if grep -q "WIFI_SSID:" "$COMPLETION_FILE"; then
+            WIFI_SSID=$(grep "WIFI_SSID:" "$COMPLETION_FILE" | awk -F ':' '{print $2}')
+        fi
+        sed -i "s|WIFI_SSID:.*|WIFI_SSID:${WIFI_SSID}|g" "$COMPLETION_FILE"
+    fi
+    if [ -f /home/libreserver/ssid.txt ]; then
+        WIFI_SSID=$(cat /home/libreserver/ssid.txt)
+    fi
+    CELLID='any'
+
+    CHANNEL=2
+    HOTSPOT_CHANNEL=6
+    if [ -f "$COMPLETION_FILE" ]; then
+        if grep -q "Wifi channel:" "$COMPLETION_FILE"; then
+            CHANNEL=$(grep "Wifi channel:" "$COMPLETION_FILE" | awk -F ':' '{print $2}')
+        fi
+        sed -i "s|Wifi channel:.*|Wifi channel:${CHANNEL}|g" "$COMPLETION_FILE"
+    fi
+
+    IPFS_PORT=4001
+    TOX_PORT=33445
+    TOX_BOOTSTRAP_PORT=3389
+    GIT_SSB_PORT=7718
+    NGINX_GIT_SSB_PORT=7719
+
+    # Ethernet bridge definition (bridged to bat0)
+    BRIDGE=br-mesh
+    BRIDGE_HOTSPOT=br-hotspot
+    IFACE=
+    IFACE_SECONDARY=
+    EIFACE=eth0
+    if [[ "$MESH_INTERFACE_TYPE" == 'wlan'* ]]; then
+        WLAN_ADAPTORS=$(count_wlan)
+
+        if [ "$WLAN_ADAPTORS" -eq 0 ]; then
+            echo $'No wlan adaptors found'
+            exit 0
+        fi
+    fi
+}
+
+function get_ipv6_wlan {
+    ifconfig "${IFACE}" | grep inet6 | awk -F ' ' '{print $2}'
+}
+
+function mesh_hotspot_ip_address {
+    ifconfig "${BRIDGE}" | grep inet6 | awk -F ' ' '{print $2}'
+}
+
+function global_rate_limit {
+    if ! grep -q "net.ipv4.tcp_challenge_ack_limit" /etc/sysctl.conf; then
+        echo 'net.ipv4.tcp_challenge_ack_limit = 999999999' >> /etc/sysctl.conf
+    else
+        sed -i 's|net.ipv4.tcp_challenge_ack_limit.*|net.ipv4.tcp_challenge_ack_limit = 999999999|g' /etc/sysctl.conf
+    fi
+    sysctl -p -q
+}
+
+function assign_peer_address {
+    for i in {1..6}; do
+        number=$RANDOM
+        (( "number %= 255" ))
+        octet=$(echo "obase=16;$number" | bc)
+        if [ ${#octet} -lt 2 ]; then
+            octet="0${octet}"
+        fi
+        if [ $i -gt 1 ]; then
+            echo -n ":"
+        fi
+        echo -n "${octet}"
+    done
+}
+
+function mesh_create_app_downloads_page {
+    if [ ! -d "/root/$PROJECT_NAME/image_build/mesh_apps" ]; then
+        return
+    fi
+    if [ ! -d /var/www/html ]; then
+        return
+    fi
+    # Don't go straight to cryptpad when navigating to the peer's IP address
+    if [ -L /etc/nginx/sites-enabled/cryptpad ]; then
+        rm /etc/nginx/sites-enabled/cryptpad
+        ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+        if [ -d /etc/cryptpad ]; then
+            systemctl stop cryptpad
+            systemctl disable cryptpad
+        fi
+        fuser -k 80/tcp
+        fuser -k 443/tcp
+        systemctl restart nginx
+    fi
+    # Don't show the cryptpad icon on the desktop
+    if [ -f /home/libreserver/Desktop/cryptpad.desktop ]; then
+        mv /home/libreserver/Desktop/cryptpad.desktop /home/libreserver/.cryptpad.desktop
+    fi
+
+    cp "/root/$PROJECT_NAME/website/EN/meshindex.html" /var/www/html/index.html
+    if [ ! -f /var/www/html/ssb.apk ]; then
+        cp "/root/$PROJECT_NAME/image_build/mesh_apps/ssb.apk" /var/www/html/ssb.apk
+    fi
+    if [ ! -f /var/www/html/trifa.apk ]; then
+        cp "/root/$PROJECT_NAME/image_build/mesh_apps/trifa.apk" /var/www/html/trifa.apk
+    fi
+    if [ ! -d /var/www/html/images ]; then
+        mkdir /var/www/html/images
+    fi
+    if [ ! -f /var/www/html/images/logo.png ]; then
+        cp "/root/$PROJECT_NAME/img/logo.png" /var/www/html/images/logo.png
+    fi
+    if [ ! -f /var/www/html/images/ssb.png ]; then
+        cp "/root/$PROJECT_NAME/img/icon_patchwork.png" /var/www/html/images/ssb.png
+    fi
+    if [ ! -f /var/www/html/images/trifa.png ]; then
+        cp "/root/$PROJECT_NAME/img/trifa.png" /var/www/html/images/trifa.png
+    fi
+    if [ ! -f "/var/www/html/${PROJECT_NAME}.css" ]; then
+        cp "/root/$PROJECT_NAME/website/${PROJECT_NAME}.css" "/var/www/html/${PROJECT_NAME}.css"
+    fi
+    chown -R www-data:www-data /var/www/html/*
+}
+
+function enable_mesh_firewall {
+    /usr/sbin/nft flush ruleset
+
+    # web
+    /usr/sbin/nft add rule inet filter INPUT tcp dport 80 accept
+    /usr/sbin/nft add rule inet filter INPUT tcp dport 443 accept
+
+    #DNS
+    /usr/sbin/nft add rule inet filter INPUT tcp dport 548 accept
+
+    # avahi
+    /usr/sbin/nft add rule inet filter INPUT udp dport 5353 accept comment \"mDNS\"
+    /usr/sbin/nft add rule inet filter INPUT udp dport 5354 accept comment \"mDNS\"
+
+    # uPnP
+    /usr/sbin/nft add rule inet filter INPUT udp dport 1900 accept comment \"uPnP-DLNA\"
+
+    # IPFS
+    /usr/sbin/nft add rule inet filter INPUT tcp dport "$IPFS_PORT" accept
+
+    # Tox
+    /usr/sbin/nft add rule inet filter INPUT tcp dport "$TOX_PORT" accept comment \"Tox\"
+    /usr/sbin/nft add rule inet filter INPUT udp dport "$TOX_PORT" accept comment \"Tox\"
+    /usr/sbin/nft add rule inet filter INPUT tcp dport "$TOX_BOOTSTRAP_PORT" accept comment \"Tox Bootstrap\"
+    /usr/sbin/nft add rule inet filter INPUT udp dport "$TOX_BOOTSTRAP_PORT" accept comment \"Tox Bootstrap\"
+
+    # SSB/Scuttlebot
+    /usr/sbin/nft add rule inet filter INPUT tcp dport "$GIT_SSB_PORT" accept comment \"SSB\"
+    /usr/sbin/nft add rule inet filter INPUT tcp dport 8008 accept comment \"SSB\"
+    /usr/sbin/nft add rule inet filter INPUT tcp dport 8010 accept comment \"SSB\"
+
+    # OLSR2/MANET
+    /usr/sbin/nft add rule inet filter INPUT udp dport 269 accept comment \"OLSR2\"
+    /usr/sbin/nft add rule inet filter INPUT tcp dport 138 accept comment \"OLSR2\"
+
+    # Babel
+    /usr/sbin/nft add rule inet filter INPUT tcp dport 6696 accept comment \"Babel\"
+
+    # wireguard
+    /usr/sbin/nft add rule inet filter INPUT udp dport 51820 accept comment \"Wireguard\"
+
+    #forwarding
+    if [ -f /proc/sys/net/ipv4/ip_forward ]; then
+	echo 1 > /proc/sys/net/ipv4/ip_forward
+    fi
+    sed -i 's|# net.ipv4.ip_forward|net.ipv4.ip_forward|g' /etc/sysctl.conf
+    sed -i 's|#net.ipv4.ip_forward|net.ipv4.ip_forward|g' /etc/sysctl.conf
+    sed -i 's|net.ipv4.ip_forward.*|net.ipv4.ip_forward=1|g' /etc/sysctl.conf
+}
+
+function disable_mesh_firewall {
+    /usr/sbin/nft flush ruleset
+    echo 0 > /proc/sys/net/ipv4/ip_forward
+    sed -i 's|net.ipv4.ip_forward=.*|net.ipv4.ip_forward=0|g' /etc/sysctl.conf
+}
+
+function enable_mesh_scuttlebot {
+    if [ -f /etc/scuttlebot/.ssb/config ]; then
+        ethernet_connected=$(cat /sys/class/net/eth0/carrier)
+        if [[ "$ethernet_connected" != "0" ]]; then
+            sed -i "s|\"host\": .*|\"host\": \"$(get_ipv6_wlan)\",|g" /etc/scuttlebot/.ssb/config
+            systemctl restart scuttlebot
+        else
+            if [ ! -f /etc/nginx/sites-available/git_ssb ]; then
+                systemctl stop scuttlebot
+            else
+                systemctl restart scuttlebot
+            fi
+        fi
+    fi
+    sed -i "s|\"host\":.*|\"host\": \"${HOSTNAME}.local\",|g" /etc/scuttlebot/.ssb/config
+    systemctl restart scuttlebot
+}
+
+function enable_mesh_tor {
+    # if we have an ethernet connection to an internet router then create
+    # an onion address for this peer
+    if [[ "$ethernet_connected" != "0" ]]; then
+        systemctl enable tor
+        systemctl start tor
+        HIDDEN_SERVICE_PATH=/var/lib/tor/hidden_service_
+        if [ ! -f ${HIDDEN_SERVICE_PATH}mesh/hostname ]; then
+            echo "HiddenServiceDir ${HIDDEN_SERVICE_PATH}mesh/" >> /etc/tor/torrc
+            echo "HiddenServicePort 653 127.0.0.1:653" >> /etc/tor/torrc
+            systemctl restart tor
+        fi
+    else
+        systemctl stop tor
+        systemctl disable tor
+    fi
+}
+
+function enable_mesh_seconary_wifi {
+    if [ "$secondary_wifi_available" ]; then
+        sed -i 's|#DAEMON_CONF=.*|DAEMON_CONF="/etc/hostapd/hostapd.conf"|g' /etc/default/hostapd
+
+        mesh_hotspot_address=$(mesh_hotspot_ip_address)
+        if [[ "$mesh_hotspot_address" == *'.'* ]]; then
+            { echo "interface=${IFACE_SECONDARY}";
+              echo "bridge=${BRIDGE}";
+              echo 'driver=nl80211';
+              echo "country_code=UK";
+              echo "ssid=${WIFI_SSID}-${mesh_hotspot_address}";
+              echo 'hw_mode=g';
+              echo "channel=${HOTSPOT_CHANNEL}";
+              echo 'wpa=2';
+              echo "wpa_passphrase=$HOTSPOT_PASSPHRASE";
+              echo 'wpa_key_mgmt=WPA-PSK';
+              echo 'wpa_pairwise=TKIP';
+              echo 'rsn_pairwise=CCMP';
+              echo 'auth_algs=1';
+              echo 'macaddr_acl=0'; } > /etc/hostapd/hostapd.conf
+
+            sed -i "s|#interface=.*|interface=${IFACE_SECONDARY}|g" /etc/dnsmasq.conf
+            sed -i "s|interface=.*|interface=${IFACE_SECONDARY}|g" /etc/dnsmasq.conf
+            sed -i "s|listen-address=.*|listen-address=127.0.0.1,$mesh_hotspot_address|g" /etc/dnsmasq.conf
+            sed -i 's|#listen-address|listen-address|g' /etc/dnsmasq.conf
+            systemctl enable dnsmasq
+            systemctl restart dnsmasq
+
+            systemctl enable hostapd
+            systemctl restart hostapd
+            mesh_create_app_downloads_page
+        else
+            secondary_wifi_available=
+            echo $'WARNING: No IP address could be obtained for the hotspot'
+        fi
+    fi
+
+    if [ ! "$secondary_wifi_available" ]; then
+        systemctl stop hostapd
+        systemctl disable hostapd
+
+        # Recreate the cryptpad symlink
+        if [ -f /etc/nginx/sites-available/cryptpad ]; then
+            if [ -L /etc/nginx/sites-enabled/cryptpad ]; then
+                rm /etc/nginx/sites-enabled/default
+            fi
+            systemctl enable cryptpad
+            systemctl start cryptpad
+
+            if [ ! -L /etc/nginx/sites-enabled/cryptpad ]; then
+                ln -s /etc/nginx/sites-available/cryptpad /etc/nginx/sites-enabled/cryptpad
+                fuser -k 80/tcp
+                fuser -k 443/tcp
+                systemctl restart nginx
+            fi
+        fi
+        if [ -f /home/libreserver/.cryptpad.desktop ]; then
+            mv /home/libreserver/.cryptpad.desktop /home/libreserver/Desktop/cryptpad.desktop
+        fi
+    fi
+}
+
+# NOTE: deliberately there is no "exit 0"

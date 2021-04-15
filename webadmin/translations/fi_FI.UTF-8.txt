@@ -1,0 +1,592 @@
+About|Noin
+Accept|Hyväksyä
+Accounts software can often be quite complex, and so you'll probably want to refer to the official documentation (https://akaunting.com/docs) for details.|Tilitysohjelmat voivat usein olla melko monimutkaisia, joten sinun kannattaa viitata viralliseen dokumentaatioon (https://akaunting.com/docs) yksityiskohdista.
+Add|Lisätä
+New Member|Lisää uusi käyttäjä
+Add custom emoji|Lisää omia tunteita
+Add mp3 or ogg files to a USB drive|Lisää mp3- tai ogg-tiedostoja USB-asemaan
+Add the following to your Emacs configuration file:|Lisää seuraava Emacs-määritystiedostoon:
+Add the Syncthing IDs for your other systems and devices here|Lisää tässä muiden järjestelmien ja laitteiden synkronointitunnukset
+Add your dat links below|Lisää dat-linkit alla
+Add your RSS feeds here. Each line should be [title],[feed URL]|Lisää RSS-syötteesi tähän. Jokainen rivi tulee olla [nimi], [syöttävä URL]
+Adding music|Musiikin lisääminen
+Afrikaans|afrikaans
+Akaunting|Akaunting
+Albanian|albanialainen
+Allow new registrations|Salli uusia rekisteröintejä
+An upgrade is scheduled|Päivitys on ajoitettu
+App is being removed|Sovellus poistetaan
+App is scheduled to be installed|App on suunniteltu asennettavaksi
+Apps|sovellukset
+Arabic|arabialainen
+Backup|Varmuuskopioida
+Backup / Restore|Varmuuskopio
+Backup drive space used|Käytettävä varmuuskopiointityökalu
+Backup has failed|Varmuuskopiointi epäonnistui
+Backup in progress|Varmuuskopiointi käynnissä
+Backup is complete|Varmuuskopiointi on valmis
+Backup of keys failed|Avainten varmuuskopio epäonnistui
+Backup of keys is complete|Avainten varmuuskopiointi on valmis
+Backup your keys now?|Varmuuskopioi avaimet nyt?
+Basque|baski
+Beginning app install|Aloita sovelluksen asennus
+Beginning removal of app|App
+Belarusian|Valko
+Bosnian|Bosnia
+Bulgarian|bulgarialainen
+Cancel|Peruuttaa
+Catalan|katalaani
+Chat system|Chat-järjestelmä
+Chinese (Simplified)|Yksinkertaistettu kiina)
+Chinese (Traditional)|Kiinalainen perinteinen)
+Choose the language that you wish to translate from the list.|Valitse kieli, jonka haluat kääntää luettelosta.
+Choose your language|Valitse kielesi
+Classic chat system|Klassinen chat-järjestelmä
+Click close and then connect.|Napsauta sulje ja yhdistä sitten.
+Click on "add new" to add a new server and enter the domain name or onion address for the LibreServer, your username (which can be anything) and the VoIP server password which is the same as the password you set up the box with. Accept the self-signed SSL certificate if you don't have a Let's Encrypt certificate set up for your default domain. You are now ready to chat.|Napsauta "lisää uusi" lisätäksesi uuden palvelimen ja anna LibreServern verkkotunnuksen tai sipulin osoitteen, käyttäjänimesi (mikä voi olla mikä tahansa) ja VoIP-palvelimen salasanasta, joka on sama kuin salasanalla, jonka asetit laatikkoon. Hyväksy itse allekirjoitettu SSL-sertifikaatti, jos sinulla ei ole oletusdomeenille asetettua Salaa varmennetta. Olet nyt valmis keskustelemaan.
+Click on the lock icon at the bottom of the screen and enter the password. It should then appear unlocked. If you don't unlock then any edits you make won't be saved.|Napsauta näytön alareunassa olevaa lukkokuvaketta ja kirjoita salasana. Sen pitäisi näyttää avautuneena. Jos et avata, kaikki tehdyt muokkaukset eivät tallennu.
+Collaborative document editor|Yhteistoiminnallinen dokumentinmuokkaus
+Confirm backup password|Varmista varmuuskopiosalasana
+Continue|Jatkaa
+Copy and paste the translations file and select 'update'.|Kopioi ja liitä käännöstiedosto ja valitse 'päivitä'.
+Copy and paste the translations file into your favorite editor.|Kopioi ja liitä käännöstiedosto suosikkieditoriksi.
+Copy and paste this into an email or other messaging app and send it to the LibreServer project.|Kopioi ja liitä tämä sähköpostiin tai muuhun viestintäohjelmaan ja lähetä se LibreServer-projektiin.
+CPU temperature|CPU lämpötila
+CPU usage|prosessorin käyttö
+Croatian|kroaatti
+Czech|czech
+Danish|Tanskan kieli
+DAT Server|DAT-palvelin
+Databaseless blogging|Databaseless blogging
+Databaseless wiki|Tietotaiton wiki
+diagnostics|diagnostiikka
+diagnostics log|diagnostiikkapäiväkirja
+Different versions of the same page on different servers are represented by boxes at the bottom right of the screen. You can double click on them to see the different versions, and use the flag icon to fork if you prefer that version|Erilaisia ​​saman sivun versioita eri palvelimissa edustaa ruudut ruudun oikeassa alakulmassa. Voit kaksoisnapsauttaa niitä nähdäksesi eri versiot ja käyttää lippukuvaketta haarukkaan, jos haluat kyseisen version
+Disk I/O Speed|Levy I / O-nopeus
+Disk space used|Levytilaa käytetään
+DNS setup|DNS-asetukset
+Domain/User Blocking|Verkkotunnus / käyttäjän estäminen
+Domain:|domain:
+Domain|domain
+Dutch|Hollannin kieli
+Dynamic DNS|Dynaaminen DNS
+Edit your translations. The structure of this file is very simple. On the left is English text and on the right is translated text, with the vertical line character as a separator.|Muokkaa käännöksiäsi. Tiedoston rakenne on hyvin yksinkertainen. Vasemmalla on englanninkielinen teksti ja oikealla on käännetty teksti, jossa pystysuora viiva merkki separatorina.
+Edit, add or remove blocked domains or users. This applies to Email and XMPP addresses|Muokkaa, lisää tai poista estettyjä verkkotunnuksia tai käyttäjiä. Tämä koskee sähköposti- ja XMPP-osoitteita
+Edith enable login|Edith kirjautuu sisään
+Email system|Sähköpostijärjestelmä
+Email/XMPP: USEREMAIL|Sähköposti / XMPP: USEREMAIL
+Enable access via secure shell?|Sallitaan pääsy suojatun suojan kautta?
+Enable Updates|Ota päivitykset käyttöön
+English|Englanti
+English (US)|Englanti me)
+Ensure that dat files are always available|Varmista, että datatiedostot ovat aina käytettävissä
+Ensure that tor is installed onto your local system:|Varmista, että tor on asennettu paikalliseen järjestelmään:
+Enter a label (which can be any name you choose for the server), the default domain name of the LibreServer or preferably the mumble onion address, your username (which can also be anything) and the mumble password which is the same as the one you originally set up the box with. Leave the port number unchanged.|Anna etiketti (mikä tahansa palvelimelle valitsemasi nimi), LibreServern oletusnimialueen nimi tai mieluummin mumma sipuliosoite, käyttäjänimesi (joka voi olla myös mikä tahansa) ja salamansalaatti, joka on sama kuin olet alun perin asettanut laatikkoon. Jätä portin numero ennallaan.
+Enter a password which will be used to protect the backup|Anna salasana, jota käytetään suojaamaan varmuuskopio
+Enter first and second nicknames and check connect to this network on startup.|Anna ensimmäinen ja toinen lempinimi ja tarkista, että muodostat yhteyden tähän verkkoon käynnistyksen yhteydessä.
+Estonian|Virolainen
+Everything installed will be lost|Kaikki asennettuna menetetään
+Extremely simple note taking|Erittäin yksinkertainen muistiinpano
+Factory reset is in progress|Tehdasasetus on käynnissä
+Farsi|farsi
+Favicon|favicon
+Federated image sharing|Federated image sharing
+Federated microblogging|Federated microblogging
+Federated social network|Federated social network
+Federated wiki|Federated wiki
+Fedwiki Favicon|Fedwiki Favicon
+Fedwiki Password|Fedwiki-salasana
+Fedwiki Settings|Fedwiki-asetukset
+File storage and sync|Tiedoston tallennus ja synkronointi
+File synchronization|Tiedoston synkronointi
+Filipino|filippiiniläinen
+Finnish|Suomalainen
+First ensure that tor is installed. Within a terminal:|Varmista ensin, että tor on asennettu. Terminaalissa:
+For details see the diagnostics|Katso lisätietoja diagnostiikasta
+For details see:|Lisätietoja:
+For further information see the website at https://libreserver.org|Lisätietoja löytyy osoitteesta https://libreserver.org
+For the initial login use username: admin password admin|Aloitussivulle käytetään käyttäjätunnusta: admin salasana admin
+For the Jabber ID enter the email address from your LibreServer user settings|Jabber-tunnukselle kirjoita sähköpostiosoite LibreServer-käyttäjäasetuksistasi
+For the password use the password which you initially wrote down or stored during the setup of the LibreServer system|Salasanassa käytetään salasanaa, jonka alunperin kirjoitit tai tallennat LibreServer-järjestelmän asennuksen aikana
+Forward port 80 and 443 from your internet router|Siirtää porttia 80 ja 443 Internet-reitittimestasi
+Forward the following ports from your internet router:|Siirrä Internet-reitittimesi seuraavat portit:
+Forward the port 64738 from your internet router|Siirrä portti 64738 Internet-reitittimestasi
+Forward the port 6697 from your internet router|Lähetä portti 6697 Internet-reitittimestasi
+Forward the port 8448 from your internet router|Lähetä portti 8448 internet-reitittimestäsi
+FreeDNS code:|FreeDNS-koodi:
+LibreServer started in 2013. It was initially based on the Beaglebone Black hardware and inspired by the FreedomBox idea of an inexpensive and simple to manage internet server for the home.|LibreServer aloitti vuonna 2013. Se perustui alunperin Beaglebone Black -laitteistoon ja FreedomBox-idean innoittamana edullisen ja helppokäyttöisen internet-palvelimen kotiin.
+French|Ranskan kieli
+French (Canada)|Ranska (Kanada)
+From the initial screen select 'settings' then 'language'.|Valitse aloitusnäytöstä "asetukset" ja sitten "kieli".
+From the menu select 'Configure' then 'Settings'. Select the 'Advanced' checkbox then select 'Network'. Select 'Force TCP mode' and proxy type 'Socks5'. Hostname should be set to 'localhost' and port should be 9050.|Valitse valikosta "Määritä" ja sitten "Asetukset". Valitse Lisäasetukset-valintaruutu ja valitse sitten Verkko. Valitse 'Force TCP-tila' ja välityspalvelimen tyyppi 'Socks5'. Hostname olisi asetettava 'localhost' ja portin pitäisi olla 9050.
+Gaelic|gaelilainen
+Gallego|Gallego
+Georgian|georgialainen
+German|Saksan kieli
+German (Personal)|Saksa (henkilökohtainen)
+Git repo management|Git-repo-hallinta
+Go Back|Mene takaisin
+Go back to the F-droid initial screen and update the repositories by swiping downwards. You'll see it say "updating repositories". This might take a few minutes.|Palaa F-droidin aloitusnäyttöön ja päivitä arkistot pyyhkäisemällä alaspäin. Näet sen sanovan "arkistojen päivittäminen". Tämä saattaa kestää muutaman minuutin.
+Go back to the initial screen of the Conversations app, select the menu again, then 'Manage accounts'. Add an account by selecting the person icon with the plus next to it.|Siirry takaisin Keskustelut-sovelluksen aloitusnäyttöön, valitse valikko uudelleen ja valitse sitten Hallinnoi tilejä. Lisää tili valitsemalla henkilökuvake, jonka vieressä on plusmerkki.
+Gogs allow new registrations|Gogit sallivat uusien rekisteröintien
+Greek|kreikkalainen
+Gujarati|gujarati
+Have you written down or saved the login credentials and removed any backup drives from the system?|Oletko kirjannut tai tallentanut kirjautumistiedot ja poistanut kaikki varmuuskopiointiasemat järjestelmästä?
+Hebrew|heprealainen
+Help|auta
+Helps caregivers track sleep, feedings, diaper changes, and tummy time|Auttaa hoitajia seuraamaan nukkua, syöttöjä, vaippamuutoksia ja vatsa-aikaa
+Helps caregivers track sleep, feedings, diaper changes, and tummy time to learn about and predict babys needs without as much guess work.|Auttaa hoitajia seuraamaan uneliaisuutta, ruokailuja, vaippamuutoksia ja vatsa-aikaa oppia ja ennustaa lapsen tarpeet ilman niin paljon arvausta.
+here|tässä
+HexChat (formerly XChat) is compatible with proxying via Tor and so provides the best security when connecting to your IRC server. It will allow you to connect to your IRC server's onion address.|HexChat (aiemmin XChat) on yhteensopiva pro: n kanssa Torin kautta ja tarjoaa näin parhaan mahdollisen turvallisuuden, kun liität IRC-palvelimeen. Sen avulla voit muodostaa yhteyden IRC-palvelimesi sipulikohtaan.
+Hindi|hindi
+How to do translations|Miten tehdä käännöksiä
+Hungarian|Unkarin kieli
+Icecast|Icecast
+Icecast is quite CPU intensive. For example on an A20 based system it takes about 70% of the CPU resource. This is something to be aware of if you're running multiple apps|Icecast on melko CPU-intensiivinen. Esimerkiksi A20-pohjaisessa järjestelmässä se vie noin 70% CPU-resurssista. Tämä on jotain, joka on tiedossa, jos käytät useita sovelluksia
+Icecast is updating|Icecast päivittyy
+Icelandic|islantilainen
+Icons on the website and user interfaces are by Rashid Mhar.|Sivustoilla olevat kuvakkeet ja käyttöliittymät ovat Rashid Mhar.
+If you are an Emacs user then you can also connect to your IRC server via Emacs.|Jos olet Emacs-käyttäjä, voit myös muodostaa yhteyden IRC-palvelimeen Emacsin kautta.
+If you are using the onion address then use SSL should be unchecked and the transport encryption will be handled via the onion address itself.|Jos käytät sipuliosoitetta, käytä SSL: ää ei tarvitse valittaa ja kuljetuksen salaus käsitellään itse sipulisivun kautta.
+If you are using the ordinary domain name (clearnet/ICANN) then make sure that Use SSL is checked.|Jos käytät tavallista verkkotunnusta (clearnet / ICANN), varmista, että Käytä SSL-toimintoa on valittu.
+If you don't have a domain then just select Continue|Jos sinulla ei ole verkkotunnusta, valitse vain Jatka
+If you don't have Orbot installed then enable The Guardian Project repository from the drop down menu and install it.|Jos sinulla ei ole Orbot -ohjelmaa, ota sitten The Guardian Project -huoneisto pudotusvalikosta ja asenna se.
+If you don't need a password then just leave this blank and select Update|Jos et tarvitse salasanaa, jätä se tyhjäksi ja valitse Päivitä
+If you have a USB plugged in leave it inserted until you can confirm that the stream is working|Jos sinulla on USB-liitäntä, jätä se paikalleen, kunnes voit vahvistaa, että virta toimii
+If you have trouble accessing onion addresses paste some Tor bridges below. See https://bridges.torproject.org/bridges|Jos sinulla on vaikeuksia päästä sipulien osoitteisiin, liitä allaolevia Tor-siltoja. Katso https://bridges.torproject.org/bridges
+If you're using the Element mobile app to access your Matrix homeserver then you can significantly improve battery performance by going to the settings and changing 'Sync request timeout' to 30 seconds and 'Delay between two sync requests' to 600 seconds. Also turning off 'msgs in group chats' will help, since it will avoid getting a notification whenever a group chat event happens, which then wakes up the screen|Jos käytät Element-mobiilisovellusta Matrix-kotipalvelimen käyttämiseen, voit parantaa merkittävästi akun suorituskykyä siirtymällä asetuksiin ja valitsemalla Sync-pyynnön aikakatkaisu 30 sekuntia ja "Synkronointipyyntöjen viive kahden sekunnin välillä". Myös keskustelujen "viestien poistaminen ryhmäkeskusteluista" auttaa, koska se välttää ilmoituksen vastaanottamisen, kun tapahtuu ryhmäkeskustelu, joka sitten herättää näytön
+If your translations are accepted they will later appear in the upstream project and be usable by anyone.|Jos käännökset hyväksytään, ne tulevat myöhemmin esiin tuotantoketjun alkuprojektissa ja niitä voi käyttää kuka tahansa.
+Import|Tuonti
+In a Tor browser navigate to the onion address for Icecast and you can then play the stream|Tor-selaimessa siirry Icecastin sipuliosoitteeseen ja voit soittaa streamia
+Indonesian|indonesialainen
+Initial login|Ensimmäinen kirjautuminen
+Initial Setup|Alkuasennus
+Install|Asentaa
+Install APPNAME now?|Asenna APPNAME nyt?
+Install F-Droid|Asenna F-Droid
+Install HexChat and set up its configuration file. Assuming that you're running on a Debian or Arch based distro, this can be done on your local machine with:|Asenna HexChat ja asenna kokoonpanotiedosto. Olettaen, että olet käynnissä Debian- tai Arch-pohjaisella etäisyyksellä, tämä voidaan tehdä paikallisella koneellasi:
+Installation|Asennus
+Installing in Emacs|Asennus Emacsissa
+Installing on Desktop|Asentaminen työpöydälle
+Invalid Password|väärä salasana
+IRC|IRC
+IRC is useful for multi-user chat. The classic use case is for software development where many engineers might need to coordinate their activities, but it's also useful for meetings, parties and general socialising.|IRC on hyödyllinen monen käyttäjän keskustelussa. Klassinen käyttötapa on ohjelmistokehitykseen, jossa monet insinöörit saattavat joutua koordinoimaan toimintaansa, mutta se on myös hyödyllinen kokouksiin, bileisiin ja yleiseen seurusteluun.
+It can be shown using the command:|Se voidaan näyttää komennolla:
+It's possible to add jingles which will be played between tracks at random intervals. If some of the audio files on your USB drive are named jingle_something.mp3 then they will be used as jingles|On mahdollista lisätä jinglejä, joita soitetaan raidojen välillä satunnaisin väliajoin. Jos jotkut USB-aseman äänitiedostosta on nimetty jingle_something.mp3, niitä käytetään jingleinä
+It's recommended that you add an SRV record for Matrix to your DNS setup. How you do this will depend upon your dynamic DNS provider and their web interface. On FreeDNS on the subdomains settings in addition to the subdomain which you are using for the matrix server create an extra entry as follows:|On suositeltavaa lisätä SRV-tietue Matrix-sovellukseen DNS-asetuksiin. Näin teet tämän riippuen dynaamisesta DNS-palveluntarjoajaltasi ja heidän web-käyttöliittymästä. FreeDNS: ssä aliverkkotunnusten asetuksissa matriisipalvelimelle käytettävän aliverkkotunnuksen lisäksi voit luoda ylimääräisen merkinnän seuraavasti:
+Italian|italialainen
+Japanese|japanilainen
+Jingles|Jingles
+Kannada|kannada
+Keep changes|Pidä muutoksia
+Khmer|Khmer
+Korean|Korealainen
+Language|Kieli
+Lao|Lao
+Latvian|Latvialainen
+Lithuanian|liettualainen
+Malayalam|malajalam
+Malaysian|Malesian
+Manually upgrade now ?|Päivitä manuaalisesti nyt?
+Maori (Ngai Tahu)|Maori (Ngai Tahu)
+Maori (Waikoto Uni)|Maori (Waikoto Uni)
+Markdown blogging|Markdown bloggaaminen
+Matrix|Matriisi
+Maybe instead of editing within this user interface you prefer to use your own editor. That can be done as follows:|Ehkä tämän käyttöliittymän muokkaamisen sijaan haluat käyttää omaa editoriani. Se voidaan tehdä seuraavasti:
+Media broadcast|Media lähetetään
+Media storage and broadcast|Median tallennus ja lähetys
+Mongolian|mongolialainen
+Mumble|Jupina
+Music player|Musiikinsoittaja
+No|Ei
+No SSH public key was provided|SSH: n julkista avainta ei annettu
+none|ei mitään
+Norwegian|Norjan kieli
+Norwegian (Primary)|Norja (ensisijainen)
+Not Connected|Ei yhteyttä
+Note taking|Muistiinpanojen tekemistä
+Nynorsk|nynorsk
+Once you are on the translations screen (see the first three steps in the first section above) select the 'submit' button.|Kun olet käännöstyössä (katso ensimmäisessä vaiheessa ensimmäiset kolme vaihetta) valitse lähetä-painike.
+Once you are on the translations screen (see the first three steps in the first section above) select the language code shown at the top of the screen (usually it ends with UTF-8). You can then see the raw translations file.|Kun olet käännöstyössä (katso ensimmäisessä vaiheessa ensimmäiset kolme vaihetta), valitse näytön yläosassa näkyvä kielikoodi (yleensä se päättyy UTF-8: lla). Tämän jälkeen voit tarkastella raakakäännöstiedostoa.
+Open the F-droid app and select 'Settings' then 'Repositories'. Make sure that 'Guardian Project Official Releases' is enabled|Avaa F-droidi-sovellus ja valitse 'Asetukset' ja sitten 'Repositorit'. Varmista, että Guardian Project Official Releases on käytössä
+Open the settings. Select 'General', then 'Connect via Tor'. This will provide better protection, making it more difficult for adversaries to know who is talking to who. If connecting through Tor is unreliable and causes crashes then unselect 'Connect via Tor' on the 'General settings' and then just use your ordinary domain name.|Avaa asetukset. Valitse Yleiset ja sitten Yhdistä Torin kautta. Tämä antaa paremman suojan, mikä vaikeuttaa vastustajien tietävän kuka puhuu kenelle. Jos Torin kautta tapahtuva yhteys ei ole luotettava ja aiheuttaa kaatumisen, poista valinta "Yhdistä Torin kautta" Yleiset asetukset -kohdasta ja käytä vain tavallista verkkotunnusta.
+Open up the Conversations app and select the menu (three dots), scroll down and select 'Expert Settings' then select 'Connect to Tor'|Avaa Keskustelut-sovellus ja valitse valikko (kolme pistettä), selaa alaspäin ja valitse "Expert Settings" ja valitse "Connect to Tor"
+or|tai
+Paragraphs can be dragged up and down to change their order, or moved between pages|Kappaleita voidaan vetää ylös ja alas vaihtamaan järjestystä tai siirtyä sivujen välillä
+Password|Salasana
+Password: |Salasana:
+Paste your ssh public key here|Liitä ssh-julkinen avain täällä
+Paste your translations file below|Liitä käännöstiedostot alla
+Peertube allow new registrations|Peertube antaa uusia rekisteröintejä
+Personal accounting|Henkilökohtainen kirjanpito
+Personal or small business accounting|Henkilökohtainen tai pienyritysten kirjanpito
+Photo album|valokuva-albumi
+Please enter their username. This should be lower case only and with no spaces.|Anna käyttäjätunnuksesi. Tämän pitäisi olla pieni ja ilman välilyöntejä.
+Please insert a USB drive|Aseta USB-asema
+Please insert the USB drive to restore from now|Aseta USB-asema palamaan nyt
+Please insert your backup USB drive now|Aseta varmuuskopio USB-asema nyt
+Please specify stream name, description and genre|Määritä nimen, kuvauksen ja tyylilajin nimi
+Please wait while your appliance is configuring|Odota, kun laite on määrittänyt
+Please write down or save these credentials|Kirjoita tai tallenna nämä valtakirjat
+Pleroma|pleroma
+Pleroma allow new registrations|Pleroma antaa uusia rekisteröintejä
+Pleroma Custom Emoji|Pleroma Custom Emoji
+Pleroma Settings|Pleroma-asetukset
+Plug the USB drive into your server, then go to the Icecast app settings, add some details about your playlist, and select 'Update'|Liitä USB-asema palvelimeen, siirry sitten Icecast-sovelluksen asetuksiin, lisää tiedot soittolistasi ja valitse 'Päivitä'
+Polish|Kiillottaa
+Ports|satamat
+Portuguese|Portugalin kieli
+Portuguese (Brazil)|Portugali (Brasilia)
+Power|teho
+Press the plus button to add a Mumble server.|Paina Plus-painiketta lisätäksesi Mumble-palvelimen.
+Proceed with backup?|Suorita varmuuskopiointi?
+Proceed with drive format?|Suorita asema?
+Proceed with reset?|Jatka nollausta?
+Proceed with restore?|Jatka palautus?
+RAM used|Käytetty RAM
+Remote access|Etäyhteys
+Remove|Poistaa
+Remove any backup drives now|Poista kaikki varmuuskopioasemat nyt
+Remove APPNAME now?|Poista APPNAME nyt?
+Remove user USERNAME?|Poista käyttäjä USERNAME?
+Removing user account|Käyttäjätilien poistaminen
+Reset is in progress|Nollaus on käynnissä
+Reset to factory|Palauta tehdas
+RESET TO FACTORY DEFAULTS|PALAUTA TEHDASALUEESEEN
+Restart|Uudelleenkäynnistää
+Restore|Palauttaa
+Restore has failed|Palautus on epäonnistunut
+Restore in progress|Palauta käynnissä
+Restore is complete|Palautus on valmis
+Restore of keys failed|Avainten palautus epäonnistui
+Restore of keys is complete|Avainten palautus on valmis
+Restore password|Palauta salasana
+Restore your keys now?|Palauta avaimet nyt?
+Restoring backup keys|Varmuuskopioiden avaaminen
+Romanian|romanialainen
+RSS Reader|RSS-lukija
+Run HexChat.|Suorita HexChat.
+Running backup of keys|Avainten varmuuskopiointi
+Russian|Venäjän kieli
+Samoan|samoa
+Search again for 'Conversations' (not the legacy version), then select 'install'|Etsi uudelleen keskusteluista (ei vanhasta versiosta) ja valitse sitten "asenna"
+Search for and install Plumble.|Etsi ja asenna lävistys.
+Secure realtime collaboration|Turvallinen reaaliaikainen yhteistyö
+Secure realtime collaboration with docs, presentations, drawing and voting. Documents are ephemeral and unless you save them will be deleted when you close the browser.|Turvallinen reaaliaikainen yhteistyö asiakirjojen, esitysten, piirustuksen ja äänestyksen kanssa. Dokumentit ovat efektejä, ja jos tallennat ne, ne poistetaan, kun suljet selaimen.
+Secure Shell|Secure Shell
+Select|valita
+Select 'Apply' and 'Ok', then on the menu 'Server' and 'Connect'.|Valitse 'Käytä' ja 'OK' ja valitse valikosta 'Palvelin' ja 'Yhdistä'.
+Select 'Next' to create the account. If eveything is working after a couple of minutes you should see the account status change to 'online' in green|Luo tili valitsemalla Seuraava. Jos kaikki toimivat parin minuutin kuluttua, tilien tilan muuttuminen vihreänä on "verkossa"
+Select search (magnifying glass icon) and search for 'Orbot' (not the legacy version), then select 'install'|Valitse haku (suurennuslasikuvake) ja etsi 'Orbot' (ei vanha versio) ja valitse 'asenna'
+Select the 'translate' button. You will see a new screen with English text on the left and translated text on the right.|Valitse kääntää-painike. Näet uuden ruudun, jossa on englanninkielinen teksti vasemmalla ja käännetty teksti oikealla.
+Select the Autojoin channels tab, click Add and enter #libreserver as the channel name.|Valitse Autojoin-kanavat -välilehti, valitse Lisää ja kirjoita kanavaan nimi #libreserver.
+Select the entry within the servers box, then enter ircaddress.onion/6697 or mydomainname/6697 and press Enter.|Valitse merkintä palvelinruudusta ja syötä ircaddress.onion/6697 tai mydomainname/6697 ja paina Enter.
+Select the wiki button at the bottom of the screen, next to pages, to enable or disable editing.|Valitse sivun vieressä näytön alaosassa oleva wiki-painike, jotta muokkaus otetaan käyttöön tai poistetaan käytöstä.
+Selecting the server by pressing on it then connects you to the server so that you can chat with other connected users|Palvelimen valitseminen painamalla sitä muodostaa yhteyden palvelimeen, jotta voit keskustella muiden liitettyjen käyttäjien kanssa
+Serbian|serbialainen
+Setting up on a laptop|Asentaminen kannettavaan tietokoneeseen
+Setting up on Android|Asentaminen Android-laitteelle
+Setting up with an Android phone|Asentaminen Android-puhelimella
+Settings|asetukset
+Setup on Android|Asennus Androidissa
+Shortcode|Lyhyt koodi
+Shutdown|Sammuttaa
+Shutting down|sammutetaan
+Simple kanban|Yksinkertainen Kanban
+Simple Markdown blogging|Yksinkertainen Markdown bloggaaminen
+Simple notes|Yksinkertaiset huomautukset
+Slovak|Slovakian
+Slovenian|slovenian
+Somali|somali
+Spanish (International)|Espanja (kansainvälinen)
+SSH access is disabled|SSH-käyttö on estetty
+SSH access is enabled|SSH-yhteys on käytössä
+Stream Description|Stream Kuvaus
+Streaming media|Streaming media
+Submit|Lähetä
+Submitting your translations to the LibreServer project|Käännösten lähettäminen LibreServern projektiin
+Swedish|Ruotsin kieli
+System Monitor|Järjestelmänvalvonta
+Systems may be temporarily unavailable in the next few minutes|Järjestelmät voivat olla tilapäisesti poissa seuraavien minuuttien aikana
+Tagalog|Tagalog
+Tamil|tamil
+Thai|thaimaalainen
+Thankyou for choosing the LibreServer home internet appliance|Kiitos, kun valitsit Freedombon kotisovelluslaitteen
+The account will now be removed. This may take a minute or two. For details see:|Tili poistetaan nyt. Tämä saattaa kestää hetken tai kaksi. Lisätietoja:
+The classic low bandwidth chat system|Klassinen matala kaistanleveys chat-järjestelmä
+The LibreServer system isn't primarily aimed at companies or institutions, but if you're a one person company or freelancer then having the ability to run your own accounting system and keep the data private and also backed up is useful. Akaunting provides a nice web based system for small business accounts, and is also quite usable within a mobile web browser.|LibreServer-järjestelmää ei ole ensisijaisesti suunnattu yrityksille tai laitoksille, mutta jos olet yksi henkilöyritys tai freelancer, silloin kykenet käyttämään omaa kirjanpitojärjestelmääsi ja pitämään tiedot yksityisesti ja myös varmuuskopioidut ovat hyödyllisiä. Akaunting tarjoaa mukavan web-pohjaisen järjestelmän pienyritysten tileille ja on myös melko käyttökelpoinen mobiiliselaimessa.
+A new member is being added. This may take a minute or two.|Uusi käyttäjä lisätään. Kirjoita salasana tai tallenna se.
+The passwords do not match|salasanat eivät täsmää
+There are a few things to know about using the federated wiki.|Muutamia asioita on tiedettävä yhdistetyn wikin käyttämisestä.
+There are no apps installed. Select the plus button above to install new apps.|Sovelluksia ei ole asennettu. Aseta uudet sovellukset valitsemalla yläpuolella oleva plus-painike.
+This app may be useful if you have a new child or babysitting duties. It helps caregivers track sleep, feedings, diaper changes, and tummy time to learn about and predict baby's needs without as much guess work.|Tämä sovellus voi olla hyödyllinen, jos sinulla on uusi lapsi tai lastenhoitopalvelu. Se auttaa hoitajia seuraamaan nukkua, ravitsemuksia, vaippamuutoksia ja mahakivaa aikaa oppia ja ennustaa vauvan tarpeet ilman paljon arvauksia.
+This is a server system which enables you to run internet apps such as a blog or federated social network.|Tämä on palvelinjärjestelmä, jonka avulla voit käyttää Internet-sovelluksia, kuten blogia tai yhdistettyä sosiaalista verkostoa.
+This is certainly the type of data which you might want to keep private and away from companies who might otherwise use surveillance of parenting app data to try to guilt you into buying all sorts of junk that you don't really need or can't afford.|Tämä on varmasti tietotyyppi, jota saatat haluta pitää yksityisenä ja poissa yrityksiltä, ​​jotka saattaisivat muuten käyttää vanhempainlaskennan tietojen valvontaa yrittäessään syyttää sinua ostamasta kaikenlaisia ​​roskaa, jota et todellakaan tarvitse tai joilla ei ole varaa .
+This is your new password|Tämä on uusi salasana
+This may take a few minutes.|Tämä saattaa kestää muutaman minuutin.
+This may take a minute or two. For details see:|Tämä saattaa kestää hetken tai kaksi. Lisätietoja:
+This system isn't intended to broadcast to large audiences and the upper limit of listeners is set at ten. So a family and friends type group.|Tätä järjestelmää ei ole tarkoitus lähettää suurille yleisöille ja kuuntelijoiden yläraja asetetaan kymmeneen. Joten perhe- ja ystäväryhmä.
+This will make a backup of the keys which encrypt your backups, protecting them against accidental loss or exposure. You should keep this drive in a safe place, separate from other backups.|Tämä varmuuskopioi avaimet, jotka salaavat varmuuskopiot ja suojaavat niitä vahingossa tapahtuvalta häviämiseltä tai altistumiselta. Tämä asema on säilytettävä turvallisessa paikassa erillään muista varmuuskopioista.
+This will restore the keys used to encrypt backups.|Tämä palauttaa varmuuskopioiden salaamiseen käytetyt avaimet.
+To add a new paragraph use the + button|Lisää uusi kohta käyttämällä + -painiketta
+To claim/fork a page from another server click on the flag icon|Voit hakea / haarata sivun toisesta palvelimesta klikkaamalla lippukuvaketta
+To edit a paragraph double click on it|Voit muokata kohdan kaksoisnapsauta sitä
+To remove a paragraph just delete all of its text|Poistaaksesi kappaleen, poista vain kaikki teksti
+To upload music files install Syncthing then copy album directories into ~/Sync/music_upload, then within Koel go to settings and scan the directory /music|Voit ladata musiikkitiedostoja asentamalla Synk.:n ja kopioida albumihakemistoja ~ / Sync / music_upload, sitten Koelissa siirry asetuksiin ja skannaa hakemisto / musiikki
+Tor Bridges|Tor-sillat
+Translate|Kääntää
+Translations|käännökset
+Turkish|turkki
+Type: SRV|Tyyppi: SRV
+Ukrainian|ukrainalainen
+Uncheck use global user information.|Poista valinta käytöstä maailmanlaajuisten käyttäjätietojen avulla.
+Uninstall|Uninstall
+Update|Päivittää
+Updates settings changed|Päivitysasetukset muuttuvat
+Upgrade|parantaa
+Upgrades happen automatically. You don't need to start them manually like this, except in rare circumstances|Päivitykset tapahtuvat automaattisesti. Sinun ei tarvitse aloittaa niitä manuaalisesti näin, paitsi harvinaisissa olosuhteissa
+Upload|upload
+URL to upload from|URL lähetettäväksi
+USB drive format has failed|USB-asema on epäonnistunut
+USB drive format in progress|USB-asema on käynnissä
+USB drive format is complete|USB-asema on valmis
+Username: |Käyttäjätunnus:
+Username: admin|Käyttäjätunnus: admin
+Members|käyttäjät
+Using your preferred editor|Käyttämällä haluamaasi editoria
+Video broadcast|Videon lähetys
+Vietnamese|vietnam
+Voice chat|Äänipuhelu
+WARNING: THIS WILL ERASE ALL CONTENT OF THE USB DRIVE|VAROITUS: TÄTÄ POISTA KAIKKI USB-ASEMAN SISÄLTÖ
+We're sorry, but the username you gave is not suitable. Check that it does not contain spaces, is lower case and at least 3 characters in length.|Pahoittelemme, mutta antamasi käyttäjänimi ei ole sopiva. Varmista, että se ei sisällä välilyöntejä, on pienikokoinen ja pituudeltaan vähintään 3 merkkiä.
+Web publishing system|Web-julkaisujärjestelmä
+When done editing click on the wiki button again|Kun olet valmis, napsauta wiki-painiketta uudelleen
+When it's done it will appear on the apps screen|Kun se on tehty, se näkyy sovellusnäytössä
+When removal is finished it will disappear from apps|Kun poistuminen on valmis, se poistuu sovelluksista
+When you are done with translating select the 'import' button on the translations screen.|Kun olet valmis kääntämisen jälkeen, valitse "tuonti" -painike käännösten näytöllä.
+When you've added your translations select the 'update' button. This will update the translations file for the selected language. Note that this does not change the current language within the user interface. If you want to do that go back to the language screen, select a language and then the 'select' button.|Kun olet lisännyt käännöksesi, valitse päivitys -painike. Tämä päivittää valitun kielen käännöstiedoston. Huomaa, että tämä ei muuta nykyistä kieltä käyttöliittymässä. Jos haluat tehdä tämän, palaa kielivalikkoon valitsemalla kieli ja sitten "valitse" -painike.
+Whichever screen you are currently on, you can get back to the previous screen by clicking or pressing on the LibreServer logo at the top.|Minkälainen näyttö tällä hetkellä on, voit palata edelliseen näyttöön napsauttamalla tai painamalla yläosassa olevaa LibreServer-logoa.
+With Icecast you can run your own internet radio stream from an onion address. As always, be careful about copyright issues and preferably stick to Creative Commons music or music files that you own.|Icecastilla voit käyttää oman Internet-radion streamia sipulin osoitteesta. Kuten aina, ole varovainen tekijänoikeuskysymyksistä ja mieluummin kiinni Creative Commons -musiikista tai musiikkitiedostoista, joita omistat.
+Within the network list click, Add and enter your domain name then click Edit.|Valitse verkko-luettelossa Lisää ja syötä verkkotunnuksesi nimi ja napsauta Muokkaa.
+Within the Password field enter the password which you originally set up the box with.|Kirjoita Salasana-kenttään salasana, jonka alunperin laatikko asetettiin.
+Within the software center search for "mumble" and install the client then run it. Skip through the audio setup wizard. Cancel the initial connection window.|Ohjelmistokeskuksen sisällä etsiä "mumble" ja asenna asiakas ja suorita se. Ohita ohjatun ääniasetustoiminnon avulla. Peruuta alkutili-ikkuna.
+Write it down or save it|Kirjoita se tai tallenna se
+XMPP|XMPP
+xmpp based chat system|xmpp-pohjainen chat-järjestelmä
+Yes|Joo
+You can edit the translated text on the right side of the screen.|Voit muokata käännettyä tekstiä näytön oikealla puolella.
+You can get to this system remotely via:|Voit päästä järjestelmään etäyhteyden kautta:
+You can now go back to the initial Conversations app screen and start using it. You'll probably want to add contacts using the icon at the bottom right. For more information see the Conversations website (conversations.im) or subscribe to the chat group conversations@conference.siacs.eu|Voit nyt palata aloituskeskustelut-sovelluksen näyttöön ja aloittaa sen käytön. Luultavasti haluat lisätä yhteystietoja kuvakkeen alapuolella oikealla. Lisätietoja on Keskustelut -sivustossa (conversations.im) tai tilaamalla keskusteluryhmät conversations@conference.siacs.eu
+You can now log in with:|Voit nyt kirjautua sisään seuraavilla tavoilla:
+You can see upgrade progress|Näet päivityksen edistyksen
+You can use left and right cursor keys to move through pages|Voit siirtyä sivun kautta vasemmalla ja oikealla nuolipainikkeella
+You may also want to make another entry with the same settings but replacing tcp with udp.|Voit myös haluta tehdä toisen merkinnän samoilla asetuksilla, mutta korvata tcp: n udp: lla.
+You may now remove the USB drive|Voit nyt poistaa USB-aseman
+You might have mistyped one of them|Saatat olla väärin yksi niistä
+You will see the translations file with some instructions at the top.|Näet käännöstiedoston joidenkin ohjeiden yläosassa.
+Your password must be at least 8 characters in length and only use the characters a-z A-Z and 0-9|Salasanasi on oltava vähintään 8 merkkiä pitkä ja käytä vain a-z A-Z ja 0-9 merkkejä
+Zero knowledge pastebin|Nolla tietämyspastaa
+Theme|Teema
+Light|valo
+Dark|Tumma
+Mail|posti
+Clear|Asia selvä
+Send email through a proxy|Lähetä sähköpostia proxy-välityksellä
+If you find that you can't send out email and that you get 'failed delivery' messages returned instead then you may be able to proxy sent emails through another server. Sometimes ISPs or companies provide an SMTP server which can do this.|Lähettäjän sähköpostiosoite ja sähköpostiosoite ovat lähettäneet välityspalvelimen sähköpostitse kautta en annen palvelimen. Joskus palveluntarjoajan Internet-palveluntarjoajan palveluntarjoajan palveluntarjoaja joutuu kärsimään.
+Failed to install. For details see admin/applog.txt|Asennuksen epäonnistuminen. Lisätietoja on ohjeaiheessa admin/applog.txt
+Installed successfully|Asennettu onnistuneesti
+pihole|pihole
+Unlike browser based ad blockers, pihole works at the domain name resolution level to block domains known to privide the ads appearing in web pages.|Toisin kuin selainpohjaiset mainosten salpaajat, pihole toimii verkkotunnuksen resoluution tasolla estää verkkotunnukset, joiden tiedetään vahvistavan verkkosivujen mainoksia.
+Set your DNS IP address to the one shown and many ads will get blocked even before they're delivered to your laptop or mobile device. This can save a lot of bandwidth and generally speed up the loading of websites.| Aseta DNS-IP-osoitteen näyttöön ja monet mainokset estetään, ennen kuin ne toimitetaan kannettavalle tietokoneelle tai mobiililaitteelle. Tämä voi säästää paljon kaistanleveyttä ja yleensä nopeuttaa verkkosivustojen lataamista
+Change DNS on your internet router| Vaihda DNS Internet-reitittimessäsi
+If your internet router allows you to change the DNS IP address then this is the best way to use pihole because it will then provide coverage for all of the devices and computers in your home.|Jos Internet-reitittimesi avulla voit muuttaa DNS-IP-osoitetta, tämä on paras tapa käyttää pihole, koska se antaa kattavuuden kaikille kotona oleville laitteille ja tietokoneille.
+Change DNS on individual devices|Vaihda DNS yksittäisillä laitteilla
+If you can't change your internet router's DNS then you can do that on individual GNU/Linux systems as follows:| Jos et voi muuttaa Internet-reitittimen DNS: tä, voit tehdä sen yksittäisissä GNU/Linux-järjestelmissä seuraavasti:
+Remove or comment out any existing nameservers and add one with the IP address shown for the pihole app. Something like:|Poista olemassa olevat palvelinten nimet ja poista ne ja lisää ne yhdellä IP-osoitteen kanssa, joka on osoitettu pihole -sovellukselle. Jotain:
+Then save and exit and prevent the file from being automatically changed with:| Tallenna sitten ja poistu ja estä tiedostoa automaattisesti muuttamalla:
+If you're running the standard version of LibreServer (not the onion version) then you may need to modify your hosts file to access your own domain.|Jos käytät LibreServern vakioversion (ei sipuliversiota), sinun on ehkä muokattava isäntätiedostoasi päästäksesi omaan verkkotunnustasi.
+Then add something like:|Lisää sitten jotain:
+This only works when you're within your home network, so if you're outside of your home then undo the changes made above.|Tämä toimii vain, kun olet kotiverkossasi, joten jos olet ulkopuolella kotisi, kumoa edellä tehdyt muutokset
+The Pi-hole is a DNS sinkhole that protects your devices from unwanted content, without installing any client-side software.|Pi-reikä on DNS-läpivienti, joka suojaa laitteitasi ei-toivotulta sisällöltä ilman, että asennat mitään asiakaspuolen ohjelmistoa.
+Search|Hae
+removed|poistettu
+To get email working you will need to forward some ports. Email using your onion address will work anyway, so long as you are contacting other onion based email addresses.|Jotta saisit sähköpostia, sinun on toimitettava joitain portteja. Sähköposti käyttäen sipuliosoitteesi toimii joka tapauksessa, niin kauan kuin otat yhteyttä muihin sipulipohjaisiin sähköpostiosoitteisiin.
+Forward ports 25, 587 and 465 from your internet router|Välitä portit 25, 587 ja 465 Internet-reitittimestasi
+To access cryptpad you'll need to use a Tor browser. Navigate to the URL and enable javascript for the site under the NoScript icon. The screen will be blank for a few seconds while it's downloading the application into your browser.|Jos haluat käyttää salakirjoitinta, sinun on käytettävä Tor-selainta. Siirry URL-osoitteeseen ja salli sivuston javascript NoScript-kuvakkeen alla. Näyttö on tyhjä muutamassa sekunnissa, kun se lataa sovelluksen selaimeesi.
+Cryptpad is an almost peer-to-peer application. No data is stored on the server, which only does minimal orchestration between the clients. If an adversary subsequently obtains the server they still learn nothing.|Cryptpad on lähes peer-to-peer -sovellus, eikä palvelimelle ole tallennettu tietoja, mikä vain minimoi asiakkaiden välisen orkestroinnin. Jos vastapuoli myöhemmin saa palvelimen, he eivät vieläkään saa mitään tietoa.
+Authentication Token|Todennusmerkki
+This is only needed if you're using FreeDNS. Otherwise you can leave it blank.|Tämä on tarpeen vain, jos käytät FreeDNS-ohjelmaa. Muutoin voit jättää sen tyhjäksi.
+On the site where you obtained your domain name set up some custom nameservers as follows:|Verkkotunnuksestasi hankitulla sivustolla perustettiin joitain mukautettuja nimipalvelimia seuraavasti:
+On the FreeDNS site go to the "Dynamic DNS" section and make sure that "link updates of the same IP together" is set to ON.|Siirry FreeDNS-sivustoon kohtaan "Dynaaminen DNS" -osio ja varmista, että samojen IP-yhteyksien päivitykset tulevat ON-tilaan.
+For your main domain name select "quick cron example" and then your authentication token is the random string on the last line between the ? and = characters.|Päädynimesi nimeksi valitaan "nopea cron-esimerkki" ja sitten todennusmerkki on viimeisen rivin satunnaisjono merkkijoukon? Ja = välillä.
+Your current IP address is shown at the top of the Dynamic DNS screen of the LibreServer user interface. You can use the "Mass Mod" feature at the top of the "Subdomains" part of the FreeDNS site to set all of your subdomains to that IP address.|Voit käyttää "Mass Mod" -ominaisuutta FreeDNS-sivuston "Aliverkkotunnukset" -osan yläreunassa asettaaksesi kaikki aliverkkotunnuksesi siihen IP-osoite.
+Select the MX entry for your main domain and change the destination to 10:mydomainname rather than 10:mail.mydomainname.|Valitse MX-merkintä pääverkostasi ja muuta määränpää 10: mydomainname-osoite sijaan 10: mail.mydomainname.
+Enter your FreeDNS login details and the authentication token on the Dynamic DNS screen of the LibreServer user interface.|Syötä FreeDNS-kirjautumistiedot ja todennusmerkki LibreServer-käyttöliittymän Dynamic DNS -näytöllä.
+To make a playlist insert a USB drive containing audio files in a directory called playlist, add a description below and then select Update|Voit lisätä soittolistaan ​​USB-aseman, joka sisältää äänitiedostoja soittolistassa, lisää alla oleva kuvaus ja valitse sitten Päivitä
+To add music copy it to a directory called Music on a USB drive then plug it into your server and select Update|Lisää musiikki kopioi se USB-asemaan nimeltä Musiikki-hakemistoon ja liitä se sitten palvelimeen ja valitse Päivitä
+This is a wiki which stores its content in text files. Having no database makes maintaining it simpler, and it's not tied to any particular domain name so you can easily copy the files to a different domain if you need to.|Tämä on wiki, joka tallentaa sen sisällön tekstitiedostoihin. Tietokannan ylläpitäminen tekee siitä yksinkertaisemman, eikä se ole sidoksissa mihinkään tietylle verkkotunnukselle, joten voit helposti kopioida tiedostot toiseen verkkotunnukseen, jos tarvitset.
+Provides an easy and private way to sync calendar and contacts between devices.|Tarjoaa helpon ja yksityisen tavan synkronoida kalenteri ja yhteystiedot laitteiden välillä.
+Using on mobile|Käyttäminen mobiililaitteilla
+The user interface is a little misleading. Make sure that you log in with your username, not your email addres.|Käyttöliittymä on hieman harhaanjohtava. Varmista, että kirjaudut käyttäjänimesi, ei sähköpostiosoitteiden, kanssa.
+Also choose the advanced option and enter the subdomain that you installed etesync on.|Valitse myös lisäasetus ja syötä alasivusto, johon olet asentanut etesyncin.
+This is a well known system for real time collaborative editing of documents. Just log in, choose a document title and then edit. Different users will appear in different colours, and can also chat in the sidebar. This is installed as a private system in which only users on your LibreServer server will be able to create and edit documents, so it's not open to any random users on the internet.|Tämä on tunnettu järjestelmä reaaliaikaiseen dokumenttien yhteistoimintaan. Kirjaudu sisään vain, valitse asiakirja ja muokkaa sitä. Eri käyttäjät näyttävät eri väreissä ja voivat myös keskustella sivupalkissa. Tämä on asennettu yksityiseksi järjestelmäksi, jossa vain LibreServer-palvelimen käyttäjät voivat luoda ja muokata asiakirjoja, joten se ei ole avoin millekään satunnaiselle käyttäjälle Internetissä.
+This is a federated social networking system. It can federate with other popular fediverse systems.|Tämä on yhdistetty sosiaalisen verkostoitumisen järjestelmä. Se voi liittää muiden suosittujen fediverse-järjestelmien kanssa.
+This is a blogging system which has no database and only uses text files for storage.|Tämä on bloggausjärjestelmä, jolla ei ole tietokantaa ja käyttää vain tekstitiedostoja tallennukseen.
+This is a git hosting system. It's very similar to Github in appearance and use, is lightweight and so is well suited for use on low power ARM servers.|Tämä on git hosting -järjestelmä. Se on hyvin samanlainen kuin Github ulkonäössä ja käytössä, on kevyt ja sopii hyvin käytettäväksi pienitehoisissa ARM-palvelimissa.
+This is a web publishing and social network system which includes wiki, web pages, photo albums and file storage. It also has nomadic identity allowing you to easily move your account between different servers and privacy controls which allow you to define who can see what content.|Tämä on verkkojulkaisu ja sosiaalinen verkosto, joka sisältää wikin, verkkosivut, valokuva-albumit ja tiedoston tallennuksen. Se on myös nomadinen henkilöllisyys, jonka avulla voit helposti siirtää tilisi eri palvelinten ja tietoturvavalvonnan välillä. Näin voit määrittää, kuka voi nähdä sisällön.
+Kanbans are one way of managing projects. They're traditionally used in businesses but can also be useful for personal TODO lists or within open source or DIY projects. If you have a list of things which need to be done and want to keep track of progress then this provides a way to do that.|Kanban on yksi tapa hallita hankkeita. Niitä käytetään perinteisesti yrityksissä, mutta ne voivat olla hyödyllisiä myös henkilökohtaisiin TODO-luetteloihin tai avoimen lähdekoodin tai DIY-projektien yhteydessä. Jos sinulla on luettelo asioista, jotka on tehtävä ja haluat seurata edistymistä, niin tämä tarjoaa keinon tehdä niin.
+The default login is username "admin" and the login password which you usually use for the web interface.|Oletus kirjautumiseen on käyttäjätunnus "admin" ja kirjautumissalasana, jota yleensä käytät web-käyttöliittymään.
+If you're using a Tor browser then you may need to allow javascript for the site by selecting the NoScript icon.|Jos käytät Tor-selainta, sinun on ehkä sallittava sivuston javascript valitsemalla NoScript-kuvake.
+Extra users can be added from the drop down menu at the top right of the screen, under "Users management".|Lisäkäyttäjiä voidaan lisätä pudotusvalikosta näytön oikeassa yläkulmassa kohdassa Käyttäjien hallinta.
+This enables you to store your music on the LibreServer server and then access it from any internet connected device.|Tämän avulla voit tallentaa musiikkisi LibreServer-palvelimelle ja käyttää sitä mistä tahansa internetyhteydestä.
+This is a simple and lightweight photo album for the web. Whether you're an amateur or professional photographer, or want to publish random holiday pics or cat pictures. Lychee just does what it says it does without any fuss.|Tämä on yksinkertainen ja kevyt valokuva-albumi verkossa. Olitpa amatööri tai ammattimainen valokuvaaja tai haluat julkaista satunnaisia ​​loma-kuvia tai kissan kuvia. Lychee vain tekee sen, mitä se sanoo, ilman mitään hätää.
+This provides an webmail interface suitable for use on desktop or mobile clients and with built in support for encryption.|Tämä tarjoaa webmail-rajapinnan, joka soveltuu käytettäväksi työpöydällä tai mobiililaitteilla ja sisäänrakennetulla salauksella.
+This is a system for file synchronisation and also has many other plugins for calendar, videoconferencing, collaborative document editing and federated file sharing.|Tämä on tiedostojen synkronointijärjestelmä, ja siinä on myös monia muita kalenteri-, videokonferensseja, yhteistoiminnallisten asiakirjojen muokkausta ja tiedostojen jakamista.
+This is a video hosting system which uses webtorrent to help distribute the files to or between clients.|Tämä on video hosting-järjestelmä, joka käyttää webtorrentia jakamaan tiedostot asiakkaille tai niiden välillä.
+Use the username 'root' and your usual password to log in as the administrator. You can then change settings as needed.|Käytä käyttäjätunnusta "root" ja tavallinen salasana kirjautumalla sisään järjestelmänvalvojana. Voit muuttaa asetuksia tarpeen mukaan.
+This is an OStatus and ActivityPub compatible social networking server which federates with other fediverse systems. It is high-performance and so is especially well suited for running on low power single board computers without much RAM.|Tämä on OStatus- ja ActivityPub-yhteensopiva sosiaalinen verkko-palvelin, joka liittää muiden fediversien järjestelmien kanssa. Se on erittäin suorituskykyinen, joten se sopii erityisen hyvin käytettäväksi pienitehoisissa yhden korttikoneissa ilman paljon RAM-muistia.
+Since Pleroma supports the same protocols, any Mastodon client for Android should work with it.|Koska Pleroma tukee samoja protokollia, minkä tahansa Androidin Mastodon-asiakkaan pitäisi työskennellä sen kanssa.
+This is a fork of GNU Social which includes some extra fixes and optimisations to improve performance. It federates with other fediverse servers, such as Pleroma or Mastodon.|Tämä on GNU Socialin haarukka, joka sisältää joitain lisäkorjauksia ja optimointeja suorituskyvyn parantamiseksi. Se yhdistää muiden palvelimien kanssa, kuten Pleroma tai Mastodon.
+This is an encrypted pastebin, such that the server has zero knowledge of the content. It's intended for small amounts of text less than 32K in length. It's not intended for transfering large files, or for storing pastes for more than a day.|Tämä on salattu lippu, jolla palvelimella ei ole tietoa sisällöstä. Se on tarkoitettu pienempiin tekstiin, joiden pituus on alle 32 k. Se ei ole tarkoitettu suurien tiedostojen siirtämiseen tai tahran säilyttämiseen yli päivälle.
+This is a web based user interface to the Matrix federated chat system. You will need to have already installed the Matrix app for this to work.|Tämä on Web-pohjainen käyttöliittymä Matrix-yhdistyneeseen chat-järjestelmään. Matrix-sovelluksen on oltava asennettuna jo toimimaan.
+This is yet another chat system, but the server part of it isn't federated and so it's suitable for small private groups rather than for general public discussions.|Tämä on vielä uusi chat-järjestelmä, mutta sen palvelinosa ei ole yhdistetty, joten se sopii pienille yksityisille ryhmille eikä yleisön keskusteluille.
+Provides a similar capability to proprietary systems such as Dropbox, and also is well suited for use with low power single board computers. You can have one or more directories which are synchronized across your various laptops/desktops/devices, and this makes it hard for you to ever lose important files. Of course, you don't necessarily need to be running a server in order to use Syncthing, but if you do have a server which is always running then there's always at least one place to synchronize your files to or from.|Edellyttää samanlaisia ​​ominaisuuksia kuin omaperäiset järjestelmät, kuten Dropbox, ja soveltuu hyvin myös pienitehoisten yhden korttikoneen käyttöön. Voit saada yhden tai useamman hakemiston, joka on synkronoitu eri kannettavien tietokoneiden / pöytätietokoneiden / laitteiden välillä, mikä vaikeuttaa sinua menettämässä tärkeitä tiedostoja. Tietenkään sinun ei välttämättä tarvitse käyttää palvelinta, jotta voit käyttää synkronointia, mutta jos sinulla on palvelin, joka on aina käynnissä, on aina vähintään yksi paikka synkronoida tiedostot tai lähde.
+On a Debian based system:|Debian-järjestelmässä:
+Or on Android search for the Syncthing app.|Tai Android-haulla Synktinen sovellus.
+Using the settings button within the LibreServer web interface for the Syncthing app you can then paste in any IDs for other devices. They will then sync with your server.|Käyttämällä Asetukset-painiketta LibreServer-web-käyttöliittymässä Synkronoitosovelluksen avulla voit liittää minkä tahansa tunnuksen muihin laitteisiin. Ne synkronoituvat sitten palvelimen kanssa.
+A system for privately creating and sharing notes and images, similar to Evernote. It can be set up so that a small number of users on the server can share their notes in a convenient way. It doesn't have any web user interface, and you need to install native clients on mobile or laptop/desktop machines.|Järjestelmä, joka luo ja jakaa muistiinpanoja ja kuvia, kuten Evernote. Se voidaan määrittää niin, että pieni määrä käyttäjiä palvelimella voi jakaa muistiinpanonsa kätevästi. Se ei ole web-käyttöliittymää, ja sinun on asennettava alkuperäisiä asiakkaita mobiiliin tai kannettavaan / pöytäkoneeseen.
+Since the data at rest is stored in PGP encrypted format this is a good system to use in cases where security really is a critical factor.|Koska lepotilassa olevat tiedot tallennetaan PGP-salattuun muotoon, tämä on hyvä järjestelmä, jota käytetään tapauksissa, joissa turvallisuus on todella kriittinen tekijä.
+Go to https://turtlapp.com/download and you'll then be able to download the appropriate app for your laptop or phone.|Siirry osoitteeseen https://turtlapp.com/download ja voit sitten ladata sopivan sovelluksen kannettavaksi tai puhelimellesi.
+Run the downloaded native app then at the bottom of the screen select "advanced settings" and enter your turl domain name, then register a new account. The password can be anything you choose, but since the client side encryption depends upon having a good password make it a long random string generated by a password manager such as KeepassX.|Suorita ladattu natiivi sovellus, valitse näytön alareunasta "Lisäasetukset" ja kirjoita turl-verkkotunnuksesi ja rekisteröi uusi tili. Salasana voi olla mikä tahansa, mutta koska asiakaspuolen salaus riippuu siitä, että sinulla on hyvä salasana, se tekee salasanan hallinnan, kuten KeepassX: n, pitkän satunnaisen merkkijonon.
+You should then be able to log in and start using the app. You might also want to invite any other users of your LibreServer system to also sign up using the turtl domain name which you specified during installation.|Sinun pitäisi sitten kirjautua sisään ja aloittaa sovelluksen käyttäminen. Haluat myös haluta kutsua muita LibreServer-järjestelmän käyttäjiä myös rekisteröitymään turtl-verkkotunnuksen avulla, jonka olet määrittänyt asennuksen aikana.
+Disabling new registrations|Uusien rekisteröitymisten poistaminen käytöstä
+Once you have set up the server with however many users are needed you can then disable any new registrations by selecting Turtl on the LibreServer web interface and going to the settings screen.|Kun olet määrittänyt palvelimen, mutta tarvitset kuitenkin paljon käyttäjiä, voit poistaa kaikki uudet rekisteröinnit valitsemalla Turtl-ohjelman Freedombon web-käyttöliittymästä ja siirtymällä asetusten näyttöön.
+This is similar to Hubzilla but with a reduced range of features concentrating exclusively upon social networking with the latest version of the Zot protocol. Nomadic identity is supported, so to can export your channels and import them on other servers if necessary, without losing followers.|Tämä on samanlainen kuin Hubzilla mutta pienempi valikoima ominaisuuksia, jotka keskittyvät yksinomaan sosiaaliseen verkostoon uusimman Zot-protokollan avulla. Nomadista identiteettiä tuetaan, jotta voimme viedä kanavasi ja tuoda ne muille palvelimille, ilman että menetämme seuraajia.
+Zap also has sophisticated privacy controls which enable you to decide exactly how you wish to interact with other users and what information of yours they can view.|Zapilla on myös hienostunut tietosuojavalvonta, jonka avulla voit päättää tarkasti, miten haluat vaihtaa muiden käyttäjien kanssa ja mitä tietoja he voivat tarkastella.
+The first account you register will be the administrator user, and from there you can go to the admin settings and disable new registrations if needed.|Rekisteröitymän ensimmäinen tili on järjestelmänvalvojan käyttäjä, ja sieltä voit siirtyä admin-asetuksiin ja poistaa tarvittaessa uusia rekisteröintejä.
+To find other users to follow select "directory" from the drop down menu at the top right of the screen and set "this site only" to "no".|Voit etsiä muita käyttäjiä seuraamaan valikosta "hakemisto" pudotusvalikosta näytön oikeassa yläkulmassa ja asettamaan "vain tämä sivusto" -asetukseksi "ei".
+There is an Android app available called Nomad.|Käytössä on Android-sovellus nimeltä Nomad.
+End-to-end encrypted sync of calendar and contacts between devices|Kalenterin ja yhteyksien välinen salattu salattu synkronointi laitteiden välillä
+Secure, end-to-end encrypted and journaled personal information cloud synchronization for Android and the desktop, supporting contacts and calendars|Turvallinen, päästä päähän salattu ja päivitetty henkilökohtainen tieto pilvi synkronointi Android ja työpöydälle, yhteystietojen ja kalenterien tukeminen
+Nomadic social network server|Nomadinen sosiaalisen verkon palvelin
+Zap is a full featured social network application running under the Zot6 protocol. It provides enhanced privacy modes and identity/content mirroring across multiple servers ("nomadic identity").|Zap on täysin varusteltu sosiaalisen verkon sovellus, joka toimii Zot6-protokollan alla. Se tarjoaa parannetut yksityisyysmoodit ja identiteetin / sisällön peilaus useissa palvelimissa ("nomadinen identiteetti").
+Change background|Vaihda taustakuva
+Diagnostics|diagnostiikka
+Please wait while your app is installing|Odota, kun sovelluksesi asentuu
+The app could not be installed|Sovellusta ei voitu asentaa
+Add a new member|Lisää uusi jäsen
+Kanban focussed on simplicity and minimalism|Kanban keskittyi yksinkertaisuuteen ja minimalismiin
+Emails, chat or social network posts will be blocked if they contain the following words or phrases|Sähköposti-, chat- tai sosiaalisen verkoston viestit estetään, jos ne sisältävät seuraavat sanat tai lauseet
+Muted words|Poistettu sanat
+Disk space is getting too low. Installation stopped.|Levytila on liian alhainen. Asennus pysähtyi.
+Password changed|Salasana vaihdettu
+Play media from any UPNP/DLNA device on your local network|Toista media paikallisverkon UPNP / DLNA-laitteelta
+This allows you to play media on any DLNA supporting device within your local network.|Näin voit toistaa mediaa missä tahansa DLNA-tukilaitteessa paikallisessa verkossasi.
+No Access Control|Ei pääsyä
+DLNA doesn't have any access controls, so keep in mind that anyone with a mobile device or laptop within your local network is potentially able to play any media on the server. Hence this may not be suitable for situations where you want parental control over what media can be accessed.|DLNA: lla ei ole käyttöoikeuksien hallintaa, joten muista, että kuka tahansa, jolla on paikallisverkossa oleva mobiililaite tai kannettava tietokone, voi mahdollisesti pelata palvelimella olevia tietovälineitä. Siksi tämä ei ehkä sovi tilanteisiin, joissa haluat, että vanhempien valvonta on mahdollista, millä mediasovelluksella on pääsy.
+Adding Media|Median lisääminen
+You can add media by selecting the settings button from the DLNA app.|Voit lisätä tiedotusvälineitä valitsemalla DLNA-sovelluksen asetukset-painikkeen.
+Your homepage can also be accessed with a Tor browser on:|Kotisivullesi pääsee myös Tor-selaimella:
+Chat|Chat
+Media|Media
+Social|sosiaaliset
+Sync|sync
+Publishing|julkaisu
+Other|Muut
+Recommended Firefox Add-ons:|Suositellut Firefox-lisäosat:
+Change your default domain name|Muuta oletusalueen nimeä
+Do you want to change your default domain name to:|Haluatko muuttaa oletusalueen nimeäsi:
+rsync failed|rsync epäonnistui
+For most purposes Syncthing is an easier file synchronization system, but rsync is still a reliable solution if you prefer to do things the more traditional way or if you just want to create a mirror from an existing rsync server.|Useimmissa tapauksissa Syncthing on helpompi tiedostojen synkronointijärjestelmä, mutta rsync on edelleen luotettava ratkaisu, jos haluat tehdä asioita perinteisemmällä tavalla tai jos haluat vain luoda peilin olemassa olevasta rsync-palvelimesta.
+Rsync is unencrypted but can be used via an onion address for transport security. If you are using it via your domain name then third parties will be able to see the content, but this may not matter if you are synchronizing already public files, such as GNU/Linux distro downloads.|Rsync on salaamaton, mutta sitä voidaan käyttää sipuliosoitteen avulla kuljetuksen turvallisuuteen. Jos käytät sitä verkkotunnuksesi kautta, kolmannet osapuolet voivat nähdä sisällön, mutta tämä ei välttämättä ole tärkeää, jos synkronoit jo julkisia tiedostoja, kuten GNU / Linux-lataus.
+Avoid using this for private data, unless you are exclusively using rsync via the onion address.|Vältä tätä käyttöä yksityisille tiedoille, ellet käytä yksinomaan rsyncia sipuliosoitteen kautta.
+Creating a Mirror|Peilin luominen
+Select the Settings button then enter the domain and module name for the mirror. From then on synchronization will happen once per day.|Valitse Asetukset-painike ja kirjoita sitten peilin domeeni ja moduulin nimi. Siitä lähtien synkronointi tapahtuu kerran päivässä.
+Local Sync|Paikallinen synkronointi
+If you created a mirror to your server you can then sync those files to other machines or devices on your local network as follows:|Jos olet luonut palvelimelle peilin, voit synkronoida nämä tiedostot muihin paikallisen verkon koneisiin tai laitteisiin seuraavasti:
+If "libreserver" doesn't work then you can substitute the local IP address of your server.|Jos "libreserver" ei toimi, voit korvata palvelimesi paikallisen IP-osoitteen.
+Create a mirror of public files|Luo julkisten tiedostojen peili
+The domain name could not be changed|Verkkotunnusta ei voitu muuttaa
+This might be because you do not have ports 80 and 443 forwarded to the server.|Tämä voi johtua siitä, että palvelimelle ei ole lähetetty portteja 80 ja 443.
+Check the port forwarding settings on your internet router.|Tarkista internet-reitittimen porttisiirtoasetukset.
+Please specify a domain name which will be used for your email or XMPP address.|Määritä verkkotunnus, jota käytetään sähköpostiisi tai XMPP-osoitteeseesi.
+Please forward the following ports from your internet router:|Lähetä seuraavat portit Internet-reitittimestäsi:
+Search for 'Barcode Scanner', then select 'install'|Etsi 'Viivakoodinlukija' ja valitse sitten 'Asenna'
+Download the DarkMessenger apk file via the link below, preferably using a Tor based browser, then install it|Lataa DarkMessenger apk-tiedosto alla olevan linkin avulla, mieluiten Tor-pohjaisen selaimen avulla, ja asenna se sitten
+Run DarkMessenger and the initial account setup will be shown. DarkMessenger only allows onion addresses to be used to create accounts|Suorita DarkMessenger ja alkuperäinen tiliasetus näytetään. DarkMessenger sallii vain sipuliosoitteiden käytön tilin luomisessa
+You can obtain your onion XMPP address from the Members section within the web interface, usually at http://libreserver/admin or http://libreserver.local/admin. If you can't easily copy and paste it into the account setup within DarkMessenger then you can use the barcode scanner on the QRcode displayed|Voit hankkia sipulisi XMPP-osoitteen Web-käyttöliittymän jäsenten osiosta, yleensä osoitteesta http: // libreserver / admin tai http: //libreserver.local/admin. Jos et voi kopioida ja liittää sitä helposti DarkMessengerin tiliasetukseen, voit käyttää viivakoodinlukijaa näytettävällä QR-koodilla
+Enter the password which you stored during initial setup of the system and also the onion domain|Syötä salasana, jonka tallensit järjestelmän alkuasennuksen aikana, sekä sipuli-verkkotunnuksen
+You should now be able to connect to your onion XMPP account and set an avatar image if necessary|Sinun pitäisi nyt pystyä muodostamaan yhteys sipulisi XMPP-tiliin ja asettamaan avatar-kuvan tarvittaessa
+When sending or receiving pictures or other attachments for the first time you will need to accept the self-signed certificates. Select 'always' twice. This should only happen once per contact|Kun lähetät tai vastaanotat kuvia tai muita liitetiedostoja ensimmäistä kertaa, sinun on hyväksyttävä itse allekirjoitetut varmenteet. Valitse "aina" kahdesti. Tämä tulisi tapahtua vain kerran kontaktissa
+Under Settings/Expert you may want to change the automatic message deletion period. By default this is one day|Asetukset / Asiantuntija -kohdassa voit halutessasi muuttaa automaattista viestin poistoaikaa. Oletuksena tämä on yksi päivä
+When setting up a group chat first ensure that you have separately confirmed two way messaging with each of the participants individually|Kun ryhmäkeskustelu asetetaan, varmista ensin, että olet vahvistanut erikseen kahden osapuolen viestit jokaisen osanottajan kanssa
+Enable strict TLS authentication between XMPP servers?|Ota käyttöön tiukka TLS-todennus XMPP-palvelimien välillä?
+If you or other people are having difficulty joining multi-user chat then enabling this might help|Jos sinulla tai muilla henkilöillä on vaikeuksia liittyä monen käyttäjän keskusteluun, tämä voi auttaa
+Music can be uploaded using NextCloud. Install the app and then create a directory called 'Music'.|Musiikki voidaan ladata NextCloudin avulla. Asenna sovellus ja luo sitten hakemisto nimeltä ”Musiikki”.
+Drag your files into the Music directory and they will then become available to mpd.|Vedä tiedostot Musiikki-hakemistoon ja ne tulevat sitten saataville mpd: lle.
+Select search (magnifying glass icon) and search for 'MALP', then select 'install'|Valitse haku (suurennuslasin kuvake) ja etsi "MALP", valitse "asenna"
+Open MALP and from the settings select Profiles|Avaa MALP ja valitse asetukset Profiilit
+Enter the following settings:|Anna seuraavat asetukset:
+Save the settings by selecting the disk icon at the top right of the screen|Tallenna asetukset valitsemalla näytön oikeassa yläkulmassa oleva levykuvake
+You should now be able to connect to mpd on your server and select and play albums.|Nyt sinun pitäisi pystyä muodostamaan yhteys palvelimellesi mpd: ään ja valitsemaan ja toistamaan albumeita.
+In a non-Tor browser navigate to http://libreserver:8250 or http://[server local IP address]:8250 and you should be able to play the selected album.|Ei-Tor-selaimessa siirry osoitteeseen http: // libreserver: 8250 tai http: // [palvelimen paikallinen IP-osoite]: 8250 ja sinun pitäisi pystyä toistamaan valittu albumi.
+Setting up on the desktop|Asennus työpöydälle
+Install Sonata|Asenna Sonata
+Run Sonata and enter the following settings:|Suorita Sonata ja anna seuraavat asetukset:
+You should now be able to see your albums listed and be able to add them to the currently playing list.|Nyt sinun pitäisi pystyä näkemään luetellut albumisi ja lisäämään ne parhaillaan toistettavaan luetteloon.
+In a non-Tor browser navigate to http://libreserver:8250 or http://[server local IP address]:8250 and you should be able to play the selected album.|Ei-Tor-selaimessa siirry osoitteeseen http: // libreserver: 8250 tai http: // [palvelimen paikallinen IP-osoite]: 8250 ja sinun pitäisi pystyä toistamaan valittu albumi.
+Select your music file format:|Valitse musiikkitiedostomuoto:
+pixelfed allow new registrations|pixelfed sallii uusien rekisteröintien
+Groceries and household management|Elintarvikkeet ja kotitalouden hallinta
+Organization|organisaatio
+VPN domain or IP address:|VPN-verkkotunnus tai IP-osoite:
+VPN public key:|VPN-julkinen avain:
+Public key for this server:|Tämän palvelimen julkinen avain:
+Public keys for the laptops or devices that you wish to be able to use this server to connect to the internet.|Julkiset avaimet kannettaville tietokoneille tai laitteille, joita haluat käyttää palvelimella Internet-yhteyden muodostamiseen.
+Network|verkko
+Set your coordinates on the map|Aseta koordinaatit kartalle
+Longitude:|pituusaste:
+Latitude:|Latitude:
+Join|Liittyä seuraan
+Docs|Docs
+Community network map is being generated|Yhteisön verkkokarttaa luodaan
+Please wait|Odota
+IP address (optional):|IP-osoite (valinnainen):
+Export|Viedä
+Add a new community network node|Lisää uusi yhteisöverkon solmu
+Remove a community network node|Poista yhteisöverkon solmu
+WARNING: Only change this if you know what you are doing. Selecting the wrong mesh protocol may make your server disappear from the network, and be difficult to recover|VAROITUS: Muuta tätä vain, jos tiedät, mitä olet tekemässä. Väärän verkkoprotokollan valinta voi tehdä palvelimellesi katoamasta verkosta ja olla vaikeasti palautettavissa
+WARNING: Only change this if you know what you are doing. Setting an incorrect IP address or gateway may cause your server to become inaccessible, and may be difficult to recover|VAROITUS: Muuta tätä vain, jos tiedät, mitä olet tekemässä. Virheellisen IP-osoitteen tai yhdyskäytävän asettaminen saattaa aiheuttaa sen, että palvelin ei pääse käsiksi, ja se voi olla vaikea palauttaa
+Choose your network:|Valitse verkko:
+Language is being changed|Kieli muuttuu
+Community Network|Yhteisön verkosto
+Theme is being changed|Teemaa muutetaan
+Install a new app|Asenna uusi sovellus
+Restore APPNAME from backup?|Palauta APPNAME varmuuskopiosta?
+Add or remove feeds|Lisää tai poista syötteitä
+Enter an RSS feed URL to add or remove. The domain name is enough for removals.|Anna RSS-syötteen URL-osoite, jonka haluat lisätä tai poistaa. Verkkotunnuksen nimi riittää muuttoihin.
+Show onion address|Näytä sipulin osoite
+Multi User Dungeon from the era of Welsh mainframe computing|Multi User Dungeon Welsh-mainframe -tietokoneen aikakaudelta
+Forward the UDP port 5100 from your internet router|Välitä UDP-portti 5100 Internet-reitittimestäsi
+Since this app only uses the UDP protocol it won't work via an onion address. If you are running the onion only version of LibreServer then use its local IP address (usually 192.168.1.x) to connect to the game on the above port.|Koska tämä sovellus käyttää vain UDP-protokollaa, se ei toimi sipuliosoitteen kautta. Jos käytät vain Freedombonin sipuliversiota, käytä sen paikallista IP-osoitetta (yleensä 192.168.1.x) muodostaaksesi yhteyden peliin yllä olevassa portissa.
+Near infinite world block sandbox game|Lähellä ääretön maailmanlohkon hiekkalaatikkopeli
+Federation List|Yhdistysluettelo
+Add or remove the domain names for instances with whom you wish to federate. Don't include your own domain names.|Lisää tai poista verkkotunnuksia sellaisiin tilanteisiin, joiden kanssa haluat yhdistää. Älä lisää omia verkkotunnuksia.
+Notify via|Ilmoita kautta
+Receive admin notifications|Vastaanota järjestelmänvalvojan ilmoituksia
+New calendar event|Uusi kalenteritapahtuma
+New direct message|Uusi suora viesti
+New reply|Uusi vastaus
+New shared item|Uusi jaettu kohde
+New follow request|Uusi seuraa pyyntö
+Number of connections on HTTP port is high|Yhteyksien määrä HTTP-portissa on suuri
+Number of connections on HTTPS port is high|Yhteyksien määrä HTTPS-portissa on suuri
+Cryptpad allow new signups|Salaustekniikka sallii uusien rekisteröintien
+Name of the Dungeon Master|Dungeon-päällikön nimi
+Message Of The Day|Päivän viesti
+port|verkkoportti
+Server Password|Palvelin salasana
+DNS over TLS|DNS TLS: n kautta
+IP Address|IP-osoite
+New git patch|Uusi git-laastari
+liked your post|piti viestistäsi

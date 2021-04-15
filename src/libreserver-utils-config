@@ -1,0 +1,357 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Initial reading of the configuration file, typically called libreserver.cfg
+#
+# License
+# =======
+#
+# Copyright (C) 2014-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+configuration_variables=(SYSTEM_TYPE
+                         SSL_PROTOCOLS
+                         SSL_CIPHERS
+                         SSH_CIPHERS
+                         SSH_MACS
+                         SSH_KEX
+                         SSH_HOST_KEY_ALGORITHMS
+                         SSH_PASSWORDS
+                         REFRESH_GPG_KEYS_HOURS
+                         GPG_KEYSERVER
+                         ENABLE_SOCIAL_KEY_MANAGEMENT
+                         MY_USERNAME
+                         DOMAIN_NAME
+                         DEFAULT_DOMAIN_NAME
+                         DEFAULT_DOMAIN_CODE
+                         EMAIL_DOMAIN_CODE
+                         XMPP_DOMAIN_CODE
+                         NAMESERVER1
+                         NAMESERVER2
+                         NAMESERVER3
+                         NAMESERVER4
+                         NAMESERVER5
+                         NAMESERVER6
+                         GET_IP_ADDRESS_URL
+                         DDNS_PROVIDER
+                         DDNS_USERNAME
+                         DDNS_PASSWORD
+                         LOCAL_NETWORK_STATIC_IP_ADDRESS
+                         ROUTER_IP_ADDRESS
+                         CPU_CORES
+                         WEBSERVER_LOG_LEVEL
+                         ROUTE_THROUGH_TOR
+                         MY_NAME
+                         MY_EMAIL_ADDRESS
+                         INSTALLING_ON_BBB
+                         SSH_PORT
+                         INSTALLED_WITHIN_DOCKER
+                         GPG_ENCRYPT_STORED_EMAIL
+                         MY_GPG_PUBLIC_KEY
+                         MY_GPG_PRIVATE_KEY
+                         MY_GPG_PUBLIC_KEY_ID
+                         USB_DRIVE
+                         ONION_ONLY
+                         DEFAULT_LANGUAGE
+                         MINIMAL_INSTALL
+                         LETSENCRYPT_SERVER
+                         WIFI_INTERFACE
+                         WIFI_SSID
+                         WIFI_TYPE
+                         WIFI_PASSPHRASE
+                         WIFI_HOTSPOT
+                         WIFI_NETWORKS_FILE
+                         DEFAULT_SEARCH
+                         SEARCH_ENGINE_PASSWORD
+                         PROJECT_WEBSITE
+                         PROJECT_REPO
+                         GPGIT_REPO
+                         GPGIT_COMMIT
+                         NGINX_ENSITE_REPO
+                         NGINX_ENSITE_REPO
+                         NGINX_ENSITE_COMMIT
+                         CLEANUP_MAILDIR_COMMIT
+                         CLEANUP_MAILDIR_REPO
+                         INADYN_REPO
+                         INADYN_COMMIT
+                         DH_KEYLENGTH
+                         WIFI_CHANNEL
+                         IPV6_NETWORK
+                         HWRNG_TYPE
+                         ENABLE_BATMAN)
+
+function get_completion_param {
+    param_name="$1"
+
+    if [ ${#param_name} -gt 0 ]; then
+        if [ "$COMPLETION_FILE" ]; then
+            if [ -f "$COMPLETION_FILE" ]; then
+                if grep -q "${param_name}:" "$COMPLETION_FILE"; then
+                    param_value=$(grep "${param_name}:" "$COMPLETION_FILE" | head -n 1 | awk -F ':' '{print $2}')
+                    echo "$param_value"
+                    return
+                fi
+            fi
+        fi
+    fi
+    echo ""
+}
+
+function set_completion_param {
+    param_name="$1"
+    param_value="$2"
+
+    if [ ! "$COMPLETION_FILE" ]; then
+        COMPLETION_FILE=$HOME/${PROJECT_NAME}-completed.txt
+    fi
+    if [ ${#COMPLETION_FILE} -eq 0 ]; then
+        COMPLETION_FILE=$HOME/${PROJECT_NAME}-completed.txt
+    fi
+
+    if [ ${#param_name} -gt 0 ]; then
+        if [ ${#param_value} -gt 0 ]; then
+            if [ -f "$COMPLETION_FILE" ]; then
+                if grep -q "${param_name}:" "$COMPLETION_FILE"; then
+                    sed -i "s|${param_name}:.*|${param_name}:${param_value}|g" "$COMPLETION_FILE"
+                else
+                    echo "${param_name}:${param_value}" >> "$COMPLETION_FILE"
+                fi
+            else
+                echo "${param_name}:${param_value}" > "$COMPLETION_FILE"
+            fi
+        fi
+    fi
+}
+
+function mark_completed {
+    param_name="$1"
+
+    if [ ! "$COMPLETION_FILE" ]; then
+        COMPLETION_FILE=$HOME/${PROJECT_NAME}-completed.txt
+    fi
+    if [ ${#COMPLETION_FILE} -eq 0 ]; then
+        COMPLETION_FILE=$HOME/${PROJECT_NAME}-completed.txt
+    fi
+
+    if [ ${#param_name} -gt 0 ]; then
+        if [ -f "$COMPLETION_FILE" ]; then
+            if ! grep -Fxq "${param_name}" "$COMPLETION_FILE"; then
+                echo "${param_name}" >> "$COMPLETION_FILE"
+            fi
+        else
+            echo "${param_name}" > "$COMPLETION_FILE"
+        fi
+    fi
+}
+
+function is_completed {
+    param_name="$1"
+
+    if [ ! "$COMPLETION_FILE" ]; then
+        COMPLETION_FILE="$HOME/${PROJECT_NAME}-completed.txt"
+    fi
+    if [ ${#COMPLETION_FILE} -eq 0 ]; then
+        COMPLETION_FILE="$HOME/${PROJECT_NAME}-completed.txt"
+    fi
+
+    if [ ${#param_name} -gt 0 ]; then
+        if [ -f "$COMPLETION_FILE" ]; then
+            if grep -Fxq "${param_name}" "$COMPLETION_FILE"; then
+                echo "1"
+                return
+            fi
+        fi
+    fi
+    echo "0"
+}
+
+function read_config_param {
+    param_name="$1"
+
+    if [ ${#param_name} -gt 0 ]; then
+        if [ "$CONFIGURATION_FILE" ]; then
+            if [ -f "$CONFIGURATION_FILE" ]; then
+                if grep -q "${param_name}=" "$CONFIGURATION_FILE"; then
+                    param_value=$(grep "${param_name}=" "$CONFIGURATION_FILE" | head -n 1 | sed "s|${param_name}=||g")
+                    export "${param_name}"="${param_value}"
+                fi
+            fi
+        fi
+    fi
+}
+
+function config_param_exists {
+    param_name="$1"
+
+    if [ ${#param_name} -gt 0 ]; then
+        if [ "$CONFIGURATION_FILE" ]; then
+            if [ -f "$CONFIGURATION_FILE" ]; then
+                if grep -q "${param_name}=" "$CONFIGURATION_FILE"; then
+                    param_value=$(grep "${param_name}=" "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+                    if [ ${#param_value} -gt 0 ]; then
+                        echo "1"
+                        return
+                    fi
+                fi
+            fi
+        fi
+    fi
+    echo "0"
+}
+
+function write_config_param {
+    param_name="$1"
+    param_value="$2"
+
+    if [ ! "$CONFIGURATION_FILE" ]; then
+        CONFIGURATION_FILE=$HOME/${PROJECT_NAME}.cfg
+    fi
+    if [ ${#CONFIGURATION_FILE} -eq 0 ]; then
+        CONFIGURATION_FILE=$HOME/${PROJECT_NAME}.cfg
+    fi
+
+    if [ ${#param_name} -gt 0 ]; then
+        if [ ${#param_value} -gt 0 ]; then
+            if [ -f "$CONFIGURATION_FILE" ]; then
+                if grep -q "${param_name}=" "$CONFIGURATION_FILE"; then
+                    sed -i "s|${param_name}=.*|${param_name}=${param_value}|g" "$CONFIGURATION_FILE"
+                else
+                    echo "${param_name}=${param_value}" >> "$CONFIGURATION_FILE"
+                fi
+            else
+                echo "${param_name}=${param_value}" > "$CONFIGURATION_FILE"
+            fi
+        fi
+    fi
+}
+
+function remove_config_param {
+    param_name="$1"
+
+    if [ ${#param_name} -gt 0 ]; then
+        if [ "$CONFIGURATION_FILE" ]; then
+            if [ -f "$CONFIGURATION_FILE" ]; then
+                if grep -q "${param_name}=" "$CONFIGURATION_FILE"; then
+                    sed -i "/${param_name}=/d" "$CONFIGURATION_FILE"
+                fi
+            fi
+        fi
+    fi
+}
+
+function remove_completion_param {
+    param_name="$1"
+
+    if [ ${#param_name} -gt 0 ]; then
+        if [ "$COMPLETION_FILE" ]; then
+            if [ -f "$COMPLETION_FILE" ]; then
+                if grep -Fxq "${param_name}" "$COMPLETION_FILE"; then
+                    sed -i "/${param_name}/d" "$COMPLETION_FILE"
+                fi
+                if grep -q "${param_name}:" "$COMPLETION_FILE"; then
+                    sed -i "/${param_name}:/d" "$COMPLETION_FILE"
+                fi
+            fi
+        fi
+    fi
+}
+
+function save_configuration_values {
+    # shellcheck disable=SC2068
+    for v in ${configuration_variables[@]}
+    do
+        write_config_param "$v" "${!v}"
+    done
+}
+
+function read_configuration_values {
+    # if not installing on a Beaglebone then use sdb as the USB drive by default
+    if [ ! "$INSTALLING_ON_BBB" ]; then
+        if [[ $USB_DRIVE == /dev/sda1 ]]; then
+            USB_DRIVE=/dev/sdb1
+        fi
+    fi
+
+    if [ -f "$CONFIGURATION_FILE" ]; then
+        # Ensure that a copy of the config exists for upgrade purposes
+        if [[ $CONFIGURATION_FILE != "/root/${PROJECT_NAME}.cfg" ]]; then
+            cp "$CONFIGURATION_FILE" "/root/${PROJECT_NAME}.cfg"
+        fi
+
+        # shellcheck disable=SC2068
+        for v in ${configuration_variables[@]}
+        do
+            read_config_param "$v"
+        done
+
+        if grep -q "DEBIAN_REPO" "$CONFIGURATION_FILE"; then
+            read_config_param "DEBIAN_REPO"
+            # shellcheck disable=SC2034
+            CHECK_MESSAGE=$"Check your internet connection, /etc/network/interfaces and /etc/resolvconf/resolv.conf.d/head, then delete $COMPLETION_FILE, run 'rm -fR /var/lib/apt/lists/* && $UPDATE_PACKAGES --fix-missing' and run this script again. If hash sum mismatches persist then try setting $DEBIAN_REPO to a different mirror and also change /etc/apt/sources.list."
+        fi
+    fi
+}
+
+function read_configuration {
+    if [[ $INSTALLING_FROM_CONFIGURATION_FILE == "yes"  ]]; then
+        if [ ! -f "$CONFIGURATION_FILE" ]; then
+            echo $"The configuration file $CONFIGURATION_FILE was not found"
+            exit 89
+        fi
+    fi
+
+    read_configuration_values
+}
+
+function check_system_type {
+    if [ ${#SYSTEM_TYPE} -eq 0 ]; then
+        echo $'Unknown system type'
+        exit 76
+    fi
+    echo "System type: $SYSTEM_TYPE"
+}
+
+# check that domain names are valid and that they are unique for each app
+function check_domains {
+    specified_domains=$(grep "_DOMAIN_NAME" "$CONFIGURATION_FILE" | uniq)
+    domains_array=("$specified_domains")
+    checked_domains=()
+
+    # shellcheck disable=SC2068
+    for d in ${domains_array[@]}
+    do
+        domain_param=$(echo "$d" | awk -F '=' '{print $1}')
+        if [[ "$domain_param" != "DEFAULT_DOMAIN_NAME" ]]; then
+            domain_value=$(echo "$d" | awk -F '=' '{print $2}')
+            if [[ "$domain_value" != "${LOCAL_NAME}.local" ]]; then
+                if ! item_in_array "${domain_value}" ${checked_domains[@]}; then
+                    # test that this is a valid domain name
+                    function_check test_domain_name
+                    test_domain_name "$domain_value"
+                    # add it to the list of domains
+                    checked_domains+=("$domain_value")
+                else
+                    echo $"Domain ${domain_value} collides with another app. The domain for each app should be unique."
+                    exit 67
+                fi
+            fi
+        fi
+    done
+}
+
+# NOTE: deliberately no exit 0

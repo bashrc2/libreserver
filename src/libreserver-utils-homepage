@@ -1,0 +1,247 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Create a screen which can be used as a browser home
+# page to get quick access to your apps
+#
+# License
+# =======
+#
+# Copyright © 2018-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+function homepage_create_qr_code {
+    webadmin_onion_domain="$1"
+
+    if [ -f "$homepage_install_dir/images/homepage_qrcode.png" ]; then
+        return
+    fi
+
+    if [ ! -f /usr/local/bin/myqr ]; then
+        if [ ! -f /usr/bin/qrencode ]; then
+            INSTALL_PACKAGES qrencode
+        fi
+        echo -n "http://${webadmin_onion_domain}/home" | qrencode -t PNG -o "$homepage_install_dir/images/homepage_qrcode.png"
+    else
+        myqr "http://${webadmin_onion_domain}/home" -p "/root/${PROJECT_NAME}/img/onion.png" -c -v 8 -n "$homepage_install_dir/images/homepage_qrcode.png"
+    fi
+}
+
+function web_create_homepage {
+    web_admin_get_hostname
+    homepage_install_dir="/var/www/${local_hostname}/htdocs/home"
+
+    homepage_filename="$homepage_install_dir/index.html"
+    homepage_about_filename="$homepage_install_dir/about.html"
+
+    homepage_template_filename="$webadmin_install_dir/homepage_template.html"
+    icons_dir="$homepage_install_dir/icons"
+    pending_removes="$webadmin_install_dir/pending_removes.txt"
+
+    if [ ! -d "$homepage_install_dir" ]; then
+        mkdir -p "$homepage_install_dir"
+    fi
+
+    if [ ! -d "$icons_dir" ]; then
+        mkdir -p "$icons_dir"
+    fi
+
+    # NOTE: Here we don't use the icons from the admin directory
+    # because that is password controlled. So that any user on the system
+    # can use the homepage the icons are copied over to the home directory
+
+    # copy the icons
+    cp -r "$webadmin_install_dir/icons"/*.png "$icons_dir"
+
+    # copy the logo
+    if [ ! -d "$homepage_install_dir/images" ]; then
+        mkdir -p "$homepage_install_dir/images"
+    fi
+    cp "$webadmin_install_dir/images/logo.png" "$homepage_install_dir/images"
+
+    # copy search icon
+    cp "$webadmin_install_dir/images/search.png" "$homepage_install_dir/images"
+
+    # copy the script used for search
+    cp "$webadmin_install_dir/common.php" "$homepage_install_dir"
+    cp "$webadmin_install_dir/search.php" "$homepage_install_dir"
+
+    # copy the css
+    cp "$webadmin_install_dir/${PROJECT_NAME}.css" "$homepage_install_dir"
+
+    if [ ! -f "$homepage_template_filename" ]; then
+        return
+    fi
+    cp "$homepage_template_filename" "$homepage_filename"
+
+    sed -i '/<\/div> <!-- header -->/d' "$homepage_filename"
+    sed -i '/<\/body>/d' "$homepage_filename"
+    sed -i '/<\/html>/d' "$homepage_filename"
+
+    # copy the about screen for homepage
+    cp "$webadmin_install_dir/homepage_about.html" "$homepage_about_filename"
+
+    # show onion address for homepage
+    webadmin_onion_domain=$(cat /var/lib/tor/hidden_service_webadmin/hostname)
+    sed -i "s|WEBADMINONIONADDRESS|${webadmin_onion_domain}|g" "$homepage_about_filename"
+    homepage_create_qr_code "$webadmin_onion_domain"
+
+    total_apps_ctr=0
+    installed_apps_ctr=0
+    app_index=0
+    # shellcheck disable=SC2068,SC2034
+    for a in ${APPS_INSTALLED[@]}
+    do
+        app_name=${APPS_INSTALLED_NAMES[$app_index]}
+        if [ "$app_name" ]; then
+            app_filename="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-${app_name}"
+            if [ -f "$app_filename" ]; then
+
+                # check if the app is being removed
+                app_being_removed=
+                if [ -f "$pending_removes" ]; then
+                    if grep -q "remove_${app_name}" "$pending_removes"; then
+                        app_being_removed=1
+                    fi
+                fi
+
+                if [ ! $app_being_removed ]; then
+                    if grep -q "NOT_ON_HOMEPAGE=1" "$app_filename"; then
+                        app_index=$((app_index+1))
+                        continue
+                    fi
+
+                    # get the icon for the app
+                    icon_filename="/usr/share/${PROJECT_NAME}/android-app/${app_name}.png"
+                    if [ ! -f "$icon_filename" ]; then
+                        icon_filename=
+                    fi
+
+                    app_name_upper=$(echo "$app_name" | awk '{print toupper($0)}')
+
+                    if ! grep -q "${app_name_upper}_DOMAIN_NAME=" "$app_filename"; then
+                        app_index=$((app_index+1))
+                        continue
+                    fi
+
+                    read_config_param "${app_name_upper}_DOMAIN_NAME"
+                    read_config_param ONION_ONLY
+                    onion_app_name=${app_name}
+                    if [[ "$onion_app_name" == 'xmpp' ]]; then
+                        onion_app_name='email'
+                    fi
+                    if [[ "$ONION_ONLY" == 'no' ]]; then
+                        if grep -q "INSTALLED_ON_DEFAULT_DOMAIN=1" "$app_filename"; then
+                            read_config_param DEFAULT_DOMAIN_NAME
+                            domain_name=$DEFAULT_DOMAIN_NAME
+                        else
+                            test_domain_name="${app_name_upper}_DOMAIN_NAME"
+                            domain_name=${!test_domain_name}
+                        fi
+                    else
+                        domain_name=$(cat "/var/lib/tor/hidden_service_${onion_app_name}/hostname")
+                    fi
+                    onion_domain_name=
+                    if [ -f "/var/lib/tor/hidden_service_${onion_app_name}/hostname" ]; then
+                        onion_domain_name=$(cat "/var/lib/tor/hidden_service_${onion_app_name}/hostname")
+                    fi
+                    if [ "$domain_name" ]; then
+                        if [[ "$domain_name" != *'.onion' ]]; then
+                            domain_name="https://${domain_name}"
+                        else
+                            domain_name="http://${onion_domain_name}"
+                        fi
+                    else
+                        app_index=$((app_index+1))
+                        continue
+                    fi
+
+                    if grep -q "SHOW_URL_PORT=" "$app_filename"; then
+                        domain_port_number=$(grep "SHOW_URL_PORT=" "$app_filename" | awk -F '=' '{print $2}')
+                        if [ "$domain_port_number" ]; then
+                            domain_name="http://${local_hostname}:${domain_port_number}"
+                            onion_domain_name="${onion_domain_name}:${domain_port_number}"
+                        fi
+                    fi
+
+                    if [ $installed_apps_ctr -eq 0 ]; then
+                        echo '    <div class="row">' >> "$homepage_filename"
+                    fi
+
+                    SHORT_DESCRIPTION="$(grep "${app_name_upper}_SHORT_DESCRIPTION=" "$app_filename" | head -n 1 | sed 's|\$||g' | sed "s|'||g" | sed 's|\"||g' | awk -F '=' '{print $2}')"
+
+                    translated_short_description=$(web_admin_translate_text "$SHORT_DESCRIPTION")
+                    SHORT_DESCRIPTION="$translated_short_description"
+                    app_title="${SHORT_DESCRIPTION}"
+
+                    if grep -q "${app_name_upper}_DESCRIPTION=" "$app_filename"; then
+                        DESCRIPTION="$(grep "${app_name_upper}_DESCRIPTION=" "$app_filename" | head -n 1 | sed 's|\$||g' | sed "s|'||g" | sed 's|\"||g' | awk -F '=' '{print $2}')"
+                        translated_description=$(web_admin_translate_text "$DESCRIPTION")
+                        DESCRIPTION="$translated_description"
+                        app_title="${DESCRIPTION}"
+                    fi
+
+                    { echo '      <div class="column">';
+                      echo '        <div>';
+                      echo "          <a href=\"$domain_name\" title=\"${app_title}\">";
+                      echo "            <img src=\"icons/${app_name}.png\" style=\"width:40%\" loading=\"lazy\">";
+                      echo "            <center>${app_name}</center>";
+                      echo '          </a>';
+                      echo '        </div>';
+                      echo '      </div>'; } >> "$homepage_filename"
+
+                    installed_apps_ctr=$((installed_apps_ctr+1))
+                    total_apps_ctr=$((total_apps_ctr+1))
+
+                    # four columns per row
+                    if [ $installed_apps_ctr -eq 4 ]; then
+                        echo '    </div>' >> "$homepage_filename"
+                        installed_apps_ctr=0
+                    fi
+                fi
+            fi
+        fi
+        app_index=$((app_index+1))
+    done
+
+    if [ ${installed_apps_ctr} -gt 0 ]; then
+        # Complete the rest of the four column row
+        # shellcheck disable=SC2034
+        for i in $(seq ${installed_apps_ctr} 3)
+        do
+            { echo '      <div class="column">';
+              echo '        <div>';
+              echo '        </div>';
+              echo '      </div>'; } >> "$homepage_filename"
+        done
+        echo '    </div>' >> "$homepage_filename"
+    fi
+
+    if [ $total_apps_ctr -gt 0 ]; then
+        sed -i "/\"appstext\"/d" "$homepage_filename"
+    fi
+
+    { echo '    </div>';
+      echo '    <br><br>';
+      echo '  </body>';
+      echo '</html>'; } >> "$homepage_filename"
+
+    chown -R www-data:www-data "$homepage_install_dir"
+}
+
+# NOTE: deliberately no exit 0

@@ -1,0 +1,536 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Dokuwiki application
+#
+# License
+# =======
+#
+# Copyright (C) 2014-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VARIANTS='full full-vim writer'
+
+APP_CATEGORY=publishing
+
+IN_DEFAULT_INSTALL=0
+SHOW_ON_ABOUT=1
+REQUIRES_APP=
+
+DOKUWIKI_DOMAIN_NAME=
+DOKUWIKI_CODE=
+DOKUWIKI_ONION_PORT=8089
+DOKUWIKI_ADMIN_PASSWORD=
+DOKUWIKI_TITLE="${PROJECT_NAME} Dokuwiki"
+
+DOKUWIKI_REPO="https://github.com/splitbrain/dokuwiki"
+DOKUWIKI_COMMIT='7347c7c107a0885329924cdcad9bec872eefd339'
+
+DOKUWIKI_SHORT_DESCRIPTION=$'Databaseless wiki'
+DOKUWIKI_DESCRIPTION=$'Databaseless wiki'
+DOKUWIKI_MOBILE_APP_URL=
+
+dokuwiki_variables=(ONION_ONLY
+                    MY_USERNAME
+                    DOKUWIKI_TITLE
+                    DOKUWIKI_DOMAIN_NAME
+                    DOKUWIKI_CODE
+                    DDNS_PROVIDER)
+
+function upgrade_distro_dokuwiki {
+    target_distro="$1"
+
+    if [[ "$target_distro" == 'bullseye' ]]; then
+        echo -n ''
+    fi
+}
+
+function logging_on_dokuwiki {
+    echo -n ''
+}
+
+function logging_off_dokuwiki {
+    echo -n ''
+}
+
+function install_interactive_dokuwiki {
+    if [[ $ONION_ONLY != "no" ]]; then
+        DOKUWIKI_TITLE=$'My Dokuwiki'
+        DOKUWIKI_DOMAIN_NAME='dokuwiki.local'
+        write_config_param "DOKUWIKI_TITLE" "$DOKUWIKI_TITLE"
+        write_config_param "DOKUWIKI_DOMAIN_NAME" "$DOKUWIKI_DOMAIN_NAME"
+    else
+        function_check interactive_site_details_with_title
+        interactive_site_details_with_title "dokuwiki" "DOKUWIKI_TITLE" "DOKUWIKI_DOMAIN_NAME" "DOKUWIKI_CODE"
+    fi
+    APP_INSTALLED=1
+}
+
+function change_password_dokuwiki {
+    curr_username="$1"
+    new_user_password="$2"
+
+    DOKUWIKI_DOMAIN_NAME=$(get_completion_param "dokuwiki domain")
+    if grep -q "$curr_username:" "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/lib/plugins/acl/users.auth.php"; then
+        HASHED_DOKUWIKI_PASSWORD=$(echo -n "$new_user_password" | md5sum | awk -F ' ' '{print $1}')
+        existing_user=$(grep "$curr_username:" "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/lib/plugins/acl/users.auth.php" | hean -n 1)
+        if [[ "$existing_user" == *":admin,"* ]]; then
+            sed -i "s|$curr_username:.*|$curr_username:$HASHED_DOKUWIKI_PASSWORD:$curr_username:$curr_username@$HOSTNAME:admin,user,upload|g" "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/lib/plugins/acl/users.auth.php"
+        else
+            sed -i "s|$curr_username:.*|$curr_username:$HASHED_DOKUWIKI_PASSWORD:$curr_username:$curr_username@$HOSTNAME:user,upload|g" "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/lib/plugins/acl/users.auth.php"
+        fi
+        cp "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/lib/plugins/acl/users.auth.php" "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/conf/users.auth.php"
+        chmod 640 "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/conf/users.auth.php"
+        chmod 640 "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/lib/plugins/acl/users.auth.php"
+        "${PROJECT_NAME}-pass" -u "$curr_username" -a dokuwiki -p "$new_user_password"
+    fi
+}
+
+function add_user_dokuwiki {
+    new_username="$1"
+    new_user_password="$2"
+
+    DOKUWIKI_DOMAIN_NAME=$(get_completion_param "dokuwiki domain")
+    HASHED_DOKUWIKI_PASSWORD=$(echo -n "$new_user_password" | md5sum | awk -F ' ' '{print $1}')
+    echo "$new_username:$HASHED_DOKUWIKI_PASSWORD:$new_username:$new_username@$HOSTNAME:user,upload" >> "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/lib/plugins/acl/users.auth.php"
+    cp "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/lib/plugins/acl/users.auth.php" "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/conf/users.auth.php"
+    chmod 640 "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/lib/plugins/acl/users.auth.php"
+    chmod 640 "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/conf/users.auth.php"
+    "${PROJECT_NAME}-pass" -u "$new_username" -a dokuwiki -p "$new_user_password"
+    echo '0'
+}
+
+function remove_user_dokuwiki {
+    remove_username="$1"
+
+    read_config_param "DOKUWIKI_DOMAIN_NAME"
+    if grep -q "$remove_username:" "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/lib/plugins/acl/users.auth.php"; then
+        sed -i "/$remove_username:/d" "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/lib/plugins/acl/users.auth.php"
+        sed -i "/$remove_username:/d" "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/conf/users.auth.php"
+        "${PROJECT_NAME}-pass" -u "$remove_username" --rmapp dokuwiki
+    fi
+}
+
+function reconfigure_dokuwiki {
+    echo -n ''
+}
+
+function upgrade_dokuwiki {
+    function_check set_repo_commit
+    set_repo_commit "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs" "dokuwiki commit" "$DOKUWIKI_COMMIT" $DOKUWIKI_REPO
+}
+
+function backup_local_dokuwiki {
+    DOKUWIKI_DOMAIN_NAME=$(get_completion_param "dokuwiki domain")
+
+    function_check backup_directory_to_usb
+
+    # backup the data
+    source_directory="/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/data"
+    if [ -d "$source_directory" ]; then
+        dest_directory=dokuwikidat
+        backup_directory_to_usb "$source_directory" "$dest_directory"
+    fi
+
+    # backup the users
+    source_directory="/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/lib/plugins/acl"
+    if [ -d "$source_directory" ]; then
+        dest_directory=dokuwikiacl
+        cp "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/conf/users*.php" "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/lib/plugins/acl/"
+        backup_directory_to_usb "$source_directory" "$dest_directory"
+    fi
+}
+
+function restore_local_dokuwiki {
+    echo $"Restoring Dokuwiki installation"
+    function_check get_completion_param
+    DOKUWIKI_DOMAIN_NAME=$(get_completion_param "dokuwiki domain")
+
+    # restore the data
+    temp_restore_dir=/root/tempdokuwikidat
+    function_check restore_directory_from_usb
+    restore_directory_from_usb ${temp_restore_dir} dokuwikidat
+    if [ -d "${temp_restore_dir}/var/www/${DOKUWIKI_DOMAIN_NAME}/htdocs/data" ]; then
+        cp -r "${temp_restore_dir}/var/www/${DOKUWIKI_DOMAIN_NAME}/htdocs/data/"* "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/data"
+    else
+        cp -r "${temp_restore_dir}/"* "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/data"
+    fi
+    # shellcheck disable=SC2181
+    if [ ! "$?" = "0" ]; then
+        function_check restore_directory_from_usb
+        set_user_permissions
+        function_check backup_unmount_drive
+        backup_unmount_drive
+        rm -rf ${temp_restore_dir}
+        exit 68
+    fi
+    rm -rf ${temp_restore_dir}
+
+    # restore the users
+    temp_restore_dir=/root/tempdokuwikiacl
+    function_check restore_directory_from_usb
+    restore_directory_from_usb ${temp_restore_dir} dokuwikiacl
+    if [ -d "${temp_restore_dir}/var/www/${DOKUWIKI_DOMAIN_NAME}/htdocs/lib/plugins/acl" ]; then
+        cp "${temp_restore_dir}/var/www/${DOKUWIKI_DOMAIN_NAME}/htdocs/lib/plugins/acl/users.auth.php" "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/lib/plugins/acl/"
+        cp "${temp_restore_dir}/var/www/${DOKUWIKI_DOMAIN_NAME}/htdocs/lib/plugins/acl/users.auth.php" "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/conf/"
+    else
+        cp "${temp_restore_dir}/users.auth.php" "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/lib/plugins/acl/"
+        cp "${temp_restore_dir}/users.auth.php" "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/conf/"
+    fi
+    # shellcheck disable=SC2181
+    if [ ! "$?" = "0" ]; then
+        function_check restore_directory_from_usb
+        set_user_permissions
+        function_check backup_unmount_drive
+        backup_unmount_drive
+        rm -rf ${temp_restore_dir}
+        exit 45
+    fi
+    rm -rf ${temp_restore_dir}
+
+    chmod 640 "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/lib/plugins/acl/users.auth.php"
+    chmod 640 "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/conf/users.auth.php"
+    chmod -R 755 "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/data"
+    chmod -R 755 "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/lib"
+    chown -R www-data:www-data "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs"
+    echo $"Restore of Dokuwiki complete"
+}
+
+function backup_remote_dokuwiki {
+    echo -n ''
+}
+
+function restore_remote_dokuwiki {
+    echo -n ''
+}
+
+function remove_dokuwiki {
+    if [ ${#DOKUWIKI_DOMAIN_NAME} -eq 0 ]; then
+        return
+    fi
+    function_check remove_onion_service
+    remove_onion_service dokuwiki ${DOKUWIKI_ONION_PORT}
+    nginx_dissite "$DOKUWIKI_DOMAIN_NAME"
+    remove_certs "$DOKUWIKI_DOMAIN_NAME"
+    if [ -f "/etc/nginx/sites-available/$DOKUWIKI_DOMAIN_NAME" ]; then
+        rm "/etc/nginx/sites-available/$DOKUWIKI_DOMAIN_NAME"
+    fi
+    if [ ! -d "/var/www/$DOKUWIKI_DOMAIN_NAME" ]; then
+        rm -rf "/var/www/$DOKUWIKI_DOMAIN_NAME"
+    fi
+    if [ -d /var/lib/dokuwiki ]; then
+        rm -rf /var/lib/dokuwiki
+    fi
+    if [ -d /etc/dokuwiki ]; then
+        rm -rf /etc/dokuwiki
+    fi
+    if [ -d /usr/share/dokuwiki ]; then
+        rm -rf /usr/share/dokuwiki
+    fi
+    remove_completion_param "install_dokuwiki"
+    remove_completion_param "dokuwiki domain"
+    sed -i '/dokuwiki/d' "$COMPLETION_FILE"
+
+    function_check remove_ddns_domain
+    remove_ddns_domain "$DOKUWIKI_DOMAIN_NAME"
+}
+
+function install_dokuwiki {
+    if [ ! "$DOKUWIKI_DOMAIN_NAME" ]; then
+        return
+    fi
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES php-common php-cli php-curl php-gd git
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES php-dev imagemagick php-imagick libfcgi0ldbl
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES php-memcached memcached
+
+    if [ ! -d "/var/www/$DOKUWIKI_DOMAIN_NAME" ]; then
+        mkdir "/var/www/$DOKUWIKI_DOMAIN_NAME"
+    fi
+
+    if [ ! -f "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/install.php" ]; then
+        cd "/var/www/$DOKUWIKI_DOMAIN_NAME" || exit 23
+
+        if [ -d /repos/dokuwiki ]; then
+            mkdir -p "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs"
+            cp -r -p /repos/dokuwiki/. "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs"
+            cd "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs" || exit 24
+            git pull
+        else
+            function_check git_clone
+            git_clone "$DOKUWIKI_REPO" "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs"
+        fi
+
+        cd "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs" || exit 38
+        git checkout "$DOKUWIKI_COMMIT" -b "$DOKUWIKI_COMMIT"
+        set_completion_param "dokuwiki commit" "$DOKUWIKI_COMMIT"
+
+    fi
+
+    increment_app_install_progress
+
+    $REMOVE_PACKAGES_PURGE apache2-bin*
+    if [ -d /etc/apache2 ]; then
+        rm -rf /etc/apache2
+        echo $'Removed Apache installation after Dokuwiki install'
+    fi
+
+    { echo '<?php';
+      echo "\$conf['title'] = '${DOKUWIKI_TITLE}';";
+      echo "\$conf['lang'] = 'en';";
+      echo "\$conf['license'] = 'cc-by-sa';";
+      echo "\$conf['useacl'] = 1;";
+      echo "\$conf['superuser'] = '@admin';";
+      echo "\$conf['disableactions'] = 'register';"; } > "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/conf/local.php"
+    ln -s "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/conf/local.php" "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/local.php"
+
+    chmod 600 "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/conf/local.php"
+    chown -R www-data:www-data "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs"
+    chmod -R 755 "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/lib"
+    chmod -R 755 "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/data"
+
+    if [ -f "$IMAGE_PASSWORD_FILE" ]; then
+        DOKUWIKI_ADMIN_PASSWORD="$(printf "%s" "$(cat "$IMAGE_PASSWORD_FILE")")"
+    else
+        if [ ! "$DOKUWIKI_ADMIN_PASSWORD" ]; then
+            DOKUWIKI_ADMIN_PASSWORD="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
+        fi
+    fi
+    HASHED_DOKUWIKI_PASSWORD=$(echo -n "$DOKUWIKI_ADMIN_PASSWORD" | md5sum | awk -F ' ' '{print $1}')
+    echo -n "$MY_USERNAME:$HASHED_DOKUWIKI_PASSWORD:$MY_NAME:$MY_EMAIL:admin,user,upload" > "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/lib/plugins/acl/users.auth.php"
+    cp "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/lib/plugins/acl/users.auth.php" "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/conf/users.auth.php"
+    chmod 640 "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/lib/plugins/acl/users.auth.php"
+
+    if ! grep -q "video/ogg" "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/conf/mime.conf"; then
+        echo 'ogv     video/ogg' >> "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/conf/mime.conf"
+    fi
+    if ! grep -q "video/mp4" "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/conf/mime.conf"; then
+        echo 'mp4     video/mp4' >> "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/conf/mime.conf"
+    fi
+    if ! grep -q "video/webm" "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/conf/mime.conf"; then
+        echo 'webm    video/webm' >> "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/conf/mime.conf"
+    fi
+
+    increment_app_install_progress
+
+    DOKUWIKI_ONION_HOSTNAME=$(add_onion_service dokuwiki 80 ${DOKUWIKI_ONION_PORT})
+    set_completion_param "dokuwiki domain" "${DOKUWIKI_DOMAIN_NAME}"
+
+    increment_app_install_progress
+
+    if [[ $ONION_ONLY == "no" ]]; then
+        function_check nginx_http_redirect
+        nginx_http_redirect "$DOKUWIKI_DOMAIN_NAME"
+        { echo 'server {';
+          echo '    listen 443 ssl;';
+          echo '    #listen [::]:443 ssl;';
+          echo "    root /var/www/$DOKUWIKI_DOMAIN_NAME/htdocs;";
+          echo "    server_name $DOKUWIKI_DOMAIN_NAME;";
+          echo '    access_log /dev/null;';
+          echo "    error_log /dev/null;";
+          echo '    index index.php;';
+          echo '    charset utf-8;';
+          echo '    proxy_read_timeout 86400s;'; } >> "/etc/nginx/sites-available/$DOKUWIKI_DOMAIN_NAME"
+        function_check nginx_ssl
+        nginx_ssl "$DOKUWIKI_DOMAIN_NAME"
+        function_check nginx_security_options
+        nginx_security_options "$DOKUWIKI_DOMAIN_NAME"
+        nginx_robots "$DOKUWIKI_DOMAIN_NAME"
+        { echo '    add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
+	  echo "    add_header Onion-Location http://${DOKUWIKI_ONION_HOSTNAME}\$request_uri;";
+          echo '';
+          echo '    # rewrite to front controller as default rule';
+          echo '    location / {'; } >> "/etc/nginx/sites-available/$DOKUWIKI_DOMAIN_NAME"
+        function_check nginx_limits
+        nginx_limits "$DOKUWIKI_DOMAIN_NAME"
+        { echo "        rewrite ^/(.*) /index.php?q=\$uri&\$args last;";
+          echo '    }';
+          echo '';
+          echo '    # statically serve these file types when possible';
+          echo '    # otherwise fall back to front controller';
+          echo '    # allow browser to cache them';
+          echo '    # added .htm for advanced source code editor library';
+          echo '    location ~* \.(jpg|jpeg|gif|png|ico|css|js|htm|html|ttf|woff|svg)$ {';
+          echo '        expires 30d;';
+          echo "        try_files \$uri /index.php?q=\$uri&\$args;";
+          echo '    }';
+          echo '';
+          echo '    # block these file types';
+          echo '    location ~* \.(tpl|md|tgz|log|out)$ {';
+          echo '        deny all;';
+          echo '    }';
+          echo '';
+          echo '    # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000';
+          echo '    # or a unix socket';
+          echo '    location ~* \.php$ {'; } >> "/etc/nginx/sites-available/$DOKUWIKI_DOMAIN_NAME"
+        function_check nginx_limits
+        nginx_limits "$DOKUWIKI_DOMAIN_NAME"
+        { echo '        # Zero-day exploit defense.';
+          echo '        # http://forum.nginx.org/read.php?2,88845,page=3';
+          echo "        # Won't work properly (404 error) if the file is not stored on this";
+          echo "        # server, which is entirely possible with php-fpm/php-fcgi.";
+          echo "        # Comment the 'try_files' line out if you set up php-fpm/php-fcgi on";
+          echo "        # another machine. And then cross your fingers that you won't get hacked.";
+          echo "        try_files \$uri \$uri/ /index.php;";
+          echo '        # NOTE: You should have "cgi.fix_pathinfo = 0;" in php.ini';
+          echo '        fastcgi_split_path_info ^(.+\.php)(/.+)$;';
+          echo '        # With php-cgi alone:';
+          echo '        # fastcgi_pass 127.0.0.1:9000;';
+          echo '        # With php-fpm:';
+          echo "        fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
+          echo '        fastcgi_read_timeout 30;';
+          echo '        include fastcgi_params;';
+          echo '        fastcgi_index index.php;';
+          echo "        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;";
+          echo '    }';
+          echo '';
+          echo '    # deny access to all dot files';
+          echo '    location ~ /\. {';
+          echo '        deny all;';
+          echo '    }';
+          echo '';
+          echo '    #deny access to store';
+          echo '    location ~ /store {';
+          echo '        deny all;';
+          echo '    }';
+          echo '    location ~ /(data|conf|bin|inc)/ {';
+          echo '      deny all;';
+          echo '    }';
+          echo '    location ~ /\.ht {';
+          echo '      deny  all;';
+          echo '    }';
+          echo '}';
+          echo ''; } >> "/etc/nginx/sites-available/$DOKUWIKI_DOMAIN_NAME"
+    else
+        echo -n '' > "/etc/nginx/sites-available/$DOKUWIKI_DOMAIN_NAME"
+    fi
+    { echo 'server {';
+      echo "    listen 127.0.0.1:${DOKUWIKI_ONION_PORT} default_server;";
+      echo '    port_in_redirect off;';
+      echo "    root /var/www/$DOKUWIKI_DOMAIN_NAME/htdocs;";
+      echo "    server_name $DOKUWIKI_ONION_HOSTNAME;";
+      echo '    access_log /dev/null;';
+      echo "    error_log /dev/null;";
+      echo '    index index.php;';
+      echo '    charset utf-8;';
+      echo '    proxy_read_timeout 86400s;'; } >> "/etc/nginx/sites-available/$DOKUWIKI_DOMAIN_NAME"
+    function_check nginx_security_options
+    nginx_security_options "$DOKUWIKI_DOMAIN_NAME"
+    { echo '    add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
+      echo '';
+      echo '    # rewrite to front controller as default rule';
+      echo '    location / {'; } >> "/etc/nginx/sites-available/$DOKUWIKI_DOMAIN_NAME"
+    function_check nginx_limits
+    nginx_limits "$DOKUWIKI_DOMAIN_NAME"
+    { echo "        rewrite ^/(.*) /index.php?q=\$uri&\$args last;";
+      echo '    }';
+      echo '';
+      echo '    # statically serve these file types when possible';
+      echo '    # otherwise fall back to front controller';
+      echo '    # allow browser to cache them';
+      echo '    # added .htm for advanced source code editor library';
+      echo '    location ~* \.(jpg|jpeg|gif|png|ico|css|js|htm|html|ttf|woff|svg)$ {';
+      echo '        expires 30d;';
+      echo "        try_files \$uri /index.php?q=\$uri&\$args;";
+      echo '    }';
+      echo '';
+      echo '    # block these file types';
+      echo '    location ~* \.(tpl|md|tgz|log|out)$ {';
+      echo '        deny all;';
+      echo '    }';
+      echo '';
+      echo '    # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000';
+      echo '    # or a unix socket';
+      echo '    location ~* \.php$ {'; } >> "/etc/nginx/sites-available/$DOKUWIKI_DOMAIN_NAME"
+    function_check nginx_limits
+    nginx_limits "$DOKUWIKI_DOMAIN_NAME"
+    { echo '        # Zero-day exploit defense.';
+      echo '        # http://forum.nginx.org/read.php?2,88845,page=3';
+      echo "        # Won't work properly (404 error) if the file is not stored on this";
+      echo "        # server, which is entirely possible with php-fpm/php-fcgi.";
+      echo "        # Comment the 'try_files' line out if you set up php-fpm/php-fcgi on";
+      echo "        # another machine. And then cross your fingers that you won't get hacked.";
+      echo "        try_files \$uri \$uri/ /index.php;";
+      echo '        # NOTE: You should have "cgi.fix_pathinfo = 0;" in php.ini';
+      echo '        fastcgi_split_path_info ^(.+\.php)(/.+)$;';
+      echo '        # With php-cgi alone:';
+      echo '        # fastcgi_pass 127.0.0.1:9000;';
+      echo '        # With php-fpm:';
+      echo "        fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
+      echo '        fastcgi_read_timeout 30;';
+      echo '        include fastcgi_params;';
+      echo '        fastcgi_index index.php;';
+      echo "        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;";
+      echo '    }';
+      echo '';
+      echo '    # deny access to all dot files';
+      echo '    location ~ /\. {';
+      echo '        deny all;';
+      echo '    }';
+      echo '';
+      echo '    #deny access to store';
+      echo '    location ~ /store {';
+      echo '        deny all;';
+      echo '    }';
+      echo '    location ~ /(data|conf|bin|inc)/ {';
+      echo '      deny all;';
+      echo '    }';
+      echo '    location ~ /\.ht {';
+      echo '      deny  all;';
+      echo '    }';
+      echo '}'; } >> "/etc/nginx/sites-available/$DOKUWIKI_DOMAIN_NAME"
+
+    increment_app_install_progress
+
+    function_check create_site_certificate
+    create_site_certificate "$DOKUWIKI_DOMAIN_NAME" 'yes'
+
+    increment_app_install_progress
+
+    function_check configure_php
+    configure_php
+
+    increment_app_install_progress
+
+    nginx_ensite "$DOKUWIKI_DOMAIN_NAME"
+
+    # shellcheck disable=SC2086
+    systemctl restart php${PHP_VERSION}-fpm
+    systemctl restart nginx
+
+    increment_app_install_progress
+
+    function_check add_ddns_domain
+    add_ddns_domain "$DOKUWIKI_DOMAIN_NAME"
+
+    increment_app_install_progress
+
+    "${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a dokuwiki -p "$DOKUWIKI_ADMIN_PASSWORD"
+
+    APP_INSTALLED=1
+}
+
+# NOTE: deliberately no exit 0

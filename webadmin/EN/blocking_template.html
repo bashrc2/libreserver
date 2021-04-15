@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <style>
+      @import url("libreserver.css");
+
+      .appurl {
+          font-size: 100%;
+      }
+
+      .welcomeheader {
+          font-size: 200%;
+          font-weight: bold;
+      }
+
+      .descriptiontext {
+          font-size: 90%;
+      }
+
+      .logintext {
+          font-size: 120%;
+          font-weight: bold;
+          color: #981737;
+      }
+
+      button {
+          border: none;
+          outline: 0;
+          display: inline-block;
+          padding: 8px;
+          color: white;
+          background-color: #000;
+          text-align: center;
+          cursor: pointer;
+          width: 100%;
+          font-size: 18px;
+      }
+
+      button:hover, a:hover {
+          opacity: 0.7;
+      }
+
+      .chip {
+          display: inline-block;
+          padding: 0 25px;
+          height: 50px;
+          font-size: 70%;
+          line-height: 50px;
+          border-radius: 25px;
+          background-color: #f1f1f1;
+      }
+
+      .chip img {
+          float: left;
+          margin: 0 10px 0 -25px;
+          height: 50px;
+          width: 50px;
+          border-radius: 50%;
+      }
+
+      textarea {
+          width: 90%;
+          color: black;
+          font-weight: bold;
+          background: lightblue;
+          font-size: 120%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="header">
+        <a href="settings.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a><br>
+
+        <p class="descriptiontext" translate="yes">Edit, add or remove blocked domains or users. This applies to Email and XMPP addresses</p>
+
+        <form action="blocking.php" method="post">
+          <textarea rows="10" cols="50" name="blockinglist" translate="no">BLOCKEDLIST</textarea>
+          <br><br>
+          <input type="submit" name="submitblockingcancel" translate="yes" value="Cancel">
+          <input type="submit" name="submitblockingwords" translate="yes" value="Muted words">
+          <input type="submit" name="submitblocking" translate="yes" value="Continue">
+        </form>
+
+        <br>
+      </div>
+    </div>
+  </body>
+</html>

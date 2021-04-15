@@ -1,0 +1,877 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# cryptpad application
+#
+# License
+# =======
+#
+# Copyright (C) 2017-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VARIANTS='full full-vim writer'
+
+APP_CATEGORY=publishing
+
+IN_DEFAULT_INSTALL=0
+SHOW_ON_ABOUT=1
+SHOW_CLEARNET_ADDRESS_ON_ABOUT=0
+SHOW_DOMAIN_IN_ADD_WEBADMIN=0
+NOT_ON_HOMEPAGE=1
+REQUIRES_APP=
+
+CRYPTPAD_ONION_PORT=8119
+CRYPTPAD_PORT=9003
+CRYPTPAD_PORT2=9005
+CRYPTPAD_REPO="https://github.com/xwiki-labs/cryptpad"
+CRYPTPAD_COMMIT='81fba02bc75781f6794bd77e6881f7b58e66e5bd'
+CRYPTPAD_DIR=/etc/cryptpad
+CRYPTPAD_DOMAIN_NAME=cryptpad.local
+
+CRYPTPAD_SHORT_DESCRIPTION=$'Secure realtime collaboration'
+CRYPTPAD_DESCRIPTION=$'Secure realtime collaboration with docs, presentations, drawing and voting. Documents are ephemeral and unless you save them will be deleted when you close the browser.'
+CRYPTPAD_MOBILE_APP_URL=
+
+CRYPTPAD_BOWER_VERSION='1.8.12'
+
+cryptpad_variables=(ONION_ONLY
+                    CRYPTPAD_DOMAIN_NAME)
+
+function cryptpad_setting_registration {
+    allow_registrations="$1"
+
+    cryptpad_nginx_filename=/etc/nginx/sites-available/cryptpad
+    if [[ "$allow_registrations" == '1' ]]; then
+        if ! grep -q ' /allownewsignups' ${cryptpad_nginx_filename}; then
+            if grep -q ' /register' ${cryptpad_nginx_filename}; then
+                sed -i 's| /register| /allownewsignups|g' ${cryptpad_nginx_filename}
+                sed -i 's|(login|(register|login|g' ${cryptpad_nginx_filename}
+                systemctl restart nginx
+            fi
+        fi
+    fi
+
+    if [[ "$allow_registrations" == '0' ]]; then
+        if grep -q ' /allownewsignups' ${cryptpad_nginx_filename}; then
+            sed -i 's| /allownewsignups| /register|g' ${cryptpad_nginx_filename}
+            sed -i 's|(register|login|(login|g' ${cryptpad_nginx_filename}
+            systemctl restart nginx
+        fi
+    fi
+}
+
+function cryptpad_evict_inactive_data {
+    { echo '#!/bin/bash';
+      echo 'cd /etc/cryptpad || exit 0';
+      echo 'if [ -f scripts/evict-inactive.js ]; then'
+      echo '    /usr/bin/node scripts/evict-inactive.js';
+      echo 'fi'; } > /etc/cron.daily/cryptpad-evict
+    chmod +x /etc/cron.daily/cryptpad-evict
+}
+
+function cryptpad_turn_off_signups {
+    cryptpad_nginx_filename=/etc/nginx/sites-available/cryptpad
+    { echo '#!/bin/bash';
+      echo "if grep -q ' /allownewsignups' ${cryptpad_nginx_filename}; then";
+      echo "  sed -i 's| /allownewsignups| /register|g' ${cryptpad_nginx_filename}";
+      echo "  sed -i 's|(register|login|(login|g' ${cryptpad_nginx_filename}";
+      echo '  systemctl restart nginx';
+      echo 'fi'; } > /etc/cron.weekly/cryptpad-signups
+    chmod +x /etc/cron.weekly/cryptpad-signups
+}
+
+function upgrade_distro_cryptpad {
+    target_distro="$1"
+
+    if [[ "$target_distro" == 'bullseye' ]]; then
+        echo -n ''
+    fi
+}
+
+function logging_on_cryptpad {
+    echo -n ''
+}
+
+function logging_off_cryptpad {
+    echo -n ''
+}
+
+function remove_user_cryptpad {
+    remove_username="$1"
+}
+
+function add_user_cryptpad {
+    new_username="$1"
+    new_user_password="$2"
+    echo '0'
+}
+
+function install_interactive_cryptpad {
+    echo -n ''
+    APP_INSTALLED=1
+}
+
+function change_password_cryptpad {
+    curr_username="$1"
+    new_user_password="$2"
+}
+
+function reconfigure_cryptpad {
+    if [ -d ${CRYPTPAD_DIR}/datastore ]; then
+        rm -rf ${CRYPTPAD_DIR}/datastore
+    fi
+}
+
+function cryptpad_generate_api_config {
+    if [ ! -d ${CRYPTPAD_DIR}/customize/api ]; then
+        mkdir -p ${CRYPTPAD_DIR}/customize/api
+    fi
+    wget 127.0.0.1:${CRYPTPAD_PORT}/api/config -O ${CRYPTPAD_DIR}/customize/api/config
+    if [ ! -f ${CRYPTPAD_DIR}/customize/api/config ]; then
+        echo $'Unable to wget api/config'
+        exit 89
+    fi
+    chown -R cryptpad:cryptpad ${CRYPTPAD_DIR}
+}
+
+function upgrade_cryptpad {
+    cryptpad_turn_off_signups
+    cryptpad_evict_inactive_data
+
+    CURR_CRYPTPAD_COMMIT=$(get_completion_param "cryptpad commit")
+    if [[ "$CURR_CRYPTPAD_COMMIT" == "$CRYPTPAD_COMMIT" ]]; then
+        return
+    fi
+
+    systemctl stop cryptpad
+
+    # update to the next commit
+    function_check set_repo_commit
+    set_repo_commit ${CRYPTPAD_DIR} "cryptpad commit" "$CRYPTPAD_COMMIT" $CRYPTPAD_REPO
+
+    cd ${CRYPTPAD_DIR} || exit 254
+    if [ -f ${CRYPTPAD_DIR}/config.js ]; then
+        mv ${CRYPTPAD_DIR}/config.js ${CRYPTPAD_DIR}/config/config.js
+        chown cryptpad:cryptpad ${CRYPTPAD_DIR}/config/config.js
+    fi
+    cryptpad_create_config
+    /usr/bin/npm upgrade
+    /usr/bin/npm install
+    if [ ! -d "${CRYPTPAD_DIR}/node_modules/bower/bin/bower" ]; then
+        /usr/bin/npm install bower@${CRYPTPAD_BOWER_VERSION}
+        chown -R cryptpad:cryptpad "${CRYPTPAD_DIR}"
+    fi
+    rm -rf ${CRYPTPAD_DIR}/.cache/bower
+    su -c './node_modules/bower/bin/bower install --config.interactive=false' - cryptpad
+    su -c './node_modules/bower/bin/bower update --config.interactive=false' - cryptpad
+    cryptpad_generate_api_config
+    chown -R cryptpad:cryptpad ${CRYPTPAD_DIR}
+
+    systemctl start cryptpad
+
+    if ! grep -q "debug|kanban" /etc/nginx/sites-available/cryptpad; then
+        sed -i 's@location ~.*@location ~ ^/(register|login|settings|user|pad|drive|poll|slide|code|whiteboard|file|media|profile|contacts|todo|filepicker|debug|kanban)$ {@g' /etc/nginx/sites-available/cryptpad
+        systemctl restart nginx
+    fi
+
+    if grep -q "location = /cryptpad_websocket {" /etc/nginx/sites-available/cryptpad; then
+        sed -i 's|location = /cryptpad_websocket {|location ^~ /cryptpad_websocket {|g' /etc/nginx/sites-available/cryptpad
+        systemctl restart nginx
+    fi
+}
+
+function backup_local_cryptpad {
+    source_directory=${CRYPTPAD_DIR}/datastore
+    if [ -d $source_directory ]; then
+        systemctl stop cryptpad
+
+        dest_directory=cryptpad
+        function_check suspend_site
+        suspend_site cryptpad
+
+        function_check backup_directory_to_usb
+        backup_directory_to_usb $source_directory $dest_directory
+
+        function_check restart_site
+        restart_site
+
+        systemctl start cryptpad
+    fi
+}
+
+function restore_local_cryptpad {
+    if [ -d ${CRYPTPAD_DIR} ]; then
+        systemctl stop cryptpad
+        temp_restore_dir=/root/tempcryptpad
+        function_check restore_directory_from_usb
+        restore_directory_from_usb $temp_restore_dir cryptpad
+        if [ ! -d $temp_restore_dir${CRYPTPAD_DIR}/datastore ]; then
+            if [ -d $temp_restore_dir ]; then
+                cp -r $temp_restore_dir/* ${CRYPTPAD_DIR}/datastore/
+            else
+                systemctl start cryptpad
+                echo 'Failed to restore cryptpad'
+                rm -rf $temp_restore_dir
+                exit 87
+            fi
+        else
+            cp -r $temp_restore_dir${CRYPTPAD_DIR}/datastore/* ${CRYPTPAD_DIR}/datastore/
+        fi
+        rm -rf $temp_restore_dir
+        systemctl start cryptpad
+    fi
+}
+
+function backup_remote_cryptpad {
+    echo -n ''
+}
+
+function restore_remote_cryptpad {
+    echo -n ''
+}
+
+function remove_cryptpad {
+    systemctl stop cryptpad
+    systemctl disable cryptpad
+    if [ -f /etc/systemd/system/cryptpad.service ]; then
+        rm /etc/systemd/system/cryptpad.service
+    fi
+    systemctl daemon-reload
+
+    if [ -f /etc/cron.daily/cryptpad-evict ]; then
+        rm /etc/cron.daily/cryptpad-evict
+    fi
+    if [ -f /etc/cron.weekly/cryptpad-signups ]; then
+        rm /etc/cron.weekly/cryptpad-signups
+    fi
+
+    function_check remove_nodejs
+    remove_nodejs cryptpad
+
+    nginx_dissite cryptpad
+
+    if [ -d ${CRYPTPAD_DIR} ]; then
+        rm -rf ${CRYPTPAD_DIR}
+    fi
+    if [ -f /etc/nginx/sites-available/cryptpad ]; then
+        rm /etc/nginx/sites-available/cryptpad
+    fi
+    function_check remove_onion_service
+    remove_onion_service cryptpad ${CRYPTPAD_ONION_PORT}
+    remove_app cryptpad
+    remove_completion_param install_cryptpad
+    sed -i '/cryptpad/d' "$COMPLETION_FILE"
+
+    userdel -r cryptpad
+}
+
+function cryptpad_create_config {
+    cryptpad_install_type=$1
+
+    cryptpad_prefix=
+    if [[ "$cryptpad_install_type" == "mesh" ]]; then
+        # shellcheck disable=SC2154
+        cryptpad_prefix="$rootdir"
+    fi
+
+    cryptpad_mydomain=
+    if [[ "$cryptpad_install_type" == "mesh" ]]; then
+        cryptpad_mydomain="http://P${PEER_ID}.local"
+    else
+        CRYPTPAD_ONION_HOSTNAME=$(cat /var/lib/tor/hidden_service_cryptpad/hostname)
+        cryptpad_mydomain="http://${CRYPTPAD_ONION_HOSTNAME}"
+    fi
+
+    { echo '/*@flow*/';
+      echo "var _domain = '${cryptpad_mydomain}:${CRYPTPAD_PORT}/';";
+      echo "var domain = ' ' + _domain;";
+      echo '';
+      echo 'var baseCSP = [';
+      echo "    \"default-src 'none'\",";
+      echo "    \"style-src 'unsafe-inline' 'self' \" + domain,";
+      echo "    \"font-src 'self' data:\" + domain,";
+      echo '';
+      echo '    "child-src blob: *",';
+      echo '    "frame-src blob: *",';
+      echo "    \"connect-src 'self' ws: wss: blob:\" + domain,";
+      echo '';
+      echo "    \"img-src 'self' data: blob:\" + domain,";
+      echo '    "media-src * blob:",';
+      echo '';
+      echo '    "frame-ancestors *",';
+      echo '    ""';
+      echo '];';
+      echo '';
+      echo 'module.exports = {';
+      echo '    adminKeys: [';
+      echo '        //"http://domain.onion/user/#/1/cryptpad-user1/longrandomstring=",';
+      echo '    ],';
+      echo '';
+      echo "    httpAddress: '::',";
+      echo "    httpPort: ${CRYPTPAD_PORT},";
+      echo '';
+      echo '    // This is for allowing the cross-domain iframe to function when developing';
+      echo "    httpSafePort: ${CRYPTPAD_PORT2},";
+      echo '';
+      echo '    httpUnsafeOrigin: domain,';
+      echo '';
+      echo '    httpHeaders: {';
+      echo '        "X-XSS-Protection": "1; mode=block",';
+      echo '        "X-Content-Type-Options": "nosniff",';
+      echo '        "Access-Control-Allow-Origin": "*"';
+      echo '    },';
+      echo '';
+      echo "    contentSecurity: baseCSP.join('; ') +";
+      echo "        \"script-src 'self'\" + domain,";
+      echo '';
+      echo "    padContentSecurity: baseCSP.join('; ') +";
+      echo "        \"script-src 'self' 'unsafe-eval' 'unsafe-inline'\" + domain,";
+      echo '';
+      echo '    mainPages: [';
+      echo "        'index',";
+      echo "        'privacy',";
+      echo "        'terms',";
+      echo "        'about',";
+      echo "        'contact',";
+      echo "        'what-is-cryptpad',";
+      echo "        'faq',";
+      echo "        'maintenance'";
+      echo '    ],';
+      echo '';
+      echo "    websocketPath: '/cryptpad_websocket',";
+      echo '';
+      echo '    logToStdout: false,';
+      echo '';
+      echo '    verbose: false,';
+      echo '';
+      echo '    removeDonateButton: true,';
+      echo '    allowSubscriptions: true,';
+      echo '';
+      echo '    myDomain: _domain,';
+      echo '';
+      echo '    defaultStorageLimit: 50 * 1024 * 1024,';
+      echo '';
+      echo '    customLimits: {';
+      echo '    },';
+      echo '';
+      echo '    disableIntegratedTasks: false,';
+      echo '';
+      echo '    inactiveTime: 3, // days';
+      echo '';
+      echo '    retainData: false,';
+      echo '    archiveRetentionTime: 15,';
+      echo '    maxUploadSize: 20 * 1024 * 1024,';
+      echo '    channelExpirationMs: 30000,';
+      echo '    openFileLimit: 2048,';
+      echo '';
+      echo "    filePath: './datastore/',";
+      echo "    archivePath: './data/archive',";
+      echo "    pinPath: './data/pins',";
+      echo "    taskPath: './data/tasks',";
+      echo "    blockPath: './block',";
+      echo "    blobPath: './blob',";
+      echo "    blobStagingPath: './data/blobstage',";
+      echo "    logPath: './data/logs',";
+      echo '';
+      echo '    logToStdout: false,';
+      echo "    logLevel: 'info',";
+      echo '    //logFeedback: false,';
+      echo '    verbose: false';
+      echo '};'; } > "$cryptpad_prefix${CRYPTPAD_DIR}/config/config.js"
+
+    if [[ "$cryptpad_install_type" != "mesh" ]]; then
+        chown cryptpad:cryptpad "$cryptpad_prefix${CRYPTPAD_DIR}/config/config.js"
+    else
+        chroot "$rootdir" chown cryptpad:cryptpad ${CRYPTPAD_DIR}/config/config.js
+    fi
+}
+
+function mesh_install_cryptpad {
+    # shellcheck disable=SC2153
+    if [[ "$VARIANT" != "meshclient" && "$VARIANT" != "meshusb" ]]; then
+        return
+    fi
+
+    if [ ! -d "$rootdir/var/www/cryptpad" ]; then
+        mkdir "$rootdir/var/www/cryptpad"
+    fi
+    if [ -d "$rootdir${CRYPTPAD_DIR}" ]; then
+        rm -rf "$rootdir${CRYPTPAD_DIR}"
+    fi
+
+    git_clone "$CRYPTPAD_REPO" "$rootdir${CRYPTPAD_DIR}"
+
+    if [ ! -d "$rootdir${CRYPTPAD_DIR}" ]; then
+        echo $'Unable to clone cryptpad repo'
+        exit 78
+    fi
+
+    # an unprivileged user to run as
+    chroot "$rootdir" useradd -d ${CRYPTPAD_DIR}/ cryptpad
+
+    cd "$rootdir${CRYPTPAD_DIR}" || exit 34
+    git checkout "$CRYPTPAD_COMMIT" -b "$CRYPTPAD_COMMIT"
+
+    chroot "$rootdir" chown -R cryptpad:cryptpad ${CRYPTPAD_DIR}
+
+    cryptpad_nginx_site=$rootdir/etc/nginx/sites-available/cryptpad
+    cryptpad_mesh_domain="P${PEER_ID}.local"
+    { echo 'server {';
+      echo '  listen [::]:80 default_server;';
+      echo "  server_name ${cryptpad_mesh_domain};";
+      echo '  port_in_redirect off;';
+      echo '';
+      echo '  # Logs';
+      echo '  access_log /dev/null;';
+      echo '  error_log /dev/null;';
+      echo '';
+      echo '  root /etc/cryptpad;';
+      echo '';
+      echo '  index index.html;';
+      echo '  error_page 404 /customize.dist/404.html;';
+      echo '';
+      echo "  set \$main_domain \"${cryptpad_mesh_domain}\";";
+      echo "    set \$sandbox_domain \"${cryptpad_mesh_domain}\";";
+      echo '';
+      echo "  set \$api_domain \"${cryptpad_mesh_domain}\";";
+      echo "  set \$files_domain \"${cryptpad_mesh_domain}\";";
+      echo '';
+      echo "  add_header X-XSS-Protection \"1; mode=block\";";
+      echo "  add_header X-Content-Type-Options nosniff;";
+      echo "  # add_header X-Frame-Options \"SAMEORIGIN\";";
+      echo '';
+      echo "  if (\$args ~ ver=) {";
+      echo "    set \$cacheControl max-age=31536000;";
+      echo '  }';
+      echo "  add_header Cache-Control \$cacheControl;";
+      echo '';
+      echo "  set \$styleSrc   \"'unsafe-inline' 'self' \${main_domain}\";";
+      echo '';
+      echo "  set \$connectSrc \"'self' https://\${main_domain} \$main_domain https://\${api_domain} blob:\";";
+      echo '';
+      echo "  set \$fontSrc    \"'self' data: \${main_domain}\";";
+      echo '';
+      echo "  set \$imgSrc     \"'self' data: * blob: \${main_domain}\";";
+      echo '';
+      echo "  set \$frameSrc   \"'self' \${sandbox_domain} blob:\";";
+      echo '';
+      echo "  set \$mediaSrc   \"'self' data: * blob: \${main_domain}\";";
+      echo '';
+      echo "  set \$childSrc   \"https://\${main_domain}\";";
+      echo '';
+      echo "  set \$workerSrc  \"https://\${main_domain}\";";
+      echo '';
+      echo "  set \$scriptSrc  \"'self' \${main_domain}\";";
+      echo '';
+      echo "  set \$unsafe 0;";
+      echo "  if (\$uri = \"/pad/inner.html\") { set \$unsafe 1; }";
+      echo "  if (\$uri = \"/sheet/inner.html\") { set \$unsafe 1; }";
+      echo "  if (\$uri ~ ^\/common\/onlyoffice\/.*\/index\.html.*\$) { set \$unsafe 1; }";
+      echo '';
+      echo "  if (\$unsafe) {";
+      echo "    set \$scriptSrc \"'self' 'unsafe-eval' 'unsafe-inline' \${main_domain}\";";
+      echo '  }';
+      echo "  add_header Content-Security-Policy \"default-src 'none'; child-src \$childSrc; worker-src \$workerSrc; media-src \$mediaSrc; style-src \$styleSrc; script-src \$scriptSrc; connect-src \$connectSrc; font-src \$fontSrc; img-src \$imgSrc; frame-src \$frameSrc;\";";
+      echo '  location ^~ /cryptpad_websocket {';
+      echo "      proxy_pass http://localhost:${CRYPTPAD_PORT};";
+      echo "      proxy_set_header X-Real-IP \$remote_addr;";
+      echo "      proxy_set_header Host \$host;";
+      echo "      proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;";
+      echo '';
+      echo "      proxy_http_version 1.1;";
+      echo "      proxy_set_header Upgrade \$http_upgrade;";
+      echo "      proxy_set_header Connection upgrade;";
+      echo '  }';
+      echo '';
+      echo '  location ^~ /customize.dist/ {';
+      echo '      # This is needed in order to prevent infinite recursion between /customize/ and the root';
+      echo '  }';
+      echo '  location ^~ /customize/ {';
+      echo "      rewrite ^/customize/(.*)\$ \$1 break;";
+      echo "      try_files /customize/\$uri /customize.dist/\$uri;";
+      echo '  }';
+      echo '';
+      echo '  location = /api/config {';
+      echo "      proxy_pass http://localhost:${CRYPTPAD_PORT};";
+      echo "      proxy_set_header X-Real-IP \$remote_addr;";
+      echo "      proxy_set_header Host \$host;";
+      echo "      proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;";
+      echo '  }';
+      echo '';
+      echo '  location ^~ /blob/ {';
+      echo "      if (\$request_method = 'OPTIONS') {";
+      echo "          add_header 'Access-Control-Allow-Origin' '*';";
+      echo "          add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';";
+      echo "          add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range';";
+      echo "          add_header 'Access-Control-Max-Age' 1728000;";
+      echo "          add_header 'Content-Type' 'application/octet-stream; charset=utf-8';";
+      echo "          add_header 'Content-Length' 0;";
+      echo '          return 204;';
+      echo '      }';
+      echo '      add_header Cache-Control max-age=31536000;';
+      echo "      add_header 'Access-Control-Allow-Origin' '*';";
+      echo "      add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';";
+      echo "      add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range';";
+      echo "      add_header 'Access-Control-Expose-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range';";
+      echo "      try_files \$uri =404;";
+      echo '  }';
+      echo '';
+      echo '  location ^~ /register {';
+      echo "    try_files \$uri =404;";
+      echo '  }';
+      echo '';
+      echo '  location ^~ /features.html {';
+      echo "    try_files \$uri =404;";
+      echo '  }';
+      echo '';
+      echo '  location ^~ /contact.html {';
+      echo "    try_files \$uri =404;";
+      echo '  }';
+      echo '';
+      echo '  location ~ ^/(register|login|settings|user|pad|drive|poll|slide|code|whiteboard|file|media|profile|contacts|todo|filepicker|debug|kanban|sheet|support|admin|notifications|teams)$ {';
+      echo "      rewrite ^(.*)\$ \$1/ redirect;";
+      echo '  }';
+      echo '';
+      echo "  try_files /www/\$uri /www/\$uri/index.html /customize/\$uri;";
+      echo '}'; } > "$cryptpad_nginx_site"
+
+    cd "$rootdir${CRYPTPAD_DIR}" || exit 62
+
+    cat <<EOF > "$rootdir/usr/bin/install_cryptpad"
+#!/bin/bash
+cd ${CRYPTPAD_DIR} || exit 35
+/usr/bin/npm install --build-from-source
+/usr/bin/npm install bower@${CRYPTPAD_BOWER_VERSION}
+chown -R cryptpad:cryptpad ${CRYPTPAD_DIR}
+su -c './node_modules/bower/bin/bower install --config.interactive=false' - cryptpad
+cp config/config.example.js config/config.js
+EOF
+    chmod +x "$rootdir/usr/bin/install_cryptpad"
+    chroot "$rootdir" /usr/bin/install_cryptpad
+
+    if [ ! -f "$rootdir${CRYPTPAD_DIR}/config/config.js" ]; then
+        echo $'Cryptpad config file not found'
+        exit 62
+    fi
+
+    rm "$rootdir/usr/bin/install_cryptpad"
+
+    cryptpad_create_config mesh
+
+    chroot "$rootdir" chown -R cryptpad:cryptpad ${CRYPTPAD_DIR}
+
+    # daemon
+    { echo '[Unit]';
+      echo 'Description=Cryptpad';
+      echo 'After=syslog.target';
+      echo 'After=network.target';
+      echo '';
+      echo '[Service]';
+      echo 'User=cryptpad';
+      echo 'Group=cryptpad';
+      echo "WorkingDirectory=${CRYPTPAD_DIR}";
+      echo "ExecStart=/usr/bin/node ${CRYPTPAD_DIR}/server.js";
+      echo 'Environment=PATH=/usr/bin:/usr/local/bin';
+      echo 'Environment=NODE_ENV=production';
+      echo 'Restart=on-failure';
+      echo 'PrivateTmp=true';
+      echo 'PrivateDevices=false';
+      echo 'CapabilityBoundingSet=~CAP_SYS_ADMIN';
+      echo 'ProtectSystem=yes';
+      echo 'ProtectHome=yes';
+      echo 'ProtectClock=yes';
+      echo 'ProtectHostname=yes';
+      echo 'PrivateUsers=yes';
+      echo 'ProtectKernelModules=yes';
+      echo 'ProtectKernelTunables=yes';
+      echo 'NoNewPrivileges=true';
+      echo '';
+      echo '[Install]';
+      echo 'WantedBy=multi-user.target'; } > "$rootdir/etc/systemd/system/cryptpad.service"
+    chroot "$rootdir" systemctl enable cryptpad.service
+}
+
+function install_cryptpad_main {
+    if [[ $(app_is_installed cryptpad_main) == "1" ]]; then
+        return
+    fi
+
+    if [ ! -d /var/www/cryptpad ]; then
+        mkdir /var/www/cryptpad
+    fi
+    if [ -d ${CRYPTPAD_DIR} ]; then
+        rm -rf ${CRYPTPAD_DIR}
+    fi
+
+    if [ -d /repos/cryptpad ]; then
+        mkdir -p ${CRYPTPAD_DIR}
+        cp -r -p /repos/cryptpad/. ${CRYPTPAD_DIR}
+        cd ${CRYPTPAD_DIR} || exit 34
+        git pull
+    else
+        function_check git_clone
+        git_clone $CRYPTPAD_REPO ${CRYPTPAD_DIR}
+    fi
+
+    if [ ! -d ${CRYPTPAD_DIR} ]; then
+        echo $'Unable to clone cryptpad repo'
+        exit 78
+    fi
+
+    # an unprivileged user to run as
+    useradd -d ${CRYPTPAD_DIR}/ cryptpad
+
+    cd ${CRYPTPAD_DIR} || exit 34
+    git checkout $CRYPTPAD_COMMIT -b $CRYPTPAD_COMMIT
+    set_completion_param "cryptpad commit" "$CRYPTPAD_COMMIT"
+
+    chown -R cryptpad:cryptpad ${CRYPTPAD_DIR}
+
+    CRYPTPAD_ONION_HOSTNAME=$(add_onion_service cryptpad 80 ${CRYPTPAD_ONION_PORT})
+
+    cryptpad_nginx_site=/etc/nginx/sites-available/cryptpad
+    { echo 'server {';
+      echo "  listen 127.0.0.1:$CRYPTPAD_ONION_PORT default_server;";
+      echo '  port_in_redirect off;';
+      echo "  server_name ${CRYPTPAD_ONION_HOSTNAME};";
+      echo '';
+      echo '  # Logs';
+      echo '  access_log /dev/null;';
+      echo '  error_log /dev/null;';
+      echo '';
+      echo '  root /etc/cryptpad;';
+      echo '';
+      echo '  index index.html;';
+      echo '  error_page 404 /customize.dist/404.html;';
+      echo '';
+      echo "  set \$main_domain \"${CRYPTPAD_ONION_HOSTNAME}\";";
+      echo "    set \$sandbox_domain \"${CRYPTPAD_ONION_HOSTNAME}\";";
+      echo '';
+      echo "  set \$api_domain \"${CRYPTPAD_ONION_HOSTNAME}\";";
+      echo "  set \$files_domain \"${CRYPTPAD_ONION_HOSTNAME}\";";
+      echo '';
+      echo "  server_name ${CRYPTPAD_ONION_HOSTNAME};";
+      echo '';
+      echo "  add_header X-XSS-Protection \"1; mode=block\";";
+      echo "  add_header X-Content-Type-Options nosniff;";
+      echo "  # add_header X-Frame-Options \"SAMEORIGIN\";";
+      echo '';
+      echo "  if (\$args ~ ver=) {";
+      echo "    set \$cacheControl max-age=31536000;";
+      echo '  }';
+      echo "  add_header Cache-Control \$cacheControl;";
+      echo '';
+      echo "  set \$styleSrc   \"'unsafe-inline' 'self' \${main_domain}\";";
+      echo '';
+      echo "  set \$connectSrc \"'self' https://\${main_domain} \$main_domain https://\${api_domain} blob:\";";
+      echo '';
+      echo "  set \$fontSrc    \"'self' data: \${main_domain}\";";
+      echo '';
+      echo "  set \$imgSrc     \"'self' data: * blob: \${main_domain}\";";
+      echo '';
+      echo "  set \$frameSrc   \"'self' \${sandbox_domain} blob:\";";
+      echo '';
+      echo "  set \$mediaSrc   \"'self' data: * blob: \${main_domain}\";";
+      echo '';
+      echo "  set \$childSrc   \"https://\${main_domain}\";";
+      echo '';
+      echo "  set \$workerSrc  \"https://\${main_domain}\";";
+      echo '';
+      echo "  set \$scriptSrc  \"'self' \${main_domain}\";";
+      echo '';
+      echo "  set \$unsafe 0;";
+      echo "  if (\$uri = \"/pad/inner.html\") { set \$unsafe 1; }";
+      echo "  if (\$uri = \"/sheet/inner.html\") { set \$unsafe 1; }";
+      echo "  if (\$uri ~ ^\/common\/onlyoffice\/.*\/index\.html.*\$) { set \$unsafe 1; }";
+      echo '';
+      echo "  if (\$unsafe) {";
+      echo "    set \$scriptSrc \"'self' 'unsafe-eval' 'unsafe-inline' \${main_domain}\";";
+      echo '  }';
+      echo "  add_header Content-Security-Policy \"default-src 'none'; child-src \$childSrc; worker-src \$workerSrc; media-src \$mediaSrc; style-src \$styleSrc; script-src \$scriptSrc; connect-src \$connectSrc; font-src \$fontSrc; img-src \$imgSrc; frame-src \$frameSrc;\";";
+      echo '  location ^~ /cryptpad_websocket {';
+      echo "      proxy_pass http://localhost:${CRYPTPAD_PORT};";
+      echo "      proxy_set_header X-Real-IP \$remote_addr;";
+      echo "      proxy_set_header Host \$host;";
+      echo "      proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;";
+      echo '';
+      echo "      proxy_http_version 1.1;";
+      echo "      proxy_set_header Upgrade \$http_upgrade;";
+      echo "      proxy_set_header Connection upgrade;";
+      echo '  }';
+      echo '';
+      echo '  location ^~ /customize.dist/ {';
+      echo '      # This is needed in order to prevent infinite recursion between /customize/ and the root';
+      echo '  }';
+      echo '  location ^~ /customize/ {';
+      echo "      rewrite ^/customize/(.*)\$ \$1 break;";
+      echo "      try_files /customize/\$uri /customize.dist/\$uri;";
+      echo '  }';
+      echo '';
+      echo '  location = /api/config {';
+      echo "      proxy_pass http://localhost:${CRYPTPAD_PORT};";
+      echo "      proxy_set_header X-Real-IP \$remote_addr;";
+      echo "      proxy_set_header Host \$host;";
+      echo "      proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;";
+      echo '  }';
+      echo '';
+      echo '  location ^~ /blob/ {';
+      echo "      if (\$request_method = 'OPTIONS') {";
+      echo "          add_header 'Access-Control-Allow-Origin' '*';";
+      echo "          add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';";
+      echo "          add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range';";
+      echo "          add_header 'Access-Control-Max-Age' 1728000;";
+      echo "          add_header 'Content-Type' 'application/octet-stream; charset=utf-8';";
+      echo "          add_header 'Content-Length' 0;";
+      echo '          return 204;';
+      echo '      }';
+      echo '      add_header Cache-Control max-age=31536000;';
+      echo "      add_header 'Access-Control-Allow-Origin' '*';";
+      echo "      add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';";
+      echo "      add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range';";
+      echo "      add_header 'Access-Control-Expose-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range';";
+      echo "      try_files \$uri =404;";
+      echo '  }';
+      echo '';
+      echo '  location ^~ /register {';
+      echo "    try_files \$uri =404;";
+      echo '  }';
+      echo '';
+      echo '  location ^~ /features.html {';
+      echo "    try_files \$uri =404;";
+      echo '  }';
+      echo '';
+      echo '  location ^~ /contact.html {';
+      echo "    try_files \$uri =404;";
+      echo '  }';
+      echo '';
+      echo '  location ~ ^/(register|login|settings|user|pad|drive|poll|slide|code|whiteboard|file|media|profile|contacts|todo|filepicker|debug|kanban|sheet|support|admin|notifications|teams)$ {';
+      echo "      rewrite ^(.*)\$ \$1/ redirect;";
+      echo '  }';
+      echo '';
+      echo "  try_files /www/\$uri /www/\$uri/index.html /customize/\$uri;";
+      echo '}'; } > "$cryptpad_nginx_site"
+
+    function_check nginx_ensite
+    nginx_ensite cryptpad
+
+    install_completed cryptpad_main
+}
+
+function install_cryptpad {
+    increment_app_install_progress
+
+    function_check install_nodejs
+    install_nodejs cryptpad
+
+    increment_app_install_progress
+
+    install_cryptpad_main
+
+    increment_app_install_progress
+
+    cd ${CRYPTPAD_DIR} || exit 35
+
+    /usr/bin/npm install
+
+    increment_app_install_progress
+
+    chown -R cryptpad:cryptpad ${CRYPTPAD_DIR}
+    cp config/config.example.js config/config.js
+    if [ ! -f config/config.js ]; then
+        echo $'Cryptpad config file not found'
+        exit 62
+    fi
+
+    increment_app_install_progress
+
+    cryptpad_create_config
+    chown -R cryptpad:cryptpad ${CRYPTPAD_DIR}
+
+    increment_app_install_progress
+
+    # daemon
+    { echo '[Unit]';
+      echo 'Description=Cryptpad';
+      echo 'After=syslog.target';
+      echo 'After=network.target';
+      echo '';
+      echo '[Service]';
+      echo 'User=cryptpad';
+      echo 'Group=cryptpad';
+      echo "WorkingDirectory=${CRYPTPAD_DIR}";
+      echo "ExecStart=/usr/bin/node ${CRYPTPAD_DIR}/server.js";
+      echo 'Environment=PATH=/usr/bin:/usr/local/bin';
+      echo 'Environment=NODE_ENV=production';
+      echo "Environment='PWD=\"/etc/cryptpad\"'";
+      echo 'PrivateTmp=true';
+      echo 'PrivateDevices=false';
+      echo 'NoNewPrivileges=true';
+      echo 'CapabilityBoundingSet=~CAP_SYS_ADMIN';
+      echo 'ProtectSystem=yes';
+      echo 'ProtectHome=yes';
+      echo 'Restart=always';
+      echo 'RestartSec=2';
+      echo 'ProtectClock=yes';
+      echo 'ProtectHostname=yes';
+      echo 'PrivateUsers=yes';
+      echo 'ProtectKernelModules=yes';
+      echo 'ProtectKernelTunables=yes';
+      echo '';
+      echo '[Install]';
+      echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/cryptpad.service
+    systemctl enable cryptpad.service
+    systemctl daemon-reload
+    systemctl start cryptpad.service
+
+    increment_app_install_progress
+
+    sleep 8
+
+    cryptpad_generate_api_config
+
+    increment_app_install_progress
+
+    cd ${CRYPTPAD_DIR} || exit 73
+    /usr/bin/npm install bower@${CRYPTPAD_BOWER_VERSION}
+    if [ ! -f "${CRYPTPAD_DIR}/node_modules/bower/bin/bower" ]; then
+        echo $"bower was not installed"
+        exit 89
+    fi
+    increment_app_install_progress
+    chown -R cryptpad:cryptpad ${CRYPTPAD_DIR}/node_modules/bower
+    increment_app_install_progress
+    su -c './node_modules/bower/bin/bower install --config.interactive=false' - cryptpad
+    increment_app_install_progress
+    su -c './node_modules/bower/bin/bower update --config.interactive=false' - cryptpad
+
+    increment_app_install_progress
+
+    cryptpad_turn_off_signups
+
+    increment_app_install_progress
+
+    cryptpad_evict_inactive_data
+
+    increment_app_install_progress
+
+    systemctl restart nginx
+
+    APP_INSTALLED=1
+}
+
+# NOTE: deliberately there is no "exit 0"

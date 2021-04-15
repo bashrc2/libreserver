@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <style>
+      @import url("libreserver.css");
+
+      #qrcodepic {
+          width: 40%;
+          height: auto;
+          margin-right : auto;
+          margin-left : auto;
+      }
+
+      button {
+          border: none;
+          outline: 0;
+          display: inline-block;
+          padding: 8px;
+          color: white;
+          background-color: #000;
+          text-align: center;
+          cursor: pointer;
+          width: 100%;
+          font-size: 18px;
+      }
+
+      button:hover, a:hover {
+          opacity: 0.7;
+      }
+    </style>
+  </head>
+  <body>
+
+    <div class="card">
+      <div class="header">
+        <a href="users.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"/></a>
+        <h1 translate="no">USERNAME</h1>
+
+        <a href="../mail">
+          <img src="images/mail_small.png" style="width:12%" alt="Mail icon">
+        </a>
+
+        <p class="email" translate="no">USEREMAIL</p>
+
+        <a href="images/userprofile_USERNAME_xmpp.png"><img id="qrcodepic" class="img-responsive" src="images/userprofile_USERNAME_xmpp.png" alt="QR code"/></a>
+
+        <br><br>
+
+        <form action="userprofile.php" method="post">
+          <input type="hidden" name="myuser" value="USERNAME">
+	  <p>
+	    <span translate="yes">Notify via</span>
+            <select name="notification_type">
+              <option value="email">Email</option>
+            </select>
+	  </p>
+	  <input type="checkbox" name="admin_notify"><span translate="yes">Receive admin notifications</span><br><br>	  
+          <input type="submit" name="submitchangepassword" translate="yes" value="Password" />
+          <!-- remove user button -->
+          <input type="submit" name="submitremoveuser" translate="yes" value="Remove" />
+          <!-- end of remove user button -->
+          <input type="submit" name="submituserback" translate="yes" value="Go Back" />
+	    <input type="submit" name="submitnotification" translate="yes" value="Submit" />
+        </form>
+
+        <br><br>
+      </div>
+
+    </div>
+
+  </body>
+</html>

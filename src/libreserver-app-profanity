@@ -1,0 +1,246 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Profanity XMPP client
+#
+# License
+# =======
+#
+# Copyright (C) 2017-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VARIANTS='full full-vim chat'
+
+APP_CATEGORY=chat
+
+IN_DEFAULT_INSTALL=0
+SHOW_ON_ABOUT=1
+REQUIRES_APP=
+
+xmpp_variables=(ONION_ONLY
+                INSTALLED_WITHIN_DOCKER
+                MY_USERNAME
+                DEFAULT_DOMAIN_NAME
+                XMPP_DOMAIN_CODE)
+
+function upgrade_distro_profanity {
+    target_distro="$1"
+
+    if [[ "$target_distro" == 'bullseye' ]]; then
+        echo -n ''
+    fi
+}
+
+function change_default_domain_name_profanity {
+    new_default_domain_name="$1"
+
+    read_config_param DEFAULT_DOMAIN_NAME
+    for d in /home/*/ ; do
+        USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+        if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+
+            XMPP_CLIENT_DIR=/home/${USERNAME}/.local/share/profanity
+            XMPP_CLIENT_ACCOUNTS=$XMPP_CLIENT_DIR/accounts
+            if [ -f "$XMPP_CLIENT_ACCOUNTS" ]; then
+                sed -i "s|$DEFAULT_DOMAIN_NAME|$new_default_domain_name|g" "$XMPP_CLIENT_ACCOUNTS"
+            fi
+        fi
+    done
+}
+
+function logging_on_profanity {
+    echo -n ''
+}
+
+function logging_off_profanity {
+    echo -n ''
+}
+
+function remove_user_profanity {
+    echo -n ''
+#    remove_username="$1"
+}
+
+function add_user_profanity {
+#    new_username="$1"
+#    new_user_password="$2"
+
+    echo '0'
+}
+
+function run_client_profanity {
+    torify profanity
+}
+
+function install_interactive_profanity {
+    echo -n ''
+    APP_INSTALLED=1
+}
+
+function change_password_profanity {
+    curr_username="$1"
+    new_user_password="$2"
+
+    read_config_param DEFAULT_DOMAIN_NAME
+
+    "${PROJECT_NAME}-pass" -u "$curr_username" -a xmpp -p "$new_user_password"
+
+    # TODO: this is currently interactive. Really there needs to be a
+    # non-interactive password change option for prosodyctl
+    clear
+    # echo ''
+    # echo $'Currently Prosody requires password changes to be done interactively'
+    # prosodyctl passwd "${curr_username}@${DEFAULT_DOMAIN_NAME}"
+
+    XMPP_CLIENT_DIR=/home/${curr_username}/.local/share/profanity
+    XMPP_CLIENT_ACCOUNTS=$XMPP_CLIENT_DIR/accounts
+    if [ -f "$XMPP_CLIENT_ACCOUNTS" ]; then
+        sed -i "s|password=.*|password=$new_user_password|g" "$XMPP_CLIENT_ACCOUNTS"
+    fi
+}
+
+function reconfigure_profanity {
+    echo -n ''
+}
+
+function upgrade_profanity {
+    echo -n ''
+}
+
+function backup_local_profanity {
+    echo -n ''
+}
+
+function restore_local_profanity {
+    echo -n ''
+}
+
+function backup_remote_profanity {
+    echo -n ''
+}
+
+function restore_remote_profanity {
+    echo -n ''
+}
+
+function remove_profanity {
+    if [ -f /usr/bin/profanity ]; then
+        $REMOVE_PACKAGES profanity
+
+        remove_completion_param install_profanity
+        sed -i '/profanity/d' "$COMPLETION_FILE"
+    fi
+}
+
+function install_profanity {
+    INSTALL_PACKAGES profanity
+
+    if [ ! -f /usr/bin/profanity ]; then
+        echo $'Unable to install profanity'
+        exit 78
+    fi
+
+    XMPP_CLIENT_DIR=/home/${MY_USERNAME}/.local/share/profanity
+    XMPP_CLIENT_ACCOUNTS=$XMPP_CLIENT_DIR/accounts
+    if [ ! -d "$XMPP_CLIENT_DIR" ]; then
+        mkdir -p "$XMPP_CLIENT_DIR"
+    fi
+
+    XMPP_ONION_HOSTNAME=$(cat /var/lib/tor/hidden_service_email/hostname)
+    MY_GPG_PUBLIC_KEY_ID=$(gpg_pubkey_from_email "${MY_USERNAME}" "${MY_USERNAME}@${DEFAULT_DOMAIN_NAME}")
+
+    XMPP_PASSWORD=
+    if [ -f "$IMAGE_PASSWORD_FILE" ]; then
+        XMPP_PASSWORD="$(printf "%s" "$(cat "$IMAGE_PASSWORD_FILE")")"
+    fi
+
+    if [[ $ONION_ONLY == 'no' ]]; then
+        { echo "[${MY_USERNAME}@${DEFAULT_DOMAIN_NAME}]";
+          echo 'enabled=true';
+          echo "jid=${MY_USERNAME}@${DEFAULT_DOMAIN_NAME}";
+          echo "server=$XMPP_ONION_HOSTNAME";
+          echo "pgp.keyid=$MY_GPG_PUBLIC_KEY_ID";
+          echo "pgp.keyid=";
+          echo 'resource=profanity';
+          echo "muc.service=chat.${DEFAULT_DOMAIN_NAME}";
+          echo "muc.nick=${MY_USERNAME}";
+          echo 'presence.last=online';
+          echo 'presence.login=online';
+          echo 'priority.online=0';
+          echo 'priority.chat=0';
+          echo 'priority.away=0';
+          echo 'priority.xa=0';
+          echo 'priority.dnd=0'; } > "$XMPP_CLIENT_ACCOUNTS"
+        if [ "${XMPP_PASSWORD}" ]; then
+            echo "password=$XMPP_PASSWORD" >> "$XMPP_CLIENT_ACCOUNTS"
+        fi
+    fi
+
+    if [ -f /var/lib/tor/hidden_service_email/hostname ]; then
+        echo "[${MY_USERNAME}@${XMPP_ONION_HOSTNAME}]" >> "$XMPP_CLIENT_ACCOUNTS"
+        if [[ $ONION_ONLY == 'no' ]]; then
+            echo 'enabled=false' >> "$XMPP_CLIENT_ACCOUNTS"
+        else
+            echo 'enabled=true' >> "$XMPP_CLIENT_ACCOUNTS"
+        fi
+        { echo "jid=${MY_USERNAME}@${XMPP_ONION_HOSTNAME}";
+          echo "server=$XMPP_ONION_HOSTNAME";
+          echo "pgp.keyid=$MY_GPG_PUBLIC_KEY_ID";
+          echo "pgp.keyid=";
+          echo 'resource=profanity';
+          echo "muc.service=${XMPP_ONION_HOSTNAME}";
+          echo "muc.nick=${MY_USERNAME}";
+          echo 'presence.last=online';
+          echo 'presence.login=online';
+          echo 'priority.online=0';
+          echo 'priority.chat=0';
+          echo 'priority.away=0';
+          echo 'priority.xa=0';
+          echo 'priority.dnd=0'; } >> "$XMPP_CLIENT_ACCOUNTS"
+        if [ "${XMPP_PASSWORD}" ]; then
+            echo "password=$XMPP_PASSWORD" >> "$XMPP_CLIENT_ACCOUNTS"
+        fi
+    fi
+
+    if [ ! -d "/home/${MY_USERNAME}/.config/profanity" ]; then
+        mkdir -p "/home/${MY_USERNAME}/.config/profanity"
+    fi
+    echo '[connection]' > "/home/${MY_USERNAME}/.config/profanity/profrc"
+    if [[ $ONION_ONLY == 'no' ]]; then
+        echo "account=${MY_USERNAME}@${DEFAULT_DOMAIN_NAME}" >> "/home/${MY_USERNAME}/.config/profanity/profrc"
+    else
+        echo "account=${MY_USERNAME}@${XMPP_ONION_HOSTNAME}" >> "/home/${MY_USERNAME}/.config/profanity/profrc"
+    fi
+    { echo '';
+      echo '[otr]';
+      echo 'policy=opportunistic';
+      echo 'log=off';
+      echo '';
+      echo '[pgp]';
+      echo 'log=off';
+      echo '';
+      echo '[ui]';
+      echo 'enc.warn=true'; } >> "/home/${MY_USERNAME}/.config/profanity/profrc"
+
+    chown -R "${MY_USERNAME}":"${MY_USERNAME}" "/home/${MY_USERNAME}/.local"
+    chown -R "${MY_USERNAME}":"${MY_USERNAME}" "/home/${MY_USERNAME}/.config"
+
+    APP_INSTALLED=1
+}
+
+# NOTE: deliberately no exit 0

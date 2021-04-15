@@ -1,0 +1,74 @@
+#+TITLE: LibreServer
+#+AUTHOR: Bob Mottram
+#+EMAIL: bob@libreserver.org
+#+KEYWORDS: libreserver, file sync
+#+DESCRIPTION: How to use Syncthing
+#+OPTIONS: ^:nil toc:nil num:nil
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="libreserver.css" />
+
+#+attr_html: :width 80% :height 10% :align center
+[[file:images/logo.png]]
+
+* Syncthing
+
+Syncthing provides a similar capability to proprietary systems such as Dropbox, and also is well suited for use with low power single board computers. You can have one or more directories which are synchronized across your various laptops/desktops/devices, and this makes it hard for you to ever lose important files. The manner in which the synchronization is done is pretty secure, such that it would be difficult for passive adversaries (mass surveillance, "/men in the middle/", etc) to know what files you're sharing. Of course, you don't necessarily need to be running a server in order to use Syncthing, but if you do have a server which is always running then there's always at least one place to synchronize your files to or from.
+
+LibreServer provides Syncthing shared directories for each user on the system, plus a single shared directory for all users. The expected most common scenario here is that of a family in which members may not want to share /all of their files/ with each other, but might want to share some in a common pool (eg. birthday photos). You can also easily share between different servers.
+
+* On a laptop
+Install syncthing on a Debian based distro:
+
+#+BEGIN_SRC bash
+curl -s https://syncthing.net/release-key.txt | sudo apt-key add -
+echo "deb http://apt.syncthing.net/ syncthing release" | sudo tee /etc/apt/sources.list.d/syncthing.list
+sudo apt-get update
+sudo apt-get install syncthing
+#+END_SRC
+
+Or on Arch/Parabola:
+
+#+begin_src bash
+sudo pacman -S syncthing
+#+end_src
+
+Add syncthing to your startup applications, so that it begins running when your system starts. Then either restart your system or run the command "syncthing" from a terminal.
+
+In another terminal log into LibreServer:
+
+#+BEGIN_SRC bash
+ssh username@domainname -p 2222
+#+END_SRC
+
+Then select *Run an App* and *syncthing*.
+
+#+attr_html: :width 80% :align center
+[[file:images/controlpanel/control_panel_file_sync.jpg]]
+
+Select *Show device ID* and copy the long string of letters and numbers shown, using the shift key then select the text followed by right click then select copy.
+
+Open a non-Tor browser and enter  *http://127.0.0.1:8384* as the URL. You should now see the minimalistic user interface. Under *Remote Devices* select *Add Remote Device*. In the *Device ID* field paste the string you just copied (CTRL+v). The Device name can be anything. Under *Share Folders with Device* check *default* (or whatever folder you created on your local machine), then save.
+
+#+attr_html: :width 50% :align center
+[[file:images/syncthing_browser.jpg]]
+
+From the top menu select *Actions* and then *Show ID*, then copy the ID string (usually select then CTRL+c). Go back to the terminal control panel menu and select *Add an ID* then paste what you just copied (CTRL+v). Optionally you can also provide a description so that you later can know what that string corresponds to.
+
+Now wait for a few minutes. Eventually you will see two messages appear within the browser asking if you want to add two new folders from the LibreServer server. Say yes to both, and specify *~/Sync* as the directory with your username and *~/SyncShared* as the shared directory. You can now copy files into your *~/Sync* directory and they will automatically be synced to the server. Those will be files which only you can access. If you copy files into *~/SyncShared* then they will also be available to any other users on the system.
+
+* Desktop app
+If you're running Arch/Parabola there is a package called [[https://github.com/syncthing/syncthing-gtk][syncthing-gtk]] which provides a GTK GUI and an icon indicating whether synchronization is happening. This can be more convenient than using the browser interface.
+
+* On Android
+Install Syncthing and Connectbot from F-droid.
+
+Set up Connectbot to log into LibreServer.
+
+Select *File Synchronization*.
+
+Select *Show device ID* and copy the long string of letters by pressing anywhere on the screen, selecting the *menu* then *copy* and then selecting the ID string. This is very tricky on a small screen, so expect to fail multiple times before you succeed in copying the text.
+
+Open Syncthing and select the devices tab. Press on *+* and then paste the device ID with a long press followed by *Paste*. You may need to remove any stray characters which were copied during the previous haphazard selection process. Add a name, which can be anything.
+
+Now select the menu (top left or menu button) and then press on *Device ID*. It will be copied to the clipboard. Go back to Connectbot and from the control panel select *File Synchronization* followed by *Add an ID*. You can then paste in the ID with a long press, and optionally add a description for the device. When that's done you can disconnect from Connectbot.
+
+Now wait for a few minutes or more. Eventually you should receive two notifications (swipe down from the top to see them) which will allow you to confirm the connection to the server. Say yes to both, and specify appropriate directories for your files and the shared files. To reduce battery and data usage via the settings you can also set Syncthing to only sync while it's charging and only while it's connected to wifi.

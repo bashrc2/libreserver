@@ -1,0 +1,405 @@
+=> index.gmi ⯇ Go Back
+
+# LibreServer Frequently Asked Questions
+
+``` question logo
+    ████████████████████████
+  ██                        ██
+██    ░░██████████████░░    ▓▓██
+██  ░░██              ██░░  ▓▓██
+██  ██                  ██  ▓▓██
+██  ██      ██████      ██  ▓▓██
+██  ░░████████████      ██  ▓▓██
+██  ░░░░░░██          ██░░  ▓▓██
+██  ░░░░░░██      ████░░░░  ▓▓██
+██  ░░░░░░░░██████░░░░░░░░  ▓▓██
+██  ░░░░░░██      ██░░░░░░  ▓▓██
+██  ░░░░░░██      ██░░░░░░  ▓▓██
+██    ░░░░░░██████░░░░░░    ▓▓██
+██▓▓                      ▓▓▓▓██
+  ██▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓██
+    ████████████████████████
+```
+
+## Does this project have a Code of Conduct?
+
+=> coc.gmi ► Linked here
+
+## What is the threat model for this system?
+
+In security discussions there is often talk about threat models, but they rarely seem to be defined. The threat model for this system is documented below.
+
+=> threatmodel.gmi ► Threat Model
+
+## Can I sell this on ARM boxes?
+
+Yes. You might want to change the branding and the upstream repo. The only requirement is that you abide by the terms of the AGPL license. Free Software is about freedom, not price, so there's nothing stopping you from charging for it. For further information see the contact details.
+
+## What applications are supported?
+
+See here for the complete list of apps. In addition to those as part of the base install you get an email server.
+
+## Can I send notifications to a member other than admin?
+
+Yes. From the administration screen select Settings then Members then the account to send admin notifications to.
+
+Check Receive admin notifications then select the Submit button.
+
+The admin notifications will now be diverted to that account. This can be useful if the administrator is unavailable and you want someone else to keep an eye on the server, or of you want to leave the admin account untouched and do most things on an unprivileged account, which improves security a little.
+
+## Can I donate to the project?
+
+If you want to financially support this project it has a Patreon and LiberaPay is also available.
+
+=> https://www.patreon.com/libreserver ► Patreon
+=> https://paypal.me/BobMottram ► Paypal
+=> https://liberapay.com/bashrc/donate ► Liberapay
+
+## I don't have a static IP address. Can I still install this system?
+
+Yes. The minimum requirements are to have some hardware that you can install Debian onto and also that you have administrator access to your internet router so that you can forward ports to the system which has LibreServer installed.
+
+The lack of a static IP address can be worked around by using a dynamic DNS service. LibreServer uses inadyn , which supports a variety of dynamic DNS providers.
+
+## What are the best microSD cards to use?
+
+There can be big differences in the performance of microSD cards, and the cheaper ones are almost invariably terrible and/or unusable. Sandisk and Samsung currently appear to be the better brands. You can find some performance benchmarks here. However, benchmarks like this only give a very rough idea of performance and they can vary significantly between individual cards even within the same brand.
+
+If you're struggling to get good performance out of your microSD card then you might want to consider running from a SATA drive or SSD instead. Some boards such as Cubieboard and Olinuxino have SATA sockets such that you can connect an SSD. It doesn't have to be high cost and the smallest SSD you can find will probably be enough. It's then possible to build an image with the –sata option or download one of the pre-built ones and copy it both to the microSD and SATA drive. SSD drives can give a 10x performance improvement over just using a microSD card.
+
+## On a single board computer can I boot from an external SSD or hard drive?
+
+Some single board computers, such as Cubieboards or OLinuxino, have a SATA socket on them which enables an external drive to be connected. This is usually intended for extra file storage, but it is also possible to run the operating system from an external drive. This can have the advantage of significantly increasing the read/write performance and your apps will appear to run more quickly.
+
+Typically a microSD read speed is 10-30MB/s. An SSD or hard drive can be 100MB/s or more, so that's a big potential gain.
+
+Single board computers usually don't have the capability of booting directly from an external drive, but what you can do is boot from a partition on a microSD drive, which then runs the main filesystem (the rootfs) from the external drive.
+
+To create an image suitable for running from an SSD or hard drive use the –sata option, such as:
+
+libreserver-image -t cubieboard2 --sata sda2
+
+Note that the sata option should be set to point to the second partition on the drive, which is normally sda2.
+
+When the image is created then use the dd command to copy it both to a microSD card and to the SSD or hard drive. Plug them both into the board and it should then boot and use the external drive.
+
+## Why LibreServer and not FreedomBox?
+
+When the project began in late 2013 the FreedomBox project seemed to be going nowhere, and was only designed to work with the DreamPlug hardware. There was some new hardware out - the Beaglebone Black - which could run Debian and was also a free hardware design so seemed more appropriate. Hence the name "LibreServer", being like FreedomBox but on a Beaglebone.
+
+Right now the FreedomBox project's fortunes have turned around. It has more developers and an increasing catalog of conference talks - in part because the changing ambient politics have made it more relevant to more people whereas back in 2010 people tended to largely trust "big tech" companies. So is there still a need for something like LibreServer? There probably is, mainly because it includes things which are not necessarily packaged for Debian, whereas FreedomBox as a pure blend has to stick to official Debian packages and security defaults which are not necessarily well aligned with self-hosted deployments.
+
+Here are the main similarities and differences between the two projects:
+
+### Similarities
+
+* Uses freedom-maker and vmdebootstrap to build debian images
+* Supports the use of Tor onion addresses to access websites
+* Typically runs on ARM single board computers
+* Both projects are have the goal of becoming ready for mass market use cases
+* Both projects aim to increase independence and privacy
+* Both projects aim to make running your own server at home easy
+* Both projects include wiki, blog, VoIP and file sync
+* Both projects enable easy installation and removal of apps
+* Both are typically "bare metal" rather than running as VMs or containers
+* Both can use the companion app for Android
+
+### Differences
+
+* FreedomBox is a Debian pure blend. LibreServer is not
+* LibreServer only supports Free Software. FreedomBox includes some closed binary boot blobs for certain ARM boards
+* LibreServer includes some software not yet in the official Debian repos
+* LibreServer includes an email server set up for use with GPG by default
+* LibreServer implements recommendations from bettercrypto.org whereas FreedomBox sticks to Debian default crypto settings
+* LibreServer has a mesh network version. FreedomBox doesn't yet
+
+## Why not use full disk encryption?
+
+Full disk encryption helps with laptop security, but on a server uptime is expected to be close to 100% and full disk encryption only provides protection when the machine is powered off and unused. This means that such encryption provides very little useful security for a server.
+
+There is also the additional problem that electrical power outages may leave you with an unusable server for long periods of time if you don't always have physical access to it (eg. out at work, or on holiday) to enter a disk encryption password. LibreServer typically runs on single board computers where there is not expected to be a screen and therefore it may be difficult to enter a disk password during the boot sequence.
+
+If you do need full disk encryption and the above points are not relevant then you can install Debian stable with LUKS and then do a manual setup of LibreServer after that with libreserver menuconfig.
+
+## Why not support building images for Raspberry Pi?
+
+The FreedomBox project supports Raspberry Pi builds, and the image build system for LibreServer is based on the same system. However, although the Raspberry Pi can run a version of Debian it requires a closed proprietary blob (bootcode.bin) in order to boot the hardware. Who knows what that blob might contain or what exploits it could facilitate. From an adversarial point of view if you were trying to deliver "bulk equipment interference" then it doesn't get any better than piggybacking on something which has control of the boot process, and hence all subsequently run processes.
+
+That might be considered bad, but the tale goes downhill from there. Of the six CPU cores on recent models only four are ARM. The others are GPU cores which run a proprietary operating system owned by Microsoft called ThreadX. This operating system is the real controller of the Pi, with the ARM cores as a secondary and dependent processing system. It doesn't matter if you never display any graphics, ThreadX is still ultimately in charge and has access to everything.
+
+So although the Raspberry Pi is cheap and hugely popular it's not supported by the LibreServer project. Perhaps future versions of the Pi won't have the ThreadX GPU, or maybe ThreadX will be open sourced at some stage.
+
+## Why use Tor? I've heard it's used by bad people
+
+Years ago Tor was usually depicted in the mainstream media as something scary inhabited by cyberterrorists and other bad cybers, but today to a large extent Tor is accepted as just another way of routing data in a network. Depending upon where you live there may still be some amount of fearmongering about Tor, but it now seems clear that the trajectory is towards general acceptance.
+
+Tor and its onion addresses, previously called hidden addresses, have a few key advantages:
+
+* NAT traversal
+* Firewall traversal
+* Avoiding the domain name system (DNS), which is mostly centralized and not secure
+* Avoiding passive bulk surveillance in which governments try to find out who is communicating with who
+
+On the negative side it's a complex system which is not fully decentralized.
+
+## How is Tor integrated with LibreServer?
+
+Within this project Tor is used more to provide accessibility than the anonymity factor for which Tor is better known. The onion address system provides a way of being able to access sites even if you don't own a conventional domain name or don't have administrator access to your local internet router to be able to do port forwarding.
+
+Tor is installed by default, but it's not configured as a relay or exit node. From the administrator control panel you can optionally set up a Tor bridge, but this is only for adverse situations and not usually advisable.
+
+When you install an app you will be able to access it from its onion address.
+
+Even if you're running the "onion only" build, this only means that sites are accessible via onion addresses. It doesn't mean that everything gets routed through Tor. If full anonymity is your aim then it's probably a good idea to just stick strictly to using TAILS.
+
+## Can I add a clearnet domain to an onion build?
+
+You could if you manually edited the relevant nginx configuration files and installed some dynamic DNS system yourself. If you already have sysadmin knowledge then that's probably not too hard. But the builds created with the onion-addresses-only option aren't really intended to support access via clearnet domains.
+
+## What are the data protection implications of running this system?
+
+Data protection laws such as GDPR in the EU or the Data Protection Act in the UK usually only apply to formal organizations which are recognized as being legal entities. So you have to be running a business or a charity or some other formal organization in order for the storage of what's known as personally identifying information to potentially become a legal issue. Laws like this usually include:
+
+* A right to obtain your information
+* A right to be forgotten (i.e. to have your data permanently deleted)
+* Ensuring that stored personal data remains accurate
+
+If you're self-hosting then in the language of data protection law the "data controller" and the "data subject" are one and the same, so there isn't any power differential of that sort. Each LibreServer server is only intended to be used by a small numbers of people typically in the same household, so if you are hosting more than one person chances are that you know the others quite well and can arrange to update their data or delete their account if that's needed. Even if data protection laws are later extended to include home server type scenarios it's unlikely that this will become a problem.
+
+For the mesh version similar applies. Each peer stores their own personal data and it never gets aggregated and stored in any centralized way.
+After using nmap or other scanning tool I can no longer log in
+
+This system tries to block port scanners. Any other system trying to scan for open ports will have their IP address added to a temporary block list for 24 hours.
+
+## Should I upload my GPG keys to keybase.io?
+
+It's not recommended unless there exists some compelling reason for you to be on there. That site asks people to upload the private keys, and even if the keys are client side encrypted with a passphrase there's always the chance that there will be a data leak in future and letter agencies will then have a full time opportunity to crack the passphrases.
+
+Saying something resembling "only noobs will use crackable private key passphrases" isn't good enough. A passphrase should not be considered to be a substitute for a private key.
+
+## Keys and emails should not be stored on servers. Why do you do that?
+
+Ordinarily this is good advice. However, the threat model for a device in your home is different from the one for a generic server in a massive warehouse. Compare and contrast:
+
+### At home
+
+* Accessible to a small number of people
+* You control the environment
+* You know what gets plugged in to the box
+* You know where your home is
+* Normally requires a warrant to search
+* You know what jurisdiction your home is within
+
+### In a warehouse
+
+* Accessible to possibly many random strangers
+* You have no control over the warehouse
+* Anything could be plugged in to the box and you might not know
+* The warehouse could be anywhere in the world
+* Requires little or no justification to search
+* You may have no idea what jurisdiction the warehouse is within
+
+In the home environment a box with a good firewall and no GUI components installed may be much more secure than the end points, such as laptops and phones.
+
+## Why can't I access my .onion site with a Tor browser?
+
+Probably you need to add the site to the NoScript whitelist. Typically click/press on the noscript icon (or select from the menu on mobile) then select whitelist and add the site URL. You may also need to disable HTTPS Everywhere when using onion addresses, which don't use https.
+
+Another factor to be aware of is that it can take a while for the onion address to become available within the Tor network. In tests the amount of time between creating a site and being able to access it's onion address seems to vary between a minute or two and half an hour. So don't be too impatient if the address doesn't appear to resolve straight away.
+
+## What is the best hardware to run this system on?
+
+It was originally designed to run on the Beaglebone Black, but that should be regarded as the most minimal system, because it's single core and has by today's standards a small amount of memory. Obviously the more powerful the hardware is the faster things like web pages (blog, social networking, etc) will be served but the more electricity such a system will require if you're running it 24/7. A good compromise between performance and energy consumption is something like an old netbook. The battery of an old netbook or laptop even gives you UPS capability to keep the system going during brief power outages or cable re-arrangements, and that means using full disk encryption on the server also becomes more practical.
+
+Out of fashion but still working computer hardware tends to be cheap and readily available, yet still good for providing internet services.
+
+## Can I add more members to the system?
+
+Yes. LibreServer can support a small number of members, for a "friends and family" type of household installation. This gives them access to an email account, XMPP, VoIP, NextCloud and possibly other apps which have been installed.
+
+It's simple to add new members via the web interface, which on the local network can be accessed via http://libreserver/admin, or via its onion address remotely.
+
+## Why not use Signal for mobile chat?
+
+Celebrities recommend Signal. It's Free Software so it must be good, right?
+
+If you are currently using a proprietary chat app, something without any encryption or something really bad such as Telegram, then Signal is definitely a step up in terms of security. But Signal has problems, which can be summarised as:
+
+* It uses phone numbers. Phone numbers are used for Signal's initial verification, and they can of course be intercepted or faked. Plus it means that Open Whisper Systems keeps a list of phone numbers on its centralised server for its "X has joined Signal" notification. Even if they're hashed, they're still unique identifiers and rainbow tables for the phone number system probably exist. Phone numbers are convenient for some people, but are also a non-trivial security risk. If you're using Signal then consider what it knows about who your contacts are, where that data is located and who else might have access to that. Consider what might happen if an adversary gets to know your mobile number.
+* It's based on a single server run by Open Whisper Systems. That's a single point of failure and ought to be a big red flag (of the sporting rather than the socialist variety) as a possible locus for concentrated nefariousness.
+* It requires the installation of Google Play. If you already have Google Play installed on a stock Android OS then this doesn't increase your security problems, but for other more secure Android variants it's a massive increase in attack surface. There is a separate apk available for download, but it won't receive updates and the hash shown on the site often doesn't match.
+* It depends entirely upon the Google message pushing system. That means that Google at least knows who Signal messages are being sent to and may be able to infer the rest via your (insecure) Android phone contact list or via timing correlation of alternating deliveries. Remember that for an adversary metadata in aggregate is much better than having the content of messages. At any time Google could decide that it doesn't want to support Signal, or in adverse circumstances they could be leaned upon by the usual agencies or government cronies.
+* Their privacy policy indicates that they will give whatever server data they have to third parties under some conditions. Of course this is always claimed to be for the very best of reasons - such as combating fraud - but once that sort of disclosure capability exists it may be abused without you ever knowing about it. Consider how difficult, or not, it may be for a government to reverse engineer a database of hashed telephone numbers.
+* Forking isn't really an option. A fork was tried, but Moxie got annoyed when it still used his server. At the same time the level of interest in federating the server is not detectable with our best intrumentation, and is suspected to be negative. That's a catch 22 which effectively means that independent implementations of Signal will always leave some people unable to communicate with each other.
+* It uses GIPHY, a Facebook image service. This ought to be the coup de grâce in terms of privacy. Yes, they may be proxying the requests going to Facebook and yes they may be doing funky things with the Content-Length header to try to emulate message padding, but this is Facebook and their prime directive is surveillance of the user. It would be far safer if Moxie just downloaded a bunch of cat gifs to his server and cut the Facebook middle-man out.
+
+
+To give credit where it's due Signal is good, but it could be a lot better. The real solution for private chat is to run your own XMPP server, as you can with LibreServer, or to have someone within your community do that. There is no substitute for a decentralised solution which is within the control of your community.
+
+# What is the most secure chat app to use on mobile?
+
+On mobile there are various options. The apps which are likely to be most secure are ones which have end-to-end encryption enabled by default and which can also be onion routed via Orbot. End-to-end encryption secures the content of the message and onion routing obscures the metadata, making it hard for a passive adversary to know who is communicating with who.
+
+The current safest way to chat is to use Conversations together with Orbot - both of which can be installed from F-droid. You may need to enable the Guardian Project repository within F-droid in order to be able to install Orbot. Within the settings of the Conversations app you can set it to route via Tor, and also you can use the XMPP service of your LibreServer server. That way all of the software infrastructure is controlled by you or your community.
+
+Another possibility is the Briar app, which is peer-to-peer and runs over Tor. This may be more convenient, since it doesn't require Orbot to be installed.
+
+There are many other fashionable chat apps with end-to-end security, but often they are closed source, have a single central server or can't be onion routed and so have no metadata protection. It's also important to remember that closed source chat apps should be assumed to be untrustworthy, since their security cannot be independently verified.
+
+## How do I remove a member from the system?
+
+Log into the web interface, select members then the person's nickname. You can then select the remove button.
+
+## Why is logging for web sites turned off by default?
+
+If you're making profits out of the logs by running large server warehouses and then data mining what people click on - as is the business model of well known internet companies - then logging everything makes total sense. However, if you're running a home server then logging really only makes sense if you're trying to diagnose some specific problem with the system, and outside of that context logging everything becomes more of a liability than an asset.
+
+Logs can potentially become quite large and frequent logging isn't a great idea if you're running on a flash disk since it just increases the wear rate and thus shortens its usable lifetime. Also from a security perspective if a compromise occurs then the attacker gets considerably less social information if there are no logs containing timestamped IP addresses.
+
+On the LibreServer system web logs containing IP addresses are turned off by default. They're not deleted, they're just never created in the first place. If you need to turn logging on in order to fix a problem then go to the Administrator control panel and enable logging. If you don't manually turn it off again then it will turn itself off automatically at the next system update, which is typically a few days away.
+
+## How do I reset the tripwire?
+
+The tripwire will be automatically reset once per week. If you want to reset it earlier then do the following:
+
+ssh admin@libreserver -p 2222
+
+Select Administrator controls then Security settings then reset tripwire.
+
+## Is metadata protected?
+
+    "We kill people based on metadata"
+
+    – Michael Hayden
+
+Even when using LibreServer metadata analysis by third parties is still possible. This can be mitigated by accessing your blog, or other web services, via their onion addresses, rather than via more conventional domain names. In that case your ISP and any government which they might be compelled to report back to will know when your system is being accessed, but not necessarily which services are being accessed or by whom. So for instance using a Tor browser and the onion address people may be able to safely read your blog or wiki and be reasonably confident that metadata isn't being gathered about what they read (or more concisely the metadata which can be gathered by a third party may just not be very useful or personally identifiable). On the other hand if you access the system via conventional domain names and dynamic DNS then it's safe to assume that metadata can and will be collected by third parties.
+
+## How do I create email processing rules?
+
+The easy way to do this is to go Domain-User Blocking on the settings screen of the web interface. From there you can block particular email addresses or domains, or if you select Muted words then you can block incoming email containing particular words or phrases. Note that the muted words are case sensitive.
+
+If you prefer the commandline then enable ssh via the web interface by supplying a public key, then log in with:
+
+ssh admin@libreserver -p 2222
+
+Select Change email filtering/blocking rules then you can add rules to be applied to incoming email addresses or mailing lists.
+
+If you prefer to do things directly on the command line, without the control panel, then the following commands are available:
+
+    libreserver-addlist         Adds a mailing list
+    libreserver-rmlist          Removes a mailing list
+    libreserver-addemail        Transfers emails from an address to a given folder
+    libreserver-rmemail         Removes an email transferal rule
+    libreserver-ignore          Ignores email from an address or with a subject line containing text
+    libreserver-unignore        Removes an ignore rule
+
+Spamassassin is also available and within Mutt you can use the S (shift+s) key to mark an email as spam or the H (shift+h) key to mark an email as not being spam. So by using a combination of email rules and spam filtering you should be able to avoid any spammers or trolls.
+
+## Why isn't dynamic DNS working?
+
+If you run the command:
+
+systemctl status inadyn
+
+And see some error related to checking for changes in the IP address then you can try other external IP services. Edit /etc/inadyn.conf and change the domain for the checkip-url parameter. Possible sites are:
+
+https://check.torproject.org/
+https://www.whatsmydns.net/whats-my-ip-address.html
+https://www.privateinternetaccess.com/pages/whats-my-ip/
+
+## How do I change my encryption settings?
+
+Suppose that some new encryption vulnerability has been announced and that you need to change your encryption settings. Maybe an algorithm thought to be secure is now no longer so and you need to remove it. You can change your settings by doing the following:
+
+ssh admin@libreserver -p 2222
+
+Select Administrator controls then select Security Settings. You will then be able to edit the crypto settings for all of the installed applications. Be very careful when editing, since any mistake could make your system less secure rather than more.
+
+## How do I get a domain name?
+
+Suppose that you have bought a domain name (rather than using a free subdomain on freedns) and you want to use that instead.
+
+Remove any existing nameservers for your domain (or select "custom" nameservers), then add:
+
+NS1.AFRAID.ORG
+NS2.AFRAID.ORG
+NS3.AFRAID.ORG
+NS4.AFRAID.ORG
+
+It might take a few minutes for the above change to take effect. Within freedns click on "Domains" and add your domains (this might only be available to paid members). Make sure that they're marked as "private".
+
+Select "Subdomains" from the menu on the left then select the MX entry for your domain and change the destination to 10:mydomainname rather than 10:mail.mydomainname.
+
+## How do I renew a Let's Encrypt certificate?
+
+Normally certificates will be automatically renewed once per month, so you don't need to be concerned about it. If anything goes wrong with the automatic renewal then you should receive a warning email.
+
+If you need to manually renew a certificate:
+
+ssh admin@libreserver -p 2222
+
+Select Administrator controls then Security settings then Renew Let's Encrypt certificate.
+
+## I tried to renew a Let's Encrypt certificate and it failed. What should I do?
+
+Most likely it's because Let's Encrypt doesn't support your particular domain or subdomain. Currently free subdomains tend not to work. You'll need to buy a domain name, link it to your dynamic DNS account and then do:
+
+ssh admin@libreserver -p 2222
+
+Select Administrator controls then Security settings then Create a new Let's Encrypt certificate.
+
+## Why not use the services of $company instead? They took the Seppuku pledge
+
+That pledge is utterly worthless. Years ago people trusted Google in the same sort of way, because they promised not be be evil and because a lot of the engineers working for them seemed like honest types who were "on our side". Post-nymwars and post-PRISM we know exactly how much Google cared about the privacy and security of the people using its systems. But Google is only one particular example. In general don't trust pledges made by companies, even if the people running them seem really sincere.
+
+## Why not use LUKS on backup drives?
+
+LUKS is one of the best ways to keep data secure on a USB drive, but this isn't how backups on LibreServer are implemented.
+
+The model for doing backups is that you should be able to buy a USB drive from any store, plug it in and then select the backup icon from the web interface. It should be no more complicated than that.
+
+Using LUKS requires you to specially format the USB drive, using a tool like Gparted. Most people are not going to do this, and so if the backup required LUKS then most people would not do backups and the whole system then becomes non-viable because there will always come a time when you need to restore from backup.
+
+Instead of using LUKS, backups are written to the drive already encrypted with a backups GPG key, and the backups key is then symmetrically encrypted with a passphrase and written to the backup drive. This passphrase is what's asked for in teh web interface. It provides a similar level of data protection to LUKS, provided that you choose a good passphrase.
+
+## Why does my email keep getting rejected as spam by Gmail/etc?
+
+Welcome to the world of email. Email is really the archetypal decentralized service, developed during the early days of the internet. In principle anyone can run an email server, and that's exactly what you're doing with LibreServer. Email is very useful, but it has a big problem, and that's that the protocols are totally insecure. That made it easy for spammers to do their thing, and in response highly elaborate spam filtering and blocking systems were developed. Chances are that your emails are being blocked in this way. Sometimes the blocking is so indisciminate that entire countries are excluded.
+
+What can you do about it? The only current practical solution for clearnet email is to proxy through another "trusted" SMTP server. Sometimes the ISP will provide this, or you might be able to do it via the email services of other companies. It's a less than ideal situation which makes you dependent upon other parties to send email.
+
+To set up outgoing email proxying you can do that via the LibreServer web interface by selecting Mail and then selecting the LibreServer header icon at the top of the screen. You can then enter the proxy details and select Update.
+
+The current arrangement with email blocking works well for the big internet companies because it effectively centralises email to a few well-known brand names and keeps any independent servers out, or creates dependencies like the one just described in which you become a second class citizen of the internet.
+
+So the situation with email presently is pretty bad, and there's a clear selection pressure against decentralization and towards only a few companies controlling all email services. Longer term the solution is to have more secure protocols which make spamming hard or expensive. With LibreServer you can also use email via onion addresses, and to communicate with other people who have a similar system this might be the best option.
+
+## Tor is censored/blocked in my area. What can I do?
+
+Obtain some tor bridges then go to Settings within the web interface and select Tor Bridges. You can then paste in your bridges lines and select Continue. It may take a few minutes for the tor daemon to reconnect.
+
+You might have to try a few different bridges before you find one that works.
+The mesh system doesn't boot from USB drive
+
+If the system doesn't boot and reports an error which includes /dev/mapper/loop0p1 then reboot with Ctrl-Alt-Del and when you see the grub menu press e and manually change /dev/mapper/loop0p1 to /dev/sdb1, then press Ctrl-x. If that doesn't work then reboot and try /dev/sdc1 instead.
+
+After the system has booted successfully the problem should resolve itself on subsequent reboots.
+Mesh system doesn't connect to the network
+
+Sometimes after boot the mesh system won't connect to other peers on the network. If this happens select the network restart icon and enter the password, which by default is just "libreserver". Wait for a few minutes to see if it connects.
+
+## How does LibreServer differ from Yunohost and Sandstorm?
+
+Sandstorm is based on a container-like approach. It looks quite viable now, although I avoided it initially because it was backed by venture capital and that always results in an "exit" which is unfavorable for the users.
+
+The difference is that LibreServer doesn't use containers or anything similar. It's intended for bare metal servers. Containers are well suited for CI/CD where you want to build something for test and then throw it away, but otherwise they just add complexity without much benefit. That's also why before containers running everything in separate chroots never became a popular practice. Containers using Docker were considered and tried early on in 2014, but found to be unfeasible on a platform like the Beaglebone Black. Also I didn't want to get involved with a company funded by a letter agency and a lot of the practices around that system seemed to have the opposite of a security-oriented mindset.
+
+Yunohost (from the meme "Y U No Host?") is quite similar to LibreServer, being also based on Debian. The main difference is that it's written in python rather than bash and that apps are implemented as separate repos, whereas in LibreServer apps are scripts within a single repo.
+
+## Do you have any metrics about numbers of LibreServer servers out there?
+
+No. There are no statistics or metrics or analytics or telemetry. No logs are kept, or written, about who downloads the source code or image files or from what geographical location. There is also no intention to do that in future.
+
+## After restoring an app I get a TLS/self-signed error
+
+This usually happens because you are restoring to a different domain name. Unfortunately most apps are very tied to their domain name and so backing up to one domain and restoring to another usually doesn't work.

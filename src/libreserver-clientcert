@@ -1,0 +1,170 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Generates an email client cert for use with IMAP clients
+
+# See:
+#   http://strange.systems/certificate-based-auth-with-dovecot-sendmail
+#   http://help.fabasoftfolio.com/index.php?topic=doc/Installation-and-Configuration-of-Fabasoft-Folio-IMAP-Service/client-certificate-authentication.htm
+
+# License
+# =======
+#
+# Copyright (C) 2015-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+PROJECT_NAME='libreserver'
+
+export TEXTDOMAIN=${PROJECT_NAME}-clientcert
+export TEXTDOMAINDIR="/usr/share/locale"
+
+USERNAME=
+COUNTRY_CODE="US"
+AREA="The Internet"
+LOCATION="Anywhere"
+ORGANISATION="LibreServer"
+UNIT="LibreServer"
+EXTENSIONS=""
+
+function show_help {
+    echo ''
+    echo $"${PROJECT_NAME}-clientcert -u [username]"
+    echo ''
+    echo $'Creates email certificates for use with IMAP clients'
+    echo ''
+    echo $'     --help                  Show help'
+    echo $'  -u --username [name]       Username'
+    echo ''
+    exit 0
+}
+
+while [ $# -gt 1 ]
+do
+    key="$1"
+
+    case $key in
+        --help)
+            show_help
+            ;;
+        -u|--username)
+            shift
+            USERNAME="$1"
+            ;;
+        *)
+            # unknown option
+            ;;
+    esac
+    shift
+done
+
+if [ ! "$USERNAME" ]; then
+    echo $'No username specified'
+    exit 57
+fi
+
+if [ ! -d "/home/$USERNAME" ]; then
+    echo $"User $USERNAME not found"
+    exit 76
+fi
+
+if [ -d "/home/$USERNAME/emailcert" ]; then
+    echo $'Client certs were already for created'
+    exit 29
+fi
+
+if [ ! -f /etc/dovecot/passwd-file ]; then
+    touch /etc/dovecot/passwd-file
+fi
+
+# Add a user password
+if ! grep -q "$USERNAME:{plain}" /etc/dovecot/passwd-file; then
+    echo "$USERNAME:{plain}::::::nopassword" >> /etc/dovecot/passwd-file
+fi
+
+chmod 600 /etc/dovecot/passwd-file
+
+# create a user cert
+"${PROJECT_NAME}-addcert" -h "$USERNAME" --nodh ""
+
+if [ ! -f "/etc/ssl/private/$USERNAME.key" ]; then
+    echo $'User certificates were not created'
+    rm -rf "/home/$USERNAME/emailcert"
+    exit 74
+fi
+
+# create a certificate request
+openssl req -new -sha256 -subj \
+        "/O=$ORGANISATION/OU=$UNIT/C=$COUNTRY_CODE/ST=$AREA/L=$LOCATION/CN=$USERNAME" \
+        -key "/etc/ssl/private/$USERNAME.key" \
+        -out "/etc/ssl/requests/$USERNAME.csr"
+
+if [ ! -f "/etc/ssl/requests/$USERNAME.csr" ]; then
+    echo $'Certificate request was not created'
+    rm -rf "/home/$USERNAME/emailcert"
+    exit 83
+fi
+
+# sign the certificate request
+cd /etc/ssl || exit 74
+openssl ca -config /etc/ssl/dovecot-ca.cnf \
+        -in "/etc/ssl/requests/$USERNAME.csr" \
+        -out "/etc/ssl/certs/$USERNAME.cer"
+
+if [ ! -f "/etc/ssl/certs/$USERNAME.cer" ]; then
+    echo $'Authentication certificate was not created'
+    rm -rf "/home/$USERNAME/emailcert"
+    exit 34
+fi
+
+# move the cert to the user's home
+mkdir "/home/$USERNAME/emailcert"
+# shellcheck disable=SC2086
+mv /etc/ssl/certs/$USERNAME.cer /home/$USERNAME/emailcert
+cp "/etc/ssl/certs/dovecot.crt" "/home/$USERNAME/emailcert"
+cp "/etc/ssl/certs/ca-$HOSTNAME.crt" "/home/$USERNAME/emailcert"
+# shellcheck disable=SC2086
+mv /etc/ssl/private/$USERNAME.key /home/$USERNAME/emailcert
+# shellcheck disable=SC2086
+mv /etc/ssl/certs/$USERNAME.crt /home/$USERNAME/emailcert
+openssl pkcs12 -export -in "/home/$USERNAME/emailcert/$USERNAME.cer" \
+        -out "/home/$USERNAME/emailcert/$USERNAME.p12" \
+        -inkey "/home/$USERNAME/emailcert/$USERNAME.key" \
+        -certfile "/home/$USERNAME/emailcert/ca-$HOSTNAME.crt" \
+        -password pass:""
+
+# make an install script
+{ echo '#!/bin/bash';
+  echo "sudo mv ca-$HOSTNAME.crt /etc/ssl/certs";
+  echo "sudo mv $USERNAME.crt /etc/ssl/certs";
+  echo "sudo mv dovecot.crt /etc/ssl/certs";
+  echo "sudo mv $USERNAME.key /etc/ssl/private";
+  echo 'exit 0'; } > "/home/$USERNAME/emailcert/install.sh"
+
+# set permissions for the user
+chmod -R 755 "/home/$USERNAME/emailcert"
+chown -R "$USERNAME":"$USERNAME" "/home/$USERNAME/emailcert"
+chmod +x "/home/$USERNAME/emailcert/install.sh"
+
+rm "/etc/ssl/requests/$USERNAME.csr"
+
+echo $'Email authentication certificate created. You can obtain it on the client with:'
+echo ''
+echo "      scp -P 2222 -r $USERNAME@$HOSTNAME:/home/$USERNAME/emailcert ~/"
+echo ''
+
+exit 0

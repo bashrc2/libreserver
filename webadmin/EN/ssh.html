@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <style>
+      @import url("libreserver.css");
+
+      #welcomeicon {
+          width: 20%;
+          height: auto;
+          margin-right : auto;
+          margin-left : auto;
+          min-width : 100px;
+      }
+
+      .header {
+          text-align: center;
+          padding: 32px;
+      }
+
+      #iconpic {
+          width: 20%;
+          height: auto;
+          margin-right : auto;
+          margin-left : auto;
+          min-width : 120px;
+      }
+
+      .appurl {
+          font-size: 100%;
+      }
+
+      .welcomeheader {
+          font-size: 200%;
+          font-weight: bold;
+      }
+
+      .sshtext {
+          font-size: 90%;
+      }
+
+      .logintext {
+          font-size: 120%;
+          font-weight: bold;
+          color: #981737;
+      }
+
+      button {
+          border: none;
+          outline: 0;
+          display: inline-block;
+          padding: 8px;
+          color: white;
+          background-color: #000;
+          text-align: center;
+          cursor: pointer;
+          width: 100%;
+          font-size: 18px;
+      }
+
+      button:hover, a:hover {
+          opacity: 0.7;
+      }
+
+      .chip {
+          display: inline-block;
+          padding: 0 25px;
+          height: 50px;
+          font-size: 70%;
+          line-height: 50px;
+          border-radius: 25px;
+          background-color: #f1f1f1;
+      }
+
+      .chip img {
+          float: left;
+          margin: 0 10px 0 -25px;
+          height: 50px;
+          width: 50px;
+          border-radius: 50%;
+      }
+
+      textarea {
+          width: 90%;
+          color: black;
+          font-weight: bold;
+          background: lightblue;
+          font-size: 120%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="header">
+        <a href="settings.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a><br>
+
+        <form action="ssh.php" method="post">
+          <p class="sshtext" translate="yes">Enable access via secure shell?</p>
+          <input type="radio" name="sshconfirm" value="0" checked><label translate="yes">No</label>
+          <input type="radio" name="sshconfirm" value="1"><label translate="yes">Yes</label>
+          <p translate="yes">Paste your ssh public key here</p>
+          <textarea rows="10" cols="50" name="publickey"></textarea>
+          <br><br>
+          <input type="submit" name="submitsshcancel" translate="yes" value="Cancel" />
+          <input type="submit" name="submitssh" translate="yes" value="Update" />
+        </form>
+
+        <br>
+      </div>
+    </div>
+  </body>
+</html>

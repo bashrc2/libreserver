@@ -1,0 +1,356 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# License
+# =======
+#
+# Copyright (C) 2019-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VARIANTS='full full-vim'
+
+APP_CATEGORY=sync
+
+IN_DEFAULT_INSTALL=0
+INSTALLED_ON_DEFAULT_DOMAIN=0
+SHOW_ON_ABOUT=1
+REQUIRES_APP=
+
+RSYNC_DATA=/var/lib/rsync
+
+# whether to show the domain name in the web UI
+SHOW_DOMAIN_IN_WEBADMIN=1
+SHOW_DOMAIN_IN_ADD_WEBADMIN=0
+NOT_ON_API=0
+
+# Whether to show on http://libreserver/home
+NOT_ON_HOMEPAGE=1
+
+RSYNC_DOMAIN_NAME=
+RSYNC_CODE=
+RSYNC_PORT=873
+
+# These parameters are used by the FreedomBox mobile app and web UI
+RSYNC_SHORT_DESCRIPTION="Create a mirror of public files"
+RSYNC_DESCRIPTION="Create a mirror of public files"
+RSYNC_MOBILE_APP_URL=https://f-droid.org/wiki/page/org.amoradi.syncopoli
+
+RSYNC_FIREWALL_PORTS="$RSYNC_PORT"
+
+rsync_variables=(ONION_ONLY
+                 MY_USERNAME)
+
+function upgrade_distro_rsync {
+    target_distro="$1"
+
+    if [[ "$target_distro" == 'bullseye' ]]; then
+	echo -n ''
+    fi
+}
+
+function rsync_setting_clear {
+    if [ -f /etc/cron.daily/rsync_remote ]; then
+        rm /etc/cron.daily/rsync_remote
+    fi
+
+    restart_rsync=
+    if ! grep -q 'read only = false' /etc/rsync/rsyncd.conf; then
+        sed -i 's|read only =.*|read only = false|g' /etc/rsync/rsyncd.conf
+        restart_rsync=1
+    fi
+
+    if ! grep -q 'hosts allow = 192.168' /etc/rsync/rsyncd.conf; then
+        sed -i 's|hosts allow =.*|hosts allow = 192.168.0.0/16,10.0.0.0/16,127.0.0.1|g' /etc/rsync/rsyncd.conf
+        restart_rsync=1
+    fi
+
+    if [ $restart_rsync ]; then
+        systemctl restart rsync
+    fi
+}
+
+function rsync_deny_blocked_domains {
+    if [ ! -f /etc/rsync/rsyncd.conf ]; then
+        return
+    fi
+
+    rsync_denied_hosts=
+    while read -r blocked; do
+        if [ ${#blocked} -gt 4 ]; then
+            if [[ "$blocked" == *"."* && "$blocked" != *"localhost"* && "$blocked" != *"127.0."* ]]; then
+                if [[ "$blocked" != *"@"* ]]; then
+                    if [ "$rsync_denied_hosts" ]; then
+                        rsync_denied_hosts="${rsync_denied_hosts},$blocked"
+                    else
+                        rsync_denied_hosts="$blocked"
+                    fi
+                fi
+            fi
+        fi
+    done <"/root/${PROJECT_NAME}-firewall-domains.cfg"
+
+    if [ "$rsync_denied_hosts" ]; then
+        if ! grep -q "hosts deny = $rsync_denied_hosts" /etc/rsync/rsyncd.conf; then
+            sed -i "s|hosts deny =.*|hosts deny = $rsync_denied_hosts|g" /etc/rsync/rsyncd.conf
+            systemctl restart rsync
+        fi
+    fi
+}
+
+function rsync_setting_remote {
+    rsync_hostname="$1"
+    rsync_module="$2"
+
+    # Some sanity checks to ensure that the input is valid
+    if [[ "$rsync_hostname" != *'.'* || "$rsync_hostname" == *'/'* || \
+          "$rsync_hostname" == *'$'* || "$rsync_hostname" == *';'* || \
+          "$rsync_hostname" == *'\n'* || "$rsync_module" == *'\n'* || \
+          "$rsync_module" == *';'* || "$rsync_module" == *'$'* ]]; then
+        return
+    fi
+
+    restart_rsync=
+    if ! grep -q 'read only = true' /etc/rsync/rsyncd.conf; then
+        sed -i 's|read only =.*|read only = true|g' /etc/rsync/rsyncd.conf
+        restart_rsync=1
+    fi
+
+    if ! grep -q 'hosts allow = *' /etc/rsync/rsyncd.conf; then
+        sed -i 's|hosts allow =.*|hosts allow = *|g' /etc/rsync/rsyncd.conf
+        restart_rsync=1
+    fi
+
+    if [ $restart_rsync ]; then
+        systemctl restart rsync
+    fi
+
+    rsync_deny_blocked_domains
+
+    # remove any existing files
+    rm -rf "${RSYNC_DATA:?}"/*
+
+    text="rsync failed"
+    DEFAULT_LANGUAGE=$(grep "DEFAULT_LANGUAGE=" "/root/${PROJECT_NAME}.cfg" | awk -F '=' '{print $2}')
+    if [[ "$DEFAULT_LANGUAGE" == "en_GB"* ]]; then
+        echo "$text"
+        return
+    fi
+    local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+    translations_file="/var/www/${local_hostname}/htdocs/admin/translations/${DEFAULT_LANGUAGE}.txt"
+    if [ -f "$translations_file" ]; then
+        if grep -q "${text}|" "$translations_file"; then
+            text=$(grep "${text}|" "$translations_file" | head -n 1 | awk -F '|' '{print $2}')
+        fi
+    fi
+
+    # create a daily sync
+    if [[ "${rsync_hostname}" == *'.onion' ]]; then
+        { echo '#!/bin/bash';
+          echo "cd $RSYNC_DATA || exit 1";
+          echo "if ! torsocks rsync -aqrm --delete ${rsync_hostname}::${rsync_module} ${RSYNC_DATA}/; then";
+          echo "    ${PROJECT_NAME}-notification -s '$text' -m '${text}: ${rsync_hostname}::${rsync_module}'";
+          echo 'fi';
+          echo "chown -R rsync:rsync $RSYNC_DATA"; } > /etc/cron.daily/rsync_remote
+    else
+        { echo '#!/bin/bash';
+          echo "cd $RSYNC_DATA || exit 1";
+          echo "if ! rsync -aqrm --delete ${rsync_hostname}::${rsync_module} ${RSYNC_DATA}/; then";
+          echo "    ${PROJECT_NAME}-notification -s '$text' -m '${text}: ${rsync_hostname}::${rsync_module}'";
+          echo 'fi';
+          echo "chown -R rsync:rsync $RSYNC_DATA"; } > /etc/cron.daily/rsync_remote
+    fi
+    chmod +x /etc/cron.daily/rsync_remote
+    /etc/cron.daily/rsync_remote &
+}
+
+function change_default_domain_name_rsync {
+    new_default_domain_name="$1"
+    # If anything references DEFAULT_DOMAIN_NAME then change it here
+}
+
+function logging_on_rsync {
+    echo -n ''
+}
+
+function logging_off_rsync {
+    echo -n ''
+}
+
+function remove_user_rsync {
+    remove_username="$1"
+}
+
+function add_user_rsync {
+    new_username="$1"
+    new_user_password="$2"
+    # This doesn't have users
+    echo '0'
+}
+
+function install_interactive_rsync {
+    if [ ! "$ONION_ONLY" ]; then
+        ONION_ONLY='no'
+    fi
+
+    APP_INSTALLED=1
+}
+
+function change_password_rsync {
+    curr_username="$1"
+    new_user_password="$2"
+}
+
+function reconfigure_rsync {
+    # This is used if you need to switch identity. Dump old keys and generate new ones
+    echo -n ''
+}
+
+function configure_interactive_rsync {
+    echo -n ''
+}
+
+function upgrade_rsync {
+    rsync_deny_blocked_domains
+    chown -R rsync:rsync "$RSYNC_DATA"
+}
+
+function backup_local_rsync {
+    echo -n ''
+}
+
+function restore_local_rsync {
+    echo -n ''
+}
+
+function backup_remote_rsync {
+    echo -n ''
+}
+
+function restore_remote_rsync {
+    echo -n ''
+}
+
+function remove_rsync {
+    firewall_remove $RSYNC_PORT tcp
+
+    if [ -f /etc/systemd/system/rsync.service ]; then
+        systemctl stop rsync
+        systemctl disable rsync
+        rm /etc/systemd/system/rsync.service
+    fi
+    userdel -r rsync
+    rm -rf "$RSYNC_DATA"
+
+    function_check remove_onion_service
+    remove_onion_service rsync ${RSYNC_PORT}
+
+    if grep -q "127.0.0.1:$RSYNC_PORT" "/etc/torrc.d/${PROJECT_NAME}"; then
+        sed -i "/127.0.0.1:$RSYNC_PORT/d" "/etc/torrc.d/${PROJECT_NAME}"
+	restart_tor_daemon
+    fi
+
+    remove_app rsync
+    remove_completion_param install_rsync
+    sed -i '/rsync/d' "$COMPLETION_FILE"
+}
+
+function install_rsync {
+    INSTALL_PACKAGES rsync
+
+    increment_app_install_progress
+
+    if [ ! -d "$RSYNC_DATA" ]; then
+        mkdir "$RSYNC_DATA"
+    fi
+    if [ ! -d /etc/rsync ]; then
+        mkdir /etc/rsync
+    fi
+
+    # shellcheck disable=SC2034
+    RSYNC_ONION_HOSTNAME=$(add_onion_service rsync ${RSYNC_PORT} ${RSYNC_PORT})
+
+    { echo 'pid file = /var/run/rsyncd.pid';
+      echo 'lock file = /var/run/rsync.lock';
+      echo 'log file = /dev/null';
+      echo "port = $RSYNC_PORT";
+      echo 'max connections = 2';
+      echo 'fake super = yes';
+      echo 'use chroot = true';
+      echo 'uid = rsync';
+      echo 'gid = rsync';
+      echo '';
+      echo '[files]';
+      echo 'hosts allow = 192.168.0.0/16,10.0.0.0/16,127.0.0.1';
+      echo 'hosts deny = *';
+      echo 'list = true';
+      echo "path = $RSYNC_DATA";
+      echo 'read only = false';
+      echo 'timeout = 300'; } > /etc/rsync/rsyncd.conf
+
+    increment_app_install_progress
+
+    adduser --system --home="$RSYNC_DATA" --group rsync
+
+    increment_app_install_progress
+
+    chown -R rsync:rsync /etc/rsync
+    chown -R rsync:rsync "$RSYNC_DATA"
+
+    increment_app_install_progress
+
+    { echo '[Unit]';
+      echo 'Description=rsync';
+      echo 'After=network.target';
+      echo 'ConditionPathExists=/etc/rsync/rsyncd.conf';
+      echo '';
+      echo '[Service]';
+      echo 'Type=simple';
+      echo "WorkingDirectory=$RSYNC_DATA";
+      echo 'ExecStart=/usr/bin/rsync --config=/etc/rsync/rsyncd.conf --daemon --no-detach';
+      echo 'Environment=USER=rsync';
+      echo 'Restart=always'
+      echo 'ProtectSystem=yes';
+      echo 'ProtectHome=yes';
+      echo '';
+      echo '[Install]';
+      echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/rsync.service
+
+    increment_app_install_progress
+
+    if ! grep -q "127.0.0.1:$RSYNC_PORT" "/etc/torrc.d/${PROJECT_NAME}"; then
+        sed -i "/127.0.0.1:$WEBADMIN_ONION_PORT/a HiddenServicePort $RSYNC_PORT 127.0.0.1:$RSYNC_PORT" "/etc/torrc.d/${PROJECT_NAME}"
+	restart_tor_daemon
+    fi
+
+    systemctl enable rsync
+    systemctl start rsync
+
+    increment_app_install_progress
+
+    firewall_add rsync $RSYNC_PORT tcp
+
+    increment_app_install_progress
+
+    rsync_deny_blocked_domains
+
+    increment_app_install_progress
+
+    APP_INSTALLED=1
+}
+
+# NOTE: deliberately there is no "exit 0"

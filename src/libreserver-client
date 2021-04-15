@@ -1,0 +1,335 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# This is an optional command for setting up a client machine
+# to then be able to log into a server. It installs a few packages
+# for things like IRC and twiddles crypto settings.
+#
+# It may not be necessary to run this on client machines, and
+# is provided for some extra convenience on a Debian or Arch
+# based system.
+#
+# License
+# =======
+#
+# Copyright (C) 2015-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+PROJECT_NAME='libreserver'
+
+export TEXTDOMAIN=${PROJECT_NAME}-client
+export TEXTDOMAINDIR="/usr/share/locale"
+
+source /usr/local/bin/${PROJECT_NAME}-shortcuts
+
+CURR_USER=$USER
+CURR_GROUP=$USER
+if [ -f /usr/bin/pacman ]; then
+    CURR_GROUP='users'
+fi
+
+# setup for a specific app
+SETUP_CLIENT_APP_NAME=
+
+# Version number of this script
+VERSION="4.0"
+
+# get the main project file, so that some values can be extracted
+MAIN_PROJECT_FILE=/usr/local/bin/${PROJECT_NAME}
+if [ ! -f $MAIN_PROJECT_FILE ]; then
+    MAIN_PROJECT_FILE=/usr/bin/${PROJECT_NAME}
+fi
+if [ ! -f $MAIN_PROJECT_FILE ]; then
+    echo "The main project file $MAIN_PROJECT_FILE was not found"
+    exit 72
+fi
+
+# ssh (from https://stribika.github.io/2015/01/04/secure-secure-shell.html)
+UTILS_SSH="/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-ssh"
+SSH_CIPHERS=$(grep 'SSH_CIPHERS=' "$UTILS_SSH" | head -n 1 | awk -F '"' '{print $2}')
+SSH_MACS=$(grep 'SSH_MACS=' "$UTILS_SSH" | head -n 1 | awk -F '"' '{print $2}')
+SSH_KEX=$(grep 'SSH_KEX=' "$UTILS_SSH" | head -n 1 | awk -F '"' '{print $2}')
+SSH_HOST_KEY_ALGORITHMS=$(grep 'SSH_HOST_KEY_ALGORITHMS=' "$UTILS_SSH" | head -n 1 | awk -F '"' '{print $2}')
+
+# refresh gpg keys every few hours
+REFRESH_GPG_KEYS_HOURS=2
+
+function global_rate_limit {
+    SYSCTL_FILE=/etc/sysctl.conf
+    if [ -f /usr/bin/pacman ]; then
+        SYSCTL_FILE=/etc/sysctl.d/99-sysctl.conf
+    fi
+    if [ ! -f $SYSCTL_FILE ]; then
+        sudo touch $SYSCTL_FILE
+    fi
+
+    sudo cp $SYSCTL_FILE ~/sysctl.conf
+    sudo chown "$CURR_USER":"$CURR_GROUP" ~/sysctl.conf
+    if ! grep -q "tcp_challenge_ack_limit" ~/sysctl.conf; then
+        echo 'net.ipv4.tcp_challenge_ack_limit = 999999999' >> ~/sysctl.conf
+    else
+        sed -i 's|net.ipv4.tcp_challenge_ack_limit.*|net.ipv4.tcp_challenge_ack_limit = 999999999|g' ~/sysctl.conf
+    fi
+    sudo cp ~/sysctl.conf $SYSCTL_FILE
+    sudo rm ~/sysctl.conf
+    sudo sysctl -p -q $SYSCTL_FILE
+}
+
+function refresh_gpg_keys {
+    if [ ! -f /usr/bin/gpg ]; then
+        if [ ! -f /usr/bin/pacman ]; then
+            INSTALL_PACKAGES gnupg
+        else
+            sudo pacman -S --noconfirm gnupg
+        fi
+    fi
+    sudo cp /etc/crontab ~/temp_crontab
+    if [ -f ~/temp_crontab ]; then
+        sudo chown "$CURR_USER":"$CURR_GROUP" ~/temp_crontab
+        if grep -q 'test' ~/temp_crontab; then
+            if ! grep -q 'gpg --refresh-keys' ~/temp_crontab; then
+                echo "0            */$REFRESH_GPG_KEYS_HOURS *   *   *   $CURR_USER /usr/bin/torsocks /usr/bin/gpg --refresh-keys > /dev/null" >> ~/temp_crontab
+                sudo cp ~/temp_crontab /etc/crontab
+                sudo chown root:root /etc/crontab
+            fi
+        fi
+        rm ~/temp_crontab
+    fi
+}
+
+# see https://stribika.github.io/2015/01/04/secure-secure-shell.html
+function ssh_remove_small_moduli {
+    # shellcheck disable=SC2024
+    sudo awk '$5 > 2000' /etc/ssh/moduli > "/home/$CURR_USER/moduli"
+    # shellcheck disable=SC2086
+    sudo mv /home/$CURR_USER/moduli /etc/ssh/moduli
+}
+
+function configure_ssh_client {
+    if [ -f /usr/bin/pacman ]; then
+        sudo pacman --noconfirm -S openbsd-netcat
+    else
+        # shellcheck disable=SC2086
+        sudo INSTALL_PACKAGES tor connect-proxy vim-common
+    fi
+
+    #sudo sed -i 's/#   PasswordAuthentication.*/   PasswordAuthentication no/g' /etc/ssh/ssh_config
+    #sudo sed -i 's/#   ChallengeResponseAuthentication.*/   ChallengeResponseAuthentication no/g' /etc/ssh/ssh_config
+    sudo sed -i "s/#   HostKeyAlgorithms.*/   HostKeyAlgorithms $SSH_HOST_KEY_ALGORITHMS/g" /etc/ssh/ssh_config
+    sudo sed -i "s/#   Ciphers.*/   Ciphers $SSH_CIPHERS/g" /etc/ssh/ssh_config
+    sudo sed -i "s/#   MACs.*/   MACs $SSH_MACS/g" /etc/ssh/ssh_config
+    sudo sed -i "s/HostKeyAlgorithms.*/HostKeyAlgorithms $SSH_HOST_KEY_ALGORITHMS/g" /etc/ssh/ssh_config
+    if ! grep -q "HostKeyAlgorithms" /etc/ssh/ssh_config; then
+        sudo cp /etc/ssh/ssh_config ~/ssh_config
+        sudo chown "$CURR_USER":"$CURR_GROUP" ~/ssh_config
+        echo "   HostKeyAlgorithms $SSH_HOST_KEY_ALGORITHMS" >> ~/ssh_config
+        sudo mv ~/ssh_config /etc/ssh/ssh_config
+        sudo chown root:root /etc/ssh/ssh_config
+    fi
+    sudo sed -i "s/HostKeyAlgorithms.*/#HostKeyAlgorithms $SSH_HOST_KEY_ALGORITHMS/g" /etc/ssh/ssh_config
+
+    sudo sed -i "s/Ciphers.*/Ciphers $SSH_CIPHERS/g" /etc/ssh/ssh_config
+    if ! grep -q "Ciphers " /etc/ssh/ssh_config; then
+        sudo cp /etc/ssh/ssh_config ~/ssh_config
+        sudo chown "$CURR_USER":"$CURR_GROUP" ~/ssh_config
+        echo "   Ciphers $SSH_CIPHERS" >> ~/ssh_config
+        sudo mv ~/ssh_config /etc/ssh/ssh_config
+        sudo chown root:root /etc/ssh/ssh_config
+    fi
+    sudo sed -i "s/MACs.*/MACs $SSH_MACS/g" /etc/ssh/ssh_config
+    if ! grep -q "MACs " /etc/ssh/ssh_config; then
+        sudo cp /etc/ssh/ssh_config ~/ssh_config
+        sudo chown "$CURR_USER":"$CURR_GROUP" ~/ssh_config
+        echo "   MACs $SSH_MACS" >> ~/ssh_config
+        sudo mv ~/ssh_config /etc/ssh/ssh_config
+        sudo chown root:root /etc/ssh/ssh_config
+    fi
+
+    # Create ssh keys
+    if [ ! -f "/home/$CURR_USER/.ssh/id_ed25519" ]; then
+        ssh-keygen -t ed25519 -o -a 100
+    fi
+    if [ ! -f "/home/$CURR_USER/.ssh/id_rsa" ]; then
+        ssh-keygen -t rsa -b 2048 -o -a 100
+    fi
+
+    ssh_remove_small_moduli
+
+    if [ ! -d ~/.ssh ]; then
+        mkdir ~/.ssh
+    fi
+    if [ ! -f ~/.ssh/config ]; then
+        touch ~/.ssh/config
+    fi
+    proxycmd="connect -R remote -5 -S 127.0.0.1:9050 %h %p"
+    if [ -f /usr/bin/pacman ]; then
+        proxycmd="/usr/bin/nc -X 5 -x 127.0.0.1:9050 %h %p"
+    fi
+    if ! grep -q "# ${PROJECT_NAME} settings" ~/.ssh/config; then
+        if ! grep -q 'ProxyCommand' ~/.ssh/config; then
+            { echo "# ${PROJECT_NAME} settings start";
+              echo 'Host *.onion';
+              echo '  ServerAliveInterval 60';
+              echo '  ServerAliveCountMax 3';
+              echo "  ProxyCommand $proxycmd";
+              echo 'Host *';
+              echo '  ServerAliveInterval 60';
+              echo '  ServerAliveCountMax 3';
+              echo "# ${PROJECT_NAME} settings end"; } >> ~/.ssh/config
+        fi
+    fi
+
+    echo ''
+    echo $'Go to the Administrator Control Panel, select "Manage Users", '
+    echo $'"Change user ssh public key" then "yes" and paste the following:'
+    echo ''
+    cat "/home/$CURR_USER/.ssh/id_rsa.pub"
+    cat "/home/$CURR_USER/.ssh/id_ed25519.pub"
+    echo ''
+    echo $'Then go to "Security Settings", select "Allow ssh login with passwords"'
+    echo $'and set it to "no".'
+}
+
+function show_help {
+    echo ''
+    echo $"${PROJECT_NAME}-client"
+    echo ''
+    exit 0
+}
+
+function setup_client_app_irc {
+    echo $'Setting up hexchat'
+    if [ ! -f /usr/bin/pacman ]; then
+        # shellcheck disable=SC2086
+        sudo INSTALL_PACKAGES tor hexchat tor
+    else
+        sudo pacman -S --noconfirm hexchat tor
+    fi
+    if [ ! -d "/home/$CURR_USER/.config/hexchat" ]; then
+        mkdir -p "/home/$CURR_USER/.config/hexchat"
+    fi
+    { echo 'net_proxy_host = 127.0.0.1';
+      echo 'net_proxy_port = 9050';
+      echo 'net_proxy_type = 3';
+      echo 'net_proxy_use = 0';
+
+      echo 'net_proxy_auth = 1';
+      echo 'net_proxy_pass = HexChat';
+      echo 'net_proxy_user = HexChat';
+
+      echo 'dcc_auto_chat = 0';
+      echo 'dcc_auto_resume = 0';
+      echo 'dcc_auto_send = 0';
+      echo 'irc_hide_version = 1';
+      echo 'identd = 0';
+
+      echo 'away_reason =';
+      echo 'irc_part_reason =';
+      echo 'irc_quit_reason =';
+
+      echo "irc_real_name = ${USER}";
+      echo "irc_user_name = ${USER}";
+      echo "irc_nick1 = ${USER}";
+      echo "irc_nick2 = ${USER}_";
+      echo "irc_nick3 = ${USER}__";
+
+      echo 'completion_suffix = :';
+
+      echo 'gui_slist_skip = 1'; } > "/home/$CURR_USER/.config/hexchat/hexchat.conf"
+
+    echo $'hexchat configured'
+}
+
+function setup_client_app {
+    if [ ! $SETUP_CLIENT_APP_NAME ]; then
+        return
+    fi
+
+    case $SETUP_CLIENT_APP_NAME in
+        hexchat|xchat|irc)
+            setup_client_app_irc
+            ;;
+    esac
+    exit 0
+}
+
+function remove_known_hosts_entries {
+    # remove any previous libreserver entries from known hosts
+    if [ -f "/home/$CURR_USER/.ssh/known_hosts" ]; then
+        sed -i "/${PROJECT_NAME}.local/d" "/home/$CURR_USER/.ssh/known_hosts"
+    fi
+}
+
+function setup_avahi_client {
+    echo $'Configuring Avahi'
+    if [ ! -f /usr/bin/pacman ]; then
+        # shellcheck disable=SC2086
+        sudo INSTALL_PACKAGES avahi-utils avahi-dnsconfd
+    else
+        sudo pacman -S --noconfirm avahi nss-mdns
+        sudo sed -i 's|hosts:.*|hosts: files mdns_minimal [NOTFOUND=return] dns myhostname|g' /etc/nsswitch.conf
+    fi
+}
+
+function verify_ssh_server_key {
+    ssh -o VisualHostKey=yes -o FingerprintHash=sha256 ${PROJECT_NAME}.local -p 2222 &
+    pid=$!
+    sleep 15
+    kill ${pid}
+}
+
+while [ $# -gt 0 ]
+do
+    key="$1"
+
+    case $key in
+        -h|--help)
+            show_help
+            ;;
+        --essid)
+            shift
+            WIFI_SSID="$1"
+            ;;
+        --channel)
+            shift
+            WIFI_CHANNEL=${1}
+            ;;
+        -s|--setup)
+            shift
+            SETUP_CLIENT_APP_NAME=${1}
+            ;;
+        -v|--verify|--verifykeys)
+            verify_ssh_server_key
+            exit 0
+            ;;
+        *)
+            # unknown option
+            ;;
+    esac
+    shift
+done
+
+echo $'Configuring client'
+setup_avahi_client
+setup_client_app
+refresh_gpg_keys
+configure_ssh_client
+global_rate_limit
+remove_known_hosts_entries
+echo $'Configuration complete'
+exit 0

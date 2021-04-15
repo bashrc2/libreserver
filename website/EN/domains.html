@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2021-04-15 Thu 10:42 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LibreServer</title>
+<meta name="generator" content="Org mode" />
+<meta name="author" content="Bob Mottram" />
+<meta name="description" content="How to obtain a domain name"
+ />
+<meta name="keywords" content="libreserver, domains, dynamic dns" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  /* Languages per Org manual */
+  pre.src-asymptote:before { content: 'Asymptote'; }
+  pre.src-awk:before { content: 'Awk'; }
+  pre.src-C:before { content: 'C'; }
+  /* pre.src-C++ doesn't work in CSS */
+  pre.src-clojure:before { content: 'Clojure'; }
+  pre.src-css:before { content: 'CSS'; }
+  pre.src-D:before { content: 'D'; }
+  pre.src-ditaa:before { content: 'ditaa'; }
+  pre.src-dot:before { content: 'Graphviz'; }
+  pre.src-calc:before { content: 'Emacs Calc'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-fortran:before { content: 'Fortran'; }
+  pre.src-gnuplot:before { content: 'gnuplot'; }
+  pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-hledger:before { content: 'hledger'; }
+  pre.src-java:before { content: 'Java'; }
+  pre.src-js:before { content: 'Javascript'; }
+  pre.src-latex:before { content: 'LaTeX'; }
+  pre.src-ledger:before { content: 'Ledger'; }
+  pre.src-lisp:before { content: 'Lisp'; }
+  pre.src-lilypond:before { content: 'Lilypond'; }
+  pre.src-lua:before { content: 'Lua'; }
+  pre.src-matlab:before { content: 'MATLAB'; }
+  pre.src-mscgen:before { content: 'Mscgen'; }
+  pre.src-ocaml:before { content: 'Objective Caml'; }
+  pre.src-octave:before { content: 'Octave'; }
+  pre.src-org:before { content: 'Org mode'; }
+  pre.src-oz:before { content: 'OZ'; }
+  pre.src-plantuml:before { content: 'Plantuml'; }
+  pre.src-processing:before { content: 'Processing.js'; }
+  pre.src-python:before { content: 'Python'; }
+  pre.src-R:before { content: 'R'; }
+  pre.src-ruby:before { content: 'Ruby'; }
+  pre.src-sass:before { content: 'Sass'; }
+  pre.src-scheme:before { content: 'Scheme'; }
+  pre.src-screen:before { content: 'Gnu Screen'; }
+  pre.src-sed:before { content: 'Sed'; }
+  pre.src-sh:before { content: 'shell'; }
+  pre.src-sql:before { content: 'SQL'; }
+  pre.src-sqlite:before { content: 'SQLite'; }
+  /* additional languages in org.el's org-babel-load-languages alist */
+  pre.src-forth:before { content: 'Forth'; }
+  pre.src-io:before { content: 'IO'; }
+  pre.src-J:before { content: 'J'; }
+  pre.src-makefile:before { content: 'Makefile'; }
+  pre.src-maxima:before { content: 'Maxima'; }
+  pre.src-perl:before { content: 'Perl'; }
+  pre.src-picolisp:before { content: 'Pico Lisp'; }
+  pre.src-scala:before { content: 'Scala'; }
+  pre.src-shell:before { content: 'Shell Script'; }
+  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
+  /* additional language identifiers per "defun org-babel-execute"
+       in ob-*.el */
+  pre.src-cpp:before  { content: 'C++'; }
+  pre.src-abc:before  { content: 'ABC'; }
+  pre.src-coq:before  { content: 'Coq'; }
+  pre.src-groovy:before  { content: 'Groovy'; }
+  /* additional language identifiers from org-babel-shell-names in
+     ob-shell.el: ob-shell is the only babel language using a lambda to put
+     the execution function name together. */
+  pre.src-bash:before  { content: 'bash'; }
+  pre.src-csh:before  { content: 'csh'; }
+  pre.src-ash:before  { content: 'ash'; }
+  pre.src-dash:before  { content: 'dash'; }
+  pre.src-ksh:before  { content: 'ksh'; }
+  pre.src-mksh:before  { content: 'mksh'; }
+  pre.src-posh:before  { content: 'posh'; }
+  /* Additional Emacs modes also supported by the LaTeX listings package */
+  pre.src-ada:before { content: 'Ada'; }
+  pre.src-asm:before { content: 'Assembler'; }
+  pre.src-caml:before { content: 'Caml'; }
+  pre.src-delphi:before { content: 'Delphi'; }
+  pre.src-html:before { content: 'HTML'; }
+  pre.src-idl:before { content: 'IDL'; }
+  pre.src-mercury:before { content: 'Mercury'; }
+  pre.src-metapost:before { content: 'MetaPost'; }
+  pre.src-modula-2:before { content: 'Modula-2'; }
+  pre.src-pascal:before { content: 'Pascal'; }
+  pre.src-ps:before { content: 'PostScript'; }
+  pre.src-prolog:before { content: 'Prolog'; }
+  pre.src-simula:before { content: 'Simula'; }
+  pre.src-tcl:before { content: 'tcl'; }
+  pre.src-tex:before { content: 'TeX'; }
+  pre.src-plain-tex:before { content: 'Plain TeX'; }
+  pre.src-verilog:before { content: 'Verilog'; }
+  pre.src-vhdl:before { content: 'VHDL'; }
+  pre.src-xml:before { content: 'XML'; }
+  pre.src-nxml:before { content: 'XML'; }
+  /* add a generic configuration mode; LaTeX export needs an additional
+     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
+  pre.src-conf:before { content: 'Configuration File'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .equation-container {
+    display: table;
+    text-align: center;
+    width: 100%;
+  }
+  .equation {
+    vertical-align: middle;
+  }
+  .equation-label {
+    display: table-cell;
+    text-align: right;
+    vertical-align: middle;
+  }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  .org-svg { width: 90%; }
+  /*]]>*/-->
+</style>
+<link rel="stylesheet" type="text/css" href="libreserver.css" />
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2019 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">LibreServer</h1>
+
+<div class="figure">
+<p><img src="images/logo.png" alt="logo.png" width="80%" height="10%" align="center" />
+</p>
+</div>
+
+<div id="outline-container-org5866a3d" class="outline-2">
+<h2 id="org5866a3d">How to get a domain name</h2>
+</div>
+
+<div id="outline-container-org1903958" class="outline-2">
+<h2 id="org1903958">The domain name itself</h2>
+<div class="outline-text-2" id="text-org1903958">
+<p>
+If you want your sites or chat systems to be available via an ordinary web browser (i.e. not a Tor browser) then you'll need to obtain a domain name. The domain name system is ultimately controlled by ICANN and to obtain a domain name for which you can also get a TLS certificate you'll need to buy one. There are various sites which sell domain names, and fortunately they can often be quite cheap - especially if you can think of an obscure name for your site. Prefer sites where the domain name subscription can be automatically renewed, because otherwise trolls can quickly buy your domain when it expires and then hold it for ransom. If you're planning to self-host for more than an ephemeral purpose, such as a conference or festival, then choose the longest subscription period you can afford (typically a few years).
+</p>
+
+<p>
+You probably only need one ICANN domain name and then the various LibreServer apps you might want can be set up on subdomains, such as <i>blog.mydomainname.net</i>.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org5e8d288" class="outline-2">
+<h2 id="org5e8d288">Dynamic DNS</h2>
+<div class="outline-text-2" id="text-org5e8d288">
+<p>
+You will also need a dynamic DNS account, and again this might be something you have to pay a subscription for. Your LibreServer system will have a local network address (typically 192.168.x.y or 10.x.y.z) and also a public IP address assigned by your ISP. Your ISP will change your public IP address every so often (that's why it's called "dynamic") and so there needs to be some way to link the domain name which you've obtained to your changing public IP address. That's what the dynamic DNS service does.
+</p>
+
+<p>
+<i>Starting to think that this sounds like a rather shaky system which would would be not too difficult for an adversary to disrupt - especially if they get cosy with ICANN or the dynamic DNS provider? You'd be right. But moving swiftly past that man behind a curtain&#x2026;</i>
+</p>
+
+<p>
+In simple terms what happens is that on a regular basis the LibreServer system will ping the dynamic DNS service and say "<i>this is my current public IP address</i>", so that the mapping between domain name and IP address can be maintained.
+</p>
+
+<p>
+The dynamic DNS service will have their own DNS servers maintaining the IP address mappings and so on the web site where you registered your domain name you will need to specify the servers of the your dynamic DNS account. Look for an option such as "<i>change nameservers</i>" or "<i>custom nameservers</i>", remove any names which might already be there and then add the servers used by the dynamic DNS service. For example, if you're using FreeDNS then these servers would be:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-text">NS1.AFRAID.ORG
+NS2.AFRAID.ORG
+NS3.AFRAID.ORG
+NS4.AFRAID.ORG
+</pre>
+</div>
+
+<p>
+It might take a few minutes for the changes to take effect, so don't be too hasty to conclude that it doesn't work.
+</p>
+</div>
+
+<div id="outline-container-org98359a9" class="outline-3">
+<h3 id="org98359a9">Configuring with FreeDNS</h3>
+<div class="outline-text-3" id="text-org98359a9">
+<p>
+If you are using FreeDNS as a dynamic DNS provider then on their site select "<i>Domains</i>" and add your domain name (this might only be available to paid subscribers). Make sure that they're marked as "<i>private</i>" so that subdomains of your domain name are not used by other users of the site.
+</p>
+
+<p>
+Select "Subdomains" from the menu on the left then select the MX entry for your domain and change the destination to <b>10:mydomainname</b> rather than <b>10:mail.mydomainname</b>.
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orge426e31" class="outline-2">
+<h2 id="orge426e31">Setting up with LibreServer</h2>
+<div class="outline-text-2" id="text-orge426e31">
+<p>
+When you start the base installation of the system it will ask you to choose a dynamic DNS provider and then enter the login details for the dynamic DNS service.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgf783239" class="outline-2">
+<h2 id="orgf783239">A note about Tor</h2>
+<div class="outline-text-2" id="text-orgf783239">
+<p>
+If you only want your sites to be available via Tor then none of the above is needed and you can access your sites and systems via their onion addresses. Tor has its own naming system which is independent from ICANN, and you also won't need TLS/SSL certificates since it also manages transport encryption itself. When building disk images use the <b>&#x2013;onion yes</b> option, or choose one of the ready made onion disk images <a href="./downloads">from downloads</a>.
+</p>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: Bob Mottram</p>
+<p class="date">Created: 2021-04-15 Thu 10:42</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

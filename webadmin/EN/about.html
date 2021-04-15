@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <style>
+      @import url("libreserver.css");
+
+      .img-onion {
+          width: 30%;
+          height: auto;
+          min-width : 120px;
+      }
+
+      .versiontext {
+          color: var(--main-fg-color);
+          text-align: center;
+          font-size: 120%;
+          font-weight: bold;
+      }
+
+      .remotetext {
+          color: var(--main-fg-color);
+          text-align: center;
+          font-size: 120%;
+          font-weight: bold;
+      }
+
+      .onionaddress {
+          text-align: center;
+          font-size: 70%;
+          font-weight: bold;
+      }
+
+      #iconpic {
+          width: 20%;
+          height: auto;
+          margin-right : auto;
+          margin-left : auto;
+          min-width : 120px;
+      }
+
+      .appurl {
+          font-size: 100%;
+      }
+
+      .desc {
+          font-size: 100%;
+      }
+
+      button {
+          border: none;
+          outline: 0;
+          display: inline-block;
+          padding: 8px;
+          color: white;
+          background-color: #000;
+          text-align: center;
+          cursor: pointer;
+          width: 100%;
+          font-size: 18px;
+      }
+
+      button:hover {
+          opacity: 0.7;
+      }
+
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <a href="index.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
+
+      <p class="versiontext" translate="no">Version</p>
+
+      <p class="desc" translate="yes"><i>Whichever screen you are currently on, you can get back to the previous screen by clicking or pressing on the Libreserver logo at the top.</i></p>
+
+      <p class="remotetext" translate="yes">Remote access</p>
+      <p class="desc" translate="yes">You can get to this system remotely via:</p>
+
+      <p class="onionaddress" translate="no">http://WEBADMINONIONADDRESS/admin</p>
+
+      <img class="img-onion" src="images/webadmin_qrcode.png" alt="QR code">
+
+      <p class="headertext" translate="yes">About</p>
+
+      <p class="desc" translate="yes">This is a server system which enables you to run internet apps such as a blog or federated social network.</p>
+
+      <p class="desc" translate="yes">LibreServer started in 2013. It was initially based on the Beaglebone Black hardware and inspired by the FreedomBox idea of an inexpensive and simple to manage internet server for the home.</p>
+
+      <p class="desc" translate="yes">Icons on the website and user interfaces are by Rashid Mhar.</p>
+
+      <p class="desc" translate="yes">For further information see the website at https://libreserver.net</p>
+
+      <form action="index.html">
+        <input type="submit" translate="yes" value="Go Back" />
+      </form>
+    </div>
+
+  </body>
+</html>

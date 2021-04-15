@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+  <meta charset="utf-8">
+  <style>
+    @import url("libreserver.css");
+
+    * {
+        box-sizing: border-box;
+    }
+
+    .subheadertext {
+        margin-left : 10%;
+        text-align: left;
+        font-size: 110%;
+        font-weight: bold;
+    }
+
+    .subheaderports {
+        margin-left : 10%;
+        text-align: left;
+        font-size: 110%;
+        font-weight: bold;
+    }
+
+    .helptext {
+        width: 80%;
+        text-align: left;
+        font-size: 100%;
+        margin-left : 10%;
+    }
+
+    .codetext {
+        width: 80%;
+        text-align: left;
+        font-size: 100%;
+        margin-left : 10%;
+        font-family: Courier;
+    }
+
+    .portstext {
+        width: 80%;
+        text-align: left;
+        font-size: 100%;
+        margin-left : 10%;
+    }
+
+    .row {
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+        padding: 0 4px;
+    }
+
+    .column {
+        -ms-flex: 25%;
+        flex: 15%;
+        max-width: 25%;
+        padding: 0 4px;
+    }
+
+    .column img {
+        margin-top: 8px;
+        vertical-align: middle;
+    }
+
+    @media screen and (max-width: 800px) {
+        .column {
+            -ms-flex: 50%;
+            flex: 50%;
+            max-width: 50%;
+        }
+    }
+
+    @media screen and (max-width: 200px) {
+        .column {
+            -ms-flex: 100%;
+            flex: 100%;
+            max-width: 100%;
+        }
+    }
+  </style>
+  <body>
+
+    <div class="header">
+      <a href="app_irc.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
+    </div>
+
+    <p class="headertext" translate="yes">IRC</p>
+
+    <p class="subheaderports" translate="yes">Ports</p>
+
+    <p class="portstext" translate="yes">Forward the port 6697 from your internet router</p>
+
+    <p class="helptext" translate="yes">IRC is useful for multi-user chat. The classic use case is for software development where many engineers might need to coordinate their activities, but it's also useful for meetings, parties and general socialising.</p>
+
+    <p class="subheadertext" translate="yes">Installing on Desktop</p>
+
+    <p class="helptext" translate="yes">HexChat (formerly XChat) is compatible with proxying via Tor and so provides the best security when connecting to your IRC server. It will allow you to connect to your IRC server's onion address.</p>
+
+    <p class="helptext"><b>1.</b> <span translate="yes">Install HexChat and set up its configuration file. Assuming that you're running on a Debian or Arch based distro, this can be done on your local machine with:<span></p>
+
+    <p class="codetext" translate="no">
+      git clone https://code.libreserver.org/bashrc/libreserver<br>
+      cd libreserver<br>
+      git checkout bullseye<br>
+      sudo make install<br>
+      libreserver-client --setup hexchat
+    </p>
+
+    <p class="helptext"><b>2.</b> <span translate="yes">Run HexChat.</span></p>
+
+    <p class="helptext"><b>3.</b> <span translate="yes">Within the network list click, Add and enter your domain name then click Edit.</span></p>
+
+    <p class="helptext"><b>4.</b> <span translate="yes">Select the entry within the servers box, then enter ircaddress.onion/6697 or mydomainname/6697 and press Enter.</span></p>
+
+    <p class="helptext"><b>5.</b> <span translate="yes">Uncheck use global user information.</span></p>
+
+    <p class="helptext" translate="yes">Enter first and second nicknames and check connect to this network on startup.</p>
+    <p class="helptext"><b>6.</b> <span translate="yes">If you are using the ordinary domain name (clearnet/ICANN) then make sure that Use SSL is checked.</span></p>
+
+    <p class="helptext"><b>7.</b> <span translate="yes">If you are using the onion address then use SSL should be unchecked and the transport encryption will be handled via the onion address itself.</span></p>
+
+    <p class="helptext"><b>8.</b> <span translate="yes">Within the Password field enter the password which you originally set up the box with.</span></p>
+
+    <p class="helptext"><b>9.</b> <span translate="yes">Select the Autojoin channels tab, click Add and enter #libreserver as the channel name.</span></p>
+
+    <p class="helptext"><b>10.</b> <span translate="yes">Click close and then connect.</span></p>
+
+    <p class="subheadertext" translate="yes">Installing in Emacs</p>
+
+    <p class="helptext" translate="yes">If you are an Emacs user then you can also connect to your IRC server via Emacs.</p>
+    <p class="helptext" translate="yes">Ensure that tor is installed onto your local system:</p>
+    <p class="codetext" translate="no">
+      sudo apt-get install tor
+    </p>
+    <p class="helptext" translate="yes">Add the following to your Emacs configuration file:</p>
+    <p class="codetext" translate="no">
+(setq socks-noproxy '("localhost"))<br>
+(require 'socks)<br>
+(require 'tls)<br>
+(setq socks-server (list "Tor socks" "localhost" 9050 5))<br>
+(setq erc-server-connect-function 'socks-open-network-stream)<br>
+(setq erc-autojoin-channels-alist<br>
+    '(("myircaddress.onion" "#libreserver")))<br>
+(erc :server "myircaddress.onion" :port 6697 :nick "yourusername" :password "your IRC password")
+    </p>
+
+  </body>
+</html>

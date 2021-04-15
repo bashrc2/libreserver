@@ -1,0 +1,258 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Change dynamic dns settings
+#
+# License
+# =======
+#
+# Copyright (C) 2018-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+PROJECT_NAME='libreserver'
+
+export TEXTDOMAIN=${PROJECT_NAME}-ddns
+export TEXTDOMAINDIR="/usr/share/locale"
+
+source "/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-config"
+source "/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-dns"
+
+DDNS_PROVIDER="none"
+DDNS_USERNAME=
+DDNS_PASSWORD=
+
+function dynamic_dns_setup {
+    DDNS_PROVIDER='none'
+
+    W=(1 freedns.afraid.org
+       2 dyn.com
+       3 zoneedit.com
+       4 no-ip.com
+       5 easydns.com
+       6 dnsomatic.com
+       7 dns.he.net
+       8 tunnelbroker.net
+       9 sitelutions.com
+       10 dnsexit.com
+       11 changeip.com
+       12 zerigo.com
+       13 dhis.org
+       14 nsupdate.info
+       15 loopia.com
+       16 namecheap.com
+       17 ovh.com
+       18 dtdns.com
+       19 giradns.com
+       20 duiadns.net
+       21 ddnss.de
+       22 dynv6.com
+       23 ipv4.dynv6.com
+       24 spdyn.de
+       25 freemyip.com
+       26 cloudxns.net)
+
+    # shellcheck disable=SC2068
+    selection=$(dialog --backtitle $"LibreServer Configuration" --title $"Dynamic DNS" --menu $"Choose Dynamic DNS provider, or ESC for none:" 24 60 32 "${W[@]}" 3>&2 2>&1 1>&3)
+
+    if [ ! "$selection" ]; then
+        if [ -f /etc/systemd/system/inadyn.service ]; then
+            systemctl stop inadyn
+            systemctl disable inadyn
+        fi
+        return
+    fi
+
+    case $selection in
+        1) DDNS_PROVIDER="freedns";;
+        2) DDNS_PROVIDER="dyn";;
+        3) DDNS_PROVIDER="zoneedit.com";;
+        4) DDNS_PROVIDER="no-ip.com";;
+        5) DDNS_PROVIDER="easydns.com";;
+        6) DDNS_PROVIDER="dnsomatic.com";;
+        7) DDNS_PROVIDER="dns.he.net";;
+        8) DDNS_PROVIDER="tunnelbroker.net";;
+        9) DDNS_PROVIDER="sitelutions.com";;
+        10) DDNS_PROVIDER="dnsexit.com";;
+        11) DDNS_PROVIDER="changeip.com";;
+        12) DDNS_PROVIDER="zerigo.com";;
+        13) DDNS_PROVIDER="dhis.org";;
+        14) DDNS_PROVIDER="nsupdate.info";;
+        15) DDNS_PROVIDER="loopia.com";;
+        16) DDNS_PROVIDER="namecheap.com";;
+        17) DDNS_PROVIDER="ovh.com";;
+        18) DDNS_PROVIDER="dtdns.com";;
+        19) DDNS_PROVIDER="giradns.com";;
+        20) DDNS_PROVIDER="duiadns.net";;
+        21) DDNS_PROVIDER="ddnss.de";;
+        22) DDNS_PROVIDER="dynv6.com";;
+        23) DDNS_PROVIDER="ipv4.dynv6.com";;
+        24) DDNS_PROVIDER="spdyn.de";;
+        25) DDNS_PROVIDER="freemyip.com";;
+        26) DDNS_PROVIDER="cloudxns.net";;
+    esac
+    save_configuration_values
+
+    valid_ddns_username=
+    valid_ddns_password=
+    if [[ "$DDNS_PROVIDER" == "none" ]]; then
+        if [ -f /etc/systemd/system/inadyn.service ]; then
+            systemctl stop inadyn
+            systemctl disable inadyn
+        fi
+    else
+        while [ ! $valid_ddns_username ]
+        do
+            data=$(mktemp 2>/dev/null)
+            dialog --backtitle $"LibreServer Configuration" \
+                   --inputbox $"Dynamic DNS provider username" 10 30 "$(grep 'DDNS_USERNAME' temp.cfg | awk -F '=' '{print $2}')" 2> "$data"
+            sel=$?
+            case $sel in
+                0)  possible_username=$(cat "$data")
+                    if [ "$possible_username" ]; then
+                        if [ ${#possible_username} -gt 1 ]; then
+                            valid_ddns_username=$(cat "$data")
+                            # shellcheck disable=SC2034
+                            DDNS_USERNAME="$valid_ddns_username"
+                            rm -f "$data"
+                            break;
+                        fi
+                    fi
+                    ;;
+                1) rm -f "$data"
+                   clear
+                   exit 1;;
+                255) rm -f "$data"
+                     clear
+                     exit 1;;
+            esac
+            rm -f "$data"
+        done
+        save_configuration_values
+
+        while [ ! $valid_ddns_password ]
+        do
+            data=$(mktemp 2>/dev/null)
+            dialog --backtitle $"LibreServer Configuration" \
+                   --clear \
+                   --insecure \
+                   --passwordbox $"Dynamic DNS provider password" 10 30 "$(grep 'DDNS_PASSWORD' temp.cfg | awk -F '=' '{print $2}')" 2> "$data"
+            sel=$?
+            case $sel in
+                0)  possible_password=$(cat "$data")
+                    if [ "$possible_password" ]; then
+                        if [ ${#possible_password} -gt 1 ]; then
+                            valid_ddns_password=$(cat "$data")
+                            DDNS_PASSWORD=$valid_ddns_password
+                            break;
+                        fi
+                    fi
+                    ;;
+                1) rm -f "$data"
+                   clear
+                   exit 1;;
+                255) rm -f "$data"
+                     clear
+                     exit 1;;
+            esac
+            rm -f "$data"
+            if [ ${#DDNS_PASSWORD} -lt "$MINIMUM_PASSWORD_LENGTH" ]; then
+                dialog --title $"Password quality check" --msgbox $"The password given was too short. It must be at least $MINIMUM_PASSWORD_LENGTH characters. You may need to change your password on the dynamic DNS provider's web site." 10 40
+                DDNS_PASSWORD=""
+            fi
+        done
+        save_configuration_values
+        update_inadyn_config
+    fi
+}
+
+function choose_dynamic_dns {
+    if [[ "$SYSTEM_TYPE" != "mesh"* && "$ONION_ONLY" == "no" ]]; then
+        dialog --title $"Dynamic DNS" \
+               --backtitle $"LibreServer Configuration" \
+               --yesno $"\\nConfigure a dynamic DNS service?\\n\\nIf it is already handled by your internet router then select 'no'." 10 50
+        sel=$?
+        case $sel in
+            0) dynamic_dns_setup
+               ;;
+            255) clear
+                 exit 1
+                 ;;
+        esac
+    fi
+}
+
+function choose_dynamic_dns_noninteractive {
+    ddns="$1"
+    ddns_username="$2"
+    ddns_password="$3"
+
+    if [ ! "$ddns" ]; then
+        exit 0
+    fi
+
+    DDNS_PROVIDER="$ddns"
+
+    if [[ "$DDNS_PROVIDER" == "none" ]]; then
+        if [ -f /etc/systemd/system/inadyn.service ]; then
+            systemctl stop inadyn
+            systemctl disable inadyn
+        fi
+        save_configuration_values
+    else
+        if [ ! "$ddns_username" ]; then
+            exit 0
+        fi
+        if [ ! "$ddns_password" ]; then
+            exit 0
+        fi
+
+        # shellcheck disable=SC2034
+        DDNS_USERNAME="$ddns_username"
+        DDNS_PASSWORD="$ddns_password"
+        save_configuration_values
+        update_inadyn_config
+        if [ -f /etc/systemd/system/inadyn.service ]; then
+            if [[ "$DDNS_PROVIDER" == *"freedns"* ]]; then
+                systemctl stop inadyn
+                systemctl disable inadyn
+            else
+                systemctl enable inadyn
+                systemctl restart inadyn
+            fi
+        fi
+    fi
+}
+
+if [ ! "$CONFIGURATION_FILE" ]; then
+    CONFIGURATION_FILE=$HOME/${PROJECT_NAME}.cfg
+fi
+
+read_configuration_values
+
+if [[ "$ONION_ONLY" != 'no' ]]; then
+    exit 0
+fi
+
+if [ ! "$1" ]; then
+    choose_dynamic_dns
+    clear
+else
+    choose_dynamic_dns_noninteractive "$1" "$2" "$3"
+fi
+
+exit 0

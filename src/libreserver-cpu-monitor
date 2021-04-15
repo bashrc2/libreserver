@@ -1,0 +1,138 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Daemon which monitors the cpu and looks for anomalous
+# levels of usage
+#
+# License
+# =======
+#
+# Copyright (C) 2018-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+PROJECT_NAME='libreserver'
+
+export TEXTDOMAIN=${PROJECT_NAME}-cpu-monitor
+export TEXTDOMAINDIR="/usr/share/locale"
+
+# The initial number of samples to take before calculating
+# cpu usage average
+INITIAL_SAMPLES=10
+
+# number of samples so far
+no_of_samples=0
+
+# current running average cpu usage
+running_average=0
+prev_running_average=0
+
+# percent usage threshold for warnings
+THRESHOLD_WARNING=80
+THRESHOLD_CRITICAL=90
+
+UPDATE_INTERVAL=10
+
+# A timer used to count down to zero after a notification
+# has been sent. This helps to suppress hunting, which could
+# be annoying
+suppress=0
+
+debug_mode="$1"
+
+if [ "$debug_mode" ]; then
+    echo $'CPU monitor Debug mode'
+    UPDATE_INTERVAL=1
+fi
+
+while true
+do
+    cpu_usage=$(grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage "%"}' | awk -F '.' '{print $1}')
+
+    # get a number of samples first so that we're working from
+    # an initial good average
+    if [ $no_of_samples -lt $INITIAL_SAMPLES ]; then
+        running_average=$((running_average + cpu_usage))
+        no_of_samples=$((no_of_samples+1))
+        if [ "$debug_mode" ]; then
+            echo -n '.'
+        fi
+    fi
+
+    # calculate the initial average cpu usage
+    if [ $no_of_samples -eq $INITIAL_SAMPLES ]; then
+        # calculate the initial running average value
+        new_running_average=$((running_average / INITIAL_SAMPLES))
+        running_average=$new_running_average
+        if [ "$debug_mode" ]; then
+            echo ''
+            echo "initial $running_average"
+        fi
+        no_of_samples=$((no_of_samples+1))
+    fi
+
+    # subsequently calculate running average
+    if [ $no_of_samples -gt $INITIAL_SAMPLES ]; then
+        temp1=$((running_average*9))
+        temp2=$((temp1+cpu_usage))
+        running_average=$((temp2 / 10))
+        if [ "$debug_mode" ]; then
+            echo "$cpu_usage ${running_average}%"
+        fi
+
+        # if we exceed the warning threshold
+        if [ $prev_running_average -lt $THRESHOLD_WARNING ]; then
+            if [ $running_average -ge $THRESHOLD_WARNING ]; then
+                if [ "$debug_mode" ]; then
+                    echo "Warning"
+                else
+                    if [ $suppress -eq 0 ]; then
+                        /usr/local/bin/${PROJECT_NAME}-notification -s $'High CPU usage' -m $"CPU usage is getting high. ${running_average}%"
+                        suppress=180
+                    fi
+                fi
+            fi
+        fi
+
+        # if we exceed the critical threshold
+        if [ $prev_running_average -lt $THRESHOLD_CRITICAL ]; then
+            if [ $running_average -ge $THRESHOLD_CRITICAL ]; then
+                if [ "$debug_mode" ]; then
+                    echo "Critical"
+                else
+                    if [ $suppress -eq 0 ]; then
+                        /usr/local/bin/${PROJECT_NAME}-notification -s $'Critical CPU usage' -m $"CPU usage is reaching critical level. ${running_average}%"
+                        suppress=180
+                    fi
+                fi
+            fi
+        fi
+
+        prev_running_average=$running_average
+    fi
+
+    # count down the suppression of messages
+    if [ $suppress -gt 0 ]; then
+        new_suppress=$((suppress-1))
+        suppress=$new_suppress
+    fi
+
+    # sleep most of the time
+    sleep $UPDATE_INTERVAL
+done
+
+exit 0

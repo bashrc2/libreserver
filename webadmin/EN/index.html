@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+  <meta http-equiv="Refresh" content="60" charset="utf-8">
+  <style>
+    @import url("libreserver.css");
+
+    * {
+        box-sizing: border-box;
+    }
+
+    .page-align {
+        vertical-align: middle;
+    }
+
+    .vertical-align {
+        margin-left: 5%;
+        margin-right: 5%;
+        width: 90%;
+    }
+
+    .row {
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+        padding: 0 4px;
+    }
+
+    .column {
+        -ms-flex: 20%;
+        flex: 20%;
+        max-width: 20%;
+        padding: 0 3%;
+    }
+
+    .column img {
+        margin-top: 8px;
+        vertical-align: middle;
+        max-width: 80%;
+    }
+
+    @media screen and (min-width: 400px) {
+        .page-align {
+            margin-top: 4%;
+        }
+        .column {
+            -ms-flex: 20%;
+            flex: 20%;
+            max-width: 20%;
+        }
+    }
+
+    @media screen and (max-width: 700px) {
+        .page-align {
+            margin-top: 0%;
+        }
+        .column {
+            -ms-flex: 50%;
+            flex: 50%;
+            max-width: 50%;
+        }
+    }
+
+    form input[type=submit] {
+        border:4px solid var(--main-fg-color);
+        border-radius:10px;
+        color: var(--search-background);
+        background-color: var(--search-background2);
+        padding: 5px 4px;
+        text-align: center;
+        font-size: 110%;
+        font-weight: bold;
+        text-decoration: none;
+        display: inline-block;
+        vertical-align: middle;
+    }
+
+    form input[type=text] {
+        border:2px solid var(--main-fg-color);
+        border-radius:10px;
+        padding: 5px 4px;
+        width: 70%;
+        clear: both;
+        text-align: center;
+        font-size: 110%;
+        font-weight: bold;
+        color: var(--search-background);
+        background-color: var(--search-background2);
+        vertical-align: middle;
+    }
+  </style>
+  <body>
+
+    <div class="page-align">
+      <div class="header">
+        <a href="about.html" title="About"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="About"></a>
+
+        <br><br>
+
+        <div class="vertical-align">
+          <br>
+
+          <div class="row">
+            <div class="column">
+              <div>
+                <a href="./apps.html" title="Apps">
+                  <img src="images/admin_apps.png" style="width:100%" alt="Apps">
+                  <center translate="yes">Apps</center>
+                </a>
+              </div>
+            </div>
+            <div class="column">
+              <div>
+                <a href="./backup.html" title="Backup / Restore">
+                  <img src="images/admin_backup.png" style="width:100%" alt="Backup">
+                  <center translate="yes">Backup</center>
+                </a>
+              </div>
+            </div>
+            <div class="column">
+              <div>
+                <a href="./users.html" title="Members">
+                  <img src="images/admin_users.png" style="width:100%" alt="Members">
+                  <center translate="yes">Members</center>
+                </a>
+              </div>
+            </div>
+            <div class="column">
+              <div>
+                <a href="../mail" title="Mail">
+                  <img src="images/mail.png" style="width:100%" alt="Mail">
+                  <center translate="yes">Mail</center>
+                </a>
+              </div>
+            </div>
+            <div class="column">
+              <div>
+                <a href="./settings.html" title="Settings">
+                  <img src="images/settings.png" style="width:100%" alt="Settings">
+                  <center translate="yes">Settings</center>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <br>
+    </div>
+
+  </body>
+</html>

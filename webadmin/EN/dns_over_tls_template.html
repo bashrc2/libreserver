@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <style>
+      @import url("libreserver.css");
+
+      .ipaddress {
+          color: var(--main-fg-color);
+          text-align: center;
+          font-size: 160%;
+          font-weight: bold;
+      }
+
+      .appurl {
+          font-size: 100%;
+      }
+
+      .welcomeheader {
+          font-size: 200%;
+          font-weight: bold;
+      }
+
+      .descriptiontext {
+          font-size: 90%;
+      }
+
+      .logintext {
+          font-size: 120%;
+          font-weight: bold;
+          color: #981737;
+      }
+
+      button {
+          border: none;
+          outline: 0;
+          display: inline-block;
+          padding: 8px;
+          color: white;
+          background-color: #000;
+          text-align: center;
+          cursor: pointer;
+          width: 100%;
+          font-size: 18px;
+      }
+
+      button:hover, a:hover {
+          opacity: 0.7;
+      }
+
+      .chip {
+          display: inline-block;
+          padding: 0 25px;
+          height: 50px;
+          font-size: 70%;
+          line-height: 50px;
+          border-radius: 25px;
+          background-color: #f1f1f1;
+      }
+
+      .chip img {
+          float: left;
+          margin: 0 10px 0 -25px;
+          height: 50px;
+          width: 50px;
+          border-radius: 50%;
+      }
+
+      .ddnslist {
+          font-size: 100%;
+          font-weight: bold;
+          color: black;
+          background-color: lightblue;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="header">
+        <a href="settings.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a><br>
+        <form action="dns_over_tls.php" method="post">
+          <p class="headertext" translate="yes">DNS over TLS</p>
+          <br>
+          <label translate="yes">IP Address</label>: <input type="text" name="dns_over_tls_address" value="DNS_OVER_TLS"><br><br>
+          <br>
+          <input type="submit" name="submitdnsovertlscancel" translate="yes" value="Cancel">
+          <input type="submit" name="submitdnsovertlschange" translate="yes" value="Continue">
+        </form>
+</form>
+
+<br>
+</div>
+</div>
+</body>
+</html>

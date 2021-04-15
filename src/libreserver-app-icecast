@@ -1,0 +1,805 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Icecast application
+#
+# License
+# =======
+#
+# Copyright (C) 2017-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VARIANTS='full full-vim'
+
+APP_CATEGORY=media
+
+IN_DEFAULT_INSTALL=0
+SHOW_ON_ABOUT=1
+SHOW_CLEARNET_ADDRESS_ON_ABOUT=0
+REQUIRES_APP=
+
+ICECAST_DOMAIN_NAME=
+ICECAST_CODE=
+ICECAST_PORT=8005
+ICECAST_ONION_PORT=8146
+ICECAST_DIR=/icestream
+ICECAST_JINGLES=/jingles
+ICECAST_LOGIN_TEXT=$"Icecast login"
+
+ICECAST_SHORT_DESCRIPTION=$'Media broadcast'
+ICECAST_DESCRIPTION=$'Media broadcast'
+ICECAST_MOBILE_APP_URL=
+
+ICECAST_TITLE=$'Music Service'
+ICECAST_TITLE_MAIN=$'Music Service main'
+ICECAST_DESCRIPTION=$"This is the myStation music stream. Add some information about your station's automated programming."
+
+liquidsoap_binary=/etc/liquidsoapuser/.opam/system/bin/liquidsoap
+liquidsoap_script=/etc/liquidsoapuser/radio.liq
+liquidsoap_log=/etc/liquidsoapuser/liquidsoap.log
+
+icecast_variables=(MY_USERNAME
+                   MY_EMAIL_ADDRESS
+                   ONION_ONLY
+                   ICECAST_DOMAIN_NAME
+                   ICECAST_CODE
+                   ICECAST_TITLE
+                   ICECAST_TITLE_MAIN
+                   ICECAST_DESCRIPTION
+                   DEFAULT_LANGUAGE)
+
+function upgrade_distro_icecast {
+    target_distro="$1"
+
+    if [[ "$target_distro" == 'bullseye' ]]; then
+        echo -n ''
+    fi
+}
+
+function add_user_icecast {
+    echo '0'
+}
+
+function remove_user_icecast {
+    echo '0'
+}
+
+function icecast_install_latest_liquidsoap {
+    useradd -c "liquidsoap system account" -d /etc/liquidsoapuser -m -r -g icecast liquidsoapuser
+    gpasswd -a liquidsoapuser sudo
+    su -c 'opam init -y' - liquidsoapuser
+    # shellcheck disable=SC2016
+    su -c 'eval `opam config env`' - liquidsoapuser
+    su -c 'opam install depext' - liquidsoapuser
+    chmod 755 /etc/sudoers
+    if ! grep -q 'liquidsoapuser' /etc/sudoers; then
+        echo 'liquidsoapuser ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
+    else
+        sed -i 's|liquidsoapuser.*|liquidsoapuser ALL=(ALL) NOPASSWD: ALL|g' /etc/sudoers
+    fi
+    chmod 0440 /etc/sudoers
+    su -c 'opam depext -y taglib mad lame vorbis cry ssl samplerate magic opus liquidsoap' - liquidsoapuser
+    su -c 'opam install -y taglib mad lame vorbis cry ssl samplerate magic opus liquidsoap' - liquidsoapuser
+    if [ ! -f /etc/liquidsoapuser/.opam/system/bin/liquidsoap ]; then
+        echo $'liquidsoap was not installed via opam'
+        exit 35
+    fi
+}
+
+function icecast_liquidsoap {
+    INSTALL_PACKAGES opam
+
+    icecast_install_latest_liquidsoap
+
+    if [ ! -d $ICECAST_DIR ]; then
+        mkdir $ICECAST_DIR
+    fi
+    if [ ! -d $ICECAST_JINGLES ]; then
+        mkdir $ICECAST_JINGLES
+    fi
+    chown -R icecast2:icecast $ICECAST_DIR
+    chown -R icecast2:icecast $ICECAST_JINGLES
+
+    read_config_param ICECAST_TITLE
+    read_config_param ICECAST_TITLE_MAIN
+    read_config_param ICECAST_DESCRIPTION
+
+    ICECAST_PASSWORD=$("${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a icecast)
+    ICECAST_SOURCE_PASSWORD=$("${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a icecastsource)
+    ICECAST_RELAY_PASSWORD=$("${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a icecastrelay)
+    ICECAST_USER_PASSWORD=$("${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a icecastuser)
+
+    { echo '#Settings';
+      echo '';
+      echo 'set("log.file.path", "/dev/null")';
+      echo 'set("server.telnet", false)';
+      echo 'set("harbor.bind_addr","0.0.0.0")';
+      echo '';
+      echo '# Music playlists';
+      echo "music1 = nrj(playlist.safe(\"$ICECAST_DIR\"))";
+      echo '';
+      echo '# Some jingles';
+      echo "jingles = nrj(playlist.safe(\"$ICECAST_JINGLES\"))";
+      echo '';
+      echo '# If something goes wrong, well play this';
+      echo 'security = single("/etc/icecast2/default.ogg")';
+      echo '';
+      echo '# Start building the feed with music';
+      echo 'radio = random([music1])';
+      echo '';
+      echo '# Add the security, requests and smart crossfade';
+      echo 'radio = fallback(track_sensitive = false,[smart_crossfade(fallback([request.queue(id="request"),radio])), security])';
+      echo '';
+      echo '# Now add some jingles';
+      echo 'radio = random(weights=[1,2],[jingles,radio])';
+      echo '';
+      echo '# Add a skip command for the music stream';
+      echo '#server.register(';
+      echo '#usage="skip",';
+      echo '#description="Skip the current song.",';
+      echo '#"skip",';
+      echo '#fun(_) -> begin source.skip(radio) "Done!" end';
+      echo '';
+      echo '# Talk over stream using microphone mount.';
+      echo "#mic = input.harbor(\"mic\",port=8080,password=\"$ICECAST_USER_PASSWORD\",buffer=15.0,max=30.0)";
+      echo '#radio = smooth_add(delay=0.8, p=0.15, normal=radio, special=mic)';
+      echo '';
+      echo '#Add support for live streams.';
+      echo "#live = audio_to_stereo(input.harbor(\"live\", port=8080, password=\"$ICECAST_USER_PASSWORD\", buffer=15.0, max=30.0))";
+      echo '#full = fallback(track_sensitive=false, [live,radio])';
+      echo '';
+      echo '# Stream it out';
+      echo '#output.icecast(%mp3.vbr,';
+      echo "#host = \"localhost\", port = $ICECAST_PORT, password = \"$ICECAST_SOURCE_PASSWORD\", mount = \"music.mp3\", name=\"$ICECAST_TITLE\", description=\"$ICECAST_DESCRIPTION\",radio)";
+      echo '';
+      echo '#output.icecast(%vorbis,';
+      echo "#host = \"localhost\", port = $ICECAST_PORT,";
+      echo "#password = \"$ICECAST_SOURCE_PASSWORD\", mount = \"music.ogg\",";
+      echo "#name=\"$ICECAST_TITLE\", description=\"$ICECAST_DESCRIPTION\",radio)";
+      echo '';
+      echo '#output.icecast(%opus(vbr="unconstrained",bitrate=5),';
+      echo "#host = \"localhost\", port = $ICECAST_PORT,";
+      echo "#password = \"$ICECAST_SOURCE_PASSWORD\", mount = \"music.opus\",";
+      echo "#name=\"$ICECAST_TITLE\", description=\"$ICECAST_DESCRIPTION\",radio)";
+      echo '';
+      echo "#output.icecast(%mp3.vbr, host = \"localhost\", port = $ICECAST_PORT, password = \"$ICECAST_SOURCE_PASSWORD\", mount = \"stream.mp3\", name=\"$ICECAST_TITLE_MAIN\", description=\"$ICECAST_TITLE_MAIN\", full)";
+      echo '';
+      echo "#output.icecast(%vorbis(samplerate=8000, channels=2, quality=0.1), host=\"localhost\", port=$ICECAST_PORT, password=\"$ICECAST_SOURCE_PASSWORD\", mount=\"stream.ogg\", name=\"$ICECAST_TITLE_MAIN\", description=\"$ICECAST_TITLE_MAIN\",full)";
+      echo '';
+      echo "output.icecast(%opus(vbr=\"unconstrained\",bitrate=20), description=\"$ICECAST_TITLE_MAIN\", host=\"localhost\", port=$ICECAST_PORT, password=\"$ICECAST_SOURCE_PASSWORD\", mount=\"stream.opus\", radio)"; } > "$liquidsoap_script"
+    chown liquidsoapuser:icecast "$liquidsoap_script"
+
+    { echo '[Unit]';
+      echo 'Description=Radio Liquidsoap daemon';
+      echo 'After=network.target';
+      echo 'Documentation=http://liquidsoap.fm/';
+      echo '';
+      echo '[Service]';
+      echo 'Type=simple';
+      echo 'User=liquidsoapuser';
+      echo 'WorkingDirectory=/etc/liquidsoapuser/.opam/system/bin';
+      echo "ExecStart=$liquidsoap_binary $liquidsoap_script";
+      echo 'Restart=always';
+      echo 'ProtectSystem=yes';
+      echo 'ProtectHome=yes';
+      echo 'ProtectClock=yes';
+      echo 'ProtectHostname=yes';
+      echo 'PrivateUsers=yes';
+      echo 'ProtectKernelModules=yes';
+      echo 'ProtectKernelTunables=yes';
+      echo '';
+      echo '[Install]';
+      echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/radio.service
+    systemctl enable radio.service
+    systemctl daemon-reload
+    systemctl restart radio.service
+}
+
+function icecast_rescan {
+    cd "$ICECAST_DIR" || return
+    for name in *; do mv "$name" "${name// /_}"; done
+
+    # move default file
+    if [ -f $ICECAST_DIR/default.ogg ]; then
+        mv $ICECAST_DIR/default.ogg /etc/icecast2/default.ogg
+        chown icecast2:icecast /etc/icecast2/default.ogg
+    fi
+
+    # move jingles
+    mv $ICECAST_DIR/jingle* $ICECAST_JINGLES
+    mv $ICECAST_DIR/Jingle* $ICECAST_JINGLES
+
+    chown -R liquidsoapuser:icecast $ICECAST_DIR
+    chown -R liquidsoapuser:icecast $ICECAST_JINGLES
+
+    # restart the radio daemon
+    systemctl restart radio
+}
+
+function icecast_update_daemon {
+    systemctl stop icecast2
+    if [ -f /etc/init.d/icecast2 ]; then
+        rm /etc/init.d/icecast2
+    fi
+
+    { echo '#!/bin/sh';
+      echo "systemctl stop radio";
+      echo "systemctl stop icecast2"; } > /usr/bin/stop_icecast
+    chmod +x /usr/bin/stop_icecast
+
+    # Note that the sleep here actually is important
+    { echo '#!/bin/bash';
+      echo 'systemctl restart icecast2';
+      echo 'systemctl restart radio'; } > /usr/bin/start_icecast
+    chmod +x /usr/bin/start_icecast
+
+    { echo '[Unit]';
+      echo 'Description=Icecast';
+      echo 'After=network.target';
+      echo 'After=tor.service';
+      echo '';
+      echo '[Service]';
+      echo 'User=icecast2';
+      echo 'Group=icecast';
+      echo 'ExecStart=/usr/bin/icecast2 -c /etc/icecast2/icecast.xml';
+      echo 'Restart=always';
+      echo 'RestartSec=10';
+      echo '';
+      echo '[Install]';
+      echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/icecast2.service
+
+    chown -R icecast2:icecast /etc/icecast2
+    systemctl daemon-reload
+    systemctl enable icecast2
+}
+
+function change_password_icecast {
+    curr_username="$1"
+    new_user_password="$2"
+
+    read_config_param MY_USERNAME
+    if [[ "$curr_username" == "$MY_USERNAME" ]]; then
+        stop_icecast
+
+        sed -i "s|<admin-user>[^<]*</admin-user>|<admin-user>$curr_username</admin-user>|g" /etc/icecast2/icecast.xml
+        sed -i "s|<admin-password>[^<]*</admin-password>|<admin-password>$new_user_password</admin-password>|g" /etc/icecast2/icecast.xml
+
+        "${PROJECT_NAME}-pass" -u "$curr_username" -a icecast -p "$new_user_password"
+        start_icecast
+    fi
+}
+
+function logging_on_icecast {
+    if [ ! -f /etc/icecast2/icecast.xml ]; then
+        return
+    fi
+    sed -i 's|<loglevel>.*|<loglevel>4</loglevel>|g' /etc/icecast2/icecast.xml
+    sed -i "s|set(\"log.file.path\".*|set(\"log.file.path\", \"$liquidsoap_log\")|g" "$liquidsoap_script"
+}
+
+function logging_off_icecast {
+    if [ ! -f /etc/icecast2/icecast.xml ]; then
+        return
+    fi
+    sed -i 's|<loglevel>.*|<loglevel>1</loglevel>|g' /etc/icecast2/icecast.xml
+    sed -i 's|set("log.file.path".*|set("log.file.path", "/dev/null")|g' "$liquidsoap_script"
+}
+
+function reconfigure_icecast {
+    echo -n ''
+}
+
+function icecast_import_from_directory {
+    data=$(mktemp 2>/dev/null)
+    dialog --title "Choose a directory containing stream files" --dselect "/home/$MY_USERNAME/" 30 60 2> "$data"
+    selected_dir=$(cat "$data")
+    rm -f "$data"
+    if [[ "$selected_dir" == "$ICECAST_DIR" ]]; then
+        return
+    fi
+    if [ ! -d "$selected_dir" ]; then
+        return
+    fi
+    if [[ "$selected_dir" == "/home/$MY_USERNAME/" ]]; then
+        return
+    fi
+    if [[ "$selected_dir" == "/home/$MY_USERNAME/."* ]]; then
+        return
+    fi
+    if [[ "$selected_dir" == *"/Maildir" || "$selected_dir" == *"/Sync" ]]; then
+        return
+    fi
+
+    dialog --title $"Import stream files directory into Icecast" \
+           --backtitle $"LibreServer Control Panel" \
+           --defaultno \
+           --yesno $"\\nImport the directory:\\n\\n  $selected_dir" 12 75
+    sel=$?
+    case $sel in
+        1) return;;
+        255) return;;
+    esac
+
+    if [ ! -d $ICECAST_DIR ]; then
+        mkdir -p $ICECAST_DIR
+    fi
+
+    # shellcheck disable=SC2086
+    mv $selected_dir/* $ICECAST_DIR
+    icecast_rescan
+
+    dialog --title $"Import stream files directory into Icecast" \
+           --msgbox $"Import success" 6 40
+}
+
+function icecast_import_from_usb {
+    clear
+    USB_DRIVE=$(detect_connected_drives)
+
+    if [ ! -b "$USB_DRIVE" ]; then
+        dialog --title $"Import stream files from USB drive" --msgbox $'No USB drive found' 6 50
+        return
+    fi
+
+    backup_mount_drive "${USB_DRIVE}"
+    if [ ! -d "$USB_MOUNT$ICECAST_DIR" ]; then
+        dialog --title $"Import stream files from USB drive" --msgbox $'No stream files directory found on USB drive' 6 50
+        backup_unmount_drive "${USB_DRIVE}"
+    fi
+    cp -ru "$USB_MOUNT$ICECAST_DIR/"* $ICECAST_DIR
+    icecast_rescan
+    backup_unmount_drive "${USB_DRIVE}"
+    dialog --title $"Import stream files from USB drive" --msgbox $'Import complete. You may now remove the USB drive' 6 50
+}
+
+function icecast_export_to_usb {
+    clear
+    USB_DRIVE=$(detect_connected_drives)
+
+    if [ ! -b "$USB_DRIVE" ]; then
+        dialog --title $"Export stream files to USB drive" --msgbox $'No USB drive found' 6 50
+        return
+    fi
+
+    backup_mount_drive "${USB_DRIVE}"
+    if [ ! -d "$USB_MOUNT$ICECAST_DIR" ]; then
+        mkdir -p "$USB_MOUNT$ICECAST_DIR"
+    fi
+    cp -ru "$ICECAST_DIR/"* "$USB_MOUNT$ICECAST_DIR"
+    backup_unmount_drive "${USB_DRIVE}"
+    dialog --title $"Export stream files to USB drive" --msgbox $'Export complete. You may now remove the USB drive' 6 50
+}
+
+function icecast_format_drive {
+    USB_DRIVE=$(detect_connected_drives)
+    data=$(mktemp 2>/dev/null)
+    dialog --title $"Format USB drive $USB_DRIVE for stream file storage" \
+           --backtitle $"LibreServer Control Panel" \
+           --defaultno \
+           --yesno $"\\nPlease confirm that you wish to format drive\\n\\n    ${USB_DRIVE}\\n\\nAll current data on the drive will be lost, and you will be prompted to give a password used to encrypt the drive.\\n\\nDANGER: If you screw up here and format the wrong drive it's your own fault!" 16 60
+    sel=$?
+    case $sel in
+        1)  rm -f "$data"
+            return;;
+        255) rm -f "$data"
+             return;;
+    esac
+    rm -f "$data"
+
+    clear
+    echo ''
+    echo $"Formatting drive $USB_DRIVE. ALL CONTENTS WILL BE LOST."
+    echo ''
+    "${PROJECT_NAME}-format" "$USB_DRIVE"
+    dialog --title $"Format USB drive $USB_DRIVE for stream file storage" --msgbox $'Format complete. You may now export stream files or remove the USB drive' 6 50
+}
+
+function icecast_change_login {
+    read_config_param "$MY_USERNAME"
+    ICECAST_USER_PASSWORD=$("${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a icecastuser)
+
+    data=$(mktemp 2>/dev/null)
+    dialog --title $"Change Icecast stream visitor login" \
+           --backtitle $"LibreServer Control Panel" \
+           --inputbox $"Enter the new login password for stream visitors" 8 60 "$ICECAST_USER_PASSWORD" 2>"$data"
+    sel=$?
+    case $sel in
+        0)  ICECAST_USER_PASSWORD=$(<"$data")
+            if [[ "$ICECAST_USER_PASSWORD" != *' '* ]]; then
+                if [ ${#ICECAST_USER_PASSWORD} -gt 8 ]; then
+                    "${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a icecastuser -p "$ICECAST_USER_PASSWORD"
+                    dialog --title $"Change Icecast stream visitor login" \
+                           --msgbox $"Password changed to $ICECAST_USER_PASSWORD" 6 75
+                fi
+            fi
+            ;;
+    esac
+    rm -f "$data"
+}
+
+function icecast_enable_login {
+    dialog --title $"Enable Icecast login" \
+           --backtitle $"LibreServer Control Panel" \
+           --defaultno \
+           --yesno $"\\nDo you want to add a login so that random web users can't access your stream?" 10 60
+    sel=$?
+    case $sel in
+        0) if grep -q '#auth_basic' /etc/nginx/sites-available/icecast; then
+               sed -i 's|#auth_basic|auth_basic|g' /etc/nginx/sites-available/icecast
+               systemctl restart nginx
+           fi
+           read_config_param "$MY_USERNAME"
+           ICECAST_USER_PASSWORD=$("${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a icecastuser)
+           dialog --title $"Enable Icecast login" \
+                  --msgbox $"Icecast logins are now enabled with the password $ICECAST_USER_PASSWORD" 6 65
+           ICECAST_USER_PASSWORD=
+           ;;
+        1) if ! grep -q '#auth_basic' /etc/nginx/sites-available/icecast; then
+               sed -i 's|auth_basic|#auth_basic|g' /etc/nginx/sites-available/icecast
+               systemctl restart nginx
+           fi
+           dialog --title $"Disable Icecast login" \
+                  --msgbox $"Icecast logins are now disabled. Anyone can access your stream." 6 65
+           ;;
+    esac
+}
+
+function icecast_set_stream_name {
+    read_config_param ICECAST_TITLE
+    read_config_param ICECAST_DESCRIPTION
+
+    data=$(mktemp 2>/dev/null)
+    dialog --backtitle $"LibreServer Control Panel" \
+           --title $"Change Icecast stream details" \
+           --form "\\n" 8 60 4 \
+           $"Stream name:" 1 1 "$ICECAST_TITLE" 1 18 40 1000 \
+           $"Description:" 2 1 "$ICECAST_DESCRIPTION" 2 18 40 1000 \
+           $"Genre:" 3 1 "Example genre" 3 18 40 1000 \
+           2> "$data"
+    sel=$?
+    case $sel in
+        1) rm -f "$data"
+           return;;
+        255) rm -f "$data"
+             return;;
+    esac
+    ICECAST_TITLE=$(sed -n 1p < "$data")
+    ICECAST_DESCRIPTION=$(sed -n 2p < "$data")
+    #stream_genre=$(sed -n 3p < "$data")
+
+    rm -f "$data"
+
+    stop_icecast
+    icecast_liquidsoap
+    start_icecast
+}
+
+function icecast_set_maximum_streams {
+    data=$(mktemp 2>/dev/null)
+    dialog --title $"Set the maximum clients" \
+           --backtitle $"LibreServer Control Panel" \
+           --inputbox $"Maximum number of clients" 8 40 "10" 2>"$data"
+    sel=$?
+    case $sel in
+        0)
+            max_clients=$(<"$data")
+            if [ ${#max_clients} -gt 0 ]; then
+                if [[ "$max_clients" != *' '* ]]; then
+                    # shellcheck disable=SC2076
+                    if [[ "$max_clients" =~ '^[0-9]+$' ]] ; then
+                        sed -i "s|<clients>.*|<clients>${max_clients}</clients>|g" /etc/icecast2/icecast.xml
+                        stop_icecast
+                        start_icecast
+                        dialog --title $"Set the maximum clients" \
+                               --msgbox $"\\nMaximum Icecast clients was set to ${max_clients}" 8 50
+                    fi
+                fi
+            fi
+            ;;
+    esac
+    rm -f "$data"
+}
+
+function configure_interactive_icecast {
+    W=(1 $"Import stream files from directory"
+       2 $"Import stream files from USB drive"
+       3 $"Format a USB drive for stream file storage"
+       4 $"Export stream files to USB drive"
+       5 $"Enable login for stream visitors"
+       6 $"Change password for stream visitors"
+       7 $"Re-scan playlist"
+       8 $"Restart stream"
+       9 $"Set Stream Name/Description/Genre"
+       10 $"Set maximum number of clients/streams")
+
+    while true
+    do
+        # shellcheck disable=SC2068
+        selection=$(dialog --backtitle $"LibreServer Administrator Control Panel" --title $"Icecast" --menu $"Choose an operation, or ESC to exit:" 20 60 10 "${W[@]}" 3>&2 2>&1 1>&3)
+
+        if [ ! "$selection" ]; then
+            break
+        fi
+
+        case $selection in
+            1) icecast_import_from_directory;;
+            2) icecast_import_from_usb;;
+            3) icecast_format_drive;;
+            4) icecast_export_to_usb;;
+            5) icecast_enable_login;;
+            6) icecast_change_login;;
+            7) clear
+               echo $'Rescanning Icecast playlist'
+               icecast_rescan;;
+            8) clear
+               echo $'Restarting Icecast stream'
+               stop_icecast
+               start_icecast;;
+            9) icecast_set_stream_name;;
+            10) icecast_set_maximum_streams;;
+        esac
+    done
+}
+
+function upgrade_icecast {
+    icecast_update_daemon
+}
+
+function backup_local_icecast {
+    if [ ! -d $ICECAST_DIR ]; then
+        return
+    fi
+    stop_icecast
+
+    cp /etc/nginx/.icepasswd $ICECAST_DIR
+
+    function_check backup_directory_to_usb
+    backup_directory_to_usb $ICECAST_DIR icecast
+
+    rm $ICECAST_DIR/.icepasswd
+    start_icecast
+}
+
+function restore_local_icecast {
+    if [ ! -d $ICECAST_DIR ]; then
+        return
+    fi
+    stop_icecast
+    temp_restore_dir=/root/tempicecast
+    function_check restore_directory_from_usb
+    restore_directory_from_usb $temp_restore_dir icecast
+    if [ -d $temp_restore_dir$ICECAST_DIR ]; then
+        cp -r $temp_restore_dir$ICECAST_DIR $ICECAST_DIR/
+    else
+        cp -r $temp_restore_dir/* $ICECAST_DIR/*
+    fi
+    cp $ICECAST_DIR/.icepasswd /etc/nginx/.icepasswd
+    rm $ICECAST_DIR/.icepasswd
+    chown -R icecast2:icecast $ICECAST_DIR
+
+    start_icecast
+    rm -rf $temp_restore_dir
+}
+
+function backup_remote_icecast {
+    echo -n ''
+}
+
+function restore_remote_icecast {
+    echo -n ''
+}
+
+function remove_icecast {
+    nginx_dissite icecast
+
+    stop_icecast
+    systemctl disable icecast2
+    rm /etc/systemd/system/icecast2.service
+    rm /usr/bin/start_icecast
+    rm /usr/bin/stop_icecast
+
+    if [ -f /etc/nginx/sites-available/icecast ]; then
+        rm /etc/nginx/sites-available/icecast
+    fi
+
+    if [ -d /var/www/icecast ]; then
+        rm -rf /var/www/icecast
+    fi
+
+    $REMOVE_PACKAGES_PURGE icecast2
+
+    chmod 755 /etc/sudoers
+    sed -i '/liquidsoapuser/d' /etc/sudoers
+    chmod 0440 /etc/sudoers
+
+    userdel -r liquidsoapuser
+    if [ -d /etc/liquidsoapuser ]; then
+        rm -rf /etc/liquidsoapuser
+    fi
+    $REMOVE_PACKAGES liquidsoap-*
+    $REMOVE_PACKAGES liquidsoap
+
+    if [ -d /etc/icecast2 ]; then
+        rm -rf /etc/icecast2
+    fi
+    function_check remove_onion_service
+    remove_onion_service icecast ${ICECAST_ONION_PORT}
+    sed -i '/icecast/d' "$COMPLETION_FILE"
+}
+
+function install_icecast {
+    increment_app_install_progress
+
+    INSTALL_PACKAGES software-properties-common debconf-utils
+
+    increment_app_install_progress
+
+    $UPDATE_PACKAGES
+
+    increment_app_install_progress
+
+    debconf-set-selections <<< "icecast2 icecast2/icecast-setup boolean false"
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES icecast2
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES ffmpeg apache2-utils vorbis-tools
+
+    increment_app_install_progress
+
+    if [ ! -f /etc/icecast2/icecast.xml ]; then
+        echo $'Icecast not installed'
+        exit 79
+    fi
+
+    if [ ! "${ICECAST_PASSWORD}" ]; then
+        if [ -f "${IMAGE_PASSWORD_FILE}" ]; then
+            ICECAST_PASSWORD="$(printf "%s" "$(cat "$IMAGE_PASSWORD_FILE")")"
+        else
+            ICECAST_PASSWORD="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
+        fi
+    fi
+    ICECAST_SOURCE_PASSWORD="$(create_password 30)"
+    ICECAST_RELAY_PASSWORD="$(create_password 30)"
+
+    ICECAST_ONION_HOSTNAME=$(add_onion_service icecast 80 ${ICECAST_ONION_PORT})
+
+    increment_app_install_progress
+
+    sed -i  -e "s|<source-password>[^<]*</source-password>|<source-password>$ICECAST_SOURCE_PASSWORD</source-password>|" \
+        -e "s|<relay-password>[^<]*</relay-password>|<relay-password>$ICECAST_RELAY_PASSWORD</relay-password>|" \
+        -e "s|<admin-password>[^<]*</admin-password>|<admin-password>$ICECAST_PASSWORD</admin-password>|" \
+        -e "s|<hostname>[^<]*</hostname>|<hostname>localhost</hostname>|" \
+        /etc/icecast2/icecast.xml
+
+    sed -i "s|<clients>.*|<clients>10</clients>|g" /etc/icecast2/icecast.xml
+    sed -i "s|<sources>.*|<sources>22</sources>|g" /etc/icecast2/icecast.xml
+    sed -i "s|<port>.*|<port>$ICECAST_PORT</port>|g" /etc/icecast2/icecast.xml
+    sed -i "s|<admin-user>.*|<admin-user>$MY_USERNAME</admin-user>|g" /etc/icecast2/icecast.xml
+    sed -i "s|<admin>.*|<admin>$MY_USERNAME@localhost</admin>|g" /etc/icecast2/icecast.xml
+    sed -i "s|<location>.*|<location>The Interwebs</location>|g" /etc/icecast2/icecast.xml
+    #sed -i 's|<!-- <bind-address>.*|<bind-address>127.0.0.1</bind-address>|g' /etc/icecast2/icecast.xml
+
+    if [ ! -d /var/www/icecast/htdocs ]; then
+        mkdir -p /var/www/icecast/htdocs
+    fi
+
+    increment_app_install_progress
+
+    icecast_nginx_site=/etc/nginx/sites-available/icecast
+    { echo 'server {';
+      echo "    listen 127.0.0.1:$ICECAST_ONION_PORT default_server;";
+      echo '    port_in_redirect off;';
+      echo "    server_name $ICECAST_ONION_HOSTNAME;";
+      echo '';
+      echo "    proxy_set_header Host \$host;";
+      echo "    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;";
+      echo "    proxy_set_header X-Forwarded-Host \$host;";
+      echo "    proxy_set_header X-Forwarded-Server \$host;";
+      echo "    proxy_set_header X-Real-IP \$remote_addr;";
+      echo '';
+      echo '    # Logs';
+      echo '    access_log /dev/null;';
+      echo '    error_log /dev/null;';
+      echo '';
+      echo '    location / {'; } > $icecast_nginx_site
+    function_check nginx_limits
+    nginx_limits "$ICECAST_ONION_HOSTNAME" '15m'
+    { echo "        proxy_pass http://127.0.0.1:$ICECAST_PORT;";
+      echo "        #auth_basic \"${ICECAST_LOGIN_TEXT}\";";
+      echo '        #auth_basic_user_file /etc/nginx/.icepasswd;';
+      echo '';
+      echo '        location /server_version.xsl {';
+      echo '            deny all;';
+      echo '        }';
+      echo '    }';
+      echo '}'; } >> $icecast_nginx_site
+
+    if [ ! -d /var/log/ices ]; then
+        mkdir -p /var/log/ices
+    fi
+
+    sed -i 's|ENABLE=.*|ENABLE=true|g' /etc/default/icecast2
+    sed -i 's|<!-- <bind-address>.*|<bind-address>127.0.0.1</bind-address>|g' /etc/icecast2/icecast.xml
+    sed -i 's|<!--<bind-address>.*|<bind-address>127.0.0.1</bind-address>|g' /etc/icecast2/icecast.xml
+
+    if [ ! -d $ICECAST_DIR ]; then
+        mkdir $ICECAST_DIR
+    fi
+    chown -R icecast2:icecast $ICECAST_DIR
+
+    increment_app_install_progress
+
+    # create a password for users
+    ICECAST_USER_PASSWORD="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
+    if grep -q "$MY_USERNAME:" /etc/nginx/.icepasswd; then
+        sed -i "/$MY_USERNAME:/d" /etc/nginx/.icepasswd
+    fi
+
+    increment_app_install_progress
+
+    echo "$ICECAST_USER_PASSWORD" | htpasswd -i -s -c /etc/nginx/.icepasswd "$MY_USERNAME"
+    if [ ! -f /etc/nginx/.icepasswd ]; then
+        echo $'/etc/nginx/.icepasswd not found'
+        exit 73
+    fi
+
+    increment_app_install_progress
+
+    "${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a icecast -p "$ICECAST_PASSWORD"
+    "${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a icecastsource -p "$ICECAST_SOURCE_PASSWORD"
+    "${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a icecastrelay -p "$ICECAST_RELAY_PASSWORD"
+    "${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a icecastuser -p "$ICECAST_USER_PASSWORD"
+
+    if ! grep -q "icecast:" /etc/group; then
+	groupadd icecast
+    fi
+    useradd -c "Icecast system account" -d /etc/icecast2 -m -r -g icecast icecast2
+
+    increment_app_install_progress
+
+    icecast_liquidsoap
+
+    increment_app_install_progress
+
+    icecast_update_daemon
+
+    increment_app_install_progress
+
+    nginx_ensite icecast
+    systemctl restart nginx
+
+    increment_app_install_progress
+
+    icecast_rescan
+
+    increment_app_install_progress
+
+    start_icecast
+
+    APP_INSTALLED=1
+}
+
+function install_interactive_icecast {
+    install_icecast
+}
+
+# NOTE: deliberately no exit 0

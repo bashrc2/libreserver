@@ -1,0 +1,210 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# poker game
+#
+# License
+# =======
+#
+# Copyright (C) 2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VARIANTS='full full-vim games'
+
+APP_CATEGORY=games
+
+IN_DEFAULT_INSTALL=0
+SHOW_ON_ABOUT=1
+SHOW_DOMAIN_ONLY=1
+SHOW_APP_PORT=7234
+NOT_ON_HOMEPAGE=1
+REQUIRES_APP=
+
+POKER_DOMAIN_NAME=
+POKER_CODE=
+
+POKER_PORT=7234
+
+POKER_DIR=/var/games/pokerth-server
+poker_config_filename=/var/games/pokerth-server/.pokerth/config.xml
+
+POKER_SHORT_DESCRIPTION=$'PokerTH'
+POKER_DESCRIPTION=$'PokerTH'
+POKER_MOBILE_APP_URL=""
+
+poker_variables=(ONION_ONLY
+		 SYSTEM_TYPE
+                 MY_USERNAME)
+
+function poker_setting_serverpassword {
+    # sets the name of the server password
+    server_password="$1"
+
+    if [ ! "$server_password" ]; then
+	return
+    fi
+
+    if ! grep -q "ServerPassword value=\"${server_password}\"" $poker_config_filename; then
+	sed -i "s|ServerPassword.*|ServerPassword value=\"${server_password}\" />|g" $poker_config_filename
+	systemctl restart pokerth-server
+    fi
+}
+
+function upgrade_distro_poker {
+    target_distro="$1"
+
+    if [[ "$target_distro" == 'bullseye' ]]; then
+        echo -n ''
+    fi
+}
+
+function logging_on_poker {
+    echo -n ''
+}
+
+function logging_off_poker {
+    echo -n ''
+}
+
+function install_interactive_poker {
+    echo -n ''
+    APP_INSTALLED=1
+}
+
+function reconfigure_poker {
+    echo -n ''
+}
+
+function upgrade_poker {
+    echo -n ''
+}
+
+function backup_local_poker {
+    source_directory=/usr/share/games/pokerth
+    if [ -d $source_directory ]; then
+        dest_directory=poker
+        function_check backup_directory_to_usb
+        backup_directory_to_usb $source_directory $dest_directory
+    fi
+}
+
+function restore_local_poker {
+    if [ -d $POKER_DIR ]; then
+        if [ -d "$USB_MOUNT_POKER/backup/poker" ]; then
+            echo $"Restoring PokerTH"
+            temp_restore_dir=/root/temppoker
+            function_check restore_directory_from_usb
+            restore_directory_from_usb $temp_restore_dir poker
+            if [ -d $temp_restore_dir/usr/share/games/pokerth ]; then
+                cp -r $temp_restore_dir/usr/share/games/pokerth/* /usr/share/games/pokerth/
+            else
+                cp -r $temp_restore_dir/* /usr/share/games/pokerth/
+            fi
+            # shellcheck disable=SC2181
+            if [ ! "$?" = "0" ]; then
+                rm -rf $temp_restore_dir
+                function_check set_user_permissions
+                set_user_permissions
+                function_check backup_unmount_drive
+                backup_unmount_drive
+                exit 99
+            fi
+            rm -rf $temp_restore_dir
+        fi
+    fi
+}
+
+function backup_remote_poker {
+    echo -n ''
+}
+
+function restore_remote_poker {
+    echo -n ''
+}
+
+function remove_poker {
+    systemctl stop pokerth-server
+    remove_onion_service poker ${POKER_PORT}
+
+    $REMOVE_PACKAGES_PURGE pokerth*
+
+    remove_app poker
+    remove_completion_param install_poker
+    sed -i '/poker/d' "$COMPLETION_FILE"
+
+    if [ -d /var/www/poker ]; then
+        rm -rf /var/www/poker
+    fi
+    if [ -d $POKER_DIR ]; then
+        rm -rf $POKER_DIR
+    fi
+    if [ -d /usr/share/doc/pokerth-server ]; then
+        rm -rf /usr/share/doc/pokerth-server
+    fi
+    if [ -d /usr/share/games/pokerth ]; then
+	rm -rf /usr/share/games/pokerth
+    fi
+    firewall_remove ${POKER_PORT}
+}
+
+function install_poker {
+    increment_app_install_progress
+
+    if [ -d /var/www/poker ]; then
+        rm -rf /var/www/poker
+    fi
+    mkdir -p /var/www/poker/htdocs
+
+    increment_app_install_progress
+
+    chown -R www-data:www-data /var/www/poker/htdocs
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES pokerth-server    
+
+    if [ ! -d $POKER_DIR ]; then
+        echo $'Unable to install pokerth-server'
+        exit 32
+    fi    
+
+    increment_app_install_progress
+
+    POKER_ONION_HOSTNAME=$(add_onion_service poker ${POKER_PORT} ${POKER_PORT})
+    
+    increment_app_install_progress
+    
+    firewall_add poker ${POKER_PORT}
+
+    sed -i "s|ServerPassword.*|ServerPassword value=\"\" />|g" $poker_config_filename
+    sed -i "s|<ServerPort.*|<ServerPort value=\"${POKER_PORT}\" />|g" $poker_config_filename
+    sed -i "s|InternetGameAllowSpectators.*|InternetGameAllowSpectators value=\"0\" />|g" $poker_config_filename
+    sed -i "s|InternetGameName.*|InternetGameName value=\"${PROJECT_NAME} poker\" />|g" $poker_config_filename
+    if [[ "$ONION_ONLY" == 'no' ]]; then
+	sed -i "s|InternetServerAddress.*|InternetServerAddress value=\"${POKER_DOMAIN_NAME}\" />|g" $poker_config_filename
+    else
+	sed -i "s|InternetServerAddress.*|InternetServerAddress value=\"${POKER_ONION_HOSTNAME}\" />|g" $poker_config_filename
+    fi
+    sed -i "s|ServerRestrictGuestLogin.*|ServerRestrictGuestLogin value=\"1\" />|g" $poker_config_filename
+
+    systemctl restart pokerth-server
+
+    APP_INSTALLED=1
+}
+
+# NOTE: deliberately no exit 0

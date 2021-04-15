@@ -1,0 +1,430 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Functions for drawing maps
+#
+# License
+# =======
+#
+# Copyright (C) 2019-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# name of a script which keeps running processes going even if they crash
+
+MAP_REPO="https://github.com/komoot/staticmap"
+MAP_COMMIT='3c9280c808ac29805449a23c87dff64903afb897'
+MAP_WIDTH_PIXELS=800
+MAP_YOUR_LOCATION_COLOR='#0036FF'
+MAP_MARKER_COLOR='green'
+
+MAP_LONGITUDE=
+MAP_LATITUDE=
+MAP_ZOOM=14
+
+function set_map_location {
+    # default location
+    MAP_LONGITUDE="$1"
+    MAP_LATITUDE="$2"
+    if grep -q 'MAP_LONGITUDE=' "$CONFIGURATION_FILE"; then
+        sed -i "s|MAP_LONGITUDE=.*|MAP_LONGITUDE=$MAP_LONGITUDE|g" "$CONFIGURATION_FILE"
+    else
+        echo "MAP_LONGITUDE=$MAP_LONGITUDE" >> "$CONFIGURATION_FILE"
+    fi
+    if grep -q 'MAP_LATITUDE=' "$CONFIGURATION_FILE"; then
+        sed -i "s|MAP_LATITUDE=.*|MAP_LATITUDE=$MAP_LATITUDE|g" "$CONFIGURATION_FILE"
+    else
+        echo "MAP_LATITUDE=$MAP_LATITUDE" >> "$CONFIGURATION_FILE"
+    fi
+}
+
+function install_static_map {
+    echo $'install_static_map'
+    # shellcheck disable=SC2154
+    if grep -q "staticmap commit:$MAP_COMMIT" "$rootdir$COMPLETION_FILE"; then
+        if [ -d /etc/staticmap ]; then
+            return
+        fi
+    fi
+
+    if [ "$rootdir" ]; then
+        # shellcheck disable=SC2086
+        chroot "$rootdir" INSTALL_PACKAGES libjpeg-dev python3-pip python3-socks python3-stem python3-setuptools python3-wheel python3-dev python3-pil
+    else
+        INSTALL_PACKAGES libjpeg-dev python3-pip python3-socks python3-stem python3-setuptools python3-wheel python3-dev python3-pil
+    fi
+
+    { echo '#!/bin/bash';
+      echo "git clone \"$MAP_REPO\" /etc/staticmap";
+      echo 'cd /etc/staticmap || exit 1';
+      echo "git checkout $MAP_COMMIT -b $MAP_COMMIT";
+      echo 'if ! pip3 install -r requirements.txt; then';
+      echo '    echo "WARN: Failed to install dependencies for staticmap"';
+      echo '    rm -rf /etc/staticmap';
+      echo '    exit 2';
+      echo 'fi'; } > "$rootdir/root/install_static_map.sh"
+    chmod +x "$rootdir/root/install_static_map.sh"
+
+    if [ "$rootdir" ]; then
+        chroot "$rootdir" /bin/bash /root/install_static_map.sh
+    else
+        /bin/bash /root/install_static_map.sh
+    fi
+    rm "$rootdir/root/install_static_map.sh"
+
+    # record current commit
+    if ! grep -q 'staticmap commit' "$rootdir$COMPLETION_FILE"; then
+        echo "staticmap commit:$MAP_COMMIT" >> "$rootdir$COMPLETION_FILE"
+    else
+        sed -i "s|staticmap commit:.*|staticmap commit:$MAP_COMMIT|g" "$rootdir$COMPLETION_FILE"
+    fi
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function regenerate_network_map {
+    if ! grep -q 'COMMUNITY_NETWORK=' "$CONFIGURATION_FILE"; then
+        return
+    fi
+    COMMUNITY_NETWORK=$(grep 'COMMUNITY_NETWORK=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+    if [ ! "$COMMUNITY_NETWORK" ]; then
+        return
+    fi
+    if [[ "$COMMUNITY_NETWORK" == 'none' ]]; then
+        return
+    fi
+    if [ ! "$MAP_LONGITUDE" ]; then
+        MAP_LONGITUDE=$(grep 'MAP_LONGITUDE=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+    fi
+    if [ ! "$MAP_LATITUDE" ]; then
+        MAP_LATITUDE=$(grep 'MAP_LATITUDE=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+    fi
+    if grep -q 'MAP_ZONE=' "$CONFIGURATION_FILE"; then
+        MAP_ZONE=$(grep 'MAP_ZONE=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+    fi
+    if grep -q 'MAP_DOMAIN=' "$CONFIGURATION_FILE"; then
+        MAP_DOMAIN=$(grep 'MAP_DOMAIN=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+    fi
+
+    local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+    webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+    if [ -f "$webadmin_install_dir/settings_${COMMUNITY_NETWORK}_template.html" ]; then
+        cp "$webadmin_install_dir/settings_${COMMUNITY_NETWORK}_template.html" "$webadmin_install_dir/settings_${COMMUNITY_NETWORK}.html"
+        sed -i "s|YOURLONGITUDE|$MAP_LONGITUDE|g" "$webadmin_install_dir/settings_${COMMUNITY_NETWORK}.html"
+        sed -i "s|YOURLATITUDE|$MAP_LATITUDE|g" "$webadmin_install_dir/settings_${COMMUNITY_NETWORK}.html"
+        sed -i "s|YOURZONE|$MAP_ZONE|g" "$webadmin_install_dir/settings_${COMMUNITY_NETWORK}.html"
+        if [[ "${COMMUNITY_NETWORK}" == 'communitynetwork' ]]; then
+            sed -i "s|YOURNETWORKDOMAIN|$MAP_DOMAIN|g" "$webadmin_install_dir/settings_${COMMUNITY_NETWORK}.html"
+
+            # You can only edit nodes if you are the current mapping domain
+            CURR_MAP_DOMAIN=$(cat /var/lib/tor/hidden_service_communitynetwork/hostname)
+            if [[ "$CURR_MAP_DOMAIN" != "$MAP_DOMAIN" ]]; then
+                sed -i '/addnode/d' "$webadmin_install_dir/settings_${COMMUNITY_NETWORK}.html"
+                sed -i '/removenode/d' "$webadmin_install_dir/settings_${COMMUNITY_NETWORK}.html"
+            fi
+        fi
+
+        chown www-data:www-data "$webadmin_install_dir/settings_${COMMUNITY_NETWORK}.html"
+    fi
+}
+
+function create_map {
+    if [ ! -d /etc/staticmap ]; then
+        install_static_map
+    fi
+
+    # NOTE: Don't use read_config_param here because it's called from webadmin daemon
+    if grep -q 'MAP_LONGITUDE=' "$CONFIGURATION_FILE"; then
+        MAP_LONGITUDE=$(grep 'MAP_LONGITUDE=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+    fi
+    if grep -q 'MAP_LATITUDE=' "$CONFIGURATION_FILE"; then
+        MAP_LATITUDE=$(grep 'MAP_LATITUDE=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+    fi
+    if grep -q 'MAP_ZOOM=' "$CONFIGURATION_FILE"; then
+        MAP_ZOOM=$(grep 'MAP_ZOOM=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+    fi
+    if grep -q 'MAP_ZONE=' "$CONFIGURATION_FILE"; then
+        MAP_ZONE=$(grep 'MAP_ZONE=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+    fi
+    if grep -q 'MAP_DOMAIN=' "$CONFIGURATION_FILE"; then
+        MAP_DOMAIN=$(grep 'MAP_DOMAIN=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+    fi
+
+    markers_filename="$1"
+
+    if [ ! "$MAP_LONGITUDE" ]; then
+        return
+    fi
+    if [ ! "$MAP_LATITUDE" ]; then
+        return
+    fi
+    if [ ! "$MAP_ZOOM" ]; then
+        return
+    fi
+
+    regenerate_network_map
+
+    filename="/etc/staticmap/generate_map.py"
+
+    local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+    webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+    map_filename="$webadmin_install_dir/network_map.png"
+    markers_filename="$webadmin_install_dir/network_map_markers.txt"
+
+    { echo 'from staticmap import StaticMap, CircleMarker, IconMarker, Line';
+      echo '';
+      echo "m = StaticMap($MAP_WIDTH_PIXELS, $MAP_WIDTH_PIXELS, 10)";
+      echo '';
+      echo "zoom_level=$MAP_ZOOM";
+      echo 'if zoom_level < 10:';
+      echo '    zoom_level = 10';
+      echo 'if zoom_level > 18:';
+      echo '    zoom_level = 18';
+      echo "zoom_range={ '10':0.48, '11':0.24, '12':0.12, '13':0.06, '14':0.03, '15':0.015, '16':0.0075, '17':0.00375, '18':0.001875 }";
+      echo "marker_size={ '10':8, '11':8, '12':8, '13':8, '14':8, '15':10, '16':10, '17':10, '18':10 }";
+      echo "home_longitude=$MAP_LONGITUDE";
+      echo "home_latitude=$MAP_LATITUDE";
+      echo "marker0 = CircleMarker((home_longitude,home_latitude), '#0036FF', 12)";
+      echo 'm.add_marker(marker0)';
+      echo '';
+      echo "markers_filename = '$markers_filename'";
+      echo 'with open(markers_filename) as f:';
+      echo '    content = f.readlines()';
+      echo '';
+      echo 'for line in content:';
+      echo "    coords = line.strip().split(';')";
+      echo '    #node_name=float(coords[0])';
+      echo '    longitude=float(coords[1])';
+      echo '    if abs(longitude - home_longitude) < zoom_range[str(zoom_level)]:';
+      echo '        latitude=float(coords[2])';
+      echo '        if abs(latitude - home_latitude) < zoom_range[str(zoom_level)]:';
+      echo '            if len(coords) == 3:';
+      echo "                marker = CircleMarker((longitude,latitude), 'green', marker_size[str(zoom_level)])";
+      echo '            else:';
+      echo "                marker = IconMarker((longitude,latitude), './samples/icon-flag.png', marker_size[str(zoom_level)], 32)";
+      echo '            m.add_marker(marker)';
+      echo '';
+      echo 'image = m.render(zoom=zoom_level)';
+      echo "image.save('$map_filename')"; } > "$filename"
+
+    cd /etc/staticmap || return
+    python3 generate_map.py
+
+    if [ -f "$map_filename" ]; then
+        chown www-data:www-data "$map_filename"
+    fi
+}
+
+function network_communities_upgrade {
+    regenerate_network_map
+}
+
+function run_map_parser {
+    communitynetwork="$1"
+    map_debug=
+
+    if grep -q 'MAP_DEBUG=true' "$CONFIGURATION_FILE"; then
+        map_debug=1
+        cat parse_map.py
+    fi
+
+    python3 parse_map.py
+    if [ ! $map_debug ]; then
+        rm parse_map.py
+    fi
+    if [ -f network_map_markers.txt ]; then
+        create_kml_from_markers network_map_markers.txt network_map_markers.kml
+        chown www-data:www-data network_map_markers.kml
+        chown www-data:www-data network_map_markers.txt
+        echo $"$(wc -l network_map_markers.txt | awk -F ' ' '{print $1}') installed ${communitynetwork} nodes"
+    else
+        echo $"0 installed ${communitynetwork} nodes"
+    fi
+}
+
+function create_guifinet_nodes_list {
+    guifinet_zone_number="$1"
+    guifinet_region="$2"
+    if [ ! -d "/etc/guifinet${guifinet_region}" ]; then
+        return
+    fi
+
+    { echo 'import csv';
+      echo 'import requests';
+      echo '';
+      echo 'file = open("network_map_markers.txt","w")';
+      echo '';
+      echo 'with requests.Session() as s:';
+      echo "    download = s.get(\"https://guifi.net/guifi/gml/${guifinet_zone_number}/nodes/csv\")";
+      echo '';
+      echo "    decoded_content = download.content.decode('utf-8')";
+      echo '';
+      echo "    cr = csv.reader(decoded_content.splitlines(), delimiter=',')";
+      echo '    nodes_list = list(cr)';
+      echo '    for row in nodes_list:';
+      echo "        if row[5] == 'Working':";
+      echo '            name=row[3]';
+      echo '            longitude=float(row[1])';
+      echo '            latitude=float(row[2])';
+      # shellcheck disable=SC2028
+      echo "            file.write(name + ';' + str(longitude) + ';' + str(latitude) + '\n')";
+      echo '';
+      echo 'file.close()'; } > parse_map.py
+
+    run_map_parser "guifinet${guifinet_region}"
+}
+
+function create_freifunk_nodes_list_v1 {
+    communitynetwork="$1"
+    communitynetwork_json_url="$2"
+
+    if [ ! -d "/etc/${communitynetwork}" ]; then
+        return
+    fi
+
+    { echo 'import json';
+      echo 'import requests';
+      echo '';
+      echo "file = open(\"network_map_markers.txt\",\"w\")";
+      echo '';
+      echo "data = requests.get(\"${communitynetwork_json_url}\").json()['nodes']";
+      echo 'for elem in data:';
+      echo "    if 'status' in elem:";
+      echo "        if 'online' in elem['status']:";
+      echo "            if elem['status']['online']:";
+      echo "                if 'position' in elem:";
+      echo "                    if 'long' in elem['position']:";
+      # shellcheck disable=SC2028
+      echo "                        file.write(elem['name'] + ';' + str(elem['position']['long']) + ';' + str(elem['position']['lat']) + '\n')";
+      echo '';
+      echo 'file.close()'; } > parse_map.py
+
+    run_map_parser "${communitynetwork}"
+}
+
+function create_freifunk_nodes_list_v1E {
+    communitynetwork="$1"
+    communitynetwork_json_url="$2"
+
+    if [ ! -d "/etc/${communitynetwork}" ]; then
+        return
+    fi
+
+    { echo 'import json';
+      echo 'import requests';
+      echo '';
+      echo "file = open(\"network_map_markers.txt\",\"w\")";
+      echo '';
+      echo "data = requests.get(\"${communitynetwork_json_url}\").json()['nodes']";
+      echo 'for key, elem in data.items():';
+      echo "    if 'flags' in elem:";
+      echo "        if 'online' in elem['flags']:";
+      echo "            if elem['flags']['online']:";
+      echo "                if 'nodeinfo' in elem:";
+      echo "                    if 'location' in elem['nodeinfo']:";
+      echo "                        if 'longitude' in elem['nodeinfo']['location']:";
+      # shellcheck disable=SC2028
+      echo "                            file.write(elem['nodeinfo']['hostname'] + ';' + str(elem['nodeinfo']['location']['longitude']) + ';' + str(elem['nodeinfo']['location']['latitude']) + '\n')";
+      echo '';
+      echo 'file.close()'; } > parse_map.py
+
+    run_map_parser "${communitynetwork}"
+}
+
+function create_freifunk_nodes_list_v2 {
+    communitynetwork="$1"
+    communitynetwork_json_url="$2"
+
+    if [ ! -d "/etc/${communitynetwork}" ]; then
+        return
+    fi
+
+    { echo 'import json';
+      echo 'import requests';
+      echo '';
+      echo "file = open(\"network_map_markers.txt\",\"w\")";
+      echo '';
+      echo "data = requests.get(\"${communitynetwork_json_url}\").json()['nodes']";
+      echo 'for elem in data:';
+      echo "    if 'flags' in elem:";
+      echo "        if 'online' in elem['flags']:";
+      echo "            if elem['flags']['online']:";
+      echo "                if 'nodeinfo' in elem:";
+      echo "                    if 'location' in elem['nodeinfo']:";
+      echo "                        if 'longitude' in elem['nodeinfo']['location']:";
+      # shellcheck disable=SC2028
+      echo "                            file.write(elem['nodeinfo']['hostname'] + ';' + str(elem['nodeinfo']['location']['longitude']) + ';' + str(elem['nodeinfo']['location']['latitude']) + '\n')";
+      echo '';
+      echo 'file.close()'; } > parse_map.py
+
+    run_map_parser "${communitynetwork}"
+}
+
+function create_openwifimap_nodes_list {
+    communitynetwork="$1"
+    communitynetwork_json_url="$2"
+
+    if [ ! -d "/etc/${communitynetwork}" ]; then
+        return
+    fi
+
+    { echo 'import json';
+      echo 'import requests';
+      echo '';
+      echo "file = open(\"network_map_markers.txt\",\"w\")";
+      echo '';
+      echo "data = requests.get(\"${communitynetwork_json_url}\").json()['rows']";
+      echo 'for elem in data:';
+      echo "    if 'id' in elem:";
+      echo "        if 'geometry' in elem:";
+      echo "            if 'coordinates' in elem['geometry']:";
+      # shellcheck disable=SC2028
+      echo "                file.write(elem['id'] + \";\" + str(elem['geometry']['coordinates'][1]) + \";\" + str(elem['geometry']['coordinates'][0]) + '\n')";
+      echo '';
+      echo 'file.close()'; } > parse_map.py
+
+    run_map_parser "${communitynetwork}"
+}
+
+function create_kml_from_markers {
+    markers_filename="$1"
+    kml_filename="$2"
+
+    if [ ! -f "$markers_filename" ]; then
+        return
+    fi
+
+    { echo "<?xml version=\"1.0\" encoding='UTF-8'?>";
+      echo "<kml xmlns=\"http://www.opengis.net/kml/2.2\">";
+      echo "<Document>"; } > "$kml_filename"
+
+    while read -r line; do
+        marker_name=$(echo "$line" | awk -F ';' '{print $1}')
+        marker_longitude=$(echo "$line" | awk -F ';' '{print $2}')
+        marker_latitude=$(echo "$line" | awk -F ';' '{print $3}')
+
+        { echo "  <Placemark>";
+          echo "    <name>${marker_name}</name>";
+          #echo "    <description></description>";
+          echo "    <Point><coordinates>${marker_longitude},${marker_latitude},0</coordinates></Point>";
+          echo "  </Placemark>"; } >> "$kml_filename"
+    done <"$markers_filename"
+
+    { echo "</Document>";
+      echo "</kml>"; } >> "$kml_filename"
+}
+
+# NOTE: deliberately no exit 0

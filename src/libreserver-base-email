@@ -1,0 +1,2008 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Email functions
+#
+# License
+# =======
+#
+# Copyright (C) 2014-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# the default email address
+MY_EMAIL_ADDRESS=$MY_USERNAME@$DEFAULT_DOMAIN_NAME
+
+# When sending mail to riseup.net route to this onion address
+# https://riseup.net/en/security/network-security/tor
+RISEUP_EMAIL_ONION='5gdvpfoh6kb2iqbizb37lzk2ddzrwa47m6rpdueg2m656fovmbhoptqd.onion'
+
+GPG_KEYSERVER="hkp://keys.gnupg.net"
+
+# whether to encrypt all incoming email with your public key
+GPG_ENCRYPT_STORED_EMAIL="no"
+
+# optionally you can provide your exported GPG key pair here
+# Note that the private key file will be deleted after use
+# If these are unspecified then a new GPG key will be created
+MY_GPG_PUBLIC_KEY=
+MY_GPG_PRIVATE_KEY=
+
+# optionally specify your public key ID
+MY_GPG_PUBLIC_KEY_ID=
+
+# email encryption at rest
+GPGIT_REPO="https://gitlab.com/mikecardwell/gpgit"
+GPGIT_COMMIT='583dc76119f19420f8a33f606744faa7c8922738'
+
+# refresh gpg keys every few hours
+REFRESH_GPG_KEYS_HOURS=2
+
+function email_create_dns_lookup {
+    { echo "perl_startup = do '/etc/exim4/perl-routines.pl'";
+      echo "perl_at_start"; } > /etc/exim4/conf.d/main/00_exim4-config_perl
+
+    { echo "use Net::DNS::Resolver;";
+      echo "sub onionLookup {";
+      echo "  my \$hostname = shift;";
+      echo "  my \$res = Net::DNS::Resolver->new(nameservers => [qw(127.0.0.1)],);";
+      echo "  \$res->port(5300);";
+      echo "  my \$query = \$res->search(\$hostname);";
+      echo "  if (\$query) {";
+      echo "    foreach my \$rr (\$query->answer) {";
+      echo "      next unless \$rr->type eq \"A\";";
+      echo "      return \$rr->address;";
+      echo "    }";
+      echo "  }";
+      echo "  return 'no_such_host';";
+      echo "}"; } > /etc/exim4/perl-routines.pl
+}
+
+function configure_email_i2p {
+    if [ ! -d /var/lib/i2pd/tunnels.d ]; then
+        mkdir /var/lib/i2pd/tunnels.d
+        chown -R i2pd:i2pd /var/lib/i2pd/tunnels.d
+    fi
+    if [ -f /var/lib/i2pd/tunnels.d/email ]; then
+        return
+    fi
+    I2P_SMTP_PORT=7659
+    { echo '[smtp]';
+      echo 'type = client';
+      echo 'address = 127.0.0.1';
+      echo "port = ${I2P_SMTP_PORT}";
+      echo 'destination = smtp.postman.i2p';
+      echo 'destinationport = 25';
+      echo "keys = ${PROJECT_NAME}.dat";
+      echo '';
+      echo '[email]';
+      echo 'type=server';
+      echo 'host=127.0.0.1';
+      echo 'port=25';
+      echo "keys=${PROJECT_NAME}.dat"; } > /var/lib/i2pd/tunnels.d/email
+
+    chmod 644 /var/lib/i2pd/tunnels.d/*
+    systemctl restart i2pd
+
+    if ! grep -q '\*.i2p' /etc/exim4/conf.d/router/200_exim4-config_primary; then
+       sed -i 's|: ! \*.onion|: ! \*.onion : ! \*.i2p|g' /etc/exim4/conf.d/router/200_exim4-config_primary
+    fi
+
+    { echo "i2prelays:";
+      echo "  driver    = manualroute";
+      echo "  domains   = *.i2p";
+      echo "  transport = i2p_relay";
+      echo "  headers_remove = Received:Message-ID:X-Mailer:User-Agent";
+      # shellcheck disable=SC2028
+      echo "  headers_add = \"Message-ID: <\${lc:\${sha1:\$message_id}}@\$sender_address_domain>\\n\\";
+      echo "Jabber-ID: \$sender_address\"";
+      echo "  route_list = * \"127.0.0.1::${I2P_SMTP_PORT}\"";
+      echo "  no_more"; } > /etc/exim4/conf.d/router/910_exim4-config-i2prelays
+
+    { echo "i2p_relay:";
+      echo "  driver = smtp";
+      echo "  helo_data = \"\$address_data \$original_domain\"";
+      echo "  hosts_avoid_tls = *";
+      echo "  socks_proxy = 127.0.0.1 port=${I2P_SMTP_PORT}"; } > /etc/exim4/conf.d/transport/050_exim4-config_i2p_relay
+
+    update-exim4.conf.template -r
+    update-exim4.conf
+    dpkg-reconfigure --frontend noninteractive exim4-config
+    systemctl restart exim4
+}
+
+function email_update_riseup_onion_domain {
+    if ! grep -q "$RISEUP_EMAIL_ONION" /etc/exim4/conf.d/router/905_exim4-config-riseup; then
+        sed -i "s|route_data =.*|route_data = \${perl{onionLookup}{$RISEUP_EMAIL_ONION}}|g" /etc/exim4/conf.d/router/905_exim4-config-riseup
+        systemctl restart exim4
+    fi
+}
+
+function email_change_default_domain_name {
+    new_default_domain_name="$1"
+
+    read_config_param ONION_ONLY
+    read_config_param MY_USERNAME
+
+    if [[ "$ONION_ONLY" != 'no' ]]; then
+        return
+    fi
+
+    sed -i "s|dc_other_hostnames=.*|dc_other_hostnames='${new_default_domain_name};mail.${new_default_domain_name}'|g" /etc/exim4/update-exim4.conf.conf
+
+    sed -i "s|ssl_ca =.*|ssl_ca = /etc/ssl/certs/ca-${new_default_domain_name}.crt|g" /etc/dovecot/conf.d/10-ssl.conf
+    if [ ! -f "/etc/ssl/private/ca-${new_default_domain_name}.key" ]; then
+        if [[ "$LETSENCRYPT_ENABLED" != "yes" ]]; then
+            "${PROJECT_NAME}-addcert" -h "$new_default_domain_name" --ca "" --dhkey "$DH_KEYLENGTH"
+        else
+            "${PROJECT_NAME}-addcert" -e "$new_default_domain_name" -s "$LETSENCRYPT_SERVER" --ca "" --dhkey "$DH_KEYLENGTH" --email "$MY_EMAIL_ADDRESS"
+        fi
+    fi
+    sed -i "s|certificate =.*|certificate = /etc/ssl/certs/ca-${new_default_domain_name}.crt|g" /etc/ssl/dovecot-ca.cnf
+    sed -i "s|private_key =.*|private_key = /etc/ssl/private/ca-${new_default_domain_name}.key|g" /etc/ssl/dovecot-ca.cnf
+
+    "${PROJECT_NAME}-addemail" -u "$MY_USERNAME" -e "root@${new_default_domain_name}" -g admin --public no
+    MY_EMAIL_ADDRESS="${MY_USERNAME}@${new_default_domain_name}"
+    write_config_param MY_EMAIL_ADDRESS "$MY_EMAIL_ADDRESS"
+
+    update-exim4.conf
+
+    dpkg-reconfigure --frontend noninteractive exim4-config
+    systemctl restart saslauthd
+    email_install_tls "${new_default_domain_name}"
+    systemctl restart exim4
+    systemctl restart dovecot
+}
+
+function email_create_template {
+    if [ ! -d /etc/skel/log ]; then
+        mkdir -m 700 /etc/skel/log
+    fi
+    if [ ! -d /etc/skel/Maildir ]; then
+        mkdir -m 700 /etc/skel/.mutt
+        mkdir -m 700 /etc/skel/Maildir
+        mkdir -m 700 /etc/skel/Maildir/new
+        mkdir -m 700 /etc/skel/Maildir/cur
+        mkdir -m 700 /etc/skel/Maildir/Sent
+        mkdir -m 700 /etc/skel/Maildir/Sent/tmp
+        mkdir -m 700 /etc/skel/Maildir/Sent/cur
+        mkdir -m 700 /etc/skel/Maildir/Sent/new
+        mkdir -m 700 /etc/skel/Maildir/.learn-spam
+        mkdir -m 700 /etc/skel/Maildir/.learn-spam/cur
+        mkdir -m 700 /etc/skel/Maildir/.learn-spam/new
+        mkdir -m 700 /etc/skel/Maildir/.learn-spam/tmp
+        mkdir -m 700 /etc/skel/Maildir/.learn-ham
+        mkdir -m 700 /etc/skel/Maildir/.learn-ham/cur
+        mkdir -m 700 /etc/skel/Maildir/.learn-ham/new
+        mkdir -m 700 /etc/skel/Maildir/.learn-ham/tmp
+        ln -s /etc/skel/Maildir/.learn-spam /etc/skel/Maildir/spam
+        ln -s /etc/skel/Maildir/.learn-ham /etc/skel/Maildir/ham
+    fi
+
+    if [ ! -d "/home/$MY_USERNAME/Maildir" ]; then
+        mkdir -m 700 "/home/$MY_USERNAME/.mutt"
+        mkdir -m 700 "/home/$MY_USERNAME/Maildir"
+        mkdir -m 700 "/home/$MY_USERNAME/Maildir/cur"
+        mkdir -m 700 "/home/$MY_USERNAME/Maildir/tmp"
+        mkdir -m 700 "/home/$MY_USERNAME/Maildir/new"
+        mkdir -m 700 "/home/$MY_USERNAME/Maildir/Sent"
+        mkdir -m 700 "/home/$MY_USERNAME/Maildir/Sent/cur"
+        mkdir -m 700 "/home/$MY_USERNAME/Maildir/Sent/tmp"
+        mkdir -m 700 "/home/$MY_USERNAME/Maildir/Sent/new"
+        mkdir -m 700 "/home/$MY_USERNAME/Maildir/.learn-spam"
+        mkdir -m 700 "/home/$MY_USERNAME/Maildir/.learn-spam/cur"
+        mkdir -m 700 "/home/$MY_USERNAME/Maildir/.learn-spam/new"
+        mkdir -m 700 "/home/$MY_USERNAME/Maildir/.learn-spam/tmp"
+        mkdir -m 700 "/home/$MY_USERNAME/Maildir/.learn-ham"
+        mkdir -m 700 "/home/$MY_USERNAME/Maildir/.learn-ham/cur"
+        mkdir -m 700 "/home/$MY_USERNAME/Maildir/.learn-ham/new"
+        mkdir -m 700 "/home/$MY_USERNAME/Maildir/.learn-ham/tmp"
+        ln -s "/home/$MY_USERNAME/Maildir/.learn-spam" "/home/$MY_USERNAME/Maildir/spam"
+        ln -s "/home/$MY_USERNAME/Maildir/.learn-ham" "/home/$MY_USERNAME/Maildir/ham"
+        chown -R "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME/Maildir"
+    fi
+}
+
+function create_email_onion_address {
+    email_hostname='/var/lib/tor/hidden_service_email/hostname'
+    if ! grep -q "hidden_service_email" "$ONION_SERVICES_FILE"; then
+        if [ ! "$ONION_RATE_PER_SEC" ]; then
+            ONION_RATE_PER_SEC=42
+            ONION_BURST_PER_SEC=87
+        fi
+        { echo 'HiddenServiceDir /var/lib/tor/hidden_service_email/';
+          echo 'HiddenServiceVersion 3';
+          echo "#HiddenServiceEnableIntroDoSRatePerSec ${ONION_RATE_PER_SEC}";
+          echo "#HiddenServiceEnableIntroDoSBurstPerSec ${ONION_BURST_PER_SEC}";
+          echo 'HiddenServicePort 25 127.0.0.1:25';
+          echo 'HiddenServicePort 587 127.0.0.1:587';
+          echo 'HiddenServicePort 465 127.0.0.1:465';
+          echo "HiddenServicePort 80 127.0.0.1:${WEBADMIN_SECONDARY_ONION_PORT}";
+          echo "HiddenServicePort 5222 127.0.0.1:5222";
+          echo "HiddenServicePort 5269 127.0.0.1:5269";
+          echo "HiddenServicePort 5281 127.0.0.1:5281";} >> "$ONION_SERVICES_FILE"
+
+        function_check onion_update
+        onion_update
+
+        function_check wait_for_onion_service
+        wait_for_onion_service email
+
+        if [ ! -f $email_hostname ]; then
+            echo $"email onion site hostname not found"
+            restart_tor_daemon
+            exit 78
+        fi
+
+        onion_address=$(cat $email_hostname)
+        set_completion_param "email onion domain" "${onion_address}"
+        add_email_hostname "$onion_address"
+    else
+        onion_address=$(cat $email_hostname)
+    fi
+    cp $email_hostname /etc/skel/.email_onion_domain
+    cp $email_hostname "/home/$MY_USERNAME/.email_onion_domain"
+    chown "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME/.email_onion_domain"
+}
+
+function update_email_onion_dns {
+    if [ -f /etc/torrc.d/dns ]; then
+        if grep -q '#DNSListenAddress' /etc/torrc.d/dns; then
+            sed -i 's|#DNSListenAddress|DNSListenAddress|g' /etc/torrc.d/dns
+            systemctl restart tor
+        fi
+    fi
+}
+
+function configure_email_onion {
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+    if [[ "$SYSTEM_TYPE" == "mesh"* ]]; then
+        return
+    fi
+
+    create_email_onion_address
+
+    INSTALL_PACKAGES perl
+
+    # MX record should be:
+    # _onion-mx._tcp
+    # 20:$onion_address
+    # 3600 IN SRV 0 5 25 $onion_address
+
+    # To test the system, on receiving server:
+    #   exim -bd -d -oX 25
+    # On the sensing server:
+    #   exim -d -oX 25 -bt username@$onion_address
+
+    email_create_dns_lookup
+
+    { echo "riseup:";
+      echo "  driver    = manualroute";
+      echo "  domains   = riseup.net";
+      echo "  transport = onion_relay";
+      echo "  headers_remove = Received:Message-ID:X-Mailer:User-Agent";
+      # shellcheck disable=SC2028
+      echo "  headers_add = \"Message-ID: <\${lc:\${sha1:\$message_id}}@\$sender_address_domain>\\n\\";
+      echo "Jabber-ID: \$sender_address\"";
+      echo "  route_data = \${perl{onionLookup}{$RISEUP_EMAIL_ONION}}"
+      echo "  no_more"; } > /etc/exim4/conf.d/router/905_exim4-config-riseup
+
+    update_config_primary=
+    if ! grep -q '\*.onion' /etc/exim4/conf.d/router/200_exim4-config_primary; then
+        update_config_primary=1
+    fi
+    if ! grep -q '\*.i2p' /etc/exim4/conf.d/router/200_exim4-config_primary; then
+        update_config_primary=1
+    fi
+    if [ $update_config_primary ]; then
+       sed -i 's|domains = ! +local_domains|domains = ! +local_domains : ! \*.onion : ! \*.i2p : ! riseup.net|g' /etc/exim4/conf.d/router/200_exim4-config_primary
+    fi
+
+    { echo "onionrelays:";
+      echo "  driver    = manualroute";
+      echo "  domains   = *.onion";
+      echo "  transport = onion_relay";
+      echo "  headers_remove = Received:Message-ID:X-Mailer:User-Agent";
+      # shellcheck disable=SC2028
+      echo "  headers_add = \"Message-ID: <\${lc:\${sha1:\$message_id}}@\$sender_address_domain>\\n\\";
+      echo "Jabber-ID: \$sender_address\"";
+      echo "  route_data = \${perl{onionLookup}{\$domain}}"
+      echo "  no_more"; } > /etc/exim4/conf.d/router/910_exim4-config-onionrelays
+
+    { echo "onion_relay:";
+      echo "  driver = smtp";
+      echo "  helo_data = \"\$address_data \$original_domain\"";
+      echo "  hosts_avoid_tls = *";
+      echo "  socks_proxy = 127.0.0.1 port=9050"; } > /etc/exim4/conf.d/transport/050_exim4-config_onion_relay
+
+    { echo 'DNSPort 5300';
+      echo '#DNSListenAddress 127.0.0.1';
+      echo 'AutomapHostsOnResolve 1'; } > /etc/torrc.d/dns
+
+    update-exim4.conf.template -r
+    update-exim4.conf
+    dpkg-reconfigure --frontend noninteractive exim4-config
+    restart_tor_daemon
+    systemctl restart exim4
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function check_email_address_exists {
+    read_config_param ONION_ONLY
+    read_config_param MY_USERNAME
+    read_config_param DEFAULT_DOMAIN_NAME
+    read_config_param MY_EMAIL_ADDRESS
+    read_config_param DH_KEYLENGTH
+
+    if [ ! "$MY_USERNAME" ]; then
+        echo $'No username for email installation'
+        exit 73
+    fi
+    if [ ! "$DEFAULT_DOMAIN_NAME" ]; then
+        echo $'No default domain name for email installation'
+        exit 57
+    fi
+
+    my_email="$MY_EMAIL_ADDRESS"
+    if [ ${#my_email} -lt 3 ]; then
+        MY_EMAIL_ADDRESS="${MY_USERNAME}@${DEFAULT_DOMAIN_NAME}"
+        write_config_param "MY_EMAIL_ADDRESS" "$MY_EMAIL_ADDRESS"
+    fi
+
+    if [[ $ONION_ONLY != 'no' ]]; then
+        my_email=$onion_address
+        MY_EMAIL_ADDRESS="${MY_USERNAME}@$onion_address"
+        write_config_param "MY_EMAIL_ADDRESS" "$MY_EMAIL_ADDRESS"
+    fi
+}
+
+function backup_email {
+    echo ''
+}
+
+function configure_firewall_for_email {
+    if [[ "$INSTALLED_WITHIN_DOCKER" == "yes" ]]; then
+        # docker does its own firewalling
+        return
+    fi
+    if [[ "$ONION_ONLY" != "no" ]]; then
+        return
+    fi
+
+    firewall_add Email 25 tcp
+    firewall_add Email 587 tcp
+    firewall_add Email 465 tcp
+    firewall_add Imap 993 tcp
+}
+
+function encrypt_incoming_email {
+    # encrypts incoming mail using your GPG public key
+    # so even if an attacker gains access to the data at rest they still need
+    # to know your GPG key password to be able to read anything
+    if [ ! -d /etc/exim4 ]; then
+        return
+    fi
+
+    # update to the next commit
+    function_check set_repo_commit
+    set_repo_commit "$INSTALL_DIR/gpgit" "gpgit commit" "$GPGIT_COMMIT" "$GPGIT_REPO"
+
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+
+    if [[ "$GPG_ENCRYPT_STORED_EMAIL" != "yes" ]]; then
+        return
+    fi
+
+    if [ ! -f /usr/bin/gpgit.pl ]; then
+        INSTALL_PACKAGES git libmail-gnupg-perl
+        cd "$INSTALL_DIR" || exit 24
+        function_check git_clone
+        git_clone "$GPGIT_REPO" "$INSTALL_DIR/gpgit"
+        cd "$INSTALL_DIR/gpgit" || exit 72
+        git checkout "$GPGIT_COMMIT" -b "$GPGIT_COMMIT"
+        set_completion_param "gpgit commit" "$GPGIT_COMMIT"
+        cp gpgit.pl /usr/bin
+    fi
+
+    # add a procmail rule
+    if ! grep -q "/usr/bin/gpgit.pl" "/home/$MY_USERNAME/.procmailrc"; then
+        { echo '';
+          echo ':0 f';
+          echo "| /usr/bin/gpgit.pl --encrypt-mode prefer-inline --inline-flatten $MY_EMAIL_ADDRESS"; } >> "/home/$MY_USERNAME/.procmailrc"
+        chown "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME/.procmailrc"
+        { echo '';
+          echo ':0 f';
+          echo -n "| /usr/bin/gpgit.pl --encrypt-mode prefer-inline --inline-flatten \$USER@";
+          echo "$DEFAULT_DOMAIN_NAME"; } >> /etc/skel/.procmailrc
+    fi
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function encrypt_outgoing_email {
+    # encrypts outgoing mail using your GPG public key
+    # so even if an attacker gains access to the data at rest they still need
+    # to know your GPG key password to be able to read sent mail
+    if [ ! -d /etc/exim4 ]; then
+        return
+    fi
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+    if [[ "$GPG_ENCRYPT_STORED_EMAIL" != "yes" ]]; then
+        return
+    fi
+
+    if [ ! -d "/home/$MY_USERNAME/.gnupg" ]; then
+        return
+    fi
+
+    if [ ! -f "/home/$MY_USERNAME/.muttrc" ]; then
+        return
+    fi
+
+    # obtain your public key ID
+    if [ ! "$MY_GPG_PUBLIC_KEY_ID" ]; then
+        MY_GPG_PUBLIC_KEY_ID=$(gpg_pubkey_from_email "$MY_USERNAME" "$MY_EMAIL_ADDRESS")
+        if [ ! "$MY_GPG_PUBLIC_KEY_ID" ]; then
+            return
+        fi
+        if [ ${#MY_GPG_PUBLIC_KEY_ID} -lt 4 ]; then
+            return
+        fi
+    fi
+
+    if ! grep -q "pgp_encrypt_only_command" "/home/$MY_USERNAME/.muttrc"; then
+        { echo '';
+        echo $'# Encrypt items in the Sent folder';
+        echo "set pgp_encrypt_only_command=\"/usr/lib/mutt/pgpewrap gpg --batch --quiet --no-verbose --output - --encrypt --textmode --armor --trust-model always --encrypt-to $MY_GPG_PUBLIC_KEY_ID -- -r %r -- %f\""; } >> "/home/$MY_USERNAME/.muttrc"
+    else
+        sed -i "s|set pgp_encrypt_only_command.*|set pgp_encrypt_only_command=\"/usr/lib/mutt/pgpewrap gpg --batch --quiet --no-verbose --output - --encrypt --textmode --armor --trust-model always --encrypt-to $MY_GPG_PUBLIC_KEY_ID -- -r %r -- %f\"|g" "/home/$MY_USERNAME/.muttrc"
+    fi
+
+    if ! grep -q "pgp_encrypt_sign_command" "/home/$MY_USERNAME/.muttrc"; then
+        echo "set pgp_encrypt_sign_command=\"/usr/lib/mutt/pgpewrap gpg %?p?--passphrase-fd 0? --batch --quiet --no-verbose --textmode --output - --encrypt --sign %?a?-u %a? --armor --trust-model always --encrypt-to $MY_GPG_PUBLIC_KEY_ID -- -r %r -- %f\"" >> "/home/$MY_USERNAME/.muttrc"
+    else
+        sed -i "s|set pgp_encrypt_sign_command.*|set pgp_encrypt_sign_command=\"/usr/lib/mutt/pgpewrap gpg %?p?--passphrase-fd 0? --batch --quiet --no-verbose --textmode --output - --encrypt --sign %?a?-u %a? --armor --trust-model always --encrypt-to $MY_GPG_PUBLIC_KEY_ID -- -r %r -- %f\"|g" "/home/$MY_USERNAME/.muttrc"
+    fi
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function encrypt_all_email {
+    if [ ! -d /etc/exim4 ]; then
+        return
+    fi
+    if [[ "$GPG_ENCRYPT_STORED_EMAIL" != "yes" ]]; then
+        return
+    fi
+
+    if [ -f "/usr/local/bin/${PROJECT_NAME}-encrypt-mail" ]; then
+        if [ ! -f /usr/bin/encmaildir ]; then
+            cp "/usr/local/bin/${PROJECT_NAME}-encrypt-mail" /usr/bin/encmaildir
+        else
+            HASH1=$(sha256sum "/usr/local/bin/${PROJECT_NAME}-encrypt-mail" | awk -F ' ' '{print $1}')
+            HASH2=$(sha256sum /usr/bin/encmaildir | awk -F ' ' '{print $1}')
+            if [[ "$HASH1" != "$HASH2" ]]; then
+                cp "/usr/local/bin/${PROJECT_NAME}-encrypt-mail" /usr/bin/encmaildir
+            fi
+        fi
+    else
+        if [ ! -f /usr/bin/encmaildir ]; then
+            cp "/usr/bin/${PROJECT_NAME}-encrypt-mail" /usr/bin/encmaildir
+        else
+            HASH1=$(sha256sum "/usr/bin/${PROJECT_NAME}-encrypt-mail" | awk -F ' ' '{print $1}')
+            HASH2=$(sha256sum /usr/bin/encmaildir | awk -F ' ' '{print $1}')
+            if [[ "$HASH1" != "$HASH2" ]]; then
+                cp "/usr/bin/${PROJECT_NAME}-encrypt-mail" /usr/bin/encmaildir
+            fi
+        fi
+    fi
+
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+
+    if [ ! -f "/home/$MY_USERNAME/README" ]; then
+        touch "/home/$MY_USERNAME/README"
+    fi
+    if ! grep -q $"If you have imported legacy email which is not encrypted" "/home/$MY_USERNAME/README"; then
+        { echo '';
+          echo '';
+          echo $'# Encrypting legacy email';
+          echo $'If you have imported legacy email which is not encrypted';
+          echo $'then it can be encrypted with the command:';
+          echo '';
+          echo '  encmaildir';
+          echo '';
+          echo $'But be warned that depending upon how much email you have';
+          echo $'this could take a seriously LONG time on the Beaglebone';
+          echo $'and may be better done on a faster machine.'; } >> "/home/$MY_USERNAME/README"
+        chown "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME/README"
+        chmod 600 "/home/$MY_USERNAME/README"
+    fi
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function email_client {
+    if [ ! -d /etc/exim4 ]; then
+        return
+    fi
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+    INSTALL_PACKAGES lynx abook urlview mutt
+
+    if [ ! -f /etc/Muttrc ]; then
+        echo $"ERROR: Mutt does not appear to have installed. $CHECK_MESSAGE"
+        exit 49
+    fi
+
+    if [ ! -d "/home/$MY_USERNAME/.mutt" ]; then
+        mkdir "/home/$MY_USERNAME/.mutt"
+    fi
+    echo "text/html; lynx -dump -width=78 -nolist %s | sed ‘s/^ //’; copiousoutput; needsterminal; nametemplate=%s.html" > "/home/$MY_USERNAME/.mutt/mailcap"
+    cp "/home/$MY_USERNAME/.mutt/mailcap" /etc/skel/.mutt
+    chown -R "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME/.mutt"
+    chown -R root:root /etc/skel/.mutt
+
+    { echo 'set mbox_type=Maildir';
+      echo 'set folder="~/Maildir"';
+      echo 'set mask="!^\\.[^.]"';
+      echo 'set mbox="~/Maildir"';
+      echo 'set record="+Sent"';
+      echo 'set postponed="+Drafts"';
+      echo 'set trash="+Trash"';
+      echo 'set spoolfile="~/Maildir"';
+      echo 'auto_view text/x-vcard text/html text/enriched';
+      echo 'set header_cache="+.cache"';
+      echo 'set markers=no';
+      echo '';
+      echo '# ctrl-u to view long URLs';
+      echo 'macro pager \cu <pipe-entry>"urlview"<enter> "Follow links with urlview"';
+      echo '';
+      echo 'macro index S "<tag-prefix><decode-save>=.learn-spam<enter>" "move to learn-spam"';
+      echo 'macro pager S "<decode-save>=.learn-spam<enter>" "move to learn-spam"';
+      echo 'macro index H "<tag-prefix><decode-copy>=.learn-ham<enter>" "copy to learn-ham"';
+      echo 'macro pager H "<decode-copy>=.learn-ham<enter>" "copy to learn-ham"';
+      echo '';
+      echo '# set up the sidebar';
+      echo 'set sidebar_width=22';
+      echo 'set sidebar_visible=yes';
+      echo '';
+      echo 'set rfc2047_parameters';
+      echo '';
+      echo '# Show inbox and sent items';
+      echo 'mailboxes = =admin =Sent =maybe-spam =spam';
+      echo '';
+      echo '# Alter these colours as needed for maximum bling';
+      echo 'color sidebar_new yellow default';
+      echo 'color normal white default';
+      echo 'color hdrdefault brightcyan default';
+      echo 'color signature green default';
+      echo 'color attachment brightyellow default';
+      echo 'color quoted green default';
+      echo 'color quoted1 white default';
+      echo 'color tilde blue default';
+      echo '';
+      echo '# ctrl-n, ctrl-p to select next, prev folder';
+      echo '# ctrl-o to open selected folder';
+      echo 'bind index \Cp sidebar-prev';
+      echo 'bind index \Cn sidebar-next';
+      echo 'bind index \Co sidebar-open';
+      echo 'bind pager \Cp sidebar-prev';
+      echo 'bind pager \Cn sidebar-next';
+      echo 'bind pager \Co sidebar-open';
+      echo '';
+      echo '# ctrl-b toggles sidebar visibility';
+      echo "macro index,pager \\Cb '<enter-command>toggle sidebar_visible<enter><redraw-screen>' 'toggle sidebar'";
+      echo '';
+      echo '# esc-m Mark new messages as read';
+      echo 'macro index <esc>m "T~N<enter>;WNT~O<enter>;WO\CT~T<enter>" "mark all messages read"';
+      echo '';
+      echo '# Collapsing threads';
+      echo 'macro index [ "<collapse-thread>" "collapse/uncollapse thread"';
+      echo 'macro index ] "<collapse-all>"    "collapse/uncollapse all threads"';
+      echo '';
+      echo '# threads containing new messages';
+      echo 'uncolor index "~(~N)"';
+      echo 'color index brightblue default "~(~N)"';
+      echo '';
+      echo '# new messages themselves';
+      echo 'uncolor index "~N"';
+      echo 'color index brightyellow default "~N"';
+      echo '';
+      echo '# GPG/PGP integration';
+      echo '# this set the number of seconds to keep in memory the passphrase used to encrypt/sign';
+      echo 'set pgp_timeout=1800';
+      echo '';
+      echo '# automatically sign and encrypt with PGP/MIME';
+      echo 'set pgp_autosign         # autosign all outgoing mails';
+      echo 'set pgp_autoencrypt      # Try to encrypt automatically';
+      echo 'set pgp_replyencrypt     # autocrypt replies to crypted';
+      echo 'set pgp_replysign        # autosign replies to signed';
+      echo 'set pgp_auto_decode=yes  # decode attachments';
+      echo 'set fcc_clear=no         # Keep encrypted copy of sent encrypted mail';
+      echo 'unset smime_is_default';
+      echo '';
+      echo 'set alias_file=~/.mutt-alias';
+      echo 'source ~/.mutt-alias';
+      echo 'set query_command= "abook --mutt-query \"%s\""';
+      echo 'macro index,pager A "<pipe-message>abook --add-email-quiet<return>" "add the sender address to abook"';
+      echo 'unignore x-face';
+      echo 'macro pager \ef "|/usr/local/bin/view-x-face<enter>" "display the X-Face included in the mail"';
+    } > /etc/Muttrc
+
+    if [[ "$ONION_ONLY" != 'no' ]]; then
+        # On onion only systems email is onion router anyway, with its
+        # own encryption system, so we don't need the additional pgp layer
+        # except perhaps for some additional confidence
+        sed -i 's|set pgp_autoencrypt|unset pgp_autoencrypt|g' /etc/Muttrc
+        sed -i 's|set pgp_autosign|unset pgp_autosign|g' /etc/Muttrc
+    fi
+
+    # For viewing long URLs
+    # shellcheck disable=SC2028
+    echo 'REGEXP (((http|https|ftp|gopher)|mailto)[.:][^ >"\t]*|www\.[-a-z0-9.]+)[^ .,;\t>">\):]' > "/home/$MY_USERNAME/.urlview"
+    echo 'COMMAND lynx -dump -width=78 -nolist %s' >> "/home/$MY_USERNAME/.urlview"
+
+    cp -f /etc/Muttrc "/home/$MY_USERNAME/.muttrc"
+    cp -f /etc/Muttrc /etc/skel/.muttrc
+    cp -f "/home/$MY_USERNAME/.urlview" /etc/skel/.urlview
+    touch "/home/$MY_USERNAME/.mutt-alias"
+    cp "/home/$MY_USERNAME/.mutt-alias" /etc/skel/.mutt-alias
+    chown "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME/.muttrc"
+    chown "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME/.mutt-alias"
+
+    # default user on generic images
+    if [ -d "/home/${GENERIC_IMAGE_USERNAME}" ]; then
+        cp -f /etc/Muttrc "/home/${GENERIC_IMAGE_USERNAME}/.muttrc"
+        chown "${GENERIC_IMAGE_USERNAME}":"${GENERIC_IMAGE_USERNAME}" "/home/${GENERIC_IMAGE_USERNAME}/.muttrc"
+        touch "/home/${GENERIC_IMAGE_USERNAME}/.mutt-alias"
+        chown "${GENERIC_IMAGE_USERNAME}":"${GENERIC_IMAGE_USERNAME}" "/home/${GENERIC_IMAGE_USERNAME}/.mutt-alias"
+    fi
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function email_archiving {
+    if [ ! -d /etc/exim4 ]; then
+        return
+    fi
+
+    # ensure that the mail archive script is up to date
+    if [ -f "/usr/local/bin/${PROJECT_NAME}-archive-mail" ]; then
+        if [ ! -f /etc/cron.daily/archivemail ]; then
+            cp "/usr/local/bin/${PROJECT_NAME}-archive-mail" /etc/cron.daily/archivemail
+            chmod +x /etc/cron.daily/archivemail
+        else
+            HASH1=$(sha256sum "/usr/local/bin/${PROJECT_NAME}-archive-mail" | awk -F ' ' '{print $1}')
+            HASH2=$(sha256sum /etc/cron.daily/archivemail | awk -F ' ' '{print $1}')
+            if [[ "$HASH1" != "$HASH2" ]]; then
+                cp "/usr/local/bin/${PROJECT_NAME}-archive-mail" /etc/cron.daily/archivemail
+                chmod +x /etc/cron.daily/archivemail
+            fi
+        fi
+    else
+        if [ -f "/usr/bin/${PROJECT_NAME}-archive-mail" ]; then
+            if [ ! -f /etc/cron.daily/archivemail ]; then
+                cp "/usr/bin/${PROJECT_NAME}-archive-mail" /etc/cron.daily/archivemail
+                chmod +x /etc/cron.daily/archivemail
+            else
+                HASH1=$(sha256sum "/usr/local/bin/${PROJECT_NAME}-archive-mail" | awk -F ' ' '{print $1}')
+                HASH2=$(sha256sum /etc/cron.daily/archivemail | awk -F ' ' '{print $1}')
+                if [[ "$HASH1" != "$HASH2" ]]; then
+                    cp "/usr/local/bin/${PROJECT_NAME}-archive-mail" /etc/cron.daily/archivemail
+                    chmod +x /etc/cron.daily/archivemail
+                fi
+            fi
+        else
+            echo "/usr/bin/${PROJECT_NAME}-archive-mail was not found. ${PROJECT_NAME} might not have fully installed."
+            exit 62
+        fi
+    fi
+
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+# Ensure that the from field is correct when sending email from Mutt
+function email_from_address {
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+
+    if [ ! -f "/home/$MY_USERNAME/.muttrc" ]; then
+        return
+    fi
+    if grep -q "set from=" "/home/$MY_USERNAME/.muttrc"; then
+        sed -i "s|set from=.*|set from='$MY_NAME <$MY_EMAIL_ADDRESS>'|g" "/home/$MY_USERNAME/.muttrc"
+    else
+        echo "set from='$MY_NAME <$MY_EMAIL_ADDRESS>'" >> "/home/$MY_USERNAME/.muttrc"
+    fi
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function split_gpg_key_into_fragments {
+    # split the gpg key into fragments if social key management is enabled
+    if [[ "$ENABLE_SOCIAL_KEY_MANAGEMENT" == "yes" ]]; then
+
+        if [ "$IMAGE_PASSWORD_FILE" ]; then
+            if [ -f "$IMAGE_PASSWORD_FILE" ]; then
+                "${PROJECT_NAME}-splitkey" -u "$MY_USERNAME" -e "$MY_EMAIL_ADDRESS" --fullname "$MY_NAME" --passwordfile "$IMAGE_PASSWORD_FILE"
+                return
+            fi
+        fi
+
+        echo 'Splitting GPG key. You may need to enter your passphrase.'
+        "${PROJECT_NAME}-splitkey" -u "$MY_USERNAME" -e "$MY_EMAIL_ADDRESS" --fullname "$MY_NAME"
+        if [ ! -d "/home/$MY_USERNAME/.gnupg_fragments" ]; then
+            echo 'Yhe GPG key could not be split'
+            exit 86
+        fi
+    fi
+}
+
+function import_email {
+    if [ ! -d /etc/exim4 ]; then
+        return
+    fi
+    EMAIL_COMPLETE_MSG=$"
+  *** ${PROJECT_NAME} mailbox installation is complete ***
+
+      Now on your internet router forward ports
+     25, 587, 465, 993 and 2222 to the ${PROJECT_NAME}
+"
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        if [[ "$SYSTEM_TYPE" == "mail"* ]]; then
+            function_check install_tripwire
+            install_tripwire
+
+            function_check split_gpg_key_into_fragments
+            split_gpg_key_into_fragments
+
+            clear
+            echo ''
+            echo "$EMAIL_COMPLETE_MSG"
+            if [ -d "$USB_MOUNT" ]; then
+                umount "$USB_MOUNT"
+                rm -rf "$USB_MOUNT"
+                echo $'            You can now remove the USB drive'
+            fi
+            exit 0
+        fi
+        return
+    fi
+    mark_completed "${FUNCNAME[0]}"
+    if [[ "$SYSTEM_TYPE" == "mail"* ]]; then
+        function_check install_tripwire
+        install_tripwire
+
+        function_check split_gpg_key_into_fragments
+        split_gpg_key_into_fragments
+
+        # unmount any attached usb drive
+        clear
+        echo ''
+        echo "$EMAIL_COMPLETE_MSG"
+        echo ''
+        if [ -d "$USB_MOUNT" ]; then
+            umount "$USB_MOUNT"
+            rm -rf "$USB_MOUNT"
+            echo $'            You can now remove the USB drive'
+        fi
+        exit 0
+    fi
+}
+
+function remove_email {
+    echo ''
+}
+
+function install_email_basic {
+    $REMOVE_PACKAGES postfix
+    INSTALL_PACKAGES exim4 sasl2-bin swaks libnet-ssleay-perl procmail
+
+    if [ ! -d /etc/exim4 ]; then
+        echo $"ERROR: Exim does not appear to have installed. $CHECK_MESSAGE"
+        exit 48
+    fi
+
+    # configure for Maildir format
+    sed -i 's/MAIL_DIR/#MAIL_DIR/g' /etc/login.defs
+    sed -i 's|#MAIL_FILE.*|MAIL_FILE Maildir/|g' /etc/login.defs
+
+    if ! grep -q "export MAIL" /etc/profile; then
+        echo 'export MAIL=~/Maildir' >> /etc/profile
+    fi
+
+    sed -i 's|pam_mail.so standard|pam_mail.so dir=~/Maildir standard|g' /etc/pam.d/login
+    sed -i 's|pam_mail.so standard noenv|pam_mail.so dir=~/Maildir standard|g' /etc/pam.d/sshd
+    sed -i 's|pam_mail.so nopen|pam_mail.so dir=~/Maildir nopen|g' /etc/pam.d/su
+
+    echo "dc_eximconfig_configtype='internet'" > /etc/exim4/update-exim4.conf.conf
+
+    if [[ $ONION_ONLY == 'no' ]]; then
+        echo "dc_other_hostnames='${DEFAULT_DOMAIN_NAME};mail.${DEFAULT_DOMAIN_NAME}'" >> /etc/exim4/update-exim4.conf.conf
+    else
+        echo "dc_other_hostnames='${onion_address}'" >> /etc/exim4/update-exim4.conf.conf
+    fi
+
+    { echo "dc_local_interfaces=''";
+      echo "dc_readhost=''";
+      echo "dc_relay_domains=''";
+      echo "dc_minimaldns='false'"; } >> /etc/exim4/update-exim4.conf.conf
+    IPv4_address=$(get_ipv4_address)
+    IPv4_address_base=$(echo "$IPv4_address" | awk -F '.' '{print $1"."$2"."$3}')
+    RELAY_NETS="${IPv4_address_base}.0/24"
+    if [ "$LOCAL_NETWORK_STATIC_IP_ADDRESS" ]; then
+        RELAY_NETS=$(awk "$LOCAL_NETWORK_STATIC_IP_ADDRESS" -F '.' '{print $1 "." $2 "." $3 ".0/24"}')
+    fi
+    { echo "dc_relay_nets='$RELAY_NETS'";
+      echo "dc_smarthost=''";
+      echo "CFILEMODE='644'";
+      echo "dc_use_split_config='false'";
+      echo "dc_hide_mailname=''";
+      echo "dc_mailname_in_oh='true'";
+      echo "dc_localdelivery='maildir_home'";
+      echo "dc_main_log_selector=-all"; } >> /etc/exim4/update-exim4.conf.conf
+
+    echo "chunking_advertise_hosts =" > /etc/exim4/conf.d/main/04_exim4-config_chunking
+
+    update-exim4.conf
+    sed -i "s/START=no/START=yes/g" /etc/default/saslauthd
+    systemctl start saslauthd
+
+    email_install_tls
+
+    adduser "$MY_USERNAME" sasl
+    addgroup Debian-exim sasl
+    systemctl restart exim4
+
+    email_create_template
+
+    if [ -f /usr/sbin/exim ]; then
+        chmod u+s /usr/sbin/exim
+    fi
+    if [ -f /usr/sbin/exim4 ]; then
+        chmod u+s /usr/sbin/exim4
+    fi
+
+    function_check configure_firewall_for_email
+    configure_firewall_for_email
+    dpkg-reconfigure --frontend noninteractive exim4-config
+    systemctl restart exim4
+}
+
+function email_add_xmpp_headers {
+    xmpp_header_added=
+    if [ -f /etc/exim4/conf.d/transport/30_exim4-config_remote_smtp ]; then
+        if ! grep -q "headers_add = Jabber-ID:" /etc/exim4/conf.d/transport/30_exim4-config_remote_smtp; then
+            sed -i "/driver = smtp/a headers_add = Jabber-ID: \$sender_address" /etc/exim4/conf.d/transport/30_exim4-config_remote_smtp
+            sed -i "s|headers_add = Jabber-ID: \$sender_address|  headers_add = Jabber-ID: \$sender_address|g" /etc/exim4/conf.d/transport/30_exim4-config_remote_smtp
+            xmpp_header_added=1
+        fi
+    fi
+
+    if [ -f /etc/exim4/conf.d/transport/30_exim4-config_remote_smtp_smarthost ]; then
+        if ! grep -q "headers_add = Jabber-ID:" /etc/exim4/conf.d/transport/30_exim4-config_remote_smtp_smarthost; then
+            sed -i "/driver = smtp/a headers_add = Jabber-ID: \$sender_address" /etc/exim4/conf.d/transport/30_exim4-config_remote_smtp_smarthost
+            sed -i "s|headers_add = Jabber-ID: \$sender_address|  headers_add = Jabber-ID: \$sender_address|g" /etc/exim4/conf.d/transport/30_exim4-config_remote_smtp_smarthost
+            xmpp_header_added=1
+        fi
+    fi
+
+    if [ $xmpp_header_added ]; then
+        update-exim4.conf.template -r
+        update-exim4.conf
+        dpkg-reconfigure --frontend noninteractive exim4-config
+        systemctl restart exim4
+    fi
+}
+
+function email_smtp_proxy_through_isp {
+    isp_smtp_domain="$1"
+    isp_smtp_port="$2"
+    isp_smtp_username="$3"
+    isp_smtp_password="$4"
+    email_server_type='smarthost'
+
+    ONION_ONLY=$(grep "ONION_ONLY=" "/root/${PROJECT_NAME}.cfg" | awk -F '=' '{print $2}')
+
+    if [[ "$isp_smtp_domain" == 'off' || "$isp_smtp_domain" == '0' || "$isp_smtp_domain" == '' || "$ONION_ONLY" != 'no' ]]; then
+        { echo '# password file used when the local exim is authenticating to a remote';
+          echo '# host as a client.';
+          echo '#';
+          echo '# see exim4_passwd_client(5) for more documentation';
+          echo '#';
+          echo '# Example:';
+          echo '### target.mail.server.example:login:password'; } > /etc/exim4/passwd.client
+        if ! grep -q 'dc_eximconfig_configtype=' /etc/exim4/update-exim4.conf.conf; then
+            echo "dc_eximconfig_configtype='internet'" >> /etc/exim4/update-exim4.conf.conf
+        else
+            sed -i "s|dc_eximconfig_configtype=.*|dc_eximconfig_configtype='internet'|g" /etc/exim4/update-exim4.conf.conf
+        fi
+        sed -i "s|dc_smarthost=.*|dc_smarthost=''|g" /etc/exim4/update-exim4.conf.conf
+        sed -i "s|dc_readhost=.*|dc_readhost=''|g" /etc/exim4/update-exim4.conf.conf
+        sed -i "s|tls_on_connect_ports=.*|tls_on_connect_ports=465|g" /etc/exim4/conf.d/main/03_exim4-config_tlsoptions
+        if grep -q 'protocol = smtps' /etc/exim4/conf.d/transport/30_exim4-config_remote_smtp_smarthost; then
+            sed -i '/protocol = smtps/d' /etc/exim4/conf.d/transport/30_exim4-config_remote_smtp_smarthost
+        fi
+        if grep -q 'hosts_require_tls=' /etc/exim4/conf.d/transport/30_exim4-config_remote_smtp_smarthost; then
+            sed -i '/hosts_require_tls=/d' /etc/exim4/conf.d/transport/30_exim4-config_remote_smtp_smarthost
+        fi
+    else
+        if [[ "$isp_smtp_domain" != *'.'* ]]; then
+            return
+        fi
+        if [ ! "$isp_smtp_port" ]; then
+            isp_smtp_port=465
+        fi
+        if [ ! "$isp_smtp_username" ]; then
+            return
+        fi
+        if [ ! "$isp_smtp_password" ]; then
+            return
+        fi
+
+        isp_smtp_domain_alias=
+        isp_smtp_domain_alias_line=
+        temp_proxy_file=/tmp/emailproxy.txt
+        host "$isp_smtp_domain" > $temp_proxy_file
+        if [ -f $temp_proxy_file ]; then
+            temp_proxy_file_lines=$(wc -l < "$temp_proxy_file")
+            # shellcheck disable=SC2086
+            if [ $temp_proxy_file_lines -ge 2 ]; then
+                alias_str=$' alias '
+                if grep -q "$alias_str" $temp_proxy_file; then
+                    # shellcheck disable=SC2002
+                    line_str=$(cat "$temp_proxy_file" | grep "$alias_str" | awk 'NF>1{print $NF}')
+                    if [ ${#line_str} -gt 4 ]; then
+                        if [[ "$line_str" == *'.' ]]; then
+                            # remove the last character
+                            #shellcheck disable=SC2116
+                            line_str2=$(echo ${line_str::-1})
+                            line_str="$line_str2"
+                        fi
+
+                        if [[ "$line_str" == *'.'* ]]; then
+                            # line to be added to the exim password file
+                            isp_smtp_domain_alias="${line_str}"
+                            isp_smtp_domain_alias_line="${isp_smtp_domain_alias}:${isp_smtp_username}:${isp_smtp_password}"
+                        fi
+                    fi
+                fi
+            fi
+            rm $temp_proxy_file
+        fi
+
+        { echo '# password file used when the local exim is authenticating to a remote';
+          echo '# host as a client.';
+          echo '#';
+          echo '# see exim4_passwd_client(5) for more documentation';
+          echo '#';
+          echo "${isp_smtp_domain_alias_line}";
+          echo "${isp_smtp_domain}:${isp_smtp_username}:${isp_smtp_password}"; } > /etc/exim4/passwd.client
+        if ! grep -q 'dc_eximconfig_configtype=' /etc/exim4/update-exim4.conf.conf; then
+            echo "dc_eximconfig_configtype='$email_server_type'" >> /etc/exim4/update-exim4.conf.conf
+        else
+            sed -i "s|dc_eximconfig_configtype=.*|dc_eximconfig_configtype='$email_server_type'|g" /etc/exim4/update-exim4.conf.conf
+        fi
+        sed -i "s|dc_smarthost=.*|dc_smarthost='${isp_smtp_domain}::${isp_smtp_port}'|g" /etc/exim4/update-exim4.conf.conf
+        if [[ "$(hostname)" != *'.local' ]]; then
+            sed -i "s|dc_readhost=.*|dc_readhost='$(hostname)'|g" /etc/exim4/update-exim4.conf.conf
+        fi
+        sed -i "s|tls_on_connect_ports=.*|tls_on_connect_ports=${isp_smtp_port}|g" /etc/exim4/conf.d/main/03_exim4-config_tlsoptions
+
+        if ! grep -q 'protocol = smtps' /etc/exim4/conf.d/transport/30_exim4-config_remote_smtp_smarthost; then
+            sed -i '/driver = smtp/a protocol = smtps' /etc/exim4/conf.d/transport/30_exim4-config_remote_smtp_smarthost
+            sed -i 's|protocol = smtps|  protocol = smtps|g' /etc/exim4/conf.d/transport/30_exim4-config_remote_smtp_smarthost
+        fi
+        if ! grep -q 'hosts_require_tls=' /etc/exim4/conf.d/transport/30_exim4-config_remote_smtp_smarthost; then
+            sed -i "/driver = smtp/a hosts_require_tls=${isp_smtp_domain}" /etc/exim4/conf.d/transport/30_exim4-config_remote_smtp_smarthost
+            sed -i "s|hosts_require_tls=${isp_smtp_domain}|  hosts_require_tls=${isp_smtp_domain}|g" /etc/exim4/conf.d/transport/30_exim4-config_remote_smtp_smarthost
+        fi
+    fi
+
+    sed -i "s|dc_use_split_config=.*|dc_use_split_config='true'|g" /etc/exim4/update-exim4.conf.conf
+
+    chown root:Debian-exim /etc/exim4/passwd.client
+    chmod 640 /etc/exim4/passwd.client
+
+    update-exim4.conf.template -r
+    update-exim4.conf
+    dpkg-reconfigure --frontend noninteractive exim4-config
+    systemctl restart exim4
+
+    email_add_xmpp_headers
+}
+
+function email_change_relay {
+    curr_ip_address="$1"
+    email_relay_base=$(echo "$curr_ip_address" | awk -F '.' '{print $1"."$2"."$3}')
+    RELAY_NETS="${email_relay_base}.0/24"
+    sed -i "s|dc_relay_nets=.*|dc_relay_nets='$RELAY_NETS'|g" /etc/exim4/update-exim4.conf.conf
+    dpkg-reconfigure --frontend noninteractive exim4-config
+}
+
+function create_procmail {
+    if [ ! -d /etc/exim4 ]; then
+        return
+    fi
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+    if [ ! -f "/home/$MY_USERNAME/.procmailrc" ]; then
+        { echo "MAILDIR=\$HOME/Maildir";
+          echo "DEFAULT=\$MAILDIR/";
+          echo "LOGFILE=\$HOME/log/procmail.log";
+          echo 'LOGABSTRACT=all';
+          echo '';
+          echo '# Test for an empty or missing subject line';
+          echo "SUBJ_=\$(formail -xSubject: \\";
+          echo "        | expand | sed -e 's/^[ ]*//g' -e 's/[ ]*\$//g')";
+          echo ':0';
+          echo '  * SUBJ_ ?? ^^^^';
+          echo '/dev/null';
+          echo '';
+          echo $"# Tripwire reports which have no violations don't need to be logged";
+          echo ':0 BD:'; } > "/home/$MY_USERNAME/.procmailrc"
+        TRIPWIRE_VIOLATIONS_STR=$'Total violations found:  0'
+        { echo "  * .*$TRIPWIRE_VIOLATIONS_STR";
+          echo '/dev/null';
+          echo ''; } >> "/home/$MY_USERNAME/.procmailrc"
+        chown "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME/.procmailrc"
+    fi
+
+    mkdir -p "/home/$MY_USERNAME/Maildir/admin/new"
+    mkdir -p "/home/$MY_USERNAME/Maildir/admin/cur"
+    chown -R "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME/Maildir/admin"
+
+    if [ ! -f /etc/skel/.procmailrc ]; then
+        cp "/home/$MY_USERNAME/.procmailrc" /etc/skel/.procmailrc
+        chown root:root /etc/skel/.procmailrc
+    fi
+
+    if [ -f /usr/bin/procmail ]; then
+        chmod 6755 /usr/bin/procmail
+    fi
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function handle_admin_emails {
+    # keep emails for root in a separate folder
+    if [ -d "/home/$MY_USERNAME/Maildir/admin" ]; then
+        return
+    fi
+
+    "${PROJECT_NAME}-addemail" -u "$MY_USERNAME" -e "root@$DEFAULT_DOMAIN_NAME" -g admin --public no
+}
+
+function spam_filtering {
+    if [ ! -d /etc/exim4 ]; then
+        return
+    fi
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+    INSTALL_PACKAGES exim4-daemon-heavy
+    INSTALL_PACKAGES spamassassin
+    if [ ! -f /etc/default/spamassassin ]; then
+        echo 'Spamassassin was not installed'
+        exit 72
+    fi
+    sa-update -v
+    sed -i 's/ENABLED=0/ENABLED=1/g' /etc/default/spamassassin
+    sed -i 's/# spamd_address = 127.0.0.1 783/spamd_address = 127.0.0.1 783/g' /etc/exim4/exim4.conf.template
+    # This configuration is based on https://wiki.debian.org/DebianSpamAssassin
+    sed -i 's/local_parts = postmaster/local_parts = postmaster:abuse/g' /etc/exim4/conf.d/acl/30_exim4-config_check_rcpt
+    sed -i '/domains = +local_domains : +relay_to_domains/a\    set acl_m0 = rfcnames' /etc/exim4/conf.d/acl/30_exim4-config_check_rcpt
+    # This prevents .onion domains from being accepted
+    #sed -i "s/accept/accept condition = \${if eq{\$acl_m0}{rfcnames} {1}{0}}/g" /etc/exim4/conf.d/acl/40_exim4-config_check_data
+
+    { echo "warn  message = X-Spam-Score: \$spam_score (\$spam_bar)";
+      echo '      spam = nobody:true';
+      echo 'warn  message = X-Spam-Flag: YES';
+      echo '      spam = nobody';
+      echo "warn  message = X-Spam-Report: \$spam_report";
+      echo '      spam = nobody';
+      echo '# reject spam at high scores (> 12)';
+      echo "deny  message = This message scored \$spam_score spam points.";
+      echo '      spam = nobody:true';
+      echo "      condition = \${if >{\$spam_score_int}{120}{1}{0}}"; } >> /etc/exim4/conf.d/acl/40_exim4-config_check_data
+    # procmail configuration
+    { echo '# get spamassassin to check emails';
+      echo ':0fw: .spamassassin.lock';
+      echo '  * < 256000';
+      echo '| spamc';
+      echo '# strong spam are discarded';
+      echo ':0';
+      echo '  * ^X-Spam-Level: \*\*\*\*\*\*';
+      echo '/dev/null';
+      echo '# weak spam are kept just in case - clear this out every now and then';
+      echo ':0';
+      echo '  * ^X-Spam-Level: \*\*\*\*\*';
+      echo 'maybe-spam/';
+      echo '# otherwise, marginal spam goes here for revision';
+      echo ':0';
+      echo '  * ^X-Spam-Level: \*\*';
+      echo 'spam/'; } >> "/home/$MY_USERNAME/.procmailrc"
+    chown "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME/.procmailrc"
+    { echo '# get spamassassin to check emails';
+      echo ':0fw: .spamassassin.lock';
+      echo '  * < 256000';
+      echo '| spamc';
+      echo '# strong spam are discarded';
+      echo ':0';
+      echo '  * ^X-Spam-Level: \*\*\*\*\*\*';
+      echo '/dev/null';
+      echo '# weak spam are kept just in case - clear this out every now and then';
+      echo ':0';
+      echo '  * ^X-Spam-Level: \*\*\*\*\*';
+      echo 'maybe-spam/';
+      echo '# otherwise, marginal spam goes here for revision';
+      echo ':0';
+      echo '  * ^X-Spam-Level: \*\*';
+      echo 'spam/'; } >> /etc/skel/.procmailrc
+    # filtering scripts
+    { echo '#!/bin/bash';
+      echo 'for d in /home/*/ ; do';
+      echo "    USERNAME=\$(echo \"\$d\" | awk -F '/' '{print \$3}')";
+      echo "    if [[ \$USERNAME != \"git\" && $USERNAME != \"go\" && \$USERNAME != \"gogs\" && \$USERNAME != \"sync\" ]]; then";
+      echo "        MAILDIR=/home/\$USERNAME/Maildir/.learn-spam";
+      echo "        if [ ! -d \"\$MAILDIR\" ]; then";
+      echo '           exit';
+      echo '        fi';
+      echo "        for f in \$(ls \$MAILDIR/cur)";
+      echo '        do';
+      echo "            spamc -L spam < \"\$MAILDIR/cur/\$f\" > /dev/null";
+      echo "            rm \"\$MAILDIR/cur/\$f\"";
+      echo '        done';
+      echo "        for f in \$(ls \$MAILDIR/new)";
+      echo '        do';
+      echo "            spamc -L spam < \"\$MAILDIR/new/\$f\" > /dev/null";
+      echo "            rm \"\$MAILDIR/new/\$f\"";
+      echo '        done';
+      echo '    fi';
+      echo 'done';
+      echo 'exit 0'; } > /usr/bin/filterspam
+
+    { echo '#!/bin/bash';
+      echo 'for d in /home/*/ ; do';
+      echo "    USERNAME=\$(echo \"\$d\" | awk -F '/' '{print \$3}')";
+      echo "    if [[ \$USERNAME != \"git\" && \$USERNAME != \"go\" && \$USERNAME != \"gogs\" && \$USERNAME != \"sync\" ]]; then";
+      echo "        MAILDIR=/home/\$USERNAME/Maildir/.learn-ham";
+      echo "        if [ ! -d \"\$MAILDIR\" ]; then";
+      echo '            exit';
+      echo '        fi';
+      echo "        for f in \$(ls \$MAILDIR/cur)";
+      echo '        do';
+      echo "            spamc -L ham < \"\$MAILDIR/cur/\$f\" > /dev/null";
+      echo "            rm \"\$MAILDIR/cur/\$f\"";
+      echo '        done';
+      echo "        for f in \$(ls \$MAILDIR/new)";
+      echo '        do';
+      echo "            spamc -L ham < \"\$MAILDIR/new/\$f\" > /dev/null";
+      echo "            rm \"\$MAILDIR/new/\$f\"";
+      echo '        done';
+      echo '    fi';
+      echo 'done';
+      echo 'exit 0'; } > /usr/bin/filterham
+
+    function_check cron_add_mins
+    cron_add_mins 3 '/usr/bin/timeout 120 /usr/bin/filterspam'
+    cron_add_mins 3 '/usr/bin/timeout 120 /usr/bin/filterham'
+    chmod 655 /usr/bin/filterspam /usr/bin/filterham
+    sed -i 's/# use_bayes 1/use_bayes 1/g' /etc/mail/spamassassin/local.cf
+    sed -i 's/# bayes_auto_learn 1/bayes_auto_learn 1/g' /etc/mail/spamassassin/local.cf
+
+    # user preferences
+    if [ ! -d "/home/$MY_USERNAME/.spamassassin" ]; then
+        mkdir "/home/$MY_USERNAME/.spamassassin"
+        { echo $'# How many points before a mail is considered spam.';
+          echo '# required_score        5';
+          echo '';
+          echo $'# Whitelist and blacklist addresses are now file-glob-style patterns, so';
+          echo $'# "friend@somewhere.com", "*@isp.com", or "*.domain.net" will all work.';
+          echo '# whitelist_from    someone@somewhere.com';
+          echo '';
+          echo $'# Add your own customised scores for some tests below.  The default scores are';
+          echo $'# read from the installed spamassassin rules files, but you can override them';
+          echo $'# here.  To see the list of tests and their default scores, go to';
+          echo '# http://spamassassin.apache.org/tests.html .';
+          echo '#';
+          echo '# score SYMBOLIC_TEST_NAME n.nn';
+          echo '';
+          echo $'# Speakers of Asian languages, like Chinese, Japanese and Korean, will almost';
+          echo $'# definitely want to uncomment the following lines.  They will switch off some';
+          echo $'# rules that detect 8-bit characters, which commonly trigger on mails using CJK';
+          echo $'# character sets, or that assume a western-style charset is in use. ';
+          echo '# ';
+          echo '# score HTML_COMMENT_8BITS  0';
+          echo '# score UPPERCASE_25_50     0';
+          echo '# score UPPERCASE_50_75     0';
+          echo '# score UPPERCASE_75_100    0';
+          echo '# score OBSCURED_EMAIL      0';
+          echo '';
+          echo $'# Speakers of any language that uses non-English, accented characters may wish';
+          echo $'# to uncomment the following lines.   They turn off rules that fire on';
+          echo $'# misformatted messages generated by common mail apps in contravention of the';
+          echo $'# email RFCs.';
+          echo '';
+          echo '# score SUBJ_ILLEGAL_CHARS      0';
+          echo '';
+          echo '# Allow from onion domains';
+          echo 'whitelist_from    *.onion'; } > "/home/$MY_USERNAME/.spamassassin/user_prefs"
+        cp -r "/home/$MY_USERNAME/.spamassassin" /etc/skel
+    fi
+    # this must be accessible by root
+    chown -R "$MY_USERNAME":root "/home/$MY_USERNAME/.spamassassin"
+
+    # script to keep spamassassin running
+    # There is a systemd script from the debian package, but it doesn't restart on failure
+    # and also doesn't ensure start after networking is up. If that is eventually fixed
+    # then this script and the cron job which runs it can be removed.
+    script_name=/usr/bin/run-spamassassin
+    { echo '#!/bin/bash';
+      echo "current_state=\$(systemctl status spamassassin)";
+      echo "if [[ \"\$current_state\" != *\"(running)\"* ]]; then";
+      echo '    systemctl restart spamassassin';
+      echo 'fi';
+      echo 'exit 0'; } > $script_name
+    chmod +x $script_name
+
+    systemctl start spamassassin
+    systemctl restart exim4
+    systemctl restart cron
+    function_check cron_add_mins
+    cron_add_mins 10 "$script_name 2> /dev/null"
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function configure_imap {
+    if [ ! -d /etc/exim4 ]; then
+        return
+    fi
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+
+    INSTALL_PACKAGES dovecot-imapd
+
+    if [ ! -d /etc/dovecot ]; then
+        echo $"ERROR: Dovecot does not appear to have installed. $CHECK_MESSAGE"
+        exit 48
+    fi
+
+    if [[ "$(cert_exists dovecot)" == "0" ]]; then
+        "${PROJECT_NAME}-addcert" -h dovecot --dhkey "$DH_KEYLENGTH"
+        # shellcheck disable=SC2034
+        CHECK_HOSTNAME=dovecot
+        check_certificates dovecot
+    fi
+
+    chmod 600 /etc/shadow
+    chmod 600 /etc/gshadow
+    if ! grep -q "default:" /etc/group; then
+        groupadd default
+    fi
+    usermod -g default dovecot
+    chmod 0000 /etc/shadow
+    chmod 0000 /etc/gshadow
+
+    chown root:default /etc/ssl/certs/dovecot.*
+    chown root:default /etc/ssl/private/dovecot.*
+    chown root:default "/etc/ssl/certs/${DEFAULT_DOMAIN_NAME}.*"
+    chown root:default "/etc/ssl/private/${DEFAULT_DOMAIN_NAME}.*"
+
+    if [ ! -f /etc/dovecot/conf.d/10-ssl.conf ]; then
+        echo $'Unable to find /etc/dovecot/conf.d/10-ssl.conf'
+        exit 83
+    fi
+    sed -i 's|#ssl =.*|ssl = no|g' /etc/dovecot/conf.d/10-ssl.conf
+    sed -i 's|ssl =.*|ssl = no|g' /etc/dovecot/conf.d/10-ssl.conf
+    sed -i "s|#ssl_cert =.*|ssl_cert = </etc/ssl/certs/dovecot.crt|g" /etc/dovecot/conf.d/10-ssl.conf
+    sed -i "s|ssl_cert =.*|ssl_cert = </etc/ssl/certs/dovecot.crt|g" /etc/dovecot/conf.d/10-ssl.conf
+    sed -i "s|#ssl_key =.*|ssl_key = </etc/ssl/private/dovecot.key|g" /etc/dovecot/conf.d/10-ssl.conf
+    sed -i "s|ssl_key =.*|ssl_key = </etc/ssl/private/dovecot.key|g" /etc/dovecot/conf.d/10-ssl.conf
+    sed -i "s|#ssl_dh_parameters_length.*|ssl_dh_parameters_length = ${DH_KEYLENGTH}|g" /etc/dovecot/conf.d/10-ssl.conf
+    sed -i 's/#ssl_prefer_server_ciphers.*/ssl_prefer_server_ciphers = yes/g' /etc/dovecot/conf.d/10-ssl.conf
+    sed -i "s|#ssl_protocols =.*|ssl_protocols = '$SSL_PROTOCOLS'|g" /etc/dovecot/conf.d/10-ssl.conf
+    sed -i "s|ssl_protocols =.*|ssl_protocols = '$SSL_PROTOCOLS'|g" /etc/dovecot/conf.d/10-ssl.conf
+    echo "ssl_cipher_list = '$SSL_CIPHERS'" >> /etc/dovecot/conf.d/10-ssl.conf
+
+    if [ ! -f /etc/dovecot/conf.d/10-master.conf ]; then
+        echo $'Unable to find /etc/dovecot/conf.d/10-master.conf'
+        exit 49
+    fi
+    sed -i 's/#process_limit =.*/process_limit = 100/g' /etc/dovecot/conf.d/10-master.conf
+
+    if [ ! -f /etc/dovecot/conf.d/10-logging.conf ]; then
+        echo $'Unable to find /etc/dovecot/conf.d/10-logging.conf'
+        exit 48
+    fi
+    sed -i 's/#auth_verbose.*/auth_verbose = yes/g' /etc/dovecot/conf.d/10-logging.conf
+
+    if [ ! -f /etc/dovecot/dovecot.conf ]; then
+        echo $'Unable to find /etc/dovecot/dovecot.conf'
+        exit 43
+    fi
+    sed -i 's/#listen =.*/listen = */g' /etc/dovecot/dovecot.conf
+
+    if [ ! -f /etc/dovecot/conf.d/10-auth.conf ]; then
+        echo $'Unable to find /etc/dovecot/conf.d/10-auth.conf'
+        exit 84
+    fi
+    sed -i 's/#disable_plaintext_auth =.*/disable_plaintext_auth = no/g' /etc/dovecot/conf.d/10-auth.conf
+    sed -i 's/auth_mechanisms =.*/auth_mechanisms = plain login/g' /etc/dovecot/conf.d/10-auth.conf
+
+    if [ ! -f /etc/dovecot/conf.d/10-mail.conf ]; then
+        echo $'Unable to find /etc/dovecot/conf.d/10-mail.conf'
+        exit 42
+    fi
+    sed -i 's|mail_location =.*|mail_location = maildir:~/Maildir:LAYOUT=fs|g' /etc/dovecot/conf.d/10-mail.conf
+
+    # This long notify interval makes the system more suited for use with
+    # battery powered mobile devices
+    sed -i 's|#imap_idle_notify_interval =.*|imap_idle_notify_interval = 29|g' /etc/dovecot/conf.d/20-imap.conf
+
+    if [ -f /var/lib/dovecot/ssl-parameters.dat ]; then
+        rm /var/lib/dovecot/ssl-parameters.dat
+    fi
+
+    if [ -f /etc/systemd/system/sockets.target.wants/dovecot.socket ]; then
+        rm /etc/systemd/system/sockets.target.wants/dovecot.socket
+    fi
+
+    # Separate logging, otherwise syslog is used
+    if ! grep -q "# logging" /etc/dovecot/dovecot.conf; then
+        { echo '';
+          echo '# logging';
+          echo 'log_path = /var/log/dovecot.log';
+          echo 'info_log_path = /var/log/dovecot-info.log';
+          echo 'debug_log_path = /var/log/dovecot-debug.log'; } >> /etc/dovecot/dovecot.conf
+    fi
+
+    # fix minor bug with missing seconds
+    sed -i 's|imap_idle_notify_interval.*|imap_idle_notify_interval = 29s|g' /etc/dovecot/conf.d/20-imap.conf
+
+    systemctl restart dovecot
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function configure_imap_client_certs {
+    if [ ! -d /etc/exim4 ]; then
+        return
+    fi
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+    # http://strange.systems/certificate-based-auth-with-dovecot-sendmail/
+    sed -i 's|#default_process_limit =.*|default_process_limit = 100|g' /etc/dovecot/conf.d/10-master.conf
+    sed -i 's/disable_plaintext_auth =.*/disable_plaintext_auth = yes/g' /etc/dovecot/conf.d/10-auth.conf
+    sed -i 's|#auth_ssl_require_client_cert =.*|auth_ssl_require_client_cert = yes|g' /etc/dovecot/conf.d/10-auth.conf
+    sed -i 's|#auth_ssl_username_from_cert =.*|auth_ssl_username_from_cert = yes|g' /etc/dovecot/conf.d/10-auth.conf
+    sed -i "s|#ssl_ca =.*|ssl_ca = /etc/ssl/certs/ca-$DEFAULT_DOMAIN_NAME.crt|g" /etc/dovecot/conf.d/10-ssl.conf
+    sed -i 's|#ssl_cert_username_field =.*|ssl_cert_username_field = commonName|g' /etc/dovecot/conf.d/10-ssl.conf
+    sed -i 's|#ssl_verify_client_cert =.*|ssl_verify_client_cert = yes|g' /etc/dovecot/conf.d/10-ssl.conf
+    if ! grep -q "passdb {" /etc/dovecot/conf.d/10-auth.conf; then
+        { echo '';
+          echo 'passdb {';
+          echo '  driver = passwd-file';
+          echo '  args = /etc/dovecot/passwd-file';
+          echo '  deny = no';
+          echo '  master = no';
+          echo '  pass = no';
+          echo '}'; } >> /etc/dovecot/conf.d/10-auth.conf
+    fi
+    if [[ "$ONION_ONLY" == "no" ]]; then
+        # make a CA cert
+        if [ ! -f "/etc/ssl/private/ca-$DEFAULT_DOMAIN_NAME.key" ]; then
+            if [[ "$LETSENCRYPT_ENABLED" != "yes" ]]; then
+                "${PROJECT_NAME}-addcert" -h "$DEFAULT_DOMAIN_NAME" --ca "" --dhkey "$DH_KEYLENGTH"
+            else
+                "${PROJECT_NAME}-addcert" -e "$DEFAULT_DOMAIN_NAME" -s "$LETSENCRYPT_SERVER" --ca "" --dhkey "$DH_KEYLENGTH" --email "$MY_EMAIL_ADDRESS"
+            fi
+        fi
+    fi
+    # CA configuration
+    { echo '[ ca ]';
+      echo "default_ca = dovecot-ca";
+      echo '';
+      echo '[ crl_ext ]';
+      echo 'authorityKeyIdentifier=keyid:always';
+      echo '';
+      echo '[ dovecot-ca ]';
+      echo 'new_certs_dir = .';
+      echo 'unique_subject = no';
+      echo "certificate = /etc/ssl/certs/ca-$DEFAULT_DOMAIN_NAME.crt";
+      echo 'database = ssldb';
+      echo "private_key = /etc/ssl/private/ca-$DEFAULT_DOMAIN_NAME.key";
+      echo 'serial = sslserial';
+      echo 'default_days = 3650';
+      echo 'default_md = sha256';
+      echo 'default_bits = 2048';
+      echo 'policy = dovecot-ca_policy';
+      echo 'x509_extensions = dovecot-ca_extensions';
+      echo '';
+      echo '[ dovecot-ca_policy ]';
+      echo 'commonName = supplied';
+      echo 'stateOrProvinceName = supplied';
+      echo 'countryName = supplied';
+      echo 'emailAddress = optional';
+      echo 'organizationName = supplied';
+      echo 'organizationalUnitName = optional';
+      echo '';
+      echo '[ dovecot-ca_extensions ]';
+      echo 'basicConstraints = CA:false';
+      echo 'subjectKeyIdentifier = hash';
+      echo 'authorityKeyIdentifier = keyid:always';
+      echo 'keyUsage = digitalSignature,keyEncipherment';
+      echo 'extendedKeyUsage = clientAuth'; } > /etc/ssl/dovecot-ca.cnf
+    if [ -f /etc/ssl/ssldb ]; then
+        rm /etc/ssl/ssldb
+    fi
+    if [ -f /etc/ssl/sslserial ]; then
+        rm /etc/ssl/sslserial
+    fi
+    touch /etc/ssl/ssldb
+    echo 0001 > /etc/ssl/sslserial
+    #${PROJECT_NAME}-clientcert -u $MY_USERNAME
+    systemctl restart dovecot
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function create_gpg_subkey {
+    # Note: currently not used
+    if [ ! -d /etc/exim4 ]; then
+        return
+    fi
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+    INSTALL_PACKAGES gnupg
+
+    GPG_KEY_USAGE=$1
+    if [[ "$GPG_KEY_USAGE" != "sign" && "$GPG_KEY_USAGE" != "auth" && "$GPG_KEY_USAGE" != "encrypt" ]]; then
+        echo $"Unknown subkey usage: $GPG_KEY_USAGE"
+        echo $'Available types: sign|auth|encrypt'
+        exit 14
+    fi
+
+    KEYGRIP=$(gpg --fingerprint --fingerprint "$MY_EMAIL_ADDRESS" | grep fingerprint | tail -1 | cut -d= -f2 | sed -e 's/ //g')
+
+    if [ ! "$MY_NAME" ]; then
+        MY_NAME="$MY_USERNAME"
+    fi
+
+    # Generate a GPG subkey
+    { echo 'Key-Type: eddsa';
+      echo 'Key-Curve: Ed25519';
+      echo 'Key-Usage: sign';
+      echo 'Subkey-Type: ecdh';
+      echo 'Subkey-Curve: Curve25519';
+      echo 'Preferences: SHA512 SHA384 SHA256 SHA224 CAMELLIA256 TWOFISH AES256 CAMELLIA192 AES192 Uncompressed ZIP ZLIB BZIP2';
+      echo 'Subkey-Usage: encrypt';
+      echo "Name-Real:  $MY_NAME";
+      echo "Name-Email: $MY_EMAIL_ADDRESS";
+      echo "Name-Comment: $GPG_KEY_USAGE";
+      echo 'Expire-Date: 0';
+      echo "Passphrase: $PROJECT_NAME";
+      echo '%commit';
+      echo '%echo gpg subkey generated'; } > "/home/$MY_USERNAME/gpg-genkey.conf"
+    chown "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME/gpg-genkey.conf"
+    su -m root -c "gpg --homedir /home/$MY_USERNAME/.gnupg --batch --full-gen-key /home/$MY_USERNAME/gpg-genkey.conf" - "$MY_USERNAME"
+    chown -R "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME/.gnupg"
+
+    rm "/home/$MY_USERNAME/gpg-genkey.conf"
+
+    # shellcheck disable=SC2034
+    MY_GPG_SUBKEY_ID=$(gpg_pubkey_from_email "$MY_USERNAME" "$MY_EMAIL_ADDRESS")
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function gpg_key_exists {
+    key_owner_username="$1"
+    key_search_text="$2"
+    if [[ $key_owner_username != "root" ]]; then
+        KEY_EXISTS=$(su -c "gpg --list-keys \"${key_search_text}\"" - "$key_owner_username")
+    else
+        KEY_EXISTS=$(gpg --list-keys "${key_search_text}")
+    fi
+    if [ ! "$KEY_EXISTS" ]; then
+        echo "no"
+        return
+    fi
+    if [[ "$KEY_EXISTS" == *"error"* ]]; then
+        echo "no"
+        return
+    fi
+    echo "yes"
+}
+
+function configure_gpg {
+    if [ ! -d /etc/exim4 ]; then
+        return
+    fi
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+    INSTALL_PACKAGES gnupg dirmngr
+    printf '%%Assuan%%\nsocket=/dev/shm/S.dirmngr\n' > ~/.gnupg/S.dirmngr
+
+    check_email_address_exists
+
+    gpg_dir="/home/$MY_USERNAME/.gnupg"
+
+    # if gpg keys directory was previously imported from usb
+    if [ -d "$gpg_dir" ]; then
+        echo $'GPG directory exists'
+    else
+        echo $"GPG directory $gpg_dir was not found"
+    fi
+    if [ -d "$gpg_dir" ]; then
+        echo $'GPG keys were imported'
+        sed -i "s|keyserver hkp://keys.gnupg.net|keyserver $GPG_KEYSERVER|g" "$gpg_dir/gpg.conf"
+        MY_GPG_PUBLIC_KEY_ID=$(gpg_pubkey_from_email "$MY_USERNAME" "$MY_EMAIL_ADDRESS")
+        if [ ${#MY_GPG_PUBLIC_KEY_ID} -lt 4 ]; then
+            echo $'GPG public key ID could not be obtained'
+        else
+            if [[ "$MY_GPG_PUBLIC_KEY_ID" == *'error'* ]]; then
+                echo $"Can't locate gpg key"
+            else
+                chown -R "$MY_USERNAME":"$MY_USERNAME" "$gpg_dir"
+                chmod 700 "$gpg_dir"
+                chmod 600 "$gpg_dir/"*
+                printf '%%Assuan%%\nsocket=/dev/shm/S.dirmngr\n' > "/home/$MY_USERNAME/.gnupg/S.dirmngr"
+                if [ -d "/home/$MY_USERNAME/.gnupg/crls.d" ]; then
+                    chmod +x "/home/$MY_USERNAME/.gnupg/crls.d"
+                fi
+                mark_completed "${FUNCNAME[0]}"
+                return
+            fi
+        fi
+    fi
+
+    if [ ! -d "$gpg_dir" ]; then
+        mkdir "$gpg_dir"
+        echo "keyserver $GPG_KEYSERVER" >> "$gpg_dir/gpg.conf"
+        echo 'keyserver-options auto-key-retrieve' >> "$gpg_dir/gpg.conf"
+    fi
+
+    sed -i "s|keyserver hkp://keys.gnupg.net|keyserver $GPG_KEYSERVER|g" "$gpg_dir/gpg.conf"
+    if ! grep -q 'keyserver hkps.pool.sks-keyservers.net' "$gpg_dir/gpg.conf"; then
+        echo 'keyserver hkps://hkps.pool.sks-keyservers.net' >> "$gpg_dir/gpg.conf"
+    fi
+
+    gpg_agent_setup root
+    gpg_agent_setup "$MY_USERNAME"
+
+    if ! grep -q "# default preferences" "$gpg_dir/gpg.conf"; then
+        { echo '';
+          echo '# default preferences';
+          echo 'personal-digest-preferences SHA256';
+          echo 'cert-digest-algo SHA256';
+          echo 'default-preference-list SHA512 SHA384 SHA256 SHA224 AES256 AES192 AES CAST5 ZLIB BZIP2 ZIP Uncompressed'; } >> "$gpg_dir/gpg.conf"
+    fi
+
+    chown -R "$MY_USERNAME":"$MY_USERNAME" "$gpg_dir"
+    chmod 700 "$gpg_dir"
+    chmod 600 "$gpg_dir/"*
+    printf '%%Assuan%%\nsocket=/dev/shm/S.dirmngr\n' > "$gpg_dir/S.dirmngr"
+    if [ -d "$gpg_dir/crls.d" ]; then
+        chmod +x "$gpg_dir/crls.d"
+    fi
+
+    if [[ "$MY_GPG_PUBLIC_KEY" && "$MY_GPG_PRIVATE_KEY" ]]; then
+        echo $'Importing GPG keys from file'
+        echo $"Public key:  $MY_GPG_PUBLIC_KEY"
+        echo $"Private key: $MY_GPG_PRIVATE_KEY"
+
+        # use your existing GPG keys which were exported
+        if [ ! -f "$MY_GPG_PUBLIC_KEY" ]; then
+            echo $"GPG public key file $MY_GPG_PUBLIC_KEY was not found"
+            exit 24
+        fi
+
+        if [ ! -f "$MY_GPG_PRIVATE_KEY" ]; then
+            echo $"GPG private key file $MY_GPG_PRIVATE_KEY was not found"
+            exit 53
+        fi
+
+        gpg_import_public_key "$MY_USERNAME" "$MY_GPG_PUBLIC_KEY"
+        gpg_import_private_key "$MY_USERNAME" "$MY_GPG_PRIVATE_KEY"
+
+        KEY_EXISTS=$(gpg_key_exists "$MY_USERNAME" "$MY_EMAIL_ADDRESS" | tail -n 1)
+        if [[ $KEY_EXISTS == "no" ]]; then
+            echo $"The GPG key for $MY_EMAIL_ADDRESS could not be imported"
+            exit 13
+        fi
+
+        # for security ensure that the private key file doesn't linger around
+        rm "$MY_GPG_PRIVATE_KEY"
+        MY_GPG_PUBLIC_KEY_ID=$(gpg_pubkey_from_email "$MY_USERNAME" "$MY_EMAIL_ADDRESS")
+        if [ ${#MY_GPG_PUBLIC_KEY_ID} -lt 4 ]; then
+            echo $'GPG public key ID could not be obtained'
+        fi
+    else
+        # Generate a GPG key
+        if [ -f "$IMAGE_PASSWORD_FILE" ]; then
+            gpg_create_key "$MY_USERNAME" "$(printf "%s" "$(cat "$IMAGE_PASSWORD_FILE")")"
+        else
+            gpg_create_key "$MY_USERNAME" "$PROJECT_NAME"
+        fi
+        MY_GPG_PUBLIC_KEY_ID=$(gpg_pubkey_from_email "$MY_USERNAME" "$MY_EMAIL_ADDRESS")
+        MY_GPG_PUBLIC_KEY=/tmp/public_key.gpg
+        gpg_export_public_key "$MY_USERNAME" "$MY_GPG_PUBLIC_KEY_ID" "$MY_GPG_PUBLIC_KEY"
+    fi
+
+    if [ ! -d /root/.gnupg ]; then
+        cp -r "/home/$MY_USERNAME/.gnupg" /root/
+        chmod 700 /root/.gnupg
+        chmod 600 /root/.gnupg/*
+        printf '%%Assuan%%\nsocket=/dev/shm/S.dirmngr\n' > /root/.gnupg/S.dirmngr
+        if [ -d /root/.gnupg/crls.d ]; then
+            chmod +x /root/.gnupg/crls.d
+        fi
+    fi
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function refresh_gpg_keys {
+    REFRESH_GPG_KEYS_SCRIPT=/tmp/update-gpg-keys
+    { echo '#!/bin/bash';
+      echo "if [ -f /usr/local/bin/${PROJECT_NAME}-sec ]; then";
+      echo "    /usr/bin/timeout 600 /usr/local/bin/${PROJECT_NAME}-sec --refresh yes";
+      echo 'else';
+      echo "    /usr/bin/timeout 600 /usr/bin/${PROJECT_NAME}-sec --refresh yes";
+      echo 'fi';
+      echo 'exit 0'; } > "$REFRESH_GPG_KEYS_SCRIPT"
+    chmod +x "$REFRESH_GPG_KEYS_SCRIPT"
+
+    if [ ! -f /usr/bin/update-gpg-keys ]; then
+        cp "$REFRESH_GPG_KEYS_SCRIPT" /usr/bin/update-gpg-keys
+    else
+        HASH1=$(sha256sum "$REFRESH_GPG_KEYS_SCRIPT" | awk -F ' ' '{print $1}')
+        HASH2=$(sha256sum /usr/bin/update-gpg-keys | awk -F ' ' '{print $1}')
+        if [[ "$HASH1" != "$HASH2" ]]; then
+            cp $REFRESH_GPG_KEYS_SCRIPT /usr/bin/update-gpg-keys
+        fi
+        rm $REFRESH_GPG_KEYS_SCRIPT
+    fi
+
+    REFRESH_GPG_KEYS_SCRIPT=/usr/bin/update-gpg-keys
+    if grep -q "${PROJECT_NAME}-sec" /etc/crontab; then
+        sed -i "/${PROJECT_NAME}-sec /d" /etc/crontab
+    fi
+    if ! grep -q "$REFRESH_GPG_KEYS_SCRIPT" /etc/crontab; then
+        GPG_REFRESH_TIME=$(( RANDOM % 60 ))
+        echo "$GPG_REFRESH_TIME            */$REFRESH_GPG_KEYS_HOURS *   *   *   root cronic $REFRESH_GPG_KEYS_SCRIPT" >> /etc/crontab
+        systemctl restart cron
+    else
+        if ! grep -q "root cronic $REFRESH_GPG_KEYS_SCRIPT" /etc/crontab; then
+            sed -i "s|root $REFRESH_GPG_KEYS_SCRIPT.*|root cronic $REFRESH_GPG_KEYS_SCRIPT|g" /etc/crontab
+        fi
+    fi
+}
+
+function prevent_mail_process_overrun {
+    # This prevents any large buildup of exim processes, perhaps due to
+    # Tor unavailability, from disabling the server
+    { echo '#!/bin/bash';
+      echo "exim_ctr=\$(ps aux | grep \"exim4\" | grep -v grep | wc -l)";
+      echo "if [ \"\$exim_ctr\" -gt 5 ]; then";
+      echo '    systemctl stop exim4';
+      echo '    exim -bp | exiqgrep -i | xargs exim -Mrm 2> /dev/null';
+      echo '    systemctl start exim4';
+      echo 'fi'; } > /usr/bin/exim_check
+    chmod +x /usr/bin/exim_check
+    cron_add_mins 5 '/usr/bin/exim_check'
+}
+
+function populate_keyservers {
+    for d in /home/*/ ; do
+        refresh_keys=
+        USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+        if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+            if [ -f "/home/$USERNAME/.gnupg/gpg.conf" ]; then
+                if ! grep -q "keyserver hkps://hkps.pool.sks-keyservers.net" "/home/$USERNAME/.gnupg/gpg.conf"; then
+                    echo "keyserver hkps://hkps.pool.sks-keyservers.net" >> "/home/$USERNAME/.gnupg/gpg.conf"
+                    refresh_keys=1
+                fi
+            fi
+            if [ $refresh_keys ]; then
+                su -c 'torsocks gpg --refresh-keys' - "$USERNAME"
+            fi
+        fi
+    done
+}
+
+function exim_enable_tls {
+    read_config_param ONION_ONLY
+
+    # TLS only applies on the clearnet
+    if [[ "$ONION_ONLY" != 'no' ]]; then
+        return
+    fi
+
+    # don't conflict with web UI
+    if [[ "$(hostname)" == *'.local' ]]; then
+        return
+    fi
+
+    # check that cert exists
+    if [ ! -f "/etc/letsencrypt/live/$(hostname)/fullchain.pem" ]; then
+        # try to create a letsencrypt cert
+        if [ ! -d "/var/www/$(hostname)/htdocs" ]; then
+            mkdir "/var/www/$(hostname)/htdocs"
+        fi
+        DH_KEYLENGTH=2048
+        LETSENCRYPT_SERVER='https://acme-v02.api.letsencrypt.org/directory'
+        "${PROJECT_NAME}-addcert" -e "$(hostname)" -s "$LETSENCRYPT_SERVER" --dhkey "$DH_KEYLENGTH"
+        # does the cert exist ?
+        if [ ! -f "/etc/letsencrypt/live/$(hostname)/fullchain.pem" ]; then
+            return
+        fi
+    fi
+    if [ ! -f "/etc/letsencrypt/live/$(hostname)/privkey.pem" ]; then
+        return
+    fi
+
+    exim_tls_config_file=/etc/exim4/conf.d/main/03_exim4-config_tlsoptions
+
+    # enable TLS in exim
+    if ! grep -q "MAIN_TLS_ENABLE =" $exim_tls_config_file; then
+        sed -i '/.ifdef MAIN_TLS_ENABLE/i MAIN_TLS_ENABLE = yes' $exim_tls_config_file
+    else
+        sed -i 's|MAIN_TLS_ENABLE =.*|MAIN_TLS_ENABLE = yes|g' $exim_tls_config_file
+    fi
+
+    # add TLS private key in exim
+    if ! grep -q 'MAIN_TLS_PRIVATEKEY =' $exim_tls_config_file; then
+        sed -i "/MAIN_TLS_ENABLE =/a MAIN_TLS_PRIVATEKEY = /etc/letsencrypt/live/$(hostname)/privkey.pem" $exim_tls_config_file
+    else
+        sed -i "s|MAIN_TLS_PRIVATEKEY =.*|MAIN_TLS_PRIVATEKEY = /etc/letsencrypt/live/$(hostname)/privkey.pem|g" $exim_tls_config_file
+    fi
+
+    # add TLS public key in exim
+    if ! grep -q 'MAIN_TLS_CERTIFICATE =' $exim_tls_config_file; then
+        sed -i "/MAIN_TLS_ENABLE =/a MAIN_TLS_CERTIFICATE = /etc/letsencrypt/live/$(hostname)/fullchain.pem" $exim_tls_config_file
+    else
+        sed -i "s|MAIN_TLS_CERTIFICATE =.*|MAIN_TLS_CERTIFICATE = /etc/letsencrypt/live/$(hostname)/fullchain.pem|g" $exim_tls_config_file
+    fi
+
+    exim_sasl_file=/etc/exim4/conf.d/auth/30_exim4-config_examples
+    if grep -q '# plain_saslauthd_server:' $exim_sasl_file; then
+        { echo '';
+          echo 'plain_saslauthd_server:';
+          echo '  driver = plaintext';
+          echo '  public_name = PLAIN';
+          echo "  server_condition = \${if saslauthd{{\$auth2}{\$auth3}}{1}{0}}";
+          echo "  server_set_id = \$auth2";
+          echo '  server_prompts = :';
+          echo '  .ifndef AUTH_SERVER_ALLOW_NOTLS_PASSWORDS';
+          echo "  server_advertise_condition = \${if eq{\$tls_in_cipher}{}{}{*}}";
+          echo '  .endif'; } >> $exim_sasl_file
+        sed -i '/# plain_saslauthd_server:/d' $exim_sasl_file
+    fi
+}
+
+function install_email {
+    if [[ $SYSTEM_TYPE == "mesh"* ]]; then
+        return
+    fi
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+
+    create_email_onion_address
+    check_email_address_exists
+    install_email_basic
+    configure_email_onion
+    update_email_onion_dns
+    configure_email_i2p
+    prevent_mail_process_overrun
+    exim_enable_tls
+    configure_dkim
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function remove_ip_addresses_from_email_logs {
+    { echo '#!/bin/bash';
+      echo '';
+      echo "if grep -q \"= /dev/null\" /etc/php/${PHP_VERSION}/fpm/php-fpm.conf; then";
+      echo '    if [ -f /var/log/exim4/mainlog ]; then';
+      echo '        rm /var/log/exim4/mainlog';
+      echo '    fi';
+      echo '    if [ -f /var/log/exim4/rejectlog ]; then';
+      echo '        rm /var/log/exim4/rejectlog';
+      echo '    fi';
+      echo 'else';
+      echo '    if [ -f /var/log/exim4/mainlog ]; then';
+      echo "        if grep -q '\\[' /var/log/exim4/mainlog; then";
+      echo "            tail -n 50 /var/log/exim4/mainlog | sed 's/\\[[^][]*\\]//g' > /tmp/.exim4_mainlog";
+      echo '            chown Debian-exim:adm /tmp/.exim4_mainlog';
+      echo '            mv /tmp/.exim4_mainlog /var/log/exim4/mainlog';
+      echo '        fi';
+      echo '    fi';
+      echo '    if [ -f /var/log/exim4/rejectlog ]; then';
+      echo "        if grep -q '\\[' /var/log/exim4/rejectlog; then";
+      echo "            tail -n 50 /var/log/exim4/rejectlog | sed 's/\\[[^][]*\\]//g' > /tmp/.exim4_rejectlog";
+      echo '            chown Debian-exim:adm /tmp/.exim4_rejectlog';
+      echo '            mv /tmp/.exim4_rejectlog /var/log/exim4/rejectlog';
+      echo '        fi';
+      echo '    fi';
+      echo 'fi'; } > /usr/bin/exim_log_tidy
+    chmod +x /usr/bin/exim_log_tidy
+    cron_add_mins 1 '/usr/bin/exim_log_tidy'
+}
+
+function email_remove_html {
+    if [ ! -d /usr/lib/python3/dist-packages/html2text ]; then
+        INSTALL_PACKAGES python3-html2text
+    fi
+
+    if [ ! -f /usr/bin/python3 ]; then
+        INSTALL_PACKAGES python3
+    fi
+
+    html_remove_script='/usr/bin/remove_html'
+
+    if [ -f "${html_remove_script}" ]; then
+        for d in /home/*/ ; do
+            USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+            if [ -f "/home/$USERNAME/.procmailrc" ]; then
+                if grep -q '# remove html begin' "/home/$USERNAME/.procmailrc"; then
+                    sed -i '/remove html begin/,/remove html end/d' "/home/$USERNAME/.procmailrc"
+                fi
+                #if ! grep -q '# remove html begin' "/home/$USERNAME/.procmailrc"; then
+                #    { echo '# remove html begin';
+                #      echo ':0 f';
+                #      echo "| /usr/bin/python3 ${html_remove_script}";
+                #      echo ':0 BD:';
+                #      echo '  * .*___INVALID___';
+                #      echo '/dev/null';
+                #      echo '# remove html end'; } >> "/home/$USERNAME/.procmailrc"
+                #fi
+            fi
+        done
+        chmod +x $html_remove_script
+    fi
+}
+
+function email_flooding_defense {
+    acl_check_rcpt_file=/etc/exim4/conf.d/acl/30_exim4-config_check_rcpt
+    email_config_modified=
+    if [ -f "$acl_check_rcpt_file" ]; then
+        if ! grep -q '# Flooding from a particular address' "$acl_check_rcpt_file"; then
+            sed -i "/acl_check_rcpt:/a \\\\n  # Flooding from a particular address\\n  deny\\n    ratelimit = 20 / 1h / per_rcpt / strict / \$sender_address\\n    log_message = Denied (sender address), sending rate of: \$sender_rate by \$sender_address" "$acl_check_rcpt_file"
+            email_config_modified=1
+        fi
+
+        if ! grep -q '# General flooding' "$acl_check_rcpt_file"; then
+            sed -i "/acl_check_rcpt:/a \\\\n  # General flooding\\n  deny\\n    ratelimit = 100 / 1h\\n    log_message = Denied (receive limit), receive limit reached" "$acl_check_rcpt_file"
+            email_config_modified=1
+        fi
+    fi
+
+    if [ $email_config_modified ]; then
+        systemctl restart exim4
+    fi
+}
+
+function email_remove_frozen {
+    no_of_frozen_emails=$(exim -bpr | grep -c frozen)
+    # shellcheck disable=SC2086
+    if [ $no_of_frozen_emails -gt 10 ]; then
+        # shellcheck disable=SC1083
+        exim -bpr | grep frozen | awk {'print $3'} | xargs exim -Mrm
+    fi
+}
+
+function configure_dkim {
+    if [[ "$ONION_ONLY" != 'no' ]]; then
+        return
+    fi
+    # See https://debian-administration.org/article/718/DKIM-signing_outgoing_mail_with_exim4
+    # https://www.mailhardener.com/kb/how-to-create-a-dkim-record-with-openssl
+    create_dmarc_file=
+    if [ ! -f /etc/exim4/dkim_privkey.pem ]; then
+        cd /etc/exim4 || return
+        openssl genrsa -out dkim_privkey.pem 2048
+        if [ -f /etc/exim4/dkim_dnskey.txt ]; then
+            rm /etc/exim4/dkim_dnskey.txt
+        fi
+        if [ -f /etc/exim4/conf.d/main/00_local_macros ]; then
+            rm /etc/exim4/conf.d/main/00_local_macros
+        fi
+        create_dmarc_file=1
+    fi
+    if [ ! -f /etc/exim4/dkim_privkey.pem ]; then
+        echo $'WARN: Could not create DKIM private key'
+        return
+    fi
+    if [ ! -f /etc/exim4/dkim_dnskey.txt ]; then
+        cd /etc/exim4 || return
+        DKIM_PUBKEY=$(openssl rsa -in dkim_privkey.pem -pubout -outform der 2>/dev/null | openssl base64 -A)
+        { echo 'Email Domain Keys Setup';
+          echo '=======================';
+          echo '';
+          echo "Add the following TXT records within your dynamic DNS provider's admin settings.";
+          echo 'Or on your domain registrar site if you are not using dynamic DNS.';
+          echo '';
+          echo 'SPF';
+          echo '---';
+          echo '';
+          echo 'Subdomain: Leave blank';
+          echo "Domain: ${HOSTNAME}";
+          echo "Destination: \"v=spf1 mx a:${HOSTNAME} [include:SMTP relay domain] -all\"";
+          echo '';
+          echo 'DKIM';
+          echo '----';
+          echo '';
+          echo 'Subdomain: libreserver._domainkey';
+          echo "Domain: ${HOSTNAME}";
+          echo "Destination: \"v=DKIM1; p=${DKIM_PUBKEY:0:${#DKIM_PUBKEY}/2}\" \"${DKIM_PUBKEY:${#DKIM_PUBKEY}/2}\"";
+          echo '';
+          echo 'DMARC';
+          echo '-----';
+          echo '';
+          echo 'Subdomain: _dmarc';
+          echo "Domain: ${HOSTNAME}";
+          echo "Destination: \"v=DMARC1; p=reject; adkim=r; aspf=r; fo=1; rua=mailto:admin@${HOSTNAME}\""; } > /etc/exim4/dkim_dnskey.txt
+        create_dmarc_file=1
+    fi
+    if [ -d /etc/exim4/conf.d/main ]; then
+        if [ ! -f /etc/exim4/conf.d/main/00_local_macros ]; then
+            { echo 'DKIM_CANON = relaxed';
+              echo "DKIM_SELECTOR = ${PROJECT_NAME}";
+              echo "DKIM_DOMAIN = ${HOSTNAME}";
+              echo 'DKIM_FILE = /etc/exim4/dkim_privkey.pem'; } > /etc/exim4/conf.d/main/00_local_macros
+            update-exim4.conf.template -r
+            update-exim4.conf
+            dpkg-reconfigure --frontend noninteractive exim4-config
+            systemctl restart exim4
+        fi
+    fi
+    if [ -f /etc/exim4/dkim_dnskey.txt ]; then
+        local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+        webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+        if [ ! -f "${webadmin_install_dir}/dmarc.txt" ]; then
+            create_dmarc_file=1
+        fi
+        if [ $create_dmarc_file ]; then
+            cp /etc/exim4/dkim_dnskey.txt "${webadmin_install_dir}/dmarc.txt"
+            chown www-data:www-data "${webadmin_install_dir}/dmarc.txt"
+        fi
+    fi
+}
+
+# NOTE: deliberately no exit 0

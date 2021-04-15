@@ -1,0 +1,819 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Functions for selecting which apps to install or remove
+#
+# License
+# =======
+#
+# Copyright (C) 2015-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# Array containing names of available apps
+APPS_AVAILABLE=()
+
+# Array containing 1 or 0 indicating installed apps
+APPS_INSTALLED=()
+
+# Apps selected with checklist
+APPS_CHOSEN=()
+
+# A list of the names of installed apps
+APPS_INSTALLED_NAMES=()
+
+# file containing a list of removed apps
+REMOVED_APPS_FILE=/root/removed
+
+INSTALLED_APPS_LIST=/usr/share/${PROJECT_NAME}/installed.txt
+
+# keep a list of which users have been added to which apps
+# so that when a new app is added existing users can be added
+APP_USERS_FILE=$HOME/app_users.txt
+
+if [ ! "$COMPLETION_FILE" ]; then
+    COMPLETION_FILE="$HOME/${PROJECT_NAME}-completed.txt"
+fi
+
+function postinstall_daemon_is_running {
+    daemon_name="$1"
+    if [ ! -f "/etc/systemd/system/${daemon_name}.service" ]; then
+        return
+    fi
+
+    if [[ $(daemon_is_running "$daemon_name") != 'Running' ]]; then
+        echo "$daemon_name daemon is not running. Waiting to see if it starts."
+        sleep 10
+        if [[ $(daemon_is_running "$daemon_name") != 'Running' ]]; then
+            echo "$daemon_name daemon failed to start"
+            APP_INSTALLED=
+        fi
+    fi
+}
+
+# Loads variables defined at the beginning of an app script
+function app_load_variables {
+    app_name=$1
+
+    config_var_name=${app_name}_variables
+    # shellcheck disable=SC2086
+    if [ ! ${!config_var_name} ]; then
+        echo $"${app_name}_variables was not found"
+        return
+    fi
+
+    #shellcheck disable=SC1087,SC2125,SC2178
+    configvarname=$config_var_name[@]
+
+    #shellcheck disable=SC2206
+    configvarname=( ${!configvarname} )
+    # shellcheck disable=SC2068
+    for v in ${configvarname[@]}
+    do
+        read_config_param "$v"
+    done
+}
+
+# Saves variables for a given app script
+function app_save_variables {
+    app_name=$1
+
+    config_var_name=${app_name}_variables
+    #shellcheck disable=SC2086
+    if [ ! ${!config_var_name} ]; then
+        return
+    fi
+
+    #shellcheck disable=SC1087,SC2125,SC2178
+    configvarname=$config_var_name[@]
+
+    #shellcheck disable=SC2206
+    configvarname=( ${!configvarname} )
+    # shellcheck disable=SC2068
+    for v in ${configvarname[@]}
+    do
+        write_config_param "$v" "${!v}"
+    done
+}
+
+# gets the variants list from an app script
+function app_variants {
+    filename=$1
+    variants_line=$(grep 'VARIANTS=' "${filename}")
+    if [[ "$variants_line" == *"'"* ]]; then
+        variants_list=$(echo "$variants_line" | awk -F '=' '{print $2}' | awk -F "'" '{print $2}')
+    else
+        variants_list=$(echo "$variants_line" | awk -F '=' '{print $2}' | awk -F '"' '{print $2}')
+    fi
+    echo "$variants_list"
+}
+
+# whether a given item is in an array
+function item_in_array {
+    local e
+    for e in "${@:2}"; do [[ "$e" == "$1" ]] && return 0; done
+    return 1
+}
+
+# returns a list of available system variants
+# based upon the variants string in each app script
+function available_system_variants {
+    function_check item_in_array
+
+    FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
+
+    new_available_variants_list=()
+    for filename in $FILES
+    do
+        system_variants_list=$(app_variants "$filename")
+        # shellcheck disable=SC2206
+        variants_array=($system_variants_list)
+        # shellcheck disable=SC2068
+        for variant_str in ${variants_array[@]}
+        do
+            if ! item_in_array "${variant_str}" ${new_available_variants_list[@]}; then
+                new_available_variants_list+=("$variant_str")
+            fi
+        done
+    done
+    # shellcheck disable=SC2207
+    available_variants_list=($(sort <<<"${new_available_variants_list[*]}"))
+}
+
+function is_valid_variant {
+    sys_type="$1"
+    available_variants_list=()
+
+    function_check available_system_variants
+    available_system_variants
+
+    # shellcheck disable=SC2068
+    for variant_str in ${available_variants_list[@]}
+    do
+        if [[ "$sys_type" == "$variant_str" ]]; then
+            return "1"
+        fi
+    done
+    return "0"
+}
+
+function show_available_variants {
+    available_variants_list=()
+
+    function_check available_system_variants
+    available_system_variants
+
+    # shellcheck disable=SC2068
+    for variant_str in ${available_variants_list[@]}
+    do
+        echo "  $variant_str"
+    done
+}
+
+# mark a given app as having been removed so that it doesn't get reinstalled on updates
+function remove_app {
+    app_name=$1
+    if [ ! -f $REMOVED_APPS_FILE ]; then
+        touch $REMOVED_APPS_FILE
+    fi
+    if ! grep -Fxq "_${app_name}_" $REMOVED_APPS_FILE; then
+        echo "_${app_name}_" >> $REMOVED_APPS_FILE
+    fi
+    if grep -Fxq "install_${app_name}" "$COMPLETION_FILE"; then
+        sed -i "/install_${app_name}/d" "$COMPLETION_FILE"
+    fi
+    if grep -Fxq "install_${app_name}" "$INSTALLED_APPS_LIST"; then
+        sed -i "/install_${app_name}/d" "$INSTALLED_APPS_LIST"
+    fi
+}
+
+# returns 1 if an app has been marked as removed
+function app_is_removed {
+    app_name="$1"
+    if [ ! -f $REMOVED_APPS_FILE ]; then
+        echo "0"
+        return
+    fi
+
+    if ! grep -Fxq "_${app_name}_" $REMOVED_APPS_FILE; then
+        echo "0"
+    else
+        echo "1"
+    fi
+}
+
+# Allows an app to be reinstalled even if it was previously marked as being removed
+function reinstall_app {
+    app_name=$1
+    if [ ! -f $REMOVED_APPS_FILE ]; then
+        return
+    fi
+    if [[ $(app_is_removed "$app_name") == "1" ]]; then
+        sed -i "/_${app_name}_/d" $REMOVED_APPS_FILE
+    fi
+}
+
+# returns 1 if an app is installed
+function app_is_installed {
+    app_name="$1"
+
+    # Why does this secondary file exist, apart from COMPLETION_FILE ?
+    # It's so that it is visible to unprivileged users from the user control panel
+    if [ -f "$INSTALLED_APPS_LIST" ]; then
+        if ! grep -Fxq "install_${app_name}" "$INSTALLED_APPS_LIST"; then
+            echo "0"
+        else
+            echo "1"
+        fi
+        return
+    fi
+
+    # check the completion file to see if it was installed
+    if [ ! -f "$COMPLETION_FILE" ]; then
+        echo "0"
+        return
+    fi
+
+    if ! grep -Fxq "install_${app_name}" "$COMPLETION_FILE"; then
+        echo "0"
+    else
+        echo "1"
+    fi
+}
+
+function other_app_required {
+    # is another app required before the install of this one?
+    app_name="$1"
+
+    app_filename="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-${app_name}"
+    if [ ! -f "$app_filename" ]; then
+        echo ''
+        return
+    fi
+    if ! grep -q 'REQUIRES_APP=' "$app_filename"; then
+        echo ''
+        return
+    fi
+    grep 'REQUIRES_APP=' "$app_filename" | head -n 1 | awk -F '=' '{print $2}'
+}
+
+function check_other_app_required {
+    app_name="$1"
+    apprequired=$(other_app_required "${app_name}")
+    if [ "$apprequired" ]; then
+        if [[ $(app_is_installed "${apprequired}") != "1" ]]; then
+            echo $"${apprequired} needs to be installed before you can install ${app_name}"
+            exit 61
+        fi
+    fi
+}
+
+function install_completed_remove_progress_screen {
+    local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+    webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+
+    # replace the installing screen with the original index page
+    if [ -f "$webadmin_install_dir/index_app_installing.html" ]; then
+        cp "$webadmin_install_dir/index_app_installing.html" "$webadmin_install_dir/index.html"
+        chown www-data:www-data "$webadmin_install_dir/index.html"
+        rm "$webadmin_install_dir/index_app_installing.html"
+        if [ -f "$webadmin_install_dir/installing_progress.html" ]; then
+            rm "$webadmin_install_dir/installing_progress.html"
+        fi
+    fi
+}
+
+# called at the end of the install section of an app script
+function install_completed {
+    if [ ! "${1}" ]; then
+        exit 67
+    fi
+
+    install_completed_remove_progress_screen
+
+    if ! grep -Fxq "install_${1}" "$COMPLETION_FILE"; then
+        echo "install_${1}" >> "$COMPLETION_FILE"
+    fi
+}
+
+# populates an array of "0" or "1" for whether apps are installed
+function get_apps_installed {
+    # shellcheck disable=SC2068
+    for a in ${APPS_AVAILABLE[@]}
+    do
+        APPS_INSTALLED+=("$(app_is_installed "$a")")
+    done
+}
+
+# populates an array of installed app names
+function get_apps_installed_names {
+    APPS_INSTALLED_NAMES=()
+    # shellcheck disable=SC2068
+    for a in ${APPS_AVAILABLE[@]}
+    do
+        if [[ $(app_is_installed "$a") == "1" ]]; then
+            APPS_INSTALLED_NAMES+=("$a")
+        fi
+    done
+}
+
+function app_not_on_onion_only {
+    app_name="$1"
+
+    read_config_param ONION_ONLY
+
+    if [[ "$ONION_ONLY" != 'no' ]]; then
+        if grep -q "NOT_ON_ONION=1" "/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-${app_name}"; then
+            echo "0"
+            return
+        fi
+    fi
+    echo "1"
+}
+
+function app_not_on_arm {
+    app_name="$1"
+
+    if grep -q "NOT_ON_ARM=1" "/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-${app_name}"; then
+        archtype=$(uname -m)
+        if [[ "$archtype" == 'arm'* ]]; then
+            echo "0"
+            return
+        fi
+    fi
+    echo "1"
+}
+
+function app_not_in_webadmin {
+    app_name="$1"
+
+    if grep -q "NOT_IN_WEBADMIN=1" "/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-${app_name}"; then
+        echo "0"
+        return
+    fi
+    echo "1"
+}
+
+function enough_ram_for_app {
+    app_name="$1"
+
+    if ! grep -q "MINIMUM_RAM_MB=" "/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-${app_name}"; then
+        echo "0"
+        return
+    fi
+
+    minimum_ram_MB=$(grep "MINIMUM_RAM_MB=" "/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-${app_name}" | head -n 1 | awk -F '=' '{print $2}')
+    minimum_ram_bytes=$((minimum_ram_MB * 1024))
+
+    ram_available=$(grep MemTotal /proc/meminfo | awk '{print $2}')
+    if [ "$ram_available" -lt "$minimum_ram_bytes" ]; then
+        echo "1"
+        return
+    fi
+    echo "0"
+}
+
+# detects what apps are available
+function detect_apps {
+    FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
+
+    function_check item_in_array
+
+    APPS_AVAILABLE=()
+    APPS_CHOSEN=()
+
+    # for all the app scripts
+    for filename in $FILES
+    do
+        app_name=$(echo "${filename}" | awk -F '-app-' '{print $2}')
+        if [[ $(enough_ram_for_app "$app_name") == "0" ]]; then
+            if [[ $(app_not_on_onion_only "$app_name") != "0" ]]; then
+                if [[ $(app_not_on_arm "$app_name") != "0" ]]; then
+                    # shellcheck disable=SC2068
+                    if ! item_in_array "${app_name}" ${APPS_AVAILABLE[@]}; then
+                        APPS_AVAILABLE+=("${app_name}")
+                        APPS_CHOSEN+=("0")
+                    fi
+                fi
+            fi
+        fi
+    done
+
+    function_check get_apps_installed
+    get_apps_installed
+    get_apps_installed_names
+}
+
+# detects what apps are available and can be installed
+# If the variants list within an app script is an empty string then
+# it is considered to be too experimental to be installable
+function detect_installable_apps {
+    FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
+
+    APPS_AVAILABLE=()
+    APPS_CHOSEN=()
+    APPS_INSTALLED=()
+    APPS_INSTALLED_NAMES=()
+
+    function_check app_variants
+    function_check app_is_installed
+    function_check item_in_array
+
+    # for all the app scripts
+    for filename in $FILES
+    do
+        app_name=$(echo "${filename}" | awk -F '-app-' '{print $2}')
+
+        if [[ $(enough_ram_for_app "$app_name") == "0" ]]; then
+            if [[ $(app_not_on_onion_only "$app_name") != "0" ]]; then
+                if [[ $(app_not_on_arm "$app_name") != "0" ]]; then
+                    # shellcheck disable=SC2068
+                    if ! item_in_array "${app_name}" ${APPS_AVAILABLE[@]}; then
+                        variants_list=$(app_variants "$filename")
+                        # check for empty string
+                        if [ ${#variants_list} -gt 0 ]; then
+                            APPS_AVAILABLE+=("${app_name}")
+                            APPS_CHOSEN+=("0")
+                            APPS_INSTALLED+=("$(app_is_installed "$app_name")")
+                            if [[ $(app_is_installed "$app_name") == "1" ]]; then
+                                APPS_INSTALLED_NAMES+=("$app_name")
+                            fi
+                        fi
+                    fi
+                fi
+            fi
+        fi
+    done
+}
+
+function detect_installed_apps {
+    FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
+
+    APPS_AVAILABLE=()
+    APPS_INSTALLED=()
+    APPS_INSTALLED_NAMES=()
+
+    function_check app_variants
+    function_check app_is_installed
+    function_check item_in_array
+
+    # for all the app scripts
+    for filename in $FILES
+    do
+        app_name=$(echo "${filename}" | awk -F '-app-' '{print $2}')
+
+        if [[ $(enough_ram_for_app "$app_name") == "0" ]]; then
+            if [[ $(app_not_on_onion_only "$app_name") != "0" ]]; then
+                if [[ $(app_not_on_arm "$app_name") != "0" ]]; then
+                    if [[ $(app_is_installed "$app_name") == "1" ]]; then
+                        # shellcheck disable=SC2068
+                        if ! item_in_array "${app_name}" ${APPS_AVAILABLE[@]}; then
+                            variants_list=$(app_variants "$filename")
+                            if [ ${#variants_list} -gt 0 ]; then
+                                APPS_AVAILABLE+=("${app_name}")
+                                APPS_INSTALLED_NAMES+=("$app_name")
+                            fi
+                        fi
+                    fi
+                fi
+            fi
+        fi
+    done
+}
+
+# creates the APPS_AVAILABLE and APPS_CHOSEN arrays based on
+# the given variant name
+function choose_apps_for_variant {
+    variant_name="$1"
+
+    function_check item_in_array
+    function_check app_variants
+    function_check app_is_removed
+
+    if [ ${#variant_name} -eq 0 ]; then
+        echo $"No variant name for choosing apps"
+        exit 23
+    fi
+
+    FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
+
+    APPS_CHOSEN=()
+
+    # for all the app scripts
+    for filename in $FILES
+    do
+        app_name=$(echo "${filename}" | awk -F '-app-' '{print $2}')
+        if [[ $(enough_ram_for_app "$app_name") == "0" ]]; then
+            if [[ $(app_not_on_onion_only "$app_name") != "0" ]]; then
+                if [[ $(app_not_on_arm "$app_name") != "0" ]]; then
+                    # shellcheck disable=SC2068
+                    if item_in_array "${app_name}" ${APPS_AVAILABLE[@]}; then
+                        if grep -q "VARIANTS=" "${filename}"; then
+                            variants_list=$(app_variants "$filename")
+                            if [[ "${variants_list}" == 'all'* || \
+                                      "${variants_list}" == "$variant_name" || \
+                                      "${variants_list}" == "$variant_name "* || \
+                                      "${variants_list}" == *" $variant_name "* || \
+                                      "${variants_list}" == *" $variant_name" ]]; then
+                                if [[ $(app_is_removed "${a}") == "0" ]]; then
+                                    #echo $"${app_name} chosen"
+                                    APPS_CHOSEN+=("1")
+                                else
+                                    APPS_CHOSEN+=("0")
+                                fi
+                            else
+                                APPS_CHOSEN+=("0")
+                            fi
+                        else
+                            APPS_CHOSEN+=("0")
+                        fi
+                    fi
+                fi
+            fi
+        fi
+    done
+
+    function_check get_apps_installed
+    get_apps_installed
+}
+
+# show a list of apps which have been chosen
+function list_chosen_apps {
+    app_index=0
+    # shellcheck disable=SC2068
+    for a in ${APPS_AVAILABLE[@]}
+    do
+        if [[ ${APPS_CHOSEN[$app_index]} == "1" ]]; then
+            echo $"${a}"
+        fi
+        app_index=$((app_index+1))
+    done
+}
+
+function remove_apps {
+    if [ -f /tmp/.upgrading ]; then
+        return
+    fi
+
+    app_index=0
+    # shellcheck disable=SC2068
+    for a in ${APPS_AVAILABLE[@]}
+    do
+        if [[ ${APPS_INSTALLED[$app_index]} == "1" ]]; then
+            if [[ ${APPS_CHOSEN[$app_index]} == "0" ]]; then
+                echo $"Removing users for application: ${a}"
+
+                function_check remove_users_for_app
+                remove_users_for_app "${a}"
+
+                echo $"Removing application: ${a}"
+
+                function_check app_load_variables
+                app_load_variables "${a}"
+
+                function_check remove_app
+                remove_app "${a}"
+
+                function_check "remove_${a}"
+                "remove_${a}"
+
+                echo $"${a} was removed"
+            fi
+        fi
+        app_index=$((app_index+1))
+    done
+    update_installed_apps_list
+}
+
+function install_apps_interactive {
+    echo $"Interactive installer"
+    app_index=0
+    # shellcheck disable=SC2068
+    for a in ${APPS_AVAILABLE[@]}
+    do
+        if [[ ${APPS_INSTALLED[$app_index]} == "0" ]]; then
+            if [[ ${APPS_CHOSEN[$app_index]} == "1" ]]; then
+                # interactively obtain settings for this app
+                if [[ $(function_exists "install_interactive_${a}") == "1" ]]; then
+                    clear_app_install_progress "${a}"
+                    "install_interactive_${a}"
+                fi
+            fi
+        fi
+
+        app_index=$((app_index+1))
+    done
+    echo $"Interactive settings complete"
+}
+
+function user_added_to_app {
+    user_name="$1"
+    app_name="$2"
+
+    if [[ $(is_valid_user "$user_name") == "1" ]]; then
+        if [[ $(function_exists "add_user_${app_name}") == "1" ]]; then
+            if grep -Fxq "${app_name}_${user_name}" "$APP_USERS_FILE"; then
+                echo "1"
+                return
+            fi
+        fi
+    fi
+    echo "0"
+}
+
+function add_users_after_install {
+    app_name="$1"
+
+    read_config_param MY_USERNAME
+
+    # ensure a minimum password length
+    if [ ! "$MINIMUM_PASSWORD_LENGTH" ]; then
+        MINIMUM_PASSWORD_LENGTH=20
+    fi
+    if [ ${#MINIMUM_PASSWORD_LENGTH} -lt 20 ]; then
+        MINIMUM_PASSWORD_LENGTH=20
+    fi
+
+    ADMIN_USERNAME=$(get_completion_param "Admin user")
+    if [ ! "$ADMIN_USERNAME" ]; then
+        ADMIN_USERNAME=$MY_USERNAME
+    fi
+
+    for d in /home/*/ ; do
+        USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+        if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+            if [[ "$USERNAME" != "$ADMIN_USERNAME" ]]; then
+                if [[ $(user_added_to_app "${USERNAME}" "${app_name}") == "0" ]]; then
+                    #valstr=$"Login for user ${USERNAME}="
+                    app_password=$("${PROJECT_NAME}-pass" -u "$USERNAME" -a login)
+		    if [ "${app_password}" ]; then
+			echo "add_users_after_install: ${app_name}/${USERNAME}"
+			"add_user_${app_name}" "${USERNAME}" "${app_password}"
+			echo "${app_name}_${USERNAME}" >> "$APP_USERS_FILE"
+		    fi
+                fi
+            fi
+        fi
+    done
+}
+
+function remove_users_for_app {
+    app_name="$1"
+
+    read_config_param MY_USERNAME
+
+    for d in /home/*/ ; do
+        USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+        if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+            if [[ "$USERNAME" != "$MY_USERNAME" ]]; then
+                if [[ $(user_added_to_app "${USERNAME}" "${app_name}") == "1" ]]; then
+                    if [[ $(function_exists "remove_user_${app_name}") == "1" ]]; then
+                        "remove_user_${app_name}" "${USERNAME}"
+                    fi
+                    sed -i "/${app_name}_${USERNAME}/d" "$APP_USERS_FILE"
+                fi
+            fi
+        fi
+    done
+}
+
+function app_being_added_indicator {
+    # This indicates if an app is about to be added
+    # If a failure subsequently happens then this can be used
+    # to show the failure screen within webadmin
+    if [ ! -f /root/.addremove_app_command ]; then
+        touch /root/.addremove_app_command
+    fi
+}
+
+function install_apps {
+    is_interactive=$1
+
+    if [ -f /tmp/.upgrading ]; then
+        return
+    fi
+
+    APP_INSTALLED_SUCCESS=1
+
+    # interactive install configuration for each app
+    if [ "${is_interactive}" ]; then
+        install_apps_interactive
+    fi
+
+    # now install the apps
+    app_index=0
+    # shellcheck disable=SC2068
+    for a in ${APPS_AVAILABLE[@]}
+    do
+        if [[ ${APPS_INSTALLED[$app_index]} == "0" ]]; then
+            if [[ ${APPS_CHOSEN[$app_index]} == "1" ]]; then
+
+                # remove any temp files
+                rm -rf /tmp/*
+
+                clear_app_install_progress "${a}"
+
+                if [ "${is_interactive}" ]; then
+                    # clears any removal indicator
+                    function_check reinstall_app
+                    reinstall_app "${a}"
+
+                    function_check app_load_variables
+                    app_load_variables "${a}"
+
+                    if [[ $(app_is_installed "${a}") == "1" ]]; then
+                        echo $"Upgrading application from interactive: ${a}"
+                        "upgrade_${a}"
+                        echo $"${a} was upgraded from interactive"
+                    else
+                        check_other_app_required "${a}"
+                        echo $"Installing application from interactive: ${a}"
+                        APP_INSTALLED=
+                        function_check app_being_added_indicator
+                        app_being_added_indicator
+                        "install_${a}"
+                        #postinstall_check_daemon_is_running "${a}"
+                        if [ $APP_INSTALLED ]; then
+                            function_check app_save_variables
+                            app_save_variables "${a}"
+
+                            function_check add_users_after_install
+                            add_users_after_install "${a}"
+
+                            function_check lockdown_permissions
+                            lockdown_permissions
+
+                            function_check install_completed
+                            install_completed "${a}"
+                            echo $"${a} was installed from interactive"
+                        else
+                            echo "Failed to install: ${a}" >> "/var/log/${PROJECT_NAME}.log"
+                            APP_INSTALLED_SUCCESS=
+                            echo $"${a} was not installed from interactive"
+                        fi
+                    fi
+                else
+                    # check if the app was removed
+                    if [[ $(app_is_removed "${a}") == "0" ]]; then
+                        function_check app_load_variables
+                        app_load_variables "${a}"
+                        if [[ $(app_is_installed "${a}") == "1" ]]; then
+                            echo $"Upgrading application: ${a}"
+                            "upgrade_${a}"
+                            echo $"${a} was upgraded"
+                        else
+                            check_other_app_required "${a}"
+                            echo $"Installing application: ${a}"
+                            APP_INSTALLED=
+                            function_check app_being_added_indicator
+                            app_being_added_indicator
+                            "install_${a}"
+                            #postinstall_check_daemon_is_running "${a}"
+                            if [ $APP_INSTALLED ]; then
+                                function_check app_save_variables
+                                app_save_variables "${a}"
+
+                                function_check add_users_after_install
+                                add_users_after_install "${a}"
+
+                                function_check lockdown_permissions
+                                lockdown_permissions
+
+                                function_check install_completed
+                                install_completed "${a}"
+                                echo $"${a} was installed"
+                            else
+                                echo "Failed to install: ${a}" >> "/var/log/${PROJECT_NAME}.log"
+                                APP_INSTALLED_SUCCESS=
+                                echo $"${a} was not installed"
+                            fi
+
+                        fi
+                    else
+                        echo $"${a} has been removed and so will not be reinstalled"
+                    fi
+                fi
+            fi
+        fi
+        app_index=$((app_index+1))
+    done
+
+    function_check update_installed_apps_list
+    update_installed_apps_list
+}
+
+# NOTE: deliberately no exit 0

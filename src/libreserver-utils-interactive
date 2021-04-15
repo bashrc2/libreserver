@@ -1,0 +1,203 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Interactive install functions
+#
+# License
+# =======
+#
+# Copyright (C) 2014-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+function interactive_configuration {
+    if [ ! -f "/usr/local/bin/${PROJECT_NAME}-config" ]; then
+        if [ ! -f "/usr/bin/${PROJECT_NAME}-config" ]; then
+            echo $"The command ${PROJECT_NAME}-config was not found"
+            exit 63
+        fi
+    fi
+    if [ -f /tmp/meshuserdevice ]; then
+        rm -f /tmp/meshuserdevice
+    fi
+
+    if [[ $ONION_ONLY == "no" ]]; then
+        if [[ $MINIMAL_INSTALL == "no" ]]; then
+            "${PROJECT_NAME}-config" \
+                -f "$CONFIGURATION_FILE" \
+                -w "$PROJECT_WEBSITE" \
+                -m "$MINIMUM_PASSWORD_LENGTH" \
+                -n "$MENUCONFIG_NONINTERACTIVE" \
+                -d "$DEFAULT_DOMAIN_NAME"
+        else
+            "${PROJECT_NAME}-config" \
+                -f "$CONFIGURATION_FILE" \
+                -w "$PROJECT_WEBSITE" \
+                -m "$MINIMUM_PASSWORD_LENGTH" \
+                -n "$MENUCONFIG_NONINTERACTIVE" \
+                -d "$DEFAULT_DOMAIN_NAME" \
+                --minimal "yes"
+        fi
+    else
+        "${PROJECT_NAME}-config" \
+            -f "$CONFIGURATION_FILE" \
+            -w "$PROJECT_WEBSITE" \
+            -m "$MINIMUM_PASSWORD_LENGTH" \
+            -n "$MENUCONFIG_NONINTERACTIVE" \
+            --onion "yes"
+    fi
+
+    if [ -f /tmp/meshuserdevice ]; then
+        # mesh network user device installation
+        rm -f /tmp/meshuserdevice
+        exit 0
+    fi
+    # shellcheck disable=SC2181
+    if [ ! "$?" = "0" ]; then
+        echo $'Command failed:'
+        echo ''
+        echo $"  ${PROJECT_NAME}-config -u $MY_USERNAME -f $CONFIGURATION_FILE -w $PROJECT_WEBSITE -b $PROJECT_BITMESSAGE -m $MINIMUM_PASSWORD_LENGTH --minimal [yes|no]"
+        echo ''
+        exit 73
+    fi
+}
+
+function interactive_site_details {
+    site_name="$1"
+    site_name_upper=${site_name^^}
+
+    SITE_BACKTITLE=$"LibreServer Configuration"
+    SITE_CONFIG_TITLE=$"${site_name^} Configuration"
+    SITE_FORM_TEXT=$"\\nPlease enter your ${site_name^} details.\\n\\nIMPORTANT: This should be a domain name which is supported by Let's Encrypt:"
+    SITE_DOMAIN_NAME=
+    SITE_CODE=
+    SITE_DETAILS_COMPLETE=
+    while [ ! $SITE_DETAILS_COMPLETE ]
+    do
+        data=$(mktemp 2>/dev/null)
+        dialog --backtitle "$SITE_BACKTITLE" \
+               --title "$SITE_CONFIG_TITLE" \
+               --form "$SITE_FORM_TEXT" 12 55 2 \
+               $"Domain:" 1 1 "$(grep "${site_name_upper}_DOMAIN_NAME" temp.cfg | awk -F '=' '{print $2}')" 1 16 33 40 \
+               2> "$data"
+        sel=$?
+        case $sel in
+            1) rm -f "$data"
+               exit 1;;
+            255) rm -f "$data"
+                 exit 1;;
+        esac
+        SITE_DOMAIN_NAME=$(sed -n 1p < "$data")
+        if [ "$SITE_DOMAIN_NAME" ]; then
+            TEST_DOMAIN_NAME=$SITE_DOMAIN_NAME
+            validate_domain_name
+            if [[ "$TEST_DOMAIN_NAME" != "$SITE_DOMAIN_NAME" ]]; then
+                SITE_DOMAIN_NAME=
+                dialog --title $"Domain name validation" --msgbox "$TEST_DOMAIN_NAME" 15 50
+            fi
+        fi
+        if [ "$SITE_DOMAIN_NAME" ]; then
+            SITE_DETAILS_COMPLETE="yes"
+        fi
+        rm -f "$data"
+    done
+
+    # save the results in the config file
+    write_config_param "${site_name_upper}_DOMAIN_NAME" "$SITE_DOMAIN_NAME"
+    site_code_str="$SITE_CODE"
+    if [ "$site_code_str" ]; then
+        if [ ${#site_code_str} -gt 1 ]; then
+            write_config_param "${site_name_upper}_CODE" "${SITE_CODE}"
+        fi
+    fi
+}
+
+function interactive_site_details_with_title {
+    site_name="${1}"
+
+    SITE_BACKTITLE=$"LibreServer Configuration"
+    SITE_CONFIG_TITLE=$"${site_name^} Configuration"
+    SITE_FORM_TEXT=$"\nPlease enter your ${site_name^} details.\n\nIMPORTANT: This should be a domain name which is supported by Let's Encrypt:"
+
+    SITE_TITLE=
+    SITE_DOMAIN_NAME=
+    SITE_CODE=
+
+    SITE_DETAILS_COMPLETE=
+    while [ ! $SITE_DETAILS_COMPLETE ]
+    do
+        data=$(mktemp 2>/dev/null)
+        if [[ $DDNS_PROVIDER == *"freedns"* ]]; then
+                dialog --backtitle $"LibreServer Configuration" \
+                       --title "$SITE_BACKTITLE" \
+                       --form "$SITE_FORM_TEXT" 14 55 4 \
+                       $"Domain:" 2 1 "$(grep "$SITE_DOMAIN_NAME" temp.cfg | awk -F '=' '{print $2}')" 2 16 33 40 \
+                       $"Code:" 3 1 "$(grep "$SITE_CODE" temp.cfg | awk -F '=' '{print $2}')" 3 16 33 255 \
+                       2> "$data"
+        else
+            dialog --backtitle "$SITE_BACKTITLE" \
+                   --title "$SITE_CONFIG_TITLE" \
+                   --form "$SITE_FORM_TEXT" 11 55 3 \
+                   $"Title:" 1 1 "$(grep "$SITE_TITLE" temp.cfg | awk -F '=' '{print $2}')" 1 16 33 40 \
+                   $"Domain:" 2 1 "$(grep "$SITE_DOMAIN_NAME" temp.cfg | awk -F '=' '{print $2}')" 2 16 33 40 \
+                   2> "$data"
+        fi
+        sel=$?
+        case $sel in
+            1) rm -f "$data"
+               exit 1;;
+            255) rm -f "$data"
+                 exit 1;;
+        esac
+        SITE_TITLE=$(sed -n 1p < "$data")
+        SITE_DOMAIN_NAME=$(sed -n 2p < "$data")
+        site_domain_name_str="$SITE_DOMAIN_NAME"
+        if [ ${#site_domain_name_str} -gt 1 ]; then
+            TEST_DOMAIN_NAME="$SITE_DOMAIN_NAME"
+            validate_domain_name
+            if [[ "$TEST_DOMAIN_NAME" != "${SITE_DOMAIN_NAME}" ]]; then
+                SITE_DOMAIN_NAME=
+                dialog --title $"Domain name validation" --msgbox "$TEST_DOMAIN_NAME" 15 50
+            else
+                if [[ "$DDNS_PROVIDER" == *"freedns"* ]]; then
+                    SITE_CODE=$(sed -n 3p < "$data")
+                    validate_freedns_code "${SITE_CODE}"
+                    if [ ! "$VALID_CODE" ]; then
+                        SITE_DOMAIN_NAME=
+                    fi
+                fi
+            fi
+        fi
+        site_title_str="$SITE_TITLE"
+        if [ ${#site_title_str} -gt 0 ]; then
+            if [ ${SITE_DOMAIN_NAME} ]; then
+                SITE_DETAILS_COMPLETE="yes"
+            fi
+        fi
+        rm -f "$data"
+    done
+
+    # save the results in the config file
+    write_config_param "$2" "${SITE_TITLE}"
+    write_config_param "$3" "${SITE_DOMAIN_NAME}"
+    site_code_str="$SITE_CODE"
+    if [ ${#site_code_str} -gt 1 ]; then
+        write_config_param "$4" "${SITE_CODE}"
+    fi
+}
+
+# NOTE: deliberately no exit 0

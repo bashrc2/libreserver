@@ -1,0 +1,80 @@
+=> index.gmi ⯇ Go Back
+
+# Installing LibreServer
+
+``` laptop logo
+         ._________________.
+         |.---------------.|
+         || >_            ||
+         ||               ||
+         ||               ||
+─────────||               ||──────────
+         ||               ||
+         ||_______________||
+         /.-.-.-.-.-.-.-.-.\
+        /.-.-.-.-.-.-.-.-.-.\
+       /.-.-.-.-.-.-.-.-.-.-.\
+      /        /      \       \ 
+     /________/________\_______\ 
+     \_________________________/
+```
+
+## ⃟ Step 1: Download
+
+Download the disk image for your server architecture.
+
+## ⃟ Step 2: Copy to drive
+
+In a terminal, copy the image to your drive. This could be microSD, a USB stick or an SSD.
+
+  xzcat libreserver-bullseye-*-amd64.img.xz | sudo dd bs=4M of=/dev/sdX conv=fsync status=progress
+
+Where sdX is the name of your drive.
+
+## ⃟ Step 3: Plug in
+
+Connect everything up.
+
+ * Ethernet cable between your internet router and your server.
+ * Plug in the drive.
+ * Connect power supply.
+
+If your server fails to boot then go back to step 2 and try writing to the drive again, or using a different drive. Sometimes copying the image to the drive is not always entirely reliable.
+
+## ⃟ Step 4: Locate on the network
+
+Find you server's local IP address. It will usually start with 192.168.. A typical way to do this is to log in to your internet router and show the list of devices on your local network.
+
+## ⃟ Step 5: Log in
+
+Log into your server using ssh.
+
+  ssh admin@192.168.x.y
+
+The initial password is libreserver. On first login you will be asked to change this and the server will log you out again. Log back in with your chosen password. Note that the password that you entered is temporary and will be thrown away when installation is complete.
+
+## ⃟ Step 6: Start the install
+
+Follow the instructions to begin the install. Typically this will be:
+
+  sudo libreserver menuconfig
+
+or for the onion version:
+
+  sudo libreserver menuconfig-onion
+
+You will be prompted to select a language and then be given a new password. Write this down or store it in a password manager.
+
+If you are not installing the onion version then you will be also be asked for dynamic DNS and domain name. The domain name must be one which you own, and not a free-as-in-gratis subdomain.
+
+Installation may take a long time - possibly up to a few hours - depending on your type of drive and internet bandwidth, but you can leave it running unattended. microSD cards and USB sticks are typically quite slow (unless it's USB3 and your hardware has USB3 sockets).
+
+## ⃟ Step 7: Browse to admin
+
+When installation is complete you can log into your server with a browser.
+
+  http://192.168.x.y/admin
+
+The username is admin and the password is the one you wrote down previously.
+
+

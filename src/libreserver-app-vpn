@@ -1,0 +1,743 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# VPN functions
+# https://www.digitalocean.com/community/tutorials/how-to-set-up-an-openvpn-server-on-debian-8
+# https://jamielinux.com/blog/force-all-network-traffic-through-openvpn-using-iptables/
+# http://www.farrellf.com/projects/software/2016-05-04_Running_a_VPN_Server_with_OpenVPN_and_Stunnel/index_.php
+#
+# License
+# =======
+#
+# Copyright (C) 2014-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VARIANTS='full full-vim'
+
+APP_CATEGORY=other
+
+IN_DEFAULT_INSTALL=0
+SHOW_ON_ABOUT=0
+NOT_ON_HOMEPAGE=1
+REQUIRES_APP=
+
+OPENVPN_SERVER_NAME="server"
+OPENVPN_KEY_FILENAME='client.ovpn'
+
+VPN_COUNTRY_CODE="US"
+VPN_AREA="The Internet"
+VPN_LOCATION="Anywhere"
+VPN_ORGANISATION="LibreServer"
+VPN_UNIT="LibreServer"
+STUNNEL_PORT=3439
+VPN_TLS_PORT=553
+VPN_MESH_TLS_PORT=653
+
+vpn_variables=(MY_EMAIL_ADDRESS
+               DEFAULT_DOMAIN_NAME
+               MY_USERNAME
+               VPN_COUNTRY_CODE
+               VPN_AREA
+               VPN_LOCATION
+               VPN_ORGANISATION
+               VPN_UNIT
+               VPN_TLS_PORT)
+
+function upgrade_distro_vpn {
+    target_distro="$1"
+
+    if [[ "$target_distro" == 'bullseye' ]]; then
+        echo -n ''
+    fi
+}
+
+function change_default_domain_name_vpn {
+    new_default_domain_name="$1"
+
+    for d in /home/*/ ; do
+        USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+        if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+            user_vpn_cert_file=/home/$USERNAME/$OPENVPN_KEY_FILENAME
+
+            { echo 'client';
+              echo 'dev tun';
+              echo 'proto tcp';
+              echo "remote localhost $STUNNEL_PORT";
+              echo "route $new_default_domain_name 255.255.255.255 net_gateway";
+              echo 'resolv-retry infinite';
+              echo 'nobind';
+              echo 'tun-mtu 1500';
+              echo 'tun-mtu-extra 32';
+              echo 'mssfix 1450';
+              echo 'persist-key';
+              echo 'persist-tun';
+              echo 'auth-nocache';
+              echo 'remote-cert-tls server';
+              echo 'comp-lzo';
+              echo 'verb 3';
+              echo ''; } > "$user_vpn_cert_file"
+            chown "$USERNAME":"$USERNAME" "$user_vpn_cert_file"
+        fi
+    done
+
+    { echo '[openvpn]';
+      echo 'client = yes';
+      echo "accept = $STUNNEL_PORT";
+      echo "connect = $new_default_domain_name:$VPN_TLS_PORT";
+      echo 'cert = stunnel.pem';
+      echo 'protocol = socks'; } > /etc/stunnel/stunnel-client.conf
+
+    systemctl restart openvpn
+}
+
+function logging_on_vpn {
+    if [ ! -f /etc/openvpn/server.conf ]; then
+        return
+    fi
+    sed -i 's|status .*|status /var/log/openvpn.log|g' /etc/openvpn/server.conf
+    systemctl restart openvpn
+}
+
+function logging_off_vpn {
+    if [ ! -f /etc/openvpn/server.conf ]; then
+        return
+    fi
+    sed -i 's|status .*|status /dev/null|g' /etc/openvpn/server.conf
+    systemctl restart openvpn
+}
+
+function install_interactive_vpn {
+    read_config_param VPN_TLS_PORT
+    if [ ! $VPN_TLS_PORT ]; then
+        VPN_TLS_PORT=553
+    fi
+    VPN_DETAILS_COMPLETE=
+    while [ ! $VPN_DETAILS_COMPLETE ]
+    do
+        data=$(mktemp 2>/dev/null)
+        currtlsport=$(grep 'VPN_TLS_PORT' temp.cfg | awk -F '=' '{print $2}')
+        if [ "$currtlsport" ]; then
+            VPN_TLS_PORT=$currtlsport
+        fi
+        dialog --backtitle $"LibreServer Configuration" \
+               --title $"VPN Configuration" \
+               --form $"\\nPlease enter your VPN details. Changing the port to 443 will help defend against censorship but will prevent other web apps from running." 12 65 1 \
+               $"TLS port:" 1 1 "$VPN_TLS_PORT" 1 12 5 5 \
+               2> "$data"
+        sel=$?
+        case $sel in
+            1) rm -f "$data"
+               exit 1;;
+            255) rm -f "$data"
+                 exit 1;;
+        esac
+        tlsport=$(sed -n 1p < "$data")
+        if [ ${#tlsport} -gt 1 ]; then
+            if [[ "$tlsport" != *' '* && "$tlsport" != *'.'* ]]; then
+                VPN_TLS_PORT="$tlsport"
+                VPN_DETAILS_COMPLETE="yes"
+                write_config_param "VPN_TLS_PORT" "$VPN_TLS_PORT"
+            fi
+        fi
+        rm -f "$data"
+    done
+    clear
+    APP_INSTALLED=1
+}
+
+function vpn_change_tls_port {
+    if ! grep -q "VPN-TLS" "$FIREWALL_CONFIG"; then
+        EXISTING_VPN_TLS_PORT=443
+    else
+        EXISTING_VPN_TLS_PORT=$(grep "VPN-TLS" "$FIREWALL_CONFIG" | awk -F '=' '{print $2}')
+    fi
+
+    data=$(mktemp 2>/dev/null)
+    dialog --title $"VPN Configuration" \
+           --backtitle $"LibreServer Control Panel" \
+           --inputbox $'Change TLS port' 10 50 "$EXISTING_VPN_TLS_PORT" 2>"$data"
+    sel=$?
+    case $sel in
+        0)
+            tlsport=$(<"$data")
+            if [ ${#tlsport} -gt 0 ]; then
+                if [[ "$tlsport" != "$EXISTING_VPN_TLS_PORT" ]]; then
+                    clear
+                    VPN_TLS_PORT=$tlsport
+                    write_config_param "VPN_TLS_PORT" "$VPN_TLS_PORT"
+                    sed -i "s|accept =.*|accept = $VPN_TLS_PORT|g" /etc/stunnel/stunnel.conf
+                    sed -i "s|connect =.*|connect = :$VPN_TLS_PORT|g" /etc/stunnel/stunnel-client.conf
+
+                    for d in /home/*/ ; do
+                        USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+                        if [ -f "/home/$USERNAME/stunnel-client.conf" ]; then
+                            cp "/etc/stunnel/stunnel-client.conf" "/home/$USERNAME/stunnel-client.conf"
+                            chown "$USERNAME":"$USERNAME" "/home/$USERNAME/stunnel-client.conf"
+                        fi
+                    done
+
+                    if [ "$VPN_TLS_PORT" -eq 443 ]; then
+                        if [[ "$PREVIOUS_VPN_TLS_PORT" != "443" ]]; then
+                            firewall_remove VPN-TLS "${EXISTING_VPN_TLS_PORT}"
+                        fi
+                        systemctl stop nginx
+                        systemctl disable nginx
+                    else
+                        if [[ "$PREVIOUS_VPN_TLS_PORT" != "$VPN_TLS_PORT" ]]; then
+                            firewall_remove VPN-TLS "${EXISTING_VPN_TLS_PORT}"
+                            firewall_add VPN-TLS "${VPN_TLS_PORT}" tcp
+                        fi
+                        systemctl enable nginx
+                        systemctl restart nginx
+                    fi
+
+                    systemctl restart stunnel
+
+                    if [ "$VPN_TLS_PORT" -eq 443 ]; then
+                        dialog --title $"VPN Configuration" \
+                               --msgbox $"TLS port changed to ${VPN_TLS_PORT}. Forward this port from your internet router." 10 60
+                    else
+                        dialog --title $"VPN Configuration" \
+                               --msgbox $"TLS port changed to ${VPN_TLS_PORT}. Forward this port from your internet router." 10 60
+                    fi
+                fi
+            fi
+            ;;
+    esac
+    rm -f "$data"
+}
+
+function vpn_regenerate_client_keys {
+    data=$(mktemp 2>/dev/null)
+    dialog --title $"Regenerate VPN keys for a user" \
+           --backtitle $"LibreServer Control Panel" \
+           --inputbox $'username' 10 50 2>"$data"
+    sel=$?
+    case $sel in
+        0)
+            USERNAME=$(<"$data")
+            if [ ${#USERNAME} -gt 0 ]; then
+                if [ -d "/home/$USERNAME" ]; then
+                    clear
+                    create_user_vpn_key "$USERNAME"
+                    dialog --title $"Regenerate VPN keys for a user" \
+                           --msgbox $"VPN keys were regenerated for $USERNAME" 6 60
+                fi
+            fi
+            ;;
+    esac
+    rm -f "$data"
+}
+
+function configure_interactive_vpn {
+    read_config_param VPN_TLS_PORT
+    while true
+    do
+        W=(1 $"Change TLS port (currently $VPN_TLS_PORT)"
+           2 $"Regenerate keys for a user")
+
+        # shellcheck disable=SC2068
+        selection=$(dialog --backtitle $"LibreServer Administrator Control Panel" --title $"VPN" --menu $"Choose an operation, or ESC to exit:" 10 60 2 "${W[@]}" 3>&2 2>&1 1>&3)
+
+        if [ ! "$selection" ]; then
+            break
+        fi
+
+        case $selection in
+            1) vpn_change_tls_port;;
+            2) vpn_regenerate_client_keys;;
+        esac
+    done
+}
+
+function reconfigure_vpn {
+    echo -n ''
+}
+
+function upgrade_vpn {
+    echo -n ''
+}
+
+function backup_local_vpn {
+    for d in /home/*/ ; do
+        USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+        if [ -f "/home/$USERNAME/$OPENVPN_KEY_FILENAME" ]; then
+            cp "/home/$USERNAME/$OPENVPN_KEY_FILENAME" "/etc/openvpn/easy-rsa/keys/${USERNAME}_${OPENVPN_KEY_FILENAME}"
+        fi
+    done
+
+    function_check backup_directory_to_usb
+    backup_directory_to_usb /etc/openvpn/easy-rsa/keys vpn
+    backup_directory_to_usb /etc/stunnel vpnstunnel
+}
+
+function restore_local_vpn {
+    temp_restore_dir=/root/tempvpn
+    restore_directory_from_usb $temp_restore_dir vpn
+    if [ -d ${temp_restore_dir} ]; then
+        cp -r ${temp_restore_dir}/* /etc/openvpn/easy-rsa/keys
+        cp -r ${temp_restore_dir}/${OPENVPN_SERVER_NAME}* /etc/openvpn/
+        cp -r ${temp_restore_dir}/dh* /etc/openvpn/
+        rm -rf ${temp_restore_dir}
+
+        for d in /home/*/ ; do
+            USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+            if [ -f "/etc/openvpn/easy-rsa/keys/${USERNAME}_${OPENVPN_KEY_FILENAME}" ]; then
+                cp "/etc/openvpn/easy-rsa/keys/${USERNAME}_${OPENVPN_KEY_FILENAME}" "/home/$USERNAME/$OPENVPN_KEY_FILENAME"
+                chown "$USERNAME":"$USERNAME" "/home/$USERNAME/$OPENVPN_KEY_FILENAME"
+            fi
+        done
+    fi
+    temp_restore_dir=/root/tempvpnstunnel
+    restore_directory_from_usb $temp_restore_dir vpnstunnel
+    if [ -d ${temp_restore_dir} ]; then
+        cp -r ${temp_restore_dir}/* /etc/stunnel
+        rm -rf ${temp_restore_dir}
+        for d in /home/*/ ; do
+            USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+            if [ -f "/home/$USERNAME/stunnel.pem" ]; then
+                cp /etc/stunnel/stunnel.pem "/home/$USERNAME/stunnel.pem"
+                chown "$USERNAME":"$USERNAME" "/home/$USERNAME/stunnel.pem"
+            fi
+            if [ -f "/home/$USERNAME/stunnel.p12" ]; then
+                cp /etc/stunnel/stunnel.p12 "/home/$USERNAME/stunnel.p12"
+                chown "$USERNAME":"$USERNAME" "/home/$USERNAME/stunnel.p12"
+            fi
+        done
+    fi
+}
+
+function backup_remote_vpn {
+    echo -n ''
+}
+
+function restore_remote_vpn {
+    echo -n ''
+}
+
+function remove_vpn {
+    systemctl stop stunnel
+    systemctl disable stunnel
+    rm /etc/systemd/system/stunnel.service
+
+    systemctl stop openvpn
+    if [ "$VPN_TLS_PORT" -ne 443 ]; then
+        firewall_remove VPN-TLS "$VPN_TLS_PORT"
+    else
+        systemctl enable nginx
+        systemctl restart nginx
+    fi
+
+    $REMOVE_PACKAGES_PURGE fastd openvpn easy-rsa
+    $REMOVE_PACKAGES stunnel4
+    if [ -d /etc/openvpn ]; then
+        rm -rf /etc/openvpn
+    fi
+    firewall_disable_vpn
+
+    echo 0 > /proc/sys/net/ipv4/ip_forward
+    sed -i 's|net.ipv4.ip_forward=.*|net.ipv4.ip_forward=0|g' /etc/sysctl.conf
+
+    remove_completion_param install_vpn
+
+    # remove any client keys
+    for d in /home/*/ ; do
+        USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+        if [ -f "/home/$USERNAME/$OPENVPN_KEY_FILENAME" ]; then
+            rm "/home/$USERNAME/$OPENVPN_KEY_FILENAME"
+        fi
+        rm "/home/$USERNAME/stunnel*"
+    done
+    userdel -f vpn
+    groupdel -f vpn
+
+    if [ -d /etc/stunnel ]; then
+        rm -rf /etc/stunnel
+    fi
+}
+
+function create_user_vpn_key {
+    username=$1
+
+    if [ ! -d "/home/$username" ]; then
+        return
+    fi
+
+    echo $"Creating VPN key for $username"
+
+    cd /etc/openvpn/easy-rsa || exit 47
+
+    if [ -f "/etc/openvpn/easy-rsa/keys/$username.crt" ]; then
+        rm "/etc/openvpn/easy-rsa/keys/$username.crt"
+    fi
+    if [ -f "/etc/openvpn/easy-rsa/keys/$username.key" ]; then
+        rm "/etc/openvpn/easy-rsa/keys/$username.key"
+    fi
+    if [ -f "/etc/openvpn/easy-rsa/keys/$username.csr" ]; then
+        rm "/etc/openvpn/easy-rsa/keys/$username.csr"
+    fi
+
+    sed -i 's| --interact||g' build-key
+    ./build-key "$username"
+
+    if [ ! -f "/etc/openvpn/easy-rsa/keys/$username.crt" ]; then
+        echo $'VPN user cert not generated'
+        exit 78
+    fi
+    user_cert=$(cat "/etc/openvpn/easy-rsa/keys/$username.crt")
+    if [ ${#user_cert} -lt 10 ]; then
+        cat "/etc/openvpn/easy-rsa/keys/$username.crt"
+        echo $'User cert generation failed'
+        exit 63
+    fi
+    if [ ! -f "/etc/openvpn/easy-rsa/keys/$username.key" ]; then
+        echo $'VPN user key not generated'
+        exit 68
+    fi
+    user_key=$(cat "/etc/openvpn/easy-rsa/keys/$username.key")
+    if [ ${#user_key} -lt 10 ]; then
+        cat "/etc/openvpn/easy-rsa/keys/$username.key"
+        echo $'User key generation failed'
+        exit 28
+    fi
+
+    user_vpn_cert_file=/home/$username/$OPENVPN_KEY_FILENAME
+
+    { echo 'client';
+      echo 'dev tun';
+      echo 'proto tcp';
+      echo "remote localhost $STUNNEL_PORT";
+      echo "route $DEFAULT_DOMAIN_NAME 255.255.255.255 net_gateway";
+      echo 'resolv-retry infinite';
+      echo 'nobind';
+      echo 'tun-mtu 1500';
+      echo 'tun-mtu-extra 32';
+      echo 'mssfix 1450';
+      echo 'persist-key';
+      echo 'persist-tun';
+      echo 'auth-nocache';
+      echo 'remote-cert-tls server';
+      echo 'comp-lzo';
+      echo 'verb 3';
+      echo ''; } > "$user_vpn_cert_file"
+
+    {
+        echo '<ca>';
+        cat /etc/openvpn/ca.crt;
+        echo '</ca>';
+
+        echo '<cert>';
+        cat "/etc/openvpn/easy-rsa/keys/$username.crt;"
+        echo '</cert>';
+
+        echo '<key>';
+        cat "/etc/openvpn/easy-rsa/keys/$username.key;"
+        echo '</key>'; } >> "$user_vpn_cert_file"
+
+    chown "$username":"$username" "$user_vpn_cert_file"
+
+    # keep a backup
+    cp "$user_vpn_cert_file" "/etc/openvpn/easy-rsa/keys/$username.ovpn"
+
+    #rm /etc/openvpn/easy-rsa/keys/$username.crt
+    #rm /etc/openvpn/easy-rsa/keys/$username.csr
+    rm "/etc/openvpn/easy-rsa/keys/$username.key"
+
+    echo $"VPN key created at $user_vpn_cert_file"
+}
+
+function add_user_vpn {
+    new_username="$1"
+#    new_user_password="$2"
+
+    create_user_vpn_key "$new_username"
+    if [ -f /etc/stunnel/stunnel.pem ]; then
+        cp /etc/stunnel/stunnel.pem "/home/$new_username/stunnel.pem"
+        chown "$new_username":"$new_username" "/home/$new_username/stunnel.pem"
+    fi
+    if [ -f /etc/stunnel/stunnel.p12 ]; then
+        cp /etc/stunnel/stunnel.p12 "/home/$new_username/stunnel.p12"
+        chown "$new_username":"$new_username" "/home/$new_username/stunnel.p12"
+    fi
+    cp /etc/stunnel/stunnel-client.conf "/home/$new_username/stunnel-client.conf"
+    chown "$new_username":"$new_username" "/home/$new_username/stunnel-client.conf"
+}
+
+function remove_user_vpn {
+    new_username="$1"
+}
+
+function mesh_setup_vpn {
+    vpn_generate_keys
+
+    if [ -d /home/libreserver ]; then
+        cp /etc/stunnel/stunnel-client.conf /home/libreserver/stunnel-client.conf
+        chown libreserver:libreserver /home/libreserver/stunnel*
+    fi
+
+    generate_stunnel_keys
+
+    systemctl restart openvpn
+}
+
+function generate_stunnel_keys {
+    openssl req -x509 -nodes -days 3650 -sha256 \
+            -subj "/O=$VPN_ORGANISATION/OU=$VPN_UNIT/C=$VPN_COUNTRY_CODE/ST=$VPN_AREA/L=$VPN_LOCATION/CN=$HOSTNAME" \
+            -newkey rsa:2048 -keyout /etc/stunnel/key.pem \
+            -out /etc/stunnel/cert.pem
+    if [ ! -f /etc/stunnel/key.pem ]; then
+        echo $'stunnel key not created'
+        exit 79
+    fi
+    if [ ! -f /etc/stunnel/cert.pem ]; then
+        echo $'stunnel cert not created'
+        exit 20
+    fi
+    chmod 400 /etc/stunnel/key.pem
+    chmod 640 /etc/stunnel/cert.pem
+
+    cat /etc/stunnel/key.pem /etc/stunnel/cert.pem >> /etc/stunnel/stunnel.pem
+    chmod 640 /etc/stunnel/stunnel.pem
+
+    openssl pkcs12 -export -out /etc/stunnel/stunnel.p12 -inkey /etc/stunnel/key.pem -in /etc/stunnel/cert.pem -passout pass:
+    if [ ! -f /etc/stunnel/stunnel.p12 ]; then
+        echo $'stunnel pkcs12 not created'
+        exit 63
+    fi
+    chmod 640 /etc/stunnel/stunnel.p12
+
+    cp /etc/stunnel/stunnel.pem "/home/$MY_USERNAME/stunnel.pem"
+    cp /etc/stunnel/stunnel.p12 "/home/$MY_USERNAME/stunnel.p12"
+    chown "$MY_USERNAME":"$MY_USERNAME" "$prefix/home/$MY_USERNAME/stunnel*"
+}
+
+function install_stunnel {
+    prefix=
+    prefixchroot=
+    # shellcheck disable=SC2154
+    if [ "$rootdir" ]; then
+        prefix=$rootdir
+        prefixchroot="chroot $rootdir"
+        VPN_TLS_PORT=$VPN_MESH_TLS_PORT
+    fi
+
+    # shellcheck disable=SC2086
+    $prefixchroot INSTALL_PACKAGES stunnel4
+
+    if [ ! "$prefix" ]; then
+        cd /etc/stunnel || exit 46
+        generate_stunnel_keys
+    fi
+
+    { echo 'chroot = /var/lib/stunnel4';
+      echo 'pid = /stunnel4.pid';
+      echo 'setuid = stunnel4';
+      echo 'setgid = stunnel4';
+      echo 'socket = l:TCP_NODELAY=1';
+      echo 'socket = r:TCP_NODELAY=1';
+      echo 'cert = /etc/stunnel/stunnel.pem';
+      echo '[openvpn]';
+      echo "accept = $VPN_TLS_PORT";
+      echo 'connect = localhost:1194';
+      echo 'cert = /etc/stunnel/stunnel.pem';
+      echo 'protocol = socks'; } > "$prefix/etc/stunnel/stunnel.conf"
+
+    sed -i 's|ENABLED=.*|ENABLED=1|g' "$prefix/etc/default/stunnel4"
+
+    { echo '[openvpn]';
+      echo 'client = yes';
+      echo "accept = $STUNNEL_PORT";
+      echo "connect = $DEFAULT_DOMAIN_NAME:$VPN_TLS_PORT";
+      echo 'cert = stunnel.pem';
+      echo 'protocol = socks'; } > "$prefix/etc/stunnel/stunnel-client.conf"
+
+    { echo '[Unit]';
+      echo 'Description=SSL tunnel for network daemons';
+      echo 'Documentation=man:stunnel https://www.stunnel.org/docs.html';
+      echo 'DefaultDependencies=no';
+      echo 'After=network.target';
+      echo 'After=syslog.target';
+      echo '';
+      echo '[Install]';
+      echo 'WantedBy=multi-user.target';
+      echo 'Alias=stunnel.target';
+      echo '';
+      echo '[Service]';
+      echo 'Type=forking';
+      echo 'RuntimeDirectory=stunnel';
+      echo 'EnvironmentFile=-/etc/stunnel/stunnel.conf';
+      echo 'ExecStart=/usr/bin/stunnel /etc/stunnel/stunnel.conf';
+      echo 'ExecStop=/usr/bin/killall -9 stunnel';
+      echo 'RemainAfterExit=yes'; } > "$prefix/etc/systemd/system/stunnel.service"
+
+    if [ ! "$prefix" ]; then
+        if [ $VPN_TLS_PORT -eq 443 ]; then
+            systemctl stop nginx
+            systemctl disable nginx
+        else
+            systemctl enable nginx
+            systemctl restart nginx
+        fi
+
+        systemctl enable stunnel
+        systemctl daemon-reload
+        systemctl start stunnel
+
+        cp /etc/stunnel/stunnel-client.conf "/home/$MY_USERNAME/stunnel-client.conf"
+        chown "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME/stunnel*"
+    fi
+}
+
+function vpn_generate_keys {
+    # generate host keys
+    if [ ! -f /etc/openvpn/dh2048.pem ]; then
+        "${PROJECT_NAME}-dhparam" -o /etc/openvpn/dh2048.pem
+    fi
+    if [ ! -f /etc/openvpn/dh2048.pem ]; then
+        echo $'vpn dhparams were not generated'
+        exit 73
+    fi
+    cp /etc/openvpn/dh2048.pem /etc/openvpn/easy-rsa/keys/dh2048.pem
+
+    cd /etc/openvpn/easy-rsa || exit 56
+    # shellcheck disable=SC1091
+    . ./vars
+    ./clean-all
+    vpn_openssl_version='1.0.0'
+    if [ ! -f openssl-${vpn_openssl_version}.cnf ]; then
+        echo $"openssl-${vpn_openssl_version}.cnf was not found"
+        exit 73
+    fi
+    cp openssl-${vpn_openssl_version}.cnf openssl.cnf
+
+    if [ -f /etc/openvpn/easy-rsa/keys/${OPENVPN_SERVER_NAME}.crt ]; then
+        rm /etc/openvpn/easy-rsa/keys/${OPENVPN_SERVER_NAME}.crt
+    fi
+    if [ -f /etc/openvpn/easy-rsa/keys/${OPENVPN_SERVER_NAME}.key ]; then
+        rm /etc/openvpn/easy-rsa/keys/${OPENVPN_SERVER_NAME}.key
+    fi
+    if [ -f /etc/openvpn/easy-rsa/keys/${OPENVPN_SERVER_NAME}.csr ]; then
+        rm /etc/openvpn/easy-rsa/keys/${OPENVPN_SERVER_NAME}.csr
+    fi
+    sed -i 's| --interact||g' build-key-server
+    sed -i 's| --interact||g' build-ca
+    ./build-ca
+    ./build-key-server ${OPENVPN_SERVER_NAME}
+    if [ ! -f /etc/openvpn/easy-rsa/keys/${OPENVPN_SERVER_NAME}.crt ]; then
+        echo $'OpenVPN crt not found'
+        exit 78
+    fi
+    server_cert=$(cat /etc/openvpn/easy-rsa/keys/${OPENVPN_SERVER_NAME}.crt)
+    if [ ${#server_cert} -lt 10 ]; then
+        cat /etc/openvpn/easy-rsa/keys/${OPENVPN_SERVER_NAME}.crt
+        echo $'Server cert generation failed'
+        exit 32
+    fi
+
+    if [ ! -f /etc/openvpn/easy-rsa/keys/${OPENVPN_SERVER_NAME}.key ]; then
+        echo $'OpenVPN key not found'
+        exit 68
+    fi
+    if [ ! -f /etc/openvpn/easy-rsa/keys/ca.key ]; then
+        echo $'OpenVPN ca not found'
+        exit 79
+    fi
+    cp /etc/openvpn/easy-rsa/keys/{$OPENVPN_SERVER_NAME.crt,$OPENVPN_SERVER_NAME.key,ca.crt} /etc/openvpn
+
+    create_user_vpn_key "${MY_USERNAME}"
+}
+
+function install_vpn {
+    prefix=
+    prefixchroot=
+    if [ "$rootdir" ]; then
+        prefix=$rootdir
+        prefixchroot="chroot $rootdir"
+        VPN_TLS_PORT=$VPN_MESH_TLS_PORT
+    fi
+    # shellcheck disable=SC2086
+    $prefixchroot INSTALL_PACKAGES fastd openvpn easy-rsa
+
+    $prefixchroot groupadd vpn
+    $prefixchroot useradd -r -s /bin/false -g vpn vpn
+
+    # server configuration
+    { echo 'port 1194';
+      echo 'proto tcp';
+      echo 'dev tun';
+      echo 'tun-mtu 1500';
+      echo 'tun-mtu-extra 32';
+      echo 'mssfix 1450';
+      echo 'ca /etc/openvpn/ca.crt';
+      echo 'cert /etc/openvpn/server.crt';
+      echo 'key /etc/openvpn/server.key';
+      echo 'dh /etc/openvpn/dh2048.pem';
+      echo 'server 10.8.0.0 255.255.255.0';
+      echo 'push "redirect-gateway def1 bypass-dhcp"';
+      echo "push \"dhcp-option DNS 91.239.100.100\"";
+      echo "push \"dhcp-option DNS 89.233.43.71\"";
+      echo 'keepalive 5 30';
+      echo 'comp-lzo';
+      echo 'persist-key';
+      echo 'persist-tun';
+      echo 'status /dev/null';
+      echo 'verb 3';
+      echo ''; } > "$prefix/etc/openvpn/server.conf"
+
+    if [ ! "$prefix" ]; then
+        echo 1 > /proc/sys/net/ipv4/ip_forward
+    fi
+    sed -i 's|# net.ipv4.ip_forward|net.ipv4.ip_forward|g' "$prefix/etc/sysctl.conf"
+    sed -i 's|#net.ipv4.ip_forward|net.ipv4.ip_forward|g' "$prefix/etc/sysctl.conf"
+    sed -i 's|net.ipv4.ip_forward.*|net.ipv4.ip_forward=1|g' "$prefix/etc/sysctl.conf"
+
+    cp -r "$prefix/usr/share/easy-rsa/" "$prefix/etc/openvpn"
+    if [ ! -d "$prefix/etc/openvpn/easy-rsa/keys" ]; then
+        mkdir "$prefix/etc/openvpn/easy-rsa/keys"
+    fi
+
+    # keys configuration
+    sed -i "s|export KEY_COUNTRY.*|export KEY_COUNTRY=\"US\"|g" "$prefix/etc/openvpn/easy-rsa/vars"
+    sed -i "s|export KEY_PROVINCE.*|export KEY_PROVINCE=\"TX\"|g" "$prefix/etc/openvpn/easy-rsa/vars"
+    sed -i "s|export KEY_CITY.*|export KEY_CITY=\"Dallas\"|g" "$prefix/etc/openvpn/easy-rsa/vars"
+    sed -i "s|export KEY_ORG.*|export KEY_ORG=\"$PROJECT_NAME\"|g" "$prefix/etc/openvpn/easy-rsa/vars"
+    sed -i "s|export KEY_EMAIL.*|export KEY_EMAIL=\"$MY_EMAIL_ADDRESS\"|g" "$prefix/etc/openvpn/easy-rsa/vars"
+    sed -i "s|export KEY_OU=.*|export KEY_OU=\"MoonUnit\"|g" "$prefix/etc/openvpn/easy-rsa/vars"
+    sed -i "s|export KEY_NAME.*|export KEY_NAME=\"$OPENVPN_SERVER_NAME\"|g" "$prefix/etc/openvpn/easy-rsa/vars"
+
+    if [ ! "$prefix" ]; then
+        vpn_generate_keys
+        firewall_enable_vpn
+
+        if [ ${VPN_TLS_PORT} -ne 443 ]; then
+            firewall_add VPN-TLS ${VPN_TLS_PORT} tcp
+        fi
+
+        systemctl start openvpn
+    fi
+
+    install_stunnel
+
+    if [ ! "$prefix" ]; then
+        systemctl restart openvpn
+    fi
+
+    APP_INSTALLED=1
+}
+
+# NOTE: deliberately there is no "exit 0"

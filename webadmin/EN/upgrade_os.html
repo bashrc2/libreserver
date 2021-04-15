@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <style>
+      body {
+          margin: 0;
+          font-family: Arial;
+          background-color: white;
+          color: black;
+      }
+
+      #headerpic {
+          width: 60%;
+          height: auto;
+          margin-right : auto;
+          margin-left : auto;
+          min-width : 220px;
+      }
+
+      .header {
+          text-align: center;
+          padding: 32px;
+      }
+
+      #iconpic {
+          width: 20%;
+          height: auto;
+          margin-right : auto;
+          margin-left : auto;
+          min-width : 120px;
+      }
+
+      .appurl {
+          color: grey;
+          font-size: 100%;
+      }
+
+      .appdesc {
+          font-size: 65%;
+      }
+
+      button {
+          border: none;
+          outline: 0;
+          display: inline-block;
+          padding: 8px;
+          color: white;
+          background-color: #000;
+          text-align: center;
+          cursor: pointer;
+          width: 100%;
+          font-size: 18px;
+      }
+
+      a {
+          text-decoration: none;
+      }
+
+      button:hover, a:hover {
+          opacity: 0.7;
+      }
+
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <a href="index.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
+
+      <h3 translate="yes">Upgrade Operating System</h3>
+
+      <h4 translate="yes">WARNING: If anything goes wrong during the upgrade then this can prevent your server from running. You should make sure that you have a full drive backup of the server before continuing.</h4>
+
+      <br>
+
+      <form action="reset.php" method="post">
+        <input type="submit" name="submitcancel" translate="yes" value="Go Back" /><br><br><br>
+        <input type="submit" name="submitupgradeoperatingsystemconfirm" translate="yes" value="Continue" /><br><br><br>
+      </form>
+
+    </div>
+
+  </body>
+</html>

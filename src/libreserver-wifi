@@ -1,0 +1,232 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Wifi configuration tools
+#
+# License
+# =======
+#
+# Copyright (C) 2016-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+PROJECT_NAME='libreserver'
+
+export TEXTDOMAIN=${PROJECT_NAME}-wifi
+export TEXTDOMAINDIR="/usr/share/locale"
+
+CONFIGURATION_FILE=$HOME/${PROJECT_NAME}.cfg
+COMPLETION_FILE=$HOME/${PROJECT_NAME}-completed.txt
+
+WIFI_INTERFACE=wlan0
+wifi_interface_specified=
+WIFI_TYPE='wpa2-psk'
+WIFI_SSID=
+WIFI_PASSPHRASE=
+WIFI_HOTSPOT='no'
+WIFI_CONFIG=/etc/wpa_supplicant/wpa_supplicant.conf
+WIFI_NETWORKS_FILE=~/${PROJECT_NAME}-wifi.cfg
+NETWORKS_INTERACTIVE=
+WIFI_DISABLE=
+WAIT_SEC=
+WIFI_MAX_RETRIES=5
+
+IFACE=
+IFACE_SECONDARY=
+
+source /usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-config
+source /usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-wifi
+
+function show_help {
+    echo ''
+    echo $"${PROJECT_NAME}-wifi -i [interface] -t [type] -s [ssid] -p [passphrase]"
+    echo ''
+    echo $'Wifi configuration tool'
+    echo ''
+    echo $'     --help                        Show help'
+    echo $'  -i --interface [wlan0|wlan1...]  Device name'
+    echo $'  -t --type [wpa2-psk|none|open]   Security type'
+    echo $'  -s --ssid [id]                   Set SSID'
+    echo $'  -p --passphrase [text]           Set passphrase'
+    echo $'     --hotspot [yes|no]            Create a hotspot'
+    echo $'     --networks [filename]         File containing wifi networks'
+    echo $'     --createnetworks [filename]   Create file containing wifi networks'
+    echo $'     --disable [yes/no]            Disable wifi'
+    echo $'     --retries [number]            Maximum number of retries'
+    echo ''
+    exit 0
+}
+
+while [ $# -gt 1 ]
+do
+    key="$1"
+
+    case $key in
+        --help)
+            show_help
+            ;;
+        -i|--if|--interface)
+            shift
+            WIFI_INTERFACE=${1}
+            wifi_interface_specified=1
+            write_config_param "WIFI_INTERFACE" "$WIFI_INTERFACE"
+            ;;
+        --wait|--sleep|--pause)
+            shift
+            WAIT_SEC=${1}
+            ;;
+        -t|--type)
+            shift
+            WIFI_TYPE=${1}
+            ;;
+        -s|--ssid)
+            shift
+            WIFI_SSID=${1}
+            ;;
+        --retries)
+            shift
+            WIFI_MAX_RETRIES=${1}
+            ;;
+        -p|--pass|--passphrase)
+            shift
+            WIFI_PASSPHRASE=${1}
+            ;;
+        --hotspot)
+            shift
+            WIFI_HOTSPOT=${1}
+            ;;
+        --networks)
+            shift
+            WIFI_NETWORKS_FILE=${1}
+            ;;
+        --networksinteractive)
+            shift
+            NETWORKS_INTERACTIVE='yes'
+            WIFI_NETWORKS_FILE=${1}
+            ;;
+        --disable)
+            shift
+            WIFI_DISABLE=${1}
+            if [[ $WIFI_DISABLE == $'yes' || $WIFI_DISABLE == $'y' ]]; then
+                WIFI_DISABLE='yes'
+            else
+                WIFI_DISABLE='no'
+            fi
+            ;;
+        *)
+            # unknown option
+            ;;
+    esac
+    shift
+done
+
+if [ ${NETWORKS_INTERACTIVE} ]; then
+    create_networks_interactive
+    exit 0
+fi
+
+if [ ! ${wifi_interface_specified} ]; then
+    if [ ! "$WAIT_SEC" ]; then
+       wpa_action "${WIFI_INTERFACE}" stop
+       wpa_cli -i "${WIFI_INTERFACE}" terminate
+    else
+        sleep "${WAIT_SEC}"
+    fi
+    update_wifi_adaptors 'wlan'
+    if [ ! $IFACE ]; then
+        echo $'No wifi adaptors were found'
+        exit 87
+    fi
+    WIFI_INTERFACE=${IFACE}
+    echo "Adaptor: $WIFI_INTERFACE"
+    write_config_param "WIFI_INTERFACE" "$WIFI_INTERFACE"
+fi
+
+if [ ${WIFI_DISABLE} ]; then
+    disable_wifi ${WIFI_DISABLE}
+    exit 0
+fi
+
+if [[ ${WIFI_HOTSPOT} == 'no' ]]; then
+    if [ -f "${WIFI_NETWORKS_FILE}" ]; then
+        wifi_established=
+        wifi_retry_ctr=0
+        while [ ! $wifi_established ]; do
+            if [ ${wifi_retry_ctr} -gt 0 ]; then
+                wpa_action ${WIFI_INTERFACE} stop
+                wpa_cli -i ${WIFI_INTERFACE} terminate
+            fi
+            networks_from_file
+            # allow some time for a connection to be established
+            sleep 5
+            # has it worked?
+            if [[ $(wifi_is_running) != "0" ]]; then
+                wifi_established=1
+                break
+            fi
+            # has the limit of retries been reached?
+            wifi_retry_ctr=$((wifi_retry_ctr+1))
+            if [ ${wifi_retry_ctr} -ge "${WIFI_MAX_RETRIES}" ]; then
+                break
+            fi
+        done
+        if [ $wifi_established ]; then
+            wpa_cli status
+            exit 0
+        else
+            echo $'Wifi could not be started'
+            exit 4
+        fi
+    fi
+fi
+
+if [ ! "${WIFI_SSID}" ]; then
+    echo $'No SSID given'
+    exit 1
+fi
+
+if [[ ${WIFI_HOTSPOT} != 'no' ]]; then
+    if ! hotspot_on; then
+        exit "$?"
+    fi
+    exit 0
+else
+    hotspot_off
+fi
+
+if [[ "$WIFI_TYPE" != 'none' && "$WIFI_TYPE" != 'open' ]]; then
+    if [ ! "$WIFI_PASSPHRASE" ]; then
+        echo $'No wifi passphrase was given'
+        exit 2
+    fi
+fi
+
+if [[ ${WIFI_TYPE} == 'wpa2-psk' ]]; then
+    if [ ! -d /etc/wpa_supplicant ]; then
+        echo $'wpasupplicant package is not installed'
+        exit 3
+    fi
+    wifi_wpa2_psk "$WIFI_SSID" "$WIFI_PASSPHRASE"
+    exit 0
+fi
+
+if [[ "$WIFI_TYPE" == 'none' || "$WIFI_TYPE" == 'open' ]]; then
+    wifi_none "$WIFI_SSID"
+    exit 0
+fi
+
+exit 0

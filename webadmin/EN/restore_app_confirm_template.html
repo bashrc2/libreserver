@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <style>
+      @import url("libreserver.css");
+
+      .appurl {
+          font-size: 100%;
+      }
+
+      .proceedtext {
+          font-size: 120%;
+      }
+
+      button {
+          border: none;
+          outline: 0;
+          display: inline-block;
+          padding: 8px;
+          color: white;
+          background-color: red;
+          text-align: center;
+          cursor: pointer;
+          width: 100%;
+          font-size: 18px;
+      }
+
+      button:hover, a:hover {
+          opacity: 0.7;
+      }
+
+      .chip {
+          display: inline-block;
+          padding: 0 25px;
+          height: 50px;
+          font-size: 70%;
+          line-height: 50px;
+          border-radius: 25px;
+          background-color: #f1f1f1;
+      }
+
+      .chip img {
+          float: left;
+          margin: 0 10px 0 -25px;
+          height: 50px;
+          width: 50px;
+          border-radius: 50%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="header">
+        <a href="apps.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a><br>
+        <br>
+        <p class="proceedtext" translate="yes"><b>Restore APPNAME from backup?</b></p>
+
+        <form action="restoreappconfirm.php" method="post">
+          <p>
+            <input type="radio" name="restoreconfirm" value="0" checked><label translate="yes">No</label>
+            <input type="radio" name="restoreconfirm" value="1"><label translate="yes">Yes</label>
+            <input type="hidden" name="app_name" value="APPNAME">
+          </p>
+          <img src="images/restore_app_progress.png" alt="Restore"/>
+          <p translate="yes">Restore password</p>
+          <p><input type="password" name="backup_password" value="" autofocus></p>
+          <p class="proceedtext" translate="yes">Plug your backup drive into the server now</p>
+          <br>
+          <input type="submit" name="restoreconfirmsubmit" translate="yes" value="Continue" />
+        </form>
+        <br>
+      </div>
+    </div>
+  </body>
+</html>

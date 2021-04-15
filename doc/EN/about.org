@@ -1,0 +1,36 @@
+#+TITLE: LibreServer
+#+AUTHOR: Bob Mottram
+#+EMAIL: bob@libreserver.org
+#+KEYWORDS: libreserver, origin
+#+DESCRIPTION: LibreServer: The origin story
+#+OPTIONS: ^:nil toc:nil num:nil
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="libreserver.css" />
+
+#+attr_html: :width 80% :height 10% :align center
+[[file:images/logo.png]]
+
+* The Origin Story
+
+** SheevaPlug
+
+In 2010 I saw the talk given by Eben Moglen on YouTube, called [[https://www.youtube.com/watch?v=QOEMv0S8AcA][Freedom in The Cloud]]. The problem which he was describing was immediately recognizable, because I'd been having it myself. My content was dispersed among various "big tech" sites and I was beginning to get the feeling that I no longer had meaningful control over it. Some services were shutting down and others were imposing various restrictions, antifeatures or dark patterns. People were being excluded from participation in software projects based on the very arbitrary criteria of what location they happened to have been born in. The era in which Google had been a plucky startup friendly towards Free Software seemed to be conclusively at an end.
+
+The plan described in /Freedom in The Cloud/ seemed feasible, so I looked up the plug computers which had been mentioned and found the SheevaPlug, based on an Arm 5 architecture. I started running Apache, MediaWiki and Friendica on it with dynamic DNS. It wasn't the fastest hardware, but it worked. In that initial phase I found that running internet applications was not as difficult as I had previously believed. Much of the apparent complexity of the web, and the frequently proclaimed genius of tech company "rockstars" was more like the man behind the curtain in /Wizard of Oz/. More smoke and mirrors or cheap publicity stunt than reality.
+
+So that it was possible to reinstall everything if there was a failure I kept notes on the various setup commands typed into an ssh terminal. Over time this list got longer and longer.
+
+** The Snowden Moment
+
+Then in 2013 the /Snowden Moment/ happened. I'd been reading stories about this kind of stuff for a long time. For example the "total information awareness" system or the various US bases with their golfball radars and protests against them. But those stories always lacked detail and so were plausibly deniable by officials. /"Those people protesting the golfballs are just paranoid. They have no evidence."/, it had sometimes been said in the 1990s. The Snowden documents ended that era of plausible deniability. If anything they showed that the spying capabilities which protesters had consistently complained about had been an extremely conservative underestimate of what was actually going on. Much of the edifice of power was propped up by this type of dubious bulk violation of basic rights. It made me think about how movements for social advancement in previous decades must also have been undermined via lower tech incarnations of what Snowden had revealed.
+
+At that time the internet seemed quite broken. It was clearly being exploited in the worst kind of way by people with bad intentions. Was there anything that I, a mere /Dark Matter Developer/, could do about this?
+
+So now was the time to start running FreedomBox and build a better internet without the default spying. Or so I thought. By that time FreedomBox had a foundation, but development on it appeared to have stalled and nobody seemed to be actively working on it. Also what code existed was very integrated with the DreamPlug hardware, which I didn't want to use. So if I wanted something like a FreedomBox I'd have to do it myself.
+
+** The Project Name
+
+At the end of 2013 the Beaglebone Black had just been released. Supply was limited and getting hold of one wasn't easy. But this seemed like a better platform for self-hosting because unlike the DreamPlug it was an open hardware design with no proprietary blobs. Now I needed a project name which was something like FreedomBox but not the same. Some combination of Beaglebone and FreedomBox. An internet search indicated that "LibreServer" wasn't taken by any existing product and so, for better or worse, that's what I went with.
+
+** After the Origin
+
+In 2013/14 LibreServer was an increasingly long list of instructions, and then because manually typing in commands was error-prone it got turned into a single large bash script. There was a major rewrite in 2016 to make everything easier to maintain and less monolithic, which was known as /"the Stockholm rewrite"/. This became version 2. In 2018 a web based user interface was added to make administering the system simpler.

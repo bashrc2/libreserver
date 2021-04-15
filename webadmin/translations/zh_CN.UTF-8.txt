@@ -1,0 +1,592 @@
+About|关于
+Accept|接受
+Accounts software can often be quite complex, and so you'll probably want to refer to the official documentation (https://akaunting.com/docs) for details.|帐户软件通常非常复杂，因此您可能需要参考官方文档（https://akaunting.com/docs）了解详细信息。
+Add|加
+New Member|添加新用户
+Add custom emoji|添加自定义表情符号
+Add mp3 or ogg files to a USB drive|将mp3或ogg文件添加到USB驱动器
+Add the following to your Emacs configuration file:|将以下内容添加到Emacs配置文件中：
+Add the Syncthing IDs for your other systems and devices here|在此处为您的其他系统和设备添加Syncthing ID
+Add your dat links below|在下面添加您的数据链接
+Add your RSS feeds here. Each line should be [title],[feed URL]|在此处添加RSS源。每行应为[标题]，[提要网址]
+Adding music|添加音乐
+Afrikaans|南非荷兰语
+Akaunting|Akaunting
+Albanian|阿尔巴尼亚人
+Allow new registrations|允许新注册
+An upgrade is scheduled|计划升级
+App is being removed|应用程序正在删除
+App is scheduled to be installed|计划安装应用程序
+Apps|应用
+Arabic|阿拉伯
+Backup|备用
+Backup / Restore|备份/还原
+Backup drive space used|使用备份驱动器空间
+Backup has failed|备份失败
+Backup in progress|正在备份
+Backup is complete|备份完成
+Backup of keys failed|密钥备份失败
+Backup of keys is complete|密钥备份已完成
+Backup your keys now?|现在备份你的钥匙？
+Basque|巴斯克
+Beginning app install|开始应用安装
+Beginning removal of app|开始删除应用程序
+Belarusian|白俄罗斯
+Bosnian|波斯尼亚
+Bulgarian|保加利亚语
+Cancel|取消
+Catalan|加泰罗尼亚
+Chat system|聊天系统
+Chinese (Simplified)|简体中文）
+Chinese (Traditional)|中国传统的）
+Choose the language that you wish to translate from the list.|从列表中选择您要翻译的语言。
+Choose your language|选择你的语言
+Classic chat system|经典聊天系统
+Click close and then connect.|单击关闭然后连接。
+Click on "add new" to add a new server and enter the domain name or onion address for the LibreServer, your username (which can be anything) and the VoIP server password which is the same as the password you set up the box with. Accept the self-signed SSL certificate if you don't have a Let's Encrypt certificate set up for your default domain. You are now ready to chat.|单击“添加新”以添加新服务器并输入LibreServer的域名或洋葱地址，您的用户名（可以是任何内容）和VoIP服务器密码，该密码与您设置的密码相同。如果您没有为默认域设置Let's Encrypt证书，请接受自签名SSL证书。你现在准备聊天了。
+Click on the lock icon at the bottom of the screen and enter the password. It should then appear unlocked. If you don't unlock then any edits you make won't be saved.|单击屏幕底部的锁定图标，然后输入密码。它应该显示为解锁。如果您没有解锁，则不会保存您所做的任何编辑。
+Collaborative document editor|协作文档编辑器
+Confirm backup password|确认备份密码
+Continue|继续
+Copy and paste the translations file and select 'update'.|复制并粘贴翻译文件，然后选择“更新”。
+Copy and paste the translations file into your favorite editor.|将翻译文件复制并粘贴到您喜欢的编辑器中。
+Copy and paste this into an email or other messaging app and send it to the LibreServer project.|将其复制并粘贴到电子邮件或其他消息应用程序中，然后将其发送到LibreServer项目。
+CPU temperature|CPU温度
+CPU usage|CPU使用率
+Croatian|克罗地亚
+Czech|捷克
+Danish|丹麦
+DAT Server|DAT服务器
+Databaseless blogging|无数据库博客
+Databaseless wiki|无数据库的wiki
+diagnostics|诊断
+diagnostics log|诊断日志
+Different versions of the same page on different servers are represented by boxes at the bottom right of the screen. You can double click on them to see the different versions, and use the flag icon to fork if you prefer that version|不同服务器上同一页面的不同版本由屏幕右下方的框表示。您可以双击它们以查看不同的版本，如果您喜欢该版本，可以使用标志图标进行分叉
+Disk I/O Speed|磁盘I / O速度
+Disk space used|使用的磁盘空间
+DNS setup|DNS设置
+Domain/User Blocking|域/用户阻止
+Domain:|域：
+Domain|域
+Dutch|荷兰人
+Dynamic DNS|动态DNS
+Edit your translations. The structure of this file is very simple. On the left is English text and on the right is translated text, with the vertical line character as a separator.|编辑您的翻译。这个文件的结构非常简单。左侧是英文文本，右侧是翻译文本，垂直线条字符作为分隔符。
+Edit, add or remove blocked domains or users. This applies to Email and XMPP addresses|编辑，添加或删除被阻止的域或用户。 这适用于电子邮件和XMPP地址
+Edith enable login|Edith启用登录
+Email system|电邮系统
+Email/XMPP: USEREMAIL|电子邮件/ XMPP：USEREMAIL
+Enable access via secure shell?|通过安全shell启用访问？
+Enable Updates|启用更新
+English|英语
+English (US)|英语（美国）
+Ensure that dat files are always available|确保dat文件始终可用
+Ensure that tor is installed onto your local system:|确保tor已安装到本地系统上：
+Enter a label (which can be any name you choose for the server), the default domain name of the LibreServer or preferably the mumble onion address, your username (which can also be anything) and the mumble password which is the same as the one you originally set up the box with. Leave the port number unchanged.|输入一个标签（可以是您为服务器选择的任何名称），LibreServer的默认域名，或者最好是嘟嘟洋葱地址，您的用户名（也可以是任何内容）和嘟嘟密码与该密码相同你最初设置的盒子。保持端口号不变。
+Enter a password which will be used to protect the backup|输入用于保护备份的密码
+Enter first and second nicknames and check connect to this network on startup.|输入第一个和第二个昵称，并在启动时检查连接到此网络。
+Estonian|爱沙尼亚语
+Everything installed will be lost|安装的一切都将丢失
+Extremely simple note taking|非常简单的笔记
+Factory reset is in progress|恢复出厂设置正在进行中
+Farsi|波斯语
+Favicon|网站图标
+Federated image sharing|联合图像共享
+Federated microblogging|联邦微博
+Federated social network|联邦社交网络
+Federated wiki|联邦维基
+Fedwiki Favicon|Fedwiki Favicon
+Fedwiki Password|Fedwiki密码
+Fedwiki Settings|Fedwiki设置
+File storage and sync|文件存储和同步
+File synchronization|文件同步
+Filipino|菲律宾
+Finnish|芬兰
+First ensure that tor is installed. Within a terminal:|首先确保安装了tor。在终端内：
+For details see the diagnostics|有关详细信息，请参阅诊断
+For details see:|详情见：
+For further information see the website at https://libreserver.org|有关详细信息，请访问https://libreserver.org网站
+For the initial login use username: admin password admin|对于初始登录，请使用用户名：admin password admin
+For the Jabber ID enter the email address from your LibreServer user settings|对于Jabber ID，请输入LibreServer用户设置中的电子邮件地址
+For the password use the password which you initially wrote down or stored during the setup of the LibreServer system|对于密码，请使用最初在LibreServer系统设置期间记下或存储的密码
+Forward port 80 and 443 from your internet router|从您的互联网路由器转发端口80和443
+Forward the following ports from your internet router:|从您的互联网路由器转发以下端口：
+Forward the port 64738 from your internet router|从您的互联网路由器转发端口64738
+Forward the port 6697 from your internet router|从您的互联网路由器转发端口6697
+Forward the port 8448 from your internet router|从您的互联网路由器转发端口8448
+FreeDNS code:|FreeDNS代码：
+LibreServer started in 2013. It was initially based on the Beaglebone Black hardware and inspired by the FreedomBox idea of an inexpensive and simple to manage internet server for the home.|LibreServer始于2013年。它最初基于Beaglebone Black硬件，灵感来自FreedomBox的想法，即为家庭提供廉价且易于管理的互联网服务器。
+French|法国
+French (Canada)|法语（加拿大）
+From the initial screen select 'settings' then 'language'.|从初始屏幕选择“设置”，然后选择“语言”。
+From the menu select 'Configure' then 'Settings'. Select the 'Advanced' checkbox then select 'Network'. Select 'Force TCP mode' and proxy type 'Socks5'. Hostname should be set to 'localhost' and port should be 9050.|从菜单中选择“配置”，然后选择“设置”。选中“高级”复选框，然后选择“网络”。选择“强制TCP模式”和代理类型“Socks5”。主机名应设置为“localhost”，端口应为9050。
+Gaelic|盖尔
+Gallego|加列戈
+Georgian|格鲁吉亚
+German|德语
+German (Personal)|德语（个人）
+Git repo management|Git回购管理
+Go Back|回去
+Go back to the F-droid initial screen and update the repositories by swiping downwards. You'll see it say "updating repositories". This might take a few minutes.|返回F-droid初始屏幕并向下滑动以更新存储库。你会看到它说“更新存储库”。这可能需要几分钟时间。
+Go back to the initial screen of the Conversations app, select the menu again, then 'Manage accounts'. Add an account by selecting the person icon with the plus next to it.|返回“对话”应用的初始屏幕，再次选择菜单，然后选择“管理帐户”。通过选择旁边带有加号的人员图标来添加帐户。
+Gogs allow new registrations|Gogs允许新的注册
+Greek|希腊语
+Gujarati|古吉拉特语
+Have you written down or saved the login credentials and removed any backup drives from the system?|您是否已记下或保存了登录凭据并从系统中删除了所有备份驱动器？
+Hebrew|希伯来语
+Help|帮帮我
+Helps caregivers track sleep, feedings, diaper changes, and tummy time|帮助护理人员跟踪睡眠，喂养，尿布变化和肚子时间
+Helps caregivers track sleep, feedings, diaper changes, and tummy time to learn about and predict babys needs without as much guess work.|帮助护理人员跟踪睡眠，喂养，尿布变化和肚子时间，以了解和预测宝宝的需求，而无需尽可能多的猜测工作。
+here|这里
+HexChat (formerly XChat) is compatible with proxying via Tor and so provides the best security when connecting to your IRC server. It will allow you to connect to your IRC server's onion address.|HexChat（以前称为XChat）与Tor代理兼容，因此在连接到IRC服务器时提供最佳安全性。它将允许您连接到IRC服务器的洋葱地址。
+Hindi|印地语
+How to do translations|怎么做翻译
+Hungarian|匈牙利
+Icecast|的Icecast
+Icecast is quite CPU intensive. For example on an A20 based system it takes about 70% of the CPU resource. This is something to be aware of if you're running multiple apps|Icecast非常占用CPU。例如，在基于A20的系统上，它占用了大约70％的CPU资源。如果您正在运行多个应用程序，请注意这一点
+Icecast is updating|Icecast正在更新
+Icelandic|冰岛的
+Icons on the website and user interfaces are by Rashid Mhar.|网站和用户界面上的图标由Rashid Mhar提供。
+If you are an Emacs user then you can also connect to your IRC server via Emacs.|如果您是Emacs用户，则还可以通过Emacs连接到IRC服务器。
+If you are using the onion address then use SSL should be unchecked and the transport encryption will be handled via the onion address itself.|如果您正在使用洋葱地址，则应取消选中使用SSL，并通过洋葱地址本身处理传输加密。
+If you are using the ordinary domain name (clearnet/ICANN) then make sure that Use SSL is checked.|如果您使用普通域名（clearnet / ICANN），请确保选中使用SSL。
+If you don't have a domain then just select Continue|如果您没有域，则只需选择继续
+If you don't have Orbot installed then enable The Guardian Project repository from the drop down menu and install it.|如果您没有安装Orbot，请从下拉菜单中启用Guardian Project存储库并进行安装。
+If you don't need a password then just leave this blank and select Update|如果您不需要密码，请将其留空并选择更新
+If you have a USB plugged in leave it inserted until you can confirm that the stream is working|如果您已插入USB，请将其插入，直到您可以确认该流正常工作
+If you have trouble accessing onion addresses paste some Tor bridges below. See https://bridges.torproject.org/bridges|如果您无法访问洋葱地址，请在下方粘贴一些Tor桥。请参阅https://bridges.torproject.org/bridges
+If you're using the Element mobile app to access your Matrix homeserver then you can significantly improve battery performance by going to the settings and changing 'Sync request timeout' to 30 seconds and 'Delay between two sync requests' to 600 seconds. Also turning off 'msgs in group chats' will help, since it will avoid getting a notification whenever a group chat event happens, which then wakes up the screen|如果您使用Element移动应用程序访问Matrix主服务器，那么您可以通过转到设置并将“同步请求超时”更改为30秒并将“两个同步请求之间的延迟”更改为600秒来显着提高电池性能。关闭“群组聊天中的消息”也会有所帮助，因为它会避免在群聊事件发生时收到通知，然后唤醒屏幕
+If your translations are accepted they will later appear in the upstream project and be usable by anyone.|如果您的翻译被接受，它们将在以后出现在上游项目中并且可供任何人使用。
+Import|进口
+In a Tor browser navigate to the onion address for Icecast and you can then play the stream|在Tor浏览器中，导航到Icecast的洋葱地址，然后您可以播放该流
+Indonesian|印度尼西亚
+Initial login|初次登录
+Initial Setup|初始设置
+Install|安装
+Install APPNAME now?|立即安装APPNAME？
+Install F-Droid|安装F-Droid
+Install HexChat and set up its configuration file. Assuming that you're running on a Debian or Arch based distro, this can be done on your local machine with:|安装HexChat并设置其配置文件。假设您在基于Debian或Arch的发行版上运行，可以在本地计算机上执行以下操作：
+Installation|安装
+Installing in Emacs|在Emacs中安装
+Installing on Desktop|在桌面上安装
+Invalid Password|无效的密码
+IRC|IRC
+IRC is useful for multi-user chat. The classic use case is for software development where many engineers might need to coordinate their activities, but it's also useful for meetings, parties and general socialising.|IRC对多用户聊天很有用。经典用例适用于软件开发，许多工程师可能需要协调他们的活动，但它对会议，聚会和一般社交活动也很有用。
+It can be shown using the command:|可以使用以下命令显示：
+It's possible to add jingles which will be played between tracks at random intervals. If some of the audio files on your USB drive are named jingle_something.mp3 then they will be used as jingles|可以添加将以随机间隔在曲目之间播放的jingles。如果USB驱动器上的某些音频文件名为jingle_something.mp3，那么它们将被用作jingles
+It's recommended that you add an SRV record for Matrix to your DNS setup. How you do this will depend upon your dynamic DNS provider and their web interface. On FreeDNS on the subdomains settings in addition to the subdomain which you are using for the matrix server create an extra entry as follows:|建议您将Matrix的SRV记录添加到DNS设置中。如何执行此操作取决于您的动态DNS提供程序及其Web界面。在子域设置上的FreeDNS以及您用于矩阵服务器的子域之外，创建一个额外的条目，如下所示：
+Italian|意大利
+Japanese|日本
+Jingles|顺口溜
+Kannada|卡纳达语
+Keep changes|保持变化
+Khmer|高棉
+Korean|朝鲜的
+Language|语言
+Lao|老挝
+Latvian|拉脱维亚
+Lithuanian|立陶宛
+Malayalam|马拉雅拉姆语
+Malaysian|马来西亚
+Manually upgrade now ?|现在手动升级？
+Maori (Ngai Tahu)|毛利人（Ngai Tahu）
+Maori (Waikoto Uni)|毛利人（Waikoto Uni）
+Markdown blogging|Markdown博客
+Matrix|矩阵
+Maybe instead of editing within this user interface you prefer to use your own editor. That can be done as follows:|也许您不想在此用户界面中进行编辑，而是希望使用自己的编辑器。这可以做到如下：
+Media broadcast|媒体广播
+Media storage and broadcast|媒体存储和广播
+Mongolian|蒙
+Mumble|咕哝
+Music player|音乐播放器
+No|没有
+No SSH public key was provided|没有提供SSH公钥
+none|没有
+Norwegian|挪威
+Norwegian (Primary)|挪威语（小学）
+Not Connected|未连接
+Note taking|做笔记
+Nynorsk|尼诺斯克
+Once you are on the translations screen (see the first three steps in the first section above) select the 'submit' button.|进入翻译界面后（请参阅上面第一部分的前三个步骤），选择“提交”按钮。
+Once you are on the translations screen (see the first three steps in the first section above) select the language code shown at the top of the screen (usually it ends with UTF-8). You can then see the raw translations file.|进入翻译界面后（请参阅上面第一部分的前三个步骤），选择屏幕顶部显示的语言代码（通常以UTF-8结尾）。然后，您可以看到原始翻译文件。
+Open the F-droid app and select 'Settings' then 'Repositories'. Make sure that 'Guardian Project Official Releases' is enabled|打开F-droid应用程序，然后选择“设置”，然后选择“存储库”。确保启用“Guardian Project官方发布”
+Open the settings. Select 'General', then 'Connect via Tor'. This will provide better protection, making it more difficult for adversaries to know who is talking to who. If connecting through Tor is unreliable and causes crashes then unselect 'Connect via Tor' on the 'General settings' and then just use your ordinary domain name.|打开设置。选择“常规”，然后选择“通过Tor连接”。这将提供更好的保护，使对手更难以知道谁在与谁交谈。如果通过Tor连接不可靠并导致崩溃，则在“常规设置”中取消选择“通过Tor连接”，然后只使用普通域名。
+Open up the Conversations app and select the menu (three dots), scroll down and select 'Expert Settings' then select 'Connect to Tor'|打开Conversations应用程序并选择菜单（三个点），向下滚动并选择'Expert Settings'然后选择'Connect to Tor'
+or|要么
+Paragraphs can be dragged up and down to change their order, or moved between pages|可以上下拖动段落以更改其顺序，也可以在页面之间移动
+Password|密码
+Password: |密码：
+Paste your ssh public key here|在此粘贴您的ssh公钥
+Paste your translations file below|在下面粘贴您的翻译文件
+Peertube allow new registrations|Peertube允许新注册
+Personal accounting|个人会计
+Personal or small business accounting|个人或小企业会计
+Photo album|相片集
+Please enter their username. This should be lower case only and with no spaces.|请输入他们的用户名。这应该只是小写，没有空格。
+Please insert a USB drive|请插入USB驱动器
+Please insert the USB drive to restore from now|请从现在开始插入USB驱动器进行恢复
+Please insert your backup USB drive now|请立即插入备用USB驱动器
+Please specify stream name, description and genre|请指定流名称，描述和流派
+Please wait while your appliance is configuring|您的设备正在配置，请稍候
+Please write down or save these credentials|请写下或保存这些凭据
+Pleroma|Pleroma
+Pleroma allow new registrations|Pleroma允许新的注册
+Pleroma Custom Emoji|Pleroma Custom Emoji
+Pleroma Settings|Pleroma设置
+Plug the USB drive into your server, then go to the Icecast app settings, add some details about your playlist, and select 'Update'|将USB驱动器插入服务器，然后转到Icecast应用程序设置，添加有关播放列表的一些详细信息，然后选择“更新”
+Polish|抛光
+Ports|端口
+Portuguese|葡萄牙语
+Portuguese (Brazil)|葡萄牙语（巴西）
+Power|功率
+Press the plus button to add a Mumble server.|按加号按钮添加Mumble服务器。
+Proceed with backup?|继续进行备份？
+Proceed with drive format?|继续驱动格式？
+Proceed with reset?|继续重置？
+Proceed with restore?|继续还原？
+RAM used|使用RAM
+Remote access|远程访问
+Remove|去掉
+Remove any backup drives now|立即删除所有备份驱动器
+Remove APPNAME now?|立即删除APPNAME？
+Remove user USERNAME?|删除用户USERNAME？
+Removing user account|删除用户帐户
+Reset is in progress|重置正在进行中
+Reset to factory|重置为工厂
+RESET TO FACTORY DEFAULTS|重置工厂默认值
+Restart|重新开始
+Restore|恢复
+Restore has failed|恢复失败
+Restore in progress|正在恢复
+Restore is complete|恢复完成
+Restore of keys failed|恢复密钥失败
+Restore of keys is complete|恢复密钥已完成
+Restore password|恢复密码
+Restore your keys now?|现在恢复你的钥匙？
+Restoring backup keys|恢复备份密钥
+Romanian|罗马尼亚
+RSS Reader|RSS阅读器
+Run HexChat.|运行HexChat。
+Running backup of keys|运行密钥备份
+Russian|俄语
+Samoan|萨摩亚
+Search again for 'Conversations' (not the legacy version), then select 'install'|再次搜索“对话”（不是旧版），然后选择“安装”
+Search for and install Plumble.|搜索并安装Plumble。
+Secure realtime collaboration|安全的实时协作
+Secure realtime collaboration with docs, presentations, drawing and voting. Documents are ephemeral and unless you save them will be deleted when you close the browser.|通过文档，演示文稿，绘图和投票实现安全的实时协作。文档是短暂的，除非您保存它们将在关闭浏览器时被删除。
+Secure Shell|安全外壳
+Select|选择
+Select 'Apply' and 'Ok', then on the menu 'Server' and 'Connect'.|选择“应用”和“确定”，然后在“服务器”和“连接”菜单上。
+Select 'Next' to create the account. If eveything is working after a couple of minutes you should see the account status change to 'online' in green|选择“下一步”以创建帐户。如果eveything在几分钟后工作，您应该会看到帐户状态变为绿色的“在线”状态
+Select search (magnifying glass icon) and search for 'Orbot' (not the legacy version), then select 'install'|选择搜索（放大镜图标）并搜索“Orbot”（不是旧版），然后选择“安装”
+Select the 'translate' button. You will see a new screen with English text on the left and translated text on the right.|选择“翻译”按钮。您将看到左侧是英文文本的新屏幕，右侧是翻译文本。
+Select the Autojoin channels tab, click Add and enter #libreserver as the channel name.|选择“自动加入频道”选项卡，单击“添加”，然后输入#libreserver作为频道名称。
+Select the entry within the servers box, then enter ircaddress.onion/6697 or mydomainname/6697 and press Enter.|选择服务器框中的条目，然后输入ircaddress.onion/6697或mydomainname/6697并按Enter键。
+Select the wiki button at the bottom of the screen, next to pages, to enable or disable editing.|选择屏幕底部，页面旁边的wiki按钮，以启用或禁用编辑。
+Selecting the server by pressing on it then connects you to the server so that you can chat with other connected users|按下它选择服务器然后将您连接到服务器，以便您可以与其他连接的用户聊天
+Serbian|塞尔维亚
+Setting up on a laptop|在笔记本电脑上设置
+Setting up on Android|在Android上设置
+Setting up with an Android phone|使用Android手机进行设置
+Settings|设置
+Setup on Android|在Android上安装
+Shortcode|短代码
+Shutdown|关掉
+Shutting down|关机
+Simple kanban|简单的看板
+Simple Markdown blogging|简单的Markdown博客
+Simple notes|简单的笔记
+Slovak|斯洛伐克
+Slovenian|斯洛文尼亚
+Somali|索马里
+Spanish (International)|西班牙语（国际）
+SSH access is disabled|SSH访问被禁用
+SSH access is enabled|SSH访问已启用
+Stream Description|流描述
+Streaming media|流媒体
+Submit|提交
+Submitting your translations to the LibreServer project|将您的翻译提交到LibreServer项目
+Swedish|瑞典
+System Monitor|系统监视器
+Systems may be temporarily unavailable in the next few minutes|系统可能在接下来的几分钟内暂时无法使用
+Tagalog|他加禄语
+Tamil|泰米尔人
+Thai|泰国
+Thankyou for choosing the LibreServer home internet appliance|谢谢您选择LibreServer家庭互联网设备
+The account will now be removed. This may take a minute or two. For details see:|该帐户现在将被删除。这可能需要一两分钟。详情见：
+The classic low bandwidth chat system|经典的低带宽聊天系统
+The LibreServer system isn't primarily aimed at companies or institutions, but if you're a one person company or freelancer then having the ability to run your own accounting system and keep the data private and also backed up is useful. Akaunting provides a nice web based system for small business accounts, and is also quite usable within a mobile web browser.|LibreServer系统并非主要针对公司或机构，但如果您是一个单独的公司或自由职业者，那么能够运行您自己的会计系统并将数据保密并备份也很有用。 Akaunting为小型企业帐户提供了一个很好的基于Web的系统，并且在移动Web浏览器中也非常有用。
+A new member is being added. This may take a minute or two.|正在添加新用户。记下或保存他们的密码。
+The passwords do not match|密码不匹配
+There are a few things to know about using the federated wiki.|关于使用联合wiki，有几点需要了解。
+There are no apps installed. Select the plus button above to install new apps.|没有安装应用程序。选择上面的加号按钮以安装新应用。
+This app may be useful if you have a new child or babysitting duties. It helps caregivers track sleep, feedings, diaper changes, and tummy time to learn about and predict baby's needs without as much guess work.|如果您有新的孩子或保姆职责，此应用程序可能会有用。它帮助护理人员跟踪睡眠，喂养，尿布变化和肚子时间，以了解和预测宝宝的需求，而无需进行大量的猜测工作。
+This is a server system which enables you to run internet apps such as a blog or federated social network.|这是一个服务器系统，使您可以运行互联网应用程序，如博客或联合社交网络。
+This is certainly the type of data which you might want to keep private and away from companies who might otherwise use surveillance of parenting app data to try to guilt you into buying all sorts of junk that you don't really need or can't afford.|这肯定是您可能希望保密的数据类型，远离公司，否则他们可能会使用对育儿应用数据的监控来试图让您有罪地购买各种您实际上不需要或不负担的垃圾。
+This is your new password|这是您的新密码
+This may take a few minutes.|这可能需要几分钟的时间。
+This may take a minute or two. For details see:|这可能需要一两分钟。详情见：
+This system isn't intended to broadcast to large audiences and the upper limit of listeners is set at ten. So a family and friends type group.|该系统不打算向大量观众广播，并且听众的上限设置为10。所以一个家庭和朋友类型组。
+This will make a backup of the keys which encrypt your backups, protecting them against accidental loss or exposure. You should keep this drive in a safe place, separate from other backups.|这将备份加密备份的密钥，防止意外丢失或暴露。您应该将此驱动器保存在安全的地方，与其他备份分开。
+This will restore the keys used to encrypt backups.|这将恢复用于加密备份的密钥。
+To add a new paragraph use the + button|要添加新段落，请使用+按钮
+To claim/fork a page from another server click on the flag icon|要从另一台服务器声明/分叉页面，请单击标志图标
+To edit a paragraph double click on it|要编辑段落，请双击它
+To remove a paragraph just delete all of its text|要删除段落，只需删除其所有文本
+To upload music files install Syncthing then copy album directories into ~/Sync/music_upload, then within Koel go to settings and scan the directory /music|要上传音乐文件，请安装Syncthing，然后将相册目录复制到〜/ Sync / music_upload，然后在Koel内转到设置并扫描目录/音乐
+Tor Bridges|Tor Bridges
+Translate|翻译
+Translations|翻译
+Turkish|土耳其
+Type: SRV|类型：SRV
+Ukrainian|乌克兰
+Uncheck use global user information.|取消选中使用全局用户信息。
+Uninstall|卸载
+Update|更新
+Updates settings changed|更新设置已更改
+Upgrade|升级
+Upgrades happen automatically. You don't need to start them manually like this, except in rare circumstances|升级自动发生。除非在极少数情况下，否则您不需要像这样手动启动它们
+Upload|上传
+URL to upload from|要上传的网址
+USB drive format has failed|USB驱动器格式失败
+USB drive format in progress|USB驱动器格式正在进行中
+USB drive format is complete|USB驱动器格式已完成
+Username: |用户名：
+Username: admin|用户名：admin
+Members|用户
+Using your preferred editor|使用首选编辑器
+Video broadcast|视频广播
+Vietnamese|越南
+Voice chat|语音聊天
+WARNING: THIS WILL ERASE ALL CONTENT OF THE USB DRIVE|警告：这将删除USB驱动器的所有内容
+We're sorry, but the username you gave is not suitable. Check that it does not contain spaces, is lower case and at least 3 characters in length.|很抱歉，您提供的用户名不合适。检查它是否包含空格，是小写字母，长度至少为3个字符。
+Web publishing system|网络出版系统
+When done editing click on the wiki button again|完成编辑后再次单击wiki按钮
+When it's done it will appear on the apps screen|完成后，它将显示在应用程序屏幕上
+When removal is finished it will disappear from apps|删除完成后，它将从应用程序中消失
+When you are done with translating select the 'import' button on the translations screen.|完成翻译后，选择翻译屏幕上的“导入”按钮。
+When you've added your translations select the 'update' button. This will update the translations file for the selected language. Note that this does not change the current language within the user interface. If you want to do that go back to the language screen, select a language and then the 'select' button.|添加翻译后，选择“更新”按钮。这将更新所选语言的翻译文件。请注意，这不会更改用户界面中的当前语言。如果要执行此操作，请返回语言屏幕，选择一种语言，然后选择“选择”按钮。
+Whichever screen you are currently on, you can get back to the previous screen by clicking or pressing on the LibreServer logo at the top.|无论您当前使用哪种屏幕，都可以通过单击或按顶部的LibreServer徽标返回上一屏幕。
+With Icecast you can run your own internet radio stream from an onion address. As always, be careful about copyright issues and preferably stick to Creative Commons music or music files that you own.|使用Icecast，您可以从洋葱地址运行自己的互联网广播流。与往常一样，请注意版权问题，最好坚持使用您拥有的Creative Commons音乐或音乐文件。
+Within the network list click, Add and enter your domain name then click Edit.|在网络列表中单击，添加并输入您的域名，然后单击编辑。
+Within the Password field enter the password which you originally set up the box with.|在密码字段中输入您最初设置框的密码。
+Within the software center search for "mumble" and install the client then run it. Skip through the audio setup wizard. Cancel the initial connection window.|在软件中心内搜索“mumble”并安装客户端然后运行它。跳过音频设置向导。取消初始连接窗口。
+Write it down or save it|写下来或保存
+XMPP|XMPP
+xmpp based chat system|基于xmpp的聊天系统
+Yes|是
+You can edit the translated text on the right side of the screen.|您可以编辑屏幕右侧的翻译文本。
+You can get to this system remotely via:|您可以通过以下方式远程访问此系统：
+You can now go back to the initial Conversations app screen and start using it. You'll probably want to add contacts using the icon at the bottom right. For more information see the Conversations website (conversations.im) or subscribe to the chat group conversations@conference.siacs.eu|您现在可以返回初始的Conversations应用程序屏幕并开始使用它。您可能希望使用右下方的图标添加联系人。有关详细信息，请参阅Conversations网站（conversations.im）或订阅聊天组conversations@conference.siacs.eu
+You can now log in with:|您现在可以使用以下命令登录：
+You can see upgrade progress|您可以看到升级进度
+You can use left and right cursor keys to move through pages|您可以使用左右光标键在页面中移动
+You may also want to make another entry with the same settings but replacing tcp with udp.|您可能还想使用相同的设置创建另一个条目，但用udp替换tcp。
+You may now remove the USB drive|您现在可以删除USB驱动器
+You might have mistyped one of them|您可能输错了其中一个
+You will see the translations file with some instructions at the top.|您将在顶部看到带有一些说明的翻译文件。
+Your password must be at least 8 characters in length and only use the characters a-z A-Z and 0-9|您的密码长度必须至少为8个字符，并且只能使用字符a-z A-Z和0-9
+Zero knowledge pastebin|零知识pastebin
+Theme|主题
+Light|光
+Dark|黑暗
+Mail|邮件
+Clear|明确
+Send email through a proxy|通过代理发送电子邮件
+If you find that you can't send out email and that you get 'failed delivery' messages returned instead then you may be able to proxy sent emails through another server. Sometimes ISPs or companies provide an SMTP server which can do this.|如果您发现无法发送电子邮件，并且您收到了“发送失败”消息，那么您可以通过其他服务器代理发送的电子邮件。 有时，ISP或公司提供可以执行此操作的SMTP服务器。
+Failed to install. For details see admin/applog.txt|安装失败。 有关详细信息，请参阅admin/applog.txt
+Installed successfully|安装成功
+pihole|pihole
+Unlike browser based ad blockers, pihole works at the domain name resolution level to block domains known to privide the ads appearing in web pages.|与基于浏览器的广告拦截器不同，pihole在域名解析级别工作，以阻止已知的域名出现在网页中。
+Set your DNS IP address to the one shown and many ads will get blocked even before they're delivered to your laptop or mobile device. This can save a lot of bandwidth and generally speed up the loading of websites.| 将您的DNS IP地址设置为显示的IP地址，即使在将广告投放到您的笔记本电脑或移动设备之前，也会阻止许多广告。这可以节省大量带宽，并且通常可以加快网站的加载速度
+Change DNS on your internet router| 在您的互联网路由器上更改DNS
+If your internet router allows you to change the DNS IP address then this is the best way to use pihole because it will then provide coverage for all of the devices and computers in your home.|如果您的互联网路由器允许您更改DNS IP地址，那么这是使用pihole的最佳方式，因为它将为您家中的所有设备和计算机提供覆盖。
+Change DNS on individual devices|更改各个设备上的DNS
+If you can't change your internet router's DNS then you can do that on individual GNU/Linux systems as follows:| 如果您无法更改您的互联网路由器的DNS，那么您可以在各个GNU/Linux系统上执行此操作，如下所示：
+Remove or comment out any existing nameservers and add one with the IP address shown for the pihole app. Something like:|删除或注释掉任何现有的名称服务器，并添加一个显示为pihole应用程序显示的IP地址。像：
+Then save and exit and prevent the file from being automatically changed with:| 然后保存并退出并阻止文件自动更改为：
+If you're running the standard version of LibreServer (not the onion version) then you may need to modify your hosts file to access your own domain.|如果您正在运行LibreServer的标准版本（而不是洋葱版），那么您可能需要修改您的hosts文件以访问您自己的域。
+Then add something like:|然后添加如下内容：
+This only works when you're within your home network, so if you're outside of your home then undo the changes made above.|这仅适用于您在家庭网络中的情况，因此如果您在家外，则撤消上述更改
+The Pi-hole is a DNS sinkhole that protects your devices from unwanted content, without installing any client-side software.|Pi-hole是一个DNS sinkhole，可以保护您的设备免受不必要的内容的侵害，而无需安装任何客户端软件。
+Search|搜索
+removed|去除
+To get email working you will need to forward some ports. Email using your onion address will work anyway, so long as you are contacting other onion based email addresses.|要使电子邮件正常工作，您需要转发一些端口。 只要您联系其他基于洋葱的电子邮件地址，使用您的洋葱地址的电子邮件仍然有效。
+Forward ports 25, 587 and 465 from your internet router|从您的互联网路由器转发端口25,587和465
+To access cryptpad you'll need to use a Tor browser. Navigate to the URL and enable javascript for the site under the NoScript icon. The screen will be blank for a few seconds while it's downloading the application into your browser.|要访问cryptpad，您需要使用Tor浏览器。 导航到URL并在NoScript图标下为站点启用javascript。 在将应用程序下载到浏览器中时，屏幕将显示空白几秒钟。
+Cryptpad is an almost peer-to-peer application. No data is stored on the server, which only does minimal orchestration between the clients. If an adversary subsequently obtains the server they still learn nothing.|Cryptpad是一个几乎是点对点的应用程序。 没有数据存储在服务器上，只在客户端之间进行最小的编排。 如果对手随后获得了服务器，他们仍然没有学到任何东西。
+Authentication Token|身份验证令牌
+This is only needed if you're using FreeDNS. Otherwise you can leave it blank.|只有在使用FreeDNS时才需要这样做。 否则你可以留空。
+On the site where you obtained your domain name set up some custom nameservers as follows:|在您获取域名的站点上设置一些自定义名称服务器，如下所示：
+On the FreeDNS site go to the "Dynamic DNS" section and make sure that "link updates of the same IP together" is set to ON.|在FreeDNS站点上，转到“动态DNS”部分，确保“将相同IP的链接更新”设置为“开”。
+For your main domain name select "quick cron example" and then your authentication token is the random string on the last line between the ? and = characters.|对于您的主域名选择“快速cron示例”，然后您的身份验证令牌是最后一行之间的随机字符串？ 和=字符。
+Your current IP address is shown at the top of the Dynamic DNS screen of the LibreServer user interface. You can use the "Mass Mod" feature at the top of the "Subdomains" part of the FreeDNS site to set all of your subdomains to that IP address.|您当前的IP地址显示在LibreServer用户界面的动态DNS屏幕顶部。 您可以使用FreeDNS网站“Subdomains”部分顶部的“Mass Mod”功能将所有子域设置为该IP地址。
+Select the MX entry for your main domain and change the destination to 10:mydomainname rather than 10:mail.mydomainname.|选择主域的MX条目，并将目标更改为10：mydomainname而不是10：mail.mydomainname。
+Enter your FreeDNS login details and the authentication token on the Dynamic DNS screen of the LibreServer user interface.|在LibreServer用户界面的动态DNS屏幕上输入您的FreeDNS登录详细信息和身份验证令牌。
+To make a playlist insert a USB drive containing audio files in a directory called playlist, add a description below and then select Update|要制作播放列表，请将包含音频文件的USB驱动器插入名为播放列表的目录中，在下面添加说明，然后选择“更新”
+To add music copy it to a directory called Music on a USB drive then plug it into your server and select Update|要添加音乐，请将其复制到USB驱动器上名为Music的目录中，然后将其插入服务器并选择更新
+This is a wiki which stores its content in text files. Having no database makes maintaining it simpler, and it's not tied to any particular domain name so you can easily copy the files to a different domain if you need to.|这是一个将其内容存储在文本文件中的Wiki。没有数据库使维护更简单，并且它不依赖于任何特定的域名，因此您可以根据需要轻松地将文件复制到其他域。
+Provides an easy and private way to sync calendar and contacts between devices.|提供一种简单而私密的方式来同步设备之间的日历和联系人。
+Using on mobile|在移动设备上使用
+The user interface is a little misleading. Make sure that you log in with your username, not your email addres.|用户界面有点误导。确保使用您的用户名登录，而不是使用电子邮件地址登录。
+Also choose the advanced option and enter the subdomain that you installed etesync on.|同时选择高级选项并输入您在其上安装etesync的子域。
+This is a well known system for real time collaborative editing of documents. Just log in, choose a document title and then edit. Different users will appear in different colours, and can also chat in the sidebar. This is installed as a private system in which only users on your LibreServer server will be able to create and edit documents, so it's not open to any random users on the internet.|这是用于文档的实时协作编辑的众所周知的系统。只需登录，选择文档标题，然后进行编辑。不同的用户将以不同的颜色显示，也可以在侧边栏中聊天。这是作为一个私人系统安装的，其中只有LibreServer服务器上的用户才能创建和编辑文档，因此它不对互联网上的任何随机用户开放。
+This is a federated social networking system. It can federate with other popular fediverse systems.|这是一个联合社交网络系统。它可以与其他流行的fediverse系统联合。
+This is a blogging system which has no database and only uses text files for storage.|这是一个没有数据库的博客系统，只使用文本文件进行存储。
+This is a git hosting system. It's very similar to Github in appearance and use, is lightweight and so is well suited for use on low power ARM servers.|这是一个git托管系统。它在外观和使用方面与Github非常相似，重量轻，非常适合在低功耗ARM服务器上使用。
+This is a web publishing and social network system which includes wiki, web pages, photo albums and file storage. It also has nomadic identity allowing you to easily move your account between different servers and privacy controls which allow you to define who can see what content.|这是一个网络发布和社交网络系统，包括维基，网页，相册和文件存储。它还具有游牧身份，允许您轻松地在不同服务器和隐私控制之间移动您的帐户，从而可以定义谁可以查看哪些内容。
+Kanbans are one way of managing projects. They're traditionally used in businesses but can also be useful for personal TODO lists or within open source or DIY projects. If you have a list of things which need to be done and want to keep track of progress then this provides a way to do that.|看板是管理项目的一种方式。它们传统上用于商业，但也可用于个人TODO列表或开源或DIY项目。如果您有一系列需要完成的事情并希望跟踪进度，那么这就提供了一种方法。
+The default login is username "admin" and the login password which you usually use for the web interface.|默认登录名是用户名“admin”和您通常用于Web界面的登录密码。
+If you're using a Tor browser then you may need to allow javascript for the site by selecting the NoScript icon.|如果您使用的是Tor浏览器，则可能需要通过选择NoScript图标为该网站允许javascript。
+Extra users can be added from the drop down menu at the top right of the screen, under "Users management".|可以从屏幕右上角的“用户管理”下的下拉菜单中添加额外用户。
+This enables you to store your music on the LibreServer server and then access it from any internet connected device.|这使您可以将音乐存储在LibreServer服务器上，然后从任何连接到互联网的设备访问它。
+This is a simple and lightweight photo album for the web. Whether you're an amateur or professional photographer, or want to publish random holiday pics or cat pictures. Lychee just does what it says it does without any fuss.|这是一个简单轻便的网络相册。无论您是业余摄影师还是专业摄影师，或想发布随机假日照片或猫图片。荔枝只是做它所说的没有任何大惊小怪。
+This provides an webmail interface suitable for use on desktop or mobile clients and with built in support for encryption.|这提供了适用于桌面或移动客户端的webmail接口，并且内置了对加密的支持。
+This is a system for file synchronisation and also has many other plugins for calendar, videoconferencing, collaborative document editing and federated file sharing.|这是一个用于文件同步的系统，还有许多其他用于日历，视频会议，协作文档编辑和联合文件共享的插件。
+This is a video hosting system which uses webtorrent to help distribute the files to or between clients.|这是一个视频托管系统，它使用webtorrent帮助将文件分发到客户端或客户端之间。
+Use the username 'root' and your usual password to log in as the administrator. You can then change settings as needed.|使用用户名“root”和常用密码以管理员身份登录。然后，您可以根据需要更改设置。
+This is an OStatus and ActivityPub compatible social networking server which federates with other fediverse systems. It is high-performance and so is especially well suited for running on low power single board computers without much RAM.|这是一个OStatus和ActivityPub兼容的社交网络服务器，它与其他的fediverse系统联合。它具有高性能，因此特别适合在没有太多RAM的低功耗单板计算机上运行。
+Since Pleroma supports the same protocols, any Mastodon client for Android should work with it.|由于Pleroma支持相同的协议，因此Android的任何Mastodon客户端都应该使用它。
+This is a fork of GNU Social which includes some extra fixes and optimisations to improve performance. It federates with other fediverse servers, such as Pleroma or Mastodon.|这是GNU Social的一个分支，它包含一些额外的修复和优化以提高性能。它与其他fediverse服务器联合，例如Pleroma或Mastodon。
+This is an encrypted pastebin, such that the server has zero knowledge of the content. It's intended for small amounts of text less than 32K in length. It's not intended for transfering large files, or for storing pastes for more than a day.|这是一个加密的pastebin，因此服务器对内容没有任何了解。它适用于少量长度小于32K的文本。它不是用于传输大文件，也不是用于存储超过一天的粘贴。
+This is a web based user interface to the Matrix federated chat system. You will need to have already installed the Matrix app for this to work.|这是Matrix联合聊天系统的基于Web的用户界面。您需要已经安装了Matrix应用程序才能实现此功能。
+This is yet another chat system, but the server part of it isn't federated and so it's suitable for small private groups rather than for general public discussions.|这是另一个聊天系统，但它的服务器部分不是联合的，因此它适用于小型私人组而不是一般的公共讨论。
+Provides a similar capability to proprietary systems such as Dropbox, and also is well suited for use with low power single board computers. You can have one or more directories which are synchronized across your various laptops/desktops/devices, and this makes it hard for you to ever lose important files. Of course, you don't necessarily need to be running a server in order to use Syncthing, but if you do have a server which is always running then there's always at least one place to synchronize your files to or from.|提供与Dropbox等专有系统类似的功能，也非常适合与低功耗单板计算机一起使用。您可以拥有一个或多个在各种笔记本电脑/台式机/设备上同步的目录，这使您很难丢失重要文件。当然，您不一定需要运行服务器才能使用Syncthing，但如果您确实有一台始终运行的服务器，那么始终至少有一个地方可以同步您的文件。
+On a Debian based system:|在基于Debian的系统上：
+Or on Android search for the Syncthing app.|或者在Android上搜索Syncthing应用。
+Using the settings button within the LibreServer web interface for the Syncthing app you can then paste in any IDs for other devices. They will then sync with your server.|使用LibreServer Web界面中的设置按钮为Syncthing应用程序，您可以粘贴其他设备的任何ID。然后，他们将与您的服务器同步。
+A system for privately creating and sharing notes and images, similar to Evernote. It can be set up so that a small number of users on the server can share their notes in a convenient way. It doesn't have any web user interface, and you need to install native clients on mobile or laptop/desktop machines.|私人创建和共享笔记和图像的系统，类似于Evernote。它可以设置为使服务器上的少量用户可以方便地共享他们的笔记。它没有任何Web用户界面，您需要在移动或笔记本电脑/台式机上安装本机客户端。
+Since the data at rest is stored in PGP encrypted format this is a good system to use in cases where security really is a critical factor.|由于静态数据以PGP加密格式存储，因此在安全性确实是关键因素的情况下，这是一个很好的系统。
+Go to https://turtlapp.com/download and you'll then be able to download the appropriate app for your laptop or phone.|转到https://turtlapp.com/download，然后您就可以为您的笔记本电脑或手机下载相应的应用程序。
+Run the downloaded native app then at the bottom of the screen select "advanced settings" and enter your turl domain name, then register a new account. The password can be anything you choose, but since the client side encryption depends upon having a good password make it a long random string generated by a password manager such as KeepassX.|运行下载的本机应用程序，然后在屏幕底部选择“高级设置”并输入您的turl域名，然后注册一个新帐户。密码可以是您选择的任何密码，但由于客户端加密取决于具有良好的密码，因此密码管理器（如KeepassX）生成的长随机字符串。
+You should then be able to log in and start using the app. You might also want to invite any other users of your LibreServer system to also sign up using the turtl domain name which you specified during installation.|然后，您应该能够登录并开始使用该应用程序。您可能还想邀请LibreServer系统的任何其他用户也使用您在安装期间指定的turtl域名进行注册。
+Disabling new registrations|禁用新注册
+Once you have set up the server with however many users are needed you can then disable any new registrations by selecting Turtl on the LibreServer web interface and going to the settings screen.|一旦您设置了服务器，但需要很多用户，您可以通过选择LibreServer Web界面上的Turtl并进入设置屏幕来禁用任何新注册。
+This is similar to Hubzilla but with a reduced range of features concentrating exclusively upon social networking with the latest version of the Zot protocol. Nomadic identity is supported, so to can export your channels and import them on other servers if necessary, without losing followers.|这与Hubzilla类似，但功能范围缩小，专注于使用最新版Zot协议的社交网络。支持游牧身份，因此可以导出您的频道并在必要时将其导入其他服务器，而不会丢失关注者。
+Zap also has sophisticated privacy controls which enable you to decide exactly how you wish to interact with other users and what information of yours they can view.|Zap还拥有先进的隐私控制功能，使您可以确切地决定如何与其他用户进行互动以及他们可以查看您的哪些信息。
+The first account you register will be the administrator user, and from there you can go to the admin settings and disable new registrations if needed.|您注册的第一个帐户将是管理员用户，从那里您可以转到管理员设置并在需要时禁用新注册。
+To find other users to follow select "directory" from the drop down menu at the top right of the screen and set "this site only" to "no".|要查找其他用户，请从屏幕右上角的下拉菜单中选择“目录”，并将“仅此站点”设置为“否”。
+There is an Android app available called Nomad.|有一个名为Nomad的Android应用程序。
+End-to-end encrypted sync of calendar and contacts between devices|设备之间的日历和联系人的端到端加密同步
+Secure, end-to-end encrypted and journaled personal information cloud synchronization for Android and the desktop, supporting contacts and calendars|适用于Android和桌面的安全，端到端加密和记录的个人信息云同步，支持联系人和日历
+Nomadic social network server|游牧社交网络服务器
+Zap is a full featured social network application running under the Zot6 protocol. It provides enhanced privacy modes and identity/content mirroring across multiple servers ("nomadic identity").|Zap是一个在Zot6协议下运行的全功能社交网络应用程序。它在多个服务器上提供增强的隐私模式和身份/内容镜像（“游牧身份”）。
+Change background|换背景
+Diagnostics|诊断
+Please wait while your app is installing|请等待您的应用安装
+The app could not be installed|该应用无法安装
+Add a new member|添加新成员
+Kanban focussed on simplicity and minimalism|看板专注于简约和极简主义
+Emails, chat or social network posts will be blocked if they contain the following words or phrases|如果电子邮件，聊天或社交网络帖子包含以下字词或短语，则会被阻止
+Muted words|无言的话
+Disk space is getting too low. Installation stopped.|磁盘空间过低。 安装停止了。
+Password changed|密码已更改
+Play media from any UPNP/DLNA device on your local network|从本地网络上的任何UPNP / DLNA设备播放媒体
+This allows you to play media on any DLNA supporting device within your local network.|这允许您在本地网络中的任何DLNA支持设备上播放媒体。
+No Access Control|无访问控制
+DLNA doesn't have any access controls, so keep in mind that anyone with a mobile device or laptop within your local network is potentially able to play any media on the server. Hence this may not be suitable for situations where you want parental control over what media can be accessed.|DLNA没有任何访问控制，因此请记住，在本地网络中拥有移动设备或笔记本电脑的任何人都有可能在服务器上播放任何媒体。 因此，这可能不适合您希望家长控制可访问的媒体的情况。
+Adding Media|添加媒体
+You can add media by selecting the settings button from the DLNA app.|您可以通过从DLNA应用程序中选择设置按钮来添加媒体。
+Your homepage can also be accessed with a Tor browser on:|您也可以使用Tor浏览器访问您的主页：
+Chat|聊天
+Media|媒体
+Social|社会
+Sync|同步
+Publishing|出版
+Other|其他
+Recommended Firefox Add-ons:|推荐的Firefox附加组件：
+Change your default domain name|更改您的默认域名
+Do you want to change your default domain name to:|是否要将默认域名更改为：
+rsync failed|rsync失败了
+For most purposes Syncthing is an easier file synchronization system, but rsync is still a reliable solution if you prefer to do things the more traditional way or if you just want to create a mirror from an existing rsync server.|对于大多数用途，Syncthing是一个更简单的文件同步系统，但如果您更喜欢以更传统的方式执行操作，或者只是想从现有rsync服务器创建镜像，则rsync仍然是可靠的解决方案。
+Rsync is unencrypted but can be used via an onion address for transport security. If you are using it via your domain name then third parties will be able to see the content, but this may not matter if you are synchronizing already public files, such as GNU/Linux distro downloads.|Rsync是未加密的，但可以通过洋葱地址用于传输安全性。 如果您通过您的域名使用它，那么第三方将能够看到内容，但如果您正在同步已经公开的文件，例如GNU / Linux发行版下载，这可能无关紧要。
+Avoid using this for private data, unless you are exclusively using rsync via the onion address.|避免将此用于私人数据，除非您通过洋葱地址专门使用rsync。
+Creating a Mirror|创建镜像
+Select the Settings button then enter the domain and module name for the mirror. From then on synchronization will happen once per day.|选择“设置”按钮，然后输入镜像的域和模块名称。 从那时起，同步将每天发生一次。
+Local Sync|本地同步
+If you created a mirror to your server you can then sync those files to other machines or devices on your local network as follows:|如果您为服务器创建了镜像，则可以将这些文件同步到本地网络上的其他计算机或设备，如下所示：
+If "libreserver" doesn't work then you can substitute the local IP address of your server.|如果“libreserver”不起作用，那么您可以替换服务器的本地IP地址。
+Create a mirror of public files|创建公共文件的镜像
+The domain name could not be changed|域名无法更改
+This might be because you do not have ports 80 and 443 forwarded to the server.|这可能是因为您没有将端口80和443转发到服务器。
+Check the port forwarding settings on your internet router.|检查Internet路由器上的端口转发设置。
+Please specify a domain name which will be used for your email or XMPP address.|请指定将用于您的电子邮件或XMPP地址的域名。
+Please forward the following ports from your internet router:|请从您的互联网路由器转发以下端口：
+Search for 'Barcode Scanner', then select 'install'|搜索“条码扫描器”，然后选择“安装”
+Download the DarkMessenger apk file via the link below, preferably using a Tor based browser, then install it|通过下面的链接下载DarkMessenger apk文件，最好使用基于Tor的浏览器，然后安装
+Run DarkMessenger and the initial account setup will be shown. DarkMessenger only allows onion addresses to be used to create accounts|运行DarkMessenger并显示初始帐户设置。 DarkMessenger仅允许使用洋葱地址来创建帐户
+You can obtain your onion XMPP address from the Members section within the web interface, usually at http://libreserver/admin or http://libreserver.local/admin. If you can't easily copy and paste it into the account setup within DarkMessenger then you can use the barcode scanner on the QRcode displayed|您可以从Web界面中的“成员”部分获取洋葱XMPP地址，通常位于http：// libreserver / admin或http：//libreserver.local/admin。如果您无法轻松将其复制并粘贴到DarkMessenger中的帐户设置中，那么您可以使用显示的QRcode上的条形码扫描仪
+Enter the password which you stored during initial setup of the system and also the onion domain|输入在初始设置系统期间存储的密码以及洋葱域
+You should now be able to connect to your onion XMPP account and set an avatar image if necessary|您现在应该可以连接到您的洋葱XMPP帐户并在必要时设置头像图像
+When sending or receiving pictures or other attachments for the first time you will need to accept the self-signed certificates. Select 'always' twice. This should only happen once per contact|首次发送或接收图片或其他附件时，您需要接受自签名证书。选择“始终”两次。这应该只发生一次
+Under Settings/Expert you may want to change the automatic message deletion period. By default this is one day|在“设置/专家”下，您可能想要更改自动消息删除期间。默认情况下，这是一天
+When setting up a group chat first ensure that you have separately confirmed two way messaging with each of the participants individually|首先设置群聊时，请确保您已单独确认每个参与者的双向消息
+Enable strict TLS authentication between XMPP servers?|在XMPP服务器之间启用严格的TLS身份验证？
+If you or other people are having difficulty joining multi-user chat then enabling this might help|如果您或其他人在加入多用户聊天时遇到困难，那么启用此功能可能会有所帮助
+Music can be uploaded using NextCloud. Install the app and then create a directory called 'Music'.|可以使用NextCloud上传音乐。 安装应用程序，然后创建一个名为“音乐”的目录。
+Drag your files into the Music directory and they will then become available to mpd.|将文件拖到Music目录中，然后它们将可用于mpd。
+Select search (magnifying glass icon) and search for 'MALP', then select 'install'|选择搜索（放大镜图标）并搜索“MALP”，然后选择“安装”
+Open MALP and from the settings select Profiles|打开MALP并从设置中选择配置文件
+Enter the following settings:|输入以下设置：
+Save the settings by selecting the disk icon at the top right of the screen|通过选择屏幕右上角的磁盘图标来保存设置
+You should now be able to connect to mpd on your server and select and play albums.|您现在应该能够连接到服务器上的mpd并选择并播放专辑。
+In a non-Tor browser navigate to http://libreserver:8250 or http://[server local IP address]:8250 and you should be able to play the selected album.|在非Tor浏览器中，导航到http：// libreserver：8250或http：// [服务器本地IP地址]：8250，您应该能够播放所选专辑。
+Setting up on the desktop|在桌面上设置
+Install Sonata|安装Sonata
+Run Sonata and enter the following settings:|运行Sonata并输入以下设置：
+You should now be able to see your albums listed and be able to add them to the currently playing list.|您现在应该能够看到列出的相册，并能够将它们添加到当前播放的列表中。
+In a non-Tor browser navigate to http://libreserver:8250 or http://[server local IP address]:8250 and you should be able to play the selected album.|在非Tor浏览器中，导航到http：// libreserver：8250或http：// [服务器本地IP地址]：8250，您应该能够播放所选专辑。
+Select your music file format:|选择您的音乐文件格式：
+pixelfed allow new registrations|pixelfed允许新的注册
+Groceries and household management|杂货和家庭管理
+Organization|组织
+VPN domain or IP address:|VPN域或IP地址：
+VPN public key:|VPN公钥：
+Public key for this server:|此服务器的公钥：
+Public keys for the laptops or devices that you wish to be able to use this server to connect to the internet.|您希望能够使用此服务器连接到互联网的笔记本电脑或设备的公钥。
+Network|网络
+Set your coordinates on the map|在地图上设置坐标
+Longitude:|经度：
+Latitude:|纬度：
+Join|加入
+Docs|文件
+Community network map is being generated|正在生成社区网络地图
+Please wait|请耐心等待
+IP address (optional):|IP地址（可选）：
+Export|出口
+Add a new community network node|添加新的社区网络节点
+Remove a community network node|删除社区网络节点
+WARNING: Only change this if you know what you are doing. Selecting the wrong mesh protocol may make your server disappear from the network, and be difficult to recover|警告：只有在知道自己在做什么的情况下才能更改此项。 选择错误的网状协议可能会使您的服务器从网络中消失，并且难以恢复
+WARNING: Only change this if you know what you are doing. Setting an incorrect IP address or gateway may cause your server to become inaccessible, and may be difficult to recover|警告：只有在知道自己在做什么的情况下才能更改此项。 设置错误的IP地址或网关可能会导致服务器无法访问，并且可能难以恢复
+Choose your network:|选择你的网络：
+Language is being changed|语言正在改变
+Community Network|社区网络
+Theme is being changed|主题正在改变
+Install a new app|安装新应用
+Restore APPNAME from backup?|从备份恢复APPNAME？
+Add or remove feeds|添加或删除Feed
+Enter an RSS feed URL to add or remove. The domain name is enough for removals.|输入要添加或删除的RSS源URL。 域名足以删除。
+Show onion address|显示洋葱地址
+Multi User Dungeon from the era of Welsh mainframe computing|来自威尔士大型机计算时代的多用户地下城
+Forward the UDP port 5100 from your internet router|从您的互联网路由器转发UDP端口5100
+Since this app only uses the UDP protocol it won't work via an onion address. If you are running the onion only version of LibreServer then use its local IP address (usually 192.168.1.x) to connect to the game on the above port.|由于此应用程序仅使用UDP协议，因此无法通过洋葱地址工作。 如果您正在运行仅有洋葱版本的LibreServer，则使用其本地IP地址（通常为192.168.1.x）连接到上述端口上的游戏。
+Near infinite world block sandbox game|近无限世界块沙盒游戏
+Federation List|联邦名单
+Add or remove the domain names for instances with whom you wish to federate. Don't include your own domain names.|添加或删除要与其联合的实例的域名。 不要包含您自己的域名。
+Notify via|通知通过
+Receive admin notifications|接收管理员通知
+New calendar event|新日历活动
+New direct message|新直接讯息
+New reply|新回覆
+New shared item|新共享项
+New follow request|新的关注请求
+Number of connections on HTTP port is high|HTTP端口上的连接数很高
+Number of connections on HTTPS port is high|HTTPS端口上的连接数很高
+Cryptpad allow new signups|加密板允许新注册
+Name of the Dungeon Master|地牢大师的名字
+Message Of The Day|每日讯息
+port|网络端口
+Server Password|服务器密码
+DNS over TLS|TLS上的DNS
+IP Address|IP地址
+New git patch|新的git补丁
+liked your post|喜欢你的帖子

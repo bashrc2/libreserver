@@ -1,0 +1,293 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Deploys the website
+#
+# License
+# =======
+#
+# Copyright (C) 2018-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+PROJECT_NAME=libreserver
+
+lang=$2
+
+CONFIGURATION_FILE=/root/${PROJECT_NAME}.cfg
+
+ONION_ONLY='no'
+site_domain=${PROJECT_NAME}.net
+site_onion_port=8149
+rootdir=
+
+if [ "$1" ]; then
+    site_domain="$1"
+
+    # if there is a /tmp/randnum/ directory prefix
+    if [[ "$site_domain" == '/tmp/'* ]]; then
+        rootdir=/tmp/$(echo -n "$site_domain" | awk -F '/' '{print $3}')
+        CONFIGURATION_FILE="$rootdir/root/${PROJECT_NAME}.cfg"
+    fi
+fi
+
+if [ ! -d "$rootdir/root/${PROJECT_NAME}/website" ]; then
+    echo "Directory not found $rootdir/root/${PROJECT_NAME}/website"
+    exit 1
+fi
+
+if [ -f "$CONFIGURATION_FILE" ]; then
+    ONION_ONLY=$(grep 'ONION_ONLY=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+fi
+
+if [[ "$ONION_ONLY" != 'no' ]]; then
+    site_domain=${PROJECT_NAME}_web
+fi
+
+dest_dir="$rootdir/var/www/${site_domain}/htdocs"
+
+if [[ "${site_domain}" == *'/help' ]]; then
+    dest_dir="${site_domain}"
+    site_domain=${PROJECT_NAME}.local
+fi
+
+if [ ! -d "$dest_dir" ]; then
+    mkdir -p "$dest_dir"
+fi
+
+if [ ! "$rootdir" ]; then
+    if ! grep -q ":$site_onion_port" "$rootdir/etc/torrc.d/${PROJECT_NAME}"; then
+        { echo "HiddenServiceDir /var/lib/tor/hidden_service_${PROJECT_NAME}/";
+          echo 'HiddenServiceVersion 3';
+          echo "HiddenServicePort 80 127.0.0.1:${site_onion_port}"; } >> "$rootdir/etc/torrc.d/${PROJECT_NAME}"
+        systemctl restart tor
+    fi
+
+    site_onion_domain=$(cat "$rootdir/var/lib/tor/hidden_service_${PROJECT_NAME}/hostname")
+
+    if [[ "$ONION_ONLY" == 'no' ]]; then
+        { echo 'server {';
+          echo '    listen 80;';
+          echo '    listen [::]:80;';
+          echo "    server_name ${site_domain};";
+          echo "    root ${dest_dir};";
+          echo '    access_log /dev/null;';
+          echo '    error_log /dev/null;';
+          echo '    client_max_body_size 20m;';
+          echo '    client_body_buffer_size 128k;';
+          echo '';
+          echo '    limit_conn conn_limit_per_ip 10;';
+          echo '    limit_req zone=req_limit_per_ip burst=10 nodelay;';
+          echo '';
+          echo '    index index.php;';
+          echo "    rewrite ^ https://\$server_name\$request_uri? permanent;";
+          echo '}';
+          echo '';
+          echo 'server {';
+          echo '  listen 443 ssl;';
+          echo "  server_name ${site_domain};";
+          echo '';
+          echo '    gzip            on;';
+          echo '    gzip_min_length 1000;';
+          echo '    gzip_proxied    expired no-cache no-store private auth;';
+          echo '    gzip_types      text/plain application/xml;';
+          echo '';
+          echo '    ssl_stapling off;';
+          echo '    ssl_stapling_verify off;';
+          echo "    ssl_certificate /etc/letsencrypt/live/${site_domain}/fullchain.pem;";
+          echo "    ssl_certificate_key /etc/letsencrypt/live/${site_domain}/privkey.pem;";
+          echo "    ssl_dhparam /etc/ssl/certs/${site_domain}.dhparam;";
+          echo '';
+          echo '    ssl_session_cache  builtin:1000  shared:SSL:10m;'
+          echo '    ssl_session_timeout 60m;';
+          echo '    ssl_prefer_server_ciphers on;';
+          echo '    ssl_protocols TLSv1.2 TLSv1.3;';
+          echo "    ssl_ciphers 'ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES256-SHA:ECDHE-ECDSA-DES-CBC3-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:DES-CBC3-SHA:!DSS';";
+          echo "    add_header Content-Security-Policy \"default-src https:; script-src https: 'unsafe-inline'; style-src https: 'unsafe-inline'\";";
+          echo '    add_header X-XSS-Protection "1; mode=block";';
+          echo '    add_header X-Download-Options noopen;';
+          echo '    add_header X-Permitted-Cross-Domain-Policies none;';
+          echo '    add_header X-Frame-Options DENY;';
+          echo '    add_header X-Content-Type-Options nosniff;';
+          echo "    add_header Onion-Location http://${site_onion_domain}\$request_uri;";
+          echo '';
+	  echo '  add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
+          echo '';
+          echo '  access_log /dev/null;';
+          echo '  error_log /dev/null;';
+          echo '';
+          echo "  root ${dest_dir};";
+          echo '';
+          echo '  index index.html;';
+          echo '';
+          echo '  location / {';
+          echo '      client_max_body_size 15m;';
+          echo '          client_body_buffer_size 1m;';
+          echo '';
+          echo '      limit_conn conn_limit_per_ip 10;';
+          echo '          limit_req zone=req_limit_per_ip burst=10 nodelay;';
+          echo '  }';
+          echo '';
+          echo '  location /downloads {';
+          echo '      client_max_body_size 2G;';
+          echo '      client_body_buffer_size 128k;';
+          echo '';
+          echo '      limit_conn conn_limit_per_ip 10;';
+          echo '      limit_req zone=req_limit_per_ip burst=10 nodelay;';
+          echo '      autoindex on;';
+          echo '  }';
+          echo '';
+          echo '  location ^~ /.well-known/ {';
+          echo '      allow all;';
+          echo '  }';
+          echo '}';
+          echo ''; } > "$rootdir/etc/nginx/sites-available/${site_domain}"
+    else
+        echo -n '' > "$rootdir/etc/nginx/sites-available/${site_domain}"
+    fi
+
+    { echo 'server {';
+      echo "    listen 127.0.0.1:${site_onion_port} default_server;";
+      echo "    server_name ${site_onion_domain};";
+      echo '';
+      echo '    add_header X-Frame-Options DENY;';
+      echo '    add_header X-Content-Type-Options nosniff;';
+      echo '';
+      echo '    access_log /dev/null;';
+      echo '    error_log /dev/null;';
+      echo '';
+      echo "    root ${dest_dir};";
+      echo '';
+      echo '    index index.html;';
+      echo '';
+      echo '    location / {';
+      echo '        #proxy_pass http://127.0.0.1:8099;';
+      echo '            client_max_body_size 15m;';
+      echo '            client_body_buffer_size 1m;';
+      echo '';
+      echo '        limit_conn conn_limit_per_ip 10;';
+      echo '            limit_req zone=req_limit_per_ip burst=10 nodelay;';
+      echo '        }';
+      echo '';
+      echo '    location ^~ /downloads/ {';
+      echo '      client_max_body_size 1m;';
+      echo '      client_body_buffer_size 128k;';
+      echo '';
+      echo '      limit_conn conn_limit_per_ip 10;';
+      echo '      limit_req zone=req_limit_per_ip burst=10 nodelay;';
+      echo '      autoindex on;';
+      echo '        }';
+      echo '';
+      echo '        location ^~ /.well-known/ {';
+      echo '            allow all;';
+      echo '        }';
+      echo '}';
+      echo '';
+      echo 'server {';
+      echo '    listen 127.0.0.1:8110 default_server;';
+      echo "    server_name ${site_onion_domain};";
+      echo '';
+      echo '    add_header X-Frame-Options DENY;';
+      echo '    add_header X-Content-Type-Options nosniff;';
+      echo '';
+      echo '    access_log /dev/null;';
+      echo '    error_log /dev/null;';
+      echo '';
+      echo '    location / {';
+      echo '        client_max_body_size 15m;';
+      echo '        client_body_buffer_size 128k;';
+      echo '';
+      echo '        limit_conn conn_limit_per_ip 10;';
+      echo '        limit_req zone=req_limit_per_ip burst=10 nodelay;';
+      echo '';
+      echo '        proxy_pass http://localhost:3478;';
+      echo "        proxy_set_header X-Forwarded-For \$remote_addr;";
+      echo '    }';
+      echo '}';
+      echo '# End of TURN Server'; } >> "$rootdir/etc/nginx/sites-available/${site_domain}"
+
+    nginx_ensite ${site_domain}
+
+    if [[ "$ONION_ONLY" == 'no' ]]; then
+        if [ ! -f "$rootdir/etc/letsencrypt/live/${site_domain}/fullchain.pem" ]; then
+            DH_KEYLENGTH=2048
+            LETSENCRYPT_SERVER='https://acme-v02.api.letsencrypt.org/directory'
+            ${PROJECT_NAME}-addcert -e "${site_domain}" -s "$LETSENCRYPT_SERVER" --dhkey "$DH_KEYLENGTH"
+        fi
+    fi
+fi
+
+if [ ! "$lang" ]; then
+    lang='EN'
+fi
+
+cd "$rootdir/root/${PROJECT_NAME}/website" || exit 2
+
+if [ ! -d "$dest_dir" ]; then
+    mkdir -p "$dest_dir"
+fi
+
+if [ ! -d "$dest_dir/images" ]; then
+    mkdir "$dest_dir/images"
+fi
+
+cp -r "$lang"/* "$dest_dir"
+# shellcheck disable=SC2035
+cp *.css "$dest_dir"
+cp -r ../img/* "$dest_dir/images"
+cp -r ../webadmin/EN/help_*.html "$dest_dir"
+if [ ! -d "$dest_dir/downloads" ]; then
+    mkdir "$dest_dir/downloads"
+fi
+if [ -f "$dest_dir/downloads/images.txt" ]; then
+    rm "$dest_dir/downloads/images.txt"
+fi
+chown -R www-data:www-data "$dest_dir"
+
+if [ ! "$rootdir" ]; then
+    systemctl restart nginx
+fi
+
+echo "Website deployed to $dest_dir"
+
+if [ -d "${rootdir}/var/gemini" ]; then
+    dest_dir="${rootdir}/var/gemini"
+    cp -r ../gemini/EN/* "$dest_dir"
+    # shellcheck disable=SC2086
+    rm ${dest_dir}/*~
+
+    # copy epicyon gemini site
+    epicyon_dir=
+    if [ -d "${rootdir}/etc/epicyon" ]; then
+	epicyon_dir="${rootdir}/etc/epicyon"
+    fi
+    if [ -d "${rootdir}/opt/epicyon" ]; then
+	epicyon_dir="${rootdir}/opt/epicyon"
+    fi
+    if [ -d "${rootdir}${epicyon_dir}/gemini/EN" ]; then
+	if [ ! -d "${dest_dir}/epicyon" ]; then
+	    mkdir "${dest_dir}/epicyon"
+	fi
+	cp -r "${rootdir}${epicyon_dir}/gemini/EN"/* "${dest_dir}/epicyon"
+    fi
+
+    chown -R gemini:gemini "${dest_dir}"
+    # shellcheck disable=SC2086
+    echo "Gemini site deployed to $(cat ${rootdir}/var/lib/tor/hidden_service_email/hostname)"
+fi
+echo "$site_domain"
+echo "$site_onion_domain"

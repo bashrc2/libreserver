@@ -1,0 +1,395 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Mumble application
+#
+# License
+# =======
+#
+# Copyright (C) 2014-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VARIANTS='full full-vim chat'
+
+APP_CATEGORY=chat
+
+IN_DEFAULT_INSTALL=0
+INSTALLED_ON_DEFAULT_DOMAIN=0
+SHOW_ON_ABOUT=1
+REQUIRES_APP=
+
+MUMBLE_DOMAIN_NAME=
+MUMBLE_CODE=
+
+# Password used for mumble server
+MUMBLE_SERVER_PASSWORD=
+# Port on which mumble server listens
+MUMBLE_PORT=64738
+MUMBLE_ONION_PORT=${MUMBLE_PORT}
+
+# Location of mumble database and configuration
+MUMBLE_DATABASE="mumble-server.sqlite"
+MUMBLE_CONFIG_FILE="mumble-server.ini"
+
+MUMBLE_SHORT_DESCRIPTION=$'Voice chat'
+MUMBLE_DESCRIPTION=$'Voice chat'
+MUMBLE_MOBILE_APP_URL='https://f-droid.org/en/packages/se.lublin.mumla'
+
+MUMBLE_FIREWALL_PORTS="${MUMBLE_PORT}"
+
+mumble_variables=(MY_USERNAME
+                  DEFAULT_DOMAIN_NAME
+                  ONION_ONLY
+                  ADMIN_USERNAME)
+
+function mumble_update_settings_screen_password {
+    mumblePassword=$(grep 'serverpassword=' /etc/mumble-server.ini | awk -F '=' '{print $2}')
+    local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+    webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+    if [ -f "${webadmin_install_dir}/settings_mumble.html" ]; then
+	sed -i "s|name=\"mumblePassword\".*|name=\"mumblePassword\" value=\"${mumblePassword}\">|g" "${webadmin_install_dir}/settings_mumble.html"
+    fi
+}
+
+function mumble_setting_password {
+    # sets the name of the dm
+    newPassword="$1"
+
+    if [ ! "$newPassword" ]; then
+	return
+    fi
+
+    sed -i "s|serverpassword=.*|serverpassword=${newPassword}|g" /etc/mumble-server.ini
+    systemctl restart mumble-server
+    mumble_update_settings_screen_password
+}
+
+function upgrade_distro_mumble {
+    target_distro="$1"
+
+    if [[ "$target_distro" == 'bullseye' ]]; then
+	echo -n ''
+    fi
+}
+
+function change_default_domain_name_mumble {
+    new_default_domain_name="$1"
+    upgrade_mumble "$new_default_domain_name"
+}
+
+function logging_on_mumble {
+    if [ -f /etc/mumble-server.ini ]; then
+        sed -i 's|logfile=.*|logfile=/var/log/mumble-server.log|g' /etc/mumble-server.ini
+    fi
+}
+
+function logging_off_mumble {
+    if [ -f /etc/mumble-server.ini ]; then
+        sed -i 's|logfile=.*|logfile=/dev/null|g' /etc/mumble-server.ini
+        if [ -d /var/log/mumble-server ]; then
+            $REMOVE_FILES_COMMAND /var/log/mumble-server/*
+            rm -rf /var/log/mumble-server
+        fi
+    fi
+}
+
+function install_interactive_mumble {
+    echo -n ''
+    APP_INSTALLED=1
+}
+
+function change_password_mumble {
+    new_mumble_password="$2"
+
+    set_password_for_all_users mumble "$new_mumble_password"
+    sed -i "s|serverpassword=.*|serverpassword=$new_mumble_password|g" /etc/mumble-server.ini
+    systemctl restart mumble-server
+    mumble_update_settings_screen_password
+}
+
+function reconfigure_mumble {
+    echo -n ''
+}
+
+function upgrade_mumble {
+    mumble_update_settings_screen_password
+
+    if [ -d /etc/letsencrypt ]; then
+        usermod -a -G ssl-cert mumble-server
+    fi
+
+    if [ ! -f "/etc/letsencrypt/live/${MUMBLE_DOMAIN_NAME}/fullchain.pem" ]; then
+        if ! grep -q "mumble.pem" /etc/mumble-server.ini; then
+            sed -i 's|sslCert=.*|sslCert=/var/lib/mumble-server/mumble.pem|g' /etc/mumble-server.ini
+            sed -i 's|sslKey=.*|sslKey=/var/lib/mumble-server/mumble.key|g' /etc/mumble-server.ini
+            systemctl restart mumble
+        fi
+    else
+        if ! grep -q "${MUMBLE_DOMAIN_NAME}/fullchain.pem" /etc/mumble-server.ini; then
+            usermod -a -G ssl-cert mumble-server
+            sed -i "s|sslCert=.*|sslCert=/etc/letsencrypt/live/${MUMBLE_DOMAIN_NAME}/fullchain.pem|g" /etc/mumble-server.ini
+            sed -i "s|sslKey=.*|sslKey=/etc/letsencrypt/live/${MUMBLE_DOMAIN_NAME}/privkey.pem|g" /etc/mumble-server.ini
+            systemctl restart mumble
+        fi
+    fi
+}
+
+function backup_local_mumble {
+    if [ -f /etc/mumble-server.ini ]; then
+        echo $"Backing up Mumble settings"
+        temp_backup_dir=/root/tempmumblebackup
+        if [ ! -d $temp_backup_dir ]; then
+            mkdir -p $temp_backup_dir
+        fi
+        cp -f /etc/mumble-server.ini $temp_backup_dir
+        cp -f /var/lib/mumble-server/mumble-server.sqlite $temp_backup_dir
+        backup_directory_to_usb $temp_backup_dir mumble
+        echo $"Mumble settings backup complete"
+    fi
+}
+
+function restore_local_mumble {
+    if [ -d "$USB_MOUNT/backup/mumble" ]; then
+        echo $"Restoring mumble settings"
+        temp_restore_dir=/root/tempmumble
+        function_check restore_directory_from_usb
+        restore_directory_from_usb $temp_restore_dir voip
+        restore_directory_from_usb $temp_restore_dir mumble
+        if [ -d "$temp_restore_dir/home/$ADMIN_USERNAME/tempbackup" ]; then
+            cp -f "$temp_restore_dir/home/$ADMIN_USERNAME/tempbackup/mumble-server.ini" /etc/
+        else
+            cp -f $temp_restore_dir/mumble-server.ini /etc/
+        fi
+        # shellcheck disable=SC2181
+        if [ ! "$?" = "0" ]; then
+            rm -rf $temp_restore_dir
+            function_check set_user_permissions
+            set_user_permissions
+            function_check backup_unmount_drive
+            backup_unmount_drive
+            exit 36
+        fi
+        if [ -d "$temp_restore_dir/home/$ADMIN_USERNAME/tempbackup" ]; then
+            cp -f "$temp_restore_dir/home/$ADMIN_USERNAME/tempbackup/mumble-server.sqlite" /var/lib/mumble-server/
+        else
+            cp -f $temp_restore_dir/mumble-server.sqlite /var/lib/mumble-server/
+        fi
+        # shellcheck disable=SC2181
+        if [ ! "$?" = "0" ]; then
+            rm -rf $temp_restore_dir
+            function_check set_user_permissions
+            set_user_permissions
+            function_check backup_unmount_drive
+            backup_unmount_drive
+            exit 27
+        fi
+        rm -rf $temp_restore_dir
+        cp /etc/ssl/certs/mumble* /var/lib/mumble-server
+        cp /etc/ssl/private/mumble* /var/lib/mumble-server
+        chown -R mumble-server:mumble-server /var/lib/mumble-server
+        systemctl restart mumble-server
+    fi
+}
+
+function backup_remote_mumble {
+    echo -n ''
+}
+
+function restore_remote_mumble {
+    echo -n ''
+}
+
+function remove_mumble {
+    $REMOVE_PACKAGES_PURGE mumble-server
+    if [[ $ONION_ONLY == "no" ]]; then
+        firewall_remove ${MUMBLE_PORT}
+    fi
+    if [ -f /etc/mumble-server.ini ]; then
+        rm /etc/mumble-server.ini
+    fi
+    remove_certs "$MUMBLE_DOMAIN_NAME"
+    if [ -d /var/lib/mumble-server ]; then
+        rm -rf /var/lib/mumble-server
+    fi
+    function_check remove_onion_service
+    remove_onion_service mumble ${MUMBLE_ONION_PORT}
+    sed -i '/mumble/d' "$COMPLETION_FILE"
+}
+
+function configure_firewall_for_mumble {
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+    if [[ $ONION_ONLY != "no" ]]; then
+        return
+    fi
+    firewall_add Mumble ${MUMBLE_PORT}
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function install_mumble {
+    increment_app_install_progress
+
+    if [ -d /var/lib/mumble-server ]; then
+	echo $'Removing previous mumble server install'
+	$REMOVE_PACKAGES mumble-server
+	if [ -d /var/lib/mumble-server ]; then
+            rm -rf /var/lib/mumble-server
+	fi
+    fi
+    
+    INSTALL_PACKAGES mumble-server
+
+    increment_app_install_progress
+
+    if [ -f "$IMAGE_PASSWORD_FILE" ]; then
+        MUMBLE_SERVER_PASSWORD="$(printf "%s" "$(cat "$IMAGE_PASSWORD_FILE")")"
+    else
+        if [ ! "$MUMBLE_SERVER_PASSWORD" ]; then
+            MUMBLE_SERVER_PASSWORD="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
+            if [ ${#MUMBLE_SERVER_PASSWORD} -lt "$MINIMUM_PASSWORD_LENGTH" ]; then
+                MUMBLE_SERVER_PASSWORD="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
+            fi
+        fi
+    fi
+
+    increment_app_install_progress
+
+    if [ ! -d "/var/www/${MUMBLE_DOMAIN_NAME}/htdocs" ]; then
+        mkdir "/var/www/${MUMBLE_DOMAIN_NAME}/htdocs"
+    fi
+
+    increment_app_install_progress
+
+    echo $'Obtaining certificate for the mumble domain'
+    function_check create_site_certificate
+    create_site_certificate "$MUMBLE_DOMAIN_NAME" 'yes'
+    chmod 755 "/etc/ssl/certs/${MUMBLE_DOMAIN_NAME}.dhparam"
+
+    increment_app_install_progress
+
+    if [[ ${ONION_ONLY} == 'no' ]]; then
+        chgrp -R ssl-cert /etc/letsencrypt
+        chmod -R g=rX /etc/letsencrypt
+    fi
+
+    increment_app_install_progress
+
+    if [ ! -d /var/lib/mumble-server ]; then
+        mkdir /var/lib/mumble-server
+    fi
+
+    increment_app_install_progress
+
+    # Make an ssl cert for the server
+    if [ ! -f "/etc/letsencrypt/live/${MUMBLE_DOMAIN_NAME}/fullchain.pem" ]; then
+        if [ ! -f /etc/ssl/certs/mumble.dhparam ]; then
+	    echo $'Creating self-signed certificate for the mumble domain on onion address'
+            "${PROJECT_NAME}-addcert" -h mumble --dhkey "$DH_KEYLENGTH"
+            function_check check_certificates
+            check_certificates mumble
+        fi
+	# Check that the cert was created
+	if [ ! -f /etc/ssl/certs/mumble.crt ]; then
+            echo $'mumble server certificate not created'
+            exit 57
+	fi
+	if [ ! -f /etc/ssl/private/mumble.key ]; then
+            echo $'mumble server key not created'
+            exit 58
+	fi
+    fi
+
+    increment_app_install_progress
+
+    if [ ! -f "/etc/letsencrypt/live/${MUMBLE_DOMAIN_NAME}/fullchain.pem" ]; then
+	cp /etc/ssl/certs/mumble.* /var/lib/mumble-server
+	cp /etc/ssl/private/mumble.key /var/lib/mumble-server
+	if [ ! -f /var/lib/mumble-server/mumble.pem ]; then
+            mv /var/lib/mumble-server/mumble.crt /var/lib/mumble-server/mumble.pem
+	fi
+    fi
+
+    increment_app_install_progress
+
+    chown -R mumble-server:mumble-server /var/lib/mumble-server
+
+    sed -i "s|welcometext=.*|welcometext=\"<br />Welcome to $MUMBLE_DOMAIN_NAME <b>mumble</b>.<br />Chat freely!<br />\"|g" /etc/mumble-server.ini
+
+    if [[ $MUMBLE_SERVER_PASSWORD ]]; then
+        sed -i "s|serverpassword=.*|serverpassword=$MUMBLE_SERVER_PASSWORD|g" /etc/mumble-server.ini
+    fi
+
+    increment_app_install_progress
+
+    sed -i 's|;autobanAttempts.*|autobanAttempts = 10|g' /etc/mumble-server.ini
+    sed -i 's|;autobanTimeframe.*|autobanTimeframe = 120|g' /etc/mumble-server.ini
+    sed -i 's|;autobanTime.*|autobanTime = 300|g' /etc/mumble-server.ini
+    sed -i 's|;sendversion=.*|sendversion=False|g' /etc/mumble-server.ini
+    sed -i 's|sendversion=.*|sendversion=False|g' /etc/mumble-server.ini
+    if ! grep -q "allowping" /etc/mumble-server.ini; then
+        echo 'allowping=False' >> /etc/mumble-server.ini
+    fi
+    sed -i 's|allowping=.*|allowping=False|g' /etc/mumble-server.ini
+    if [ ! -f "/etc/letsencrypt/live/${MUMBLE_DOMAIN_NAME}/fullchain.pem" ]; then
+        sed -i 's|;sslCert=.*|sslCert=/var/lib/mumble-server/mumble.pem|g' /etc/mumble-server.ini
+        sed -i 's|;sslKey=.*|sslKey=/var/lib/mumble-server/mumble.key|g' /etc/mumble-server.ini
+    else
+        sed -i "s|;sslCert=.*|sslCert=/etc/letsencrypt/live/${MUMBLE_DOMAIN_NAME}/fullchain.pem|g" /etc/mumble-server.ini
+        sed -i "s|;sslKey=.*|sslKey=/etc/letsencrypt/live/${MUMBLE_DOMAIN_NAME}/privkey.pem|g" /etc/mumble-server.ini
+    fi
+    sed -i 's|;certrequired=.*|certrequired=True|g' /etc/mumble-server.ini
+    sed -i 's|users=100|users=10|g' /etc/mumble-server.ini
+    sed -i 's|;channelnestinglimit=10|channelnestinglimit=10|g' /etc/mumble-server.ini
+    sed -i 's|;textmessagelength=.*|textmessagelength=1000|g' /etc/mumble-server.ini
+    sed -i 's|textmessagelength=.*|textmessagelength=1000|g' /etc/mumble-server.ini
+    sed -i 's|;imagemessagelength=.*|imagemessagelength=131072|g' /etc/mumble-server.ini
+    sed -i 's|;allowhtml=.*|allowhtml=False|g' /etc/mumble-server.ini
+    sed -i 's|allowhtml=.*|allowhtml=False|g' /etc/mumble-server.ini
+    sed -i "s|port=.*|port=${MUMBLE_PORT}|g" /etc/mumble-server.ini
+
+    increment_app_install_progress
+
+    add_onion_service mumble ${MUMBLE_PORT} ${MUMBLE_ONION_PORT}
+
+    increment_app_install_progress
+
+    # turn off logs by default
+    sed -i 's|logfile=.*|logfile=/dev/null|g' /etc/mumble-server.ini
+
+    if [ -d /etc/letsencrypt ]; then
+        usermod -a -G ssl-cert mumble-server
+    fi
+
+    update_default_domain
+    systemctl restart mumble-server
+
+    increment_app_install_progress
+
+    set_password_for_all_users mumble "$MUMBLE_SERVER_PASSWORD"
+
+    function_check configure_firewall_for_mumble
+
+    increment_app_install_progress
+
+    configure_firewall_for_mumble
+
+    APP_INSTALLED=1
+}
+
+# NOTE: deliberately no exit 0

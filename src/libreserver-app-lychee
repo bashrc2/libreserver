@@ -1,0 +1,577 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Lychee photo album
+#
+# License
+# =======
+#
+# Copyright (C) 2014-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VARIANTS="full full-vim"
+
+APP_CATEGORY=media
+
+IN_DEFAULT_INSTALL=0
+SHOW_ON_ABOUT=1
+REQUIRES_APP=
+
+LYCHEE_DOMAIN_NAME=
+LYCHEE_CODE=
+LYCHEE_ONION_PORT=8105
+LYCHEE_REPO="https://github.com/electerious/Lychee"
+LYCHEE_COMMIT='42541f460d61c1163bea72759ac1f42904731028'
+# version from php/Modules/Database.php
+LYCHEE_VERSION='030102'
+
+LYCHEE_SHORT_DESCRIPTION=$'Photo album'
+LYCHEE_DESCRIPTION=$'Photo album'
+LYCHEE_MOBILE_APP_URL=
+
+lychee_variables=(LYCHEE_REPO
+                  LYCHEE_DOMAIN_NAME
+                  LYCHEE_CODE
+                  ONION_ONLY
+                  DDNS_PROVIDER
+                  MY_USERNAME)
+
+function upgrade_distro_lychee {
+    target_distro="$1"
+
+    if [[ "$target_distro" == 'bullseye' ]]; then
+        echo -n ''
+    fi
+}
+
+function lychee_hashed_string {
+    lycheestr="$1"
+
+    { echo '<?php';
+      echo "\$cost = 10;";
+      echo "if (extension_loaded('openssl')) {";
+      echo "    \$salt = strtr(substr(base64_encode(openssl_random_pseudo_bytes(17)),0,22), '+', '.');";
+      echo "} elseif (extension_loaded('mcrypt')) {";
+      echo "    \$salt = strtr(substr(base64_encode(mcrypt_create_iv(17, MCRYPT_DEV_URANDOM)),0,22), '+', '.');";
+      echo '} else {';
+      echo "    \$salt = '';";
+      echo "    for (\$i = 0; \$i < 22; \$i++) {";
+      echo "        \$salt .= substr(\"./ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789\", mt_rand(0, 63), 1);";
+      echo '    }';
+      echo '}';
+      echo "\$salt = sprintf(\"\$2a\$%02d\$\", \$cost) . \$salt;";
+      echo "echo crypt('$lycheestr', \$salt);";
+      echo '?>'; } > /root/.lychee_string.php
+
+    php /root/.lychee_string.php
+}
+
+function logging_on_lychee {
+    echo -n ''
+}
+
+function logging_off_lychee {
+    echo -n ''
+}
+
+function lychee_create_database {
+    if [ -f "${IMAGE_PASSWORD_FILE}" ]; then
+        LYCHEE_ADMIN_PASSWORD="$(printf "%s" "$(cat "$IMAGE_PASSWORD_FILE")")"
+    else
+        if [ ! "${LYCHEE_ADMIN_PASSWORD}" ]; then
+            LYCHEE_ADMIN_PASSWORD="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
+        fi
+    fi
+    if [ ! "$LYCHEE_ADMIN_PASSWORD" ]; then
+        return
+    fi
+
+    function_check create_database
+    create_database lychee "$LYCHEE_ADMIN_PASSWORD"
+}
+
+function remove_user_lychee {
+    #remove_username="$1"
+    echo -n ''
+}
+
+function add_user_lychee {
+    if [[ $(app_is_installed lychee) == "0" ]]; then
+        echo '0'
+        return
+    fi
+
+    #new_username="$1"
+    #new_user_password="$2"
+    # Note this is a single user system
+
+    echo '0'
+}
+
+function install_interactive_lychee {
+    if [ ! "$ONION_ONLY" ]; then
+        ONION_ONLY='no'
+    fi
+
+    if [[ $ONION_ONLY != "no" ]]; then
+        LYCHEE_DOMAIN_NAME='lychee.local'
+        write_config_param "LYCHEE_DOMAIN_NAME" "$LYCHEE_DOMAIN_NAME"
+    else
+        function_check interactive_site_details
+        interactive_site_details "lychee" "LYCHEE_DOMAIN_NAME" "LYCHEE_CODE"
+    fi
+    APP_INSTALLED=1
+}
+
+function configure_interactive_lychee {
+    function_check get_mariadb_password
+    get_mariadb_password
+
+    dialog --title $"Lychee Configuration" \
+           --msgbox $"\\nYou can initially install the system with:\\n\\n  Username: root\\n  Password: $MARIADB_PASSWORD" 10 70
+}
+
+
+function change_password_lychee {
+    LYCHEE_USERNAME="$1"
+    LYCHEE_PASSWORD="$2"
+    if [ ${#LYCHEE_PASSWORD} -lt 8 ]; then
+        echo $'Lychee password is too short'
+        return
+    fi
+
+    read_config_param MY_USERNAME
+
+    if [[ "$LYCHEE_USERNAME" == "$MY_USERNAME" ]]; then
+        password_encrypted=$(lychee_hashed_string "$LYCHEE_PASSWORD")
+        MARIADB_PASSWORD=$("${PROJECT_NAME}-pass" -u root -a mariadb)
+        # shellcheck disable=SC2006
+        run_query lychee "UPDATE lychee_settings SET value = '${password_encrypted}' WHERE `key` = 'password'"
+        MARIADB_PASSWORD=
+        "${PROJECT_NAME}-pass" -u "$LYCHEE_USERNAME" -a lychee -p "$LYCHEE_PASSWORD"
+    fi
+}
+
+function reconfigure_lychee {
+    echo -n ''
+}
+
+function upgrade_lychee {
+    CURR_LYCHEE_COMMIT=$(get_completion_param "lychee commit")
+    if [[ "$CURR_LYCHEE_COMMIT" == "$LYCHEE_COMMIT" ]]; then
+        return
+    fi
+
+    read_config_param "LYCHEE_DOMAIN_NAME"
+
+    function_check set_repo_commit
+    set_repo_commit /var/www/$LYCHEE_DOMAIN_NAME/htdocs "lychee commit" "$LYCHEE_COMMIT" $LYCHEE_REPO
+    chown -R www-data:www-data "/var/www/${LYCHEE_DOMAIN_NAME}/htdocs"
+    chmod -R 750 "/var/www/${LYCHEE_DOMAIN_NAME}/htdocs/uploads"/
+    chmod -R 750 "/var/www/${LYCHEE_DOMAIN_NAME}/htdocs/data"/
+}
+
+function backup_local_lychee {
+    LYCHEE_DOMAIN_NAME='lychee.local'
+    if grep -q "lychee domain" "$COMPLETION_FILE"; then
+        LYCHEE_DOMAIN_NAME=$(get_completion_param "lychee domain")
+    fi
+
+    lychee_path="/var/www/${LYCHEE_DOMAIN_NAME}/htdocs"
+    if [ -d "$lychee_path" ]; then
+        function_check backup_database_to_usb
+        backup_database_to_usb lychee
+
+        backup_directory_to_usb "$lychee_path" lychee
+        restart_site
+    fi
+}
+
+function restore_local_lychee {
+    LYCHEE_DOMAIN_NAME='lychee.local'
+    if grep -q "lychee domain" "$COMPLETION_FILE"; then
+        LYCHEE_DOMAIN_NAME=$(get_completion_param "lychee domain")
+    fi
+    if [ "$LYCHEE_DOMAIN_NAME" ]; then
+        suspend_site "${LYCHEE_DOMAIN_NAME}"
+
+        function_check lychee_create_database
+        lychee_create_database
+
+        function_check restore_database
+        restore_database lychee "${LYCHEE_DOMAIN_NAME}"
+
+        if [ -f "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/data/config.php" ]; then
+            MARIADB_PASSWORD=$("${PROJECT_NAME}-pass" -u root -a mariadb)
+            sed -i "s|dbPassword.*|dbPassword = '$MARIADB_PASSWORD';|g" "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/data/config.php"
+            MARIADB_PASSWORD=
+        fi
+
+        restart_site
+        chown -R lychee: "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/"
+    fi
+}
+
+function backup_remote_lychee {
+    echo -n ''
+}
+
+function restore_remote_lychee {
+    echo -n ''
+}
+
+function remove_lychee {
+    if [ ${#LYCHEE_DOMAIN_NAME} -eq 0 ]; then
+        return
+    fi
+
+    read_config_param "LYCHEE_DOMAIN_NAME"
+    nginx_dissite "$LYCHEE_DOMAIN_NAME"
+    remove_certs "${LYCHEE_DOMAIN_NAME}"
+
+    drop_database lychee
+    remove_backup_database_local lychee
+
+    if [ -f "/etc/nginx/sites-available/$LYCHEE_DOMAIN_NAME" ]; then
+        rm -f "/etc/nginx/sites-available/$LYCHEE_DOMAIN_NAME"
+    fi
+    if [ -d "/var/www/$LYCHEE_DOMAIN_NAME" ]; then
+        rm -rf "/var/www/$LYCHEE_DOMAIN_NAME"
+    fi
+    remove_config_param LYCHEE_DOMAIN_NAME
+    remove_config_param LYCHEE_CODE
+    function_check remove_onion_service
+    remove_onion_service lychee "${LYCHEE_ONION_PORT}"
+    remove_completion_param "install_lychee"
+    sed -i '/Lychee/d' "$COMPLETION_FILE"
+    sed -i '/lychee/d' "$COMPLETION_FILE"
+
+    function_check remove_ddns_domain
+    remove_ddns_domain "$LYCHEE_DOMAIN_NAME"
+}
+
+function install_lychee_website {
+    function_check nginx_http_redirect
+    nginx_http_redirect "$LYCHEE_DOMAIN_NAME"
+    { echo 'server {';
+      echo '    listen 443 ssl;';
+      echo '    #listen [::]:443 ssl;';
+      echo "    root /var/www/$LYCHEE_DOMAIN_NAME/htdocs;";
+      echo "    server_name $LYCHEE_DOMAIN_NAME;";
+      echo '    access_log /dev/null;';
+      echo "    error_log /dev/null;";
+      echo '    index index.html;';
+      echo '    charset utf-8;';
+      echo '    proxy_read_timeout 86400s;'; } >> "/etc/nginx/sites-available/$LYCHEE_DOMAIN_NAME"
+    function_check nginx_ssl
+    nginx_ssl "$LYCHEE_DOMAIN_NAME"
+    function_check nginx_security_options
+    nginx_security_options "$LYCHEE_DOMAIN_NAME"
+    nginx_robots "$LYCHEE_DOMAIN_NAME"
+    { echo '    add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
+      echo "    add_header Onion-Location http://${LYCHEE_ONION_HOSTNAME}\$request_uri;";
+      echo '';
+      echo '    # rewrite to front controller as default rule';
+      echo '    location / {'; } >> "/etc/nginx/sites-available/$LYCHEE_DOMAIN_NAME"
+    function_check nginx_limits
+    nginx_limits "$LYCHEE_DOMAIN_NAME"
+    { echo '    }';
+      echo '';
+      echo '    # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000';
+      echo '    # or a unix socket';
+      echo '    location ~* \.php$ {';
+      echo '        # Zero-day exploit defense.';
+      echo '        # http://forum.nginx.org/read.php?2,88845,page=3';
+      echo "        # Won't work properly (404 error) if the file is not stored on this";
+      echo "        # server, which is entirely possible with php-fpm/php-fcgi.";
+      echo "        # Comment the 'try_files' line out if you set up php-fpm/php-fcgi on";
+      echo "        # another machine. And then cross your fingers that you won't get hacked.";
+      echo "        try_files \$uri \$uri/ /index.html;";
+      echo '        # NOTE: You should have "cgi.fix_pathinfo = 0;" in php.ini';
+      echo '        fastcgi_split_path_info ^(.+\.php)(/.+)$;';
+      echo '        # With php-cgi alone:';
+      echo '        # fastcgi_pass 127.0.0.1:9000;';
+      echo '        # With php-fpm:';
+      echo "        fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
+      echo '        include fastcgi_params;';
+      echo '        fastcgi_read_timeout 30;';
+      echo '        fastcgi_index index.html;';
+      echo "        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;";
+      echo '    }';
+      echo '';
+      echo '    # deny access to all dot files';
+      echo '    location ~ /\. {';
+      echo '        deny all;';
+      echo '    }';
+      echo '';
+      echo '    #deny access to store';
+      echo '    location ~ /store {';
+      echo '        deny all;';
+      echo '    }';
+      echo '    location ~ /(data|conf|bin|inc)/ {';
+      echo '      deny all;';
+      echo '    }';
+      echo '    location ~ /\.ht {';
+      echo '      deny  all;';
+      echo '    }';
+      echo '}';
+      echo ''; } >> "/etc/nginx/sites-available/$LYCHEE_DOMAIN_NAME"
+}
+
+function install_lychee_website_onion {
+    { echo 'server {';
+      echo "    listen 127.0.0.1:${LYCHEE_ONION_PORT} default_server;";
+      echo '    port_in_redirect off;';
+      echo "    root /var/www/$LYCHEE_DOMAIN_NAME/htdocs;";
+      echo "    server_name $LYCHEE_ONION_HOSTNAME;";
+      echo '    access_log /dev/null;';
+      echo "    error_log /dev/null;";
+      echo '    index index.html;';
+      echo '    charset utf-8;';
+      echo '    proxy_read_timeout 86400s;'; } >> "/etc/nginx/sites-available/$LYCHEE_DOMAIN_NAME"
+    function_check nginx_security_options
+    nginx_security_options "$LYCHEE_DOMAIN_NAME"
+    { echo '    add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
+      echo '';
+      echo '    # rewrite to front controller as default rule';
+      echo '    location / {'; } >> "/etc/nginx/sites-available/$LYCHEE_DOMAIN_NAME"
+    function_check nginx_limits
+    nginx_limits "$LYCHEE_DOMAIN_NAME"
+    { echo '    }';
+      echo '';
+      echo '    # block these file types';
+      echo '    location ~* \.(tpl|md|tgz|log|out)$ {';
+      echo '        deny all;';
+      echo '    }';
+      echo '';
+      echo '    # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000';
+      echo '    # or a unix socket';
+      echo '    location ~* \.php$ {'; } >> "/etc/nginx/sites-available/$LYCHEE_DOMAIN_NAME"
+    function_check nginx_limits
+    nginx_limits "$LYCHEE_DOMAIN_NAME"
+    { echo '        # Zero-day exploit defense.';
+      echo '        # http://forum.nginx.org/read.php?2,88845,page=3';
+      echo "        # Won't work properly (404 error) if the file is not stored on this";
+      echo "        # server, which is entirely possible with php-fpm/php-fcgi.";
+      echo "        # Comment the 'try_files' line out if you set up php-fpm/php-fcgi on";
+      echo "        # another machine. And then cross your fingers that you won't get hacked.";
+      echo "        try_files \$uri \$uri/ /index.html;";
+      echo '        # NOTE: You should have "cgi.fix_pathinfo = 0;" in php.ini';
+      echo '        fastcgi_split_path_info ^(.+\.php)(/.+)$;';
+      echo '        # With php-cgi alone:';
+      echo '        # fastcgi_pass 127.0.0.1:9000;';
+      echo '        # With php-fpm:';
+      echo "        fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
+      echo '        include fastcgi_params;';
+      echo '        fastcgi_read_timeout 30;';
+      echo '        fastcgi_index index.html;';
+      echo "        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;";
+      echo '    }';
+      echo '';
+      echo '    # deny access to all dot files';
+      echo '    location ~ /\. {';
+      echo '        deny all;';
+      echo '    }';
+      echo '';
+      echo '    #deny access to store';
+      echo '    location ~ /store {';
+      echo '        deny all;';
+      echo '    }';
+      echo '    location ~ /(data|conf|bin|inc)/ {';
+      echo '      deny all;';
+      echo '    }';
+      echo '    location ~ /\.ht {';
+      echo '      deny  all;';
+      echo '    }';
+      echo '}'; } >> "/etc/nginx/sites-available/$LYCHEE_DOMAIN_NAME"
+}
+
+function install_lychee_from_repo {
+    if [ ! -d "/var/www/$LYCHEE_DOMAIN_NAME" ]; then
+        mkdir "/var/www/$LYCHEE_DOMAIN_NAME"
+    fi
+
+    cd "/var/www/$LYCHEE_DOMAIN_NAME" || exit 68
+
+    if [ -d /repos/lychee ]; then
+        mkdir htdocs
+        cp -r -p /repos/lychee/. htdocs
+        cd htdocs || exit 96
+        git pull
+    else
+        git_clone "$LYCHEE_REPO" htdocs
+    fi
+
+    cd "/var/www/$LYCHEE_DOMAIN_NAME/htdocs" || exit 56
+    git checkout "$LYCHEE_COMMIT" -b "$LYCHEE_COMMIT"
+    set_completion_param "lychee commit" "$LYCHEE_COMMIT"
+}
+
+function lychee_create_admin_user {
+    if [ ! "$LYCHEE_ADMIN_PASSWORD" ]; then
+        echo $'No lychee database password'
+        exit 62
+    fi
+    cd "/var/www/${LYCHEE_DOMAIN_NAME}/htdocs/php/database" || exit 27
+    lychee_identifier=$(php -r "echo md5(microtime(true));")
+    username_encrypted=$(lychee_hashed_string "$MY_USERNAME")
+    password_encrypted=$(lychee_hashed_string "$LYCHEE_ADMIN_PASSWORD")
+    rm /root/.lychee_string.php
+
+    sed -i 's|?|lychee_log|g' log_table.sql
+    initialise_database lychee log_table.sql
+    sed -i 's|?|lychee_photos|g' photos_table.sql
+    initialise_database lychee photos_table.sql
+    cp settings_content.sql settings_content2.sql
+    sed -i 's|?|lychee_settings|g' settings_table.sql
+    sed -i 's|?|lychee_settings|g' settings_content2.sql
+    sed -i "s|'version',''|'version','${LYCHEE_VERSION}'|g" settings_content2.sql
+    sed -i "s|'username',''|'username','${username_encrypted}'|g" settings_content2.sql
+    sed -i "s|'password',''|'password','${password_encrypted}'|g" settings_content2.sql
+    sed -i "s|'identifier',''|'identifier','${lychee_identifier}'|g" settings_content2.sql
+    initialise_database lychee settings_table.sql
+    run_query_with_output lychee "$(cat settings_content2.sql)"
+    rm settings_content2.sql
+    sed -i 's|?|lychee_albums|g' albums_table.sql
+    initialise_database lychee albums_table.sql
+}
+
+function lychee_create_config {
+    MARIADB_PASSWORD=$("${PROJECT_NAME}-pass" -u root -a mariadb)
+    { echo '<?php';
+      echo '';
+      echo '// Database configuration';
+      echo "\$dbHost = 'localhost'; // Host of the database";
+      echo "\$dbUser = 'root'; // Username of the database";
+      echo "\$dbPassword = '$MARIADB_PASSWORD'; // Password of the database";
+      echo "\$dbName = 'lychee'; // Database name";
+      echo "\$dbTablePrefix = ''; // Table prefix";
+      echo '';
+      echo '?>'; } > "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/data/config.php"
+}
+
+function install_lychee {
+    if [ ! $ONION_ONLY ]; then
+        ONION_ONLY='no'
+    fi
+
+    if [ ! "$LYCHEE_DOMAIN_NAME" ]; then
+        echo $'The lychee domain name was not specified'
+        exit 54
+    fi
+
+    increment_app_install_progress
+
+    # for the avatar changing command
+    INSTALL_PACKAGES imagemagick exif zip libfcgi0ldbl
+    # shellcheck disable=SC2086
+    INSTALL_PACKAGES php${PHP_VERSION}-mysql php${PHP_VERSION}-imagick
+    # shellcheck disable=SC2086
+    INSTALL_PACKAGES php${PHP_VERSION}-mbstring php${PHP_VERSION}-json
+    # shellcheck disable=SC2086
+    INSTALL_PACKAGES php${PHP_VERSION}-gd php${PHP_VERSION}-xml php${PHP_VERSION}-zip
+
+    increment_app_install_progress
+
+    function_check install_lychee_from_repo
+    install_lychee_from_repo
+
+    increment_app_install_progress
+
+    if [[ $ONION_ONLY == "no" ]]; then
+        function_check install_lychee_website
+        install_lychee_website
+    else
+        echo -n '' > "/etc/nginx/sites-available/$LYCHEE_DOMAIN_NAME"
+    fi
+
+    LYCHEE_ONION_HOSTNAME=$(add_onion_service lychee 80 ${LYCHEE_ONION_PORT})
+
+    increment_app_install_progress
+
+    function_check install_lychee_website_onion
+    install_lychee_website_onion
+
+    increment_app_install_progress
+
+    function_check create_site_certificate
+    create_site_certificate "$LYCHEE_DOMAIN_NAME" 'yes'
+
+    function_check configure_php
+    configure_php
+
+    increment_app_install_progress
+
+    chmod -R 1777 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/uploads/"
+    chmod -R 1777 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/data/"
+    chown -R www-data:www-data "/var/www/$LYCHEE_DOMAIN_NAME/htdocs"
+
+    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/uploads/big/index.html"
+    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/uploads/medium/index.html"
+    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/uploads/import/index.html"
+    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/uploads/thumb/index.html"
+    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/data/.gitignore"
+
+    function_check nginx_ensite
+    nginx_ensite "$LYCHEE_DOMAIN_NAME"
+
+    function_check install_mariadb
+    install_mariadb
+
+    increment_app_install_progress
+
+    function_check get_mariadb_password
+    get_mariadb_password
+
+    function_check lychee_create_database
+    lychee_create_database
+
+    increment_app_install_progress
+
+    function_check lychee_create_config
+    lychee_create_config
+
+    function_check lychee_create_admin_user
+    lychee_create_admin_user
+
+    increment_app_install_progress
+
+    systemctl restart mariadb
+
+    increment_app_install_progress
+
+    chown -R www-data:www-data "/var/www/${LYCHEE_DOMAIN_NAME}/htdocs"
+    chmod -R 750 "/var/www/${LYCHEE_DOMAIN_NAME}/htdocs/uploads"/
+    chmod -R 750 "/var/www/${LYCHEE_DOMAIN_NAME}/htdocs/data"/
+
+    # shellcheck disable=SC2086
+    systemctl restart php${PHP_VERSION}-fpm
+    systemctl restart nginx
+
+    increment_app_install_progress
+
+    "${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a lychee -p "$LYCHEE_ADMIN_PASSWORD"
+
+    function_check add_ddns_domain
+    add_ddns_domain "$LYCHEE_DOMAIN_NAME"
+
+    set_completion_param "lychee domain" "$LYCHEE_DOMAIN_NAME"
+    APP_INSTALLED=1
+}
+
+# NOTE: deliberately no exit 0

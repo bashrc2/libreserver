@@ -1,0 +1,450 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Used to enable or disable batman mesh protocol on a given interface
+#
+# License
+# =======
+#
+# Copyright (C) 2015-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+PROJECT_NAME='libreserver'
+COMPLETION_FILE="/root/${PROJECT_NAME}-completed.txt"
+
+# hotspot passphrase must be 5 characters or longer
+HOTSPOT_PASSPHRASE="${PROJECT_NAME}"
+
+# The type of interface which the mesh will run on
+MESH_INTERFACE_TYPE='wlan'
+
+source /usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-firewall
+source /usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-wifi
+source /usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-mesh
+
+function status {
+    batctl o
+
+    if [ -f "$MESH_CURRENT_PROTOCOL" ]; then
+	if grep -q "bmx6" "$MESH_CURRENT_PROTOCOL"; then
+            bmx6 -c show=originators
+	fi
+	if grep -q "bmx7" "$MESH_CURRENT_PROTOCOL"; then
+            bmx7 -c show=originators
+	fi
+    fi
+}
+
+function stop {
+    if [ ! -f "$MESH_CURRENT_PROTOCOL" ]; then
+        return
+    fi
+
+    if [ -z "$IFACE" ]; then
+        echo 'error: unable to find wifi interface, not enabling batman-adv mesh'
+        return
+    fi
+
+    systemctl stop bmx6
+    if [ -d /etc/bmx7 ]; then
+        systemctl stop bmx7
+    fi
+    systemctl stop olsr2
+    systemctl stop babel
+    systemctl disable bmx6
+    systemctl disable bmx7
+    systemctl disable olsr2
+    systemctl disable babel
+    systemctl stop dnsmasq
+    systemctl disable dnsmasq
+
+    # shellcheck disable=SC2153
+    if [ "$EIFACE" ]; then
+        if [[ "$EIFACE" != "$IFACE" ]] ; then
+            brctl delif "$BRIDGE" bat0
+            ifconfig "$BRIDGE" down || true
+            ethernet_connected=$(cat "/sys/class/net/$EIFACE/carrier")
+            if [[ "$ethernet_connected" != "0" ]]; then
+                systemctl stop hostapd
+                brctl delif "$BRIDGE" "$EIFACE"
+                ifconfig "$EIFACE" down -promisc
+            fi
+            brctl delbr "$BRIDGE"
+        fi
+    fi
+
+    ifconfig bat0 down -promisc
+
+    batctl if del "$IFACE"
+    ifconfig "$IFACE" mtu 1500
+    ifconfig "$IFACE" down
+    if [[ "$MESH_INTERFACE_TYPE" == 'wlan'* ]]; then
+        iwconfig "$IFACE" mode managed
+    fi
+
+    if [ "$IFACE_SECONDARY" ]; then
+        systemctl stop hostapd
+        systemctl disable hostapd
+        batctl if del "$IFACE_SECONDARY"
+        ifconfig "$IFACE_SECONDARY" mtu 1500
+        ifconfig "$IFACE_SECONDARY" down
+        if [[ "$MESH_INTERFACE_TYPE" == 'wlan'* ]]; then
+            iwconfig "$IFACE_SECONDARY" mode managed
+        fi
+    fi
+
+    rmmod batman-adv
+
+    disable_mesh_firewall
+
+    systemctl restart network-manager
+
+    if [ -f "$MESH_CURRENT_PROTOCOL" ]; then
+        rm "$MESH_CURRENT_PROTOCOL"
+    fi
+}
+
+function verify {
+    tempfile="$(mktemp)"
+    batctl o > "$tempfile"
+    if grep -q "disabled" "$tempfile"; then
+        echo $'B.A.T.M.A.N. not enabled'
+        rm "$tempfile"
+        stop
+        exit 72
+    fi
+    echo $'B.A.T.M.A.N. is running'
+    rm "$tempfile"
+}
+
+function add_wifi_interface {
+    ifname=$1
+    ifssid=$WIFI_SSID
+    if [ "$2" ]; then
+        ifssid=$2
+    fi
+    ifmode=ad-hoc
+    if [ "$3" ]; then
+        ifmode=$3
+    fi
+    ifchannel=$CHANNEL
+    if [ "$4" ]; then
+        ifchannel=$4
+    fi
+
+    ifconfig "$ifname" down
+    ifconfig "$ifname" mtu 1532
+    peermac=$(assign_peer_address)
+    if [ ! "$peermac" ]; then
+        echo $"Unable to obtain MAC address for $peermac on $ifname"
+        return
+    fi
+    ifconfig "$ifname" hw ether "$peermac"
+    echo $"$ifname assigned MAC address $peermac"
+    if [[ "$MESH_INTERFACE_TYPE" == 'wlan'* ]]; then
+        iwconfig "$ifname" enc off
+        iwconfig "$ifname" mode "$ifmode" essid "$ifssid" channel "$ifchannel"
+    fi
+
+    batctl if add "$ifname"
+    ifconfig "$ifname" up
+}
+
+# shellcheck disable=SC2120
+function start {
+    update_wifi_adaptors "${MESH_INTERFACE_TYPE}"
+
+    if [ -z "$IFACE" ] ; then
+        echo 'error: unable to find wifi interface, not enabling batman-adv mesh'
+        exit 72
+    fi
+    echo "info: enabling batman-adv mesh network $WIFI_SSID on $IFACE"
+
+    stop
+    systemctl stop network-manager
+    sleep 5
+
+    systemctl stop dnsmasq
+    systemctl disable dnsmasq
+
+    # remove an avahi service which isn't used
+    if [ -f /etc/avahi/services/udisks.service ]; then
+        sudo rm /etc/avahi/services/udisks.service
+    fi
+
+    global_rate_limit
+
+    # Might have to re-enable wifi
+    rfkill unblock "$(rfkill list|awk -F: "/phy/ {print $1}")" || true
+
+    secondary_wifi_available=
+    if [[ "$MESH_INTERFACE_TYPE" == 'wlan'* ]]; then
+        if [ "$IFACE_SECONDARY" ]; then
+            if [[ "$IFACE" != "$IFACE_SECONDARY" ]]; then
+                if [ -d /etc/hostapd ]; then
+                    if [ ${#HOTSPOT_PASSPHRASE} -gt 4 ]; then
+                        secondary_wifi_available=1
+                    else
+                        echo $'Hotspot passphrase is too short'
+                    fi
+                fi
+            fi
+        fi
+    fi
+
+    modprobe batman-adv
+
+    # avahi on ipv6
+    sed -i 's|use-ipv4=.*|use-ipv4=no|g' /etc/avahi/avahi-daemon.conf
+    sed -i 's|use-ipv6=.*|use-ipv6=yes|g' /etc/avahi/avahi-daemon.conf
+
+    # enable dbus
+    sed -i "s|#enable-dbus=.*|enable-dbus=yes|g" /etc/avahi/avahi-daemon.conf
+    sed -i "s|enable-dbus=.*|enable-dbus=yes|g" /etc/avahi/avahi-daemon.conf
+
+    # allow publishing of services
+    sed -i "s|#disable-user-service-publishing=.*|disable-user-service-publishing=no|g" /etc/avahi/avahi-daemon.conf
+    sed -i "s|disable-user-service-publishing=.*|disable-user-service-publishing=no|g" /etc/avahi/avahi-daemon.conf
+
+    # set the wifi interface for layer 3 routing
+    sed -i "s|ExecStart=.*|ExecStart=/usr/sbin/bmx6 dev=${IFACE}|g" /etc/systemd/system/bmx6.service
+    sed -i "s|ExecStart=.*|ExecStart=/usr/sbin/bmx7 dev=${IFACE}|g" /etc/systemd/system/bmx7.service
+    sed -i "s|ExecStart=.*|ExecStart=/usr/local/sbin/olsrd2_static ${IFACE}|g" /etc/systemd/system/olsr2.service
+    sed -i "s|ExecStart=.*|ExecStart=/usr/local/bin/babeld ${IFACE}|g" /etc/systemd/system/babel.service
+    systemctl daemon-reload
+
+    add_wifi_interface "$IFACE" "$WIFI_SSID" ad-hoc "$CHANNEL"
+
+    # NOTE: Don't connect the secondary wifi device. hostapd will handle that by itself
+
+    ifconfig bat0 up promisc
+
+    brctl addbr "$BRIDGE"
+    brctl addif "$BRIDGE" bat0
+    ifconfig bat0 0.0.0.0
+    ethernet_connected='0'
+    if [ "$EIFACE" ] ; then
+        if [[ "$EIFACE" != "$IFACE" ]] ; then
+            ethernet_connected=$(cat "/sys/class/net/$EIFACE/carrier")
+            if [[ "$ethernet_connected" != "0" ]]; then
+                echo $'Trying ethernet bridge to the internet'
+                brctl addif "$BRIDGE" "$EIFACE"
+                ifconfig "$EIFACE" 0.0.0.0
+                ifconfig "$EIFACE" up promisc
+                echo $'End of internet bridge'
+
+                # set the wifi interfaces for layer 3 routing
+                sed -i "s|ExecStart=.*|ExecStart=/usr/sbin/bmx6 dev=${IFACE} dev=${EIFACE}|g" /etc/systemd/system/bmx6.service
+                sed -i "s|ExecStart=.*|ExecStart=/usr/sbin/bmx7 dev=${IFACE} dev=${EIFACE}|g" /etc/systemd/system/bmx7.service
+                sed -i "s|ExecStart=.*|ExecStart=/usr/local/sbin/olsrd2_static ${IFACE} ${EIFACE}|g" /etc/systemd/system/olsr2.service
+                sed -i "s|ExecStart=.*|ExecStart=/usr/local/bin/babeld ${IFACE} ${EIFACE}|g" /etc/systemd/system/babel.service
+                systemctl daemon-reload
+            else
+                echo $"$EIFACE is not connected"
+            fi
+        fi
+    fi
+    ifconfig "$BRIDGE" up
+    dhclient "$BRIDGE"
+
+    # batman-adv tweaks
+    if [ -f /sys/class/net/bat0/mesh/orig_interval ]; then
+        echo "5000" > /sys/class/net/bat0/mesh/orig_interval
+    fi
+
+    enable_mesh_seconary_wifi
+
+    enable_mesh_firewall
+
+    enable_mesh_scuttlebot
+    enable_mesh_tor
+
+    sed -i "s|server_name .*|server_name ${HOSTNAME}.local;|g" /etc/nginx/sites-available/git_ssb
+
+    systemctl restart nginx
+
+    if [ ! -f "$MESH_DEFAULT_PROTOCOL" ]; then
+        echo 'bmx6' > "$MESH_DEFAULT_PROTOCOL"
+    fi
+
+    if grep -q "bmx6" "$MESH_DEFAULT_PROTOCOL"; then
+        systemctl enable bmx6
+        systemctl restart bmx6
+        sed -i 's|<type>.*|<type>_bmx6._tcp</type>|g' /etc/avahi/services/routing.service
+    fi
+
+    if grep -q "bmx7" "$MESH_DEFAULT_PROTOCOL"; then
+        systemctl enable bmx7
+        systemctl restart bmx7
+        sed -i 's|<type>.*|<type>_bmx7._tcp</type>|g' /etc/avahi/services/routing.service
+    fi
+
+    if grep -q "olsr" "$MESH_DEFAULT_PROTOCOL"; then
+        IFACE=$(grep ExecStart "/etc/systemd/system/olsr2.service" | awk -F ' ' '{print $2}')
+        mesh_generate_ipv6_address "$IFACE"
+
+        systemctl enable olsr2
+        systemctl restart olsr2
+        sed -i 's|<type>.*|<type>_olsr2._tcp</type>|g' /etc/avahi/services/routing.service
+    fi
+
+    if grep -q "babel" "$MESH_DEFAULT_PROTOCOL"; then
+        IFACE=$(grep ExecStart /etc/systemd/system/babel.service | awk -F ' ' '{print $2}')
+        mesh_generate_ipv6_address "$IFACE"
+
+        systemctl enable babel
+        systemctl restart babel
+        sed -i 's|<type>.*|<type>_babel._tcp</type>|g' /etc/avahi/services/routing.service
+    fi
+
+    systemctl restart avahi-daemon
+
+    verify
+
+    cat "$MESH_DEFAULT_PROTOCOL" > "$MESH_CURRENT_PROTOCOL"
+}
+
+function monitor {
+    if [[ "$MESH_INTERFACE_TYPE" != 'wlan'* ]]; then
+        return
+    fi
+    if [ -z "$IFACE" ] ; then
+        echo 'error: unable to find wifi interface, not enabling batman-adv mesh'
+        exit 72
+    fi
+
+    clear
+    echo ''
+    echo $'*** Stopping network ***'
+    echo ''
+
+    stop
+
+    echo "info: monitoring mesh network $WIFI_SSID on $IFACE"
+
+    systemctl stop network-manager
+    sleep 5
+
+    clear
+    echo ''
+    echo $'*** Setting firewall rate limit ***'
+    echo ''
+
+    global_rate_limit
+
+    clear
+    echo ''
+    echo $'*** Enabling wifi adaptor in monitor mode ***'
+    echo ''
+
+    # Might have to re-enable wifi
+    rfkill unblock "$(rfkill list|awk -F: "/phy/ {print $1}")" || true
+
+    ifconfig "$IFACE" down
+    ifconfig "$IFACE" mtu 1532
+    ifconfig "$IFACE" hw ether "$(assign_peer_address)"
+    iwconfig "$IFACE" enc off
+    iwconfig "$IFACE" mode monitor channel "$CHANNEL"
+    sleep 1
+    iwconfig "$IFACE" ap "$CELLID"
+
+    modprobe batman-adv
+    batctl if add "$IFACE"
+    ifconfig "$IFACE" up
+
+    horst -i "$IFACE"
+
+    clear
+    echo ''
+    echo $'*** Restarting the network daemon. This may take a while. ***'
+    echo ''
+
+    # shellcheck disable=SC2119
+    start
+}
+
+# optionally a file can contain the mesh interface type
+mesh_interface_type_file=/root/.mesh_interface_type
+if [ -f "$mesh_interface_type_file" ]; then
+    MESH_INTERFACE_TYPE=$(head -n 1 < "$mesh_interface_type_file")
+    if [[ "$MESH_INTERFACE_TYPE" == 'wlan'* ]]; then
+        MESH_INTERFACE_TYPE='wlan'
+    fi
+    if [[ "$MESH_INTERFACE_TYPE" == 'eth'* ]]; then
+        MESH_INTERFACE_TYPE='eth'
+    fi
+fi
+
+mesh_protocol_init
+
+if [[ "$MESH_INTERFACE_TYPE" == 'eth'* ]]; then
+    MESH_INTERFACE_TYPE='eth'
+fi
+
+update_wifi_adaptors "${MESH_INTERFACE_TYPE}"
+
+if [ ! "$IFACE" ]; then
+    echo $'No wlan adaptor'
+    exit 0
+fi
+
+if [ -e /etc/default/batctl ]; then
+    # shellcheck disable=SC1091
+    . /etc/default/batctl
+fi
+
+if ! grep -q "$IFACE" /proc/net/dev; then
+    echo "Interface \$IFACE was not found"
+    stop
+    exit 1
+fi
+
+case "$1" in
+    start|stop|status|monitor)
+        $1
+        ;;
+    restart)
+        clear
+        echo ''
+        echo $'*** Stopping mesh network connection ***'
+        echo ''
+        stop
+        sleep 10
+        clear
+        echo ''
+        echo $'*** Starting mesh network connection ***'
+        echo ''
+        # shellcheck disable=SC2119
+        start
+        ;;
+    ping)
+        batctl ping "$2"
+        ;;
+    data)
+        watch -n1 "batctl s | grep mgmt | grep bytes"
+        ;;
+    ls|list)
+        avahi-browse -atl
+        ;;
+    *)
+        echo "error: invalid parameter $1"
+        echo "usage: \$0 {start|stop|restart|status|ping|ls|list}"
+        exit 2
+        ;;
+esac
+exit 0

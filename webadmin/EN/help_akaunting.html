@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+  <meta charset="utf-8">
+  <style>
+    @import url("libreserver.css");
+
+    * {
+        box-sizing: border-box;
+    }
+
+    .headertext {
+        text-align: center;
+        font-size: 120%;
+        font-weight: bold;
+    }
+
+    .subheadertext {
+        margin-left : 10%;
+        text-align: left;
+        font-size: 110%;
+        font-weight: bold;
+    }
+
+    .subheaderports {
+        margin-left : 10%;
+        text-align: left;
+        font-size: 110%;
+        font-weight: bold;
+    }
+
+    .helptext {
+        width: 80%;
+        text-align: left;
+        font-size: 100%;
+        margin-left : 10%;
+    }
+
+    .codetext {
+        font-family: Courier;
+        width: 80%;
+        text-align: left;
+        font-size: 100%;
+        margin-left : 10%;
+    }
+
+    .portstext {
+        width: 80%;
+        text-align: left;
+        font-size: 100%;
+        margin-left : 10%;
+    }
+
+    .row {
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+        padding: 0 4px;
+    }
+
+    .column {
+        -ms-flex: 25%;
+        flex: 15%;
+        max-width: 25%;
+        padding: 0 4px;
+    }
+
+    .column img {
+        margin-top: 8px;
+        vertical-align: middle;
+    }
+
+    @media screen and (max-width: 800px) {
+        .column {
+            -ms-flex: 50%;
+            flex: 50%;
+            max-width: 50%;
+        }
+    }
+
+    @media screen and (max-width: 200px) {
+        .column {
+            -ms-flex: 100%;
+            flex: 100%;
+            max-width: 100%;
+        }
+    }
+  </style>
+  <body>
+
+    <div class="header">
+      <a href="app_akaunting.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
+    </div>
+
+    <p class="headertext" translate="yes">Akaunting</p>
+
+    <p class="helptext" translate="yes">The LibreServer system isn't primarily aimed at companies or institutions, but if you're a one person company or freelancer then having the ability to run your own accounting system and keep the data private and also backed up is useful. Akaunting provides a nice web based system for small business accounts, and is also quite usable within a mobile web browser.</p>
+
+    <p class="subheaderports" translate="yes">Ports</p>
+
+    <p class="portstext" translate="yes">Forward port 80 and 443 from your internet router</p>
+
+    <p class="subheadertext" translate="yes">Installation</p>
+
+    <p class="helptext" translate="yes">Accounts software can often be quite complex, and so you'll probably want to refer to the official documentation (https://akaunting.com/docs) for details.</p>
+
+  </body>
+</html>

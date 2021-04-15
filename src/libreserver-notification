@@ -1,0 +1,483 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Sends a notification to the administrator user
+#
+# License
+# =======
+#
+# Copyright (C) 2018-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+PROJECT_NAME='libreserver'
+
+ADMIN_USERNAME=
+SUBJECT=
+MESSAGE=
+CONFIGURATION_FILE=/root/${PROJECT_NAME}.cfg
+COMPLETION_FILE=/root/${PROJECT_NAME}-completed.txt
+local_domain=$HOSTNAME
+notification_debug=
+sensitive_notification=
+
+if grep -q 'ONION_ONLY=yes' $CONFIGURATION_FILE; then
+    local_domain=$(cat /var/lib/tor/hidden_service_email/hostname)
+fi
+
+function notification_translate_text {
+    text="$1"
+    DEFAULT_LANGUAGE=$(grep "DEFAULT_LANGUAGE=" "/root/${PROJECT_NAME}.cfg" | awk -F '=' '{print $2}')
+    if [[ "$DEFAULT_LANGUAGE" == "en_GB"* ]]; then
+        echo "$text"
+        return
+    fi
+    local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+    translations_file="/var/www/${local_hostname}/htdocs/admin/translations/${DEFAULT_LANGUAGE}.txt"
+    if [ -f "$translations_file" ]; then
+        if grep -q "${text}|" "$translations_file"; then
+            grep "${text}|" "$translations_file" | head -n 1 | awk -F '|' '{print $2}'
+            return
+        fi
+    fi
+    echo "$text"
+}
+
+function matrix_server_message {
+    admin_username="$1"
+    notifications_username="$2"
+    message="$3"
+
+    MATRIX_DATA_DIR='/var/lib/matrix'
+    homeserver_config="${MATRIX_DATA_DIR}/homeserver.yaml"
+
+    # shellcheck disable=SC2002
+    MATRIX_DOMAIN_NAME=$(cat "$homeserver_config" | grep "server_name:" | head -n 1 | awk -F '"' '{print $2}')
+    if [ ! "$MATRIX_DOMAIN_NAME" ]; then
+        return
+    fi
+
+    # is this an onion only server?
+    ONION_ONLY='no'
+    if grep -q "ONION_ONLY=" "/root/${PROJECT_NAME}.cfg"; then
+        # shellcheck disable=SC2002
+        ONION_ONLY=$(cat "/root/${PROJECT_NAME}.cfg" | grep "ONION_ONLY=" | awk -F '=' '{print $2}')
+    fi
+
+    # get the curl command and domain to send to
+    curl_command='curl'
+    homebase="https://$MATRIX_DOMAIN_NAME"
+    if [[ "$ONION_ONLY" != 'no' ]]; then
+        curl_command='torsocks curl'
+        homebase="http://$(cat /var/lib/tor/hidden_service_matrix/hostname)"
+    fi
+
+    # get the token for the matrix admin user
+    MATRIXADMIN="@${admin_username}:$MATRIX_DOMAIN_NAME"
+    MATRIXUSER="@${notifications_username}:$MATRIX_DOMAIN_NAME"
+    cd "$MATRIX_DATA_DIR" || return
+    TOKEN=$(sqlite3 homeserver.db "select token from access_tokens where user_id like '$MATRIXADMIN' order by id desc limit 1;")
+    if [ ! "$TOKEN" ]; then
+        admin_username="${notifications_username}"
+        TOKEN=$(sqlite3 homeserver.db "select token from access_tokens where user_id like '$MATRIXUSER' order by id desc limit 1;")
+        if [ ! "$TOKEN" ]; then
+            echo "No matrix token for $MATRIXADMIN"
+            return
+        fi
+    fi
+    # send server notice
+    MATRIXPOST="${homebase}/_synapse/admin/v1/send_server_notice?access_token=${TOKEN}"
+    MATRIXMESSAGE="{\"user_id\": \"${MATRIXUSER}\",\"content\": { \"msgtype\": \"m.text\",\"body\": \"${message}\" }}"
+    #echo "${curl_command} --request POST --silent --header \"Content-Type: application/json\" --data \"${MATRIXMESSAGE}\" ${MATRIXPOST}"
+    # shellcheck disable=SC2086
+    ${curl_command} --request POST --silent --header "Content-Type: application/json" --data "${MATRIXMESSAGE}" ${MATRIXPOST} > /dev/null
+}
+
+function epicyon_notifications {
+    # checks if DMs or replies have arrived and sends notifications to users
+    if [ ! -f "/etc/epicyon/config.json" ]; then
+        return
+    fi
+
+    # shellcheck disable=SC2002
+    EPICYON_DOMAIN_NAME=$(cat "/etc/epicyon/config.json" | awk -F '"domain":' '{print $2}' | awk -F '"' '{print $2}')
+    for d in /home/*/ ; do
+        USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+        epicyonDir="/etc/epicyon/accounts/${USERNAME}@${EPICYON_DOMAIN_NAME}"
+
+        # send notifications for calendar events to XMPP/email users
+        epicyonCalendarfile="$epicyonDir/.newCalendar"
+        if [ -f "$epicyonCalendarfile" ]; then
+            if ! grep -q "##sent##" "$epicyonCalendarfile"; then
+                epicyonCalendarmessage=$(notification_translate_text 'New calendar event')
+                epicyonCalendarfileContent=$(echo "$epicyonCalendarmessage")" "$(cat "$epicyonCalendarfile")
+                if [[ "$epicyonCalendarfileContent" == '/calendar'* ]]; then
+                    epicyonCalendarmessage="Epicyon: ${EPICYON_DOMAIN_NAME}/users/${USERNAME}${epicyonCalendarfileContent}"
+                fi
+                "${PROJECT_NAME}-notification" -u "$USERNAME" -s "Epicyon" -m "$epicyonCalendarmessage" --sensitive yes
+                echo "##sent##" >> "$epicyonCalendarfile"
+                chown epicyon:epicyon "$epicyonCalendarfile"
+            fi
+        fi
+
+        # send notifications for DMs to XMPP/email users
+        epicyonDMfile="$epicyonDir/.newDM"
+        if [ -f "$epicyonDMfile" ]; then
+            if ! grep -q "##sent##" "$epicyonDMfile"; then
+                epicyonDMmessage=$(notification_translate_text 'New direct message')
+                epicyonDMfileContent=$(echo "$epicyonDMmessage")" "$(cat "$epicyonDMfile")
+                if [[ "$epicyonDMfileContent" == *':'* ]]; then
+                    epicyonDMmessage="Epicyon: $epicyonDMfileContent"
+                fi
+                "${PROJECT_NAME}-notification" -u "$USERNAME" -s "Epicyon" -m "$epicyonDMmessage" --sensitive yes
+                echo "##sent##" > "$epicyonDMfile"
+                chown epicyon:epicyon "$epicyonDMfile"
+            fi
+        fi
+
+        # send notifications for likes to XMPP/email users
+        epicyonLikeFile="$epicyonDir/.newLike"
+        if [ -f "$epicyonLikeFile" ]; then
+            if ! grep -q "##sent##" "$epicyonLikeFile"; then
+                epicyonLikeMessage=$(notification_translate_text 'liked your post')
+                epicyonLikeFileContent=$(cat "$epicyonLikeFile" | awk -F ' ' '{print $1}')" "$(echo "$epicyonLikeMessage")" "$(cat "$epicyonLikeFile" | awk -F ' ' '{print $2}')
+                if [[ "$epicyonLikeFileContent" == *':'* ]]; then
+                    epicyonLikeMessage="Epicyon: $epicyonLikeFileContent"
+                fi
+                "${PROJECT_NAME}-notification" -u "$USERNAME" -s "Epicyon" -m "$epicyonLikeMessage" --sensitive yes
+                echo "##sent##" > "$epicyonLikeFile"
+                chown epicyon:epicyon "$epicyonLikeFile"
+            fi
+        fi
+
+        # send notifications for replies to XMPP/email users
+        epicyonReplyFile="$epicyonDir/.newReply"
+        if [ -f "$epicyonReplyFile" ]; then
+            if ! grep -q "##sent##" "$epicyonReplyFile"; then
+                epicyonReplyMessage=$(notification_translate_text 'New reply')
+                epicyonReplyFileContent=$(echo "$epicyonReplyMessage")" "$(cat "$epicyonReplyFile")
+                if [[ "$epicyonReplyFileContent" == *':'* ]]; then
+                    epicyonReplyMessage="Epicyon: $epicyonReplyFileContent"
+                fi
+                "${PROJECT_NAME}-notification" -u "$USERNAME" -s "Epicyon" -m "$epicyonReplyMessage" --sensitive yes
+                echo "##sent##" > "$epicyonReplyFile"
+                chown epicyon:epicyon "$epicyonReplyFile"
+            fi
+        fi
+
+        # send notifications for git patches to XMPP/email users
+        epicyonPatchFile="$epicyonDir/.newPatch"
+        if [ -f "$epicyonPatchFile" ]; then
+            if [ -f "${epicyonPatchFile}Content" ]; then
+                if ! grep -q "##sent##" "$epicyonPatchFile"; then
+                    epicyonPatchMessage=$(cat "$epicyonPatchFile")
+                    if [ "$epicyonPatchMessage" ]; then
+                        # notify the member
+                        "${PROJECT_NAME}-notification" -u "$USERNAME" -s "Epicyon" -m "$epicyonPatchMessage" --sensitive yes
+                        echo "##sent##" > "$epicyonPatchFile"
+                        chown epicyon:epicyon "$epicyonPatchFile"
+                        # send the patch to them by email
+                        cat "${epicyonPatchFile}Content" | mail -s "[Epicyon] $epicyonPatchMessage" "${USERNAME}@${HOSTNAME}"
+                        rm "${epicyonPatchFile}Content"
+                    fi
+                fi
+            fi
+        fi
+
+        # send notifications for new shared items to XMPP/email users
+        epicyonShareFile="$epicyonDir/.newShare"
+        if [ -f "$epicyonShareFile" ]; then
+            if ! grep -q "##sent##" "$epicyonShareFile"; then
+                epicyonShareMessage=$(notification_translate_text 'New shared item')
+                epicyonShareFileContent=$(echo "$epicyonShareMessage")" "$(cat "$epicyonShareFile")
+                if [[ "$epicyonShareFileContent" == *':'* ]]; then
+                    epicyonShareMessage="Epicyon: $epicyonShareFileContent"
+                fi
+                "${PROJECT_NAME}-notification" -u "$USERNAME" -s "Epicyon" -m "$epicyonShareMessage" --sensitive yes
+                echo "##sent##" > "$epicyonShareFile"
+                chown epicyon:epicyon "$epicyonShareFile"
+            fi
+        fi
+
+        # send notifications for follow requests to XMPP/email users
+        epicyonFollowFile="$epicyonDir/followrequests.txt"
+        epicyonFollowNotificationsFile="$epicyonDir/follownotifications.txt"
+        if [ -f "$epicyonFollowFile" ]; then
+            if [ -s "$epicyonFollowFile" ]; then
+                epicyonNotify=
+                if [ -f "$epicyonFollowNotificationsFile" ]; then
+                    hash1=$(sha256sum "$epicyonFollowFile" | awk -F ' ' '{print $1}')
+                    hash2=$(sha256sum "$epicyonFollowNotificationsFile" | awk -F ' ' '{print $1}')
+                    if [[ "$hash1" != "$hash2" ]]; then
+                        epicyonNotify=1
+                    fi
+                else
+                    epicyonNotify=1
+                fi
+                if [ $epicyonNotify ]; then
+                    cp "$epicyonFollowFile" "$epicyonFollowNotificationsFile"
+                    chown epicyon:epicyon "$epicyonFollowNotificationsFile"
+
+                    epicyonFollowMessage=$(notification_translate_text "New follow request")" ${EPICYON_DOMAIN_NAME}/users/${USERNAME}/followers#buttonheader"
+                    "${PROJECT_NAME}-notification" -u "$USERNAME" -s "Epicyon" -m "$epicyonFollowMessage" --sensitive yes
+                fi
+            fi
+        fi
+    done
+}
+
+function kill_sendxmpp_process {
+    # Sometimes the process can get stuck, so ensure that
+    # it gets killed if necessary
+    # shellcheck disable=SC2009
+    sendxmpp_pid=$(ps ax | grep /usr/bin/sendxmpp | grep -v grep | awk -F ' ' '{print $1}')
+    if [ "$sendxmpp_pid" ]; then
+        kill -9 "$sendxmpp_pid"
+    fi
+}
+
+while [ $# -gt 1 ]
+do
+    key="$1"
+
+    case $key in
+        --epicyon)
+            epicyon_notifications
+            exit 0
+            ;;
+        --sensitive)
+            shift
+            sensitive_notification='yes'
+            ;;
+        -e|--email)
+            shift
+            ADMIN_EMAIL_ADDRESS="$1"
+            ;;
+        -u|--user|--username)
+            shift
+            ADMIN_USERNAME="$1"
+            ;;
+        --setuser|--setusername)
+            shift
+            ADMIN_USERNAME="$1"
+            if [ "$ADMIN_USERNAME" ]; then
+                if [ -d "/home/$ADMIN_USERNAME" ]; then
+                    if grep -q 'Notifications user:' "$COMPLETION_FILE"; then
+                        sed -i "s|Notifications user:.*|Notifications user:$ADMIN_USERNAME|g" "$COMPLETION_FILE"
+                    else
+                        echo "Notifications user:$ADMIN_USERNAME" >> "$COMPLETION_FILE"
+                    fi
+                    echo "Notifications user was set to $ADMIN_USERNAME"
+                    exit 0
+                fi
+            fi
+            ;;
+        -s|--subject|--header)
+            shift
+            SUBJECT="$1"
+            if [[ "$SUBJECT" == *'"'* ]]; then
+                # shellcheck disable=SC2001
+                NEW_SUBJECT=$(echo "$SUBJECT" | sed 's|"||g')
+                SUBJECT="$NEW_SUBJECT"
+            fi
+            ;;
+        -m|--message|--msg)
+            shift
+            MESSAGE="$1"
+            if [[ "$MESSAGE" == *'"'* ]]; then
+                # shellcheck disable=SC2001
+                NEW_MESSAGE=$(echo "$MESSAGE" | sed 's|"||g')
+                MESSAGE="$NEW_MESSAGE"
+            fi
+            ;;
+        -d|--debug)
+            shift
+            if [[ "$1" == 'y'* || "$1" == 't'*  || "$1" == '1' ]]; then
+                notification_debug=1
+            fi
+            ;;
+        *)
+            # unknown option
+            ;;
+    esac
+    shift
+done
+
+if [ ! "$MESSAGE" ]; then
+    exit 0
+fi
+
+if [ ! "$ADMIN_USERNAME" ]; then
+    if grep -q "Notifications user" "$COMPLETION_FILE"; then
+        ADMIN_USERNAME=$(grep "Notifications user" "$COMPLETION_FILE" | awk -F ':' '{print $2}')
+        if [ ! -d "/home/$ADMIN_USERNAME" ]; then
+            ADMIN_USERNAME=$(grep "Admin user" "$COMPLETION_FILE" | awk -F ':' '{print $2}')
+            sed -i '/Notifications user:/d' "$COMPLETION_FILE"
+        fi
+    else
+        ADMIN_USERNAME=$(grep "Admin user" "$COMPLETION_FILE" | awk -F ':' '{print $2}')
+    fi
+fi
+
+if [ ! "$ADMIN_EMAIL_ADDRESS" ]; then
+    ADMIN_EMAIL_ADDRESS=${ADMIN_USERNAME}@${local_domain}
+fi
+
+notification_image_filename=/tmp/notification.jpg
+if [[ "$SUBJECT" == *"USB"* ]]; then
+    if [ -f /usr/bin/fswebcam ]; then
+        # Preferentially use a secondary camera which can
+        # be set up from an appropriate viewing angle
+        if [ -e /dev/video1 ]; then
+            if [ -f $notification_image_filename ]; then
+                rm $notification_image_filename
+            fi
+            fswebcam -d /dev/video1 --jpeg 50 -D 1 $notification_image_filename
+        else
+            # Otherwise use the built-in camera
+            if [ -e /dev/video0 ]; then
+                if [ -f $notification_image_filename ]; then
+                    rm $notification_image_filename
+                fi
+                fswebcam -d /dev/video0 --jpeg 50 -D 1 $notification_image_filename
+            fi
+        fi
+    fi
+fi
+
+image_extra=
+if [ -f $notification_image_filename ]; then
+    # extra option for mail command
+    image_extra=" -A $notification_image_filename"
+
+    # If syncthing is installed then copy the image to the admin
+    if [ -d "/home/$ADMIN_USERNAME/Sync" ]; then
+        cp $notification_image_filename "/home/$ADMIN_USERNAME/Sync/usb_canary.jpg"
+    fi
+fi
+
+# This file sets the preferred notification methods
+notification_method_filename="/home/${ADMIN_USERNAME}/.notify"
+
+# send email to administrator
+if [ "$SUBJECT" ]; then
+    notify_by_email=1
+    if [ -f "$notification_method_filename" ]; then
+        notify_by_email=
+        if grep -q 'email' "$notification_method_filename"; then
+            notify_by_email=1
+        fi
+    fi
+    if [ $notify_by_email ]; then
+    # shellcheck disable=SC2086
+        echo "$MESSAGE" | mail -s "$SUBJECT"$image_extra "$ADMIN_EMAIL_ADDRESS"
+    fi
+fi
+
+if [ -d /etc/prosody ]; then
+    if [ -f /usr/bin/sendxmpp ]; then
+        notify_by_xmpp=1
+        if [ -f "$notification_method_filename" ]; then
+            notify_by_xmpp=
+            if grep -q 'xmpp' "$notification_method_filename"; then
+                notify_by_xmpp=1
+            fi
+        fi
+        if [ $notify_by_xmpp ]; then
+            notification_user_password=$(openssl rand -base64 32 | tr -dc A-Za-z0-9 | head -c 30 ; echo -n '')
+            if prosodyctl register "notification" "$local_domain" "$notification_user_password"; then
+                if [[ "$SUBJECT" == *' Tor '* ]]; then
+                    MESSAGE="$SUBJECT"
+                fi
+
+                if [ -f /usr/bin/sendxmpp ]; then
+                    kill_sendxmpp_process
+                    echo "${MESSAGE}" | /usr/bin/sendxmpp -u notification -p "${notification_user_password}" -j localhost -o ${local_domain} --message-type=headline -n -t -s ${PROJECT_NAME} ${ADMIN_USERNAME}@${local_domain}
+                fi
+            fi
+            prosodyctl deluser "notification@$local_domain"
+        fi
+    fi
+fi
+
+if [ -d /etc/matrix ]; then
+    notify_by_matrix=1
+    if [ -f "$notification_method_filename" ]; then
+        notify_by_matrix=
+        if grep -q 'matrix' "$notification_method_filename"; then
+            notify_by_matrix=1
+        fi
+    fi
+    if [ $notify_by_matrix ]; then
+        # shellcheck disable=SC2002
+        server_admin=$(cat "/root/${PROJECT_NAME}-completed.txt" | grep "Admin user:" | awk -F ':' '{print $2}')
+        matrix_server_message "${server_admin}" "${ADMIN_USERNAME}" "$MESSAGE"
+    fi
+fi
+
+if [ ! $sensitive_notification ]; then
+    if [ -d /etc/mosquitto ]; then
+        if ! grep -q 'ONION_ONLY=yes' $CONFIGURATION_FILE; then
+            if grep -q 'Notifications user:' "$COMPLETION_FILE"; then
+                SYSTEM_ADMIN_USERNAME=$(grep "Notifications user" "${COMPLETION_FILE}" | awk -F ':' '{print $2}')
+            else
+                SYSTEM_ADMIN_USERNAME=$(grep "Admin user" "${COMPLETION_FILE}" | awk -F ':' '{print $2}')
+            fi
+            # only publish messages destined for the admin or notifications user, not other users
+            if [[ "${ADMIN_USERNAME}" == "${SYSTEM_ADMIN_USERNAME}" ]]; then
+                mospub=/usr/bin/mosquitto_pub
+                if [ -f /usr/local/bin/mosquitto_pub ]; then
+                    mospub=/usr/local/bin/mosquitto_pub
+                fi
+                $mospub -t "${PROJECT_NAME}/${ADMIN_USERNAME}" -m "$MESSAGE"
+            fi
+        fi
+    fi
+fi
+
+if [ -d /etc/scuttlebot/notification ]; then
+    if grep -q "SSB_NOTIFY=" "/root/${PROJECT_NAME}.cfg"; then
+        SSB_NOTIFY=$(grep 'SSB_NOTIFY=' "/root/${PROJECT_NAME}.cfg" | head -n 1 | sed 's|SSB_NOTIFY=||g')
+        if [[ "$SSB_NOTIFY" == '@'* && "$SSB_NOTIFY" == *'.ed25519' ]]; then
+            notify_by_scuttlebutt=1
+            if [ -f "$notification_method_filename" ]; then
+                notify_by_scuttlebutt=
+                if grep -q 'scuttlebutt' "$notification_method_filename"; then
+                    notify_by_scuttlebutt=1
+                fi
+            fi
+            if [ $notify_by_scuttlebutt ]; then
+                cat <<EOF > /etc/scuttlebot/send_scuttlebutt_notification
+#!/bin/bash
+cd /etc/scuttlebot/notification || exit 1
+./ssb-example-pm.js $SSB_NOTIFY "$MESSAGE"
+exit 0
+EOF
+                chmod +x /etc/scuttlebot/send_scuttlebutt_notification
+                chown scuttlebot:scuttlebot /etc/scuttlebot/send_scuttlebutt_notification
+                #su -c '/etc/scuttlebot/send_scuttlebutt_notification' - scuttlebot
+                rm /etc/scuttlebot/send_scuttlebutt_notification
+            fi
+        fi
+    fi
+fi
+
+if [ -f $notification_image_filename ]; then
+    rm $notification_image_filename
+fi
+
+exit 0

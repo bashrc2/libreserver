@@ -1,0 +1,39 @@
+#+TITLE: LibreServer
+#+AUTHOR: Bob Mottram
+#+EMAIL: bob@libreserver.org
+#+KEYWORDS: libreserver, nextcloud
+#+DESCRIPTION: How to use NextCloud
+#+OPTIONS: ^:nil toc:nil num:nil
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="libreserver.css" />
+
+#+attr_html: :width 80% :height 10% :align center
+[[file:images/logo.png]]
+
+* NextCloud
+
+#+attr_html: :width 100% :align center
+[[file:images/nextcloud.jpg]]
+
+NextCloud is a system for file synchronisation and also has many other plugins for calendar, videoconferencing, collaborative document editing and federated file sharing. It's a lot more elaborate than Syncthing, but there may be situations where centralized control of your files on your server is better than a purely peer-to-peer approach (eg. if you need to remove a user's access to files).
+
+The videoconferencing plugin requires a browser with WebRTC support and so is unlikely to work in a Tor browser, but may still be a better option than using proprietary systems.
+
+* Operational considerations
+If your ISP or the government in your area is part of your threat model then NextCloud may not be the best choice for hosting files and [[./app_syncthing.html][Syncthing]] could be preferable. In the past the NextCloud company is known to have remotely scanned servers without permission and reported server admins who don't immediately update to the latest version of the software to their ISPs or to questionable government agencies. Depending upon where you are located such activities by the developer, which are not really in the spirit of independent self-hosting, could have very undesirable results.
+* Installation
+Log into your system with:
+
+#+begin_src bash
+ssh myusername@mydomain -p 2222
+#+end_src
+
+Using cursor keys and Enter key select *Administrator controls* and type in your password.
+
+Select *Add/Remove Apps* then *nextcloud*. You will then be asked for a domain name and if you are using FreeDNS also the code for the domain which can be found under *Dynamic DNS* on the FreeDNS site (the random string from "/quick cron example/" which appears after /update.php?/ and before />>/). For more details on obtaining a domain and making it accessible via dynamic DNS see the [[./faq.html][FAQ]]. Typically the domain name you use will be a subdomain, such as /cloud.mydomainname.net/. It will need to be a domain which you have bought somewhere and own and not one of the FreeDNS subdomains, otherwise you won't be able to get a SSL/TLS certificate for it.
+
+* Initial setup
+Go to the *Administrator control panel* and select *Passwords* then *nextcloud*. This will give you the password to initially log in to the system and you can change it later from a client app if needed.
+
+With a browser navigate to the domain which you gave during installation and log in.
+
+You can also install the mobile client from F-droid.

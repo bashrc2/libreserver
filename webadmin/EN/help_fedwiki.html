@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <meta charset="utf-8">
+  <style>
+    @import url("libreserver.css");
+
+    * {
+        box-sizing: border-box;
+    }
+
+    .subheadertext {
+        margin-left : 10%;
+        text-align: left;
+        font-size: 110%;
+        font-weight: bold;
+    }
+
+    .subheaderports {
+        margin-left : 10%;
+        text-align: left;
+        font-size: 110%;
+        font-weight: bold;
+    }
+
+    .helptext {
+        width: 80%;
+        text-align: left;
+        font-size: 100%;
+        margin-left : 10%;
+    }
+
+    .codetext {
+        font-family: Courier;
+        width: 80%;
+        text-align: left;
+        font-size: 100%;
+        margin-left : 10%;
+    }
+
+    .portstext {
+        width: 80%;
+        text-align: left;
+        font-size: 100%;
+        margin-left : 10%;
+    }
+
+    .row {
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+        padding: 0 4px;
+    }
+
+    .column {
+        -ms-flex: 25%;
+        flex: 15%;
+        max-width: 25%;
+        padding: 0 4px;
+    }
+
+    .column img {
+        margin-top: 8px;
+        vertical-align: middle;
+    }
+
+    @media screen and (max-width: 800px) {
+        .column {
+            -ms-flex: 50%;
+            flex: 50%;
+            max-width: 50%;
+        }
+    }
+
+    @media screen and (max-width: 200px) {
+        .column {
+            -ms-flex: 100%;
+            flex: 100%;
+            max-width: 100%;
+        }
+    }
+  </style>
+  <body>
+
+    <div class="header">
+      <a href="app_fedwiki.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
+    </div>
+
+    <p class="headertext" translate="yes">Federated Wiki</p>
+
+    <p class="helptext" translate="yes">Click on the lock icon at the bottom of the screen and enter the password. It should then appear unlocked. If you don't unlock then any edits you make won't be saved.</p>
+
+    <p class="helptext" translate="yes">There are a few things to know about using the federated wiki.</p>
+
+    <p class="helptext" translate="yes">Select the wiki button at the bottom of the screen, next to pages, to enable or disable editing.</p>
+
+    <p class="helptext" translate="yes">To edit a paragraph double click on it</p>
+
+    <p class="helptext" translate="yes">To remove a paragraph just delete all of its text</p>
+
+    <p class="helptext" translate="yes">Paragraphs can be dragged up and down to change their order, or moved between pages</p>
+
+    <p class="helptext" translate="yes">To add a new paragraph use the + button</p>
+
+    <p class="helptext" translate="yes">You can use left and right cursor keys to move through pages</p>
+
+    <p class="helptext" translate="yes">To claim/fork a page from another server click on the flag icon</p>
+
+    <p class="helptext" translate="yes">When done editing click on the wiki button again</p>
+
+    <p class="helptext" translate="yes">Different versions of the same page on different servers are represented by boxes at the bottom right of the screen. You can double click on them to see the different versions, and use the flag icon to fork if you prefer that version</p>
+
+  </body>
+</html>

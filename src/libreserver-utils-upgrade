@@ -1,0 +1,80 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Upgrading functions
+#
+# License
+# =======
+#
+# Copyright (C) 2014-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# name of a script used to upgrade the system
+UPGRADE_SCRIPT_NAME="${PROJECT_NAME}-upgrade"
+
+function create_upgrade_script {
+    upgrade_command_file=$(which "${PROJECT_NAME}-upgrade")
+    if [ ! -f "/etc/cron.weekly/$UPGRADE_SCRIPT_NAME" ]; then
+        cp "$upgrade_command_file" "/etc/cron.weekly/$UPGRADE_SCRIPT_NAME"
+    else
+        HASH1=$(sha256sum "$upgrade_command_file" | awk -F ' ' '{print $1}')
+        HASH2=$(sha256sum "/etc/cron.weekly/$UPGRADE_SCRIPT_NAME" | awk -F ' ' '{print $1}')
+        if [[ "$HASH1" != "$HASH2" ]]; then
+            cp "$upgrade_command_file" "/etc/cron.weekly/$UPGRADE_SCRIPT_NAME"
+        fi
+    fi
+
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+
+    INSTALL_PACKAGES unattended-upgrades
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function upgrade_installation_from_previous_versions {
+    if [ ! -f "$COMPLETION_FILE" ]; then
+        return
+    fi
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+
+    # upgrade from previous versions
+    sed -i 's|configure_email|install_email|g' "$COMPLETION_FILE"
+    sed -i 's|install_dlna_server|install_dlna|g' "$COMPLETION_FILE"
+    sed -i 's|install_irc_server|install_irc|g' "$COMPLETION_FILE"
+    sed -i 's|voip_turn|turn|g' "$COMPLETION_FILE"
+    sed -i 's|install_voip|install_mumble|g' "$COMPLETION_FILE"
+    sed -i 's|install_rss_reader|install_rss|g' "$COMPLETION_FILE"
+    sed -i 's|intrusion_detection|install_tripwire|g' "$COMPLETION_FILE"
+
+    sed -i 's|XMPP|xmpp|g' "$COMPLETION_FILE"
+    sed -i 's|voip|mumble|g' "$COMPLETION_FILE"
+    sed -i 's|VoIP|mumble|g' "$COMPLETION_FILE"
+    sed -i 's|Blog|htmly|g' "$COMPLETION_FILE"
+    sed -i 's|Hubzilla|hubzilla|g' "$COMPLETION_FILE"
+    sed -i 's|Gogs|gogs|g' "$COMPLETION_FILE"
+    sed -i 's|Wiki|dokuwiki|g' "$COMPLETION_FILE"
+    sed -i 's|RSS|rss|g' "$COMPLETION_FILE"
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+# NOTE: deliberately no exit 0

@@ -1,0 +1,474 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# AberMUSH game
+#
+# License
+# =======
+#
+# Copyright (C) 2019-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VARIANTS='full full-vim games'
+
+APP_CATEGORY=games
+
+IN_DEFAULT_INSTALL=0
+INSTALLED_ON_DEFAULT_DOMAIN=0
+SHOW_ON_ABOUT=1
+SHOW_DOMAIN_ONLY=0
+NOT_ON_HOMEPAGE=0
+REQUIRES_APP=
+
+ABERMUSH_REPO="https://gitlab.com/bashrc2/AberMUSH"
+ABERMUSH_COMMIT='38bc911160a023d081380b11889591b1e282f6d7'
+
+ABERMUSH_PORT=35123
+ABERMUSH_WEBSOCKET_PORT=6221
+SHOW_TELNET_PORT=${ABERMUSH_PORT}
+
+ABERMUSH_DOMAIN_NAME=abermush.local
+ABERMUSH_CODE=
+ABERMUSH_ONION_PORT=8049
+
+ABERMUSH_DIR=/etc/abermush
+
+ABERMUSH_SHORT_DESCRIPTION=$'Multi User Dungeon'
+ABERMUSH_DESCRIPTION=$'Multi User Dungeon'
+ABERMUSH_MOBILE_APP_URL=
+
+abermush_variables=(SYSTEM_TYPE
+                    MY_USERNAME
+                    ABERMUSH_DOMAIN_NAME)
+
+function upgrade_distro_abermush {
+    target_distro="$1"
+
+    if [[ "$target_distro" == 'bullseye' ]]; then
+        echo -n ''
+    fi
+}
+
+function logging_on_abermush {
+    echo -n ''
+}
+
+function logging_off_abermush {
+    echo -n ''
+}
+
+function install_interactive_abermush {
+    echo -n ''
+    APP_INSTALLED=1
+}
+
+function reconfigure_abermush {
+    echo -n ''
+}
+
+function upgrade_abermush {
+    CURR_ABERMUSH_COMMIT=$(get_completion_param "abermush commit")
+    if [[ "${CURR_ABERMUSH_COMMIT}" == "${ABERMUSH_COMMIT}" ]]; then
+        return
+    fi
+
+    systemctl stop abermush
+
+    # update to the next commit
+    function_check set_repo_commit
+    set_repo_commit ${ABERMUSH_DIR} "abermush commit" "${ABERMUSH_COMMIT}" ${ABERMUSH_REPO}
+
+    # remove previous saves
+    if [ -f "${ABERMUSH_DIR}/universe.json" ]; then
+	rm "${ABERMUSH_DIR}/universe"*.json
+    fi
+
+    abermush_copy_to_htdocs
+
+    if [[ "${ONION_ONLY}" == 'no' ]]; then
+	chown -R abermush:ssl-cert ${ABERMUSH_DIR}
+    else
+	chown -R abermush:abermush ${ABERMUSH_DIR}
+    fi
+    systemctl start abermush
+}
+
+function backup_local_abermush {
+    source_directory=${ABERMUSH_DIR}
+    if [ -d ${source_directory} ]; then
+        dest_directory=abermush
+        function_check backup_directory_to_usb
+        backup_directory_to_usb ${source_directory} ${dest_directory}
+    fi
+}
+
+function restore_local_abermush {
+    if [ -d ${ABERMUSH_DIR} ]; then
+        if [ -d "${USB_MOUNT_ABERMUSH}/backup/abermush" ]; then
+            echo $"Restoring ABERMUSH"
+            temp_restore_dir=/root/tempabermush
+            function_check restore_directory_from_usb
+            restore_directory_from_usb ${temp_restore_dir} abermush
+            if [ -d ${temp_restore_dir}${ABERMUSH_DIR} ]; then
+                cp -r ${temp_restore_dir}${ABERMUSH_DIR}/* ${ABERMUSH_DIR}/
+            else
+                cp -r ${temp_restore_dir}/* ${ABERMUSH_DIR}/
+            fi
+            # shellcheck disable=SC2181
+            if [ ! "$?" = "0" ]; then
+                rm -rf ${temp_restore_dir}
+                function_check set_user_permissions
+                set_user_permissions
+                function_check backup_unmount_drive
+                backup_unmount_drive
+                exit 99
+            fi
+            rm -rf ${temp_restore_dir}
+        fi
+    fi
+}
+
+function backup_remote_abermush {
+    echo -n ''
+}
+
+function restore_remote_abermush {
+    echo -n ''
+}
+
+function remove_abermush {
+    firewall_remove ${ABERMUSH_PORT}
+
+    function_check remove_onion_service
+    remove_onion_service abermush ${ABERMUSH_ONION_PORT}
+    nginx_dissite "${ABERMUSH_DOMAIN_NAME}"
+    remove_certs "${ABERMUSH_DOMAIN_NAME}"
+    if [ -f "/etc/nginx/sites-available/${ABERMUSH_DOMAIN_NAME}" ]; then
+        rm "/etc/nginx/sites-available/${ABERMUSH_DOMAIN_NAME}"
+    fi
+    if [ -d "/var/www/${ABERMUSH_DOMAIN_NAME}" ]; then
+        rm -rf "/var/www/${ABERMUSH_DOMAIN_NAME}"
+    fi
+
+    systemctl stop abermush
+    systemctl disable abermush
+    if [ -f /etc/systemd/system/abermush.service ]; then
+        rm /etc/systemd/system/abermush.service
+    fi
+
+    systemctl daemon-reload
+
+    remove_app abermush
+    remove_completion_param install_abermush
+    sed -i '/abermush/d' "$COMPLETION_FILE"
+
+    groupdel -f abermush
+    userdel -r abermush
+
+    if [ -d ${ABERMUSH_DIR} ]; then
+        rm -rf ${ABERMUSH_DIR}
+    fi
+
+    function_check remove_onion_service
+    remove_onion_service abermush ${ABERMUSH_PORT}
+}
+
+function abermush_copy_to_htdocs {
+    cp -r ${ABERMUSH_DIR}/fonts /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs
+    cp -r ${ABERMUSH_DIR}/cardpacks /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs
+    cp -r ${ABERMUSH_DIR}/chessboards /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs
+    cp -r ${ABERMUSH_DIR}/morrisboards /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs
+    cp ${ABERMUSH_DIR}/index.html /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs
+    cp ${ABERMUSH_DIR}/docs/index*.jpg /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs
+    cp ${ABERMUSH_DIR}/favicon.ico /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs
+    cp ${ABERMUSH_DIR}/ansi_up.js* /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs
+    chown -R www-data:www-data /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs
+    chmod 755 /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs
+
+    if [[ "$ONION_ONLY" == 'no' ]]; then
+	sed -i "s|new WebSocket.*|new WebSocket(\"wss://${ABERMUSH_DOMAIN_NAME}/websocket/\");|g" /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs/index.html
+    else
+	ABERMUSH_ONION_HOSTNAME=$(cat /var/lib/tor/hidden_service_abermush/hostname)
+	sed -i "s|new WebSocket.*|new WebSocket(\"ws://${ABERMUSH_ONION_HOSTNAME}/websocket/\");|g" /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs/index.html
+    fi
+}
+
+function install_abermush_website {
+    if [ ! -d /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs ]; then
+	mkdir -p /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs
+    fi
+    chmod 755 /var/www/${ABERMUSH_DOMAIN_NAME}
+    abermush_copy_to_htdocs
+
+    set_completion_param "abermush domain" "${ABERMUSH_DOMAIN_NAME}"
+
+    if [[ ${ONION_ONLY} == "no" ]]; then
+        function_check nginx_http_redirect
+        nginx_http_redirect "${ABERMUSH_DOMAIN_NAME}"
+	{ echo 'server {';
+	  echo "    listen ${ABERMUSH_WEBSOCKET_PORT};";
+	  echo "    #listen [::]:${ABERMUSH_WEBSOCKET_PORT};";
+	  echo "    root /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs;";
+	  echo '';
+	  echo '    location / {';
+	  echo "        proxy_pass         http://localhost:${ABERMUSH_WEBSOCKET_PORT};";
+	  echo '        proxy_http_version 1.1;';
+	  echo "        proxy_set_header   Upgrade \"websocket\";";
+	  echo "        proxy_set_header   Connection \"upgrade\";";
+	  echo "        proxy_set_header   Host \$host;";
+	  echo '    }';
+	  echo '}';
+	  echo '';
+          echo 'server {';
+          echo '    listen 443 ssl;';
+          echo '    #listen [::]:443 ssl;';
+          echo "    root /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs;";
+          echo "    server_name ${ABERMUSH_DOMAIN_NAME};";
+          echo '    access_log /dev/null;';
+          echo "    error_log /dev/null;";
+          echo '    index index.html;';
+          echo '    charset utf-8;';
+          echo '    proxy_read_timeout 86400s;'; } >> "/etc/nginx/sites-available/${ABERMUSH_DOMAIN_NAME}"
+        function_check nginx_ssl
+        nginx_ssl "${ABERMUSH_DOMAIN_NAME}"
+        function_check nginx_security_options
+        nginx_security_options "${ABERMUSH_DOMAIN_NAME}"
+        { echo '    add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
+	  echo "    add_header Onion-Location http://${ABERMUSH_ONION_HOSTNAME}\$request_uri;";
+          echo '';
+	  echo '    location /websocket {';
+	  echo "        proxy_pass         http://localhost:${ABERMUSH_WEBSOCKET_PORT};";
+	  echo '        proxy_http_version 1.1;';
+	  echo "        proxy_set_header   Upgrade \"websocket\";";
+	  echo "        proxy_set_header   Connection \"upgrade\";";
+	  echo "        proxy_set_header   Host \$host;";
+	  echo '    }';
+	  echo '';
+	  echo '    location / {';
+	  echo "        try_files \$uri \$uri/ =404;";
+	  echo '    }';
+	  echo '';
+          echo '}';
+          echo ''; } >> "/etc/nginx/sites-available/${ABERMUSH_DOMAIN_NAME}"
+    else
+	{ echo 'server {';
+	  echo "    listen ${ABERMUSH_WEBSOCKET_PORT};";
+	  echo "    #listen [::]:${ABERMUSH_WEBSOCKET_PORT};";
+	  echo "    root /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs;";
+	  echo '';
+	  echo '    location / {';
+	  echo "        proxy_pass         http://localhost:${ABERMUSH_WEBSOCKET_PORT};";
+	  echo '        proxy_http_version 1.1;';
+	  echo "        proxy_set_header   Upgrade \"websocket\";";
+	  echo "        proxy_set_header   Connection \"upgrade\";";
+	  echo "        proxy_set_header   Host \$host;";
+	  echo '    }';
+	  echo '}';
+	  echo ''; } > "/etc/nginx/sites-available/${ABERMUSH_DOMAIN_NAME}"
+    fi
+    { echo 'server {';
+      echo "    listen 127.0.0.1:${ABERMUSH_ONION_PORT} default_server;";
+      echo '    port_in_redirect off;';
+      echo "    root /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs;";
+      echo "    server_name ${ABERMUSH_ONION_HOSTNAME};";
+      echo '    access_log /dev/null;';
+      echo "    error_log /dev/null;";
+      echo '    index index.html;';
+      echo '    charset utf-8;';
+      echo '    proxy_read_timeout 86400s;'; } >> "/etc/nginx/sites-available/${ABERMUSH_DOMAIN_NAME}"
+    function_check nginx_security_options
+    nginx_security_options "${ABERMUSH_DOMAIN_NAME}"
+    { echo '    location /websocket {';
+      echo "        proxy_pass         http://localhost:${ABERMUSH_WEBSOCKET_PORT};";
+      echo '        proxy_http_version 1.1;';
+      echo "        proxy_set_header   Upgrade \"websocket\";";
+      echo "        proxy_set_header   Connection \"upgrade\";";
+      echo "        proxy_set_header   Host \$host;";
+      echo '    }';
+      echo '';
+      echo '    location / {';
+      echo "        try_files \$uri \$uri/ =404;";
+      echo '    }';
+      echo '}'; } >> "/etc/nginx/sites-available/${ABERMUSH_DOMAIN_NAME}"
+
+    # set default-src to self
+    sed -i "s|add_header Content-Security-Policy.*|add_header Content-Security-Policy \"default-src 'self'; script-src https: 'unsafe-inline'; style-src https: 'unsafe-inline'\";|g" "/etc/nginx/sites-available/${ABERMUSH_DOMAIN_NAME}"
+
+    increment_app_install_progress
+
+    function_check create_site_certificate
+    create_site_certificate "${ABERMUSH_DOMAIN_NAME}" 'yes'
+
+    increment_app_install_progress
+
+    function_check configure_php
+    configure_php
+
+    increment_app_install_progress
+
+    nginx_ensite "${ABERMUSH_DOMAIN_NAME}"
+
+    # shellcheck disable=SC2086
+    systemctl restart php${PHP_VERSION}-fpm
+    systemctl restart nginx
+
+    increment_app_install_progress
+
+    function_check add_ddns_domain
+    add_ddns_domain "${ABERMUSH_DOMAIN_NAME}"
+}
+
+function install_abermush {
+    increment_app_install_progress
+
+    if [ -d /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs ]; then
+        rm -rf /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs
+    fi
+    mkdir -p /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs
+
+    increment_app_install_progress
+
+    chown -R www-data:www-data /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES telnet
+
+    increment_app_install_progress
+
+    if [ -d ${ABERMUSH_DIR} ]; then
+        userdel -r abermush
+        rm -rf ${ABERMUSH_DIR}
+    fi
+
+    increment_app_install_progress
+
+    if [ -d /repos/abermush ]; then
+        mkdir -p ${ABERMUSH_DIR}
+        cp -r -p /repos/abermush/. ${ABERMUSH_DIR}
+        cd ${ABERMUSH_DIR} || exit 38
+        git pull
+    else
+        function_check git_clone
+        git_clone ${ABERMUSH_REPO} ${ABERMUSH_DIR}
+    fi
+
+    if [ ! -d ${ABERMUSH_DIR} ]; then
+        echo $'Unable to clone abermush repo'
+        exit 71
+    fi
+
+    increment_app_install_progress
+
+    # an unprivileged user to run as
+    useradd -d ${ABERMUSH_DIR}/ abermush
+
+    increment_app_install_progress
+
+    cd ${ABERMUSH_DIR} || exit 34
+    git checkout ${ABERMUSH_COMMIT} -b ${ABERMUSH_COMMIT}
+    set_completion_param "abermush commit" "$ABERMUSH_COMMIT"
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES python3 python3-pip
+
+    increment_app_install_progress
+
+    useradd -c "AberMUSH server" -d "${ABERMUSH_DIR}" -m -r -g abermush abermush
+
+    ./installer.sh
+
+    increment_app_install_progress
+
+    if [[ "$ONION_ONLY" == 'no' ]]; then
+	chown -R abermush:ssl-cert ${ABERMUSH_DIR}
+    else
+	chown -R abermush:abermush ${ABERMUSH_DIR}
+    fi
+
+    increment_app_install_progress
+
+    ABERMUSH_ONION_HOSTNAME=$(add_onion_service abermush 80 ${ABERMUSH_ONION_PORT})
+
+    install_abermush_website
+
+    increment_app_install_progress
+
+    abermush_group=abermush
+    if [[ "${ONION_ONLY}" == 'no' ]]; then
+	abermush_group='ssl-cert'
+    fi
+
+    { echo '[Unit]';
+      echo 'Description=AberMUSH';
+      echo 'After=syslog.target';
+      echo 'After=network.target';
+      echo '';
+      echo '[Service]';
+      echo 'Type=simple';
+      echo 'User=abermush';
+      echo "Group=${abermush_group}";
+      echo "WorkingDirectory=$ABERMUSH_DIR";
+      echo "ExecStart=/usr/bin/python3 $ABERMUSH_DIR/abermush.py";
+      echo 'Environment=PATH=/usr/bin:/usr/local/bin';
+      echo 'Restart=always';
+      echo 'TimeoutSec=30m';
+      echo 'ProtectSystem=yes';
+      echo 'ProtectHome=yes';
+      echo 'PrivateTmp=true';
+      echo 'PrivateDevices=false';
+      echo 'CapabilityBoundingSet=~CAP_SYS_ADMIN';
+      echo 'ProtectClock=yes';
+      echo 'ProtectHostname=yes';
+      echo 'PrivateUsers=yes';
+      echo 'ProtectKernelModules=yes';
+      echo 'ProtectKernelTunables=yes';
+      echo 'NoNewPrivileges=true';
+      echo '';
+      echo '[Install]';
+      echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/abermush.service
+    systemctl enable abermush.service
+
+    increment_app_install_progress
+
+    systemctl daemon-reload
+
+    increment_app_install_progress
+
+    if [[ "${ONION_ONLY}" == 'no' ]]; then
+	usermod -g ssl-cert abermush
+    fi
+    usermod -g www-data abermush
+
+    if [[ "$ONION_ONLY" == 'no' ]]; then
+	chown -R abermush:ssl-cert ${ABERMUSH_DIR}
+    else
+	chown -R abermush:abermush ${ABERMUSH_DIR}
+    fi
+
+    systemctl restart abermush.service
+
+    # firewall_add abermush ${ABERMUSH_PORT}
+
+    increment_app_install_progress
+
+    APP_INSTALLED=1
+}
+
+# NOTE: deliberately no exit 0

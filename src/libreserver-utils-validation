@@ -1,0 +1,69 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Validation functions
+#
+# License
+# =======
+#
+# Copyright (C) 2014-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# If this file exists it contains a global password used with
+# disk image installs. This simplifies password management for
+# deployment at scale
+
+function validate_domain_name {
+    # count the number of dots in the domain name
+    dots=${TEST_DOMAIN_NAME//[^.]}
+    no_of_dots=${#dots}
+    if (( no_of_dots > 3 )); then
+        TEST_DOMAIN_NAME="The domain $TEST_DOMAIN_NAME has too many subdomains. It should be of the type w.x.y.z, x.y.z or y.z"
+    fi
+    if (( no_of_dots == 0 )); then
+        TEST_DOMAIN_NAME="The domain $TEST_DOMAIN_NAME has no top level domain. It should be of the type w.x.y.z, x.y.z or y.z"
+    fi
+}
+
+function validate_freedns_code {
+    freedns_code="$1"
+
+    FREEDNS_MESSAGE=$"Please enter the FreeDNS code for this domain.\n\nThe code can be found by going to https://freedns.afraid.org, selecting 'Dynamic DNS' and then opening 'Wget example'. The code will consist of letters and numbers and be between the ? and = characters."
+
+    if [[ "$freedns_code" == *"."* || "$freedns_code" == "http"* || "$freedns_code" == *"wget "* || "$freedns_code" == *" "* ]]; then
+        dialog --title $"Invalid FreeDNS Code" --msgbox "$FREEDNS_MESSAGE" 10 70
+        VALID_CODE=
+    fi
+    if [ ${#freedns_code} -lt 30 ]; then
+        dialog --title $"Invalid FreeDNS Code" --msgbox $'FreeDNS code is too short. Did you enter the entire code?' 6 70
+        VALID_CODE=
+    fi
+    # shellcheck disable=SC2034
+    VALID_CODE='yes'
+}
+
+function is_valid_user {
+    USRNAME="$1"
+    if [[ "$USRNAME" != "turtl" && "$USRNAME" != "znc" && "$USRNAME" != "pihole" && "$USRNAME" != "libreserver" && "$USRNAME" != "go" && "$USRNAME" != "gogs" && "$USRNAME" != "gemini" && "$USRNAME" != "git" && "$USRNAME" != "sync" && "$USRNAME" != "pi" ]]; then
+        echo "1"
+    else
+        echo "0"
+    fi
+}
+
+# NOTE: deliberately no exit 0

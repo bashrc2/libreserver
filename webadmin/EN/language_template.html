@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <style>
+      @import url("libreserver.css");
+
+      .appurl {
+          font-size: 100%;
+      }
+
+      .welcomeheader {
+          font-size: 200%;
+          font-weight: bold;
+      }
+
+      .descriptiontext {
+          font-size: 90%;
+      }
+
+      .logintext {
+          font-size: 120%;
+          font-weight: bold;
+          color: #981737;
+      }
+
+      button {
+          border: none;
+          outline: 0;
+          display: inline-block;
+          padding: 8px;
+          color: white;
+          background-color: #000;
+          text-align: center;
+          cursor: pointer;
+          width: 100%;
+          font-size: 18px;
+      }
+
+      button:hover, a:hover {
+          opacity: 0.7;
+      }
+
+      .chip {
+          display: inline-block;
+          padding: 0 25px;
+          height: 50px;
+          font-size: 70%;
+          line-height: 50px;
+          border-radius: 25px;
+          background-color: #f1f1f1;
+      }
+
+      .chip img {
+          float: left;
+          margin: 0 10px 0 -25px;
+          height: 50px;
+          width: 50px;
+          border-radius: 50%;
+      }
+
+      .languagelist {
+          font-size: 100%;
+          font-weight: bold;
+          color: black;
+          background-color: lightblue;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="header">
+        <a href="settings.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a><br>
+
+        <p class="headertext" translate="yes">Choose your language</p>
+
+        <form action="language.php" method="post">
+          <select class="languagelist" name="language" size="10">
+            <option value="en_GB.UTF-8" translate="yes">English</option>
+            <option value="af_ZA.UTF-8" translate="yes">Afrikaans</option>
+            <option value="sq_AL.UTF-8" translate="yes">Albanian</option>
+            <option value="ar_SA.UTF-8" translate="yes">Arabic</option>
+            <option value="eu_ES.UTF-8" translate="yes">Basque</option>
+            <option value="be_BY.UTF-8" translate="yes">Belarusian</option>
+            <option value="bs_BA.UTF-8" translate="yes">Bosnian</option>
+            <option value="bg_BG.UTF-8" translate="yes">Bulgarian</option>
+            <option value="ca_ES.UTF-8" translate="yes">Catalan</option>
+            <option value="hr_HR.UTF-8" translate="yes">Croatian</option>
+            <option value="zh_CN.UTF-8" translate="yes">Chinese (Simplified)</option>
+            <option value="zh_TW.UTF-8" translate="yes">Chinese (Traditional)</option>
+            <option value="cs_CZ.UTF-8" translate="yes">Czech</option>
+            <option value="da_DK.UTF-8" translate="yes">Danish</option>
+            <option value="nl_NL.UTF-8" translate="yes">Dutch</option>
+            <option value="en_US.UTF-8" translate="yes">English (US)</option>
+            <option value="et_EE.UTF-8" translate="yes">Estonian</option>
+            <option value="fa_IR.UTF-8" translate="yes">Farsi</option>
+            <option value="ph_PH.UTF-8" translate="yes">Filipino</option>
+            <option value="fi_FI.UTF-8" translate="yes">Finnish</option>
+            <option value="fr_FR.UTF-8" translate="yes">French</option>
+            <option value="fr_CA.UTF-8" translate="yes">French (Canada)</option>
+            <option value="ga.UTF-8" translate="yes">Gaelic</option>
+            <option value="l_ES.UTF-8" translate="yes">Gallego</option>
+            <option value="ka_GE.UTF-8" translate="yes">Georgian</option>
+            <option value="de_DE.UTF-8" translate="yes">German</option>
+            <option value="de_DE.UTF-8" translate="yes">German (Personal)</option>
+            <option value="el_GR.UTF-8" translate="yes">Greek</option>
+            <option value="gu.UTF-8" translate="yes">Gujarati</option>
+            <option value="he_IL.utf8" translate="yes">Hebrew</option>
+            <option value="hi_IN.UTF-8" translate="yes">Hindi</option>
+            <option value="hu.UTF-8" translate="yes">Hungarian</option>
+            <option value="is_IS.UTF-8" translate="yes">Icelandic</option>
+            <option value="id_ID.UTF-8" translate="yes">Indonesian</option>
+            <option value="it_IT.UTF-8" translate="yes">Italian</option>
+            <option value="ja_JP.UTF-8" translate="yes">Japanese</option>
+            <option value="kn_IN.UTF-8" translate="yes">Kannada</option>
+            <option value="km_KH.UTF-8" translate="yes">Khmer</option>
+            <option value="ko_KR.UTF-8" translate="yes">Korean</option>
+            <option value="lo_LA.UTF-8" translate="yes">Lao</option>
+            <option value="lt_LT.UTF-8" translate="yes">Lithuanian</option>
+            <option value="lat.UTF-8" translate="yes">Latvian</option>
+            <option value="ml_IN.UTF-8" translate="yes">Malayalam</option>
+            <option value="ms_MY.UTF-8" translate="yes">Malaysian</option>
+            <option value="mi_NZ.UTF-8" translate="yes">Maori (Ngai Tahu)</option>
+            <option value="mi_NZ.UTF-8" translate="yes">Maori (Waikoto Uni)</option>
+            <option value="mn.UTF-8" translate="yes">Mongolian</option>
+            <option value="no_NO.UTF-8" translate="yes">Norwegian</option>
+            <option value="nn_NO.UTF-8" translate="yes">Norwegian (Primary)</option>
+            <option value="nn_NO.UTF-8" translate="yes">Nynorsk</option>
+            <option value="pl.UTF-8" translate="yes">Polish</option>
+            <option value="pt_PT.UTF-8" translate="yes">Portuguese</option>
+            <option value="pt_BR.UTF-8" translate="yes">Portuguese (Brazil)</option>
+            <option value="ro_RO.UTF-8" translate="yes">Romanian</option>
+            <option value="ru_RU.UTF-8" translate="yes">Russian</option>
+            <option value="mi_NZ.UTF-8" translate="yes">Samoan</option>
+            <option value="sr_CS.UTF-8" translate="yes">Serbian</option>
+            <option value="sk_SK.UTF-8" translate="yes">Slovak</option>
+            <option value="sl_SI.UTF-8" translate="yes">Slovenian</option>
+            <option value="so_SO.UTF-8" translate="yes">Somali</option>
+            <option value="es_ES.UTF-8" translate="yes">Spanish (International)</option>
+            <option value="sv_SE.UTF-8" translate="yes">Swedish</option>
+            <option value="tl.UTF-8" translate="yes">Tagalog</option>
+            <option value="ta_IN.UTF-8" translate="yes">Tamil</option>
+            <option value="th_TH.UTF-8" translate="yes">Thai</option>
+            <option value="tr_TR.UTF-8" translate="yes">Turkish</option>
+            <option value="uk_UA.UTF-8" translate="yes">Ukrainian</option>
+            <option value="vi_VN.UTF-8" translate="yes">Vietnamese</option>
+          </select>
+          <br><br>
+          <input type="submit" name="submitlanguagecancel" translate="yes" value="Cancel">
+          <input type="submit" name="submittranslatelanguage" translate="yes" value="Translate">
+          <input type="submit" name="submitlanguage" translate="yes" value="Select">
+        </form>
+
+        <br>
+      </div>
+    </div>
+  </body>
+</html>

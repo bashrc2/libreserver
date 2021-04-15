@@ -1,0 +1,110 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# set the community network
+#
+# License
+# =======
+#
+# Copyright (C) 2019-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+PROJECT_NAME='libreserver'
+
+network="$1"
+coords="$2"
+
+if [ ! "$network" ]; then
+    exit 1
+fi
+
+CONFIGURATION_FILE="/root/${PROJECT_NAME}.cfg"
+COMPLETION_FILE="/root/${PROJECT_NAME}-completed.txt"
+
+source /usr/local/bin/${PROJECT_NAME}-shortcuts
+source /usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-firewall
+source /usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-config
+source /usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-depends
+source /usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-setup
+source /usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-webadmin
+source /usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-installprogress
+source /usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-onion
+
+# for map drawing
+source "/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-map"
+
+# Include mesh files so that we can update peer locations within the map
+MESH_FILES="/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-mesh-*"
+for f in $MESH_FILES
+do
+    source "$f"
+done
+
+MAP_DOMAIN=
+if grep -q "MAP_DOMAIN=" "$CONFIGURATION_FILE"; then
+    read_config_param MAP_DOMAIN
+fi
+
+if [ ! "$coords" ]; then
+    if ! grep -q "COMMUNITY_NETWORK=" "$CONFIGURATION_FILE"; then
+        echo "COMMUNITY_NETWORK=$network" >> "$CONFIGURATION_FILE"
+    else
+        read_config_param COMMUNITY_NETWORK
+        if [[ "$COMMUNITY_NETWORK" != "$network" ]]; then
+            remove_community_network "$COMMUNITY_NETWORK"
+            if [[ "$network" == 'none' ]]; then
+                echo $"Network removed"
+                exit 0
+            fi
+            echo $"Network $COMMUNITY_NETWORK removed"
+            if ! grep -q "COMMUNITY_NETWORK=" "$CONFIGURATION_FILE"; then
+                echo "COMMUNITY_NETWORK=$network" >> "$CONFIGURATION_FILE"
+            else
+                sed -i "s|COMMUNITY_NETWORK=.*|COMMUNITY_NETWORK=$network|g" "$CONFIGURATION_FILE"
+            fi
+            COMMUNITY_NETWORK=$network
+        fi
+    fi
+
+    install_community_network
+    webadmin_change_network "$network"
+fi
+
+local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+
+webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+network_map_markers_filename="$webadmin_install_dir/network_map_markers.txt"
+if [ -f "$network_map_markers_filename" ]; then
+    create_map "$network_map_markers_filename"
+else
+    create_map
+fi
+
+if [ ! "$coords" ]; then
+    if [ -f "${webadmin_install_dir}/settings_${network}.html" ]; then
+        cp "${webadmin_install_dir}/settings_${network}.html" "${webadmin_install_dir}/network_display.html"
+    else
+        # creation failed, go back to network
+        cp "${webadmin_install_dir}/network.html" "${webadmin_install_dir}/network_display.html"
+    fi
+    chown www-data:www-data "${webadmin_install_dir}/network_display.html"
+fi
+
+echo $"Network changed to $network"
+
+exit 0

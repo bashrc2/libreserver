@@ -1,0 +1,750 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Functions for community network
+#
+# License
+# =======
+#
+# Copyright © 2019-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+COMMUNITYNETWORK_PATH=/var/www/communitynetwork
+MAP_DOMAIN=
+COMMUNITYNETWORK_ONION_PORT=7250
+COMMUNITYNETWORK_NODES_FILENAME=${COMMUNITYNETWORK_PATH}/nodes.json
+
+BMX6_REPO="https://github.com/bmx-routing/bmx6"
+BMX6_COMMIT='39dd1f2d99ac5a3fa28e92f8173c15039132e181'
+
+OLSR2_REPO="https://github.com/OLSR/OONF"
+OLSR2_COMMIT='81033251c4ee1c5699bfee9d2985112c6266ab0a'
+
+BABEL_REPO="https://github.com/jech/babeld"
+BABEL_COMMIT='d9390d1fee337c464e67255bbbd879d975e126e2'
+
+function communitynetwork_clear_log {
+    local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+    webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+    if [ -f "$webadmin_install_dir/log.txt" ]; then
+        rm "$webadmin_install_dir/log.txt"
+    fi
+}
+
+function communitynetwork_install_babel {
+    if [ -f /local/bin/babeld ]; then
+        return
+    fi
+
+    # shellcheck disable=SC2086
+    INSTALL_PACKAGES build-essential
+
+    git clone "$BABEL_REPO" /etc/babel
+
+    cat <<EOF > /usr/bin/install_babel
+#!/bin/bash
+cd /etc/babel
+git checkout $BABEL_COMMIT -b $BABEL_COMMIT
+cd /etc/babel
+
+DATE_FMT=%Y-%m-%d
+SOURCE_DATE_EPOCH=2018-12-07
+BUILD_DATE=\$(date -u -d \"\${SOURCE_DATE_EPOCH}\" \"+\${DATE_FMT}\"  2>/dev/null || date -u -r \"\${SOURCE_DATE_EPOCH}\" \"+\${DATE_FMT}\" 2>/dev/null || date -u \"+\${DATE_FMT}\")
+
+make
+make install
+EOF
+    chmod +x /usr/bin/install_babel
+    /bin/bash /usr/bin/install_babel >> "$webadmin_install_dir/log.txt"
+
+    if [ ! -f /local/bin/babeld ]; then
+        echo $'Unable to build Babel' >> "$webadmin_install_dir/log.txt"
+        communitynetwork_protocol_conventional
+        return
+    fi
+
+    rm /usr/bin/install_babel
+
+    { echo '[Unit]';
+      echo 'Description=Babel mesh routing protocol';
+      echo 'Requires=network.target';
+      echo 'After=network.target';
+      echo '';
+      echo '[Service]';
+      echo 'User=root';
+      echo 'Group=root';
+      echo 'ExecStart=/usr/local/bin/babeld eth0';
+      echo 'Restart=on-failure';
+      echo '';
+      echo '[Install]';
+      echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/babel.service
+}
+
+function communitynetwork_install_olsr2 {
+    if [ -f /usr/local/sbin/olsrd2_static ]; then
+        return
+    fi
+
+    # shellcheck disable=SC2086
+    INSTALL_PACKAGES build-essential cmake libnl-3-dev
+
+    git clone "$OLSR2_REPO" "/etc/olsr2"
+
+    cat <<EOF > "/usr/bin/install_olsr2"
+#!/bin/bash
+cd /etc/olsr2
+git checkout $OLSR2_COMMIT -b $OLSR2_COMMIT
+cd /etc/olsr2/build
+
+DATE_FMT=%Y-%m-%d
+SOURCE_DATE_EPOCH=2018-12-07
+BUILD_DATE=\$(date -u -d \"\${SOURCE_DATE_EPOCH}\" \"+\${DATE_FMT}\"  2>/dev/null || date -u -r \"\${SOURCE_DATE_EPOCH}\" \"+\${DATE_FMT}\" 2>/dev/null || date -u \"+\${DATE_FMT}\")
+
+cmake ..
+make
+make install
+EOF
+    chmod +x /usr/bin/install_olsr2
+    /bin/bash /usr/bin/install_olsr2 >> "$webadmin_install_dir/log.txt"
+
+    if [ ! -f /usr/local/sbin/olsrd2_static ]; then
+        echo $'Unable to build OLSR2' >> "$webadmin_install_dir/log.txt"
+        communitynetwork_protocol_conventional
+        return
+    fi
+
+    rm "/usr/bin/install_olsr2"
+
+    { echo '[Unit]';
+      echo 'Description=OLSR2 mesh routing protocol';
+      echo 'Requires=network.target';
+      echo 'After=network.target';
+      echo '';
+      echo '[Service]';
+      echo 'User=root';
+      echo 'Group=root';
+      echo 'ExecStart=/usr/local/sbin/olsrd2_static eth0';
+      echo 'Restart=on-failure';
+      echo '';
+      echo '[Install]';
+      echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/olsr2.service
+}
+
+function communitynetwork_install_bmx6 {
+    if [ -f /usr/sbin/bmx6 ]; then
+        return
+    fi
+
+    git clone "$BMX6_REPO" /etc/bmx6
+
+    cat <<EOF > /usr/bin/install_bmx6
+#!/bin/bash
+cd /etc/bmx6
+git checkout $BMX6_COMMIT -b $BMX6_COMMIT
+
+DATE_FMT=%Y-%m-%d
+SOURCE_DATE_EPOCH=2018-12-07
+BUILD_DATE=\$(date -u -d \"\${SOURCE_DATE_EPOCH}\" \"+\${DATE_FMT}\"  2>/dev/null || date -u -r \"\${SOURCE_DATE_EPOCH}\" \"+\${DATE_FMT}\" 2>/dev/null || date -u \"+\${DATE_FMT}\")
+
+make
+make install
+
+cd /etc/bmx6/lib/bmx6_http_info
+make
+make install
+
+cd /etc/bmx6/lib/bmx6_json
+make
+make install
+
+cd /etc/bmx6/lib/bmx6_quagga
+make
+make install
+
+cd /etc/bmx6/lib/bmx6_sms
+make
+make install
+
+cd /etc/bmx6/lib/bmx6_table
+make
+make install
+
+cd /etc/bmx6/lib/bmx6_topology
+make
+make install
+EOF
+    chmod +x /usr/bin/install_bmx6
+
+    /bin/bash /usr/bin/install_bmx6 >> "$webadmin_install_dir/log.txt"
+    chown www-data:www-data "$webadmin_install_dir/log.txt"
+
+    if [ ! -f /usr/sbin/bmx6 ]; then
+        echo $'bmx6 was not installed' >> "$webadmin_install_dir/log.txt"
+        communitynetwork_protocol_conventional
+        return
+    fi
+
+    rm /usr/bin/install_bmx6
+
+    { echo '[Unit]';
+      echo 'Description=BMX6 mesh routing protocol';
+      echo 'Requires=network.target';
+      echo 'After=network.target';
+      echo '';
+      echo '[Service]';
+      echo 'Type=forking';
+      echo 'User=root';
+      echo 'Group=root';
+      echo 'ExecStart=/usr/sbin/bmx6 dev=eth0';
+      echo "ExecStop=/usr/bin/kill -15 \$MAINPID";
+      echo 'PIDFile=/var/run/bmx6/pid';
+      echo 'Restart=on-failure';
+      echo '';
+      echo '[Install]';
+      echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/bmx6.service
+}
+
+function communitynetwork_batman_disable {
+    if ! grep -q 'batman_adv' /etc/modules; then
+        return
+    fi
+
+    systemctl stop batman
+    systemctl disable batman
+    rm /etc/systemd/system/batman.service
+
+    ifconfig bat0 down -promisc
+
+    batctl if del eth0
+    ifconfig eth0 down
+    ifconfig eth0 mtu 1500
+    ifconfig eth0 up
+
+    rmmod batman-adv
+
+    systemctl restart network-manager
+
+    sed -i '/batman_adv/d' /etc/modules
+}
+
+function communitynetwork_batman_enable {
+    if ! grep -q 'batman_adv' /etc/modules; then
+        # shellcheck disable=SC2086
+        INSTALL_PACKAGES iproute2 bridge-utils libnetfilter-conntrack3 batctl
+        # shellcheck disable=SC2086
+        INSTALL_PACKAGES python3-dev libevent-dev ebtables python3-pip git
+        # shellcheck disable=SC2086
+        INSTALL_PACKAGES rfkill
+
+        BATMAN_SCRIPT=/var/lib/batman
+        { echo '#!/bin/bash';
+          echo 'systemctl stop dnsmasq';
+          echo 'systemctl disable dnsmasq';
+          echo 'systemctl stop network-manager';
+          echo 'sleep 5';
+          echo 'modprobe batman-adv';
+          echo 'ifconfig eth0 down';
+          echo 'ifconfig eth0 mtu 1532';
+          echo 'ifconfig bat0 0.0.0.0';
+          echo 'ifconfig bat0 up promisc';
+          echo 'batctl if add eth0';
+          echo 'ifconfig eth0 up';
+          echo 'echo "5000" > /sys/class/net/bat0/mesh/orig_interval'; } > "$BATMAN_SCRIPT"
+        chmod +x "$BATMAN_SCRIPT"
+
+        BATMAN_DAEMON=/etc/systemd/system/batman.service
+        { echo '[Unit]';
+          echo 'Description=B.A.T.M.A.N. Advanced';
+          echo 'After=network.target';
+          echo '';
+          echo '[Service]';
+          echo 'RemainAfterExit=yes';
+          echo "ExecStart=$$BATMAN_SCRIPT";
+          echo 'Restart=on-failure';
+          echo 'SuccessExitStatus=3 4';
+          echo 'RestartForceExitStatus=3 4';
+          echo '';
+          echo '# Allow time for the server to start/stop';
+          echo 'TimeoutSec=300';
+          echo '';
+          echo '[Install]';
+          echo 'WantedBy=multi-user.target'; } > "$BATMAN_DAEMON"
+        systemctl enable batman
+
+        echo 'batman_adv' >> /etc/modules
+
+        /bin/bash "$BATMAN_SCRIPT" >> "$webadmin_install_dir/log.txt"
+        chown www-data:www-data "$webadmin_install_dir/log.txt"
+    fi
+}
+
+function communitynetwork_protocol_conventional {
+    if [ -f /etc/systemd/system/bmx6.service ]; then
+        systemctl stop bmx6
+        systemctl disable bmx6
+    fi
+    if [ -f /etc/systemd/system/olsr2.service ]; then
+        systemctl stop olsr2
+        systemctl disable olsr2
+    fi
+    if [ -f /etc/systemd/system/babel.service ]; then
+        systemctl stop babel
+        systemctl disable babel
+    fi
+
+    communitynetwork_batman_disable
+}
+
+function communitynetwork_protocol_libremesh {
+    communitynetwork_batman_enable
+    communitynetwork_install_bmx6
+    if [ -f /usr/sbin/bmx6 ]; then
+        systemctl enable bmx6
+        systemctl restart bmx6
+    fi
+}
+
+function communitynetwork_protocol_olsr2 {
+    communitynetwork_batman_enable
+    communitynetwork_install_olsr2
+    if [ -f /usr/local/sbin/olsrd2_static ]; then
+        systemctl enable olsr2
+        systemctl restart olsr2
+    fi
+}
+
+function communitynetwork_protocol_babel {
+    communitynetwork_batman_enable
+    communitynetwork_install_babel
+    if [ -f /local/bin/babeld ]; then
+        systemctl enable babel
+        systemctl restart babel
+    fi
+}
+
+function communitynetwork_allow_forwarding {
+    protocol="$1"
+
+    enable_forwarding=0
+    if [[ "$protocol" != 'conventional' ]]; then
+        enable_forwarding=1
+        sed -i 's/net.ipv6.conf.all.disable_ipv6.*/net.ipv6.conf.all.disable_ipv6 = 0/g' /etc/sysctl.conf
+    else
+        sed -i 's/net.ipv6.conf.all.disable_ipv6.*/net.ipv6.conf.all.disable_ipv6 = 1/g' /etc/sysctl.conf
+    fi
+    if grep -q 'net.ipv6.conf.all.forwarding' /etc/sysctl.conf; then
+        sed -i "s|#net.ipv6.conf.all.forwarding.*|net.ipv6.conf.all.forwarding=${enable_forwarding}|g" /etc/sysctl.conf
+        sed -i "s|net.ipv6.conf.all.forwarding.*|net.ipv6.conf.all.forwarding=${enable_forwarding}|g" /etc/sysctl.conf
+    else
+        echo "net.ipv6.conf.all.forwarding=${enable_forwarding}" >> /etc/sysctl.conf
+    fi
+    if grep -q 'net.ipv4.ip_forward' /etc/sysctl.conf; then
+        sed -i "s|#net.ipv4.ip_forward.*|net.ipv4.ip_forward=${enable_forwarding}|g" /etc/sysctl.conf
+        sed -i "s|net.ipv4.ip_forward.*|net.ipv4.ip_forward=${enable_forwarding}|g" /etc/sysctl.conf
+    else
+        echo "net.ipv4.ip_forward=${enable_forwarding}" >> /etc/sysctl.conf
+    fi
+
+    if grep -q 'net.ipv6.conf.all.accept_redirects' /etc/sysctl.conf; then
+        sed -i "s|#net.ipv6.conf.all.accept_redirects.*|net.ipv6.conf.all.accept_redirects=${enable_forwarding}|g" /etc/sysctl.conf
+        sed -i "s|net.ipv6.conf.all.accept_redirects.*|net.ipv6.conf.all.accept_redirects=${enable_forwarding}|g" /etc/sysctl.conf
+    else
+        echo "net.ipv6.conf.all.accept_redirects=${enable_forwarding}" >> /etc/sysctl.conf
+    fi
+    if grep -q 'net.ipv4.conf.all.accept_redirects' /etc/sysctl.conf; then
+        sed -i "s|#net.ipv4.conf.all.accept_redirects.*|net.ipv4.conf.all.accept_redirects=${enable_forwarding}|g" /etc/sysctl.conf
+        sed -i "s|net.ipv4.conf.all.accept_redirects.*|net.ipv4.conf.all.accept_redirects=${enable_forwarding}|g" /etc/sysctl.conf
+    else
+        echo "net.ipv4.conf.all.accept_redirects=${enable_forwarding}" >> /etc/sysctl.conf
+    fi
+
+    if grep -q 'net.ipv6.conf.all.accept_source_route' /etc/sysctl.conf; then
+        sed -i "s|#net.ipv6.conf.all.accept_source_route.*|net.ipv6.conf.all.accept_source_route=${enable_forwarding}|g" /etc/sysctl.conf
+        sed -i "s|net.ipv6.conf.all.accept_source_route.*|net.ipv6.conf.all.accept_source_route=${enable_forwarding}|g" /etc/sysctl.conf
+    else
+        echo "net.ipv6.conf.all.accept_source_route=${enable_forwarding}" >> /etc/sysctl.conf
+    fi
+    if grep -q 'net.ipv4.conf.all.accept_source_route' /etc/sysctl.conf; then
+        sed -i "s|#net.ipv4.conf.all.accept_source_route.*|net.ipv4.conf.all.accept_source_route=${enable_forwarding}|g" /etc/sysctl.conf
+        sed -i "s|net.ipv4.conf.all.accept_source_route.*|net.ipv4.conf.all.accept_source_route=${enable_forwarding}|g" /etc/sysctl.conf
+    else
+        echo "net.ipv4.conf.all.accept_source_route=${enable_forwarding}" >> /etc/sysctl.conf
+    fi
+    sysctl -p -q
+    nginx -s reload
+}
+
+function communitynetwork_change_protocol {
+    protocol="$1"
+    network_name="$2"
+
+    if [ ! "$protocol" ]; then
+        protocol='conventional'
+    fi
+
+    communitynetwork_clear_log
+    echo $"Changing network protocol to $protocol" > "$webadmin_install_dir/log.txt"
+
+    communitynetwork_allow_forwarding "$protocol"
+
+    case "$protocol" in
+        conventional)
+            communitynetwork_protocol_conventional
+        ;;
+        libremesh)
+            communitynetwork_protocol_libremesh
+        ;;
+        olsr2)
+            communitynetwork_protocol_olsr2
+        ;;
+        babel)
+            communitynetwork_protocol_babel
+        ;;
+        *)
+        # unknown option
+        ;;
+    esac
+}
+
+function communitynetwork_generate_remove_screen {
+    if [ ! -f network_map_markers.txt ]; then
+        return
+    fi
+    if [ ! -f communitynetwork_remove_template.html ]; then
+        return
+    fi
+
+    cp communitynetwork_remove_template.html communitynetwork_remove.html
+
+    while read -r line; do
+        node_name=$(echo "$line" | awk -F ';' '{print $1}')
+        sed -i "/select class=\"nodeslist\"/a <option value=\"$node_name\" translate=\"yes\">$node_name<\/option>" communitynetwork_remove.html
+    done <network_map_markers.txt
+
+    chown www-data:www-data communitynetwork_remove.html
+}
+
+function update_mesh_nodes_communitynetwork {
+    if grep -q '# Community Network' /etc/hosts; then
+        sed -i '/# Community Network Starts/,/# Community Network Ends/d' /etc/hosts
+    fi
+
+    if [ ! -d ${COMMUNITYNETWORK_PATH} ]; then
+        return
+    fi
+
+    if [ ! "$MAP_DOMAIN" ]; then
+        if grep -q 'MAP_DOMAIN=' "$CONFIGURATION_FILE"; then
+            MAP_DOMAIN=$(grep 'MAP_DOMAIN=' "$CONFIGURATION_FILE" | awk -F '=' '{print $2}')
+        else
+            return
+        fi
+    fi
+
+    if [[ "${MAP_DOMAIN}" == *'.onion' ]]; then
+        { echo 'import json';
+          echo 'import requests';
+          echo '';
+          echo "file = open(\"network_map_markers.txt\",\"w\")";
+          echo "hosts = open(\"/etc/hosts\",\"a\")";
+          echo '';
+          echo 'session = requests.session()';
+          echo 'session.proxies = {}';
+          echo '';
+          echo "session.proxies['http'] = 'socks5h://localhost:9050'";
+          echo "session.proxies['https'] = 'socks5h://localhost:9050'"; } > parse_map.py
+        map_url="http://${MAP_DOMAIN}/nodes.json"
+    else
+        { echo 'import json';
+          echo 'import requests';
+          echo '';
+          echo "file = open(\"network_map_markers.txt\",\"w\")";
+          echo '';
+          echo 'session = requests.session()';
+          echo 'session.proxies = {}'; } > parse_map.py
+        if [[ "${MAP_DOMAIN}" != *'.json' ]]; then
+            map_url="https://${MAP_DOMAIN}/nodes.json"
+        else
+            map_url="https://${MAP_DOMAIN}"
+        fi
+    fi
+
+    { echo '';
+      # shellcheck disable=SC2028
+      echo "hosts.write('# Community Network Starts\n')";
+      echo "data = session.get(\"${map_url}\").json()['nodes']";
+      echo 'for elem in data:';
+      echo "    if 'flags' in elem:";
+      echo "        if 'online' in elem['flags']:";
+      echo "            if elem['flags']['online']:";
+      echo "                if 'nodeinfo' in elem:";
+      echo "                    if 'network' in elem['nodeinfo']:";
+      echo "                        if 'addresses' in elem['nodeinfo']['network']:";
+      echo "                            if elem['nodeinfo']['network']['addresses'][0]:";
+      # shellcheck disable=SC2028
+      echo "                                hosts.write(elem['nodeinfo']['network']['addresses'][0] + ' ' + elem['nodeinfo']['hostname'] + '\n')";
+      echo "                    if 'location' in elem['nodeinfo']:";
+      echo "                        if 'longitude' in elem['nodeinfo']['location']:";
+      # shellcheck disable=SC2028
+      echo "                            file.write(elem['nodeinfo']['hostname'] + ';' + str(elem['nodeinfo']['location']['longitude']) + ';' + str(elem['nodeinfo']['location']['latitude']) + '\n')";
+      echo '';
+      # shellcheck disable=SC2028
+      echo "hosts.write('# Community Network Ends\n')";
+      echo 'hosts.close()';
+      echo 'file.close()'; } >> parse_map.py
+
+    python3 parse_map.py
+    #rm parse_map.py
+    if [ -f network_map_markers.txt ]; then
+        create_kml_from_markers network_map_markers.txt network_map_markers.kml
+        chown www-data:www-data network_map_markers.kml
+        chown www-data:www-data network_map_markers.txt
+        echo $"$(wc -l network_map_markers.txt | awk -F ' ' '{print $1}') installed mesh nodes"
+    else
+        echo $"0 installed mesh nodes"
+    fi
+    communitynetwork_generate_remove_screen
+}
+
+function create_mesh_nodes_json_file {
+    { echo '{';
+      echo '    "version":2,';
+      echo '    "nodes":[';
+      echo '    ]';
+      echo '}'; } > "$COMMUNITYNETWORK_NODES_FILENAME"
+    echo '0' > ${COMMUNITYNETWORK_PATH}/nodes
+}
+
+function setup_mesh_website {
+    MAP_DOMAIN=$(add_onion_service communitynetwork 80 ${COMMUNITYNETWORK_ONION_PORT})
+    if ! grep -q 'MAP_DOMAIN=' "$CONFIGURATION_FILE"; then
+        echo "MAP_DOMAIN=$MAP_DOMAIN" >> "$CONFIGURATION_FILE"
+    fi
+
+    nginx_file=/etc/nginx/sites-available/communitynetwork
+    { echo 'server {';
+      echo "  listen 127.0.0.1:${COMMUNITYNETWORK_ONION_PORT} default_server;";
+      echo "  server_name ${MAP_DOMAIN};";
+      echo "  root ${COMMUNITYNETWORK_PATH};";
+      echo '  charset UTF-8;';
+      echo '';
+      echo '  access_log /dev/null;';
+      echo '  error_log /dev/null;';
+      echo '';
+      echo '  add_header X-Content-Type-Options nosniff;';
+      echo '  add_header X-XSS-Protection "1; mode=block";';
+      echo '';
+      echo '  location / {';
+      echo "    root ${COMMUNITYNETWORK_PATH};";
+      echo '    index nodes.json /nodes.json;';
+      echo "    error_page 405 = \$uri;";
+      echo '  }';
+      echo '}'; } > "$nginx_file"
+
+    if [ ! -f "$COMMUNITYNETWORK_NODES_FILENAME" ]; then
+        create_mesh_nodes_json_file
+    fi
+    chown -R www-data:www-data ${COMMUNITYNETWORK_PATH}
+    nginx_ensite communitynetwork
+    systemctl restart nginx
+}
+
+function resume_communitynetwork {
+    if [ -f ${COMMUNITYNETWORK_PATH}/settings ]; then
+        # restore longitude
+        if grep -q 'MAP_LONGITUDE=' "${COMMUNITYNETWORK_PATH}/settings"; then
+            MAP_LONGITUDE=$(grep 'MAP_LONGITUDE=' ${COMMUNITYNETWORK_PATH}/settings | awk -F '=' '{print $2}')
+            if grep -q 'MAP_LONGITUDE=' "$CONFIGURATION_FILE"; then
+                sed -i "s|MAP_LONGITUDE=.*|MAP_LONGITUDE=$MAP_LONGITUDE|g" "$CONFIGURATION_FILE"
+            else
+                echo "MAP_LONGITUDE=$MAP_LONGITUDE" >> "$CONFIGURATION_FILE"
+            fi
+        fi
+
+        # restore latitude
+        if grep -q 'MAP_LATITUDE=' ${COMMUNITYNETWORK_PATH}/settings; then
+            MAP_LATITUDE=$(grep 'MAP_LATITUDE=' ${COMMUNITYNETWORK_PATH}/settings | awk -F '=' '{print $2}')
+            if grep -q 'MAP_LATITUDE=' "$CONFIGURATION_FILE"; then
+                sed -i "s|MAP_LATITUDE=.*|MAP_LATITUDE=$MAP_LATITUDE|g" "$CONFIGURATION_FILE"
+            else
+                echo "MAP_LATITUDE=$MAP_LATITUDE" >> "$CONFIGURATION_FILE"
+            fi
+        fi
+
+        # restore domain
+        if grep -q 'MAP_DOMAIN=' ${COMMUNITYNETWORK_PATH}/settings; then
+            MAP_DOMAIN=$(grep 'MAP_DOMAIN=' ${COMMUNITYNETWORK_PATH}/settings | awk -F '=' '{print $2}')
+            if grep -q 'MAP_DOMAIN=' "$CONFIGURATION_FILE"; then
+                sed -i "s|MAP_DOMAIN=.*|MAP_DOMAIN=$MAP_DOMAIN|g" "$CONFIGURATION_FILE"
+            else
+                echo "MAP_DOMAIN=$MAP_DOMAIN" >> "$CONFIGURATION_FILE"
+            fi
+        fi
+        rm ${COMMUNITYNETWORK_PATH}/settings
+    fi
+
+
+    if ! grep -q 'MAP_LONGITUDE=' "$CONFIGURATION_FILE"; then
+        set_map_location '2.3522' '48.8566'
+    fi
+
+    nginx_file=/etc/nginx/sites-available/communitynetwork
+    if [ ! -f "$nginx_file" ]; then
+        setup_mesh_website
+    fi
+}
+
+function setup_mesh_communitynetwork {
+    if [ -d ${COMMUNITYNETWORK_PATH} ]; then
+        resume_communitynetwork
+        return
+    fi
+
+    mkdir ${COMMUNITYNETWORK_PATH}
+
+    set_map_location '2.3522' '48.8566'
+
+    setup_mesh_website
+}
+
+function remove_mesh_communitynetwork {
+    if [ ! -d ${COMMUNITYNETWORK_PATH} ]; then
+        return
+    fi
+
+    local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+    webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+    if [ -f "$webadmin_install_dir/communitynetwork_remove.html" ]; then
+        rm "$webadmin_install_dir/communitynetwork_remove.html"
+    fi
+
+    nginx_file=/etc/nginx/sites-available/communitynetwork
+    nginx_dissite communitynetwork
+    if [ -f "$nginx_file" ]; then
+        rm "$nginx_file"
+    fi
+
+    # remember settings
+    grep -Fx 'MAP_' "$CONFIGURATION_FILE" > ${COMMUNITYNETWORK_PATH}/settings
+
+    # Don't remove so that your network is remembered even if you
+    # temporarily switch to viewing another network
+    #remove_onion_service communitynetwork ${COMMUNITYNETWORK_ONION_PORT}
+    #rm -rf ${COMMUNITYNETWORK_PATH}
+}
+
+function remove_mesh_node {
+    mesh_node_name="$1"
+
+    if [ ! -f "$COMMUNITYNETWORK_NODES_FILENAME" ]; then
+        return
+    fi
+
+    # does it exist in the json file?
+    if ! grep -q "\"hostname\": \"$mesh_node_name\"" "$COMMUNITYNETWORK_NODES_FILENAME"; then
+        return
+    fi
+
+    # set the online status to false
+    sed -i "/\"hostname\": \"$mesh_node_name\"/{N;N;N;N;N;N;N;N;N;s|\"online\":.*|\"online\": false|}" "$COMMUNITYNETWORK_NODES_FILENAME"
+    chown -R www-data:www-data "$COMMUNITYNETWORK_NODES_FILENAME"
+}
+
+function add_mesh_node {
+    mesh_node_name="$1"
+    mesh_node_longitude="$2"
+    mesh_node_latitude="$3"
+    mesh_node_ip_address="$4"
+
+    if [ "$mesh_node_ip_address" ]; then
+        if [[ "$mesh_node_ip_address" != *'.'* ]]; then
+            mesh_node_ip_address=''
+        fi
+        # handle multiple IP addresses separated by commas or semicolons
+        if [[ "$mesh_node_ip_address" == *', '* ]]; then
+            ip_str=$(echo "$mesh_node_ip_address" | sed -i 's|, |", "|g')
+            mesh_node_ip_address="$ip_str"
+        else
+            if [[ "$mesh_node_ip_address" == *','* ]]; then
+                ip_str=$(echo "$mesh_node_ip_address" | sed -i 's|,|", "|g')
+                mesh_node_ip_address="$ip_str"
+            else
+                if [[ "$mesh_node_ip_address" == *';'* ]]; then
+                    ip_str=$(echo "$mesh_node_ip_address" | sed -i 's|;|", "|g')
+                    mesh_node_ip_address="$ip_str"
+                fi
+            fi
+        fi
+    fi
+
+    if [ ! -f "$COMMUNITYNETWORK_NODES_FILENAME" ]; then
+        create_mesh_nodes_json_file
+    else
+        if grep -q "\"hostname\": \"$mesh_node_name\"" "$COMMUNITYNETWORK_NODES_FILENAME"; then
+            # change the latitude and longitude
+            sed -i "/\"hostname\": \"$mesh_node_name\"/{N;N;s|\"latitude\":.*|\"latitude\": $mesh_node_latitude, \"longitude\": $mesh_node_longitude|}" "$COMMUNITYNETWORK_NODES_FILENAME"
+            # Set status to online
+            sed -i "/\"hostname\": \"$mesh_node_name\"/{N;N;N;N;N;N;N;N;N;s|\"online\":.*|\"online\": true|}" "$COMMUNITYNETWORK_NODES_FILENAME"
+            # change the IP address
+            if grep -q " $mesh_node_name" /etc/hosts; then
+                sed -i "/ $mesh_node_name/d" /etc/hosts
+            fi
+            if [ "$mesh_node_ip_address" ]; then
+                echo "$mesh_node_ip_address $mesh_node_name" >> /etc/hosts
+                sed -i "/\"hostname\": \"$mesh_node_name\"/{N;N;N;N;N;s|\"addresses\":.*|\"addresses\": [ \"$mesh_node_ip_address\" ]|}" "$COMMUNITYNETWORK_NODES_FILENAME"
+                chown -R www-data:www-data "$COMMUNITYNETWORK_NODES_FILENAME"
+            fi
+            return
+        fi
+    fi
+
+    # remove the last two lines
+    head -n -2 "$COMMUNITYNETWORK_NODES_FILENAME" > ${COMMUNITYNETWORK_PATH}/temp_mesh_nodes.json
+
+    # add a comma
+    no_of_nodes=$(cat ${COMMUNITYNETWORK_PATH}/nodes)
+    if [[ "$no_of_nodes" != '0' ]]; then
+        echo '    ,' >> ${COMMUNITYNETWORK_PATH}/temp_mesh_nodes.json
+    fi
+
+    { echo '    {';
+      echo '        "nodeinfo": {';
+      echo "            \"hostname\": \"$mesh_node_name\",";
+      echo '            "location": {';
+      echo "                \"latitude\": $mesh_node_latitude, \"longitude\": $mesh_node_longitude";
+      echo '            },';
+      echo '            "network": {';
+      echo "                \"addresses\": [ \"$mesh_node_ip_address\" ]";
+      echo '            }';
+      echo '        },';
+      echo '        "flags": {';
+      echo '            "online": true';
+      echo '        }';
+      echo '    }';
+      echo '    ]';
+      echo '}'; } >> ${COMMUNITYNETWORK_PATH}/temp_mesh_nodes.json
+
+    mv ${COMMUNITYNETWORK_PATH}/temp_mesh_nodes.json "$COMMUNITYNETWORK_NODES_FILENAME"
+
+    # increment the number of nodes
+    echo "$((no_of_nodes+1))" > ${COMMUNITYNETWORK_PATH}/nodes
+
+    chown -R www-data:www-data ${COMMUNITYNETWORK_PATH}
+}
+
+# NOTE: deliberately no exit 0

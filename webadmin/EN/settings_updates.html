@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <style>
+      @import url("libreserver.css");
+
+      #domainicon {
+          width: 20%;
+          height: auto;
+          margin-right : auto;
+          margin-left : auto;
+          min-width : 100px;
+      }
+
+      #iconpic {
+          width: 20%;
+          height: auto;
+          margin-right : auto;
+          margin-left : auto;
+          min-width : 120px;
+      }
+
+      .appurl {
+          font-size: 100%;
+      }
+
+      .welcomeheader {
+          font-size: 200%;
+          font-weight: bold;
+      }
+
+      .domaintext {
+          font-size: 90%;
+      }
+
+      button {
+          border: none;
+          outline: 0;
+          display: inline-block;
+          padding: 8px;
+          color: white;
+          background-color: #000;
+          text-align: center;
+          cursor: pointer;
+          width: 100%;
+          font-size: 18px;
+      }
+
+      button:hover, a:hover {
+          opacity: 0.7;
+      }
+
+      .chip {
+          display: inline-block;
+          padding: 0 25px;
+          height: 50px;
+          font-size: 70%;
+          line-height: 50px;
+          border-radius: 25px;
+          background-color: #f1f1f1;
+      }
+
+      .chip img {
+          float: left;
+          margin: 0 10px 0 -25px;
+          height: 50px;
+          width: 50px;
+          border-radius: 50%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="header">
+        <a href="settings.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a><br>
+
+        <br>
+
+        <form action="settingsupdates.php" method="post">
+          <p translate="yes">Enable Updates</p>
+          <p>
+            <input type="radio" name="enable_updates" value="0"><label translate="yes">No</label>
+            <input type="radio" name="enable_updates" value="1" checked><label translate="yes">Yes</label>
+          </p>
+          <p translate="yes">
+            Source Repository
+            <input type="text" name="updates_repo" value="https://code.libreserver.org/bashrc/libreserver">
+            <br><br>
+            Branch
+            <input type="text" name="updates_branch" value="bullseye">
+          </p>
+          <br><br>
+          <input type="submit" name="submitsettingscancel" translate="yes" value="Cancel">
+          <input type="submit" name="submitsettingsupdates" translate="yes" value="Continue">
+        </form>
+
+        <br><br>
+
+      </div>
+    </div>
+  </body>
+</html>

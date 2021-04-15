@@ -1,0 +1,448 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Performs a factory reset
+#
+# License
+# =======
+#
+# Copyright (C) 2018-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+PROJECT_NAME='libreserver'
+
+export TEXTDOMAIN=${PROJECT_NAME}-factory-reset
+export TEXTDOMAINDIR="/usr/share/locale"
+
+CONFIGURATION_FILE="/root/${PROJECT_NAME}.cfg"
+COMPLETION_FILE="/root/${PROJECT_NAME}-completed.txt"
+
+# Start including files
+
+source /usr/local/bin/${PROJECT_NAME}-vars
+source /usr/local/bin/${PROJECT_NAME}-base-email
+
+UTILS_FILES="/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-*"
+for f in $UTILS_FILES
+do
+    source "$f"
+done
+
+APP_FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
+for f in $APP_FILES
+do
+    source "$f"
+done
+
+# End including files
+
+FACTORY_RESET_OPTIONS=$1
+
+if [[ "$FACTORY_RESET_OPTIONS" != '-f' && "$FACTORY_RESET_OPTIONS" != '-y' && "$FACTORY_RESET_OPTIONS" != '--force' ]]; then
+    echo $'>>> FACTORY RESET <<<'
+    read -r -p $"Do you really wish to perform a factory reset? This will erase all data. (y/n) ?" yn
+    if [[ $yn != 'y' && $yn != 'Y' && $yn != 'yes' && $yn != 'Yes' && $yn != 'YES' ]]; then
+        echo $"Factory reset was not performed"
+        exit 1
+    fi
+else
+    echo $"Forced factory reset"
+fi
+
+web_admin_get_hostname
+
+date >> "$webadmin_install_dir/log.txt"
+
+if [ -f "$webadmin_install_dir/about.html" ]; then
+    echo "Removing about.html, which contains previous addresses" >> "$webadmin_install_dir/log.txt"
+    rm "$webadmin_install_dir/about.html"
+fi
+if [ -f "$webadmin_install_dir/images/webadmin_qrcode.png" ]; then
+    echo "Removing old webadmin qr code" >> "$webadmin_install_dir/log.txt"
+    rm "$webadmin_install_dir/images/webadmin_qrcode.png"
+fi
+
+# don't try to restart tor daemon
+echo "Disable tor restarts" >> "$webadmin_install_dir/log.txt"
+mv /usr/local/bin/libreserver-fix-tor /usr/local/bin/libreserver-fix-tor-inactive
+
+# regenerate tor keys and onion domains
+echo "Restarting tor" >> "$webadmin_install_dir/log.txt"
+systemctl stop tor
+rm -rf /var/lib/tor/*
+restart_tor_daemon
+
+echo $'Removing installed apps...'
+echo "Removing installed apps..." >> "$webadmin_install_dir/log.txt"
+detect_apps
+get_apps_installed_names
+# shellcheck disable=SC2068
+for app_name in ${APPS_INSTALLED_NAMES[@]}
+do
+    if [[ $(function_exists "remove_${app_name}") == "1" ]]; then
+        echo $"Removing ${app_name}"
+        echo "Removing ${app_name}" >> "$webadmin_install_dir/log.txt"
+
+        app_load_variables "${app_name}"
+
+        # call the remove function
+        "remove_${app_name}"
+    fi
+done
+
+echo "Removing mesh configuration" >> "$webadmin_install_dir/log.txt"
+remove_mesh
+
+if [ -f /etc/nginx/.webadminpasswd ]; then
+    echo "Removing password" >> "$webadmin_install_dir/log.txt"
+    rm /etc/nginx/.webadminpasswd
+fi
+
+if [ -f /root/.temp_webadmin_password ]; then
+    echo "Removing temporary password" >> "$webadmin_install_dir/log.txt"
+    rm /root/.temp_webadmin_password
+fi
+
+if [ ! -f /root/.initial_setup ]; then
+    echo "Removing initial setup file" >> "$webadmin_install_dir/log.txt"
+    touch /root/.initial_setup
+fi
+
+if [ -f "$COMPLETION_FILE" ]; then
+    echo "Removing completion file" >> "$webadmin_install_dir/log.txt"
+    rm "$COMPLETION_FILE"
+fi
+
+# create an libreserver user
+echo "Creating libreserver user account" >> "$webadmin_install_dir/log.txt"
+MY_USERNAME=libreserver
+if [ ! -d /home/$MY_USERNAME ]; then
+    adduser --gecos "$MY_USERNAME" --disabled-password "$MY_USERNAME"
+    echo -n "$MY_USERNAME:${PROJECT_NAME}" | /usr/sbin/chpasswd
+    adduser "$MY_USERNAME" sudo
+
+    echo "Creating bashrc for libreserver user account" >> "$webadmin_install_dir/log.txt"
+    cat >> "/home/$MY_USERNAME/.bashrc" <<EOF
+# initial setup of the system
+if [ -f ~/.initial_setup ]; then
+    clear
+    echo "
+  _____               _           _
+ |   __|___ ___ ___ _| |___ _____| |_ ___ ___ ___
+ |   __|  _| -_| -_| . | . |     | . | . |   | -_|
+ |__|  |_| |___|___|___|___|_|_|_|___|___|_|_|___|
+
+               Initial setup process
+
+     Please enter your password a second time.
+"
+    sudo su
+fi
+EOF
+
+    echo "Adding initial setup file" >> "$webadmin_install_dir/log.txt"
+    touch "/home/$MY_USERNAME/.initial_setup"
+    /bin/chown "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME/.initial_setup"
+fi
+
+# remove existing admin user
+if grep -q "MY_USERNAME=" "$CONFIGURATION_FILE"; then
+    echo "Removing existing admin account" >> "$webadmin_install_dir/log.txt"
+    MY_USERNAME=$(grep "MY_USERNAME=" "$CONFIGURATION_FILE" | awk -F '=' '{print $2}')
+    if [ "$MY_USERNAME" ]; then
+        if [[ "$MY_USERNAME" != 'libreserver' ]]; then
+            if [ -d "/home/$MY_USERNAME" ]; then
+                chmod 600 /etc/shadow
+                chmod 600 /etc/gshadow
+                userdel -r "$MY_USERNAME"
+                groupdel "$MY_USERNAME"
+                chmod 0000 /etc/shadow
+                chmod 0000 /etc/gshadow
+            fi
+        fi
+    fi
+fi
+
+if [ -d /home/admin ]; then
+    echo "Setting permissions" >> "$webadmin_install_dir/log.txt"
+    chmod 600 /etc/shadow
+    chmod 600 /etc/gshadow
+    userdel -r admin
+    groupdel admin
+    chmod 0000 /etc/shadow
+    chmod 0000 /etc/gshadow
+    if [ -d /home/admin ]; then
+        rm -rf /home/admin
+    fi
+fi
+
+# ssh
+echo "Removing ssh keys" >> "$webadmin_install_dir/log.txt"
+rm -f /etc/ssh/ssh_host_*
+dpkg-reconfigure openssh-server
+echo $'ssh host keys regenerated'
+echo "ssh host keys regenerated" >> "$webadmin_install_dir/log.txt"
+
+# remove small moduli
+awk '$5 > 2000' /etc/ssh/moduli > ~/moduli
+mv ~/moduli /etc/ssh/moduli
+echo $'ssh small moduli removed'
+echo "ssh small moduli removed" >> "$webadmin_install_dir/log.txt"
+
+# remove icecast stream if it exists
+if [ -d /icestream ]; then
+    echo "Removing icecast stream" >> "$webadmin_install_dir/log.txt"
+    rm -rf /icestream
+fi
+
+# remove music if it exists
+if [ -d /music ]; then
+    echo "Removing music" >> "$webadmin_install_dir/log.txt"
+    rm -rf /music
+fi
+
+echo "Removing unused packages" >> "$webadmin_install_dir/log.txt"
+$REMOVE_UNUSED_PACKAGES
+$CLEAN_PACKAGES
+/bin/rm -rf /var/lib/apt/lists/*
+
+# remove main password for the password manager
+if [ -f /root/.passwords/root/main ]; then
+    rm /root/.passwords/root/main
+fi
+
+if [ -d /var/local/squirrelmail/attach ]; then
+    echo "Removing webmail attachments" >> "$webadmin_install_dir/log.txt"
+    rm -rf /var/local/squirrelmail/attach/*
+fi
+if [ -d /var/local/squirrelmail/data ]; then
+    echo "Removing webmail data" >> "$webadmin_install_dir/log.txt"
+    rm -rf /var/local/squirrelmail/data/*
+fi
+if [ -d /var/local/squirrelmail/temp ]; then
+    echo "Removing webmail temp files" >> "$webadmin_install_dir/log.txt"
+    rm -rf /var/local/squirrelmail/temp/*
+fi
+if [ -d /var/www/uploads ]; then
+    echo "Removing uploads" >> "$webadmin_install_dir/log.txt"
+    rm -rf /var/www/upload/*
+fi
+
+if grep -q 'VPN_DOMAIN=' "$CONFIGURATION_FILE"; then
+    echo "Removing vpn domain" >> "$webadmin_install_dir/log.txt"
+    sed -i '/VPN_DOMAIN=/d' "$CONFIGURATION_FILE"
+fi
+if grep -q 'VPN_PUBLIC_KEY=' "$CONFIGURATION_FILE"; then
+    echo "Removing vpn public key" >> "$webadmin_install_dir/log.txt"
+    sed -i '/VPN_PUBLIC_KEY=/d' "$CONFIGURATION_FILE"
+fi
+echo "Disabling wireguard" >> "$webadmin_install_dir/log.txt"
+wireguard_disable
+if [ -f /etc/wireguard/privatekey ]; then
+    echo "Removing wireguard private key" >> "$webadmin_install_dir/log.txt"
+    rm /etc/wireguard/privatekey
+fi
+if [ -f /etc/wireguard/publickey ]; then
+    echo "Removing wireguard public key" >> "$webadmin_install_dir/log.txt"
+    rm /etc/wireguard/publickey
+fi
+if [ -f "$webadmin_install_dir/vpn_public_key.txt" ]; then
+    echo "Removing wireguard public key file" >> "$webadmin_install_dir/log.txt"
+    rm "$webadmin_install_dir/vpn_public_key.txt"
+fi
+
+# remove file used to store ssh onion domain and display it in the web interface
+if [ -f "$webadmin_install_dir/onion_domain_ssh.txt" ]; then
+    echo "Removing ssh onion domain" >> "$webadmin_install_dir/log.txt"
+    rm "$webadmin_install_dir/onion_domain_ssh.txt"
+fi
+
+# remove basic authentication from webadmin
+nginx_config_filename=/etc/nginx/sites-available/foo.local
+if [ -f "$nginx_config_filename" ]; then
+    if ! grep -q "#auth_basic" "$nginx_config_filename"; then
+        echo "Disabling basic auth on webadmin" >> "$webadmin_install_dir/log.txt"
+        sed -i 's|auth_basic|#auth_basic|g' "$nginx_config_filename"
+    fi
+fi
+
+if [ ! -d "/root/${PROJECT_NAME}" ]; then
+    echo "Cloning project repo" >> "$webadmin_install_dir/log.txt"
+    git clone https://gitlab.com/bashrc2/${PROJECT_NAME} /root/${PROJECT_NAME}
+fi
+
+# remove factory reset first boot daemon
+if [ -f /etc/systemd/system/factoryreset.service ]; then
+    echo "Removing factory reset daemon" >> "$webadmin_install_dir/log.txt"
+    systemctl stop factoryreset
+    systemctl disable factoryreset
+    rm /etc/systemd/system/factoryreset.service
+fi
+
+local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+if [ -f $webadmin_install_dir/userprofile_admin.html ]; then
+    echo "Removing webadmin user profiles" >> "$webadmin_install_dir/log.txt"
+    rm $webadmin_install_dir/userprofile_*.html
+fi
+if [ -f "$webadmin_install_dir/EN/ssh_enabled.html" ]; then
+    cp "$webadmin_install_dir/EN/ssh_enabled.html" "$webadmin_install_dir/ssh_enabled.html"
+fi
+
+# reset webmail by removing its directory
+if [ -d "/var/www/${local_hostname}/htdocs/mail" ]; then
+    echo "Removing webmail directory" >> "$webadmin_install_dir/log.txt"
+    rm -rf "/var/www/${local_hostname}/htdocs/mail"
+fi
+
+echo "Restarting ssh daemon" >> "$webadmin_install_dir/log.txt"
+systemctl restart ssh
+echo "Resetting the install state counter to 0" >> "$webadmin_install_dir/log.txt"
+# set install state back to beginning
+echo "0" > /root/.install_state.txt
+if [ ! -f "$webadmin_install_dir/.setupscreenactive" ]; then
+    echo "Setting the setup screen active file" >> "$webadmin_install_dir/log.txt"
+    touch "$webadmin_install_dir/.setupscreenactive"
+fi
+echo "Resetting the install counter" >> "$webadmin_install_dir/log.txt"
+echo "0" > /root/.install_counter
+if grep -q 'install_final' "$COMPLETION_FILE"; then
+    echo "Removing final install entry from completion file" >> "$webadmin_install_dir/log.txt"
+    sed -i '/install_final/d' "$COMPLETION_FILE"
+fi
+if grep -q 'webadmin' "$COMPLETION_FILE"; then
+    echo "Removing webadmin steps from completion file" >> "$webadmin_install_dir/log.txt"
+    sed -i '/webadmin/d' "$COMPLETION_FILE"
+fi
+if grep -q 'wireguard' "$COMPLETION_FILE"; then
+    echo "Removing wireguard steps from completion file" >> "$webadmin_install_dir/log.txt"
+    sed -i '/wireguard/d' "$COMPLETION_FILE"
+fi
+echo "Installing wireguard" >> "$webadmin_install_dir/log.txt"
+install_wireguard
+
+# remove i2p keys and certs
+if [ -d /var/lib/i2pd ]; then
+    echo "Removing i2p keys" >> "$webadmin_install_dir/log.txt"
+    systemctl stop i2pd
+    rm -rf /var/lib/i2pd/*
+    systemctl restart i2pd
+fi
+echo "Configuring i2p email" >> "$webadmin_install_dir/log.txt"
+configure_email_i2p
+
+# wait for new onion domains to appear before regenerating webadmin
+echo "Waiting for onion ssh domain" >> "$webadmin_install_dir/log.txt"
+wait_for_onion_service ssh
+echo "Waiting for onion email domain" >> "$webadmin_install_dir/log.txt"
+wait_for_onion_service email
+echo "Waiting for onion webadmin domain" >> "$webadmin_install_dir/log.txt"
+wait_for_onion_service webadmin
+
+# re-enable checking that tor daemon is running
+echo "Re-apply tor daemon watchdog" >> "$webadmin_install_dir/log.txt"
+mv /usr/local/bin/libreserver-fix-tor-inactive /usr/local/bin/libreserver-fix-tor
+
+# set onion email address to the new one,
+# or clear the email address on standard version
+if grep -q "MY_EMAIL_ADDRESS=" "$CONFIGURATION_FILE"; then
+    MY_EMAIL_ADDRESS=$(grep "MY_EMAIL_ADDRESS=" "$CONFIGURATION_FILE" | awk -F '=' '{print $2}')
+    if [[ "$MY_EMAIL_ADDRESS" == *'.onion' ]]; then
+        # ensure that email address is set to the new onion domain
+        echo "Setting new email onion address" >> "$webadmin_install_dir/log.txt"
+        MY_EMAIL_ADDRESS=admin@$(cat /var/lib/tor/hidden_service_email/hostname)
+        sed -i "s|MY_EMAIL_ADDRESS=.*|MY_EMAIL_ADDRESS=${MY_EMAIL_ADDRESS}|g" "$CONFIGURATION_FILE"
+    else
+        sed -i '/MY_EMAIL_ADDRESS=/d' "$CONFIGURATION_FILE"
+    fi
+fi
+
+# reset dynamic dns provider
+if grep -q "DDNS_PROVIDER=" "$CONFIGURATION_FILE"; then
+    sed -i 's|DDNS_PROVIDER=.*|DDNS_PROVIDER=none|g' "$CONFIGURATION_FILE"
+fi
+
+# remove default domain name
+sed -i '/DEFAULT_DOMAIN_NAME=/d' "$CONFIGURATION_FILE"
+
+# remove tripwire keys
+echo "Removing tripwire keys" >> "$webadmin_install_dir/log.txt"
+rm /etc/tripwire/*.key 2> /dev/null
+
+# remove firewall block files
+if [ -f "$FIREWALL_DOMAINS" ]; then
+    echo "Removing firewall domains" >> "$webadmin_install_dir/log.txt"
+    rm "$FIREWALL_DOMAINS"
+fi
+if [ -f "$FIREWALL_ALLOW_DOMAINS" ]; then
+    echo "Removing firewall allow domains" >> "$webadmin_install_dir/log.txt"
+    rm "$FIREWALL_ALLOW_DOMAINS"
+fi
+if [ -f "$MUTED_WORDS" ]; then
+    echo "Removing firewall muted words" >> "$webadmin_install_dir/log.txt"
+    rm "$MUTED_WORDS"
+fi
+if [ -f "$FIREWALL_DOMAINS_MASKED" ]; then
+    echo "Removing firewall masked" >> "$webadmin_install_dir/log.txt"
+    rm "$FIREWALL_DOMAINS_MASKED"
+fi
+
+echo "Installing webadmin" >> "$webadmin_install_dir/log.txt"
+install_web_admin
+
+# finally remove the file which indicates that factory reset is happening
+if [ -f /root/.factoryresetdistro ]; then
+    echo "Removing the factory reset file" >> "$webadmin_install_dir/log.txt"
+    rm /root/.factoryresetdistro
+fi
+
+if [ -f /root/.manualinstall ]; then
+    echo "Removing manual install indicator" >> "$webadmin_install_dir/log.txt"
+    rm /root/.manualinstall
+fi
+
+# remove dkim key
+if [ -f /etc/exim4/dkim_privkey.pem ]; then
+    echo "Removing DKIM private key" >> "$webadmin_install_dir/log.txt"
+    rm /etc/exim4/dkim_privkey.pem
+fi
+if [ -f /etc/exim4/dkim_dnskey.txt ]; then
+    echo "Removing DKIM DNS key" >> "$webadmin_install_dir/log.txt"
+    rm /etc/exim4/dkim_dnskey.txt
+fi
+if [ -d /root/dkim ]; then
+    echo "Removing DKIM backup keys" >> "$webadmin_install_dir/log.txt"
+    rm -rf /root/dkim
+fi
+
+# reset letsencrypt to remove any certs
+if [ -d /etc/letsencrypt ]; then
+    rm -rf /etc/letsencrypt
+    mkdir /etc/letsencrypt
+    { echo '# Because we are using logrotate for greater flexibility, disable the  ';
+      echo '# internal certbot logrotation.';
+      echo 'max-log-backups = 0'; } > /etc/letsencrypt/cli.ini
+fi
+
+date >> "$webadmin_install_dir/log.txt"
+echo 'Factory reset complete. Rebooting.'
+echo "Factory reset complete. Rebooting." >> "$webadmin_install_dir/log.txt"
+systemctl reboot -i
+reboot
+
+exit 0

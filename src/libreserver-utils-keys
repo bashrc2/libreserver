@@ -1,0 +1,271 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Encryption key related functions
+#
+# License
+# =======
+#
+# Copyright (C) 2015-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+function import_gpg_from_main_keydrive {
+    USB_DRIVE=/dev/sdb1
+    USB_MOUNT=/mnt/usb
+    backup_device=$(detect_connected_drives)
+    if [ ! "$backup_device" ]; then
+        exit 35
+    fi
+    if [[ "$backup_device" != 'sd'* ]]; then
+        exit 46
+    fi
+    read_config_param MY_USERNAME
+    backup_mount_drive "$backup_device"
+    if [ -d "$USB_MOUNT/.gnupg" ]; then
+        # shellcheck disable=SC2086
+        cp -rf $USB_MOUNT/.gnupg /home/$MY_USERNAME/
+        chown -R "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME/.gnupg"
+        cp -rf $USB_MOUNT/.gnupg /root/
+    fi
+    backup_unmount_drive $USB_DRIVE $USB_MOUNT
+}
+
+function interactive_gpg_from_usb {
+    dialog --title $"Recover Encryption Keys" \
+           --msgbox $'Plug in a USB keydrive containing a copy of your full key or key fragment' 6 70
+
+    HOME_DIR=/home/$MY_USERNAME
+    GPG_LOADING="yes"
+    SSH_IMPORTED="no"
+    GPG_CTR=0
+
+    while [[ $GPG_LOADING == "yes" ]]
+    do
+        USB_DRIVE=$(detect_connected_drives)
+
+        if [ ! -b "$USB_DRIVE" ]; then
+            if (( GPG_CTR > 0 )); then
+                gpg_reconstruct_key "$MY_USERNAME" interactive
+                gpg_update_mutt "$MY_USERNAME"
+                return 0
+            fi
+            dialog --title $"Recover Encryption Keys" --msgbox $'No USB drive found' 6 30
+            exit 73
+        fi
+
+        backup_mount_drive "${USB_DRIVE}" "${MY_USERNAME}"
+
+        if [ ! -d "$USB_MOUNT" ]; then
+            if (( GPG_CTR > 0 )); then
+                backup_unmount_drive "${USB_DRIVE}"
+                gpg_reconstruct_key "$MY_USERNAME" interactive
+                return 0
+            fi
+            dialog --title $"Recover Encryption Keys" \
+                   --msgbox $"There was a problem mounting the USB drive $USB_DRIVE to $USB_MOUNT" 6 70
+            backup_unmount_drive "${USB_DRIVE}"
+            exit 74
+        fi
+
+        if [ ! -d "$USB_MOUNT/.gnupg" ]; then
+            if [ ! -d "$USB_MOUNT/.gnupg_fragments" ]; then
+                if (( GPG_CTR > 0 )); then
+                    backup_unmount_drive "${USB_DRIVE}"
+                    gpg_reconstruct_key "$MY_USERNAME" interactive
+                    gpg_update_mutt "$MY_USERNAME"
+                    return 0
+                fi
+                dialog --title $"Recover Encryption Keys" \
+                       --msgbox $"The directory $USB_MOUNT/.gnupg or $USB_MOUNT/.gnupg_fragments was not found" 6 70
+                backup_unmount_drive "${USB_DRIVE}"
+                exit 72
+            fi
+        fi
+
+        if [ -d "$USB_MOUNT/letsencrypt" ]; then
+            if [ ! -d /etc/letsencrypt ]; then
+                mkdir /etc/letsencrypt
+            fi
+            echo $'Recovering LetsEncrypt keys'
+            cp -r "$USB_MOUNT/letsencrypt/"* /etc/letsencrypt
+            addgroup ssl-cert
+            chown -R root:ssl-cert /etc/letsencrypt
+        fi
+
+        if [ -f "$USB_MOUNT/.maingpgkey" ]; then
+            # Recovering keys from file rather than just copying the gnupg
+            # directory may help to avoid problems during upgrades/reinstalls
+            if [ ! -f "$USB_MOUNT/.backupgpgkey" ]; then
+                echo $'No backup key file found on USB drive'
+                exit 72
+            fi
+            CURR_EMAIL_ADDRESS=$MY_USERNAME@$HOSTNAME
+            CURR_GPG_ID=$(gpg --homedir="$HOME_DIR/.gnupg" --list-keys "$CURR_EMAIL_ADDRESS" | sed -n '2p' | sed 's/^[ \t]*//')
+            CURR_GPG_BACKUP_ID=$(gpg --homedir="$HOME_DIR/.gnupg" --list-keys "(backup key)" | sed -n '2p' | sed 's/^[ \t]*//')
+
+            # If the default key is specified within gpg.conf
+            if [ -f "$HOME_DIR/gpg.conf" ]; then
+                if grep -q "default-key" "$HOME_DIR/gpg.conf"; then
+                    default_gpg_key=$(grep "default-key" "$HOME_DIR/gpg.conf")
+                    if [[ "$default_gpg_key" != *'#'* ]]; then
+                        default_gpg_key=$(grep "default-key" "$HOME_DIR/gpg.conf" | awk -F ' ' '{print $2}')
+                        if [ ${#default_gpg_key} -gt 3 ]; then
+                            CURR_GPG_ID=$(gpg --homedir="$HOME_DIR/.gnupg" --list-keys "$default_gpg_key" | sed -n '2p' | sed 's/^[ \t]*//')
+                        fi
+                    fi
+                fi
+            fi
+
+            echo $'Making backup copy of existing gpg keys'
+            if [ -d "$HOME_DIR/.gnupg" ]; then
+                if [ -d "$HOME_DIR/.gnupg_old" ]; then
+                    rm -rf "$HOME_DIR/.gnupg_old"
+                fi
+                cp -r "$HOME_DIR/.gnupg" "$HOME_DIR/.gnupg_old"
+                chmod 700 "$HOME_DIR/.gnupg_old"
+                chmod -R 600 "$HOME_DIR/.gnupg_old/"*
+                chown -R "$MY_USERNAME":"$MY_USERNAME" "$HOME_DIR/.gnupg_old"
+            fi
+            echo $'Removing old gpg keys'
+            gpg_delete_key "$MY_USERNAME" "$CURR_GPG_BACKUP_ID"
+            gpg_delete_key "$MY_USERNAME" "$CURR_GPG_ID"
+            echo $'Importing main keys'
+            gpg --homedir="$HOME_DIR/.gnupg" --allow-secret-key-import --import "$USB_MOUNT/.maingpgkey"
+            echo "$BACKUP_DUMMY_PASSWORD" | gpg --batch --passphrase-fd 0 --homedir="$HOME_DIR/.gnupg" --allow-secret-key-import --import "$USB_MOUNT/.backupgpgkey"
+            if [ -d "$HOME_DIR/.gnupg" ]; then
+                echo $'Setting permissions'
+                gpg_set_permissions "$MY_USERNAME"
+                echo $"Updating muttrc for $MY_USERNAME"
+                gpg_update_mutt "$MY_USERNAME"
+            fi
+            GPG_LOADING="no"
+            dialog --title $"Recover Encryption Keys" \
+                   --msgbox $"GPG Keyring loaded to $HOME_DIR from keydrive" 6 70
+        else
+            if [ -d "$USB_MOUNT/.gnupg" ]; then
+                if [ ! -d "$HOME_DIR/.gnupg" ]; then
+                    mkdir "$HOME_DIR/.gnupg"
+                fi
+                echo $'Recovering GPG keys'
+                cp -r "$USB_MOUNT/.gnupg/"* "$HOME_DIR/.gnupg"
+                GPG_LOADING="no"
+                dialog --title $"Recover Encryption Keys" \
+                       --msgbox $"GPG Keyring directory loaded to $HOME_DIR" 6 70
+            else
+                # Collect fragments from the USB drive
+                if [ ! -d "$HOME_DIR/.gnupg_fragments" ]; then
+                    mkdir "$HOME_DIR/.gnupg_fragments"
+                fi
+                cp -r "$USB_MOUNT/.gnupg_fragments/"* "$HOME_DIR/.gnupg_fragments"
+            fi
+        fi
+
+        if [[ "$SSH_IMPORTED" == "no" ]]; then
+            if [ -d "$USB_MOUNT/.ssh" ]; then
+                if [ ! -d "$HOME_DIR/.ssh" ]; then
+                    mkdir "$HOME_DIR/.ssh"
+                fi
+                cp "$USB_MOUNT/.ssh/"* "$HOME_DIR/.ssh"
+                dialog --title $"Recover Encryption Keys" \
+                       --msgbox $"ssh keys imported" 6 70
+                SSH_IMPORTED="yes"
+            fi
+        fi
+
+        if [ -d "$USB_MOUNT" ]; then
+            backup_unmount_drive "${USB_DRIVE}"
+        fi
+        if [[ $GPG_LOADING == "yes" ]]; then
+            dialog --title $"Recover Encryption Keys" \
+                   --msgbox $"Now remove the USB drive. Insert the next drive containing a key fragment, or select Ok to finish" 6 70
+        fi
+        GPG_CTR=$((GPG_CTR + 1))
+    done
+}
+
+function interactive_gpg {
+    GPG_CONFIGURED="no"
+    while [[ $GPG_CONFIGURED != "yes" ]]
+    do
+        GPG_CONFIGURED="yes"
+        data=$(mktemp 2>/dev/null)
+        dialog --backtitle $"LibreServer Configuration" \
+               --radiolist $"GPG/PGP keys for your system:" 13 70 2 \
+               1 $"Generate new keys (new user)" on \
+               2 $"Import keys from USB drive/s" off 2> "$data"
+        sel=$?
+        case $sel in
+            1) rm -f "$data"
+               exit 1;;
+            255) rm -f "$data"
+                 exit 2;;
+        esac
+        case $(cat "$data") in
+            1) if [ -d "/home/${MY_USERNAME}/.gnupg" ]; then
+                   rm -rf "/home/${MY_USERNAME}/.gnupg"
+               fi
+               break;;
+            2) interactive_gpg_from_usb
+               break;;
+        esac
+        rm -f "$data"
+    done
+}
+
+function interactive_key_recovery {
+    data=$(mktemp 2>/dev/null)
+
+    dialog --title $"Encryption Keys Recovery" \
+           --backtitle $"LibreServer Configuration" \
+           --defaultno \
+           --yesno $"Do you wish to recover your previous encryption keys from a USB keydrive?" 7 60
+    sel=$?
+    case $sel in
+        1) rm -f "$data"
+           return;;
+        255) rm -f "$data"
+             return;;
+    esac
+    clear
+    # INSTALL_PACKAGES cryptsetup
+    "${PROJECT_NAME}-recoverkey" -u "$MY_USERNAME" -d simple
+    if [ -d "/home/$MY_USERNAME/.gnupg" ]; then
+        cp -rf "/home/$MY_USERNAME/.gnupg" /root
+        chmod 700 /root/.gnupg
+        chmod 600 /root/.gnupg/*
+        printf '%%Assuan%%\nsocket=/dev/shm/S.dirmngr\n' > /root/.gnupg/S.dirmngr
+        if [ -d /root/.gnupg/crls.d ]; then
+            chmod +x /root/.gnupg/crls.d
+        fi
+    fi
+    rm -f "$data"
+}
+
+function set_password_for_all_users {
+    app_name="$1"
+    change_password="$2"
+
+    for d in /home/*/ ; do
+        USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+        if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+            "${PROJECT_NAME}-pass" -u "${USERNAME}" -a "${app_name}" -p "${change_password}"
+        fi
+    done
+}
+
+# NOTE: deliberately there is no "exit 0"

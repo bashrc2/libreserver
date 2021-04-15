@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+  <meta charset="utf-8">
+  <style>
+    @import url("libreserver.css");
+
+    * {
+        box-sizing: border-box;
+    }
+
+    .settingtext {
+        text-align: center;
+        font-size: 100%;
+    }
+
+    .row {
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+        padding: 0 4px;
+    }
+
+    .column {
+        -ms-flex: 25%;
+        flex: 15%;
+        max-width: 25%;
+        padding: 0 4px;
+    }
+
+    .column img {
+        margin-top: 8px;
+        vertical-align: middle;
+    }
+
+    .card input[type=text] {
+        width: 50%;
+        clear: both;
+        text-align: left;
+        color: black;
+        background-color: lightblue;
+    }
+
+  </style>
+  <body>
+
+    <div class="card">
+      <div class="header">
+        <a href="app_peertube.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
+
+        <p class="headertext" translate="yes">Peertube allow new registrations</p>
+
+        <form action="settings_peertube.php" method="post">
+          <input type="radio" name="allowregistrations" value="0" checked><label translate="yes">No</label>
+          <input type="radio" name="allowregistrations" value="1"><label translate="yes">Yes</label>
+          <br><br>
+          <input type="submit" name="submitallowregistrations" translate="yes" value="Update" />
+        </form>
+
+      </div>
+    </div>
+
+  </body>
+</html>

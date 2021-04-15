@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# Used to fix the tor daemon if it breaks
+
+{ echo '[Unit]';
+  echo 'Description=Anonymizing overlay network for TCP (multi-instance-master)';
+  echo '';
+  echo '[Service]';
+  echo 'Type=simple';
+  echo 'User=root';
+  echo 'Group=debian-tor';
+  echo 'ExecStart=/usr/bin/tor --defaults-torrc /usr/share/tor/tor-service-defaults-torrc -f /etc/tor/torrc --RunAsDaemon 0';
+  echo '';
+  echo '[Install]';
+  echo 'WantedBy=multi-user.target'; } > /lib/systemd/system/tor.service
+if ! grep -q "include /etc/torrc.d" /etc/tor/torrc; then
+    echo '%include /etc/torrc.d' >> /etc/tor/torrc
+fi
+if [ ! -d /etc/torrc.d ]; then
+    mkdir /etc/torrc.d
+fi
+chmod -R 644 /etc/torrc.d
+rm /etc/torrc.d/*~ &> /dev/null
+chmod -R 644 /etc/tor
+chown -R debian-tor: /etc/torrc.d
+chown -R debian-tor: /etc/tor
+chown -R debian-tor: /var/lib/tor
+systemctl daemon-reload
+systemctl restart tor

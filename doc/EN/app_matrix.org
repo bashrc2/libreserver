@@ -1,0 +1,52 @@
+#+TITLE: LibreServer
+#+AUTHOR: Bob Mottram
+#+EMAIL: bob@libreserver.org
+#+KEYWORDS: libreserver, matrix
+#+DESCRIPTION: How to use Matrix
+#+OPTIONS: ^:nil toc:nil num:nil
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="libreserver.css" />
+
+#+attr_html: :width 80% :height 10% :align center
+[[file:images/logo.png]]
+
+* Matrix
+
+#+attr_html: :width 100% :align center
+[[file:images/matrix_riotweb.jpg]]
+
+Matrix is a federated communications system, typically for multi-user chat, with end-to-end content security features. You can consider it to be like a modernized version of IRC chat where the crypto and access controls have been built in by default. At present Matrix is really only a creature of the clearnet and so there isn't any way to protect the metadata. Despite the talk of security the lack of metadata defenses make this really only suitable for public communications, similar to microblogging or public IRC channels.
+
+Another consideration is that since matrix operates on the usual HTTPS port number (443) this may make it difficult for ISPs or governments to censor this type of communications via port blocking without significant blowback.
+
+* Installation
+Log into your system with:
+
+#+begin_src bash
+ssh myusername@mydomain -p 2222
+#+end_src
+
+Using cursor keys and Enter key select *Administrator controls* and type in your password.
+
+Select *Add/Remove Apps* then *matrix*. You will then be asked for a domain name and if you are using FreeDNS also the code for the domain which can be found under *Dynamic DNS* on the FreeDNS site (the random string from "/quick cron example/" which appears after /update.php?/ and before />>/). For more details on obtaining a domain and making it accessible via dynamic DNS see the [[./faq.html][FAQ]]. Typically the domain name you use will be a subdomain, such as /matrix.mydomainname.net/. It will need to be a domain which you have bought somewhere and own and not one of the FreeDNS subdomains, otherwise you won't be able to get a SSL/TLS certificate for it.
+
+* Initial setup
+Go to the *Administrator control panel* and select *Passwords* then *matrix*. This will give you the password to initially log in to the system and you can change it later from a client app if needed.
+
+Install the *Riot* app from *F-droid* on a mobile device. You can then log in with your username and password, making sure to select a custom server and then entering your Matrix domain name for both the main server and identity server.
+
+Other client apps are available but are currently mostly only at the alpha stage. You can also install the [[./app_element.html][Element libreserver app]] if you need a user interface for desktops or laptops.
+
+* DNS setup
+It's recommended that you add an SRV record for Matrix to your DNS setup. How you do this will depend upon your dynamic DNS provider and their web interface. On FreeDNS on the subdomains settings in addition to the subdomain which you are using for the matrix server create an extra entry as follows:
+
+#+begin_src text
+Type: SRV
+Subdomain: _matrix._tcp
+Domain: [youdomain]
+Destination: 10 0 8448 [yourmatrixsubdomain]
+#+end_src
+
+You may also want to make another entry with the same settings but replacing *tcp* with *udp*.
+
+* Mobile app
+If you're using the Riot mobile app to access your Matrix homeserver then you can significantly improve battery performance by going to the *settings* and changing *Sync request timeout* to 30 seconds and *Delay between two sync requests* to 600 seconds. Also turning off *msgs in group chats* will help, since it will avoid getting a notification whenever a group chat event happens, which then wakes up the screen.

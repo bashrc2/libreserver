@@ -1,0 +1,51 @@
+#+TITLE: LibreServer
+#+AUTHOR: Bob Mottram
+#+EMAIL: bob@libreserver.org
+#+KEYWORDS: libreserver, backup
+#+DESCRIPTION: How to make backups on LibreServer
+#+OPTIONS: ^:nil toc:nil num:nil
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="libreserver.css" />
+
+#+attr_html: :width 80% :height 10% :align center
+[[file:images/logo.png]]
+
+* Backups
+
+#+BEGIN_CENTER
+#+ATTR_HTML: :border -1
+| [[Automatic backups]]      |
+| [[Backup to USB drive]]    |
+| [[Restore from USB drive]] |
+#+END_CENTER
+
+* Automatic backups
+ * Insert a USB drive
+ * That's it
+
+Backups will happen automatically once per day. If you have the XMPP app installed then you will get a message saying whether the backup succeeded or not.
+* Backup to USB drive
+Insert a USB thumb drive into the front socket of the Beaglebone Black, or equivalent USB socket.
+
+Log into the system and become the root user, then run the /backup/ command.
+
+#+BEGIN_SRC bash
+ssh username@domainname -p 2222
+#+END_SRC
+
+Select /Administrator controls/ then /Backup and Restore/ and then /Backup data to USB drive/.
+
+Type in a password which will be used to encrypt the backup, then the backup will begin.
+
+When the backup ends remove the USB drive and keep it somewhere safe. Even if it gets lost or falls into the wrong hands the content is encrypted and so is unlikely to become a source of leaks.
+* Restore from USB drive
+Log into the system and become the root user:
+
+#+BEGIN_SRC bash
+ssh username@domainname -p 2222
+#+END_SRC
+
+Select /Administrator controls/ then if this is a new LibreServer installation then you will first need to restore your backup keys. That can be done by selecting /Backup and Restore/ then /Restore GPG key from USB keydrive/. When that's done remove the keydrive and plug in the backup drive.
+
+Select /Backup and Restore/ then /Restore data from USB drive/.
+
+Enter the LUKS password for the USB drive. When the restore is complete you can remove the USB drive.

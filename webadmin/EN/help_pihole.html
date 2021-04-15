@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+  <meta charset="utf-8">
+  <style>
+    @import url("libreserver.css");
+
+    .subheadertext {
+        margin-left : 10%;
+        text-align: left;
+        font-size: 110%;
+        font-weight: bold;
+    }
+
+    .subheaderports {
+        margin-left : 10%;
+        text-align: left;
+        font-size: 110%;
+        font-weight: bold;
+    }
+
+    .helptext {
+        width: 80%;
+        text-align: left;
+        font-size: 100%;
+        margin-left : 10%;
+    }
+
+    .codetext {
+        font-family: Courier;
+        width: 80%;
+        text-align: left;
+        font-size: 100%;
+        margin-left : 10%;
+    }
+
+    .portstext {
+        width: 80%;
+        text-align: left;
+        font-size: 100%;
+        margin-left : 10%;
+    }
+
+    .row {
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+        padding: 0 4px;
+    }
+
+    .column {
+        -ms-flex: 25%;
+        flex: 15%;
+        max-width: 25%;
+        padding: 0 4px;
+    }
+
+    .column img {
+        margin-top: 8px;
+        vertical-align: middle;
+    }
+
+    @media screen and (max-width: 800px) {
+        .column {
+            -ms-flex: 50%;
+            flex: 50%;
+            max-width: 50%;
+        }
+    }
+
+    @media screen and (max-width: 200px) {
+        .column {
+            -ms-flex: 100%;
+            flex: 100%;
+            max-width: 100%;
+        }
+    }
+  </style>
+  <body>
+
+    <div class="header">
+      <a href="app_pihole.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
+    </div>
+
+    <p class="headertext" translate="yes">pihole</p>
+
+    <p class="helptext" translate="yes">Unlike browser based ad blockers, pihole works at the domain name resolution level to block domains known to privide the ads appearing in web pages.</p>
+
+    <p class="helptext" translate="yes">Set your DNS IP address to the one shown and many ads will get blocked even before they're delivered to your laptop or mobile device. This can save a lot of bandwidth and generally speed up the loading of websites.</p>
+
+    <p class="subheadertext" translate="yes">Change DNS on your internet router</p>
+
+    <p class="helptext" translate="yes">If your internet router allows you to change the DNS IP address then this is the best way to use pihole because it will then provide coverage for all of the devices and computers in your home.</p>
+
+    <p class="subheadertext" translate="yes">Change DNS on individual devices</p>
+
+    <p class="helptext" translate="yes">If you can't change your internet router's DNS then you can do that on individual GNU/Linux systems as follows:</p>
+
+    <p class="codetext" translate="yes">
+      sudo chattr -i /etc/resolv.conf<br>
+      sudo nano /etc/resolv.conf
+    </p>
+
+    <p class="helptext" translate="yes">Remove or comment out any existing nameservers and add one with the IP address shown for the pihole app. Something like:</p>
+
+    <p class="codetext" translate="yes">
+      nameserver 192.168.x.y
+    </p>
+
+    <p class="helptext" translate="yes">Then save and exit and prevent the file from being automatically changed with:</p>
+
+    <p class="codetext" translate="yes">
+      sudo chattr +i /etc/resolv.conf
+    </p>
+
+    <p class="helptext" translate="yes">If you're running the standard version of LibreServer (not the onion version) then you may need to modify your hosts file to access your own domain.</p>
+
+    <p class="codetext" translate="yes">
+      sudo nano /etc/hosts
+    </p>
+
+    <p class="helptext" translate="yes">Then add something like:</p>
+
+    <p class="codetext" translate="yes">
+      192.168.x.y  yourdomainname
+    </p>
+
+    <p class="helptext" translate="yes">This only works when you're within your home network, so if you're outside of your home then undo the changes made above.</p>
+
+  </body>
+</html>

@@ -1,0 +1,387 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Add or remove apps. Called from addremove command.
+#
+# License
+# =======
+#
+# Copyright (C) 2015-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+PROJECT_NAME='libreserver'
+
+export TEXTDOMAIN=${PROJECT_NAME}-addremove
+export TEXTDOMAINDIR="/usr/share/locale"
+
+PROJECT_INSTALL_DIR=/usr/local/bin
+if [ -f "/usr/bin/${PROJECT_NAME}" ]; then
+    PROJECT_INSTALL_DIR=/usr/bin
+fi
+
+COMPLETION_FILE="$HOME/${PROJECT_NAME}-completed.txt"
+CONFIGURATION_FILE="$HOME/${PROJECT_NAME}.cfg"
+
+# Start including files
+
+source "$PROJECT_INSTALL_DIR/${PROJECT_NAME}-vars"
+
+UTILS_FILES="/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-*"
+for f in $UTILS_FILES
+do
+    source "$f"
+done
+
+APP_FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
+for f in $APP_FILES
+do
+    source "$f"
+done
+
+# End including files
+
+install_is_interactive=1
+
+function addremove_check_disk_space {
+    drives_list=$(df -h | grep "/dev/")
+    test_drive=/dev/sda2
+
+    # if this is raspbian running from usb drive
+    if grep -q 'raspbian' /etc/apt/sources.list; then
+        # no microSD connected
+        if [ ! -f /dev/mmcblk0p1 ]; then
+            test_drive=/dev/root
+            backup_drive=/dev/sdb1
+            if grep -q "USB_DRIVE=" "${CONFIGURATION_FILE}"; then
+                if ! grep -q "USB_DRIVE=${backup_drive}" "${CONFIGURATION_FILE}"; then
+                    sed -i "s|USB_DRIVE=.*|USB_DRIVE=${backup_drive}|g" "${CONFIGURATION_FILE}"
+                fi
+            else
+                echo "USB_DRIVE=${backup_drive}" >> "${CONFIGURATION_FILE}"
+            fi
+        fi
+    fi
+
+    if [[ "$drives_list" != *"$test_drive"* ]]; then
+        test_drive=/dev/sda1
+        if [[ "$drives_list" != *"$test_drive"* ]]; then
+            test_drive=/dev/mmcblk0p2
+            if [[ "$drives_list" != *"$test_drive"* ]]; then
+                test_drive=/dev/mmcblk0p1
+            fi
+        fi
+    fi
+
+    disk_use=$(df -h | grep $test_drive)
+    disk_use_percent=0
+    if [[ "$disk_use" == *"$test_drive"* ]]; then
+        disk_use_percent=$(df -h | grep $test_drive | tail -n 1 | awk -F ' ' '{print $5}' | sed 's|%||g')
+    fi
+
+    # shellcheck disable=SC2086
+    if [ $disk_use_percent -ge 90 ]; then
+        msgstr='Disk space is getting too low. Installation stopped.'
+        echo "$msgstr"
+        disk_space_low_msg=$(web_admin_translate_text "$msgstr")
+        ${PROJECT_NAME}-notification -s "[${PROJECT_NAME}] ${disk_space_low_msg}" -m "${disk_space_low_msg}"
+        android_update_apps
+        exit 63
+    fi
+}
+
+function mark_unselected_apps_as_removed {
+    # Initially mark the apps not chosen on first install as being removed
+    # otherwise they may be automatically installed on the next update
+    select_all_apps=$1
+    if [[ "$select_all_apps" != "add-all" ]]; then
+        return
+    fi
+
+    if [ -f "$REMOVED_APPS_FILE" ]; then
+        rm "$REMOVED_APPS_FILE"
+    fi
+
+    app_index=0
+    # shellcheck disable=SC2068
+    for app_name in ${APPS_AVAILABLE[@]}
+    do
+        if [[ ${APPS_CHOSEN[$app_index]} == "0" ]]; then
+            echo "_${app_name}_" >> "$REMOVED_APPS_FILE"
+        fi
+        app_index=$((app_index+1))
+    done
+}
+
+function app_expected_to_be_installed {
+    # is the given application expected to be installed by default?
+    select_all_apps="$1"
+    app_name="$2"
+
+    read_config_param ONION_ONLY
+
+    if [[ "$select_all_apps" == "add-all" ]]; then
+        if [[ $ONION_ONLY != 'no' && "$app_name" == "hubzilla"  ]]; then
+            echo "0"
+            return
+        fi
+        if ! grep -q "IN_DEFAULT_INSTALL=1" "/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-${app_name}"; then
+            echo "0"
+            return
+        fi
+    fi
+    echo "1"
+}
+
+# Select a particular app to be added or removed
+function select_specific_app {
+    app_name="$1"
+    app_is_chosen="$2"
+
+    # make sure that already installed apps are chosen
+    app_index=0
+    # shellcheck disable=SC2068
+    for a in ${APPS_AVAILABLE[@]}
+    do
+        APPS_CHOSEN[$app_index]=${APPS_INSTALLED[$app_index]}
+        app_index=$((app_index+1))
+    done
+
+    app_index=0
+    # shellcheck disable=SC2068
+    for a in ${APPS_AVAILABLE[@]}
+    do
+        if [[ "$a" == "$app_name" ]]; then
+            APPS_CHOSEN[$app_index]="$app_is_chosen"
+            break
+        fi
+        app_index=$((app_index+1))
+    done
+}
+
+function show_apps {
+    select_all_apps="$1"
+    applist=""
+    n=1
+    app_index=0
+    # shellcheck disable=SC2068
+    for a in ${APPS_AVAILABLE[@]}
+    do
+        if [[ ${APPS_INSTALLED[$app_index]} == "0" &&  "$select_all_apps" != "add-all" ]]; then
+            applist="$applist $n $a off"
+        else
+            if [[ $(app_expected_to_be_installed "$select_all_apps" "$a") == "0" ]]; then
+                applist="$applist $n $a off"
+            else
+                applist="$applist $n $a on"
+            fi
+        fi
+        n=$((n+1))
+        app_index=$((app_index+1))
+    done
+
+    # shellcheck disable=SC2086
+    choices=$(dialog --stdout --backtitle $"LibreServer" \
+                     --title $"Add/Remove Applications" \
+                     --checklist $'Choose:' \
+                     27 40 20 $applist)
+
+    # shellcheck disable=SC2181
+    if [ $? -eq 0 ]; then
+        for choice in $choices
+        do
+            app_index=$((choice-1))
+            APPS_CHOSEN[$app_index]="1"
+        done
+    else
+        exit 0
+    fi
+}
+
+function remove_apps_selected {
+    # which apps need to be removed?
+    removals=""
+    app_index=0
+    n=0
+    # shellcheck disable=SC2068
+    for a in ${APPS_INSTALLED[@]}
+    do
+        if [[ ${APPS_INSTALLED[$app_index]} == "1" ]]; then
+            if [[ ${APPS_CHOSEN[$app_index]} == "0" ]]; then
+                if [ ${n} -gt 0 ]; then
+                    removals="$removals ${APPS_AVAILABLE[$app_index]}"
+                else
+                    removals="${APPS_AVAILABLE[$app_index]}"
+                fi
+                n=$((n+1))
+            fi
+        fi
+        app_index=$((app_index+1))
+    done
+
+    # if no apps to be removed then don't do anything
+    if [ ${n} -eq 0 ]; then
+        return
+    fi
+
+    if [ $install_is_interactive ]; then
+        if [ -f /tmp/.upgrading ]; then
+            dialog --title $"Cannot remove apps" \
+                   --msgbox $"A system upgrade is happening, so apps cannot be removed at this time" 6 60
+            return
+        fi
+
+        # ask for confirmation
+        dialog --title $"Remove applications" \
+               --backtitle $"LibreServer" \
+               --defaultno \
+               --yesno $"\\nRemove $n apps.\\n\\n    $removals\\n\\nSelect 'yes' to remove both the applications and their data/messages. If you don't have a backup then you will not be able to recover the data for these applications.\\n\\nProceed?" 15 60
+        sel=$?
+        case $sel in
+            1) return;;
+            255) return;;
+        esac
+
+        clear
+    fi
+
+    # remove the apps
+    read_configuration
+    remove_apps
+}
+
+function install_apps_selected {
+    addremove_check_disk_space
+
+    # which apps need to be installed?
+    select_all_apps=$1
+    installs=""
+    app_index=0
+    n=0
+    # shellcheck disable=SC2068
+    for a in ${APPS_INSTALLED[@]}
+    do
+        if [[ ${APPS_INSTALLED[$app_index]} == "0" ]]; then
+            if [[ ${APPS_CHOSEN[$app_index]} == "1" ]]; then
+                if [ ${n} -gt 0 ]; then
+                    installs="$installs ${APPS_AVAILABLE[$app_index]}"
+                else
+                    installs="${APPS_AVAILABLE[$app_index]}"
+                fi
+                n=$((n+1))
+            fi
+        fi
+        app_index=$((app_index+1))
+    done
+
+    # if no apps to be installed then don't do anything
+    if [ ${n} -eq 0 ]; then
+        return
+    fi
+
+    if [ $install_is_interactive ]; then
+        if [[ "$select_all_apps" != "add-all" ]]; then
+            if [ -f /tmp/.upgrading ]; then
+                dialog --title $"Cannot install apps" \
+                       --msgbox $"A system upgrade is happening, so apps cannot be installed at this time" 6 60
+                return
+            fi
+
+            # ask for confirmation
+            if [ $n -eq 1 ]; then
+                dialog --title $"$installs" \
+                       --backtitle $"LibreServer" \
+                       --defaultno \
+                       --yesno $"\\nThis will install the $installs app\\n\\nProceed?" 9 40
+            else
+                dialog_height=$((15 + "$n"))
+                dialog --title $"Add applications" \
+                       --backtitle $"LibreServer" \
+                       --defaultno \
+                       --yesno $"\\nInstall $n apps\\n\\n    $installs\\n\\nProceed?" $dialog_height 60
+            fi
+            sel=$?
+            case $sel in
+                1) return;;
+                255) return;;
+            esac
+        fi
+
+        clear
+
+        # install the apps
+        read_configuration
+        install_apps interactive
+    else
+        # install the apps
+        read_configuration
+        install_apps
+    fi
+
+    if [ ! "$APP_INSTALLED_SUCCESS" ]; then
+        echo $'One or more apps failed to install'
+    fi
+}
+
+if [[ $1 == "test"* ]]; then
+    if ! ${PROJECT_NAME}-tests; then
+        exit 2
+    fi
+fi
+
+detect_installable_apps
+
+# if no applications were found
+if [[ ${#APPS_AVAILABLE[@]} == 0 ]]; then
+    exit 1
+fi
+
+args="$1"
+
+if [ "$2" ]; then
+    if [[ "$args" == "add" || "$args" == "remove" ]]; then
+        app_name_upper=$(echo "$2" | awk '{print toupper($0)}')
+        read_config_param "${app_name_upper}_DOMAIN_NAME"
+        if [[ "$args" == "add" ]]; then
+            select_specific_app "$2" "1"
+        else
+            select_specific_app "$2" "0"
+        fi
+        install_is_interactive=
+    else
+        show_apps "$args"
+    fi
+else
+    show_apps "$args"
+fi
+
+mark_unselected_apps_as_removed "$args"
+
+if [ $install_is_interactive ]; then
+    clear
+fi
+
+remove_apps_selected
+
+if [[ "$args" == "add-all" ]]; then
+    install_apps_selected "$args"
+else
+    install_apps_selected
+fi
+android_update_apps
+
+exit 0

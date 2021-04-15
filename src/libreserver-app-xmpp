@@ -1,0 +1,1948 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# XMPP server
+#
+# python-xmpp has been removed from debian. A python3 version is not yet available
+#
+# License
+# =======
+#
+# Copyright (C) 2014-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VARIANTS='full full-vim chat'
+
+APP_CATEGORY=chat
+
+IN_DEFAULT_INSTALL=0
+INSTALLED_ON_DEFAULT_DOMAIN=1
+SHOW_ON_ABOUT=1
+SHOW_DOMAIN_ONLY=1
+NOT_ON_HOMEPAGE=1
+REQUIRES_APP=
+
+# Whether to strictly enforce end-to-end security for one-to-one chat
+XMPP_E2EE=no
+
+# Directory where XMPP settings are stored
+XMPP_DIRECTORY="/var/lib/prosody"
+XMPP_PASSWORD=
+
+XMPP_CIPHERS='EDH+CAMELLIA:EDH+aRSA:EECDH+aRSA+AESGCM:EECDH+aRSA+SHA256:EECDH:+CAMELLIA128:+AES128:+SSLv3:!aNULL:!eNULL:!LOW:!3DES:!MD5:!EXP:!PSK:!DSS:!RC4:!SEED:!IDEA:!ECDSA:kEDH:CAMELLIA128-SHA:AES128-SHA'
+XMPP_ECC_CURVE='secp384r1'
+
+# From https://hg.prosody.im/prosody-modules
+prosody_modules_filename='prosody-modules-20201207.tar.gz'
+prosody_modules_hash='f0985fb9a150f128cadd9c2c642fe8fc8c63092b6f4b38aae9864d5dd70fcc30'
+xmpp_encryption_warning=$"For security reasons, OMEMO or PGP encryption is required for conversations on this server."
+
+XMPP_SHORT_DESCRIPTION=$'Chat system'
+XMPP_DESCRIPTION=$'Chat system'
+XMPP_MOBILE_APP_URL='https://f-droid.org/packages/eu.siacs.conversations'
+
+# used to disable TLS on onion only installs
+xmpp_tls_enabled=''
+
+XMPP_FIREWALL_PORTS="5222,5223,5269,5280,5281"
+XMPP_FIREWALL_MAX_CONNECTIONS=16
+XMPP_FIREWALL_MAX_CONNECTIONS_S2S=64
+
+# rate limits in kilobytes per second
+XMPP_MAX_S2S_RATE=10
+XMPP_MAX_C2S_RATE=10
+
+xmpp_variables=(ONION_ONLY
+                INSTALLED_WITHIN_DOCKER
+                XMPP_CIPHERS
+                XMPP_ECC_CURVE
+                XMPP_ECC_CURVE
+                XMPP_E2EE
+                MY_USERNAME
+                MY_EMAIL_ADDRESS
+                DEFAULT_DOMAIN_NAME
+                XMPP_DOMAIN_CODE)
+
+function xmpp_setup_turn {
+    domain=$DEFAULT_DOMAIN_NAME
+    if [[ "$ONION_ONLY" != 'no' ]]; then
+	echo $'TURN will not be installed on onion versions'
+	return
+    fi
+
+    if ! grep -q '"turncredentials"; -- VoIP' /etc/prosody/prosody.cfg.lua; then
+	sed -i '/"http";/a "turncredentials"; -- VoIP' /etc/prosody/prosody.cfg.lua
+	sed -i 's|"turncredentials"; -- VoIP|  "turncredentials"; -- VoIP|g' /etc/prosody/prosody.cfg.lua
+    fi
+
+    if ! grep -q "turncredentials_host" /etc/prosody/prosody.cfg.lua; then
+	sed -i "/VirtualHost/a turncredentials_host = \"$domain\";" /etc/prosody/prosody.cfg.lua
+	sed -i "s|turncredentials_host|    turncredentials_host|g" /etc/prosody/prosody.cfg.lua
+    else
+	sed -i "s|turncredentials_host.*|turncredentials_host = \"$domain\";|g" /etc/prosody/prosody.cfg.lua
+    fi
+    turncredentials_secret=$(grep "static-auth-secret=" /etc/turnserver.conf | awk -F '=' '{print $2}')
+    if ! grep -q "turncredentials_secret" /etc/prosody/prosody.cfg.lua; then
+	sed -i "/VirtualHost/a turncredentials_secret = \"$turncredentials_secret\";" /etc/prosody/prosody.cfg.lua
+	sed -i "s|turncredentials_secret.*|    turncredentials_secret|g" /etc/prosody/prosody.cfg.lua
+    else
+	sed -i "s|turncredentials_secret.*|turncredentials_secret = \"$turncredentials_secret\";|g" /etc/prosody/prosody.cfg.lua
+    fi
+}
+
+function xmpp_i2p_virtualhost {
+    if [ ! -d /var/lib/i2pd ]; then
+	return
+    fi
+    if [ ! -f /var/lib/i2pd/tunnels.d/xmpp ]; then
+	xmpp_i2p_bridge
+    fi
+    filename="/etc/prosody/prosody.cfg.lua"
+    if ! grep -q "\.b32\.i2p" "$filename"; then
+	i2p_domain=$(get_i2p_domain "${PROJECT_NAME}")
+	if [[ "$i2p_domain" == *".b32.i2p" ]]; then
+            "${PROJECT_NAME}-addcert" -h i2p --dhkey 2048
+	    if [ ! -f /etc/ssl/certs/i2p.crt ]; then
+		echo "i2p TLS public key was not generated"
+		return
+	    fi
+	    if [ ! -f /etc/ssl/private/i2p.key ]; then
+		echo "i2p TLS private key was not generated"
+		return
+	    fi
+	    cp /etc/ssl/certs/i2p.crt /etc/prosody/certs
+	    cp /etc/ssl/private/i2p.key /etc/prosody/certs
+	    chown -R prosody:prosody /etc/prosody/certs/i2p*
+	    { echo "VirtualHost \"${i2p_domain}\"";
+	      echo '    ssl = {';
+	      echo "        key = \"/etc/prosody/certs/i2p.key\";";
+	      echo "        certificate = \"/etc/prosody/certs/i2p.crt\";";
+	      echo '        dhparam = "/etc/prosody/xmpp.dhparam";';
+	      echo '    }';
+	      echo '    c2s_require_encryption = true;';
+	      echo '    s2s_secure_auth = false;';
+	      echo '    authentication = "internal_plain";';
+	      echo '    modules_enabled = { "i2p" };'; } >> "$filename"
+	    xmpp_restart=1
+	fi
+    fi
+}
+
+function xmpp_i2p_bridge {
+    if [ ! -d /var/lib/i2pd/tunnels.d ]; then
+	mkdir /var/lib/i2pd/tunnels.d
+	chown -R i2pd:i2pd /var/lib/i2pd/tunnels.d
+    fi
+    if [ -f /var/lib/i2pd/tunnels.d/xmpp ]; then
+	if [ -d ${XMPP_DIRECTORY}/prosody-modules/mod_i2p ]; then
+	    return
+	fi
+    fi
+    { echo '[xmpp-s2s]';
+      echo 'type=server';
+      echo 'host=127.0.0.1';
+      echo 'port=5269';
+      echo 'inport=5269';
+      echo "keys=${PROJECT_NAME}.dat";
+      echo '';
+      echo '[xmpp-c2s]';
+      echo 'type=server';
+      echo 'host=127.0.0.1';
+      echo 'port=5222';
+      echo 'inport=5222';
+      echo "keys=${PROJECT_NAME}.dat"; } > /var/lib/i2pd/tunnels.d/xmpp
+
+    if [ -f ${XMPP_DIRECTORY}/prosody-modules/mod_i2p ]; then
+	rm ${XMPP_DIRECTORY}/prosody-modules/mod_i2p
+    fi
+    if [ -f /usr/lib/prosody/modules/mod_i2p ]; then
+	rm /usr/lib/prosody/modules/mod_i2p
+    fi
+    if [ -d "/root/${PROJECT_NAME}/image_build/prosody_mod_i2p" ]; then
+	cp -r "/root/${PROJECT_NAME}/image_build/prosody_mod_i2p" ${XMPP_DIRECTORY}/prosody-modules/mod_i2p
+	chown -R prosody:prosody ${XMPP_DIRECTORY}/prosody-modules/mod_i2p
+	cp -r "/root/${PROJECT_NAME}/image_build/prosody_mod_i2p" /usr/lib/prosody/modules/mod_i2p
+	chown -R prosody:prosody /usr/lib/prosody/modules/mod_i2p
+    fi
+
+    chown -R i2pd:i2pd /var/lib/i2pd/tunnels.d
+    chmod 644 /var/lib/i2pd/tunnels.d/*
+    systemctl restart i2pd
+    xmpp_restart=1
+}
+
+function upgrade_distro_xmpp {
+    target_distro="$1"
+
+    if [[ "$target_distro" == 'bullseye' ]]; then
+	echo -n ''
+    fi
+}
+
+function xmpp_setting_stricttls {
+    # switching strict TLS on or off, which requires authentication with a letsencrypt cert
+    strict_tls="$1"
+    strict_tls_update=
+
+    if [[ "$strict_tls" == '1' ]]; then
+        if ! grep -q 's2s_secure_auth = true' /etc/prosody/prosody.cfg.lua; then
+            sed -i 's|s2s_secure_auth = .*|s2s_secure_auth = true|g' /etc/prosody/prosody.cfg.lua
+            strict_tls_update=1
+        fi
+        if ! grep -q 's2s_require_encryption = true' /etc/prosody/prosody.cfg.lua; then
+            sed -i 's|s2s_require_encryption = .*|s2s_require_encryption = true|g' /etc/prosody/prosody.cfg.lua
+            strict_tls_update=1
+        fi
+    fi
+
+    if [[ "$strict_tls" == '0' ]]; then
+        if ! grep -q 's2s_secure_auth = false' /etc/prosody/prosody.cfg.lua; then
+            sed -i 's|s2s_secure_auth = .*|s2s_secure_auth = false|g' /etc/prosody/prosody.cfg.lua
+            strict_tls_update=1
+        fi
+        if ! grep -q 's2s_require_encryption = false' /etc/prosody/prosody.cfg.lua; then
+            sed -i 's|s2s_require_encryption = .*|s2s_require_encryption = false|g' /etc/prosody/prosody.cfg.lua
+            strict_tls_update=1
+        fi
+    fi
+
+    if [ $strict_tls_update ]; then
+        systemctl restart prosody
+    fi
+}
+
+function prosody_update_onion_certs {
+    if [[ "$ONION_ONLY" == 'no' ]]; then
+        return
+    fi
+    if [ ! -f /var/lib/prosody/xmpp.crt ]; then
+        if [ -f /etc/ssl/certs/xmpp.crt ]; then
+            cp /etc/ssl/certs/xmpp.crt /var/lib/prosody/xmpp.crt
+            chown prosody:prosody /var/lib/prosody/xmpp.crt
+            sed -i 's|/etc/ssl/certs/xmpp.crt|/var/lib/prosody/xmpp.crt|g' /etc/prosody/prosody.cfg.lua
+            xmpp_restart=1
+        fi
+    fi
+    if [ ! -f /var/lib/prosody/xmpp.key ]; then
+        if [ -f /etc/ssl/private/xmpp.key ]; then
+            cp /etc/ssl/private/xmpp.key /var/lib/prosody/xmpp.key
+            chown prosody:prosody /var/lib/prosody/xmpp.key
+            sed -i 's|/etc/ssl/private/xmpp.key|/var/lib/prosody/xmpp.key|g' /etc/prosody/prosody.cfg.lua
+            xmpp_restart=1
+        fi
+    fi
+    if ! grep -q 'dhparam = "/etc/prosody/xmpp.dhparam";' /etc/prosody/prosody.cfg.lua; then
+        sed -i 's|dhparam = .*|dhparam = "/etc/prosody/xmpp.dhparam";|g' /etc/prosody/prosody.cfg.lua
+        xmpp_restart=1
+    fi
+}
+
+function prosody_default_security_labels {
+    prosody_config_file="$1"
+
+    if grep -q 'security_labels = {' "$prosody_config_file"; then
+        return
+    fi
+
+    { echo '';
+      echo 'security_labels = {';
+      echo '  { -- This label will come first';
+      echo '    name = "Public",';
+      echo '    label = true,';
+      echo '      default = true -- The default label.';
+      echo '  },';
+      echo '  {';
+      echo '    name = "Private",';
+      echo '    label = "PRIVATE",';
+      echo '    color = "white",';
+      echo '    bgcolor = "blue"';
+      echo '  },';
+      echo '  Sensitive = {';
+      echo '    SECRET = {';
+      echo '      label = true';
+      echo '    },';
+      echo '    TOPSECRET = {';
+      echo '      color = "red",';
+      echo '      bgcolor = "black",';
+      echo '    }';
+      echo '  }';
+      echo '}'; } >> "$prosody_config_file"
+
+    xmpp_restart=1
+}
+
+function change_default_domain_name_xmpp {
+    new_default_domain_name="$1"
+
+    read_config_param DEFAULT_DOMAIN_NAME
+    sed -i "s|$DEFAULT_DOMAIN_NAME|$new_default_domain_name|g" /etc/prosody/prosody.cfg.lua
+    change_default_domain_name_turn "$new_default_domain_name"
+    systemctl restart prosody
+}
+
+function prosody_remove_module_from_config {
+    remove_prosody_module_name="$1"
+    prosody_config_file="$2"
+
+    if [ ! "${remove_prosody_module_name}" ]; then
+        return
+    fi
+
+    if [ ! -f "${prosody_config_file}" ]; then
+        echo "Config file ${prosody_config_file} not found when removing module $remove_prosody_module_name"
+        return
+    fi
+
+    if grep -q "\"${remove_prosody_module_name}\"" "${prosody_config_file}"; then
+        sed -i "/\"${remove_prosody_module_name}\"/d" "${prosody_config_file}"
+        xmpp_restart=1
+    fi
+}
+
+function prosody_remove_module {
+    remove_prosody_module_name="$1"
+    prosody_remove_module_from_config "${remove_prosody_module_name}" /etc/prosody/prosody.cfg.lua
+}
+
+function prosody_add_module_to_config {
+    new_prosody_module_name="$1"
+    prosody_config_file="$2"
+    add_to_muc="$3"
+
+    if [ ! "${new_prosody_module_name}" ]; then
+        return
+    fi
+
+    if [ ! -f "${prosody_config_file}" ]; then
+        echo "Config file ${prosody_config_file} not found when adding module $new_prosody_module_name"
+        return
+    fi
+
+    if ! grep -q "\"${new_prosody_module_name}\"" "$prosody_config_file"; then
+        sed -i "/\"pep\"/a \"${new_prosody_module_name}\";" "$prosody_config_file"
+
+        if [ "$add_to_muc" ]; then
+            if grep -q "\"muc_limits\"" "$prosody_config_file"; then
+                sed -i "/\"muc_limits\"/a \"${new_prosody_module_name}\";" "$prosody_config_file"
+            fi
+        fi
+
+        sed -i "s|\"${new_prosody_module_name}\"|        \"${new_prosody_module_name}\"|g" "$prosody_config_file"
+        xmpp_restart=1
+    fi
+}
+
+function prosody_add_module {
+    new_prosody_module_name="$1"
+    add_to_muc="$2"
+    prosody_add_module_to_config "${new_prosody_module_name}" /etc/prosody/prosody.cfg.lua "$add_to_muc"
+}
+
+function xmpp_fix_exists {
+    if ! grep -q "CREATE INDEX IF NOT EXISTS" /usr/lib/prosody/util/sql.lua; then
+        sed -i 's|CREATE INDEX|CREATE INDEX IF NOT EXISTS|g' /usr/lib/prosody/util/sql.lua
+	xmpp_restart=1
+    fi
+    if ! grep -q "CREATE TABLE IF NOT EXISTS" /usr/lib/prosody/util/sql.lua; then
+        sed -i 's|CREATE TABLE|CREATE TABLE IF NOT EXISTS|g' /usr/lib/prosody/util/sql.lua
+	xmpp_restart=1
+    fi
+}
+
+function xmpp_update_e2e_policy {
+    filename="$1"
+
+    read_config_param DEFAULT_DOMAIN_NAME
+    read_config_param ONION_ONLY
+
+    if ! grep -q "e2e_policy_muc" "$filename"; then
+        echo "e2e_policy_muc = \"none\"" >> "$filename"
+        xmpp_restart=1
+    else
+        if ! grep -q 'e2e_policy_muc = "none"' "$filename"; then
+            sed -i 's|e2e_policy_muc.*|e2e_policy_muc = "none"|g' "$filename"
+            xmpp_restart=1
+        fi
+    fi
+    if ! grep -q "e2e_policy_chat" "$filename"; then
+        if [[ "$XMPP_E2EE" == 'y'* || "$XMPP_E2EE" == 't'* ]]; then
+            echo "e2e_policy_chat = \"required\"" >> "$filename"
+            xmpp_restart=1
+        else
+            echo "e2e_policy_chat = \"optional\"" >> "$filename"
+            xmpp_restart=1
+        fi
+    else
+        if [[ "$XMPP_E2EE" == 'y'* || "$XMPP_E2EE" == 't'* ]]; then
+            if ! grep -q 'e2e_policy_chat = "required"' "$filename"; then
+                sed -i 's|e2e_policy_chat.*|e2e_policy_chat = "required"|g' "$filename"
+                xmpp_restart=1
+            fi
+        else
+            if ! grep -q 'e2e_policy_chat = "optional"' "$filename"; then
+                sed -i 's|e2e_policy_chat.*|e2e_policy_chat = "optional"|g' "$filename"
+                xmpp_restart=1
+            fi
+        fi
+    fi
+    if ! grep -q "e2e_policy_message_required_chat" "$filename"; then
+        echo "e2e_policy_message_required_chat = \"$xmpp_encryption_warning\"" >> "$filename"
+        xmpp_restart=1
+    else
+        if ! grep -q "e2e_policy_message_required_chat = \"$xmpp_encryption_warning\"" "$filename"; then
+            sed -i "s|e2e_policy_message_required_chat.*|e2e_policy_message_required_chat = \"$xmpp_encryption_warning\"|g" "$filename"
+            xmpp_restart=1
+        fi
+    fi
+    if ! grep -q "e2e_policy_whitelist" "$filename"; then
+        echo "e2e_policy_whitelist = { \"notification@$HOSTNAME\" };" >> "$filename"
+        xmpp_restart=1
+    else
+        if ! grep -q "e2e_policy_whitelist = { \"notification@$HOSTNAME\" };" "$filename"; then
+            sed -i "s|e2e_policy_whitelist.*|e2e_policy_whitelist = { \"notification@$HOSTNAME\" };|g" "$filename"
+            xmpp_restart=1
+        fi
+    fi
+
+    if [[ "$ONION_ONLY" != 'no' ]]; then
+        XMPP_ONION_HOSTNAME=$(cat /var/lib/tor/hidden_service_email/hostname)
+        sed -i "s|VirtualHost \".*.onion.*|VirtualHost \"${XMPP_ONION_HOSTNAME}\"|g" "$filename"
+        # TLS is not strictly needed for onion transport security
+        if ! grep -q 'c2s_require_encryption = false' "$filename"; then
+            sed -i 's|c2s_require_encryption =.*|c2s_require_encryption = false|g' "$filename"
+            xmpp_restart=1
+        fi
+        if ! grep -q 's2s_require_encryption = false' "$filename"; then
+            sed -i 's|s2s_require_encryption =.*|s2s_require_encryption = false|g' "$filename"
+            xmpp_restart=1
+        fi
+    fi
+}
+
+function logging_on_xmpp {
+    if [ ! -d /etc/prosody ]; then
+        return
+    fi
+
+    if ! grep -q 'info = "/var/log/prosody/prosody.log";' /etc/prosody/prosody.cfg.lua; then
+        if [ -d /etc/prosody ]; then
+            if [ ! -d /var/log/prosody ]; then
+                mkdir /var/log/prosody
+                chown root:adm /var/log/prosody
+            fi
+            if ! grep -q "/var/log/prosody/prosody.log" /etc/prosody/prosody.cfg.lua; then
+                sed -i 's|info = "/dev/null";|info = "/var/log/prosody/prosody.log";|g' /etc/prosody/prosody.cfg.lua
+                sed -i 's|error = "/dev/null";|error = "/var/log/prosody/prosody.err";|g' /etc/prosody/prosody.cfg.lua
+                sed -i 's|levels = { "error" }; to = "/dev/null";|levels = { "info" }; to = "syslog";|g' /etc/prosody/prosody.cfg.lua
+                touch /var/log/prosody/prosody.log
+                chown prosody:prosody /var/log/prosody/prosody.log
+                touch /var/log/prosody/prosody.err
+                chown prosody:prosody /var/log/prosody/prosody.err
+            fi
+        fi
+        systemctl restart prosody
+    fi
+}
+
+function logging_off_xmpp {
+    if [ ! -d /etc/prosody ]; then
+        return
+    fi
+
+    logging_restart_prosody=
+
+    # remove any chat log
+    read_config_param DEFAULT_DOMAIN_NAME
+    prosody_chat_domain="chat.${DEFAULT_DOMAIN_NAME}"
+    # shellcheck disable=SC2001
+    prosody_chat_domain_str=$(echo "$prosody_chat_domain" | sed 's|\.|%2e|g')
+    if [ -d "${XMPP_DIRECTORY}/${prosody_chat_domain_str}/muc_log" ]; then
+        # shellcheck disable=SC2086
+        rm -rf ${XMPP_DIRECTORY}/${prosody_chat_domain_str}/muc_log*
+        logging_restart_prosody=1
+    fi
+
+    if ! grep -q 'muc_log_by_default = false;' /etc/prosody/prosody.cfg.lua; then
+        sed -i 's|muc_log_by_default.*|muc_log_by_default = false;|g' /etc/prosody/prosody.cfg.lua
+        logging_restart_prosody=1
+    fi
+
+    if ! grep -q 'muc_log_all_rooms = false;' /etc/prosody/prosody.cfg.lua; then
+        sed -i 's|muc_log_all_rooms.*|muc_log_all_rooms = false;|g' /etc/prosody/prosody.cfg.lua
+        logging_restart_prosody=1
+    fi
+
+    if ! grep -q '/dev/null' /etc/prosody/prosody.cfg.lua; then
+        if [ -d /etc/prosody ]; then
+            if grep -q "/var/log/prosody/prosody.log" /etc/prosody/prosody.cfg.lua; then
+                sed -i 's|info = "/var/log/prosody/prosody.log";|info = "/dev/null";|g' /etc/prosody/prosody.cfg.lua
+                sed -i 's|error = "/var/log/prosody/prosody.err";|error = "/dev/null";|g' /etc/prosody/prosody.cfg.lua
+                sed -i 's|levels = { "info" }; to = "syslog";|levels = { "error" }; to = "/dev/null";|g' /etc/prosody/prosody.cfg.lua
+                $REMOVE_FILES_COMMAND /var/log/prosody/*
+                rm -rf /var/log/prosody
+            fi
+        fi
+        logging_restart_prosody=1
+    fi
+
+    if [ $logging_restart_prosody ]; then
+        systemctl restart prosody
+    fi
+}
+
+function xmpp_add_onion_address {
+    domain_name="$1"
+    onion_address="$2"
+    if [ ${#domain_name} -eq 0 ]; then
+        return
+    fi
+    if [ ${#onion_address} -eq 0 ]; then
+        return
+    fi
+    if ! grep -q "${onion_address}" /etc/prosody/prosody.cfg.lua; then
+        if grep -q "[\"${domain_name}\"]" /etc/prosody/prosody.cfg.lua; then
+            sed -i "s|[\"${domain_name}\"].*|[\"${domain_name}\"] = \"${onion_address}\";|g" /etc/prosody/prosody.cfg.lua
+        else
+            sed -i "/onions_map = {/a  [\"${domain_name}\"] = \"${onion_address}\";" /etc/prosody/prosody.cfg.lua
+        fi
+        systemctl restart prosody
+    fi
+}
+
+function xmpp_add_onion_address_interactive {
+    data=$(mktemp 2>/dev/null)
+    dialog --backtitle $"LibreServer Control Panel" \
+           --title $"Add a clearnet to Onion domain mapping" \
+           --form $"Sepecify a clearnet domain name and its equivalent onion address\\n" 9 50 2 \
+           $"Domain:" 1 1 "" 1 18 26 25 \
+           $"Onion address:" 2 1 "" 2 18 26 25 \
+           2> "$data"
+    sel=$?
+    case $sel in
+        1) rm -f "$data"
+           return;;
+        255) rm -f "$data"
+             return;;
+    esac
+    domain_name=$(sed -n 1p < "$data")
+    onion_address=$(sed -n 2p < "$data")
+    rm -f "$data"
+    if [[ "$onion_address" != *".onion" ]]; then
+        return
+    fi
+    if [[ "$domain_name" != *"."* ]]; then
+        return
+    fi
+
+    xmpp_add_onion_address "$domain_name" "$onion_address"
+
+    dialog --title $"Add a clearnet to Onion domain mapping" \
+           --msgbox $"${domain_name} -> ${onion_address} added" 6 70
+}
+
+function xmpp_remove_onion_address {
+    domain_name="$1"
+    if [ ${#domain_name} -eq 0 ]; then
+        return
+    fi
+    xmpp_changed=
+    if grep -q "[\"${domain_name}\"]" /etc/prosody/prosody.cfg.lua; then
+        sed -i "/[\"${domain_name}\"]/d" /etc/prosody/prosody.cfg.lua
+        xmpp_changed=1
+    fi
+
+    if grep -q "= \"${domain_name}\";" /etc/prosody/prosody.cfg.lua; then
+        sed -i "/= \"${domain_name}\";/d" /etc/prosody/prosody.cfg.lua
+        xmpp_changed=1
+    fi
+    if [ $xmpp_changed ]; then
+        systemctl restart prosody
+    fi
+}
+
+function xmpp_remove_onion_address_interactive {
+    data=$(mktemp 2>/dev/null)
+    dialog --title $"Remove clearnet to Onion domain mapping" \
+           --backtitle $"LibreServer Control Panel" \
+           --inputbox $'Enter the domain name or onion address to be removed' 8 60 2>"$data"
+    sel=$?
+    case $sel in
+        0) domain_name=$(<"$data")
+           if [[ "$domain_name" != *"."* ]]; then
+               rm -f "$data"
+               return
+           fi
+           xmpp_remove_onion_address "$domain_name"
+           dialog --title $"Remove a clearnet to Onion domain mapping" \
+                  --msgbox $"${domain_name} removed" 6 70
+           ;;
+    esac
+    rm -f "$data"
+}
+
+function configure_interactive_xmpp {
+    read_config_param XMPP_E2EE
+
+    while true
+    do
+        e2ee_policy=$'optional'
+        if [[ "$XMPP_E2EE" == 'y'* || "$XMPP_E2EE" == 't'* ]]; then
+            e2ee_policy=$'required'
+        fi
+
+        W=(1 $"End-to-end security policy: $e2ee_policy"
+           2 $"Add a clearnet to onion domain mapping"
+           3 $"Remove a clearnet to onion domain mapping")
+
+        # shellcheck disable=SC2068
+        selection=$(dialog --backtitle $"LibreServer Administrator Control Panel" --title $"XMPP" --menu $"Choose an operation, or ESC to exit:" 11 60 3 "${W[@]}" 3>&2 2>&1 1>&3)
+
+        if [ ! "$selection" ]; then
+            break
+        fi
+
+        case $selection in
+            1) if [[ "$XMPP_E2EE" == 'y'* || "$XMPP_E2EE" == 't'* ]]; then
+                   XMPP_E2EE='no'
+               else
+                   XMPP_E2EE='yes'
+               fi
+               write_config_param 'XMPP_E2EE' "$XMPP_E2EE"
+               xmpp_update_e2e_policy /etc/prosody/prosody.cfg.lua
+               systemctl restart prosody
+
+               e2ee_policy=$'optional'
+               if [[ "$XMPP_E2EE" == 'y'* || "$XMPP_E2EE" == 't'* ]]; then
+                   e2ee_policy=$'required'
+               fi
+
+               dialog --title $"xmpp end-to-end security policy" \
+                      --msgbox $"The security policy has been changed to $e2ee_policy" 6 70
+               ;;
+            2) xmpp_add_onion_address_interactive;;
+            3) xmpp_remove_onion_address_interactive;;
+        esac
+    done
+}
+
+function remove_user_xmpp {
+    remove_username="$1"
+
+    "${PROJECT_NAME}-pass" -u "$remove_username" --rmapp xmpp
+    if [[ "$ONION_ONLY" != "no" ]]; then
+        DOMAIN=$(cat /var/lib/tor/hidden_service_email/hostname)
+    else
+        DOMAIN=${HOSTNAME}
+    fi
+    prosodyctl deluser "${remove_username}@${DOMAIN}"
+}
+
+function add_user_xmpp_client {
+    new_username="$1"
+    new_user_password="$2"
+
+    if [ -f /usr/local/bin/profanity ]; then
+        XMPP_CLIENT_DIR=/home/$new_username/.local/share/profanity
+        XMPP_CLIENT_ACCOUNTS=$XMPP_CLIENT_DIR/accounts
+        if [ ! -d "$XMPP_CLIENT_DIR" ]; then
+            mkdir -p "$XMPP_CLIENT_DIR"
+        fi
+        if [ ! -d "/home/$new_username/.config/profanity" ]; then
+            mkdir -p "/home/$new_username/.config/profanity"
+        fi
+        MY_GPG_PUBLIC_KEY_ID=$(gpg_pubkey_from_email "$new_username" "$new_username@$HOSTNAME")
+        { echo "[${new_username}@${HOSTNAME}]";
+          echo 'enabled=true';
+          echo "jid=${new_username}@${HOSTNAME}";
+          echo "server=$XMPP_ONION_HOSTNAME";
+          echo "pgp.keyid=$MY_GPG_PUBLIC_KEY_ID";
+          echo 'resource=profanity';
+          echo "muc.service=conference.${HOSTNAME}";
+          echo "muc.nick=${new_username}";
+          echo 'presence.last=online';
+          echo 'presence.login=online';
+          echo 'priority.online=0';
+          echo 'priority.chat=0';
+          echo 'priority.away=0';
+          echo 'priority.xa=0';
+          echo 'priority.dnd=0'; } > "$XMPP_CLIENT_ACCOUNTS"
+
+        echo '[connection]' > "/home/$new_username/.config/profanity/profrc"
+        if [[ $ONION_ONLY != "no" ]]; then
+            echo "account=${new_username}@${XMPP_ONION_HOSTNAME}" >> "/home/$new_username/.config/profanity/profrc"
+        else
+            echo "account=${new_username}@${HOSTNAME}" >> "/home/$new_username/.config/profanity/profrc"
+        fi
+        { echo '';
+          echo '[plugins]';
+          echo 'load=prof_omemo_plugin.py;';
+          echo '';
+          echo '[otr]';
+          echo 'policy=opportunistic';
+          echo 'log=off';
+          echo '';
+          echo '[pgp]';
+          echo 'log=off';
+          echo '';
+          echo '[ui]';
+          echo 'enc.warn=true'; } >> "/home/$new_username/.config/profanity/profrc"
+
+        chown -R "$new_username":"$new_username" "/home/$new_username/.local"
+        chown -R "$new_username":"$new_username" "/home/$new_username/.config"
+    fi
+}
+
+function add_user_xmpp {
+    new_username="$1"
+    new_user_password="$2"
+
+    XMPP_ONION_HOSTNAME=$(cat /var/lib/tor/hidden_service_email/hostname)
+    "${PROJECT_NAME}-pass" -u "$new_username" -a xmpp -p "$new_user_password"
+
+    if [[ "$ONION_ONLY" != "no" ]]; then
+        DOMAIN_NAME=$XMPP_ONION_HOSTNAME
+    else
+        DOMAIN_NAME=$HOSTNAME
+    fi
+    EMAIL_ADDRESS="$new_username@$DOMAIN_NAME"
+
+    if [ ${#new_user_password} -eq 0 ]; then
+        prosodyctl adduser "$EMAIL_ADDRESS"
+    else
+        if ! prosodyctl register "$new_username" "$DOMAIN_NAME" "$new_user_password"; then
+            exit 65
+        fi
+    fi
+
+    add_user_xmpp_client "$new_username" "$new_user_password"
+    echo '0'
+}
+
+function install_interactive_xmpp {
+    echo -n ''
+    APP_INSTALLED=1
+}
+
+function change_password_xmpp {
+    curr_username="$1"
+    new_user_password="$2"
+
+    read_config_param DEFAULT_DOMAIN_NAME
+
+    "${PROJECT_NAME}-pass" -u "$curr_username" -a xmpp -p "$new_user_password"
+
+    # TODO: this is currently interactive. Really there needs to be a
+    # non-interactive password change option for prosodyctl
+    clear
+    echo ''
+    echo $'Currently Prosody requires password changes to be done interactively'
+    prosodyctl passwd "${curr_username}@${DEFAULT_DOMAIN_NAME}"
+
+    if [ -f /usr/local/bin/profanity ]; then
+        XMPP_CLIENT_DIR=/home/$curr_username/.local/share/profanity
+        XMPP_CLIENT_ACCOUNTS=$XMPP_CLIENT_DIR/accounts
+        if [ -f "$XMPP_CLIENT_ACCOUNTS" ]; then
+            sed -i "s|password=.*|password=$new_user_password|g" "$XMPP_CLIENT_ACCOUNTS"
+        fi
+    fi
+}
+
+function reconfigure_xmpp {
+    echo -n ''
+}
+
+function update_prosody_modules {
+    if [ ! "$1" ]; then
+        if [ ! -d ${XMPP_DIRECTORY}/prosody-modules ]; then
+            return
+        fi
+    fi
+    if [ ! -d /usr/lib/prosody ]; then
+        return
+    fi
+
+    if [ ! -f "$INSTALL_DIR/$prosody_modules_filename" ]; then
+        xmpp_restart=1
+
+        # Obtain the modules
+        if [ -f "/root/${PROJECT_NAME}/image_build/$prosody_modules_filename" ]; then
+	    echo "Copying $prosody_modules_filename to $INSTALL_DIR"
+            cp "/root/${PROJECT_NAME}/image_build/$prosody_modules_filename" "$INSTALL_DIR"
+        else
+            if [ -f "/home/$MY_USERNAME/${PROJECT_NAME}/image_build/$prosody_modules_filename" ]; then
+		echo "Copying $prosody_modules_filename to $INSTALL_DIR"
+                cp "/home/$MY_USERNAME/${PROJECT_NAME}/image_build/$prosody_modules_filename" "$INSTALL_DIR"
+            fi
+        fi
+
+        if [ -f "$INSTALL_DIR/$prosody_modules_filename" ]; then
+            cd "$INSTALL_DIR" || exit 24
+
+            # Check the hash
+            curr_hash=$(sha256sum "$INSTALL_DIR/$prosody_modules_filename" | awk -F ' ' '{print $1}')
+            if [[ "$curr_hash" != "$prosody_modules_hash" ]]; then
+                echo $'Prosody modules hash does not match'
+                exit 83
+            else
+                # Extract the modules
+                if [ -d "$INSTALL_DIR/prosody-modules" ]; then
+                    rm -rf "$INSTALL_DIR/prosody-modules"
+                fi
+                tar -xzvf $prosody_modules_filename
+                if [ -d "$INSTALL_DIR/prosody-modules" ]; then
+                    systemctl stop prosody
+                    if [ ! -d ${XMPP_DIRECTORY}/prosody-modules ]; then
+                        mkdir -p ${XMPP_DIRECTORY}/prosody-modules
+                    fi
+                    cp -r "$INSTALL_DIR/prosody-modules/"* ${XMPP_DIRECTORY}/prosody-modules/
+                    cp -r "$INSTALL_DIR/prosody-modules/"* /usr/lib/prosody/modules/
+		    if [ -f ${XMPP_DIRECTORY}/prosody-modules/mod_i2p ]; then
+			rm ${XMPP_DIRECTORY}/prosody-modules/mod_i2p
+		    fi
+		    if [ -f /usr/lib/prosody/modules/mod_i2p ]; then
+			rm /usr/lib/prosody/modules/mod_i2p
+		    fi
+		    if [ -d "/root/${PROJECT_NAME}/image_build/prosody_mod_i2p" ]; then
+			cp -r "/root/${PROJECT_NAME}/image_build/prosody_mod_i2p" ${XMPP_DIRECTORY}/prosody-modules/mod_i2p
+			cp -r "/root/${PROJECT_NAME}/image_build/prosody_mod_i2p" /usr/lib/prosody/modules/mod_i2p
+		    fi
+                    chown -R prosody:prosody ${XMPP_DIRECTORY}/prosody-modules
+                    chown -R prosody:prosody /usr/lib/prosody/modules
+                    systemctl start prosody
+                else
+                    echo $'Prosody modules not extracted'
+                    exit 72
+                fi
+            fi
+	else
+	    echo "Can't find prosody modules $INSTALL_DIR/$prosody_modules_filename"
+        fi
+    fi
+
+    if [ -d "${XMPP_DIRECTORY}/prosody-modules" ]; then
+	prosody_add_module 's2s_blacklist' muc
+	prosody_add_module 'firewall'
+	prosody_add_module 'block_strangers'
+    else
+	echo "Prosody modules directory not found ${XMPP_DIRECTORY}/prosody-modules"
+    fi
+
+    xmpp_server_blocklist /etc/prosody/prosody.cfg.lua
+
+    if grep -q '"mam_muc";' /etc/prosody/prosody.cfg.lua; then
+        sed -i '/"mam_muc";/d' /etc/prosody/prosody.cfg.lua
+        xmpp_restart=1
+    fi
+}
+
+function prosody_daemon_restart_script {
+    # On rare occasions the daemon appears to get stuck
+    # i.e. still active, but not accepting connections
+    # This ensures that it will unstick itself at least once per day
+    if [ -f /etc/cron.daily/prosody ]; then
+        rm /etc/cron.daily/prosody
+    fi
+    if [ ! -f /etc/cron.hourly/prosody ]; then
+        { echo '#!/bin/bash';
+          echo "is_active=\$(systemctl is-active prosody)";
+          echo "if [[ \"\$is_active\" != 'active' ]]; then";
+          echo '  systemctl restart prosody'
+          echo 'fi'; } > /etc/cron.hourly/prosody
+        chmod +x /etc/cron.hourly/prosody
+    fi
+}
+
+function prosody_set_parameter {
+    prosody_param_name="$1"
+    prosody_param_value="$2"
+
+    if ! grep -q "${prosody_param_name} " /etc/prosody/prosody.cfg.lua; then
+        echo "${prosody_param_name} = ${prosody_param_value};" >> /etc/prosody/prosody.cfg.lua
+        xmpp_restart=1
+    else
+        if ! grep -q "${prosody_param_name} = ${prosody_param_value};" /etc/prosody/prosody.cfg.lua; then
+            sed -i "s|${prosody_param_name} .*|${prosody_param_name} = ${prosody_param_value};|g" /etc/prosody/prosody.cfg.lua
+            xmpp_restart=1
+       fi
+    fi
+}
+
+function xmpp_update_certs {
+    if grep -q "/etc/ssl/certs/xmpp.dhparam" /etc/prosody/prosody.cfg.lua; then
+        cp /etc/ssl/certs/xmpp.dhparam /etc/prosody/xmpp.dhparam
+        chown prosody:prosody /etc/prosody/xmpp.dhparam
+        sed -i 's|/etc/ssl/certs/xmpp.dhparam|/etc/prosody/xmpp.dhparam|g' /etc/prosody/prosody.cfg.lua
+        xmpp_restart=1
+    fi
+
+    if grep -q "xmpp.key" /etc/prosody/prosody.cfg.lua; then
+        if [ -f "/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/privkey.pem" ]; then
+	    if grep -q "/etc/ssl/private/xmpp.key" /etc/prosody/prosody.cfg.lua; then
+		sed -i "s|/etc/ssl/private/xmpp.key|/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/privkey.pem|g" /etc/prosody/prosody.cfg.lua
+		xmpp_restart=1
+	    fi
+	    if grep -q "/var/lib/prosody/xmpp.key" /etc/prosody/prosody.cfg.lua; then
+		sed -i "s|/var/lib/prosody/xmpp.key|/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/privkey.pem|g" /etc/prosody/prosody.cfg.lua
+		xmpp_restart=1
+	    fi
+	else
+	    if grep -q "/etc/ssl/private/xmpp.key" /etc/prosody/prosody.cfg.lua; then
+		sed -i "s|/etc/ssl/private/xmpp.key|/var/lib/prosody/xmpp.key|g" /etc/prosody/prosody.cfg.lua
+		xmpp_restart=1
+	    fi
+        fi
+    fi
+
+    if grep -q "xmpp.crt" /etc/prosody/prosody.cfg.lua; then
+        if [ -f "/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/fullchain.pem" ]; then
+	    if grep -q "/etc/ssl/certs/xmpp.crt" /etc/prosody/prosody.cfg.lua; then
+		sed -i "s|/etc/ssl/certs/xmpp.crt|/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/fullchain.pem|g" /etc/prosody/prosody.cfg.lua
+		xmpp_restart=1
+	    fi
+	    if grep -q "/var/lib/prosody/xmpp.crt" /etc/prosody/prosody.cfg.lua; then
+		sed -i "s|/var/lib/prosody/xmpp.crt|/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/fullchain.pem|g" /etc/prosody/prosody.cfg.lua
+		xmpp_restart=1
+	    fi
+	else
+	    if grep -q "/etc/ssl/certs/xmpp.crt" /etc/prosody/prosody.cfg.lua; then
+		sed -i "s|/etc/ssl/certs/xmpp.crt|/var/lib/prosody/xmpp.crt|g" /etc/prosody/prosody.cfg.lua
+		xmpp_restart=1
+	    fi
+        fi
+    fi
+
+    if ! grep -q "/etc/prosody/xmpp.dhparam" /etc/prosody/prosody.cfg.lua; then
+	sed -i 's|dhparam =.*|dhparam = "/etc/prosody/xmpp.dhparam";|g' /etc/prosody/prosody.cfg.lua
+        xmpp_restart=1
+    fi
+}
+
+function upgrade_xmpp {
+    # deprecated module
+    if grep -q 'smacks_offline' /etc/prosody/prosody.cfg.lua; then
+	sed -i '/smacks_offline/d' /etc/prosody/prosody.cfg.lua
+	systemctl restart prosody
+    fi
+
+    #xmpp_version=$(prosodyctl about)
+    #if [[ "$xmpp_version" == *'Prosody 0.11.2'* ]]; then
+    #    echo $'Upgrading prosody package to backports'
+    #    INSTALL_PACKAGES prosody
+    #fi
+
+    if [ ! -f /etc/turnserver.conf ]; then
+	install_turn
+	xmpp_setup_turn
+	systemctl restart prosody
+    fi
+
+    xmpp_restart=
+
+    if [ ! -f /usr/bin/sendxmpp ]; then
+	$PACKAGE_INSTALL sendxmpp
+    fi
+
+    xmpp_fix_exists
+
+    if [ -f /etc/prosody/conf.d/xmpp.cfg.lua ]; then
+	rm /etc/prosody/conf.d/xmpp.cfg.lua
+	rm /etc/prosody/conf.avail/xmpp.cfg.lua
+	xmpp_restart=1
+    fi
+
+    $PACKAGE_UNHOLD prosody
+
+    if [ -d /etc/letsencrypt ]; then
+        prosody_groups=$(groups prosody)
+        if [[ "$prosody_groups" != *'ssl-cert'* ]]; then
+            usermod -a -G ssl-cert prosody
+        fi
+    fi
+
+    read_config_param ONION_ONLY
+    prosody_update_onion_certs
+
+    if [[ "$ONION_ONLY" != 'no' ]]; then
+        # Disable TLS for onion only versions
+        # this makes the user experience a lot slicker
+        # because there are no prompts to accept
+        # self-signed certs
+        xmpp_tls_enabled='-- '
+        xmpp_str="\-\- \"tls\""
+        if ! grep -q "$xmpp_str" /etc/prosody/prosody.cfg.lua; then
+            sed -i "s|\"tls\"|${xmpp_tls_enabled}\"tls\"|g" /etc/prosody/prosody.cfg.lua
+            xmpp_restart=1
+        fi
+    fi
+
+    read_config_param XMPP_E2EE
+    xmpp_update_e2e_policy /etc/prosody/prosody.cfg.lua
+
+    prosody_daemon_restart_script
+    function_check update_prosody_modules
+    update_prosody_modules
+    xmpp_onion_addresses /etc/prosody/prosody.cfg.lua
+    xmpp_contact_info /etc/prosody/prosody.cfg.lua
+    xmpp_server_blocklist /etc/prosody/prosody.cfg.lua
+
+    # add rate limits
+    prosody_add_module "limits"
+    if ! grep -q 's2sin = {' /etc/prosody/prosody.cfg.lua; then
+        { echo 'limits = {';
+          echo '    c2s = {';
+          echo "        rate = \"${XMPP_MAX_C2S_RATE}kb/s\";";
+          echo "        burst = \"2s\";";
+          echo '    };';
+          echo '    s2sin = {';
+          echo "        rate = \"${XMPP_MAX_S2S_RATE}kb/s\";";
+          echo "        burst = \"5s\";";
+          echo '    };';
+          echo '}'; } >> /etc/prosody/prosody.cfg.lua
+        xmpp_restart=1
+    fi
+
+    # add word filter to muc
+    prosody_add_module "filter_words"
+    if ! grep -q 'filter_words =' /etc/prosody/prosody.cfg.lua; then
+        echo 'filter_words = {}' >> /etc/prosody/prosody.cfg.lua
+        xmpp_restart=1
+    fi
+
+    prosody_set_parameter 'http_upload_file_size_limit' '25165824'
+    prosody_set_parameter 'http_upload_expire_after' '60 * 60 * 24 * 7 -- a week'
+    prosodyctl mod_http_upload expire
+
+    prosody_set_parameter 'muc_room_default_members_only' 'false'
+    prosody_set_parameter 'muc_tombstones' 'false'
+
+    # security labels
+    prosody_add_module "seclabels"
+    prosody_default_security_labels /etc/prosody/prosody.cfg.lua
+
+    # extra battery saving
+    prosody_add_module "csi_compat"
+    prosody_add_module "csi_battery_saver"
+
+    # remove omemo_all_access
+    # This isn't needed with prosody 0.11+
+    prosody_remove_module "omemo_all_access"
+
+    # remove muc logging
+    prosody_remove_module "muc_log"
+    prosody_remove_module "muc_log_http"
+
+    # remove any broadcast settings
+    prosody_remove_module "broadcast"
+
+    # handling avatars
+    prosody_remove_module "pep_vcard_avatar"
+    prosody_remove_module "vcard"
+    prosody_add_module "profile"
+
+    xmpp_update_certs
+
+    # add onion addresses for known servers
+    if ! grep -q "onions_map =" /etc/prosody/prosody.cfg.lua; then
+        echo '' >> /etc/prosody/prosody.cfg.lua
+        xmpp_onion_addresses /etc/prosody/prosody.cfg.lua
+        xmpp_restart=1
+    fi
+
+    install_i2p
+    xmpp_i2p_bridge
+    xmpp_i2p_virtualhost
+    prosody_add_module "i2p"
+
+    if [ $xmpp_restart ]; then
+        cp -r "$INSTALL_DIR/prosody-modules/"* ${XMPP_DIRECTORY}/prosody-modules/
+        chown -R prosody:prosody ${XMPP_DIRECTORY}/prosody-modules
+
+        echo $'Restarting prosody'
+        systemctl restart prosody
+    fi
+}
+
+function backup_local_xmpp {
+    source_directory=${XMPP_DIRECTORY}
+    if [ -d $source_directory ]; then
+        dest_directory=xmpp
+        function_check backup_directory_to_usb
+        backup_directory_to_usb $source_directory $dest_directory
+    fi
+}
+
+function restore_local_xmpp {
+    if [ -d ${XMPP_DIRECTORY} ]; then
+        echo $"Restoring xmpp settings"
+        temp_restore_dir=/root/tempxmpp
+        function_check restore_directory_from_usb
+        restore_directory_from_usb $temp_restore_dir xmpp
+        if [ -d $temp_restore_dir${XMPP_DIRECTORY} ]; then
+            cp -r $temp_restore_dir${XMPP_DIRECTORY}/* ${XMPP_DIRECTORY}
+        else
+            cp -r $temp_restore_dir/* ${XMPP_DIRECTORY}/
+        fi
+        # shellcheck disable=SC2181
+        if [ ! "$?" = "0" ]; then
+            function_check set_user_permissions
+            set_user_permissions
+            function_check backup_unmount_drive
+            backup_unmount_drive
+            exit 72
+        fi
+        rm -rf $temp_restore_dir
+        systemctl restart prosody
+        chown -R prosody:prosody ${XMPP_DIRECTORY}/*
+        echo $"Restore of xmpp settings complete"
+    fi
+}
+
+function backup_remote_xmpp {
+    echo -n ''
+}
+
+function restore_remote_xmpp {
+    echo -n ''
+}
+
+function configure_firewall_for_xmpp {
+    if [ ! -d /etc/prosody ]; then
+        return
+    fi
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+    if [[ $INSTALLED_WITHIN_DOCKER == "yes" ]]; then
+        # docker does its own firewalling
+        return
+    fi
+    if [[ $ONION_ONLY != "no" ]]; then
+        return
+    fi
+    firewall_add XMPP 5222 tcp
+    firewall_add XMPP 5223 tcp
+    firewall_add XMPP 5269 tcp
+    firewall_add XMPP 5280 tcp
+    firewall_add XMPP 5281 tcp
+    # netstat -an | grep :5222 | wc -l
+    firewall_max_connections 5222 $XMPP_FIREWALL_MAX_CONNECTIONS
+    firewall_max_connections 5223 $XMPP_FIREWALL_MAX_CONNECTIONS
+    firewall_max_connections 5269 $XMPP_FIREWALL_MAX_CONNECTIONS_S2S
+    firewall_max_connections 5280 $XMPP_FIREWALL_MAX_CONNECTIONS
+    firewall_max_connections 5281 $XMPP_FIREWALL_MAX_CONNECTIONS
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function remove_xmpp {
+    remove_profanity
+    read_config_param ONION_ONLY
+    if [[ $ONION_ONLY == "no" ]]; then
+        firewall_max_connections 5222 $XMPP_FIREWALL_MAX_CONNECTIONS remove
+        firewall_max_connections 5223 $XMPP_FIREWALL_MAX_CONNECTIONS remove
+        firewall_max_connections 5269 $XMPP_FIREWALL_MAX_CONNECTIONS_S2S remove
+        firewall_max_connections 5280 $XMPP_FIREWALL_MAX_CONNECTIONS remove
+        firewall_max_connections 5281 $XMPP_FIREWALL_MAX_CONNECTIONS remove
+        firewall_remove 5222 tcp
+        firewall_remove 5223 tcp
+        firewall_remove 5269 tcp
+        firewall_remove 5280 tcp
+        firewall_remove 5281 tcp
+    fi
+
+    $REMOVE_PACKAGES_PURGE prosody sendxmpp
+    rm /etc/cron.daily/prosody
+    if [ -f "$INSTALL_DIR/$prosody_modules_filename" ]; then
+        rm "$INSTALL_DIR/$prosody_modules_filename"
+    fi
+    if [ -d "$INSTALL_DIR/prosody-modules" ]; then
+        rm -rf "$INSTALL_DIR/prosody-modules"
+    fi
+    if [ -d /etc/prosody ]; then
+        rm -rf /etc/prosody
+    fi
+    if [ -d ${XMPP_DIRECTORY} ]; then
+        rm -rf ${XMPP_DIRECTORY}
+    fi
+    if [ -d /usr/lib/prosody ]; then
+        rm -rf /usr/lib/prosody
+    fi
+    if [ -f /usr/local/bin/prosody ]; then
+        rm /usr/local/bin/prosody
+    fi
+    if [ -f /usr/local/bin/prosodyctl ]; then
+        rm /usr/local/bin/prosodyctl
+    fi
+    groupdel prosody
+
+    remove_completion_param install_xmpp
+    sed -i '/xmpp/d' "$COMPLETION_FILE"
+    sed -i '/prosody/d' "$COMPLETION_FILE"
+
+    rm /etc/avahi/services/xmpp.service
+    rm /etc/avahi/services/xmpp-server.service
+    systemctl restart avahi-daemon
+}
+
+function xmpp_contact_info {
+    filename="$1"
+
+    if grep -q "contact_info =" "$filename"; then
+        return
+    fi
+
+    { echo 'contact_info = {';
+      echo "abuse = { \"mailto:${MY_EMAIL_ADDRESS}\", \"xmpp:${MY_USERNAME}@${HOSTNAME}\" };";
+      echo "admin = { \"mailto:${MY_EMAIL_ADDRESS}\", \"xmpp:${MY_USERNAME}@${HOSTNAME}\" };";
+      echo "feedback = { \"mailto:${MY_EMAIL_ADDRESS}\", \"xmpp:${MY_USERNAME}@${HOSTNAME}\" };";
+      echo "security = { \"xmpp:${MY_USERNAME}@${HOSTNAME}\" };";
+      echo "support = { \"xmpp:${MY_USERNAME}@${HOSTNAME}\" };";
+      echo '};'; } >> "$filename"
+}
+
+function xmpp_modules {
+    filename="$1"
+
+    { echo 'modules_enabled = {';
+      echo '  "server_contact_info";';
+      echo '  "pubsub";';
+      echo '  "pubsub_hub";';
+      echo '  "dialback"; -- s2s dialback support';
+      echo '  "disco"; -- Service discovery';
+      echo '  "private"; -- Private XML storage (for room bookmarks, etc.)';
+      echo '  "version"; -- Replies to server version requests';
+      echo '  "uptime"; -- Report how long server has been running';
+      echo '  "time"; -- Let others know the time here on this server';
+      echo '  "ping"; -- Replies to XMPP pings with pongs';
+      echo '  "admin_adhoc"; -- Allows administration via an XMPP client that supports ad-hoc commands';
+      echo '  "posix"; -- POSIX functionality, sends server to background, enables syslog, etc.';
+      echo '  "bosh"; -- Enable mod_bosh';
+      echo "  ${xmpp_tls_enabled}\"tls\"; -- Enable mod_tls";
+      echo '  "saslauth"; -- Enable mod_saslauth';
+      echo '  "onions"; -- Enable chat via onion service';
+      echo '  "i2p"; -- Enable chat via i2p service';
+      echo '  "mam"; -- Message archive management';
+      echo '  "seclabels"; -- Security level indicators';
+      echo '  "csi"; -- Client state indication (CSI)';
+      echo '  "csi_compat"; -- CSI for older clients';
+      echo '  "csi_battery_saver"; -- Extra CSI battery saving';
+      echo '  "carbons"; -- Message carbons';
+      echo '  "carbons_adhoc"; -- Message carbons';
+      echo '  "carbons_copies"; -- Message carbons';
+      echo '  "smacks"; -- Stream management';
+      echo '  "pep"; -- Personal Eventing Protocol (to support OMEMO)';
+      echo '  "firewall"; -- Block addresses';
+      echo '  "profile"; -- Avatars';
+      echo '  "e2e_policy"; -- To support OMEMO';
+      echo '  "blocklist"; -- Privacy lists';
+      echo '  "s2s_blacklist"; -- Blacklist particular servers';
+      echo '  "privacy_lists"; -- Privacy lists';
+      echo '  "blocking"; -- Blocking command';
+      echo '  "block_strangers"; -- Dont allow messages from strangers';
+      echo '  "roster"; -- Roster versioning';
+      echo '  "offline_email"; -- If offline send to email';
+      echo '  "offline"; -- Store offline messages';
+      echo '  "http";';
+      echo '  "turncredentials"; -- VoIP';
+      echo '  "limits"; -- rate limits';
+      echo '  "http_upload";';
+      echo '  "websocket";';
+      echo '  "throttle_presence"; -- Reduce battery and bandwidth usage';
+      echo '  "filter_chatstates"; -- Reduce battery and bandwidth usage';
+      echo '};'; } >> "$filename"
+}
+
+function xmpp_onion_addresses {
+    filename="$1"
+
+    # See https://www.cryptoparty.in/connect/contact/jabber
+    # It looks like 404.city did have a v3 address, but stopped supporting Tor
+
+    { echo 'onions_map = {';
+      echo '  ["krautspace.de"] = "jeirlvruhz22jqduzixi6li4xyoweytqglwjons4mbuif76fgslg5uad.onion";';
+      echo '  ["jabber.nr18.space"] = "szd7r26dbcrrrn4jthercrdypxfdmzzrysusyjohn4mpv2zbwcgmeqqd.onion";';
+      echo '  ["riseup.net"] = "jukrlvyhgguiedqswc5lehrag2fjunfktouuhi4wozxhb6heyzvshuyd.onion";';
+      echo '  ["xmpp.riseup.net"] = "jukrlvyhgguiedqswc5lehrag2fjunfktouuhi4wozxhb6heyzvshuyd.onion";';
+      echo '};'; } > /tmp/xmpp_onions_map.txt
+
+    if [ ! -f ${XMPP_DIRECTORY}/onions_map.txt ]; then
+       touch ${XMPP_DIRECTORY}/onions_map.txt
+       chown prosody:prosody ${XMPP_DIRECTORY}/onions_map.txt
+    fi
+
+    if ! cmp --silent /tmp/xmpp_onions_map.txt ${XMPP_DIRECTORY}/onions_map.txt; then
+        onions_map_str=$(cat /tmp/xmpp_onions_map.txt)
+
+        # remove existing onions map
+        sed -i '/onions_map = {/,/};/d' "$filename"
+
+        # append new onions map
+        echo "$onions_map_str" >> "$filename"
+
+        cp /tmp/xmpp_onions_map.txt ${XMPP_DIRECTORY}/onions_map.txt
+        chown prosody:prosody ${XMPP_DIRECTORY}/onions_map.txt
+
+        xmpp_restart=1
+    fi
+
+    rm /tmp/xmpp_onions_map.txt
+}
+
+function xmpp_server_blocklist {
+    filename="$1"
+
+    prosody_firewall_rules=${XMPP_DIRECTORY}/firewall.txt
+    blocklisted_addresses_filename=${XMPP_DIRECTORY}/blocked_addresses.txt
+    blocklisted_addresses_filename_new=/tmp/xmpp_blocked_addresses.txt
+    blocklisted_domains=
+
+    if [ -f "${blocklisted_addresses_filename_new}" ]; then
+        rm "${blocklisted_addresses_filename_new}"
+    fi
+
+    while read -r blocked; do
+        if [ ${#blocked} -gt 4 ]; then
+            if [[ "$blocked" == *"."* ]]; then
+                if [[ "$blocked" != *"@"* ]]; then
+                    if [ "$blocklisted_domains" ]; then
+                        blocklisted_domains="${blocklisted_domains}, \"$blocked\""
+                    else
+                        blocklisted_domains="\"$blocked\""
+                    fi
+                else
+                    echo "$blocked" >> "${blocklisted_addresses_filename_new}"
+                fi
+            fi
+        fi
+    done <"$FIREWALL_DOMAINS"
+
+    if ! grep -q "s2s_blacklist =" "$filename"; then
+        echo "s2s_blacklist = { $blocklisted_domains }" >> "$filename"
+        xmpp_restart=1
+    else
+        if ! grep -q "s2s_blacklist = { $blocklisted_domains }" "$filename"; then
+            sed -i "s|s2s_blacklist =.*|s2s_blacklist = { $blocklisted_domains }|g" "$filename"
+            xmpp_restart=1
+        fi
+    fi
+
+    # create blocklisted addresses file
+    if [ -f "${blocklisted_addresses_filename_new}" ]; then
+        cp "${blocklisted_addresses_filename_new}" "${blocklisted_addresses_filename}"
+        rm "${blocklisted_addresses_filename_new}"
+    else
+        echo -n '' > "${blocklisted_addresses_filename}"
+    fi
+
+    # should the xmpp firewall be updated?
+    update_prosody_firewall=
+    if [ ! -f "$prosody_firewall_rules" ]; then
+	update_prosody_firewall=1
+    else
+	if ! grep -q 'RATE normal: 4' "$prosody_firewall_rules"; then
+	    update_prosody_firewall=1
+	fi
+    fi
+
+    if [ $update_prosody_firewall ]; then
+        # create firewall rules
+	# rate limit is in stanzas per second
+        { echo "%LIST blacklist: file:${blocklisted_addresses_filename}";
+          echo '';
+          echo 'KIND: presence';
+          echo 'TYPE: subscribe';
+          echo 'CHECK LIST: blacklist contains $<@from>';
+          echo 'BOUNCE=policy-violation (Blocked)';
+          echo '';
+          echo 'KIND: message';
+          echo 'TYPE: chat';
+          echo 'CHECK LIST: blacklist contains $<@from>';
+          echo 'BOUNCE=policy-violation (Blocked)';
+          echo '';
+          echo 'KIND: message';
+          echo 'TYPE: groupchat';
+          echo 'CHECK LIST: blacklist contains $<@from>';
+          echo 'BOUNCE=policy-violation (Blocked)';
+          echo '';
+          echo '%RATE normal: 4 (burst 6)';
+          echo 'KIND: message';
+          echo 'LIMIT: normal';
+          echo 'BOUNCE=policy-violation (Sending too fast!)'; } > "$prosody_firewall_rules"
+        xmpp_restart=1
+    fi
+    chown prosody:prosody "$prosody_firewall_rules"
+    chown prosody:prosody "$blocklisted_addresses_filename"
+
+    # ensure firewall rules file is linked
+    if ! grep -q "firewall_scripts =" /etc/prosody/prosody.cfg.lua; then
+        echo "firewall_scripts = { \"$prosody_firewall_rules\" }" >> /etc/prosody/prosody.cfg.lua
+        xmpp_restart=1
+    else
+        if ! grep -q "firewall_scripts = { \"$prosody_firewall_rules\" }" /etc/prosody/prosody.cfg.lua; then
+            sed -i "s|firewall_scripts =.*|firewall_scripts = { \"$prosody_firewall_rules\" }|g" /etc/prosody/prosody.cfg.lua
+            xmpp_restart=1
+        fi
+    fi
+    if ! grep -q "firewall_scripts =" /etc/prosody/prosody.cfg.lua; then
+        echo "firewall_scripts = { \"$prosody_firewall_rules\" }" >> /etc/prosody/prosody.cfg.lua
+        xmpp_restart=1
+    else
+        if ! grep -q "firewall_scripts = { \"$prosody_firewall_rules\" }" /etc/prosody/prosody.cfg.lua; then
+            sed -i "s|firewall_scripts =.*|firewall_scripts = { \"$prosody_firewall_rules\" }|g" /etc/prosody/prosody.cfg.lua
+            xmpp_restart=1
+        fi
+    fi
+}
+
+function xmpp_create_config {
+    XMPP_ONION_HOSTNAME=$(cat /var/lib/tor/hidden_service_email/hostname)
+    xmpp_muc_domain="$DEFAULT_DOMAIN_NAME"
+    xmpp_plain_auth='false'
+    if [[ "$ONION_ONLY" != 'no' ]]; then
+	xmpp_muc_domain="$XMPP_ONION_HOSTNAME"
+	# plain aith allows xmpp notifications to work on onion addresses
+	xmpp_plain_auth='true'
+    fi
+    ADMIN_USER=$(get_completion_param "Admin user")
+    XMPP_ADMINS="\"${MY_USERNAME}@${xmpp_muc_domain}\", \"notification@${xmpp_muc_domain}\""
+    if [ "${ADMIN_USER}" ]; then
+	if [[ "${ADMIN_USER}" != "${MY_USERNAME}" ]]; then
+	    XMPP_ADMINS="\"${MY_USERNAME}@${xmpp_muc_domain}\", \"${ADMIN_USER}@${xmpp_muc_domain}\", \"notification@${xmpp_muc_domain}\""
+	fi
+    fi
+    echo "admins = { ${XMPP_ADMINS} }" > /etc/prosody/prosody.cfg.lua
+    echo 'plugin_paths = { "/var/lib/prosody/prosody-modules" }' >> /etc/prosody/prosody.cfg.lua
+    echo '' >> /etc/prosody/prosody.cfg.lua
+    xmpp_modules /etc/prosody/prosody.cfg.lua
+    echo '' >> /etc/prosody/prosody.cfg.lua
+    xmpp_onion_addresses /etc/prosody/prosody.cfg.lua
+    xmpp_contact_info /etc/prosody/prosody.cfg.lua
+    xmpp_server_blocklist /etc/prosody/prosody.cfg.lua
+    { echo '';
+      echo 'allow_registration = false;';
+      echo '';
+      echo 'daemonize = true;';
+      echo '';
+      echo 'pidfile = "/var/run/prosody/prosody.pid";';
+      echo '';
+      echo 'https_ports = { 5281 }';
+      echo 'https_interfaces = { "*" }';
+      echo 'https_ssl = {'; } >> /etc/prosody/prosody.cfg.lua
+    if [ -f "/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/fullchain.pem" ]; then
+        echo "    certificate = \"/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/fullchain.pem\";" >> /etc/prosody/prosody.cfg.lua
+        echo "    key = \"/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/privkey.pem\";" >> /etc/prosody/prosody.cfg.lua
+    else
+        echo "    certificate = \"/var/lib/prosody/xmpp.crt\";" >> /etc/prosody/prosody.cfg.lua
+        echo "    key = \"/var/lib/prosody/xmpp.key\";" >> /etc/prosody/prosody.cfg.lua
+    fi
+    { echo "    curve = \"$XMPP_ECC_CURVE\";";
+      echo "    ciphers = \"$XMPP_CIPHERS\";";
+      echo '    options = {"no_sslv2", "no_sslv3" };'; } >> /etc/prosody/prosody.cfg.lua
+
+    if [ -f "/etc/ssl/certs/${DEFAULT_DOMAIN_NAME}.dhparam" ]; then
+	cp "/etc/ssl/certs/${DEFAULT_DOMAIN_NAME}.dhparam" /etc/prosody/xmpp.dhparam
+    else
+	cp "/etc/ssl/certs/xmpp.dhparam" /etc/prosody/xmpp.dhparam
+    fi
+    chown prosody:prosody /etc/prosody/xmpp.dhparam
+    echo "    dhparam = \"/etc/prosody/xmpp.dhparam\";" >> /etc/prosody/prosody.cfg.lua
+
+    { echo "}";
+      echo '';
+      echo 'ssl = {'; } >> /etc/prosody/prosody.cfg.lua
+    if [ -f "/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/fullchain.pem" ]; then
+        echo "    certificate = \"/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/fullchain.pem\";" >> /etc/prosody/prosody.cfg.lua
+        echo "    key = \"/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/privkey.pem\";" >> /etc/prosody/prosody.cfg.lua
+    else
+        echo "    certificate = \"/var/lib/prosody/xmpp.crt\";" >> /etc/prosody/prosody.cfg.lua
+        echo "    key = \"/var/lib/prosody/xmpp.key\";" >> /etc/prosody/prosody.cfg.lua
+    fi
+    { echo "    curve = \"$XMPP_ECC_CURVE\";";
+      echo '    depth = "2";';
+      echo "    ciphers = \"$XMPP_CIPHERS\";";
+      echo '    options = {"no_sslv2", "no_sslv3" };'; } >> /etc/prosody/prosody.cfg.lua
+    if [ -f "/etc/ssl/certs/${DEFAULT_DOMAIN_NAME}.pem" ]; then
+        echo "    dhparam = \"/etc/ssl/certs/${DEFAULT_DOMAIN_NAME}.dhparam\";" >> /etc/prosody/prosody.cfg.lua
+    else
+        echo "    dhparam = \"/etc/ssl/certs/xmpp.dhparam\";" >> /etc/prosody/prosody.cfg.lua
+    fi
+
+    e2ee_policy='optional'
+    if [[ "$XMPP_E2EE" == 'y'* || "$XMPP_E2EE" == 't'* ]]; then
+        e2ee_policy='required'
+    fi
+
+    { echo '}';
+      echo '';
+      echo 'c2s_require_encryption = false';
+      echo 's2s_require_encryption = false';
+      echo "allow_unencrypted_plain_auth = ${xmpp_plain_auth}";
+      echo '';
+      echo 'e2e_policy_muc = "none"';
+      echo "e2e_policy_chat = \"$e2ee_policy\"";
+      echo "e2e_policy_message_required_chat = \"$xmpp_encryption_warning\"";
+      echo "e2e_policy_whitelist = { \"notification@${xmpp_muc_domain}\" };";
+      echo '';
+      echo 's2s_secure_auth = false';
+      echo '';
+      echo 'authentication = "internal_hashed"';
+      echo '';
+      echo 'storage = "sql"';
+      echo 'sql = { driver = "SQLite3", database = "prosody.sqlite" }';
+      echo '';
+      echo 'log = {';
+      echo '    info = "/dev/null";';
+      echo '    error = "/dev/null";';
+      echo '    { levels = { "error" }; to = "/dev/null";  };';
+      echo '}';
+      echo ''; } >> /etc/prosody/prosody.cfg.lua
+    if [[ "$ONION_ONLY" != 'no' ]]; then
+        echo "VirtualHost \"${XMPP_ONION_HOSTNAME}\"" >> /etc/prosody/prosody.cfg.lua
+        # TLS is not needed for onion transport security
+        sed -i 's|s2s_require_encryption =.*|s2s_require_encryption = false|g' /etc/prosody/prosody.cfg.lua
+        sed -i 's|c2s_require_encryption =.*|c2s_require_encryption = false|g' /etc/prosody/prosody.cfg.lua
+    else
+        echo "VirtualHost \"${DEFAULT_DOMAIN_NAME}\"" >> /etc/prosody/prosody.cfg.lua
+    fi
+    echo '    ssl = {' >> /etc/prosody/prosody.cfg.lua
+    if [ -f "/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/fullchain.pem" ]; then
+        echo "        certificate = \"/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/fullchain.pem\";" >> /etc/prosody/prosody.cfg.lua
+        echo "        key = \"/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/privkey.pem\";" >> /etc/prosody/prosody.cfg.lua
+    else
+        echo "        certificate = \"/var/lib/prosody/xmpp.crt\";" >> /etc/prosody/prosody.cfg.lua
+        echo "        key = \"/var/lib/prosody/xmpp.key\";" >> /etc/prosody/prosody.cfg.lua
+    fi
+    { echo "        curve = \"$XMPP_ECC_CURVE\";";
+      echo '        depth = "2";';
+      echo "        ciphers = \"$XMPP_CIPHERS\";";
+      echo '        options = {"no_sslv2", "no_sslv3" };';
+      echo '        dhparam = "/etc/prosody/xmpp.dhparam";';
+      echo '    }';
+      echo '';
+      echo 'Include "conf.d/*.cfg.lua"';
+      echo 'http_upload_path = "/var/lib/prosody/http_uploads"';
+      echo 'http_upload_file_size_limit = 25165824';
+      echo 'http_upload_expire_after = 60 * 60 * 24 * 7 -- a week';
+      echo '';
+      echo "Component \"chat.${xmpp_muc_domain}\" \"muc\"";
+      echo '    name = "Chatrooms"';
+      echo '    modules_enabled = {';
+      echo '        "muc_mam";';
+      echo '        "pep";';
+      echo '        "muc_defaults";';
+      echo '        "muc_moderate";';
+      echo '        "muc_limits";';
+      echo '        "filter_words";';
+      echo '        "muc_block_pm";';
+      echo "        ${xmpp_tls_enabled}\"tls\";";
+      echo '        "vcard_muc";';
+      echo '        "s2s_blacklist";';
+      echo '    }'; } >> /etc/prosody/prosody.cfg.lua
+
+    if [[ "$ONION_ONLY" == 'no' ]]; then
+        { echo '    ssl = {';
+
+          echo "        certificate = \"/etc/letsencrypt/live/chat.${DEFAULT_DOMAIN_NAME}/fullchain.pem\";";
+          echo "        key = \"/etc/letsencrypt/live/chat.${DEFAULT_DOMAIN_NAME}/privkey.pem\";";
+          echo "        curve = \"$XMPP_ECC_CURVE\";";
+          echo "        depth = \"2\";";
+          echo "        ciphers = \"$XMPP_CIPHERS\";";
+          echo "        options = { \"no_sslv2\", \"no_sslv3\" };";
+          echo "        dhparam = \"/etc/prosody/xmpp.dhparam\";";
+          echo "    }"; } >> /etc/prosody/prosody.cfg.lua
+    fi
+
+    { echo 'limits = {';
+      echo '    c2s = {';
+      echo "        rate = \"${XMPP_MAX_C2S_RATE}kb/s\";";
+      echo "        burst = \"2s\";";
+      echo '    };';
+      echo '    s2sin = {';
+      echo "        rate = \"${XMPP_MAX_S2S_RATE}kb/s\";";
+      echo "        burst = \"5s\";";
+      echo '    };';
+      echo '}';
+      echo 'storage = { muc_log = "sql"; }';
+      echo 'filter_words = {}';
+      echo 'sql = { driver = "SQLite3", database = "prosody.sqlite" }';
+      echo 'muc_event_rate = 0.5;';
+      echo 'muc_burst_factor = 10;';
+      echo 'muc_log_by_default = false;';
+      echo 'muc_log_all_rooms = false;';
+      echo 'max_archive_query_results = 10;';
+      echo 'max_history_messages = 10;';
+      echo 'muc_room_default_public = true;';
+      echo 'muc_room_default_persistent = true;';
+      echo 'muc_room_default_members_only = false;';
+      echo 'muc_room_default_moderated = true;';
+      echo 'muc_room_default_public_jids = true;';
+      echo 'muc_room_default_change_subject = false;';
+      echo 'muc_room_default_history_length = 20;';
+      echo 'muc_room_default_language = "en";';
+      echo 'muc_room_locking = false;';
+      echo 'muc_room_lock_timeout = 300;';
+      echo 'muc_tombstones = false;';
+      echo 'restrict_room_creation = "local";'; } >> /etc/prosody/prosody.cfg.lua
+}
+
+function add_xmpp_onion_http_upload {
+    if grep -q 'HiddenServicePort 5281 127.0.0.1:5281' "/etc/torrc.d/${PROJECT_NAME}"; then
+        return
+    fi
+    sed -i '/ 5269 /a HiddenServicePort 5281 127.0.0.1:5281' "/etc/torrc.d/${PROJECT_NAME}"
+    restart_tor_daemon
+}
+
+function add_xmpp_onion_to_email {
+    if ! grep -q 'hidden_service_xmpp' "/etc/torrc.d/${PROJECT_NAME}"; then
+        return
+    fi
+
+    # remove xmpp hidden service
+    sed -i "/hidden_service_xmpp/,/127.0.0.1:5222/d" "$ONION_SERVICES_FILE"
+    sed -i '/5222/d' "/etc/torrc.d/${PROJECT_NAME}"
+    sed -i '/5269/d' "/etc/torrc.d/${PROJECT_NAME}"
+    sed -i '/5281/d' "/etc/torrc.d/${PROJECT_NAME}"
+
+    # add xmpp ports to email
+    sed -i '/ 465 /a HiddenServicePort 5269 127.0.0.1:5269' "/etc/torrc.d/${PROJECT_NAME}"
+    sed -i '/ 465 /a HiddenServicePort 5222 127.0.0.1:5222' "/etc/torrc.d/${PROJECT_NAME}"
+    sed -i '/ 465 /a HiddenServicePort 5281 127.0.0.1:5281' "/etc/torrc.d/${PROJECT_NAME}"
+
+    restart_tor_daemon
+}
+
+function install_xmpp {
+    increment_app_install_progress
+
+    if [ ! -d "$INSTALL_DIR" ]; then
+        mkdir -p "$INSTALL_DIR"
+    fi
+
+    # remove any existing install attempt
+    if [ -f "$INSTALL_DIR/$prosody_modules_filename" ]; then
+        rm "$INSTALL_DIR/$prosody_modules_filename"
+    fi
+    if [ -d "$INSTALL_DIR/prosody-modules" ]; then
+        rm -rf "$INSTALL_DIR/prosody-modules"
+    fi
+
+    if [[ "$ONION_ONLY" != 'no' ]]; then
+        # Disable TLS for onion only versions
+        # this makes the user experience a lot slicker
+        # because there are no prompts to accept
+        # self-signed certs
+        xmpp_tls_enabled='-- '
+    fi
+
+    increment_app_install_progress
+
+    update_prosody_modules
+
+    increment_app_install_progress
+
+    # obtain a cert for the default domain
+    if [[ "$(cert_exists "${DEFAULT_DOMAIN_NAME}" pem)" == "0" ]]; then
+        create_site_certificate "${DEFAULT_DOMAIN_NAME}" 'yes'
+        if [[ "$ONION_ONLY" == 'no' ]]; then
+            if [[ "$(cert_exists "${DEFAULT_DOMAIN_NAME}" pem)" == "0" ]]; then
+                echo $'LetsEncrypt cert could not be obtained for xmpp'
+                exit 72
+            fi
+        fi
+    fi
+
+    increment_app_install_progress
+
+    if [[ "$(cert_exists "chat.${DEFAULT_DOMAIN_NAME}" pem)" == "0" ]]; then
+        create_site_certificate "chat.${DEFAULT_DOMAIN_NAME}" 'yes'
+        if [[ "$ONION_ONLY" == 'no' ]]; then
+            if [[ "$(cert_exists "chat.${DEFAULT_DOMAIN_NAME}" pem)" == "0" ]]; then
+                echo $'LetsEncrypt cert could not be obtained for xmpp muc'
+                exit 56
+            fi
+        fi
+    fi
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES lua-sec lua-bitop lua5.4 liblua5.4-dev
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES libidn11-dev libssl-dev lua-dbi-sqlite3 libsqlite3-dev sqlite3
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES mercurial curl
+
+    increment_app_install_progress
+
+    # INSTALL_PACKAGES python3-xmpp
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES prosody
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES sendxmpp
+
+    increment_app_install_progress
+
+    if [ ! -f /usr/bin/hg ]; then
+        echo $"Couldn't install mercurial"
+        exit 52
+    fi
+
+    if [ ! -d /etc/prosody ]; then
+        echo $"ERROR: prosody does not appear to have installed. $CHECK_MESSAGE"
+        exit 52
+    fi
+
+    if ! grep -q "prosody:" /etc/group; then
+	groupadd prosody
+    fi
+
+    if [ ! -d ${XMPP_DIRECTORY}/http_uploads ]; then
+        mkdir -p ${XMPP_DIRECTORY}/http_uploads
+    fi
+    if [ ! -d /etc/prosody/conf.d ]; then
+        mkdir -p /etc/prosody/conf.d
+    fi
+
+    chmod -R 700 /etc/prosody/conf.d
+    chown -R prosody ${XMPP_DIRECTORY}
+    chown -R prosody /etc/prosody/conf.d
+
+    # install modules
+    update_prosody_modules initial
+    if [ ! -d ${XMPP_DIRECTORY}/prosody-modules ]; then
+        echo $'No prosody modules available'
+        exit 82
+    fi
+
+    increment_app_install_progress
+
+    # create a certificate
+    if [ ! -f "/etc/ssl/certs/${DEFAULT_DOMAIN_NAME}.pem" ]; then
+        if [ ! -f /etc/ssl/certs/xmpp.crt ]; then
+            "${PROJECT_NAME}-addcert" -h xmpp --dhkey "${DH_KEYLENGTH}"
+            # shellcheck disable=SC2034
+            CHECK_HOSTNAME=xmpp
+            check_certificates xmpp
+            if [ ! -f /etc/ssl/certs/xmpp.crt ]; then
+                echo $'Failed to create xmpp certificate'
+                exit 72
+            fi
+            if [ ! -f /etc/ssl/private/xmpp.key ]; then
+                echo $'Failed to create xmpp private certificate'
+                exit 36
+            fi
+            chmod g=rX /etc/ssl/private/xmpp.key
+            chmod g=rX /etc/ssl/certs/xmpp.*
+	    cp /etc/ssl/certs/xmpp.crt /var/lib/prosody/xmpp.crt
+	    chown prosody:prosody /var/lib/prosody/xmpp.crt
+	    cp /etc/ssl/private/xmpp.key /var/lib/prosody/xmpp.key
+	    chown prosody:prosody /var/lib/prosody/xmpp.key
+        fi
+    fi
+
+    increment_app_install_progress
+
+    if ! grep -q "default:" /etc/group; then
+	groupadd default
+    fi
+    chmod 600 /etc/shadow
+    chmod 600 /etc/gshadow
+    usermod -g default prosody
+    chmod 0000 /etc/shadow
+    chmod 0000 /etc/gshadow
+
+    chown root:default /etc/ssl/private/xmpp.*
+    chown root:default /etc/ssl/certs/xmpp.*
+    chown root:default "/etc/ssl/private/${DEFAULT_DOMAIN_NAME}.*"
+    chown root:default "/etc/ssl/certs/${DEFAULT_DOMAIN_NAME}.*"
+
+    increment_app_install_progress
+
+    if [ ! -d /var/lib/tor ]; then
+        echo $'No Tor installation found. xmpp onion site cannot be configured.'
+        exit 87
+    fi
+
+    increment_app_install_progress
+
+    if [ ! -f /var/lib/tor/hidden_service_email/hostname ]; then
+        echo $'xmpp onion site hostname not found'
+        exit 65
+    fi
+    XMPP_ONION_HOSTNAME=$(cat /var/lib/tor/hidden_service_email/hostname)
+    set_completion_param "xmpp onion domain" "${XMPP_ONION_HOSTNAME}"
+
+    increment_app_install_progress
+
+    if [ -f "$IMAGE_PASSWORD_FILE" ]; then
+        XMPP_PASSWORD="$(printf "%s" "$(cat "$IMAGE_PASSWORD_FILE")")"
+    else
+        if [ ${#XMPP_PASSWORD} -lt 8 ]; then
+            XMPP_PASSWORD="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
+        fi
+    fi
+
+    function_check configure_firewall_for_xmpp
+    configure_firewall_for_xmpp
+
+    increment_app_install_progress
+
+    update_default_domain
+
+    xmpp_create_config
+
+    increment_app_install_progress
+
+    chown -R prosody /etc/prosody
+    chown -R prosody ${XMPP_DIRECTORY}
+    chown -R prosody /usr/lib/prosody
+    chmod -R 700 /etc/prosody/conf.d
+    usermod -a -G www-data prosody
+
+    # Avoid STIG failures
+    if [ -f /usr/lib/ssl/private/xmpp.key ]; then
+        chown root:root /usr/lib/ssl/private/xmpp.key
+    fi
+    if [ -f /usr/lib/ssl/certs/xmpp.crt ]; then
+        chown root:root /usr/lib/ssl/certs/xmpp.crt
+    fi
+    if [ -f /usr/lib/ssl/certs/xmpp.dhparam ]; then
+        chown root:root /usr/lib/ssl/certs/xmpp.dhparam
+    fi
+
+    if [ -d /etc/letsencrypt ]; then
+        usermod -a -G ssl-cert prosody
+    fi
+
+    if [ -f /etc/ssl/certs/xmpp.dhparam ]; then
+        cp /etc/ssl/certs/xmpp.dhparam /etc/prosody/xmpp.dhparam
+        chown prosody:prosody /etc/prosody/xmpp.dhparam
+        sed -i 's|/etc/ssl/certs/xmpp.dhparam|/etc/prosody/xmpp.dhparam|g' /etc/prosody/prosody.cfg.lua
+    fi
+
+    increment_app_install_progress
+
+    add_xmpp_onion_to_email
+
+    increment_app_install_progress
+
+    add_xmpp_onion_http_upload
+
+    increment_app_install_progress
+
+    prosody_default_security_labels /etc/prosody/prosody.cfg.lua
+
+    prosody_update_onion_certs
+
+    systemctl restart prosody
+
+    increment_app_install_progress
+
+    if [[ $ONION_ONLY != 'no' ]]; then
+	prosody_register_str="prosodyctl register \"$MY_USERNAME\" \"$XMPP_ONION_HOSTNAME\" \"[password]\""
+        prosodyctl register "$MY_USERNAME" "$XMPP_ONION_HOSTNAME" "$XMPP_PASSWORD"
+    else
+	prosody_register_str="prosodyctl register \"$MY_USERNAME\" \"$DEFAULT_DOMAIN_NAME\" \"[password]\""
+        prosodyctl register "$MY_USERNAME" "$DEFAULT_DOMAIN_NAME" "$XMPP_PASSWORD"
+    fi
+    # shellcheck disable=SC2181
+    if [ ! "$?" = "0" ]; then
+        echo ''
+        echo ''
+        systemctl status prosody -l
+        echo ''
+        echo ''
+        cat /etc/prosody/prosody.cfg.lua
+        echo ''
+        echo ''
+	echo "$prosody_register_str"
+        #remove_xmpp
+        echo $'Unable to register prosody user'
+        exit 34
+    fi
+
+    increment_app_install_progress
+
+    prosody_daemon_restart_script
+
+    "${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a xmpp -p "$XMPP_PASSWORD"
+
+    # Add avahi services
+    { echo '<?xml version="1.0" standalone="no"?><!--*-nxml-*-->';
+      echo '<!DOCTYPE service-group SYSTEM "avahi-service.dtd">';
+      echo '<service-group>';
+      echo '  <name replace-wildcards="yes">%h XMPP</name>';
+      echo '  <service>';
+      echo '    <type>_xmpp._tcp</type>';
+      echo "    <port>5222</port>";
+      echo '  </service>';
+      echo '  <service>';
+      echo '    <type>_xmpp-server._tcp</type>';
+      echo "    <port>5269</port>";
+      echo '  </service>';
+      echo '</service-group>'; } > /etc/avahi/services/xmpp.service
+
+    increment_app_install_progress
+
+    install_i2p
+
+    increment_app_install_progress
+
+    xmpp_i2p_bridge
+
+    increment_app_install_progress
+
+    xmpp_i2p_virtualhost
+
+    increment_app_install_progress
+
+    systemctl restart avahi-daemon
+
+    increment_app_install_progress
+
+    xmpp_update_certs
+
+    increment_app_install_progress
+
+    xmpp_fix_exists
+
+    increment_app_install_progress
+
+    if [ ! -f /etc/turnserver.conf ]; then
+	install_turn
+    fi
+
+    increment_app_install_progress
+
+    xmpp_setup_turn
+
+    increment_app_install_progress
+
+    systemctl restart prosody
+
+    APP_INSTALLED=1
+}
+
+# NOTE: deliberately no exit 0

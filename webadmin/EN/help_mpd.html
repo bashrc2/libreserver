@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+  <meta charset="utf-8">
+  <style>
+    @import url("libreserver.css");
+
+    * {
+        box-sizing: border-box;
+    }
+
+    .codetext {
+        width: 80%;
+        text-align: left;
+        font-size: 100%;
+        margin-left : 10%;
+        font-family: Courier;
+    }
+
+    .subheadertext {
+        margin-left : 10%;
+        text-align: left;
+        font-size: 110%;
+        font-weight: bold;
+    }
+
+    .subheaderports {
+        margin-left : 10%;
+        text-align: left;
+        font-size: 110%;
+        font-weight: bold;
+    }
+
+    .helptext {
+        width: 80%;
+        text-align: left;
+        font-size: 100%;
+        margin-left : 10%;
+    }
+
+    .portstext {
+        width: 80%;
+        text-align: left;
+        font-size: 100%;
+        margin-left : 10%;
+    }
+
+    .row {
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+        padding: 0 4px;
+    }
+
+    .column {
+        -ms-flex: 25%;
+        flex: 15%;
+        max-width: 25%;
+        padding: 0 4px;
+    }
+
+    .column img {
+        margin-top: 8px;
+        vertical-align: middle;
+    }
+
+    @media screen and (max-width: 800px) {
+        .column {
+            -ms-flex: 50%;
+            flex: 50%;
+            max-width: 50%;
+        }
+    }
+
+    @media screen and (max-width: 200px) {
+        .column {
+            -ms-flex: 100%;
+            flex: 100%;
+            max-width: 100%;
+        }
+    }
+  </style>
+  <body>
+
+    <div class="header">
+      <a href="app_mpd.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
+    </div>
+
+    <p class="headertext" translate="no">mpd</p>
+
+    <p class="subheadertext" translate="yes">Uploading Music</p>
+
+    <p class="helptext"><b>1.</b> <span translate="yes">Music can be uploaded using NextCloud. Install the app and then create a directory called 'Music'.</span></p>
+
+    <p class="helptext"><b>2.</b> <span translate="yes">Drag your files into the Music directory and they will then become available to mpd.</span></p>
+
+    <p class="subheadertext" translate="yes">Setting up with an Android phone</p>
+
+    <p class="helptext"><b>1.</b> <span translate="yes">Install F-Droid</span></p>
+
+    <p class="helptext"><b>2.</b> <span translate="yes">Select search (magnifying glass icon) and search for 'MALP', then select 'install'</span></p>
+
+    <p class="helptext"><b>3.</b> <span translate="yes">Open MALP and from the settings select Profiles</span></p>
+
+    <p class="helptext"><b>4.</b> <span translate="yes">Enter the following settings:</span></p>
+
+    <p class="codetext" translate="no">
+      Profile name: libreserver<br>
+      Hostname: libreserver (or the local IP address of your server)<br>
+      Port: 6600<br>
+      Password: mpd
+    </p>
+
+    <p class="helptext"><b>5.</b> <span translate="yes">Save the settings by selecting the disk icon at the top right of the screen</span></p>
+
+    <p class="helptext"><b>6.</b> <span translate="yes">You should now be able to connect to mpd on your server and select and play albums.</span></p>
+
+    <p class="helptext"><b>7.</b> <span translate="yes">In a non-Tor browser navigate to http://libreserver:8250 or http://[server local IP address]:8250 and you should be able to play the selected album.</span></p>
+
+    <p class="subheadertext" translate="yes">Setting up on the desktop</p>
+
+    <p class="helptext"><b>1.</b> <span translate="yes">Install Sonata</span></p>
+
+    <p class="codetext" translate="no">
+      sudo apt-get install sonata
+    </p>
+
+    <p class="helptext"><b>2.</b> <span translate="yes">Run Sonata and enter the following settings:</span></p>
+
+    <p class="codetext" translate="no">
+      Name: libreserver<br>
+      Host: libreserver (or the local IP address of your server)<br>
+      Port: 6600<br>
+      Password: mpd<br>
+      Music dir: None
+    </p>
+
+    <p class="helptext"><b>3.</b> <span translate="yes">You should now be able to see your albums listed and be able to add them to the currently playing list.</span></p>
+
+    <p class="helptext"><b>4.</b> <span translate="yes">In a non-Tor browser navigate to http://libreserver:8250 or http://[server local IP address]:8250 and you should be able to play the selected album.</span></p>
+
+  </body>
+</html>

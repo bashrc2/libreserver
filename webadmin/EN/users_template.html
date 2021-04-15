@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Refresh" content="30">
+    <style>
+      @import url("libreserver.css");
+
+      .header {
+          text-align: center;
+          padding: 32px;
+          font-size: 120%;
+          font-family: arial;
+          font-weight: bold;
+          font-size: 170%;
+          color: var(--main-fg-color);
+      }
+
+      .adduser {
+          font-size: 250%;
+          font-weight: bold;
+          color: var(--main-fg-color);
+      }
+
+      .row {
+          display: -ms-flexbox;
+          display: flex;
+          -ms-flex-wrap: wrap;
+          flex-wrap: wrap;
+          padding: 0 4px;
+      }
+
+      .column {
+          -ms-flex: 25%;
+          flex: 25%;
+          min-width: 55%;
+          max-width: 55%;
+          padding: 0 30%;
+          line-height: 60px;
+      }
+
+      .chip {
+          display: inline-block;
+          padding: 0 25px;
+          height: 50px;
+          font-size: 110%;
+          line-height: 50px;
+          border-radius: 25px;
+          width: 50%;
+          background-color: #f1f1f1;
+      }
+
+      .chip img {
+          float: left;
+          margin: 0 10px 0 -25px;
+          height: 50px;
+          width: 50px;
+          border-radius: 50%;
+      }
+    </style>
+  </head>
+  <body>
+
+    <div class="header">
+      <a href="index.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
+      <br><label translate="yes">Members</label>
+    </div>
+
+    <!-- users list -->
+    <div class="row">
+      <div class="column">
+        <div class="chip">
+          <a href="userprofile.html">
+            <img src="images/admin_users.png" alt="Person" width="96" height="96" alt="User icon">
+            User A
+          </a>
+        </div>
+        <div class="chip">
+          <a href="userprofile.html">
+            <img src="images/admin_users.png" alt="Person" width="96" height="96" alt="User icon">
+            User B
+          </a>
+        </div>
+        <div class="chip">
+          <a href="userprofile.html">
+            <img src="images/admin_users.png" alt="Person" width="96" height="96" alt="User icon">
+            User C
+          </a>
+        </div>
+        <div class="chip">
+          <a href="new_user.html">
+            <img src="images/admin_users.png" alt="Person" width="96" height="96" alt="User icon">
+            <div class="adduser">+</div>
+          </a>
+        </div>
+      </div>
+    </div>
+    <!-- end of users list -->
+  </body>
+</html>

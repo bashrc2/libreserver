@@ -1,0 +1,248 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Installs mesh applications. This avoids duplicated functions
+# within libreserver and libreserver-image-customize and also
+# for client installs
+#
+# License
+# =======
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+PROJECT_NAME='libreserver'
+COMPLETION_FILE=$HOME/${PROJECT_NAME}-completed.txt
+
+export TEXTDOMAIN=${PROJECT_NAME}-mesh-install
+export TEXTDOMAINDIR="/usr/share/locale"
+
+WIFI_CHANNEL=2
+WIFI_INTERFACE='wlan0'
+
+# B.A.T.M.A.N settings
+BATMAN_CELLID='02:BA:00:00:03:01'
+WIFI_SSID='mesh'
+
+rootdir=''
+FN=
+CHROOT_PREFIX=''
+
+# To avoid confusions these are obtained from the main project file
+TOXID_REPO=
+TOX_PORT=
+TOX_BOOTSTRAP_PORT=
+TOXCORE_REPO=
+TOXIC_REPO=
+TOXCORE_COMMIT=
+TOXIC_COMMIT=
+# These are some default nodes, but you can replace them with trusted nodes
+# as you prefer. See https://wiki.tox.im/Nodes
+TOX_NODES=
+#TOX_NODES=(
+#  '192.254.75.102,2607:5600:284::2,33445,951C88B7E75C867418ACDB5D273821372BB5BD652740BCDF623A4FA293E75D2F,Tox RELENG,US'
+#  '144.76.60.215,2a01:4f8:191:64d6::1,33445,04119E835DF3E78BACF0F84235B300546AF8B936F035185E2A8E9E0A67C8924F,sonOfRa,DE'
+#)
+
+# Directory where source code is downloaded and compiled
+INSTALL_DIR=$HOME/build
+
+MESH_INSTALL_DIR=/var/lib
+
+REMOVE='no'
+
+source /usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-git
+
+function show_help {
+    echo ''
+    echo $"${PROJECT_NAME}-mesh-install -f [function] -r [rootdir]"
+    echo ''
+    echo $'Runs a mesh network install function'
+    echo ''
+    echo $'  -h --help                   Show help'
+    echo $'  -f --function [name]        Name of the function to be run'
+    echo $'  -r --rootdir [directory]    Root directory'
+    echo $'  -w --wifi [interface]       e.g. wlan0'
+    echo ''
+    exit 0
+}
+
+function mesh_avahi {
+    # shellcheck disable=SC2086
+    $CHROOT_PREFIX INSTALL_PACKAGES avahi-utils avahi-dnsconfd
+
+    decarray=( 1 2 3 4 5 6 7 8 9 0 )
+    PEER_ID=${decarray[$RANDOM%10]}${decarray[$RANDOM%10]}${decarray[$RANDOM%10]}${decarray[$RANDOM%10]}${decarray[$RANDOM%10]}${decarray[$RANDOM%10]}${decarray[$RANDOM%10]}${decarray[$RANDOM%10]}
+    sed -i "s|#host-name=.*|host-name=P$PEER_ID|g" $rootdir/etc/avahi/avahi-daemon.conf
+
+    if [ ! -d $rootdir/etc/avahi/services ]; then
+        mkdir -p $rootdir/etc/avahi/services
+    fi
+
+    # remove an avahi service which isn't used
+    if [ -f $rootdir/etc/avahi/services/udisks.service ]; then
+        rm $rootdir/etc/avahi/services/udisks.service
+    fi
+
+    # Add a mesh routing protocol service
+    { echo '<?xml version="1.0" standalone="no"?><!--*-nxml-*-->';
+      echo '<!DOCTYPE service-group SYSTEM "avahi-service.dtd">';
+      echo '<service-group>';
+      echo '  <name replace-wildcards="yes">%h routing</name>';
+      echo '  <service>';
+      echo '    <type>_bmx6._tcp</type>';
+      echo '  </service>';
+      echo '</service-group>'; } > "$rootdir/etc/avahi/services/routing.service"
+
+    # keep the daemon running
+    WATCHDOG_SCRIPT_NAME="keepon"
+    { echo '';
+    echo '# keep avahi daemon running';
+    echo "AVAHI_RUNNING=\$(ps aux | grep avahi-daemon | grep -v grep > /dev/null && echo Running)";
+    echo "if [ ! \$AVAHI_RUNNING ]; then";
+    echo '  systemctl start avahi-daemon';
+    echo "  echo -n \$CURRENT_DATE >> \$LOGFILE";
+    echo "  echo \" Avahi daemon restarted\" >> \$LOGFILE";
+    echo 'fi'; } >> "$rootdir/usr/bin/$WATCHDOG_SCRIPT_NAME"
+    chmod +x "$rootdir/usr/bin/$WATCHDOG_SCRIPT_NAME"
+}
+
+function install_batman_remove {
+    systemctl stop batman
+    rm $rootdir/var/lib/batman
+    rm $rootdir/etc/systemd/system/batman.service
+}
+
+function install_batman {
+    # shellcheck disable=SC2086
+    $CHROOT_PREFIX INSTALL_PACKAGES iproute2 bridge-utils libnetfilter-conntrack3 batctl
+    # shellcheck disable=SC2086
+    $CHROOT_PREFIX INSTALL_PACKAGES python3-dev libevent-dev ebtables python3-pip git
+    # shellcheck disable=SC2086
+    $CHROOT_PREFIX INSTALL_PACKAGES wireless-tools rfkill
+
+    if ! grep -q "batman_adv" "$rootdir/etc/modules"; then
+        echo 'batman_adv' >> "$rootdir/etc/modules"
+    fi
+    if ! grep -q "tunnel6" "$rootdir/etc/modules"; then
+        echo 'tunnel6' >> "$rootdir/etc/modules"
+    fi
+    if ! grep -q "ip6_tunnel" "$rootdir/etc/modules"; then
+        echo 'ip6_tunnel' >> "$rootdir/etc/modules"
+    fi
+
+    BATMAN_SCRIPT=$rootdir/var/lib/batman
+
+    if [ -f /usr/local/bin/${PROJECT_NAME}-mesh-batman ]; then
+        cp /usr/local/bin/${PROJECT_NAME}-mesh-batman $BATMAN_SCRIPT
+    else
+        cp /usr/bin/${PROJECT_NAME}-mesh-batman $BATMAN_SCRIPT
+    fi
+
+    BATMAN_DAEMON=$rootdir/etc/systemd/system/batman.service
+    { echo '[Unit]';
+      echo 'Description=B.A.T.M.A.N. Advanced';
+      echo 'After=network.target';
+      echo '';
+      echo '[Service]';
+      echo 'RemainAfterExit=yes';
+      echo "ExecStart=/var/lib/batman start";
+      echo "ExecStop=/var/lib/batman stop";
+      echo 'Restart=on-failure';
+      echo 'SuccessExitStatus=3 4';
+      echo 'RestartForceExitStatus=3 4';
+      echo '';
+      echo '# Allow time for the server to start/stop';
+      echo 'TimeoutSec=300';
+      echo '';
+      echo '[Install]';
+      echo 'WantedBy=multi-user.target'; } > "$BATMAN_DAEMON"
+    $CHROOT_PREFIX systemctl enable batman
+}
+
+function enable_tox_repo {
+    sudo sh -c "echo 'deb http://download.opensuse.org/repositories/home:/antonbatenev:/tox/Debian_9.0/ /' > /etc/apt/sources.list.d/tox.list"
+    gpg_add_key tox http://download.opensuse.org/repositories/home:antonbatenev:tox/Debian_9.0/Release.key
+    # shellcheck disable=SC2086
+    sudo $UPDATE_PACKAGES
+    echo "Tox Repository Installed."
+}
+
+function mesh_tox_client_qtox {
+    enable_tox_repo
+    # shellcheck disable=SC2086
+    sudo INSTALL_PACKAGES qtox
+    echo "qTox Installed."
+}
+
+function mesh_tox_client_toxic_from_repo {
+    enable_tox_repo
+    # shellcheck disable=SC2086
+    sudo INSTALL_PACKAGES toxic
+    echo "Toxic Installed."
+}
+
+while [ $# -gt 1 ]
+do
+    key="$1"
+
+    case $key in
+        -h|--help)
+            show_help
+            ;;
+        -f|--function)
+            shift
+            FN="$1"
+            ;;
+        -r|--rootdir)
+            shift
+            rootdir="$1"
+            CHROOT_PREFIX="chroot \"\${rootdir}\""
+            ;;
+        -w|--wifi|--interface)
+            shift
+            WIFI_INTERFACE="$1"
+            ;;
+        --remove)
+            shift
+            REMOVE="$1"
+            ;;
+        *)
+            # unknown option
+            ;;
+
+    esac
+    shift
+done
+
+if [[ $FN == 'avahi' ]]; then
+    mesh_avahi
+fi
+if [[ $FN == 'batman' ]]; then
+    if [[ $REMOVE != 'yes' ]]; then
+        install_batman
+    else
+        install_batman_remove
+    fi
+fi
+if [[ $FN == 'qtox' ]]; then
+    mesh_tox_client_qtox
+fi
+if [[ $FN == 'toxic' ]]; then
+    mesh_tox_client_toxic_from_repo
+fi
+
+exit 0

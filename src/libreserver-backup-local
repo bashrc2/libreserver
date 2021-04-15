@@ -1,0 +1,567 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Backup to local storage - typically a USB drive
+#
+# License
+# =======
+#
+# Copyright (C) 2015-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+PROJECT_NAME='libreserver'
+COMPLETION_FILE=$HOME/${PROJECT_NAME}-completed.txt
+CONFIGURATION_FILE=$HOME/${PROJECT_NAME}.cfg
+BACKUP_EXTRA_DIRECTORIES=/root/backup-extra-dirs.csv
+ENABLE_BACKUP_VERIFICATION="no"
+
+export TEXTDOMAIN=${PROJECT_NAME}-backup-local
+export TEXTDOMAINDIR="/usr/share/locale"
+
+# In simple backup mode the USB drive is auto-detected
+# and the backup keys are also stored on the drive,
+# symmetrically encrypted with a password
+simple_backup=
+simple_backup_password=
+
+PROJECT_INSTALL_DIR=/usr/local/bin
+if [ -f /usr/bin/${PROJECT_NAME} ]; then
+    PROJECT_INSTALL_DIR=/usr/bin
+fi
+
+backup_counter=0
+
+source "$PROJECT_INSTALL_DIR/${PROJECT_NAME}-vars"
+
+# include utils which allow function_check and drive mount
+UTILS_FILES="/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-*"
+for f in $UTILS_FILES
+do
+    source "$f"
+done
+
+clear
+
+USB_DRIVE=/dev/sdb1
+USB_MOUNT=/mnt/usb
+
+read_config_param USB_DRIVE
+
+ADMIN_USERNAME=
+ADMIN_NAME=
+
+# The name of a currently suspended site
+# Sites are suspended so that verification should work
+SUSPENDED_SITE=
+
+DATABASE_PASSWORD=$("${PROJECT_NAME}-pass" -u root -a mariadb)
+
+function make_backup_directory {
+    # make a backup directory on the drive
+    if [ ! -d $USB_MOUNT/backup ]; then
+        mkdir -p $USB_MOUNT/backup
+    fi
+    if [ ! -d $USB_MOUNT/backup ]; then
+        echo $"There was a problem making the directory $USB_MOUNT/backup."
+        umount $USB_MOUNT
+        rm -rf $USB_MOUNT
+        exit 3
+    fi
+}
+
+function swap_backup_directories {
+    used_bytes=$(df -k $USB_MOUNT | tail -n 1 | awk -F ' ' '{print $3}')
+    free_bytes=$(df -k $USB_MOUNT | tail -n 1 | awk -F ' ' '{print $4}')
+    total_bytes=$((used_bytes+free_bytes))
+
+    # if an existing backup has been made
+    if [ -d $USB_MOUNT/backup ]; then
+
+        # get the total backup size
+        backup_bytes=$(du -s $USB_MOUNT/backup | awk -F ' ' '{print $1}')
+        if [ -f $USB_MOUNT/config.dat ]; then
+            keys_bytes=$(wc -c < $USB_MOUNT/config.dat)
+            new_backup_bytes=$((backup_bytes+keys_bytes))
+            backup_bytes=$new_backup_bytes
+        fi
+
+        # allow 10% increase in new backup size
+        backup_bytes_with_overhead=$((backup_bytes*11/10))
+
+        # estimated backup size if we keep the previous backup
+        estimated_backup_bytes=$((backup_bytes_with_overhead+backup_bytes))
+
+        # is there enough space?
+        if [ $estimated_backup_bytes -lt $total_bytes ]; then
+            # keep the previous backup
+            if [ -d $USB_MOUNT/backup_prev ]; then
+                rm -rf $USB_MOUNT/backup_prev
+            fi
+            mv $USB_MOUNT/backup $USB_MOUNT/backup_prev
+        else
+            # clear any previous backups
+            if [ -d $USB_MOUNT/backup_prev ]; then
+                rm -rf $USB_MOUNT/backup_prev
+            fi
+            rm -rf $USB_MOUNT/backup
+        fi
+    fi
+}
+
+function backup_users {
+    # Backup user files
+    for d in /home/*/ ; do
+        USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+        if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+            # Backup any gpg keys
+            if [ -d "/home/$USERNAME/.gnupg" ]; then
+                echo $"Backing up gpg keys for $USERNAME"
+                backup_directory_to_usb "/home/$USERNAME/.gnupg" "gnupg/$USERNAME"
+            fi
+
+            # Backup any personal settings
+            if [ -d "/home/$USERNAME/personal" ]; then
+                echo $"Backing up personal settings for $USERNAME"
+                backup_directory_to_usb "/home/$USERNAME/personal" "personal/$USERNAME"
+            fi
+
+            # Backup ssh keys
+            if [ -d "/home/$USERNAME/.ssh" ]; then
+                echo $"Backing up ssh keys for $USERNAME"
+                backup_directory_to_usb "/home/$USERNAME/.ssh" "ssh/$USERNAME"
+            fi
+
+            # Backup fin database if it exists
+            if [ -d "/home/$USERNAME/.fin" ]; then
+                echo $"Backing up fin files for $USERNAME"
+                backup_directory_to_usb "/home/$USERNAME/.fin" "fin/$USERNAME"
+            fi
+
+            # Backup emacs
+            if [ -d "/home/$USERNAME/.emacs.d" ]; then
+                echo $"Backing up Emacs config for $USERNAME"
+                if [ -f "/home/$USERNAME/.emacs" ]; then
+                    cp "/home/$USERNAME/.emacs" "/home/$USERNAME/.emacs.d/dotemacs"
+                fi
+                backup_directory_to_usb "/home/$USERNAME/.emacs.d" "config/$USERNAME"
+            fi
+
+            # Backup user configs
+            if [ -d "/home/$USERNAME/.config" ]; then
+                echo $"Backing up config files for $USERNAME"
+                backup_directory_to_usb "/home/$USERNAME/.config" "config/$USERNAME"
+            fi
+
+            # Backup user local
+            if [ -d "/home/$USERNAME/.local" ]; then
+                echo $"Backing up local files for $USERNAME"
+                backup_directory_to_usb "/home/$USERNAME/.local" "local/$USERNAME"
+            fi
+
+            # Backup mutt
+            if [ -f "/home/$USERNAME/.muttrc" ]; then
+                echo $"Backing up Mutt settings for $USERNAME"
+                if [ ! -d "/home/$USERNAME/tempbackup" ]; then
+                    mkdir -p "/home/$USERNAME/tempbackup"
+                fi
+                cp "/home/$USERNAME/.muttrc" "/home/$USERNAME/tempbackup"
+                if [ -f /etc/Muttrc ]; then
+                    cp /etc/Muttrc "/home/$USERNAME/tempbackup"
+                fi
+                backup_directory_to_usb "/home/$USERNAME/tempbackup" "mutt/$USERNAME"
+            fi
+            if [ -d "/home/$USERNAME/.mutt" ]; then
+                echo $"Backing up Mutt configurations for $USERNAME"
+                backup_directory_to_usb "/home/$USERNAME/.mutt" "mutt/${USERNAME}configs"
+            fi
+
+            # Backup email
+            if [ -d "/home/$USERNAME/Maildir" ]; then
+                echo $"Stopping mail server"
+                systemctl stop exim4
+                echo $"Creating an email archive for $USERNAME"
+                if [ ! -d "/root/tempbackupemail/$USERNAME" ]; then
+                    mkdir -p "/root/tempbackupemail/$USERNAME"
+                fi
+                tar -czvf "/root/tempbackupemail/$USERNAME/maildir.tar.gz" "/home/$USERNAME/Maildir"
+                echo $"Restarting mail server"
+                systemctl start exim4
+                echo $"Backing up emails for $USERNAME"
+                backup_directory_to_usb "/root/tempbackupemail/$USERNAME" "mail/$USERNAME"
+            fi
+
+            # Backup spamassassin
+            if [ -d "/home/$USERNAME/.spamassassin" ]; then
+                echo $"Backing up spamassassin settings for $USERNAME"
+                backup_directory_to_usb "/home/$USERNAME/.spamassassin" "spamassassin/$USERNAME"
+            fi
+
+            # Backup procmail
+            if [ -f "/home/$USERNAME/.procmailrc" ]; then
+                echo $"Backing up procmail settings for $USERNAME"
+                if [ ! -d "/home/$USERNAME/tempbackup" ]; then
+                    mkdir -p "/home/$USERNAME/tempbackup"
+                fi
+                cp "/home/$USERNAME/.procmailrc" "/home/$USERNAME/tempbackup"
+                backup_directory_to_usb "/home/$USERNAME/tempbackup" "procmail/$USERNAME"
+            fi
+
+            gpg_agent_enable "$USERNAME"
+            increment_backup_progress
+        fi
+    done
+}
+
+function backup_directories {
+    # directories to be backed up (source,dest)
+    backup_dirs=(
+        "/etc/letsencrypt,                      letsencrypt"
+        "/etc/ssl,                              ssl"
+        "/etc/nginx/sites-available,            web"
+        "/var/lib/tor,                          tor"
+        "/root/.passwords,                      passwordstore"
+    )
+
+    # shellcheck disable=SC2068
+    for dr in ${backup_dirs[@]}
+    do
+        # if this directory exists then back it up to the given destination
+        source_directory=$(echo "$dr" | awk -F ',' '{print $1}'  | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+        if [ -d "$source_directory" ]; then
+            dest_directory=$(echo "$dr" | awk -F ',' '{print $2}'  | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+            echo $"Backing up $source_directory to $dest_directory"
+            backup_directory_to_usb "$source_directory" "$dest_directory"
+            increment_backup_progress
+        fi
+
+        restart_site
+        increment_backup_progress
+    done
+}
+
+function remove_backup_directory {
+    if [ "$1" ]; then
+        if [[ "$1" == "remove" ]]; then
+            if [ -f $USB_MOUNT/config.dat ]; then
+                rm $USB_MOUNT/config.dat
+                echo $'Backup keys removed'
+            fi
+            if [ -d $USB_MOUNT/backup ]; then
+                rm -rf $USB_MOUNT/backup
+                echo $'Existing backup directory removed'
+            fi
+            backup_unmount_drive
+            exit 0
+        fi
+    fi
+}
+
+function prepare_directories {
+    # Some miscellaneous preparation for backing up directories
+    echo -n ''
+}
+
+function backup_blocklist {
+    if [ ! -f /root/${PROJECT_NAME}-firewall-domains.cfg ]; then
+        return
+    fi
+    echo $"Backing up ${PROJECT_NAME} blocklist"
+    temp_backup_dir=/root/tempbackupblocklist
+    if [ ! -d $temp_backup_dir ]; then
+        mkdir -p $temp_backup_dir
+    fi
+    cp -f /root/${PROJECT_NAME}-firewall-domains.cfg $temp_backup_dir
+    backup_directory_to_usb $temp_backup_dir blocklist
+    rm -rf $temp_backup_dir
+}
+
+function backup_vpn_peers {
+    if [ ! -f /root/${PROJECT_NAME}-vpn-peers.cfg ]; then
+        if [ ! -f /root/${PROJECT_NAME}-vpn-remote.cfg ]; then
+            return
+        fi
+    fi
+    echo $"Backing up ${PROJECT_NAME} vpn"
+    temp_backup_dir=/root/tempbackupvpnpeers
+    if [ ! -d $temp_backup_dir ]; then
+        mkdir -p $temp_backup_dir
+    fi
+    if [ -f "/root/${PROJECT_NAME}-vpn-peers.cfg" ]; then
+        cp -f "/root/${PROJECT_NAME}-vpn-peers.cfg" $temp_backup_dir
+    fi
+    if [ -f "/root/${PROJECT_NAME}-vpn-remote.cfg" ]; then
+        cp -f "/root/${PROJECT_NAME}-vpn-remote.cfg" $temp_backup_dir
+    fi
+    backup_directory_to_usb $temp_backup_dir vpnpeers
+    rm -rf $temp_backup_dir
+}
+
+function backup_squirrelmail {
+    if [ ! -d /var/local/squirrelmail ]; then
+        return
+    fi
+    echo $"Backing up ${PROJECT_NAME} squirrelmail"
+    backup_directory_to_usb /var/local/squirrelmail squirrelmail
+}
+
+function backup_dkim {
+    if [ ! -d /etc/exim4 ]; then
+        return
+    fi
+    echo $"Backing up ${PROJECT_NAME} DKIM keys"
+    DKIM_BACKUP_DIR=/root/dkim
+    if [ ! -d "${DKIM_BACKUP_DIR}" ]; then
+	mkdir "${DKIM_BACKUP_DIR}"
+    fi
+    if [ ! -f /etc/exim4/dkim_privkey.pem ]; then
+	cp /etc/exim4/dkim_privkey.pem "${DKIM_BACKUP_DIR}/dkim_privkey.pem"
+    fi
+    if [ ! -f /etc/exim4/dkim_dnskey.txt ]; then
+	cp /etc/exim4/dkim_dnskey.txt "${DKIM_BACKUP_DIR}/dkim_dnskey.txt"
+    fi
+    backup_directory_to_usb "${DKIM_BACKUP_DIR}" dkim
+}
+
+function backup_communitynetwork {
+    if [ ! -d "$COMMUNITYNETWORK_PATH" ]; then
+        return
+    fi
+    echo $"Backing up ${PROJECT_NAME} communitynetwork"
+    if grep -Fxq 'MAP_' "$CONFIGURATION_FILE"; then
+        grep -Fx 'MAP_' "$CONFIGURATION_FILE" > "${COMMUNITYNETWORK_PATH}/settings"
+    fi
+    backup_directory_to_usb "$COMMUNITYNETWORK_PATH" communitynetwork
+}
+
+function backup_configfiles {
+    echo $"Backing up ${PROJECT_NAME} configuration files"
+    temp_backup_dir=/root/tempbackupconfig
+    if [ ! -d $temp_backup_dir ]; then
+        mkdir -p $temp_backup_dir
+    fi
+    if [ -f "$NODEJS_INSTALLED_APPS_FILE" ]; then
+        cp -f "$NODEJS_INSTALLED_APPS_FILE" $temp_backup_dir
+    fi
+    if [ -f /root/.nostore ]; then
+        cp -f /root/.nostore $temp_backup_dir
+    else
+        if [ -f $temp_backup_dir/.nostore ]; then
+            rm $temp_backup_dir/.nostore
+        fi
+    fi
+    cp -f "$CONFIGURATION_FILE" $temp_backup_dir
+    cp -f "$COMPLETION_FILE" $temp_backup_dir
+    if [ -f $BACKUP_EXTRA_DIRECTORIES ]; then
+        cp -f $BACKUP_EXTRA_DIRECTORIES $temp_backup_dir
+    fi
+    # nginx password hashes
+    if [ -f /etc/nginx/.htpasswd ]; then
+        cp -f /etc/nginx/.htpasswd $temp_backup_dir/htpasswd
+    fi
+    backup_directory_to_usb $temp_backup_dir configfiles
+    rm -rf $temp_backup_dir
+}
+
+function backup_mariadb {
+    if [ ${#DATABASE_PASSWORD} -gt 1 ]; then
+        temp_backup_dir=/root/tempmariadb
+        if [ ! -d $temp_backup_dir ]; then
+            mkdir $temp_backup_dir
+        fi
+        keep_database_running
+        mysqldump --lock-tables --password="$DATABASE_PASSWORD" mysql user > $temp_backup_dir/mysql.sql
+        if [ ! -s $temp_backup_dir/mysql.sql ]; then
+            echo $"Unable to backup mysql settings"
+            rm -rf $temp_backup_dir
+            umount $USB_MOUNT
+            rm -rf $USB_MOUNT
+            exit 8
+        fi
+        echo "$DATABASE_PASSWORD" > $temp_backup_dir/db
+        chmod 400 $temp_backup_dir/db
+        backup_directory_to_usb $temp_backup_dir mariadb
+    fi
+}
+
+function backup_postgresql {
+    if [ ! -d /etc/postgresql ]; then
+        return
+    fi
+
+    temp_backup_dir=/root/temppostgresql
+    if [ ! -d $temp_backup_dir ]; then
+        mkdir $temp_backup_dir
+    fi
+    # shellcheck disable=SC2024
+    sudo -u postgres pg_dumpall --roles-only > "$temp_backup_dir/postgresql.sql"
+    if [ ! -s $temp_backup_dir/postgresql.sql ]; then
+        echo $"Unable to backup postgresql settings"
+        rm -rf $temp_backup_dir
+        umount $USB_MOUNT
+        rm -rf $USB_MOUNT
+        exit 68
+    fi
+    echo "$DATABASE_PASSWORD" > $temp_backup_dir/db
+    chmod 400 $temp_backup_dir/db
+    backup_directory_to_usb $temp_backup_dir postgresql
+}
+
+function simple_store_backup_keys {
+    if [ ! $simple_backup ]; then
+        return
+    fi
+    ADMIN_USERNAME=$(grep 'MY_USERNAME=' "/root/${PROJECT_NAME}.cfg" | awk -F '=' '{print $2}')
+    if [ ! "$ADMIN_USERNAME" ]; then
+        umount $USB_MOUNT
+        rm -rf $USB_MOUNT
+        exit 35
+    fi
+    if [ ! "$simple_backup_password" ]; then
+        simple_backup_password=$(${PROJECT_NAME}-pass -u "$ADMIN_USERNAME" -a simplebackup)
+        if [ ! "$simple_backup_password" ]; then
+            if [ -f /root/login.txt ]; then
+                simple_backup_password=$(cat /root/login.txt)
+            else
+                echo $'No backup password given'
+                umount $USB_MOUNT
+                rm -rf $USB_MOUNT
+                exit 68
+            fi
+        fi
+    fi
+    simple_keys_file=/root/simplebackupkeys.tar.gz
+    simple_keys_file_encrypted=/root/simplebackupkeys.gpg
+    cd "/home/${ADMIN_USERNAME}" || return
+    tar -czvf $simple_keys_file .gnupg
+    if [ ! -f $simple_keys_file ]; then
+        umount $USB_MOUNT
+        rm -rf $USB_MOUNT
+        exit 56
+    fi
+    if [ -f $simple_keys_file_encrypted ]; then
+        rm $simple_keys_file_encrypted
+    fi
+
+    echo -n "$simple_backup_password" | gpg --batch --passphrase-fd 0 --armor --output $simple_keys_file_encrypted --symmetric $simple_keys_file
+    cp $simple_keys_file_encrypted $USB_MOUNT/config.dat
+
+    rm $simple_keys_file_encrypted
+    rm $simple_keys_file
+    simple_backup_password=
+}
+
+function trust_backup_key {
+    GPG_BACKUP_ID=$(gpg --list-keys "(backup key)" | sed -n '2p' | sed 's/^[ \t]*//')
+    if [ ! "$GPG_BACKUP_ID" ]; then
+        echo $'Unable to get gpg backup key ID'
+        umount $USB_MOUNT
+        rm -rf $USB_MOUNT
+        exit 54
+    fi
+    # shellcheck disable=SC2086
+    (echo trust && echo 5 && echo y && echo quit) | gpg --command-fd 0 --edit-key $GPG_BACKUP_ID
+}
+
+backup_device="$1"
+backup_admin_username="$2"
+
+# has the remove option been set ?
+remove_option="$2"
+if [[ "$backup_device" == "remove" ]]; then
+    remove_option=$1
+fi
+
+if [[ "$backup_device" == "simple" || "$backup_device" == "detect" || "$backup_device" == "auto"* ]]; then
+    if [[ "$backup_device" == "simple" ]]; then
+        # shellcheck disable=SC2034
+        simple_backup=1
+        simple_backup_password="$2"
+        backup_admin_username=
+    fi
+    backup_device=$(detect_connected_drives)
+    if [[ "$backup_device" != 'sd'* ]]; then
+        echo $'No backup device was detected'
+        exit 35
+    fi
+fi
+
+increment_backup_progress
+gpg_agent_setup root
+
+increment_backup_progress
+backup_mount_drive "$backup_device" "$backup_admin_username"
+
+increment_backup_progress
+remove_backup_directory "$remove_option"
+
+increment_backup_progress
+swap_backup_directories
+
+increment_backup_progress
+make_backup_directory
+
+increment_backup_progress
+simple_store_backup_keys
+
+increment_backup_progress
+trust_backup_key
+
+increment_backup_progress
+backup_users
+
+increment_backup_progress
+prepare_directories
+
+increment_backup_progress
+backup_directories
+
+increment_backup_progress
+backup_apps local
+
+increment_backup_progress
+backup_configfiles
+
+increment_backup_progress
+backup_blocklist
+
+increment_backup_progress
+backup_vpn_peers
+
+increment_backup_progress
+backup_dkim
+
+increment_backup_progress
+backup_squirrelmail
+
+increment_backup_progress
+backup_communitynetwork
+
+increment_backup_progress
+backup_mariadb
+
+increment_backup_progress
+backup_postgresql
+
+increment_backup_progress
+backup_extra_directories local
+
+increment_backup_progress
+backup_unmount_drive $USB_DRIVE $USB_MOUNT
+echo $"Backup to USB drive is complete. You can now unplug it."
+
+exit 0

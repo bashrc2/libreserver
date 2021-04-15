@@ -1,0 +1,685 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2021-04-15 Thu 15:17 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LibreServer</title>
+<meta name="generator" content="Org mode" />
+<meta name="author" content="Bob Mottram" />
+<meta name="description" content="LibreServer developers guide"
+ />
+<meta name="keywords" content="libreserver, developers" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  /* Languages per Org manual */
+  pre.src-asymptote:before { content: 'Asymptote'; }
+  pre.src-awk:before { content: 'Awk'; }
+  pre.src-C:before { content: 'C'; }
+  /* pre.src-C++ doesn't work in CSS */
+  pre.src-clojure:before { content: 'Clojure'; }
+  pre.src-css:before { content: 'CSS'; }
+  pre.src-D:before { content: 'D'; }
+  pre.src-ditaa:before { content: 'ditaa'; }
+  pre.src-dot:before { content: 'Graphviz'; }
+  pre.src-calc:before { content: 'Emacs Calc'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-fortran:before { content: 'Fortran'; }
+  pre.src-gnuplot:before { content: 'gnuplot'; }
+  pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-hledger:before { content: 'hledger'; }
+  pre.src-java:before { content: 'Java'; }
+  pre.src-js:before { content: 'Javascript'; }
+  pre.src-latex:before { content: 'LaTeX'; }
+  pre.src-ledger:before { content: 'Ledger'; }
+  pre.src-lisp:before { content: 'Lisp'; }
+  pre.src-lilypond:before { content: 'Lilypond'; }
+  pre.src-lua:before { content: 'Lua'; }
+  pre.src-matlab:before { content: 'MATLAB'; }
+  pre.src-mscgen:before { content: 'Mscgen'; }
+  pre.src-ocaml:before { content: 'Objective Caml'; }
+  pre.src-octave:before { content: 'Octave'; }
+  pre.src-org:before { content: 'Org mode'; }
+  pre.src-oz:before { content: 'OZ'; }
+  pre.src-plantuml:before { content: 'Plantuml'; }
+  pre.src-processing:before { content: 'Processing.js'; }
+  pre.src-python:before { content: 'Python'; }
+  pre.src-R:before { content: 'R'; }
+  pre.src-ruby:before { content: 'Ruby'; }
+  pre.src-sass:before { content: 'Sass'; }
+  pre.src-scheme:before { content: 'Scheme'; }
+  pre.src-screen:before { content: 'Gnu Screen'; }
+  pre.src-sed:before { content: 'Sed'; }
+  pre.src-sh:before { content: 'shell'; }
+  pre.src-sql:before { content: 'SQL'; }
+  pre.src-sqlite:before { content: 'SQLite'; }
+  /* additional languages in org.el's org-babel-load-languages alist */
+  pre.src-forth:before { content: 'Forth'; }
+  pre.src-io:before { content: 'IO'; }
+  pre.src-J:before { content: 'J'; }
+  pre.src-makefile:before { content: 'Makefile'; }
+  pre.src-maxima:before { content: 'Maxima'; }
+  pre.src-perl:before { content: 'Perl'; }
+  pre.src-picolisp:before { content: 'Pico Lisp'; }
+  pre.src-scala:before { content: 'Scala'; }
+  pre.src-shell:before { content: 'Shell Script'; }
+  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
+  /* additional language identifiers per "defun org-babel-execute"
+       in ob-*.el */
+  pre.src-cpp:before  { content: 'C++'; }
+  pre.src-abc:before  { content: 'ABC'; }
+  pre.src-coq:before  { content: 'Coq'; }
+  pre.src-groovy:before  { content: 'Groovy'; }
+  /* additional language identifiers from org-babel-shell-names in
+     ob-shell.el: ob-shell is the only babel language using a lambda to put
+     the execution function name together. */
+  pre.src-bash:before  { content: 'bash'; }
+  pre.src-csh:before  { content: 'csh'; }
+  pre.src-ash:before  { content: 'ash'; }
+  pre.src-dash:before  { content: 'dash'; }
+  pre.src-ksh:before  { content: 'ksh'; }
+  pre.src-mksh:before  { content: 'mksh'; }
+  pre.src-posh:before  { content: 'posh'; }
+  /* Additional Emacs modes also supported by the LaTeX listings package */
+  pre.src-ada:before { content: 'Ada'; }
+  pre.src-asm:before { content: 'Assembler'; }
+  pre.src-caml:before { content: 'Caml'; }
+  pre.src-delphi:before { content: 'Delphi'; }
+  pre.src-html:before { content: 'HTML'; }
+  pre.src-idl:before { content: 'IDL'; }
+  pre.src-mercury:before { content: 'Mercury'; }
+  pre.src-metapost:before { content: 'MetaPost'; }
+  pre.src-modula-2:before { content: 'Modula-2'; }
+  pre.src-pascal:before { content: 'Pascal'; }
+  pre.src-ps:before { content: 'PostScript'; }
+  pre.src-prolog:before { content: 'Prolog'; }
+  pre.src-simula:before { content: 'Simula'; }
+  pre.src-tcl:before { content: 'tcl'; }
+  pre.src-tex:before { content: 'TeX'; }
+  pre.src-plain-tex:before { content: 'Plain TeX'; }
+  pre.src-verilog:before { content: 'Verilog'; }
+  pre.src-vhdl:before { content: 'VHDL'; }
+  pre.src-xml:before { content: 'XML'; }
+  pre.src-nxml:before { content: 'XML'; }
+  /* add a generic configuration mode; LaTeX export needs an additional
+     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
+  pre.src-conf:before { content: 'Configuration File'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .equation-container {
+    display: table;
+    text-align: center;
+    width: 100%;
+  }
+  .equation {
+    vertical-align: middle;
+  }
+  .equation-label {
+    display: table-cell;
+    text-align: right;
+    vertical-align: middle;
+  }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  .org-svg { width: 90%; }
+  /*]]>*/-->
+</style>
+<link rel="stylesheet" type="text/css" href="libreserver.css" />
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2019 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">LibreServer</h1>
+
+<div class="figure">
+<p><img src="images/logo.png" alt="logo.png" width="80%" height="10%" align="center" />
+</p>
+</div>
+
+<div id="outline-container-orgd6c31cc" class="outline-2">
+<h2 id="orgd6c31cc">Developers Guide</h2>
+<div class="outline-text-2" id="text-orgd6c31cc">
+<div class="org-center">
+<table border="-1" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left"><a href="#org00efad1">Introduction</a></td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#org0b8b0aa">Source code</a></td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#org3180b33">Creating images</a></td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#org48c8577">Adding extra apps</a></td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#org4c4a368">Submitting patches or pull requests</a></td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#org6fe9e5d">Architecture</a></td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#org5b5b1ca">Doing translations</a></td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#org405797f">Icons</a></td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#org69fca97">Ideas for improvements</a></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org00efad1" class="outline-2">
+<h2 id="org00efad1">Introduction</h2>
+<div class="outline-text-2" id="text-org00efad1">
+<p>
+LibreServer consists almost entirely of bash scripts, with some html, css and php for the web interface. There are many bash scripts, but they're not very complicated. If you're familiar with the GNU/Linux commandline and can hack a bash script then you can probably add a new app or fix a bug in the system. There are no trendy development frameworks to learn or to get in your way. You might also want to consult the <a href="./codeofconduct.html">Code of Conduct</a> for guidance upon the overall <i>esprit de corps</i>, and there is a Matrix room at <b>#libreserver:matrix.libreserver.net</b> and an XMPP multi-user chat at <b>support@chat.libreserver.net</b>
+</p>
+</div>
+</div>
+<div id="outline-container-org0b8b0aa" class="outline-2">
+<h2 id="org0b8b0aa">Source code</h2>
+<div class="outline-text-2" id="text-org0b8b0aa">
+<ul class="org-ul">
+<li><a href="https://code.libreserver.org/bashrc/libreserver">Repository</a> also mirrored <a href="https://gitlab.com/bashrc2/libreserver">here</a> and <a href="https://codeberg.org/bashrc/libreserver">here</a></li>
+<li><a href="https://libreserver.org/downloads/source.tar.gz">Compressed archive</a></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org3180b33" class="outline-2">
+<h2 id="org3180b33">Creating images</h2>
+<div class="outline-text-2" id="text-org3180b33">
+<p>
+To build images you will need the <b>libreserver-maker</b> tool. It can be installed with:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-bash">sudo apt install git btrfs-progs debootstrap kpartx <span style="color: #deb887;">\</span>
+  parted qemu-user-static qemu-utils sshpass
+git clone https://gitlab.com/bashrc2/libreserver-maker
+<span style="color: #f08080;">cd</span> libreserver-maker
+</pre>
+</div>
+
+<p>
+Then to build an image:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-bash">sudo python3 -m freedommaker amd64
+</pre>
+</div>
+
+<p>
+The resulting image will appear as an <b>xz</b> file in the <b>build</b> subdirectory.
+</p>
+
+<p>
+To copy it to a drive (eg. microSD or USB):
+</p>
+
+<div class="org-src-container">
+<pre class="src src-bash">xzcat build/libreserver-bullseye-*-amd64.img.xz | <span style="color: #deb887;">\</span>
+  sudo dd <span style="color: #4eee94;">bs</span>=4M <span style="color: #4eee94;">of</span>=/dev/sdg <span style="color: #4eee94;">conv</span>=fsync <span style="color: #4eee94;">status</span>=progress
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org48c8577" class="outline-2">
+<h2 id="org48c8577">Adding extra apps</h2>
+<div class="outline-text-2" id="text-org48c8577">
+<p>
+Suppose you have some internet application which you want to add to the system. To do this you need to create an app script which tells the system how to install/remove and also backup/restore. The script should be designed to work with the current stable version of Debian.
+</p>
+
+<p>
+Avoid apps written in Rust unless you can be sure that cargo will never try to run arbitrary applications from the /tmp directory, which is forbidden for security reasons and attempts to do that will be blocked.
+</p>
+
+<p>
+There's a command which you can use to generate scripts for new apps. Some examples are as follows:
+</p>
+
+<p>
+To create a script for a generic PHP plus MySql/MariaDB web app with a couple of extra packages:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-bash">libreserver-template --app [name] -e [email] -r [repo url] <span style="color: #deb887;">\</span>
+                     --packages <span style="color: #deb887;">"cowsay libssl-dev"</span> <span style="color: #deb887;">\</span>
+                     -c [commit] --php yes -d mariadb &gt; <span style="color: #deb887;">\</span>
+                     src/libreserver-app-myappname
+</pre>
+</div>
+
+<p>
+For a Nodejs app with MySql/MariaDB database:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-bash">libreserver-template --app [name] -e [email] -r [repo url] <span style="color: #deb887;">\</span>
+                     -c [commit] --node yes -d mariadb <span style="color: #deb887;">\</span>
+                     --dir /etc/myappname --daemon yes &gt; <span style="color: #deb887;">\</span>
+                     src/libreserver-app-myappname
+</pre>
+</div>
+
+<p>
+For a Python app with Postgresql database:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-bash">libreserver-template --app [name] -e [email] -r [repo url] <span style="color: #deb887;">\</span>
+                     -c [commit] -d postgresql <span style="color: #deb887;">\</span>
+                     --dir /etc/myappname --daemon yes &gt; <span style="color: #deb887;">\</span>
+                     src/libreserver-app-myappname
+</pre>
+</div>
+
+<p>
+For a Python app without any database, communicating between the daemon and the web server on port 1234:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-bash">libreserver-template --app [name] -e [email] -r [repo url] <span style="color: #deb887;">\</span>
+                     -c [commit] --dir /etc/myappname <span style="color: #deb887;">\</span>
+                     --daemon yes --portinternal 1234 &gt; <span style="color: #deb887;">\</span>
+                     src/libreserver-app-myappname
+</pre>
+</div>
+
+<p>
+For an app without any database which communicates directly on a particular port through the firewall:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-bash">libreserver-template --app [name] -e [email] -r [repo url] <span style="color: #deb887;">\</span>
+                     -c [commit] --dir /etc/myappname <span style="color: #deb887;">\</span>
+                     --daemon yes --port 5000 &gt; <span style="color: #deb887;">\</span>
+                     src/libreserver-app-myappname
+</pre>
+</div>
+
+<p>
+A generic PHP plus MySql/MariaDB web app which is only available on an onion address:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-bash">libreserver-template --app [name] -e [email] -r [repo url] <span style="color: #deb887;">\</span>
+                     -c [commit] --php yes -d mariadb <span style="color: #deb887;">\</span>
+                     --onion yes &gt; <span style="color: #deb887;">\</span>
+                     src/libreserver-app-myappname
+</pre>
+</div>
+
+<p>
+For more details see the manpage:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-bash">man libreserver-template
+</pre>
+</div>
+
+<p>
+The template command won't give you a fully working app, but it will give you a big head start and avoid a lot of potential mistakes. It's highly likely that you'll still need to add extra configuration for your particular app, especially within the <b>install_app</b> function.
+</p>
+
+<p>
+When your new script is ready for testing you can install it with:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-bash">make install
+</pre>
+</div>
+
+<p>
+Then run the administrator control panel and you should see the new app within <b>Add/Remove apps</b>.
+</p>
+
+<p>
+Submit your working app via one of the methods described below.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org4c4a368" class="outline-2">
+<h2 id="org4c4a368">Submitting patches or pull requests</h2>
+<div class="outline-text-2" id="text-org4c4a368">
+<p>
+If you've made changes and want to submit them back to the LibreServer project then there are a couple of ways to do this. This project aims not to have prolonged formal debates over patch correctness and they will typically be merged as soon as possible, with any necessary correcting commits being made subsequently.
+</p>
+</div>
+
+<div id="outline-container-org21bfda1" class="outline-3">
+<h3 id="org21bfda1">Make a patch for a single small change</h3>
+<div class="outline-text-3" id="text-org21bfda1">
+<p>
+Commit your changes to your local repo.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-bash">git commit -a -m<span style="color: #deb887;">"My patch description"</span>
+</pre>
+</div>
+
+<p>
+Format it as a patch:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-bash">git format-patch -1 HEAD --stdout
+</pre>
+</div>
+
+<p>
+HEAD can be replaced by the specific commit hash if needed. Copy and paste the result into an email addressed to <b>bob@libreserver.net</b> or a Matrix message to <b>@bob:matrix.libreserver.net</b>, and you're done.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org928e8bb" class="outline-3">
+<h3 id="org928e8bb">Submitting multiple changes over time</h3>
+<div class="outline-text-3" id="text-org928e8bb">
+<p>
+If you plan to make many changes over an extended period of time then send an email to <b>bob@libreserver.net</b> or a Matrix message to <b>@bob:matrix.libreserver.net</b> and ask for an account on code.libreserver.net. You'll then be able to fork and make pull requests.
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org6fe9e5d" class="outline-2">
+<h2 id="org6fe9e5d">Architecture</h2>
+<div class="outline-text-2" id="text-org6fe9e5d">
+</div>
+<div id="outline-container-org40d2b6b" class="outline-3">
+<h3 id="org40d2b6b">Apps</h3>
+<div class="outline-text-3" id="text-org40d2b6b">
+<p>
+Apps are scripts beginning with <b>src/libreserver-app-</b>. New scripts can be created with the template command described above. Each script contains a number of function interfaces which enable the app to be installed, removed, backed up and for logging to be turned on or off. The interfaces are:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-bash">install_appname
+install_interactive_appname
+configure_interactive_appname
+reconfigure_appname
+remove_appname
+upgrade_appname
+backup_local_appname
+restore_local_appname
+logging_on_appname
+logging_off_appname
+add_user_appname
+remove_user_appname
+change_password_appname
+</pre>
+</div>
+
+<p>
+<b>install_interactive</b> and <b>configure_interactive</b> are only used by the dialog menu interface accessible via ssh.
+</p>
+
+<p>
+<b>change_password</b> is optional because with some apps there isn't any way to do that from the commandline.
+</p>
+
+<p>
+<b>reconfigure</b> is used during <i>factory reset</i> to remove and regenerate keys or set the app back to its initial defaults.
+</p>
+</div>
+</div>
+<div id="outline-container-org7baeedc" class="outline-3">
+<h3 id="org7baeedc">Web interface</h3>
+<div class="outline-text-3" id="text-org7baeedc">
+<p>
+The web interface consists of a set of html files within <b>webadmin/EN</b>. These use forms to reference some php files within <b>webadmin</b> and those generate files which are then picked up by a systemd daemon running in the background (webadmin.service) which is implemented by <b>src/libreserver-installer</b>.
+</p>
+
+<p>
+Typically the daemon detects the presence of a file, extracts the variables from it, maybe does some additional validation and then does whatever it needs to do with those.
+</p>
+
+<p>
+The separate daemon also avoids having php code making any direct changes to the underlying system, which could create security risks. The files created by the php scripts are very small and can typically be fully validated.
+</p>
+
+<p>
+The user interface is regenerated by the function <b>install_web_admin</b> within <b>src/libreserver-utils-webadmin</b>.
+</p>
+
+<p>
+When installed, the web interface is in <b>/var/www/libreserver.local/htdocs/admin</b>. The directory above that is where a json API exists for use with the FreedomBox Android app.
+</p>
+
+<p>
+Although it's tempting and easy, avoid adding javascript into the html files. The policy is to <i>keep the web interface free from javascript</i>, so that if you're using noscript or have javascript turned off then the interface can still be used without any loss of functionality.
+</p>
+
+<p>
+It is assumed that only the administrator will be accessing the web interface, so dealing with collisions between multiple users making contradicting changes to the same things at the same time isn't necessary.
+</p>
+
+<p>
+The web interface operates in a strictly sequential/synchronous mode. So if you try to install multiple apps it puts them into a queue and does the installs one after another. The same applies for app removals.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgf85e1b1" class="outline-3">
+<h3 id="orgf85e1b1">How translations happen</h3>
+<div class="outline-text-3" id="text-orgf85e1b1">
+<p>
+Translations are stored within <b>webadmin/translations</b>. When you select a language html files are copied from <b>webadmin/EN</b> and then the English strings are searched and replaced. Strings to be translated are indicated within the html files with the parameter <b>translate=</b>"<b>yes</b>".
+</p>
+
+<p>
+Doing it this way avoids having duplicated versions of the many html files for different languages. See the <b>change_language</b> function within <b>src/libreserver-installer</b> for details of how this process works.
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org5b5b1ca" class="outline-2">
+<h2 id="org5b5b1ca">Doing translations</h2>
+<div class="outline-text-2" id="text-org5b5b1ca">
+<p>
+These can be added or edited within the web UI. Navigate to <a href="http://libreserver/admin">http://libreserver/admin</a> or its onion address, select <b>settings</b> then <b>language</b>. Select the language that you want to translate to then the <b>translate</b> button. In the right hand column you can then manually edit the translated strings. When you are done select the <b>update</b> button.
+</p>
+
+<p>
+The format of the translation files is very simple. It's:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-bash">English string|Translated string
+</pre>
+</div>
+
+<p>
+If you prefer to edit the raw files within your own editor of choice they can be found within the <b>webadmin/translations</b> directory of the repo.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org405797f" class="outline-2">
+<h2 id="org405797f">Icons</h2>
+<div class="outline-text-2" id="text-org405797f">
+<p>
+If you want to change the icons of the web user interface they can be found within the <b>webadmin/images</b> directory of the repo.
+</p>
+
+<p>
+Icons used for the mesh desktop can be found within <b>img</b> and <b>img/avatars</b> directories and their filenames begin with <b>icon_</b>.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org69fca97" class="outline-2">
+<h2 id="org69fca97">Ideas for improvements</h2>
+<div class="outline-text-2" id="text-org69fca97">
+<ul class="org-ul">
+<li>A lot of the translations are currently automatic. If anyone has language skills then checking that the strings all make sense would be very helpful.</li>
+<li>Expanding the CI system to include tests that individual apps install correctly. This would be really useful and probably wouldn't take much work.</li>
+<li>Getting more recent SBCs working with the build system. This can be fairly advanced so might not be a suitable task for people new to Linux.</li>
+<li>Pentesting to find vulnerabilities. Make a test install. Add a few apps. Try to knock it down. Report the results.</li>
+<li>Go through the STIG tests and for each try to ensure that if there is a failure then the system makes a best effort to fix it by itself. This already happens to some extent, but there are many tests.</li>
+<li>Add support for Matrix bridges to IRC or XMPP. Would need some changes to the app and some web interface changes.</li>
+<li>Icons sets and themes. Currently there is only one set of icons for the web interface, but potentially there could be different themes. If you have artistic skills produce an alternative icon set.</li>
+<li>If you make a blog post and publish it, and if you have Epicyon installed, then automatically create an ActivityPub post linking to the blog post. Sounds complicated but the implementation is probably fairly straightforward.</li>
+<li>Check accessibility for the web interface. Fonts, color contrast, layout, use with shell based browsers and screen readers. I've already done some of this, but someone with more experience of accessibility issues could be helpful. Produce an accessibility report for the web interface.</li>
+<li>Fix the progress bar when installing from menuconfig on Armbian. This doesn't work at all currently, but is probably easy to fix.</li>
+<li>Make images for recent SBCs. You can use Armbian as a base. Test that all STIG tests pass. Check that HRNGs are being used properly for each board type.</li>
+<li>Distributed backup. Make a proposal or produce an implementation for a way to do distributed backups. This should require negligible intervention or knowledge from the user. As close to fully automatic as possible. I did have a way of doing this in the past, but it was too complex.</li>
+<li>Add more community networks. Many cities in Germany now seem to have Freifunk networks, and I don't think they're all supported in LibreServer yet.</li>
+<li>Are there ways to speed up the community network map updates without using javascript? This is an unknown. Something to research.</li>
+<li>Add support for I2P to the web interface. Show a QR code for I2P addresses. There's already support for XMPP over I2P in the background, but it hasn't been linked up to the web interface.</li>
+<li>Make a howto set of instructions for setting up LibreServer with a community Network. To do it at the lowest possible cost you could use Orange Pi Zero, which has wifi. Recommend good antennas and procedures for physical installation. Tools needed, time estimates, etc. Someone with electrical/radio experience would be good for this.</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: Bob Mottram</p>
+<p class="date">Created: 2021-04-15 Thu 15:17</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

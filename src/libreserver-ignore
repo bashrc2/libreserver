@@ -1,0 +1,149 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Adds an email and xmpp MUC ignore rule for either an email address
+# or text in the subject line
+#
+# License
+# =======
+#
+# Copyright (C) 2015-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+PROJECT_NAME='libreserver'
+
+export TEXTDOMAIN=${PROJECT_NAME}-ignore
+export TEXTDOMAINDIR="/usr/share/locale"
+
+XMPP_CONFIG=/etc/prosody/prosody.cfg.lua
+MYUSERNAME=$USER
+EMAIL_ADDRESS=
+SUBJECT_TEXT=
+ALL_TEXT=
+
+function show_help {
+    echo ''
+    echo $"${PROJECT_NAME}-ignore -u [username] -e [mail address] -t [text in subject line] -a [text anywhere]"
+    echo ''
+    exit 0
+}
+
+while [ $# -gt 1 ]
+do
+key="$1"
+
+case $key in
+    -h|--help)
+    show_help
+    ;;
+    -u|--user)
+    shift
+    MYUSERNAME="$1"
+    ;;
+    -e|--email)
+    shift
+    EMAIL_ADDRESS="$1"
+    ;;
+    -t|--text)
+    shift
+    SUBJECT_TEXT="$1"
+    ;;
+    -a|--anywhere|--all)
+    shift
+    ALL_TEXT="$1"
+    ;;
+    *)
+    # unknown option
+    ;;
+esac
+shift
+done
+
+if ! [[ $MYUSERNAME && $EMAIL_ADDRESS ]]; then
+    if ! [[ $MYUSERNAME && $SUBJECT_TEXT ]]; then
+        show_help
+    fi
+fi
+
+MUTTRC="/home/$MYUSERNAME/.muttrc"
+PM="/home/$MYUSERNAME/.procmailrc"
+
+# Ignore if subject line contains text
+if [ "$SUBJECT_TEXT" ]; then
+    if ! grep -q "Ignore rule for $SUBJECT_TEXT" "$PM"; then
+        { echo "# Ignore rule for $SUBJECT_TEXT";
+          echo ":0";
+          echo "  * ^Subject:.*$SUBJECT_TEXT";
+          echo "/dev/null";
+          echo "# End of ignore rule"; } >> "$PM"
+        chown "$MYUSERNAME":"$MYUSERNAME" "$PM"
+    fi
+fi
+
+if [ "$ALL_TEXT" ]; then
+    if ! grep -q "Ignore rule for words '$ALL_TEXT'" "$PM"; then
+        { echo "# Ignore rule for words '$ALL_TEXT'";
+          echo ":0 HB";
+          echo "  * ^Subject:.*$ALL_TEXT";
+          echo "  * $ALL_TEXT";
+          echo "/dev/null";
+          echo "# End of ignore words rule"; } >> "$PM"
+        chown "$MYUSERNAME":"$MYUSERNAME" "$PM"
+    fi
+
+    if [ -f "$XMPP_CONFIG" ]; then
+        if ! grep -q 'filter_words =' "$XMPP_CONFIG"; then
+            echo 'filter_words = {}' >> "$XMPP_CONFIG"
+        fi
+
+        if grep -q 'filter_words = {}' "$XMPP_CONFIG"; then
+            # first muted words
+            sed -i "s|filter_words =.*|filter_words = { \"$ALL_TEXT\" }|g" "$XMPP_CONFIG"
+        else
+            # subsequent muted words
+            curr_filter_words=$(grep 'filter_words =' "$XMPP_CONFIG")
+            if [ "$curr_filter_words" ]; then
+                filter_words=$(echo "$curr_filter_words" | sed 's|filter_words = { ||g' | sed 's| }||g')
+                # does it already exist?
+                if [[ "$filter_words" != *"\"${ALL_TEXT}\""* ]]; then
+                    sed -i "s|filter_words =.*|filter_words = { ${filter_words},\"$ALL_TEXT\" }|g" "$XMPP_CONFIG"
+                fi
+            fi
+        fi
+    fi
+fi
+
+# ignore an email address
+if [ "$EMAIL_ADDRESS" ]; then
+    if ! grep -q "Ignore rule for $EMAIL_ADDRESS" "$PM"; then
+        { echo "# Ignore rule for $EMAIL_ADDRESS";
+        echo ":0";
+        echo "  * ^From:.*$EMAIL_ADDRESS";
+        echo "/dev/null";
+        echo "# End of ignore rule"; } >> "$PM"
+        chown "$MYUSERNAME":"$MYUSERNAME" "$PM"
+    fi
+fi
+
+PROCMAILLOG=/home/$MYUSERNAME/log
+if [ ! -d "$PROCMAILLOG" ]; then
+    mkdir "$PROCMAILLOG"
+    chown -R "$MYUSERNAME":"$MYUSERNAME" "$PROCMAILLOG"
+fi
+
+exit 0

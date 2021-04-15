@@ -1,0 +1,125 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# nodejs functions
+# Installing recent versions from snap is waaaay easier than other methods
+#
+# License
+# =======
+#
+# Copyright (C) 2014-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VARIANTS='mesh'
+
+# This should be the major version number, passed to the snap channel
+NODEJS_VERSION='14'
+
+# This file keeps track of the apps needing nodejs
+# so that it can be removed if tere are no apps which need it
+NODEJS_INSTALLED_APPS_FILE=$HOME/.nodejs-apps
+
+function remove_nodejs {
+    if [ ! "$1" ]; then
+        return
+    fi
+    if [ ! -f "$NODEJS_INSTALLED_APPS_FILE" ]; then
+        #remove_app nodejs
+        return
+    fi
+    sed -i "/install_${1}/d" "$NODEJS_INSTALLED_APPS_FILE"
+    if ! grep -q "install_" "$NODEJS_INSTALLED_APPS_FILE"; then
+	$REMOVE_PACKAGES nodejs
+	if [ -f /etc/apt/sources.list.d/nodesource.list ]; then
+	    rm /etc/apt/sources.list.d/nodesource.list
+	    $UPDATE_PACKAGES
+	fi
+        remove_app nodejs
+        rm "$NODEJS_INSTALLED_APPS_FILE"
+        $REMOVE_UNUSED_PACKAGES
+    fi
+}
+
+function upgrade_nodejs {
+    if [ ! -f /usr/bin/node ]; then
+	install_nodejs
+	return
+    fi
+    if [[ "$(node -v)" == "v${NODEJS_VERSION}."* ]]; then
+	return
+    fi
+    install_nodejs
+}
+
+function install_nodejs {
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+	if [[ "$(node -v)" == "v${NODEJS_VERSION}."* ]]; then
+	    echo "nodejs is installed, trying upgrade"
+            upgrade_nodejs
+            return
+	fi
+    fi
+
+    # remove the completion entry if it exists
+    if grep -q 'install_nodejs' $COMPLETION_FILE; then
+	remove_app nodejs
+    fi
+
+    if [ ! -d "${rootdir}${INSTALL_DIR}" ]; then
+	mkdir -p "${rootdir}${INSTALL_DIR}"
+    fi
+    if [ ! ${rootdir} ]; then
+	INSTALL_PACKAGES curl
+	curl -sL https://deb.nodesource.com/setup_${NODEJS_VERSION}.x > "${INSTALL_DIR}/nodejs_download"
+	/usr/bin/bash "${INSTALL_DIR}/nodejs_download"
+    else
+	chroot $rootdir INSTALL_PACKAGES curl
+	chroot $rootdir curl -sL https://deb.nodesource.com/setup_${NODEJS_VERSION}.x > "${INSTALL_DIR}/nodejs_download"
+	chroot $rootdir /usr/bin/bash "${INSTALL_DIR}/nodejs_download"
+    fi
+
+    if [ ! -f $rootdir/etc/apt/sources.list.d/nodesource.list ]; then
+	echo "nodejs package sources not installed via curl"
+	exit 34
+    fi
+
+    if ! grep -q "/node_${NODEJS_VERSION}." $rootdir/etc/apt/sources.list.d/nodesource.list; then
+	echo "nodejs package sources not added"
+	exit 35
+    fi
+
+    if [ ! $rootdir ]; then
+	INSTALL_PACKAGES nodejs
+    else
+	chroot $rootdir INSTALL_PACKAGES nodejs
+    fi
+
+    if [ ! -f /usr/bin/node ]; then
+	echo "/usr/bin/node was not installed"
+	exit 36
+    fi
+
+    if [[ "$(node -v)" != "v${NODEJS_VERSION}."* ]]; then
+	echo "nodejs was not installed"
+	exit 37
+    fi
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+# NOTE: deliberately there is no "exit 0"

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <meta charset="utf-8">
+  <style>
+    @import url("libreserver.css");
+
+    * {
+        box-sizing: border-box;
+    }
+
+    .subheadertext {
+        margin-left : 10%;
+        text-align: left;
+        font-size: 110%;
+        font-weight: bold;
+    }
+
+    .subheaderports {
+        margin-left : 10%;
+        text-align: left;
+        font-size: 110%;
+        font-weight: bold;
+    }
+
+    .helptext {
+        width: 80%;
+        text-align: left;
+        font-size: 100%;
+        margin-left : 10%;
+    }
+
+    .codetext {
+        font-family: Courier;
+        width: 80%;
+        text-align: left;
+        font-size: 100%;
+        margin-left : 10%;
+    }
+
+    .portstext {
+        width: 80%;
+        text-align: left;
+        font-size: 100%;
+        margin-left : 10%;
+    }
+
+    .row {
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+        padding: 0 4px;
+    }
+
+    .column {
+        -ms-flex: 25%;
+        flex: 15%;
+        max-width: 25%;
+        padding: 0 4px;
+    }
+
+    .column img {
+        margin-top: 8px;
+        vertical-align: middle;
+    }
+
+    @media screen and (max-width: 800px) {
+        .column {
+            -ms-flex: 50%;
+            flex: 50%;
+            max-width: 50%;
+        }
+    }
+
+    @media screen and (max-width: 200px) {
+        .column {
+            -ms-flex: 100%;
+            flex: 100%;
+            max-width: 100%;
+        }
+    }
+  </style>
+  <body>
+
+    <div class="header">
+      <a href="app_syncthing.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
+    </div>
+
+    <p class="headertext" translate="yes">Syncthing</p>
+
+    <p class="helptext" translate="yes">Provides a similar capability to proprietary systems such as Dropbox, and also is well suited for use with low power single board computers. You can have one or more directories which are synchronized across your various laptops/desktops/devices, and this makes it hard for you to ever lose important files. Of course, you don't necessarily need to be running a server in order to use Syncthing, but if you do have a server which is always running then there's always at least one place to synchronize your files to or from.</p>
+
+    <p class="subheaderports" translate="yes">Ports</p>
+
+    <p class="portstext" translate="yes">Forward port 22000 from your internet router</p>
+
+    <p class="subheadertext" translate="yes">Installation</p>
+
+    <p class="helptext" translate="yes">On a Debian based system:</p>
+
+    <p class="codetext" translate="no">
+      curl -s https://syncthing.net/release-key.txt | sudo apt-key add -<br>
+      echo "deb https://apt.syncthing.net/ syncthing stable" | sudo tee /etc/apt/sources.list.d/syncthing.list<br>
+      sudo apt-get update<br>
+      sudo apt-get install syncthing
+    </p>
+
+    <p class="helptext" translate="yes">Or on Android search for the Syncthing app.</p>
+
+    <p class="helptext" translate="yes">Using the settings button within the LibreServer web interface for the Syncthing app you can then paste in any IDs for other devices. They will then sync with your server.</p>
+
+  </body>
+</html>

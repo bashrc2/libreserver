@@ -1,0 +1,773 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Etherpad app
+#
+# License
+# =======
+#
+# Copyright (C) 2016-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VARIANTS="full full-vim writer"
+
+APP_CATEGORY=publishing
+
+IN_DEFAULT_INSTALL=0
+SHOW_ON_ABOUT=1
+REQUIRES_APP=
+MINIMUM_RAM_MB=900
+
+ETHERPAD_DOMAIN_NAME=
+ETHERPAD_CODE=
+ETHERPAD_ONION_PORT=8101
+ETHERPAD_PORT=9001
+ETHERPAD_REPO="https://github.com/ether/etherpad-lite"
+ETHERPAD_COMMIT='d3f583c9c5919aa61f10d476810d429d3767b5ae'
+ETHERPAD_ADMIN_PASSWORD=
+ETHERPAD_TITLE=$'LibreServer Docs'
+ETHERPAD_WELCOME_MESSAGE=$"Welcome to ${ETHERPAD_TITLE}!\\n\\nThis pad text is synchronized as you type, so that everyone viewing this page sees the same text. This allows you to collaborate seamlessly on documents!"
+
+ETHERPAD_SHORT_DESCRIPTION=$'Collaborative document editor'
+ETHERPAD_DESCRIPTION=$'Collaborative document editor'
+ETHERPAD_MOBILE_APP_URL=
+
+etherpad_variables=(ONION_ONLY
+                    DEFAULT_DOMAIN_NAME
+                    ETHERPAD_DOMAIN_NAME
+                    ETHERPAD_CODE
+                    ETHERPAD_TITLE
+                    ETHERPAD_WELCOME_MESSAGE
+                    DDNS_PROVIDER
+                    MY_USERNAME)
+
+function upgrade_distro_etherpad {
+    target_distro="$1"
+
+    if [[ "$target_distro" == 'bullseye' ]]; then
+        echo -n ''
+    fi
+}
+
+function logging_on_etherpad {
+    echo -n ''
+}
+
+function logging_off_etherpad {
+    echo -n ''
+}
+
+function change_password_etherpad {
+    change_username="$1"
+    new_user_password="$2"
+
+    read_config_param ETHERPAD_DOMAIN_NAME
+
+    if grep -q "\"$change_username\": {" "/var/www/${ETHERPAD_DOMAIN_NAME}/htdocs/settings.json"; then
+        user_line=$(grep "\"$change_username\": {" "/var/www/${ETHERPAD_DOMAIN_NAME}/htdocs/settings.json")
+        if [[ "$user_line" == *"\"is_admin\": true"* ]]; then
+            sed -i "s|\"$change_username\": {.*|\"$change_username\": { \"password\": \"$new_user_password\", \"is_admin\": true }|g" "/var/www/${ETHERPAD_DOMAIN_NAME}/htdocs/settings.json"
+        else
+            sed -i "s|\"$change_username\": {.*|\"$change_username\": { \"password\": \"$new_user_password\", \"is_admin\": false },|g" /var/www/${ETHERPAD_DOMAIN_NAME}/htdocs/settings.json
+        fi
+        "${PROJECT_NAME}-pass" -u "$change_username" -a etherpad -p "$2"
+        systemctl restart etherpad
+    fi
+}
+
+function etherpad_create_database {
+    if [ -f "$IMAGE_PASSWORD_FILE" ]; then
+        ETHERPAD_ADMIN_PASSWORD="$(printf "%s" "$(cat "$IMAGE_PASSWORD_FILE")")"
+    else
+        if [ ! "$ETHERPAD_ADMIN_PASSWORD" ]; then
+            ETHERPAD_ADMIN_PASSWORD="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
+        fi
+    fi
+    if [ ! "$ETHERPAD_ADMIN_PASSWORD" ]; then
+        return
+    fi
+
+    function_check create_database
+    create_database etherpad "$ETHERPAD_ADMIN_PASSWORD" "$MY_USERNAME"
+}
+
+function create_etherpad_settings {
+    settings_file="/var/www/${ETHERPAD_DOMAIN_NAME}/htdocs/settings.json"
+    { echo '{';
+      echo "  \"title\": \"${ETHERPAD_TITLE}\",";
+      echo '  "favicon": "favicon.ico",';
+
+      echo '  "ip": "127.0.0.1",';
+      echo "  \"port\" : ${ETHERPAD_PORT},";
+
+      echo '  "showSettingsInAdminPage" : true,';
+      echo '   "dbType" : "mysql",';
+      echo '   "dbSettings" : {';
+      echo '                    "user"    : "root",';
+      echo '                    "host"    : "localhost",';
+      echo "                    \"password\": \"${MARIADB_PASSWORD}\",";
+      echo '                    "database": "etherpad",';
+      echo '                    "charset" : "utf8mb4"';
+      echo '                  },';
+
+      echo "  \"defaultPadText\" : \"${ETHERPAD_WELCOME_MESSAGE}\",";
+
+      echo '  "padOptions": {';
+      echo '    "noColors": false,';
+      echo '    "showControls": true,';
+      echo '    "showChat": true,';
+      echo '    "showLineNumbers": false,';
+      echo '    "useMonospaceFont": false,';
+      echo '    "userName": false,';
+      echo '    "userColor": true,';
+      echo '    "rtl": false,';
+      echo '    "alwaysShowChat": true,';
+      echo '    "chatAndUsers": true,';
+      echo '    "lang": "en-gb"';
+      echo '  },';
+
+      echo '  "padShortcutEnabled" : {';
+      echo '    "altF9":     true, /* focus on the File Menu and/or editbar */';
+      echo '    "altC":      true, /* focus on the Chat window */';
+      echo '    "cmdShift2": true, /* shows a gritter popup showing a line author */';
+      echo '    "delete":    true,';
+      echo '    "return":    true,';
+      echo '    "esc":       true, /* in mozilla versions 14-19 avoid reconnecting pad */';
+      echo '    "cmdS":      true, /* save a revision */';
+      echo '    "tab":       true, /* indent */';
+      echo '    "cmdZ":      true, /* undo/redo */';
+      echo '    "cmdY":      true, /* redo */';
+      echo '    "cmdI":      true, /* italic */';
+      echo '    "cmdB":      true, /* bold */';
+      echo '    "cmdU":      true, /* underline */';
+      echo '    "cmd5":      true, /* strike through */';
+      echo '    "cmdShiftL": true, /* unordered list */';
+      echo '    "cmdShiftN": true, /* ordered list */';
+      echo '    "cmdShift1": true, /* ordered list */';
+      echo '    "cmdShiftC": true, /* clear authorship */';
+      echo '    "cmdH":      true, /* backspace */';
+      echo '    "ctrlHome":  true, /* scroll to top of pad */';
+      echo '    "pageUp":    true,';
+      echo '    "pageDown":  true';
+      echo '  },';
+
+      echo '  "suppressErrorsInPadText" : true,';
+      echo '  "requireSession" : false,';
+      echo '  "editOnly" : false,';
+      echo '  "sessionNoPassword" : false,';
+      echo '  "minify" : true,';
+      echo '  "maxAge" : 21600, // 60 * 60 * 6 = 6 hours';
+      echo '  "abiword" : null,';
+      echo '  "soffice" : null,';
+      echo '  "tidyHtml" : null,';
+      echo '  "allowUnknownFileEnds" : false,';
+      echo '  "requireAuthentication" : true,';
+      echo '  "requireAuthorization" : true,';
+      echo '  "trustProxy" : true,';
+      echo '  "disableIPlogging" : true,';
+      echo '  "automaticReconnectionTimeout": 0,';
+
+      echo '  "scrollWhenFocusLineIsOutOfViewport": {';
+      echo '    "percentage": {';
+      echo '      "editionAboveViewport": 0,';
+      echo '      "editionBelowViewport": 0';
+      echo '    },';
+      echo '    "duration": 0,';
+      echo '    "scrollWhenCaretIsInTheLastLineOfViewport": false,';
+      echo '    "percentageToScrollWhenUserPressesArrowUp": 0';
+      echo '  },';
+
+      echo '  "users": {';
+      echo "    \"${MY_USERNAME}\": { \"password\": \"${ETHERPAD_ADMIN_PASSWORD}\", \"is_admin\": true }";
+      echo '  },';
+
+      echo '  "socketTransportProtocols" : ["xhr-polling", "jsonp-polling", "htmlfile"],';
+      echo '  "loadTest": false,';
+      echo '  "indentationOnNewLine": false,';
+
+      echo '   "importExportRateLimiting": {';
+      echo '     // duration of the rate limit window (milliseconds)';
+      echo '     "windowMs": 90000,';
+      echo '     // maximum number of requests per IP to allow during the rate limit window';
+      echo '     "max": 10';
+      echo '   },';
+
+      echo '  "importMaxFileSize": 52428800, // 50 * 1024 * 1024';
+
+      echo '  "toolbar": {';
+      echo '    "left": [';
+      echo '      ["bold", "italic", "underline", "strikethrough"],';
+      echo '      ["orderedlist", "unorderedlist", "indent", "outdent"],';
+      echo '      ["undo", "redo"],';
+      echo '      ["clearauthorship"]';
+      echo '    ],';
+      echo '    "right": [';
+      echo '      ["importexport", "timeslider", "savedrevision"],';
+      echo '      ["settings", "embed"],';
+      echo '      ["showusers"]';
+      echo '    ],';
+      echo '    "timeslider": [';
+      echo '      ["timeslider_export", "timeslider_returnToPad"]';
+      echo '    ]';
+      echo '  },';
+      echo '  "exposeVersion": false,';
+      echo '  "loglevel": "INFO"';
+      echo '}'; } > $settings_file
+    chmod 600 $settings_file
+}
+
+function remove_user_etherpad {
+    remove_username="$1"
+    settings_file=/var/www/${ETHERPAD_DOMAIN_NAME}/htdocs/settings.json
+
+    "${PROJECT_NAME}-pass" -u "$remove_username" --rmapp etherpad
+
+    if grep -q "\"$remove_username\": {" $settings_file; then
+        sed -i "/\"$remove_username\": {/d" $settings_file
+        systemctl restart etherpad
+    fi
+}
+
+function add_user_etherpad {
+    new_username="$1"
+    new_user_password="$2"
+    settings_file=/var/www/${ETHERPAD_DOMAIN_NAME}/htdocs/settings.json
+
+    if ! grep -q "\"$new_username\": {" $settings_file; then
+        "${PROJECT_NAME}-pass" -u "$new_username" -a etherpad -p "$2"
+        sed -i "/\"users\": {/a    \"$new_username\": { \"password\": \"$new_user_password\", \"is_admin\": false }," $settings_file
+        if grep -q "\"$new_username\": {" $settings_file; then
+            systemctl restart etherpad
+        else
+            echo '1'
+            return
+        fi
+    fi
+    echo '0'
+}
+
+function install_interactive_etherpad {
+    if [ ! "$ONION_ONLY" ]; then
+        ONION_ONLY='no'
+    fi
+
+    if [[ "$ONION_ONLY" != "no" ]]; then
+        ETHERPAD_DOMAIN_NAME='etherpad.local'
+        write_config_param "ETHERPAD_DOMAIN_NAME" "$ETHERPAD_DOMAIN_NAME"
+    else
+        function_check interactive_site_details
+        interactive_site_details "etherpad" "ETHERPAD_DOMAIN_NAME" "ETHERPAD_CODE"
+    fi
+    APP_INSTALLED=1
+}
+
+function etherpad_set_title {
+    read_config_param "ETHERPAD_TITLE"
+    data=$(mktemp 2>/dev/null)
+    dialog --title $"Etherpad Title" \
+           --backtitle $"LibreServer Control Panel" \
+           --inputbox $'Set a title for your etherpad system' 10 60 "$ETHERPAD_TITLE" 2>"$data"
+    sel=$?
+    case $sel in
+        0)
+            temp_title=$(<"$data")
+            if [ ${#temp_title} -gt 0 ]; then
+                ETHERPAD_TITLE="$temp_title"
+                settings_file="/var/www/$ETHERPAD_DOMAIN_NAME/htdocs/settings.json"
+
+                write_config_param "ETHERPAD_TITLE" "$ETHERPAD_TITLE"
+                sed -i "s|\"title\":.*|\"title\": \"${ETHERPAD_TITLE}\"|g" $settings_file
+
+                dialog --title $"Etherpad Title" \
+                       --msgbox $"Title has been set" 6 60
+            fi
+           ;;
+    esac
+    rm -f "$data"
+}
+
+function etherpad_set_welcome_message {
+    read_config_param "ETHERPAD_WELCOME_MESSAGE"
+    data=$(mktemp 2>/dev/null)
+    dialog --title $"Etherpad Welcome Message" \
+           --backtitle $"LibreServer Control Panel" \
+           --inputbox $'Set a welcome message, which can include html formatting' 10 60 "$ETHERPAD_WELCOME_MESSAGE" 2>"$data"
+    sel=$?
+    case $sel in
+        0)
+            temp_welcome=$(<"$data")
+            if [ ${#temp_welcome} -gt 0 ]; then
+                ETHERPAD_WELCOME_MESSAGE="$temp_welcome"
+                settings_file="/var/www/$ETHERPAD_DOMAIN_NAME/htdocs/settings.json"
+
+                write_config_param "ETHERPAD_WELCOME_MESSAGE" "$ETHERPAD_WELCOME_MESSAGE"
+                sed -i "s|\"defaultPadText\" :.*|\"defaultPadText\" : \"${ETHERPAD_WELCOME_MESSAGE}\"|g" $settings_file
+
+                dialog --title $"Etherpad Welcome Message" \
+                       --msgbox $"Welcome message has been set" 6 60
+            fi
+           ;;
+    esac
+    rm -f "$data"
+}
+
+function configure_interactive_etherpad {
+    W=(1 $"Set Title"
+       2 $"Set a welcome message")
+
+    while true
+    do
+        # shellcheck disable=SC2068
+        selection=$(dialog --backtitle $"LibreServer Administrator Control Panel" --title $"Etherpad" --menu $"Choose an operation, or ESC to exit:" 10 60 2 "${W[@]}" 3>&2 2>&1 1>&3)
+
+        if [ ! "$selection" ]; then
+            break
+        fi
+
+        case $selection in
+            1) etherpad_set_title;;
+            2) etherpad_set_welcome_message;;
+        esac
+    done
+}
+
+function reconfigure_etherpad {
+    create_etherpad_settings
+    systemctl restart etherpad
+}
+
+function upgrade_etherpad {
+    CURR_ETHERPAD_COMMIT=$(get_completion_param "etherpad commit")
+    if [[ "$CURR_ETHERPAD_COMMIT" == "$ETHERPAD_COMMIT" ]]; then
+        return
+    fi
+
+    read_config_param "ETHERPAD_DOMAIN_NAME"
+
+    systemctl stop etherpad
+
+    etherpad_dir="/var/www/$ETHERPAD_DOMAIN_NAME/htdocs"
+    function_check set_repo_commit
+    set_repo_commit "$etherpad_dir" "etherpad commit" "$ETHERPAD_COMMIT" $ETHERPAD_REPO
+
+    if [ -d "$etherpad_dir/.npm" ]; then
+        chmod 755 -R "$etherpad_dir/.npm"
+    fi
+
+    cd "$etherpad_dir" || return
+    /bin/sh "$etherpad_dir/bin/installDeps.sh"
+    chown -R etherpad:etherpad "$etherpad_dir"
+    chmod 755 "/var/www/${ETHERPAD_DOMAIN_NAME}/htdocs"
+    systemctl restart etherpad
+}
+
+function backup_local_etherpad {
+    ETHERPAD_DOMAIN_NAME='etherpad'
+    if grep -q "etherpad domain" "$COMPLETION_FILE"; then
+        ETHERPAD_DOMAIN_NAME=$(get_completion_param "etherpad domain")
+    fi
+
+    source_directory=/var/www/${ETHERPAD_DOMAIN_NAME}/htdocs
+    if [ -d "$source_directory" ]; then
+        dest_directory=etherpad
+        function_check suspend_site
+        suspend_site "${ETHERPAD_DOMAIN_NAME}"
+
+        function_check backup_directory_to_usb
+        backup_directory_to_usb "$source_directory" "$dest_directory"
+
+        function_check backup_database_to_usb
+        backup_database_to_usb etherpad
+
+        function_check restart_site
+        restart_site
+    fi
+}
+
+function restore_local_etherpad {
+    if ! grep -q "etherpad domain" "$COMPLETION_FILE"; then
+        return
+    fi
+    ETHERPAD_DOMAIN_NAME=$(get_completion_param "etherpad domain")
+    if [ "$ETHERPAD_DOMAIN_NAME" ]; then
+        temp_restore_dir=/root/tempetherpad
+        #etherpad_dir="/var/www/${ETHERPAD_DOMAIN_NAME}/htdocs"
+
+        function_check etherpad_create_database
+        etherpad_create_database
+
+        restore_database etherpad "${ETHERPAD_DOMAIN_NAME}"
+        if [ -d $temp_restore_dir ]; then
+            rm -rf $temp_restore_dir
+        fi
+
+        chown -R etherpad: "/var/www/${ETHERPAD_DOMAIN_NAME}/htdocs"
+        if [ -f "/etc/ssl/certs/${ETHERPAD_DOMAIN_NAME}.pem" ]; then
+            chown etherpad: "/etc/ssl/certs/${ETHERPAD_DOMAIN_NAME}.pem"
+        fi
+        if [ -f "/etc/ssl/private/${ETHERPAD_DOMAIN_NAME}.key" ]; then
+            chown etherpad: "/etc/ssl/private/${ETHERPAD_DOMAIN_NAME}.key"
+        fi
+
+        MARIADB_PASSWORD=$("${PROJECT_NAME}-pass" -u root -a mariadb)
+        settings_file="/var/www/${ETHERPAD_DOMAIN_NAME}/htdocs/settings.json"
+        sed -i "s|\"password\":.*|\"password\": \"${MARIADB_PASSWORD}\",|g" "$settings_file"
+        MARIADB_PASSWORD=
+    fi
+}
+
+function backup_remote_etherpad {
+    echo -n ''
+}
+
+function restore_remote_etherpad {
+    echo -n ''
+}
+
+function remove_etherpad {
+    if [ ${#ETHERPAD_DOMAIN_NAME} -eq 0 ]; then
+        return
+    fi
+    read_config_param "ETHERPAD_DOMAIN_NAME"
+    read_config_param "MY_USERNAME"
+    echo "Removing $ETHERPAD_DOMAIN_NAME"
+    if [ -f /etc/systemd/system/etherpad.service ]; then
+        systemctl stop etherpad
+        systemctl disable etherpad
+        rm /etc/systemd/system/etherpad.service
+    fi
+    systemctl daemon-reload
+    nginx_dissite "$ETHERPAD_DOMAIN_NAME"
+    remove_certs "$ETHERPAD_DOMAIN_NAME"
+    if [ -d "/var/www/$ETHERPAD_DOMAIN_NAME" ]; then
+        rm -rf "/var/www/$ETHERPAD_DOMAIN_NAME"
+    fi
+    if [ -f "/etc/nginx/sites-available/$ETHERPAD_DOMAIN_NAME" ]; then
+        rm "/etc/nginx/sites-available/$ETHERPAD_DOMAIN_NAME"
+    fi
+    function_check drop_database
+    drop_database etherpad
+    function_check remove_onion_service
+    remove_onion_service etherpad ${ETHERPAD_ONION_PORT}
+    remove_app etherpad
+    remove_completion_param install_etherpad
+    sed -i '/etherpad/d' "$COMPLETION_FILE"
+    remove_backup_database_local etherpad
+    remove_nodejs etherpad
+
+    groupdel -f etherpad
+    userdel -r etherpad
+
+    function_check remove_ddns_domain
+    remove_ddns_domain "$ETHERPAD_DOMAIN_NAME"
+}
+
+function install_etherpad {
+    if [ ! "$ETHERPAD_DOMAIN_NAME" ]; then
+        echo $'No domain name was given for etherpad'
+        exit 73
+    fi
+
+    increment_app_install_progress
+
+    if [ -f "$IMAGE_PASSWORD_FILE" ]; then
+        ETHERPAD_ADMIN_PASSWORD="$(printf "%s" "$(cat "$IMAGE_PASSWORD_FILE")")"
+    else
+        if [ ! "$ETHERPAD_ADMIN_PASSWORD" ]; then
+            ETHERPAD_ADMIN_PASSWORD="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
+        fi
+    fi
+
+    increment_app_install_progress
+
+    function_check install_mariadb
+    install_mariadb
+
+    increment_app_install_progress
+
+    function_check get_mariadb_password
+    get_mariadb_password
+
+    increment_app_install_progress
+
+    function_check repair_databases_script
+    repair_databases_script
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES gzip git curl python libssl-dev pkg-config \
+            build-essential python g++ make checkinstall \
+            python3-bcrypt python3-passlib
+
+    increment_app_install_progress
+
+    function_check install_nodejs
+    install_nodejs etherpad
+
+    increment_app_install_progress
+
+    if [ ! -d "/var/www/$ETHERPAD_DOMAIN_NAME" ]; then
+        mkdir "/var/www/$ETHERPAD_DOMAIN_NAME"
+    fi
+    if [ ! -d "/var/www/$ETHERPAD_DOMAIN_NAME/htdocs" ]; then
+
+        if [ -d /repos/etherpad ]; then
+            mkdir -p "/var/www/$ETHERPAD_DOMAIN_NAME/htdocs"
+            cp -r -p /repos/etherpad/. "/var/www/$ETHERPAD_DOMAIN_NAME/htdocs"
+            cd "/var/www/$ETHERPAD_DOMAIN_NAME/htdocs" || exit 32
+            git pull
+        else
+            function_check git_clone
+            git_clone "$ETHERPAD_REPO" "/var/www/$ETHERPAD_DOMAIN_NAME/htdocs"
+        fi
+
+        if [ ! -d "/var/www/$ETHERPAD_DOMAIN_NAME/htdocs" ]; then
+            echo $'Unable to clone etherpad repo'
+            exit 56
+        fi
+    fi
+
+    increment_app_install_progress
+
+    cd "/var/www/$ETHERPAD_DOMAIN_NAME/htdocs" || exit 24
+    git checkout "$ETHERPAD_COMMIT" -b "$ETHERPAD_COMMIT"
+    set_completion_param "etherpad commit" "$ETHERPAD_COMMIT"
+
+    chmod a+w "/var/www/$ETHERPAD_DOMAIN_NAME/htdocs"
+    chown www-data:www-data "/var/www/$ETHERPAD_DOMAIN_NAME/htdocs"
+
+    increment_app_install_progress
+
+    function_check etherpad_create_database
+    etherpad_create_database
+
+    increment_app_install_progress
+
+    function_check add_ddns_domain
+    add_ddns_domain "$ETHERPAD_DOMAIN_NAME"
+
+    create_etherpad_settings
+
+    increment_app_install_progress
+
+    adduser --system --home="/var/www/$ETHERPAD_DOMAIN_NAME/htdocs/" --group etherpad
+    chown -R etherpad: "/var/www/$ETHERPAD_DOMAIN_NAME/htdocs/"
+
+    increment_app_install_progress
+
+    ETHERPAD_ONION_HOSTNAME=$(add_onion_service etherpad 80 ${ETHERPAD_ONION_PORT})
+
+    increment_app_install_progress
+
+    { echo '[Unit]';
+      echo 'Description=etherpad-lite (real-time collaborative document editing)';
+      echo 'After=syslog.target';
+      echo 'After=network.target';
+      echo '';
+      echo '[Service]';
+      echo 'Type=simple';
+      echo 'User=etherpad';
+      echo 'Group=etherpad';
+      echo "Environment=PATH=/usr/bin:/usr/local/bin";
+      echo 'Environment=NODE_ENV=production';
+      echo "WorkingDirectory=/var/www/$ETHERPAD_DOMAIN_NAME/htdocs";
+      echo "ExecStart=/usr/bin/node /var/www/$ETHERPAD_DOMAIN_NAME/htdocs/node_modules/ep_etherpad-lite/node/server.js";
+      echo 'Restart=always';
+      echo 'ProtectSystem=yes';
+      echo 'ProtectHome=yes';
+      echo 'ProtectClock=yes';
+      echo 'ProtectHostname=yes';
+      echo 'PrivateUsers=yes';
+      echo 'ProtectKernelModules=yes';
+      echo 'ProtectKernelTunables=yes';
+      echo '';
+      echo '[Install]';
+      echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/etherpad.service
+    chmod +x /etc/systemd/system/etherpad.service
+
+    etherpad_nginx_site=/etc/nginx/sites-available/$ETHERPAD_DOMAIN_NAME
+    if [[ $ONION_ONLY == "no" ]]; then
+        function_check nginx_http_redirect
+        nginx_http_redirect "$ETHERPAD_DOMAIN_NAME"
+        { echo 'server {';
+          echo '  listen 443 ssl;';
+          echo '  #listen [::]:443 ssl;';
+          echo "  server_name $ETHERPAD_DOMAIN_NAME;";
+          echo '';
+          echo '  # Security'; } >> "$etherpad_nginx_site"
+        function_check nginx_ssl
+        nginx_ssl "$ETHERPAD_DOMAIN_NAME"
+
+        function_check nginx_security_options
+        nginx_security_options "$ETHERPAD_DOMAIN_NAME"
+        nginx_robots "$ETHERPAD_DOMAIN_NAME"
+
+        { echo '  add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
+	  echo "  add_header Onion-Location http://${ETHERPAD_ONION_HOSTNAME}\$request_uri;";
+          echo '';
+          echo '  # Logs';
+          echo '  access_log /dev/null;';
+          echo '  error_log /dev/null;';
+          echo '';
+          echo '  # Root';
+          echo "  root /var/www/$ETHERPAD_DOMAIN_NAME/htdocs;";
+          echo '';
+          echo '  location / {'; } >> "$etherpad_nginx_site"
+        function_check nginx_limits
+        nginx_limits "$ETHERPAD_DOMAIN_NAME" '15m'
+        { echo "    proxy_pass        http://localhost:${ETHERPAD_PORT}/;";
+	  echo "    proxy_set_header  Host \$host;";
+	  echo "    proxy_pass_header Server;";
+	  echo '    proxy_buffering off;';
+	  echo "    proxy_set_header X-Real-IP \$remote_addr;";
+	  echo "    proxy_set_header X-Forwarded-For \$remote_addr;";
+	  echo "    proxy_set_header X-Forwarded-Proto \$scheme;";
+	  echo "    proxy_set_header Host \$host;";
+	  echo '    proxy_http_version 1.1;';
+	  echo "    proxy_set_header Upgrade \$http_upgrade;";
+	  echo "    proxy_set_header Connection \$connection_upgrade;";
+          echo '  }';
+          echo '}'; } >> "$etherpad_nginx_site"
+    else
+        echo -n '' > "$etherpad_nginx_site"
+    fi
+    { echo '';
+      echo "map \$http_upgrade \$connection_upgrade {";
+      echo '  default upgrade;';
+      echo "  ''      close;";
+      echo '}';
+      echo '';
+      echo 'server {';
+      echo "    listen 127.0.0.1:$ETHERPAD_ONION_PORT default_server;";
+      echo '    port_in_redirect off;';
+      echo "    server_name $ETHERPAD_ONION_HOSTNAME;";
+      echo ''; } >> "$etherpad_nginx_site"
+    function_check nginx_security_options
+    nginx_security_options "$ETHERPAD_DOMAIN_NAME"
+    { echo '';
+      echo '  # Logs';
+      echo '  access_log /dev/null;';
+      echo '  error_log /dev/null;';
+      echo '';
+      echo '  # Root';
+      echo "  root /var/www/$ETHERPAD_DOMAIN_NAME/htdocs;";
+      echo '';
+      echo '  location / {'; } >> "$etherpad_nginx_site"
+    function_check nginx_limits
+    nginx_limits "$ETHERPAD_DOMAIN_NAME" '15m'
+    { echo "    proxy_pass        http://localhost:${ETHERPAD_PORT}/;";
+      echo "    proxy_set_header  Host \$host;";
+      echo "    proxy_pass_header Server;";
+      echo '    proxy_buffering off;';
+      echo "    proxy_set_header X-Real-IP \$remote_addr;";
+      echo "    proxy_set_header X-Forwarded-For \$remote_addr;";
+      echo "    proxy_set_header X-Forwarded-Proto \$scheme;";
+      echo "    proxy_set_header Host \$host;";
+      echo '    proxy_http_version 1.1;';
+      echo "    proxy_set_header Upgrade \$http_upgrade;";
+      echo "    proxy_set_header Connection \$connection_upgrade;";
+      echo '  }';
+      echo '}'; } >> "$etherpad_nginx_site"
+
+    # remove content security policy which prevents teh pad from running
+    sed -i '/Content-Security-Policy/d' "$etherpad_nginx_site"
+
+    increment_app_install_progress
+
+    remove_certs "$ETHERPAD_DOMAIN_NAME"
+    function_check create_site_certificate
+    create_site_certificate "$ETHERPAD_DOMAIN_NAME" 'yes'
+
+    increment_app_install_progress
+
+    if [ -f "/etc/ssl/certs/${ETHERPAD_DOMAIN_NAME}.crt" ]; then
+        # shellcheck disable=SC2086
+        mv /etc/ssl/certs/${ETHERPAD_DOMAIN_NAME}.crt /etc/ssl/certs/${ETHERPAD_DOMAIN_NAME}.pem
+    fi
+    if [ -f "/etc/ssl/certs/${ETHERPAD_DOMAIN_NAME}.pem" ]; then
+        chown etherpad: "/etc/ssl/certs/${ETHERPAD_DOMAIN_NAME}.pem"
+    fi
+    if [ -f "/etc/ssl/private/${ETHERPAD_DOMAIN_NAME}.key" ]; then
+        chown etherpad: "/etc/ssl/private/${ETHERPAD_DOMAIN_NAME}.key"
+    fi
+    usermod -a -G ssl-cert etherpad
+
+    increment_app_install_progress
+
+    # Ensure that the database gets backed up locally, if remote
+    # backups are not being used
+    function_check backup_databases_script_header
+    backup_databases_script_header
+
+    increment_app_install_progress
+
+    function_check backup_database_local
+    backup_database_local etherpad
+
+    increment_app_install_progress
+
+    function_check nginx_ensite
+    nginx_ensite "$ETHERPAD_DOMAIN_NAME"
+
+    "${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a etherpad -p "$ETHERPAD_ADMIN_PASSWORD"
+
+    function_check add_ddns_domain
+    add_ddns_domain "$ETHERPAD_DOMAIN_NAME"
+
+    increment_app_install_progress
+
+    set_completion_param "etherpad domain" "$ETHERPAD_DOMAIN_NAME"
+
+    systemctl restart mariadb
+
+    increment_app_install_progress
+
+    systemctl enable etherpad
+
+    increment_app_install_progress
+
+    systemctl daemon-reload
+
+    increment_app_install_progress
+
+    if [ -d "/var/www/$ETHERPAD_DOMAIN_NAME/htdocs/.npm" ]; then
+        chmod 755 -R "/var/www/$ETHERPAD_DOMAIN_NAME/htdocs/.npm"
+    fi
+
+    cd "/var/www/$ETHERPAD_DOMAIN_NAME/htdocs" || exit 2
+
+    increment_app_install_progress
+
+    /bin/sh "/var/www/$ETHERPAD_DOMAIN_NAME/htdocs/bin/installDeps.sh"
+
+    increment_app_install_progress
+
+    chown -R etherpad:etherpad "/var/www/$ETHERPAD_DOMAIN_NAME/htdocs"/*
+
+    increment_app_install_progress
+
+    chmod 755 "/var/www/${ETHERPAD_DOMAIN_NAME}/htdocs"
+    
+    systemctl start etherpad
+
+    increment_app_install_progress
+
+    systemctl restart nginx
+
+    APP_INSTALLED=1
+}

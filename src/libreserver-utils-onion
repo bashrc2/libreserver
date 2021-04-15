@@ -1,0 +1,561 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Onion functions
+#
+# License
+# =======
+#
+# Copyright (C) 2014-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# The maximum amount of traffic per day in gigabytes
+TOR_MAX_TRAFFIC_PER_MONTH_GB=10
+
+USE_V2_ONION_ADDRESS=
+HIDDEN_SERVICE_PATH='/var/lib/tor/hidden_service_'
+ONION_SERVICES_FILE=/etc/torrc.d/${PROJECT_NAME}
+
+# DDoS defense
+ONION_RATE_PER_SEC=42
+ONION_BURST_PER_SEC=87
+
+function restart_tor_daemon {
+    chmod -R 644 /etc/torrc.d
+    rm /etc/torrc.d/*~ &> /dev/null
+    systemctl restart tor
+}
+
+function tor_entry_node_watchdog {
+    # watchdog checks for a bad entry/guard node and restarts the tor
+    # daemon if needed
+    # See https://www.reddit.com/r/TOR/comments/a1vyxt/closed_1_streams_for_service_scrubbedonion_for/
+    if [ ! -f /var/lib/tor/hidden_service_webadmin/hostname ]; then
+	return
+    fi
+    webadmin_domain=$(cat /var/lib/tor/hidden_service_webadmin/hostname)
+    { echo '#!/bin/bash';
+      echo "result=\$(/usr/bin/torsocks /usr/bin/curl -I http://${webadmin_domain}/admin)";
+      echo "if [[ \"\${result}\" != *'nginx'* ]]; then";
+      echo "    echo \"\$(date)\" >> /var/log/tor_daemon_restarts.log";
+      echo '    systemctl restart tor';
+      echo 'fi'; } > "/usr/bin/tor-entry-watchdog"
+    chmod +x "/usr/bin/tor-entry-watchdog"
+    cron_add_mins 10 "/usr/bin/tor-entry-watchdog"
+}
+
+function tor_daemon_watchdog {
+    # watchdog checks if the tor daemon is running and if not tries to reinstall it
+    { echo '#!/bin/bash';
+      echo 'counterFile="/root/.tor_daemon_missing"';
+      echo "torProcess=\$(ps aux | grep tor)";
+      echo "if [[ \"\$torProcess\" == *\"/usr/bin/tor --defaults-torrc\"* ]]; then";
+      echo "  if [ -f \"\$counterFile\" ]; then";
+      echo "    rm \"\$counterFile\"";
+      echo '  fi';
+      echo '  exit 0';
+      echo 'fi';
+      echo "if [ ! -f \"\$counterFile\" ]; then";
+      echo "  echo '1' > \"\$counterFile\"";
+      echo 'else';
+      echo "  count=\$(cat \"\$counterFile\")";
+      echo "  count=\$((count+1))";
+      echo '  # shellcheck disable=SC2086';
+      echo "  if [ \$count -gt 5 ]; then";
+      echo "    rm \"\$counterFile\"";
+      echo "    /usr/local/bin/${PROJECT_NAME}-fix-tor";
+      echo '  else';
+      echo "    echo \"\$count\" > \"\$counterFile\"";
+      echo '  fi';
+      echo 'fi'; } > "/usr/bin/tor-daemon-watchdog"
+    chmod +x "/usr/bin/tor-daemon-watchdog"
+    cron_add_mins 10 "/usr/bin/tor-daemon-watchdog"
+}
+
+function torrc_migrate {
+    if [ -f "$ONION_SERVICES_FILE" ]; then
+        if grep -q "#%include /etc/torrc.d" /etc/tor/torrc; then
+            sed -i 's|#%include /etc/torrc.d|%include /etc/torrc.d|g' /etc/tor/torrc
+            restart_tor_daemon
+        fi
+        return
+    fi
+    systemctl stop tor
+
+    if [ ! -d /etc/torrc.d ]; then
+        mkdir /etc/torrc.d
+        chown -R debian-tor:debian-tor /etc/torrc.d
+    fi
+
+    grep "HiddenServiceDir\\|HiddenServiceVersion\\|HiddenServicePort" /etc/tor/torrc | grep -v "#HiddenServiceDir" >> "$ONION_SERVICES_FILE"
+
+    if ! grep -q "HiddenServiceVersion" "$ONION_SERVICES_FILE"; then
+        restart_tor_daemon
+        return
+    fi
+
+    if grep -q "#%include /etc/torrc.d" /etc/tor/torrc; then
+        sed -i 's|#%include /etc/torrc.d|%include /etc/torrc.d|g' /etc/tor/torrc
+    else
+        echo "%include /etc/torrc.d" >> /etc/tor/torrc
+    fi
+
+    { echo 'DNSPort 5300';
+      echo 'DNSListenAddress 127.0.0.1';
+      echo 'AutomapHostsOnResolve 1'; } > /etc/torrc.d/dns
+
+    sed -i '/DNSPort 5300/d' /etc/tor/torrc
+    sed -i '/DNSListenAddress 127.0.0./d' /etc/tor/torrc
+    sed -i '/AutomapHostsOnResolve 1/d' /etc/tor/torrc
+
+    sed -i '/HiddenServiceDir/d' /etc/tor/torrc
+    sed -i '/HiddenServiceVersion/d' /etc/tor/torrc
+    sed -i '/HiddenServicePort/d' /etc/tor/torrc
+
+    chmod -R 644 /etc/torrc.d
+    restart_tor_daemon
+}
+
+function add_email_hostname {
+    extra_email_hostname="$1"
+    email_hostnames=$(grep "dc_other_hostnames" /etc/exim4/update-exim4.conf.conf | awk -F "'" '{print $2}')
+    if [[ "$email_hostnames" != *"$extra_email_hostname"* ]]; then
+        sed -i "s|dc_other_hostnames=.*|dc_other_hostnames='$email_hostnames;$extra_email_hostname'|g" /etc/exim4/update-exim4.conf.conf
+        update-exim4.conf
+        dpkg-reconfigure --frontend noninteractive exim4-config
+        systemctl restart saslauthd
+    fi
+}
+
+function onion_update {
+    # update so that new onion services appear
+    restart_tor_daemon
+}
+
+function wait_for_onion_service_base {
+    onion_service_name="$1"
+
+    sleep_ctr=0
+    while [ ! -f "${HIDDEN_SERVICE_PATH}${onion_service_name}/hostname" ]; do
+        sleep 1
+        sleep_ctr=$((sleep_ctr + 1))
+        if [ $sleep_ctr -gt 10 ]; then
+            break
+        fi
+    done
+}
+
+function wait_for_onion_service {
+    onion_service_name="$1"
+
+    wait_for_onion_service_base "${onion_service_name}"
+
+    if [ ! -f "${HIDDEN_SERVICE_PATH}${onion_service_name}/hostname" ]; then
+        # try a second time
+        onion_update
+        wait_for_onion_service_base "${onion_service_name}"
+    fi
+    sync
+}
+
+function remove_onion_service {
+    onion_service_name="$1"
+    onion_service_port_to=$2
+    nick="$3"
+
+    if [ ${#nick} -gt 0 ]; then
+        sed -i "/stealth ${nick}/d" "$ONION_SERVICES_FILE"
+    fi
+    sed -i "/hidden_service_${onion_service_name}_mobile/,/127.0.0.1:${onion_service_port_to}/d" "$ONION_SERVICES_FILE"
+    sed -i "/hidden_service_${onion_service_name}/,/127.0.0.1:${onion_service_port_to}/d" "$ONION_SERVICES_FILE"
+
+#    sed -i "/hidden_service_${onion_service_name}/,+1 d" "$ONION_SERVICES_FILE"
+#    sed -i "/hidden_service_${onion_service_name}_mobile/,+1 d" "$ONION_SERVICES_FILE"
+
+    sed -i "/127.0.0.1:${onion_service_port_to}/d" "$ONION_SERVICES_FILE"
+    if [ "$3" ]; then
+        sed -i "/127.0.0.1:${3}/d" "$ONION_SERVICES_FILE"
+        if [ "$4" ]; then
+            sed -i "/127.0.0.1:${4}/d" "$ONION_SERVICES_FILE"
+            if [ "$5" ]; then
+                sed -i "/127.0.0.1:${5}/d" "$ONION_SERVICES_FILE"
+            fi
+        fi
+    fi
+    if [ -d "${HIDDEN_SERVICE_PATH}${onion_service_name}" ]; then
+        rm -rf "${HIDDEN_SERVICE_PATH}${onion_service_name}"
+    fi
+    if [ -d "${HIDDEN_SERVICE_PATH}${onion_service_name}_mobile" ]; then
+        rm -rf "${HIDDEN_SERVICE_PATH}${onion_service_name}_mobile"
+    fi
+    remove_completion_param "${onion_service_name} onion domain"
+    onion_update
+}
+
+function add_onion_service {
+    onion_service_name="$1"
+    onion_service_port_from=$2
+    onion_service_port_to=$3
+    onion_stealth_name="$4"
+
+    if [ -f "${HIDDEN_SERVICE_PATH}${onion_service_name}/hostname" ]; then
+        cat "${HIDDEN_SERVICE_PATH}${onion_service_name}/hostname"
+        USE_V2_ONION_ADDRESS=
+        return
+    fi
+
+    if [ ! -d /etc/tor ]; then
+        echo $"No Tor installation found. ${onion_service_name} onion site cannot be configured."
+        USE_V2_ONION_ADDRESS=
+        exit 87
+    fi
+    if [ ! -f "$ONION_SERVICES_FILE" ]; then
+        touch "$ONION_SERVICES_FILE"
+    fi
+    if ! grep -q "hidden_service_${onion_service_name}" "$ONION_SERVICES_FILE"; then
+        echo "HiddenServiceDir ${HIDDEN_SERVICE_PATH}${onion_service_name}/" >> "$ONION_SERVICES_FILE"
+        if [ ! $USE_V2_ONION_ADDRESS ]; then
+            echo 'HiddenServiceVersion 3' >> "$ONION_SERVICES_FILE"
+        else
+            echo 'HiddenServiceVersion 2' >> "$ONION_SERVICES_FILE"
+        fi
+        echo 'HiddenServiceEnableIntroDoSDefense 1' >> "$ONION_SERVICES_FILE"
+        echo "HiddenServiceEnableIntroDoSRatePerSec ${ONION_RATE_PER_SEC}" >> "$ONION_SERVICES_FILE"
+        echo "HiddenServiceEnableIntroDoSBurstPerSec ${ONION_BURST_PER_SEC}" >> "$ONION_SERVICES_FILE"
+        echo "HiddenServicePort ${onion_service_port_from} 127.0.0.1:${onion_service_port_to}" >> "$ONION_SERVICES_FILE"
+        if [ ${#onion_stealth_name} -gt 0 ]; then
+            echo "HiddenServiceAuthorizeClient stealth ${onion_stealth_name}" >> "$ONION_SERVICES_FILE"
+        fi
+    fi
+
+    USE_V2_ONION_ADDRESS=
+
+    onion_update
+
+    function_check wait_for_onion_service
+    wait_for_onion_service "${onion_service_name}"
+
+    if [ ! -f "${HIDDEN_SERVICE_PATH}${onion_service_name}/hostname" ]; then
+        ls -lh "${HIDDEN_SERVICE_PATH}${onion_service_name}/hostname"
+        echo $"${onion_service_name} onion site hostname not found"
+        exit 76
+    fi
+
+    onion_address=$(cat "${HIDDEN_SERVICE_PATH}${onion_service_name}/hostname")
+
+    # Record the domain in the completion file
+    set_completion_param "${onion_service_name} onion domain" "${onion_address}"
+
+    echo "$onion_address"
+}
+
+function set_default_onion_domains {
+    # If sites are only visible via Tor then for installation
+    # purposes assign them some default domain names
+    if [[ $ONION_ONLY == "no" ]]; then
+        return
+    fi
+
+    HTMLY_DOMAIN_NAME='htmly.local'
+    BLUDIT_DOMAIN_NAME='bludit.local'
+    DOKUWIKI_DOMAIN_NAME='dokuwiki.local'
+    DEFAULT_DOMAIN_NAME="${LOCAL_NAME}.local"
+    GOGS_DOMAIN_NAME='gogs.local'
+}
+
+function create_avahi_onion_domains {
+    if [[ "$SYSTEM_TYPE" == "mesh"* ]]; then
+        return
+    fi
+    if [ ! -d /etc/avahi/services ]; then
+        return
+    fi
+    if [ "$HTMLY_DOMAIN_NAME" ]; then
+        function_check create_avahi_service
+        create_avahi_service 'blog' 'http' 'tcp' "$HTMLY_ONION_PORT"
+    fi
+    if [ "$GOGS_DOMAIN_NAME" ]; then
+        function_check create_avahi_service
+        create_avahi_service 'git' 'http' 'tcp' "$GOGS_ONION_PORT"
+    fi
+    if [ "$DOKUWIKI_DOMAIN_NAME" ]; then
+        function_check create_avahi_service
+        create_avahi_service 'dokuwiki' 'http' 'tcp' "$DOKUWIKI_ONION_PORT"
+    fi
+}
+
+function allow_ssh_to_onion_address {
+    if [[ "$SYSTEM_TYPE" == "mesh"* ]]; then
+        return
+    fi
+    if [ ! -d "/home/$MY_USERNAME/.ssh" ]; then
+        mkdir "/home/$MY_USERNAME/.ssh"
+    fi
+    if [ ! -d /etc/tor ]; then
+        echo $'Tor not found when updating ssh'
+        exit 52
+    fi
+    if ! grep -q "onion" "/home/$MY_USERNAME/.ssh/config"; then
+        echo 'Host *.onion' >> "/home/$MY_USERNAME/.ssh/config"
+        echo 'ProxyCommand connect -R remote -5 -S 127.0.0.1:9050 %h %p' >> "/home/$MY_USERNAME/.ssh/config"
+    fi
+}
+
+function enable_ssh_via_onion {
+    if [[ "$SYSTEM_TYPE" == "mesh"* ]]; then
+        return
+    fi
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+    echo 'N' | INSTALL_PACKAGES tor
+    INSTALL_PACKAGES connect-proxy
+    if ! grep -q 'Host *.onion' "/home/$MY_USERNAME/.ssh/config"; then
+        if [ ! -d "/home/$MY_USERNAME/.ssh" ]; then
+            mkdir "/home/$MY_USERNAME/.ssh"
+        fi
+        echo 'Host *.onion' >> "/home/$MY_USERNAME/.ssh/config"
+        echo 'ProxyCommand connect -R remote -5 -S 127.0.0.1:9050 %h %p' >> "/home/$MY_USERNAME/.ssh/config"
+        chown "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME/.ssh"
+        chown "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME/.ssh/config"
+    fi
+    if ! grep -q 'Host *.onion' /root/.ssh/config; then
+        if [ ! -d /root/.ssh ]; then
+            mkdir /root/.ssh
+        fi
+        echo 'Host *.onion' >> /root/.ssh/config
+        echo 'ProxyCommand connect -R remote -5 -S 127.0.0.1:9050 %h %p' >> /root/.ssh/config
+    fi
+    if ! grep -q 'Host *.onion' /etc/skel/.ssh/config; then
+        if [ ! -d /etc/skel/.ssh ]; then
+            mkdir /etc/skel/.ssh
+        fi
+        echo 'Host *.onion' >> /etc/skel/.ssh/config
+        echo 'ProxyCommand connect -R remote -5 -S 127.0.0.1:9050 %h %p' >> /etc/skel/.ssh/config
+    fi
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function configure_ssh_onion {
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+    if [[ "$SYSTEM_TYPE" == "mesh"* ]]; then
+        return
+    fi
+
+    SSH_ONION_HOSTNAME=$(add_onion_service ssh "${SSH_PORT}" "${SSH_PORT}")
+    if [[ "$SSH_ONION_HOSTNAME" != *'.onion' ]]; then
+        echo $'ssh onion site not generated'
+        exit 62
+    fi
+
+    set_completion_param "ssh onion domain" "${SSH_ONION_HOSTNAME}"
+    add_email_hostname "${SSH_ONION_HOSTNAME}"
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function check_tor_health {
+    { echo '#!/bin/bash';
+      echo "status=\$(${PROJECT_NAME}-tor-health)";
+      echo "ADMIN_USER=\$(grep \"MY_USERNAME=\" ~/${PROJECT_NAME}.cfg | awk -F '=' '{print \$2}')";
+      echo 'FAILS_FILE=/var/log/tor/fails';
+      echo "if [[ \"\$status\" == 'G'* ]]; then";
+      echo "    if [ -f \$FAILS_FILE ]; then";
+      echo "        rm \$FAILS_FILE";
+      echo "        /bin/bash /usr/local/bin/${PROJECT_NAME}-notification -m \"[${PROJECT_NAME}] Tor status is \$status\" -s \"[${PROJECT_NAME}] Tor status is now \$status\"";
+      echo '    fi';
+      echo '    exit 0';
+      echo 'fi';
+      echo "if [ ! -f \$FAILS_FILE ]; then";
+      echo "    /bin/bash /usr/local/bin/${PROJECT_NAME}-notification -m \"[${PROJECT_NAME}] Tor status is \$status\" -s \"[${PROJECT_NAME}] Tor status is \$status\"";
+      echo "    echo \"\$status\" > \$FAILS_FILE";
+      echo 'else';
+      echo "    prev_status=\$(cat \$FAILS_FILE)";
+      echo "    if [[ \"\$prev_status\" != \"\$status\" ]]; then";
+      echo "        /bin/bash /usr/local/bin/${PROJECT_NAME}-notification -m \"[${PROJECT_NAME}] Tor status is \$status\" -s \"[${PROJECT_NAME}] Tor status is \$status\"";
+      echo "        echo \"\$status\" > \$FAILS_FILE";
+      echo '    fi';
+      echo 'fi'; } > /usr/bin/check_tor_health
+    chmod +x /usr/bin/check_tor_health
+
+    if ! grep -q 'check_tor_health' /etc/crontab; then
+        cron_add_mins 10 "/usr/bin/check_tor_health"
+    fi
+}
+
+function install_tor {
+    if [[ "$SYSTEM_TYPE" == "mesh*" ]]; then
+        return
+    fi
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+
+    # ensure that any previous keys are removed
+    if [ -d /var/lib/tor ]; then
+        echo $'Uninstalling Tor'
+        $REMOVE_PACKAGES tor
+        if [ -d /var/lib/tor ]; then
+            echo $'Removing Tor keys'
+            rm -rf /var/lib/tor
+        fi
+    fi
+    if [ -d /etc/torrc.d ]; then
+        rm -rf /etc/torrc.d/*
+    fi
+
+    INSTALL_PACKAGES tor
+    if [ ! -f /etc/tor/torrc ]; then
+        echo $'Tor failed to install'
+        exit 38
+    fi
+
+    # For torify
+    INSTALL_PACKAGES torsocks
+
+    if [ ! -d /etc/torrc.d ]; then
+        mkdir /etc/torrc.d
+        chown -R debian-tor:debian-tor /etc/torrc.d
+    fi
+    sed -i 's|#%include /etc/torrc.d|%include /etc/torrc.d|g' /etc/tor/torrc
+    if ! grep -q '%include /etc/torrc.d' /etc/tor/torrc; then
+        echo '%include /etc/torrc.d' >> /etc/tor/torrc
+    fi
+
+    echo 'Log notice file /var/log/tor/notices.log' > /etc/torrc.d/logging
+    echo "AccountingMax $TOR_MAX_TRAFFIC_PER_MONTH_GB GBytes" > /etc/torrc.d/maxtraffic
+
+    libreserver-fix-tor
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function get_app_onion_address {
+    app_name="$1"
+    mobilestr="$2"
+
+    if [ ${#mobilestr} -gt 0 ]; then
+        app_name="mobile${app_name}"
+    fi
+    if grep -q "${app_name} onion domain" "$COMPLETION_FILE"; then
+        if grep -q "${app_name} onion domain" "$COMPLETION_FILE"; then
+            grep "${app_name} onion domain" "${COMPLETION_FILE}" | head -n 1 | awk -F ':' '{print $2}'
+            return
+        fi
+    fi
+    echo ""
+}
+
+function tor_add_bridge {
+    bridge_ip_address="$1"
+    bridge_port="$2"
+    bridge_key="$3"
+    bridge_type='obfs4'
+
+    if [[ "$bridge_ip_address" != *"."* ]]; then
+        return
+    fi
+    if [ ${#bridge_port} -eq 0 ]; then
+        return
+    fi
+    if [ ${#bridge_key} -eq 0 ]; then
+        return
+    fi
+
+    INSTALL_PACKAGES obfs4proxy
+
+    if [ ! -f /etc/torrc.d/bridges ]; then
+        { echo 'ClientTransportPlugin obfs4 exec /usr/bin/obfs4proxy managed';
+          echo 'UseBridges 1';
+          echo "Bridge $bridge_type ${bridge_ip_address}:${bridge_port} ${bridge_key}"; } > /etc/torrc.d/bridges
+    else
+        if ! grep -q "Bridge $bridge_type ${bridge_ip_address}:${bridge_port} ${bridge_key}" /etc/torrc.d/bridges; then
+            echo "Bridge $bridge_type ${bridge_ip_address}:${bridge_port} ${bridge_key}" >> /etc/torrc.d/bridges
+        fi
+    fi
+
+    restart_tor_daemon
+}
+
+function tor_remove_bridge {
+    bridge_ip_address="$1"
+    bridge_type='obfs4'
+
+    if [[ "$bridge_ip_address" == *"."* ]]; then
+        bridge_str="Bridge $bridge_type ${bridge_ip_address}"
+    else
+        if grep -q " ${bridge_ip_address}" /etc/torrc.d/bridges; then
+            bridge_str=" ${bridge_ip_address}"
+        else
+            return
+        fi
+    fi
+    if grep -q "${bridge_str}" /etc/torrc.d/bridges; then
+        sed -i "/${bridge_str}/d" /etc/torrc.d/bridges
+    fi
+
+    # If there are no bridges remaining then remove the file
+    if ! grep -q "Bridge " /etc/torrc.d/bridges; then
+        rm /etc/torrc.d/bridges
+    fi
+
+    restart_tor_daemon
+}
+
+function tor_create_bridge_relay {
+    read_config_param 'TOR_BRIDGE_PORT'
+    read_config_param 'TOR_BRIDGE_NICKNAME'
+    read_config_param 'MY_EMAIL_ADDRESS'
+
+    if [ ! "$TOR_BRIDGE_PORT" ]; then
+        return
+    fi
+    if [ ${#TOR_BRIDGE_PORT} -eq 0 ]; then
+        return
+    fi
+    if [ ${#TOR_BRIDGE_NICKNAME} -eq 0 ]; then
+        return
+    fi
+
+    INSTALL_PACKAGES obfs4proxy
+
+    { echo 'BridgeRelay 1';
+      echo 'ServerTransportPlugin obfs4 exec /usr/bin/obfs4proxy';
+      echo "ExtORPort $TOR_BRIDGE_PORT";
+      echo "ContactInfo $MY_EMAIL_ADDRESS";
+      echo "Nickname $TOR_BRIDGE_NICKNAME"; } > /etc/torrc.d/bridgerelay
+
+    firewall_add tor_bridge "$TOR_BRIDGE_PORT" tcp
+
+    restart_tor_daemon
+}
+
+function tor_remove_bridge_relay {
+    if [ -f /etc/torrc.d/bridgerelay ]; then
+        rm /etc/torrc.d/bridgerelay
+    fi
+
+    read_config_param 'TOR_BRIDGE_PORT'
+    firewall_remove "$TOR_BRIDGE_PORT" tcp
+
+    restart_tor_daemon
+}
+
+# NOTE: deliberately no exit 0

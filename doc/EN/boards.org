@@ -1,0 +1,27 @@
+#+TITLE: LibreServer
+#+AUTHOR: Bob Mottram
+#+EMAIL: bob@libreserver.org
+#+KEYWORDS: libreserver, arm board, SBC, single board computer
+#+DESCRIPTION: List of supported ARM boards
+#+OPTIONS: ^:nil toc:nil num:nil
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="libreserver.css" />
+
+#+attr_html: :width 80% :height 10% :align center
+[[file:images/logo.png]]
+
+* Supported ARM boards
+
+The following ARM boards are supported by the build system. If your board isn't listed here then you may still be able to install LibreServer using [[./armbian.html][Armbian]].
+
+ - beagleboneblack
+ - beaglebonegreen
+ - beaglex15
+ - cubieboard2
+ - cubietruck
+ - pcduino3
+ - banana-pro
+ - a20-olinuxino-lime
+ - a20-olinuxino-lime2
+ - a20-olinuxino-micro
+
+The latest image builds are obtainable with [[https://datproject.org/][dat]] and can be [[./downloads/images.txt][found here]].

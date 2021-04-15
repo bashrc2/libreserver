@@ -1,0 +1,94 @@
+#+TITLE: LibreServer
+#+AUTHOR: Bob Mottram
+#+EMAIL: bob@libreserver.org
+#+KEYWORDS: libreserver, xmpp
+#+DESCRIPTION: How to use XMPP/Jabber
+#+OPTIONS: ^:nil toc:nil num:nil
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="libreserver.css" />
+
+#+attr_html: :width 80% :height 10% :align center
+[[file:images/logo.png]]
+
+* XMPP/Jabber
+
+Most people know XMPP as "/Jabber/" and it's sometimes regarded and an old protocol once used by Google and Facebook but which is no longer relevant. However, it still works and if appropriately configured, as it is on LibreServer, can provide the best chat messaging security currently available.
+
+With regard to chat apps you might have read a lot of stuff about /end-to-end security/. That's important, but to also protect the metadata of who sends messages to who the data needs to be onion routed (wrapped in multiple layers of routing encryption), and that's something which most popular chat apps don't provide. Also beware of chat apps which fundamentally rely upon Google's infrastructure. You can be sure that they extensively data mine everything and will be able to reconstruct your social graph if that's at all technically feasible, then pass that to whatever governments they're friendly with or trying to lobby.
+
+A well written article on the state of XMPP and how it compares to other chat protocols [[https://gultsch.de/xmpp_2016.html][can be found here]].
+
+* Using with Profanity
+You can install the [[./app_profanity.html][profanity app]] via *Add/remove apps* on the *Administrator control panel*. Logging in and then selecting *Run App* and *profanity* will start it.
+* Using with Gajim
+In mid 2016 [[https://gajim.org/][Gajim]] became the first desktop XMPP client to support the [[https://en.wikipedia.org/wiki/OMEMO][OMEMO end-to-end security standard]], which is superior to the more traditional [[https://en.wikipedia.org/wiki/Off-the-Record_Messaging][OTR]] since it also includes multi-user chat and the ratcheting mechanism pioneered by Open Whisper Systems. To install it:
+
+#+begin_src bash :tangle no
+su -c 'echo "deb ftp://ftp.gajim.org/debian unstable main" > /etc/apt/sources.list.d/gajim.list'
+sudo apt-get update
+sudo apt-get -y install gajim-dev-keyring
+sudo apt-get -y install git tor python-dev python-pip gajim-nightly
+mkdir ~/.local/share/gajim/plugins -p
+cd ~/.local/share/gajim/plugins
+git clone https://github.com/omemo/gajim-omemo
+sudo pip install protobuf==2.6.1, python-axolotl==0.1.35
+#+end_src
+
+Open Gajim and enter your XMPP address and password.
+
+Go to *Edit/Preferences* and select the *Advanced* tab. Under *Global Proxy* select *Tor* and the *Close* button. Then select *Edit/Plugins* and make sure that OMEMO is active (ticked), then select the *Close* button.
+
+Go to *Edit/Accounts*, select your account then the *Connection* tab. Ensure that *Use custom hostname/port* is checked and enter your onion address there as the hostname (it can be found on the /About/ screen of the administrator control panel). Using the onion address will give you better protection against correlation attacks within the Tor network. Also under *Proxy* select *Tor*.
+
+When you start a conversation make sure that the OMEMO box is ticked. You can also click on the keys button and trust various fingerprints. Both sides will need to do that before an encrypted chat can start.
+
+If you wish to make backups of the OMEMO keys then they can be found within:
+
+#+begin_src bash :tangle no
+~/.local/share/gajim
+#+end_src
+
+If you wish to use OpenPGP to encrypt your messages then go to *Edit/Accounts*, select your account and then the *Personal Information* tab. You can then choose your GPG key. When initiating a chat you can select the *Advanced* button and then select *Toggle OpenPGP Encryption*. OpenPGP is not as secure as OMEMO, but does allow you to use XMPP in a similar style to email in that the recipient of the message does not necessarily need to be online at the same time that you send it.
+
+* Using with Jitsi
+Jitsi can be downloaded from https://jitsi.org
+
+On your desktop/laptop open Jitsi and select *Options* from the *Tools* menu.
+
+Click *Add* to add a new user, then enter the Jabber ID (yourusername@yourmaindomainname). Close and then you should notice that your status is "Online" (or if not then you should be able to set it to online).
+
+From the *File* menu you can add contacts, then select the chat icon to begin a chat.  Click on the lock icon on the right hand side and this will initiate an authentication procedure in which you can specify a question and answer to verify the identity of the person you're communicating with.  Once authentication is complete then you'll be chating using OTR, which provides an additional layer of security.
+
+When opening Jitsi initially you will get a certificate warning for your domain name (assuming that you're using a self-signed certificate). If this happens then select *View Certificate* and enable the checkbox to trust the certificate, then select *Continue Anyway*.  Once you've done this then the certificate warning will not appear again unless you reinstall Jitsi or use a different computer.
+
+You can also [[https://www.youtube.com/watch?v=vgx7VSrDGjk][see this video]] as an example of using OTR.
+
+* Using with Ubuntu
+The default XMPP client in Ubuntu is Empathy.  Using Empathy isn't as secure as using Jitsi, since it doesn't include the /off the record/ feature, but since it's the default it's what many users will have easy access to.
+
+Open *System Settings* and select *Online Accounts*, *Add account*  and then *Jabber*.
+
+Enter your username (username@domainname) and password.
+
+Click on *Advanced* and make sure that *Encryption required* and *Ignore SSL certificate errors* are checked.  Ignoring the certificate errors will allow you to use the self-signed certificate created earlier.  Then click *Done* and set your Jabber account and Empathy to *On*.
+
+* Using with Android/Conversations
+Install [[https://f-droid.org/][F-Droid]]
+
+Search for and install *Orbot* and *Conversations*.
+
+Add an account and enter your Jabber/XMPP ID and password.
+
+From the menu select *Settings* then *Expert Settings*. Select *Connect via Tor* and depending on your situation you might also want to select *Don't save encrypted messages*. Also within expert settings select *Keep in foreground*. This will enable you to still receive notifications when your device is in standby mode with the screen turned off.
+
+From the menu select *Manage accounts* and add a new account.
+
+#+BEGIN_SRC bash
+Jabber ID: myusername@mydomain
+Password:  your XMPP password
+Hostname:  mydomain (preferably your xmpp onion address)
+Port:      5222
+#+END_SRC
+
+Then select *Next*. When chatting you can use the lock icon to encrypt your conversation. OMEMO is the recommended type of encryption. It's also going through Tor, so passive surveillance of the metadata should not be easy for an adversary.
+
+It's also recommended to disable battery optimisations for Conversations and Orbot. If you don't do that then you may have trouble receiving messages or some parts of the protocol may break. That can be done by going to *Settings*, selecting *Battery* then opening the menu (top right) and selecting *Battery optimisations* then selecting *Not optimised* and *All apps*, then finally choosing Conversations and Orbot not to be optimised.

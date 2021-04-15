@@ -1,0 +1,2085 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Setup functions
+#
+# License
+# =======
+#
+# Copyright (C) 2014-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+if [ ! "$PROJECT_NAME" ]; then
+    PROJECT_NAME='libreserver'
+fi
+
+if [ ! "$LOCAL_NAME" ]; then
+    LOCAL_NAME=${PROJECT_NAME}
+fi
+
+DEFAULT_DOMAIN_NAME=
+DEFAULT_DOMAIN_CODE=
+MY_USERNAME=
+if [ ! "$SYSTEM_TYPE" ]; then
+    SYSTEM_TYPE="full"
+fi
+
+# An optional configuration file which overrides some of these variables
+if [ ! "$CONFIGURATION_FILE" ]; then
+    CONFIGURATION_FILE="$HOME/${PROJECT_NAME}.cfg"
+fi
+
+# Directory where source code is downloaded and compiled
+INSTALL_DIR=$HOME/build
+
+# device name for an attached usb drive
+USB_DRIVE=/dev/sda1
+
+# Location where the USB drive is mounted to
+USB_MOUNT=/mnt/usb
+
+# Number of days to keep backups for
+BACKUP_MAX_DAYS=30
+
+# file containing a list of remote locations to backup to
+# Format: [username@friendsdomain//home/username] [ssh_password]
+# With the only space character being between the server and the password
+FRIENDS_SERVERS_LIST="/home/$MY_USERNAME/backup.list"
+
+export DEBIAN_FRONTEND=noninteractive
+
+# used to limit CPU usage
+CPULIMIT='/usr/bin/cpulimit -l 20 -e'
+
+# command to create a git repository
+CREATE_GIT_PROJECT_COMMAND='create-project'
+
+# File which keeps track of what has already been installed
+COMPLETION_FILE=$HOME/${PROJECT_NAME}-completed.txt
+
+# log file where details of remote backups are stored
+REMOTE_BACKUPS_LOG=/var/log/remotebackups.log
+
+# message if something fails to install
+CHECK_MESSAGE="Check your internet connection, /etc/network/interfaces and /etc/resolvconf/resolv.conf.d/head, then delete $COMPLETION_FILE, run 'rm -fR /var/lib/apt/lists/* && $UPDATE_PACKAGES --fix-missing' and run this script again. If hash sum mismatches persist then try setting $DEBIAN_REPO to a different mirror and also change /etc/apt/sources.list."
+
+# Default diffie-hellman key length in bits
+DH_KEYLENGTH=2048
+
+function configure_cpu_monitor {
+    if [ -f /etc/systemd/system/cpumonitor.service ]; then
+        return
+    fi
+
+    { echo '[Unit]';
+      echo 'Description=Monitor CPU usage and produce warnings';
+      echo 'After=network.target';
+      echo '';
+      echo '[Service]';
+      echo 'User=root';
+      echo "ExecStart=/usr/local/bin/${PROJECT_NAME}-cpu-monitor";
+      echo "ExecReload=/bin/kill \$MAINPID";
+      echo 'KillMode=process';
+      echo 'Restart=always';
+      echo '';
+      echo '[Install]';
+      echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/cpumonitor.service
+
+    systemctl enable cpumonitor
+    systemctl daemon-reload
+    systemctl start cpumonitor
+}
+
+function support_256_colours {
+    if ! grep -q 'xterm-256color' /etc/skel/.profile; then
+        echo '' >> /etc/skel/.profile
+        echo 'export TERM=xterm-256color' >> /etc/skel/.profile
+    fi
+
+    if ! grep -q 'xterm-256color' "/home/$MY_USERNAME/.profile"; then
+        echo '' >> "/home/$MY_USERNAME/.profile"
+        echo 'export TERM=xterm-256color' >> "/home/$MY_USERNAME/.profile"
+        chown "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME/.profile"
+    fi
+}
+
+function separate_tmp_filesystem {
+    tmp_filesystem_size_mb=$1
+    if [ ! -d /tmp ]; then
+        mkdir -p /tmp
+    fi
+    if ! grep -q '/tmp ' /etc/fstab; then
+        mount -t tmpfs -o size="${tmp_filesystem_size_mb}m" tmpfs /tmp
+        echo "tmpfs       /tmp tmpfs   nodev,nosuid,noexec,nodiratime,size=${tmp_filesystem_size_mb}M   0 0" >> /etc/fstab
+    else
+        temp_line_str=$(grep '/tmp ' /etc/fstab)
+        if [[ "$temp_line_str" != *",noexec,"* ]]; then
+            mount -t tmpfs -o size="${tmp_filesystem_size_mb}m" tmpfs /tmp
+            sed -i "s|/tmp .*|/tmp tmpfs   nodev,nosuid,noexec,nodiratime,size=${tmp_filesystem_size_mb}M   0 0|g" /etc/fstab
+        fi
+    fi
+}
+
+function proc_filesystem_settings {
+    if ! grep -q "proc proc defaults,nodev,nosuid " /etc/fstab; then
+       sed -i 's|proc /proc proc defaults |proc /proc proc defaults,nodev,nosuid |g' /etc/fstab
+    fi
+}
+
+function remove_bluetooth {
+    if [[ "$(uname -a)" == *'odroid'* ]]; then
+        return
+    fi
+    bluetooth_changed=
+    bnep_exists=$(lsmod | grep bnep)
+    if [[ "$bnep_exists" == "bnep"* ]]; then
+        rmmod -f bnep
+        bluetooth_changed=1
+    fi
+    bluetooth_exists=$(lsmod | grep bluetooth)
+    if [[ "$bluetooth_exists" == "bluetooth"* ]]; then
+        rmmod -f bluetooth
+        bluetooth_changed=1
+    fi
+    if [ -f /etc/default/bluetooth ]; then
+        if grep -q "BLUETOOTH_ENABLED=" /etc/default/bluetooth; then
+            sed -i 's|BLUETOOTH_ENABLED=.*|BLUETOOTH_ENABLED=0|g' /etc/default/bluetooth
+        else
+            echo "BLUETOOTH_ENABLED=0" >> /etc/default/bluetooth
+        fi
+        bluetooth_changed=1
+    fi
+    if ! grep -q 'blacklist bnep' /etc/modprobe.d/bluetooth.conf; then
+        echo 'blacklist bnep' >> /etc/modprobe.d/bluetooth.conf
+        bluetooth_changed=1
+    fi
+    if ! grep -q 'blacklist btusb' /etc/modprobe.d/bluetooth.conf; then
+        echo 'blacklist btusb' >> /etc/modprobe.d/bluetooth.conf
+        bluetooth_changed=1
+    fi
+    if ! grep -q 'blacklist bluetooth' /etc/modprobe.d/bluetooth.conf; then
+        echo 'blacklist bluetooth' >> /etc/modprobe.d/bluetooth.conf
+        bluetooth_changed=1
+    fi
+    #if [ $bluetooth_changed ]; then
+        # update-initramfs -u -k "$(uname -r)" -v
+        # update-rc.d bluetooth remove
+    #fi
+}
+
+function running_as_root {
+    if [[ $EUID != 0 ]] ; then
+        echo "0"
+    else
+        echo "1"
+    fi
+}
+
+function reset_usb_devices {
+    for xhci in /sys/bus/pci/drivers/?hci-pci ; do
+
+        if ! cd "$xhci" ; then
+            return
+        fi
+
+        echo "Resetting devices from $xhci..."
+
+        for i in ????:??:??.? ; do
+            echo -n "$i" > unbind
+            echo -n "$i" > bind
+        done
+    done
+    udevadm control --reload-rules
+}
+
+function install_backports_kernel {
+    # install backports kernel if possible
+    architecture_type=$(uname -a)
+
+    if [[ "$architecture_type" == *"amd64"* ]]; then
+        package_installed=$(dpkg-query -W -f='${Package}\n' linux-image-amd64 2>/dev/null)
+        if [ ! "$package_installed" ]; then
+            INSTALL_PACKAGES_BACKPORTS linux-image-amd64
+        fi
+    fi
+}
+
+function save_rsys_header {
+    { echo "";
+      echo "#################";
+      echo "#### MODULES ####";
+      echo "#################";
+      echo '';
+      echo 'module(load="imuxsock")';
+      echo 'module(load="imklog")';
+      echo '';
+      echo '###########################';
+      echo '#### GLOBAL DIRECTIVES ####';
+      echo '###########################';
+      echo '';
+      echo "\$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat";
+      echo '';
+      echo "\$FileOwner root";
+      echo "\$FileGroup adm";
+      echo "\$FileCreateMode 0640";
+      echo "\$DirCreateMode 0755";
+      echo "\$Umask 0022";
+      echo '';
+      echo "\$WorkDirectory /var/spool/rsyslog";
+      echo '';
+      echo "\$IncludeConfig /etc/rsyslog.d/*.conf";
+      echo '';
+      echo '###############';
+      echo '#### RULES ####';
+      echo '###############';
+      echo ''; } > /etc/rsyslog.conf
+}
+
+function turn_off_rsys_logging {
+    save_rsys_header
+    echo '*.*     ~' >> /etc/rsyslog.conf
+
+    rm -rf /var/log/wtmp*
+    rm -rf /var/log/debug*
+    rm -rf /var/log/cron.*
+    rm -rf /var/log/auth.*
+    rm -rf /var/log/mail.*
+    rm -rf /var/log/daemon.*
+    rm -rf /var/log/user.*
+    rm -rf /var/log/messages*
+    rm -rf /var/log/syslog*
+    rm -rf /var/log/alternatives*
+    rm -rf /var/log/faillog
+    rm -rf /var/log/kern.log*
+}
+
+function install_password_generator {
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+    INSTALL_PACKAGES diceware
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function initial_setup {
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+
+    if ! grep -q "crontab:" /etc/group; then
+        groupadd crontab
+    fi
+    if ! grep -q "messagebus:" /etc/group; then
+        groupadd messagebus
+    fi
+    $REMOVE_PACKAGES_PURGE apache2-bin*
+    $UPGRADE_PACKAGES
+    INSTALL_PACKAGES ca-certificates
+    INSTALL_PACKAGES apt-utils
+    # INSTALL_PACKAGES cryptsetup libgfshare-bin
+    INSTALL_PACKAGES duplicity sshpass wget avahi-daemon
+
+    wgetFilename=$(which wget)
+    if [ ! "$wgetFilename" ]; then
+        echo $'wget was not installed'
+        exit 87
+    fi
+
+    INSTALL_PACKAGES avahi-utils avahi-discover connect-proxy openssh-server
+    INSTALL_PACKAGES sudo git dialog build-essential avahi-daemon avahi-utils
+    INSTALL_PACKAGES avahi-discover nftables dnsutils net-tools
+    INSTALL_PACKAGES network-manager iputils-ping libnss-mdns libnss-myhostname
+    INSTALL_PACKAGES libnss-gw-name nano man ntp locales locales-all debconf
+    #INSTALL_PACKAGES wireless-tools wpasupplicant hostapd
+    INSTALL_PACKAGES usbutils zsh cpulimit screen
+    INSTALL_PACKAGES pinentry-curses eatmydata iotop bc
+
+    # With some VMs, the hardware cycles counter is emulated and deterministic,
+    # and thus predictible, so havege should not be used
+    if [[ $ARCHITECTURE != 'qemu'* ]]; then
+        INSTALL_PACKAGES haveged
+    fi
+
+    if [[ $ARCHITECTURE == 'qemu'* || $ARCHITECTURE == 'amd64' || $ARCHITECTURE == 'x86_64' || $ARCHITECTURE == 'i686' || $ARCHITECTURE == 'i386' ]]; then
+        INSTALL_PACKAGES grub2 lvm2
+    fi
+
+    if [ ! -d "$INSTALL_DIR" ]; then
+        mkdir -p "$INSTALL_DIR"
+    fi
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function turn_off_magic_sysrq {
+    if grep -q 'kernel.sysrq = 0' /etc/sysctl.conf; then
+        return
+    fi
+    if grep -q 'kernel.sysrq' /etc/sysctl.conf; then
+        sed -i 's|#kernel.sysrq.*|kernel.sysrq = 0|g' /etc/sysctl.conf
+        sed -i 's|kernel.sysrq.*|kernel.sysrq = 0|g' /etc/sysctl.conf
+    else
+        echo 'kernel.sysrq = 0' >> /etc/sysctl.conf
+    fi
+}
+
+function setup_grub {
+    if [[ $ARCHITECTURE == 'qemu'* || $ARCHITECTURE == 'amd64' || $ARCHITECTURE == 'x86_64' || $ARCHITECTURE == 'i686' || $ARCHITECTURE == 'i386' ]]; then
+        if [ -f /etc/default/grub ]; then
+            if ! grep -q 'ifnames=0' /etc/default/grub; then
+                sed -i 's|GRUB_CMDLINE_LINUX_DEFAULT=.*|GRUB_CMDLINE_LINUX_DEFAULT="quiet ifnames=0 slub_debug=FZP slab_nomerge page_poison=1 panic=0"|g' /etc/default/grub
+                update-grub
+            fi
+        fi
+    fi
+}
+
+function admin_user_sudo {
+    # shellcheck disable=SC2154
+    if ! grep -q "$MY_USERNAME  ALL=(ALL) ALL" "$rootdir/etc/sudoers"; then
+        echo "$MY_USERNAME  ALL=(ALL) ALL" >> "$rootdir/etc/sudoers"
+    fi
+}
+
+function search_for_attached_usb_drive {
+    # If a USB drive is attached then search for email,
+    # gpg, ssh keys and emacs configuration
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+    USB_DRIVE=$(detect_connected_drives)
+    # shellcheck disable=SC2086
+    if [ -b $USB_DRIVE ]; then
+        if [ ! -d $USB_MOUNT ]; then
+            echo $'Mounting USB drive'
+            mkdir $USB_MOUNT
+            mount $USB_DRIVE $USB_MOUNT
+        fi
+        if [ -d $USB_MOUNT/.gnupg ]; then
+            echo $'Importing GPG keyring'
+            cp -r $USB_MOUNT/.gnupg /home/$MY_USERNAME
+            chown -R $MY_USERNAME:$MY_USERNAME /home/$MY_USERNAME/.gnupg
+            if [ ! -f /home/$MY_USERNAME/.gnupg/secring.gpg ]; then
+                echo $'GPG files did not copy'
+                exit 73
+            fi
+        fi
+
+        if [ -f $USB_MOUNT/private_key.gpg ]; then
+            echo $'GPG private key found on USB drive'
+            # shellcheck disable=SC2034
+            MY_GPG_PRIVATE_KEY="$USB_MOUNT/private_key.gpg"
+        fi
+        if [ -f $USB_MOUNT/public_key.gpg ]; then
+            echo $'GPG public key found on USB drive'
+            # shellcheck disable=SC2034
+            MY_GPG_PUBLIC_KEY="$USB_MOUNT/public_key.gpg"
+        fi
+
+        if [ -f $USB_MOUNT/letsencrypt ]; then
+            echo $'Copying letsencrypt keys"'
+            cp -r $USB_MOUNT/letsencrypt /etc
+        fi
+
+        if [ -d $USB_MOUNT/.ssh ]; then
+            echo $'Importing ssh keys'
+            cp -r $USB_MOUNT/.ssh /home/$MY_USERNAME
+            chown -R $MY_USERNAME:$MY_USERNAME /home/$MY_USERNAME/.ssh
+            # for security delete the ssh keys from the usb drive
+            if [ ! -f /home/$MY_USERNAME/.ssh/id_rsa ]; then
+                echo $'ssh files did not copy'
+                exit 8
+            fi
+        fi
+        if [ -f $USB_MOUNT/.emacs ]; then
+            echo $'Importing .emacs file'
+            cp -f $USB_MOUNT/.emacs /home/$MY_USERNAME/.emacs
+            chown $MY_USERNAME:$MY_USERNAME /home/$MY_USERNAME/.emacs
+        fi
+        if [ -d $USB_MOUNT/.emacs.d ]; then
+            echo $'Importing .emacs.d directory'
+            cp -r $USB_MOUNT/.emacs.d /home/$MY_USERNAME
+            chown -R $MY_USERNAME:$MY_USERNAME /home/$MY_USERNAME/.emacs.d
+        fi
+        if [ -d $USB_MOUNT/ssl ]; then
+            echo $'Importing SSL certificates'
+            cp -r $USB_MOUNT/ssl/* /etc/ssl
+            chmod 640 /etc/ssl/certs/*
+            chmod 400 /etc/ssl/private/*
+            # change ownership of some certificates
+            if [ -d /etc/prosody ]; then
+                chown prosody:prosody /etc/ssl/private/xmpp.*
+                chown prosody:prosody /etc/ssl/certs/xmpp.*
+            fi
+            if [ -d /etc/dovecot ]; then
+                chown root:dovecot /etc/ssl/certs/dovecot.*
+                chown root:dovecot /etc/ssl/private/dovecot.*
+            fi
+            if [ -f /etc/ssl/private/exim.key ]; then
+                cp /etc/ssl/private/exim.key /etc/exim4
+                cp /etc/ssl/certs/exim.crt /etc/exim4
+                cp /etc/ssl/certs/exim.dhparam /etc/exim4
+                chown root:Debian-exim /etc/exim4/exim.key /etc/exim4/exim.crt /etc/exim4/exim.dhparam
+                chmod 640 /etc/exim4/exim.key /etc/exim4/exim.crt /etc/exim4/exim.dhparam
+            fi
+        fi
+        if [ -d $USB_MOUNT/personal ]; then
+            echo $'Importing personal directory'
+            cp -r $USB_MOUNT/personal /home/$MY_USERNAME
+            chown -R $MY_USERNAME:$MY_USERNAME /home/$MY_USERNAME/personal
+        fi
+    else
+        if [ -d $USB_MOUNT ]; then
+            umount $USB_MOUNT
+            rm -rf $USB_MOUNT
+        fi
+        echo $'No USB drive attached'
+    fi
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function mark_admin_user_account {
+    set_completion_param "Admin user" "$MY_USERNAME"
+}
+
+function remove_instructions_from_motd {
+    if grep -q "## " /etc/motd; then
+        sed -i '/## /d' /etc/motd
+    fi
+}
+
+function set_current_motd {
+    # /etc/motd
+    echo -n ''
+}
+
+function remove_default_user {
+    # make sure you don't use the default user account
+    if [[ $MY_USERNAME == "debian" ]]; then
+        echo 'Do not use the default debian user account. Create a different user with: adduser [username]'
+        exit 68
+    fi
+    # remove the default debian user to prevent it from becoming an attack vector
+    if [ -d /home/debian ]; then
+        userdel -r debian
+        echo 'Default debian user account removed'
+    fi
+}
+
+function create_completion_file {
+    if [ ! -f "$COMPLETION_FILE" ]; then
+        touch "$COMPLETION_FILE"
+    fi
+}
+
+function remove_management_engine_interface {
+    ARCH=$(uname -m)
+    if [[ "$ARCH" != 'x86'* && "$ARCH" != 'amd64' ]]; then
+        return
+    fi
+    # see https://www.kernel.org/doc/Documentation/misc-devices/mei/mei.txt
+    # Disabling this interface doesn't cure the problems of ME, but it
+    # might stop an adversary in control of AMT from using the command
+    # interface to control the operating system.
+    if [ -f /dev/mei0 ]; then
+        rmmod mei_me
+        rmmod mei0
+    fi
+
+    blacklist_changed=
+    if [ ! -f /etc/modprobe.d/blacklist.conf ]; then
+        touch /etc/modprobe.d/blacklist.conf
+        blacklist_changed=1
+    fi
+    if ! grep -q "blacklist mei" /etc/modprobe.d/blacklist.conf; then
+        echo "blacklist mei" >> /etc/modprobe.d/blacklist.conf
+        blacklist_changed=1
+    fi
+    if ! grep -q "blacklist mei_me" /etc/modprobe.d/blacklist.conf; then
+        echo "blacklist mei_me" >> /etc/modprobe.d/blacklist.conf
+        blacklist_changed=1
+    fi
+
+    if [ $blacklist_changed ]; then
+        depmod -ae -E
+        update-initramfs -u
+    fi
+}
+
+function set_login_umask {
+    logindefs_umask=$(grep UMASK /etc/login.defs | grep -v '#')
+    if [[ "$logindefs_umask" != *'077' ]]; then
+        sed -i 's|UMASK\t.*|UMASK\t\t077|g' /etc/login.defs
+    fi
+}
+
+function disable_deferred_execution {
+    systemctl stop atd
+    systemctl disable atd
+}
+
+function set_shadow_permissions {
+    chown root:root /etc/shadow
+    chmod 0000 /etc/shadow
+    chown root:root /etc/gshadow
+    chmod 0000 /etc/gshadow
+}
+
+function set_max_login_tries {
+    max_tries=$1
+    unlockSec=300
+
+    if grep -q 'pam_tally' /etc/pam.d/common-auth; then
+        sed -i "s|pam_tally.*|pam_faillock.so    authfail unlock_time=$unlockSec deny=$max_tries|g" /etc/pam.d/common-auth
+    fi
+
+    if ! grep -q ' deny=' /etc/pam.d/common-auth; then
+        sed -i "/pam_deny.so/a auth    required\\t\\t\\tpam_faillock.so    authfail unlock_time=$unlockSec deny=$max_tries" /etc/pam.d/common-auth
+    else
+        if ! grep -q " deny=$max_tries" /etc/pam.d/common-auth; then
+            sed -i "s| deny=.*| deny=$max_tries|g" /etc/pam.d/common-auth
+        fi
+    fi
+
+    if grep -q 'pam_tally.so' /etc/pam.d/common-account; then
+        sed -i '/pam_tally.so/d' /etc/pam.d/common-account
+    fi
+    if ! grep -q 'pam_faillock.so' /etc/pam.d/common-account; then
+        sed -i '/pam_deny.so/a account required\t\t\tpam_faillock.so' /etc/pam.d/common-account
+    fi
+}
+
+function limit_user_logins {
+    # overall max logins
+    if ! grep -q '\* hard maxsyslogins' /etc/security/limits.conf; then
+        echo '* hard maxsyslogins 10' >> /etc/security/limits.conf
+    else
+        if ! grep -q '\* hard maxsyslogins 10' /etc/security/limits.conf; then
+            sed -i 's|hard maxsyslogins.*|hard maxsyslogins 10|g' /etc/security/limits.conf
+        fi
+    fi
+
+    # Max logins for each user
+    if ! grep -q '\* hard maxlogins' /etc/security/limits.conf; then
+        echo '* hard maxlogins 3' >> /etc/security/limits.conf
+    else
+        if ! grep -q '\* hard maxlogins 3' /etc/security/limits.conf; then
+            sed -i 's|hard maxlogins.*|hard maxlogins 3|g' /etc/security/limits.conf
+        fi
+    fi
+}
+
+function remove_serial_logins {
+    if [ ! -f /etc/securetty ]; then
+        return
+    fi
+    if grep -q 'ttyS' /etc/securetty; then
+        cp /etc/securetty /etc/securetty_old
+        sed -i '/ttyS/d' /etc/securetty
+    fi
+}
+
+function set_sticky_bits {
+    world_writable=$(find / -xdev -type d -perm -002 \! -perm -1000)
+    for w in $world_writable; do
+        echo "Setting sticky bit on $w"
+        chmod +t "$w"
+    done
+}
+
+function disable_ctrl_alt_del {
+    ctrl_alt_del=$(ls -l /etc/systemd/system/ctrl-alt-del.target)
+    if [[ "$ctrl_alt_del" !=  *'/dev/null' ]]; then
+        ln -sf /dev/null /etc/systemd/system/ctrl-alt-del.target
+    fi
+}
+
+function lockdown_permissions {
+    if grep -q 'NOPASSWD' /etc/sudoers; then
+        sed -i '/NOPASSWD/d' /etc/sudoers
+    fi
+    if [ -d /usr/lib/u-boot ]; then
+        chmod -R 644 /usr/lib/u-boot
+    fi
+    chmod -R 644 /usr/lib/*.bin 2> /dev/null
+    chmod -R 644 /usr/lib/linux*/* 2> /dev/null
+    chmod -R 755 /usr/bin/brcm* 2> /dev/null
+    if [ -d /lib/firmware ]; then
+        chmod -R 644 /lib/firmware
+    fi
+
+    if [ -d /root/.npm ]; then
+        chmod -R 700 /root/.npm
+    fi
+
+    # All commands owned by root
+    if [ -d /root/.cache/yarn ]; then
+        rm -rf /root/.cache/yarn
+    fi
+    if [ -d /usr/local/share/.cache/yarn ]; then
+        rm -rf /usr/local/share/.cache/yarn
+    fi
+    if [ -f /usr/lib/ssl/certs/ssl-cert-snakeoil.pem ]; then
+        chown root:root /usr/lib/ssl/certs/ssl-cert-snake* 2> /dev/null
+    fi
+    if [ -d /bin ]; then
+        chown -R root:root /bin/* 2> /dev/null
+    fi
+    if [ -d /usr/bin ]; then
+        chown -R root:root /usr/bin/* 2> /dev/null
+    fi
+    if [ -d /usr/local/bin ]; then
+        chown -R root:root /usr/local/bin/* 2> /dev/null
+    fi
+    if [ -d /sbin ]; then
+        chown -R root:root /sbin/* 2> /dev/null
+    fi
+    if [ -d /usr/sbin ]; then
+        chown -R root:root /usr/sbin/* 2> /dev/null
+    fi
+    if [ -d /usr/local/sbin ]; then
+        chown -R root:root /usr/local/sbin/* 2> /dev/null
+    fi
+    if [ -d /usr/share/${PROJECT_NAME} ]; then
+        chown -R root:root /usr/share/${PROJECT_NAME}
+        chmod -R +r /usr/share/${PROJECT_NAME}
+    fi
+
+    # All libraries owned by root
+    if [ -d /lib ]; then
+        chown -R root:root /lib/* 2> /dev/null
+    fi
+    if [ -d /lib64 ]; then
+        chown -R root:root /lib64/* 2> /dev/null
+    fi
+    if [ -d /usr/lib ]; then
+        chown -R root:root /usr/lib/* 2> /dev/null
+        if [ -d /usr/lib/node_modules ]; then
+            chmod -R 750 /usr/lib/node_modules/* 2> /dev/null
+        fi
+        if [ -d /usr/lib/prosody ]; then
+            chown -R prosody:prosody /usr/lib/prosody
+        fi
+    fi
+    if [ -d /usr/lib64 ]; then
+        chown -R root:root /usr/lib64/* 2> /dev/null
+    fi
+
+    # sudo permissions
+    chmod 4755 /usr/bin/sudo
+    chmod 4755 /usr/lib/sudo/sudoers.so
+    chown root:root /etc/sudoers
+
+    # permissions on email commands
+    if [ -f /usr/bin/procmail ]; then
+        chmod 6755 /usr/bin/procmail
+    fi
+    if [ -f /usr/sbin/exim ]; then
+        chmod u+s /usr/sbin/exim
+    fi
+    if [ -f /usr/sbin/exim4 ]; then
+        chmod u+s /usr/sbin/exim4
+    fi
+
+    set_sticky_bits
+
+    # Create some directories to correspond with users in passwords file
+    if [ ! -d /var/spool/lpd ]; then
+        mkdir /var/spool/lpd
+    fi
+    if [ ! -d /var/spool/news ]; then
+        mkdir /var/spool/news
+    fi
+    if [ ! -d /var/spool/uucp ]; then
+        mkdir /var/spool/uucp
+    fi
+    if [ ! -d /var/list ]; then
+        mkdir /var/list
+    fi
+    if [ ! -d /var/lib/gnats ]; then
+        mkdir /var/lib/gnats
+    fi
+    if [ ! -d /var/lib/saned ]; then
+        mkdir /var/lib/saned
+    fi
+    if [ -d /etc/prosody ]; then
+        chown -R prosody /etc/prosody
+        chmod -R 700 /etc/prosody/conf.d
+    fi
+    if [ -d /var/lib/prosody ]; then
+        chown -R prosody /var/lib/prosody
+    fi
+    if [ -d /etc/letsencrypt ]; then
+        chmod -R 600 /etc/letsencrypt
+        chmod -R g=rX /etc/letsencrypt
+        chown -R root:ssl-cert /etc/letsencrypt
+    fi
+    chown -f root:root /etc/motd /etc/issue* 2> /dev/null
+    chmod -f 0444 /etc/motd /etc/issue* 2> /dev/null
+    chmod -R 644 /etc/torrc.d
+}
+
+function disable_core_dumps {
+    if ! grep -q '\* hard core' /etc/security/limits.conf; then
+        echo '* hard core 0' >> /etc/security/limits.conf
+    else
+        if ! grep -q '\* hard core 0' /etc/security/limits.conf; then
+            sed -i 's|hard core.*|hard core 0|g' /etc/security/limits.conf
+        fi
+    fi
+}
+
+function dummy_nologin_command {
+    if [ ! -f /sbin/nologin ]; then
+        echo '#!/bin/bash' > /sbin/nologin
+        chmod +x /sbin/nologin
+    fi
+}
+
+function disable_null_passwords {
+    if grep -q ' nullok_secure' /etc/pam.d/common-auth; then
+        sed -i 's| nullok_secure||g' /etc/pam.d/common-auth
+    fi
+}
+
+function create_usb_canary {
+    if [[ $SYSTEM_TYPE == "mesh"* ]]; then
+        return
+    fi
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+
+    echo "ACTION==\"add\", KERNEL==\"sd*[!0-9]\", RUN+=\"/bin/bash /usr/local/bin/${PROJECT_NAME}-usb-canary\"" > /etc/udev/rules.d/00-usb-canary.rules
+    udevadm control --reload-rules
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function install_vulnerability_checkers {
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+    INSTALL_PACKAGES spectre-meltdown-checker
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function setup_firewall {
+    function_check create_completion_file
+    create_completion_file
+
+    function_check configure_firewall
+    configure_firewall
+
+    function_check block_microsoft_on_raspbian
+    block_microsoft_on_raspbian
+
+    function_check block_firefox_telemetry
+    block_firefox_telemetry
+
+    function_check configure_firewall_ping
+    configure_firewall_ping
+
+    function_check firewall_drop_telnet
+    firewall_drop_telnet
+
+    function_check firewall_rate_limits
+    firewall_rate_limits
+
+    function_check configure_firewall_for_dns
+    configure_firewall_for_dns
+
+    function_check configure_firewall_for_avahi
+    configure_firewall_for_avahi
+
+    function_check global_rate_limit
+    global_rate_limit
+
+    function_check firewall_block_bad_ip_ranges
+    firewall_block_bad_ip_ranges
+
+    function_check firewall_google
+    firewall_google
+
+    #function_check firewall_block_cloudflare
+    #firewall_block_cloudflare
+
+    function_check firewall_facebook
+    firewall_facebook
+}
+
+function setup_powerline {
+    if [ -f ~/${PROJECT_NAME}/src/${PROJECT_NAME}-powerline ]; then
+        if [ ! -f ~/.powerline.bash ]; then
+            cp ~/${PROJECT_NAME}/src/${PROJECT_NAME}-powerline ~/.powerline.bash
+        else
+            HASH1=$(sha256sum ~/${PROJECT_NAME}/src/${PROJECT_NAME}-powerline | awk -F ' ' '{print $1}')
+            HASH2=$(sha256sum ~/.powerline.bash | awk -F ' ' '{print $1}')
+            if [[ "$HASH1" != "$HASH2" ]]; then
+                cp ~/${PROJECT_NAME}/src/${PROJECT_NAME}-powerline ~/.powerline.bash
+            fi
+        fi
+        if [ ! -f /etc/skel/.powerline.bash ]; then
+            cp ~/${PROJECT_NAME}/src/${PROJECT_NAME}-powerline /etc/skel/.powerline.bash
+        else
+            HASH1=$(sha256sum ~/${PROJECT_NAME}/src/${PROJECT_NAME}-powerline | awk -F ' ' '{print $1}')
+            HASH2=$(sha256sum /etc/skel/.powerline.bash | awk -F ' ' '{print $1}')
+            if [[ "$HASH1" != "$HASH2" ]]; then
+                cp ~/${PROJECT_NAME}/src/${PROJECT_NAME}-powerline /etc/skel/.powerline.bash
+            fi
+        fi
+    else
+        if [ -f "/home/${MY_USERNAME}/${PROJECT_NAME}/src/${PROJECT_NAME}-powerline" ]; then
+            if [ ! -f ~/.powerline.bash ]; then
+                cp "/home/${MY_USERNAME}/${PROJECT_NAME}/src/${PROJECT_NAME}-powerline" ~/.powerline.bash
+            else
+                HASH1=$(sha256sum "/home/${MY_USERNAME}/${PROJECT_NAME}/src/${PROJECT_NAME}-powerline" | awk -F ' ' '{print $1}')
+                HASH2=$(sha256sum ~/.powerline.bash | awk -F ' ' '{print $1}')
+                if [[ "$HASH1" != "$HASH2" ]]; then
+                    cp "/home/${MY_USERNAME}/${PROJECT_NAME}/src/${PROJECT_NAME}-powerline" ~/.powerline.bash
+                fi
+            fi
+
+            if [ ! -f /etc/skel/.powerline.bash ]; then
+                cp "/home/${MY_USERNAME}/${PROJECT_NAME}/src/${PROJECT_NAME}-powerline" /etc/skel/.powerline.bash
+            else
+                HASH1=$(sha256sum "/home/${MY_USERNAME}/${PROJECT_NAME}/src/${PROJECT_NAME}-powerline" | awk -F ' ' '{print $1}')
+                HASH2=$(sha256sum /etc/skel/.powerline.bash | awk -F ' ' '{print $1}')
+                if [[ "$HASH1" != "$HASH2" ]]; then
+                    cp "/home/${MY_USERNAME}/${PROJECT_NAME}/src/${PROJECT_NAME}-powerline" /etc/skel/.powerline.bash
+                fi
+            fi
+        fi
+    fi
+    if ! grep -q "powerline" ~/.bashrc; then
+        if [ -f ~/.powerline.bash ]; then
+            echo 'source ~/.powerline.bash' >> ~/.bashrc
+        fi
+    fi
+    if ! grep -q "powerline" /etc/skel/.bashrc; then
+        if [ -f /etc/skel/.powerline.bash ]; then
+            echo 'source ~/.powerline.bash' >> /etc/skel/.bashrc
+        fi
+    fi
+}
+
+function harden_bpf {
+    # https://www.zerodayinitiative.com/advisories/ZDI-20-350
+    # https://lwn.net/Articles/660331
+    if [ -f /proc/sys/kernel/unprivileged_bpf_disabled ]; then
+        echo 1 > /proc/sys/kernel/unprivileged_bpf_disabled
+    fi
+    if [ -f /proc/sys/net/core/bpf_jit_harden ]; then
+        echo 2 > /proc/sys/net/core/bpf_jit_harden
+    fi
+    if [ ! -f /etc/sysctl.d/99-harden_bpf.conf ]; then
+        kernel_params=
+        if [ -f /proc/sys/net/core/bpf_jit_harden ]; then
+            echo 'net.core.bpf_jit_harden=2' >> /etc/sysctl.d/99-harden_bpf.conf
+            kernel_params=1
+        fi
+        if [ -f /proc/sys/kernel/unprivileged_bpf_disabled ]; then
+            echo 'kernel.unprivileged_bpf_disabled=1' >> /etc/sysctl.d/99-harden_bpf.conf
+            kernel_params=1
+        fi
+        if [ $kernel_params ]; then
+            sysctl --system
+        fi
+    fi
+}
+
+function harden_ptrace {
+    if [ -f /proc/sys/kernel/yama/ptrace_scope ]; then
+        echo 3 > /proc/sys/kernel/yama/ptrace_scope
+        if [ ! -f /etc/sysctl.d/99-harden_ptrace.conf ]; then
+            echo 'kernel.yama.ptrace_scope=3' > /etc/sysctl.d/99-harden_ptrace.conf
+            sysctl --system
+        fi
+    fi
+}
+
+function disable_shared_media {
+    # https://datatracker.ietf.org/doc/html/rfc1620
+    echo 0 > /proc/sys/net/ipv4/conf/all/shared_media
+    echo 0 > /proc/sys/net/ipv4/conf/default/shared_media
+    if [ ! -f /etc/sysctl.d/99-disable_shared_media.conf ]; then
+        echo 'net.ipv4.conf.all.shared_media=0' > /etc/sysctl.d/99-disable_shared_media.conf
+        echo 'net.ipv4.conf.default.shared_media=0' >> /etc/sysctl.d/99-disable_shared_media.conf
+        sysctl --system
+    fi
+}
+
+function mitigate_time_wait_assassination {
+    # https://tools.ietf.org/html/rfc1337
+    echo 1 > /proc/sys/net/ipv4/tcp_rfc1337
+    if [ ! -f /etc/sysctl.d/99-mitigate_time_wait_assassination.conf ]; then
+        echo 'net.ipv4.tcp_rfc1337=1' > /etc/sysctl.d/99-mitigate_time_wait_assassination.conf
+        sysctl --system
+    fi
+}
+
+function disable_kexec_system_call {
+    # https://lwn.net/Articles/580269
+    if [ -f /proc/sys/kernel/kexec_load_disabled ]; then
+        echo 1 > /proc/sys/kernel/kexec_load_disabled
+        if [ ! -f /etc/sysctl.d/99-disable_kexec_system_call.conf ]; then
+            echo 'kernel.kexec_load_disabled=1' > /etc/sysctl.d/99-disable_kexec_system_call.conf
+            sysctl --system
+        fi
+    fi
+}
+
+function hide_kernel_pointers {
+    # https://lwn.net/Articles/420403
+    # kernel pointers printed using %pK will be replaced with 0’s regardless of privileges
+    if [ -f /proc/sys/kernel/kptr_restrict ]; then
+        echo 2 > /proc/sys/kernel/kptr_restrict
+        if [ ! -f /etc/sysctl.d/99-hide_kernel_pointers.conf ]; then
+            echo 'kernel.kptr_restrict=2' > /etc/sysctl.d/99-hide_kernel_pointers.conf
+            sysctl --system
+        fi
+    fi
+
+    if [ -f /proc/sys/kernel/dmesg_restrict ]; then
+        # restricts the kernel log to the CAP_SYSLOG capability
+        echo 1 > /proc/sys/kernel/dmesg_restrict
+        if [ ! -f /etc/sysctl.d/99-restrict_syslog.conf ]; then
+            echo 'kernel.dmesg_restrict=1' > /etc/sysctl.d/99-restrict_syslog.conf
+            sysctl --system
+        fi
+    fi
+
+    if [ -f /proc/sys/kernel/printk ]; then
+        # usually "4 4 1 7"
+        # Malware that is able to record the screen during boot may
+        # be able to abuse this to gain higher privileges. This
+        # option prevents those information leaks.
+        echo "3 3 3 3" > /proc/sys/kernel/printk
+        if [ ! -f /etc/sysctl.d/99-kernel_printk.conf ]; then
+            echo 'kernel.printk=3 3 3 3' > /etc/sysctl.d/99-kernel_printk.conf
+            sysctl --system
+        fi
+    fi
+
+    if [ -f /proc/sys/kernel/unprivileged_bpf_disabled ]; then
+        echo 1 > /proc/sys/kernel/unprivileged_bpf_disabled
+        if [ ! -f /etc/sysctl.d/99-unprivileged_bpf_disabled.conf ]; then
+            echo 'kernel.unprivileged_bpf_disabled=1' > /etc/sysctl.d/99-unprivileged_bpf_disabled.conf
+            sysctl --system
+        fi
+    fi
+
+    if [ -f /proc/sys/net/core/bpf_jit_harden ]; then
+        # eBPF exposes quite large attack surface. As such, it
+        # must be restricted. These sysctls restrict eBPF to the
+        # CAP_BPF capability (CAP_SYS_ADMIN on kernel versions
+        # prior to 5.8) and enable JIT hardening techniques
+        # such as constant blinding.
+        echo 2 > /proc/sys/net/core/bpf_jit_harden
+        if [ ! -f /etc/sysctl.d/99-bpf_jit_harden.conf ]; then
+            echo 'net.core.bpf_jit_harden=2' > /etc/sysctl.d/99-bpf_jit_harden.conf
+            sysctl --system
+        fi
+    fi
+
+    if [ -f /proc/sys/dev/tty/ldisc_autoload ]; then
+        # typically 1
+        # This restricts loading TTY line disciplines to the
+        # CAP_SYS_MODULE capability to prevent unprivileged
+        # attackers from loading vulnerable line disciplines
+        # with the TIOCSETD ioctl which has been abused in a
+        # number of exploits before.
+        echo 0 > /proc/sys/dev/tty/ldisc_autoload
+        if [ ! -f /etc/sysctl.d/99-ldisc_autoload.conf ]; then
+            echo 'dev.tty.ldisc_autoload=0' > /etc/sysctl.d/99-ldisc_autoload.conf
+            sysctl --system
+        fi
+    fi
+
+    if [ -f /proc/sys/vm/unprivileged_userfaultfd ]; then
+        # The userfaultfd() syscall is often abused to exploit
+        # use-after-free flaws. Due to this, this sysctl is used
+        # to restrict this syscall to the CAP_SYS_PTRACE capability.
+        echo 0 > /proc/sys/vm/unprivileged_userfaultfd
+        if [ ! -f /etc/sysctl.d/99-unprivileged_userfaultfd.conf ]; then
+            echo 'vm.unprivileged_userfaultfd=0' > /etc/sysctl.d/99-unprivileged_userfaultfd.conf
+            sysctl --system
+        fi
+    fi
+
+    if [ -f /proc/sys/kernel/unprivileged_userns_clone ]; then
+        # restrict the usage of user namespaces to the CAP_SYS_ADMIN capability
+        echo 0 > /proc/sys/kernel/unprivileged_userns_clone
+        if [ ! -f /etc/sysctl.d/99-unprivileged_userns_clone.conf ]; then
+            echo 'kernel.unprivileged_userns_clone=0' > /etc/sysctl.d/99-unprivileged_userns_clone.conf
+            sysctl --system
+        fi
+    fi
+
+    if [ -f /proc/sys/kernel/perf_event_paranoid ]; then
+        # restrict all usage of performance events to the CAP_PERFMON capability
+        echo 3 > /proc/sys/kernel/perf_event_paranoid
+        if [ ! -f /etc/sysctl.d/99-perf_event_paranoid.conf ]; then
+            echo 'kernel.perf_event_paranoid=3' > /etc/sysctl.d/99-perf_event_paranoid.conf
+            sysctl --system
+        fi
+    fi
+}
+
+function congestion_control {
+    # see /proc/sys/net/ipv4/tcp_congestion_control
+    if [ ! -f /etc/sysctl.d/10-custom-kernel-bbr.conf ]; then
+        echo 'net.core.default_qdisc=fq' > /etc/sysctl.d/10-custom-kernel-bbr.conf
+        echo 'net.ipv4.tcp_congestion_control=bbr' >> /etc/sysctl.d/10-custom-kernel-bbr.conf
+        sysctl --system
+    fi
+}
+
+function sack_panic_mitigation {
+    # see /proc/sys/net/ipv4/tcp_congestion_control
+    if [ ! -f /etc/sysctl.d/10-sack_panic.conf ]; then
+        echo 'net.ipv4.tcp_sack=0' > /etc/sysctl.d/10-sack_panic.conf
+        sysctl --system
+    fi
+}
+
+function install_shellcheck {
+    # Used by the tests command
+    INSTALL_PACKAGES shellcheck
+}
+
+function install_webcam {
+    # Used by the USB canary
+    INSTALL_PACKAGES fswebcam
+}
+
+function microsd_card_optimisations {
+    # These values can improve performance on microSD cards
+
+    INSTALL_PACKAGES hdparm
+
+    printf '#!/bin/bash\n' > /usr/bin/enable_optimisations
+
+    if [ -f /sys/devices/virtual/bdi/179:0/read_ahead_kb ]; then
+        echo -n '4096' > /sys/devices/virtual/bdi/179:0/read_ahead_kb
+        echo "echo -n '4096' > /sys/devices/virtual/bdi/179:0/read_ahead_kb" >> /usr/bin/enable_optimisations
+    fi
+
+    if [ -f /proc/sys/vm/dirty_expire_centisecs ]; then
+        echo -n '100' > /proc/sys/vm/dirty_expire_centisecs
+        echo "echo -n '100' > /proc/sys/vm/dirty_expire_centisecs" >> /usr/bin/enable_optimisations
+    fi
+
+    if [ -f /proc/sys/vm/dirty_writeback_centisecs ]; then
+        echo -n '100' > /proc/sys/vm/dirty_writeback_centisecs
+        echo "echo -n '100' > /proc/sys/vm/dirty_writeback_centisecs" >> /usr/bin/enable_optimisations
+    fi
+
+    chmod +x /usr/bin/enable_optimisations
+
+    { echo '[Unit]';
+      echo "Description=${PROJECT_NAME} optimisations";
+      echo 'After=syslog.target';
+      echo 'After=network.target';
+      echo 'After=remote-fs.target';
+      echo '';
+      echo '[Service]';
+      echo 'Type=simple';
+      echo 'User=root';
+      echo 'Group=root';
+      echo 'WorkingDirectory=/root';
+      echo 'ExecStart=/usr/bin/enable_optimisations';
+      echo '';
+      echo '[Install]';
+      echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/optimisations.service
+      systemctl enable optimisations
+}
+
+function install_myqr {
+    ARCH=$(uname -m)
+    if [[ "$ARCH" != 'x86'* && "$ARCH" != 'amd64' ]]; then
+        return
+    fi
+    if [ -f /usr/local/bin/myqr ]; then
+        return
+    fi
+    INSTALL_PACKAGES python3-pip
+    pip3 install myqr
+    if [ ! -f /usr/local/bin/myqr ]; then
+        echo $'Failed to install myqr'
+        exit 36
+    fi
+}
+
+function turn_off_monitor {
+    # This is primarily intended to be a headless system
+    # turn off any attached monitor to save on electrical
+    # power consumption
+    { echo '#!/bin/bash';
+      echo "blankPath=\$(find /sys/devices/pci* -name blank)";
+      echo "if [ \"\$blankPath\" ]; then";
+      echo "  echo 1 > \"\$blankPath\"";
+      echo 'fi'; } > /usr/bin/monitor-off
+    chmod +x /usr/bin/monitor-off
+    /usr/bin/monitor-off
+    if ! grep -q 'monitor-off' /etc/crontab; then
+        echo "*/5            * *   *   *   root /usr/bin/monitor-off" >> /etc/crontab
+    fi
+}
+
+function set_login_fail_delay {
+    if [ -f /etc/login.defs ]; then
+        if grep -q "FAIL_DELAY" /etc/login.defs; then
+            sed -i '/FAIL_DELAY /d' /etc/login.defs
+        fi
+    fi
+    if [ -f /etc/pam.d/login ]; then
+        if ! grep -q "delay=3000000" /etc/pam.d/login; then
+            sed -i "s|delay=.*|delay=3000000|g" /etc/pam.d/login
+        fi
+    fi
+}
+
+function install_mail_utils {
+    # the mail command used for sending notifications
+    if [ ! -f /usr/bin/mail ]; then
+        INSTALL_PACKAGES mailutils
+    fi
+}
+
+function clear_bash_history {
+    if [ ! -f /etc/cron.daily/clearbash ]; then
+        { echo '#!/bin/bash';
+          echo 'history -c'; } > /etc/cron.daily/clearbash
+        chmod 755 /etc/cron.daily/clearbash
+    fi
+}
+
+function fix_nginx_daemon {
+    # This ensures that the nginx daemon doesn't stop if there
+    # are multiple restart commands in a short amount of time
+    if [ ! -f /lib/systemd/system/nginx.service ]; then
+        return
+    fi
+    if ! grep -q 'StartLimitBurst' /lib/systemd/system/nginx.service; then
+        sed -i '/KillMode/a StartLimitBurst=0' /lib/systemd/system/nginx.service
+        systemctl daemon-reload
+        systemctl restart nginx
+    fi
+}
+
+function setup_create_groups {
+    if ! grep -q "crontab:" /etc/group; then
+        groupadd crontab
+    fi
+    if ! grep -q "messagebus:" /etc/group; then
+        groupadd messagebus
+    fi
+    if ! grep -q "adm:" /etc/group; then
+        groupadd adm
+    fi
+    if ! grep -q "default:" /etc/group; then
+        groupadd default
+    fi
+    if ! grep -q "root:" /etc/group; then
+        groupadd root
+    fi
+    if ! grep -q "www-data:" /etc/group; then
+        groupadd www-data
+    fi
+    if ! grep -q "mail:" /etc/group; then
+        groupadd mail
+    fi
+}
+
+function setup_utils {
+    function_check setup_create_groups
+    setup_create_groups
+
+    read_config_param "PROJECT_REPO"
+    write_config_param "PROJECT_REPO" "$PROJECT_REPO"
+
+    function_check remove_management_engine_interface
+    remove_management_engine_interface
+
+    function_check set_login_fail_delay
+    set_login_fail_delay
+
+    function_check support_256_colours
+    support_256_colours
+
+    function_check congestion_control
+    congestion_control
+
+    function_check hide_kernel_pointers
+    hide_kernel_pointers
+
+    function_check disable_kexec_system_call
+    disable_kexec_system_call
+
+    function_check mitigate_time_wait_assassination
+    mitigate_time_wait_assassination
+
+    function_check disable_shared_media
+    disable_shared_media
+
+    function_check harden_ptrace
+    harden_ptrace
+
+    function_check harden_bpf
+    harden_bpf
+
+    function_check sack_panic_mitigation
+    sack_panic_mitigation
+
+    function_check install_password_generator
+    install_password_generator
+
+    function_check enable_predictable_device_names
+    enable_predictable_device_names
+
+    function_check turn_off_magic_sysrq
+    turn_off_magic_sysrq
+
+    function_check separate_tmp_filesystem
+    separate_tmp_filesystem 150
+
+    function_check microsd_card_optimisations
+    microsd_card_optimisations
+
+    function_check proc_filesystem_settings
+    proc_filesystem_settings
+
+    function_check optimise_filesystem
+    optimise_filesystem
+
+    function_check disable_null_passwords
+    disable_null_passwords
+
+    function_check disable_ctrl_alt_del
+    disable_ctrl_alt_del
+
+    function_check dummy_nologin_command
+    dummy_nologin_command
+
+    function_check disable_core_dumps
+    disable_core_dumps
+
+    function_check remove_serial_logins
+    remove_serial_logins
+
+    function_check set_max_login_tries
+    set_max_login_tries 10
+
+    function_check set_shadow_permissions
+    set_shadow_permissions
+
+    function_check remove_bluetooth
+    remove_bluetooth
+
+    function_check set_login_umask
+    set_login_umask
+
+    function_check disable_deferred_execution
+    disable_deferred_execution
+
+    function_check turn_off_rsys_logging
+    turn_off_rsys_logging
+
+    # function_check install_backports_kernel
+    # install_backports_kernel
+
+    function_check create_completion_file
+    create_completion_file
+
+    function_check read_configuration
+    read_configuration
+
+    function_check check_system_type
+    check_system_type
+
+    function_check set_default_onion_domains
+    set_default_onion_domains
+
+    function_check locale_setup
+    locale_setup
+
+    function_check parse_args
+    parse_args
+
+    function_check check_domains
+    check_domains
+
+    function_check install_static_network
+    install_static_network
+
+    function_check remove_default_user
+    remove_default_user
+
+    function_check setup_firewall
+    setup_firewall
+
+    function_check create_repo_sources
+    create_repo_sources
+
+    function_check configure_dns
+    configure_dns
+
+    function_check initial_setup
+    initial_setup
+
+    function_check setup_grub
+    setup_grub
+
+    function_check install_tor
+    install_tor
+
+    function_check check_tor_health
+    check_tor_health
+
+    function_check install_webcam
+    install_webcam
+
+    function_check install_command_line_browser
+    install_command_line_browser
+
+    function_check enable_ssh_via_onion
+    enable_ssh_via_onion
+
+    function_check check_date
+    check_date
+
+    function_check install_dynamicdns
+    install_dynamicdns
+
+    function_check randomize_cron
+    randomize_cron
+
+    function_check create_freedns_updater
+    create_freedns_updater
+
+    function_check mark_admin_user_account
+    mark_admin_user_account
+
+    function_check enforce_good_passwords
+    enforce_good_passwords
+
+    function_check change_login_message
+    change_login_message
+
+    function_check enable_zram
+    enable_zram
+
+    function_check random_number_generator
+    random_number_generator
+
+    function_check set_your_domain_name
+    set_your_domain_name
+
+    function_check configure_internet_protocol
+    configure_internet_protocol
+
+    function_check create_git_project
+    create_git_project
+
+    function_check setup_wifi
+    setup_wifi
+
+    function_check configure_ssh
+    configure_ssh
+
+    function_check configure_ssh_onion
+    configure_ssh_onion
+
+    function_check allow_ssh_to_onion_address
+    allow_ssh_to_onion_address
+
+    function_check remove_instructions_from_motd
+    remove_instructions_from_motd
+
+    function_check set_current_motd
+    set_current_motd
+
+    function_check check_hwrng
+    check_hwrng
+
+    function_check search_for_attached_usb_drive
+    search_for_attached_usb_drive
+
+    function_check regenerate_ssh_keys
+    regenerate_ssh_keys
+
+    function_check create_upgrade_script
+    create_upgrade_script
+
+    function_check letsencrypt_renewals
+    letsencrypt_renewals
+
+    function_check install_watchdog_script
+    install_watchdog_script
+
+    function_check install_avahi
+    install_avahi
+
+    function_check keep_avahi_running
+    keep_avahi_running
+
+    function_check create_avahi_onion_domains
+    create_avahi_onion_domains
+
+    #function_check install_atheros_wifi
+    #install_atheros_wifi
+
+    function_check upgrade_golang
+    upgrade_golang
+
+    function_check admin_user_sudo
+    admin_user_sudo
+
+    function_check limit_user_logins
+    limit_user_logins
+
+    function_check schedule_stig_tests
+    schedule_stig_tests
+
+    function_check create_usb_canary
+    create_usb_canary
+
+    function_check setup_powerline
+    setup_powerline
+
+    function_check install_shellcheck
+    install_shellcheck
+
+    function_check install_myqr
+    install_myqr
+
+    function_check install_vulnerability_checkers
+    install_vulnerability_checkers
+
+    function_check configure_cpu_monitor
+    configure_cpu_monitor
+
+    function_check turn_off_monitor
+    turn_off_monitor
+
+    function_check install_mqtt
+    install_mqtt
+
+    function_check install_i2p
+    install_i2p
+
+    function_check clear_bash_history
+    clear_bash_history
+
+    function_check fix_nginx_daemon
+    fix_nginx_daemon
+}
+
+function install_xface_dependencies {
+    # packages needed for X-Face support within mutt email
+    if [ ! -f /usr/bin/compface ]; then
+        INSTALL_PACKAGES compface
+    fi
+    if [ ! -f /usr/bin/ffmpeg ]; then
+        INSTALL_PACKAGES ffmpeg
+    fi
+    if [ ! -f /usr/bin/icontopbm ]; then
+        INSTALL_PACKAGES netpbm
+    fi
+    if [ ! -f /usr/bin/xli ]; then
+        INSTALL_PACKAGES xli
+    fi
+}
+
+function setup_email {
+    function_check create_completion_file
+    create_completion_file
+
+    function_check install_email
+    install_email
+
+    function_check remove_ip_addresses_from_email_logs
+    remove_ip_addresses_from_email_logs
+
+    function_check create_procmail
+    create_procmail
+
+    function_check handle_admin_emails
+    handle_admin_emails
+
+    function_check spam_filtering
+    spam_filtering
+
+    function_check configure_imap
+    configure_imap
+
+    #function_check configure_imap_client_certs
+    #configure_imap_client_certs
+
+    function_check configure_gpg
+    configure_gpg
+
+    function_check refresh_gpg_keys
+    refresh_gpg_keys
+
+    function_check configure_backup_key
+    configure_backup_key
+
+    function_check email_client
+    email_client
+
+    #function_check encrypt_incoming_email
+    #encrypt_incoming_email
+
+    #function_check encrypt_outgoing_email
+    #encrypt_outgoing_email
+
+    function_check email_archiving
+    email_archiving
+
+    function_check email_from_address
+    email_from_address
+
+    function_check encrypt_all_email
+    encrypt_all_email
+
+    function_check import_email
+    import_email
+
+    function_check email_remove_html
+    email_remove_html
+
+    function_check email_flooding_defense
+    email_flooding_defense
+
+    function_check install_mail_utils
+    install_mail_utils
+
+    function_check install_xface_dependencies
+    install_xface_dependencies
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function setup_web {
+    function_check create_completion_file
+    create_completion_file
+
+    function_check install_web_server
+    install_web_server
+
+    function_check install_web_server_access_control
+    install_web_server_access_control
+
+    function_check php_disable_functions
+    php_disable_functions
+
+    function_check install_static_map
+    install_static_map
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function upgrade_apps {
+    function_check create_completion_file
+    create_completion_file
+
+    APPS_COMPLETED=()
+    FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
+
+    # for all the app scripts
+    for filename in $FILES
+    do
+        app_name=$(echo "${filename}" | awk -F '-app-' '{print $2}')
+
+        # shellcheck disable=SC2068
+        if ! item_in_array "${app_name}" ${APPS_COMPLETED[@]}; then
+            function_check app_is_installed
+            if [[ "$(app_is_installed "$app_name")" == "1" ]]; then
+                echo ''
+                echo ''
+                echo $"Upgrading $app_name"
+                app_load_variables "${app_name}"
+                APPS_COMPLETED+=("${app_name}")
+                function_check "upgrade_${app_name}"
+                "upgrade_${app_name}"
+            fi
+        fi
+    done
+}
+
+function setup_apps {
+    echo $'setup_apps'
+    is_interactive=$1
+
+    function_check create_completion_file
+    create_completion_file
+
+    function_check detect_installable_apps
+    detect_installable_apps
+
+    function_check choose_apps_for_variant
+    choose_apps_for_variant "$SYSTEM_TYPE"
+
+    echo $"System variant: $SYSTEM_TYPE"
+    #echo $'The following apps have been selected'
+    #echo ''
+    #function_check list_chosen_apps
+    #list_chosen_apps
+    #echo ''
+
+    function_check upgrade_apps
+    upgrade_apps
+
+    if [[ $is_interactive == "noninteractive" || $is_interactive == "headless" ]]; then
+        function_check install_apps
+        install_apps
+        if [ ! "$APP_INSTALLED_SUCCESS" ]; then
+            echo $'One or more apps failed to install'
+        fi
+    fi
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function combine_all_scripts {
+    combined_filename=$1
+
+    # initial variables
+    cp "$PROJECT_INSTALL_DIR/${PROJECT_NAME}-vars" "$combined_filename"
+
+    # utilities
+    UTILS_FILES="/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-*"
+    for f in $UTILS_FILES
+    do
+        # this removes the first line, which is #!/bin/bash
+        tail -n +2 "$f" >> "$combined_filename"
+    done
+
+    # base system
+    BASE_SYSTEM_FILES="/usr/share/${PROJECT_NAME}/base/${PROJECT_NAME}-base-*"
+    for f in $BASE_SYSTEM_FILES
+    do
+        tail -n +2 "$f" >> "$combined_filename"
+    done
+
+    # apps
+    APP_FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
+    for f in $APP_FILES
+    do
+        tail -n +2 "$f" >> "$combined_filename"
+    done
+}
+
+function check_ram_availability {
+    minimum_ram_MB="$1"
+    minimum_ram_bytes=$((minimum_ram_MB * 1024))
+
+    ram_available=$(grep MemTotal /proc/meminfo | awk '{print $2}')
+    if [ "$ram_available" -lt "$minimum_ram_bytes" ]; then
+        echo $"Need at least ${minimum_ram_MB}MB RAM to install this app"
+        exit 78
+    fi
+}
+
+function install_community_network {
+    if [ ! "$COMMUNITY_NETWORK" ]; then
+        read_config_param COMMUNITY_NETWORK
+    fi
+    if [ ! "$COMMUNITY_NETWORK" ]; then
+        return
+    fi
+
+    if [[ "$COMMUNITY_NETWORK" == 'freifunk'* ]]; then
+        # shellcheck disable=SC2001
+        COMMUNITY_NETWORK=$(echo "$COMMUNITY_NETWORK" | sed "s|freifunk|ff|g")
+        save_config_param COMMUNITY_NETWORK "$COMMUNITY_NETWORK"
+    fi
+    if [[ "$COMMUNITY_NETWORK" == 'ctwug' ]]; then
+        COMMUNITY_NETWORK='capetown'
+    fi
+    if [[ "$COMMUNITY_NETWORK" == 'nycmesh' ]]; then
+        COMMUNITY_NETWORK='nyc'
+    fi
+    if [[ "$COMMUNITY_NETWORK" == 'pittmesh' || "$COMMUNITY_NETWORK" == 'metamesh' ]]; then
+        COMMUNITY_NETWORK='pitt'
+    fi
+
+    freifunk_region=
+    freifunk_nodes_url=
+    freifunk_nodes_url_version=
+    guifinet_region=
+    guifinet_zone_number=
+
+    if [[ "$COMMUNITY_NETWORK" == 'guifinet'* ]]; then
+        # shellcheck disable=SC2001
+        guifinet_region=$(echo "$COMMUNITY_NETWORK" | sed 's|guifinet||g')
+
+        guifinet_directory_created=
+        if [ ! -d "/etc/guifinet${guifinet_region}" ]; then
+            mkdir "/etc/guifinet${guifinet_region}"
+            guifinet_directory_created=1
+        fi
+
+        set_longitude=
+        set_latitude=
+        case "${guifinet_region}" in
+            'asturies')
+                set_longitude='-5.6343'
+                set_latitude='43.5319'
+                guifinet_zone_number=27613
+                ;;
+            'euskalherria')
+                set_longitude='-2.0250'
+                set_latitude='43.2171'
+                guifinet_zone_number=17718
+                ;;
+            'barcelona')
+                set_longitude='2.15899'
+                set_latitude='41.38879'
+                guifinet_zone_number=2436
+                ;;
+            'madrid')
+                set_longitude='-3.7038'
+                set_latitude='40.4168'
+                guifinet_zone_number=19169
+                ;;
+            'custom')
+                read_config_param MAP_ZONE
+                set_longitude='-3.4039'
+                set_latitude='51.7530'
+                if [ ! "$MAP_ZONE" ]; then
+                    MAP_ZONE=65712
+                    if ! grep -q 'MAP_ZONE=' "$CONFIGURATION_FILE"; then
+                        echo "MAP_ZONE=$MAP_ZONE" >> "$CONFIGURATION_FILE"
+                    fi
+                fi
+                guifinet_zone_number="$MAP_ZONE"
+                ;;
+            'planadevic')
+                set_longitude='2.2544335'
+                set_latitude='41.9304373'
+                guifinet_zone_number=8349
+                ;;
+            'osonasud')
+                set_longitude='2.2271'
+                set_latitude='41.85'
+                guifinet_zone_number=8350
+                ;;
+            'valldelges')
+                set_longitude='2.2688'
+                set_latitude='42.0490'
+                guifinet_zone_number=8348
+                ;;
+            'valencia')
+                set_longitude='-0.3481'
+                set_latitude='39.4423'
+                guifinet_zone_number=3674
+                ;;
+            *)
+                # unknown option
+                ;;
+        esac
+
+        if [ $guifinet_directory_created ]; then
+            set_map_location "$set_longitude" "$set_latitude"
+        fi
+    else
+        # freifunk
+        if [[ "$COMMUNITY_NETWORK" == 'ff'* ]]; then
+            # shellcheck disable=SC2001
+            freifunk_region=$(echo "$COMMUNITY_NETWORK" | sed 's|ff||g')
+
+            freifunk_directory_created=
+            if [ ! -d "/etc/ff${freifunk_region}" ]; then
+                mkdir "/etc/ff${freifunk_region}"
+                freifunk_directory_created=1
+            fi
+
+            set_longitude=
+            set_latitude=
+            case "${freifunk_region}" in
+                'aachen')
+                    set_longitude='6.083420'
+                    set_latitude='50.776640'
+                    freifunk_nodes_url="https://data.aachen.freifunk.net/nodes.json"
+                    freifunk_nodes_url_version='2'
+                    ;;
+                'berlin')
+                    set_longitude='13.410530'
+                    set_latitude='52.524370'
+                    freifunk_nodes_url="https://api.openwifimap.net/view_nodes_spatial?bbox=52.449,13.1777,52.587,13.625"
+                    freifunk_nodes_url_version='openwifimap'
+                    ;;
+                'bonn')
+                    set_longitude='7.15573'
+                    set_latitude='50.7226'
+                    freifunk_nodes_url="https://map.kbu.freifunk.net/data/nodelist.json"
+                    freifunk_nodes_url_version='1'
+                    ;;
+                'bremen')
+                    set_longitude='8.80777'
+                    set_latitude='53.07516'
+                    freifunk_nodes_url="https://downloads.bremen.freifunk.net/data/nodelist.json"
+                    freifunk_nodes_url_version='1'
+                    ;;
+                'dresden')
+                    set_longitude='13.7373'
+                    set_latitude='51.0504'
+                    freifunk_nodes_url="http://api.freifunk-dresden.de/freifunk-nodes.json"
+                    freifunk_nodes_url_version='1'
+                    ;;
+                'essen')
+                    set_longitude='7.01156'
+                    set_latitude='51.4556'
+                    freifunk_nodes_url="https://map.freifunk-essen.de/data/nodes.json"
+                    freifunk_nodes_url_version='1E'
+                    ;;
+                'munich')
+                    set_longitude='11.5771'
+                    set_latitude='48.1366'
+                    freifunk_nodes_url="https://map.ffmuc.net/data/nodelist.json"
+                    freifunk_nodes_url_version='1'
+                    ;;
+                'munster')
+                    set_longitude='7.62613'
+                    set_latitude='51.9607'
+                    freifunk_nodes_url="https://karte.freifunk-muensterland.de/data/nodes.json"
+                    freifunk_nodes_url_version='2'
+                    ;;
+                'stuttgart')
+                    set_longitude='9.1818'
+                    set_latitude='48.7754'
+                    freifunk_nodes_url="https://netinfo.freifunk-stuttgart.de/json/global_map.json"
+                    freifunk_nodes_url_version='1'
+                    ;;
+                *)
+                    # unknown option
+                    ;;
+            esac
+
+            if [ $freifunk_directory_created ]; then
+                set_map_location "$set_longitude" "$set_latitude"
+            fi
+
+            # check for function unique to the particular freifunk network
+            if [[ $(function_exists "setup_mesh_$COMMUNITY_NETWORK") != '0' ]]; then
+                setup_mesh_$COMMUNITY_NETWORK
+            fi
+        else
+            # Any others
+            function_check setup_mesh_$COMMUNITY_NETWORK
+            setup_mesh_$COMMUNITY_NETWORK
+        fi
+    fi
+
+    local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+    cd "/var/www/${local_hostname}/htdocs/admin" || return
+
+
+    { echo '#!/bin/bash';
+      echo "CONFIGURATION_FILE=\"/root/${PROJECT_NAME}.cfg\"";
+      echo "COMPLETION_FILE=\"/root/${PROJECT_NAME}-completed.txt\"";
+      echo "source /usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-firewall";
+      echo "source /usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-map";
+      echo "MESH_FILES=\"/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-mesh-*\"";
+      echo "for f in \$MESH_FILES";
+      echo 'do';
+      echo "    source \"\$f\"";
+      echo 'done';
+      echo "local_hostname=\$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print \$2}').local";
+      echo "cd \"/var/www/\${local_hostname}/htdocs/admin\" || return"; } > /tmp/weekly_network_nodes
+
+    if [[ "$COMMUNITY_NETWORK" == 'guifinet'* ]]; then
+        if [ ! "$guifinet_region" ]; then
+            echo $'No guifinet region'
+            exit 29
+        fi
+        if [ ! "$guifinet_zone_number" ]; then
+            echo $'No guifinet zone number'
+            exit 28
+        fi
+        create_guifinet_nodes_list "$guifinet_zone_number" "$guifinet_region"
+        echo "create_guifinet_nodes_list \"$guifinet_zone_number\" \"$guifinet_region\"" >> /tmp/weekly_network_nodes
+    else
+        if [[ "$COMMUNITY_NETWORK" == 'ff'* ]]; then
+            if [ ! "$freifunk_region" ]; then
+                echo $'No freifunk region'
+                exit 29
+            fi
+            if [ ! "$freifunk_nodes_url" ]; then
+                echo $'No freifunk nodes url'
+                exit 28
+            fi
+            if [ ! "$freifunk_nodes_url_version" ]; then
+                echo $'No freifunk nodes url version'
+                exit 27
+            fi
+
+            case "${freifunk_nodes_url_version}" in
+                '1')
+                    create_freifunk_nodes_list_v1 "ff${freifunk_region}" "${freifunk_nodes_url}"
+                    echo "create_freifunk_nodes_list_v1 \"ff${freifunk_region}\" \"${freifunk_nodes_url}\"" >> /tmp/weekly_network_nodes
+                    ;;
+                '1E')
+                    create_freifunk_nodes_list_v1E "ff${freifunk_region}" "${freifunk_nodes_url}"
+                    echo "create_freifunk_nodes_list_v1E \"ff${freifunk_region}\" \"${freifunk_nodes_url}\"" >> /tmp/weekly_network_nodes
+                    ;;
+                '2')
+                    create_freifunk_nodes_list_v2 "ff${freifunk_region}" "${freifunk_nodes_url}"
+                    echo "create_freifunk_nodes_list_v2 \"ff${freifunk_region}\" \"${freifunk_nodes_url}\"" >> /tmp/weekly_network_nodes
+                    ;;
+                'openwifimap')
+                    create_openwifimap_nodes_list "ff${freifunk_region}" "${freifunk_nodes_url}"
+                    echo "create_openwifimap_nodes_list \"ff${freifunk_region}\" \"${freifunk_nodes_url}\"" >> /tmp/weekly_network_nodes
+                    ;;
+                *)
+                    # unknown option
+                    ;;
+            esac
+        else
+            function_check update_mesh_nodes_$COMMUNITY_NETWORK
+            update_mesh_nodes_$COMMUNITY_NETWORK
+            echo "update_mesh_nodes_$COMMUNITY_NETWORK" >> /tmp/weekly_network_nodes
+        fi
+    fi
+
+    echo "create_map network_map.png" >> /tmp/weekly_network_nodes
+    mv /tmp/weekly_network_nodes /etc/cron.weekly/network_nodes
+    chmod +x /etc/cron.weekly/network_nodes
+}
+
+function remove_community_network {
+    network_name="$1"
+
+    if [ ! "$network_name" ]; then
+        return
+    fi
+
+    if [[ "$network_name" == 'freifunk'* ]]; then
+        # shellcheck disable=SC2001
+        network_name=$(echo "$network_name" | sed "s|freifunk|ff|g")
+    fi
+    if [[ "$network_name" == 'nycmesh' ]]; then
+        network_name='nyc'
+    fi
+    if [[ "$network_name" == 'pittmesh' || "$network_name" == 'metamesh' ]]; then
+        network_name='pitt'
+    fi
+
+    if [ -f /etc/cron.weekly/network_nodes ]; then
+        rm /etc/cron.weekly/network_nodes
+    fi
+
+    if [[ $(function_exists "remove_mesh_${network_name}") != '0' ]]; then
+        # shellcheck disable=SC2086
+        remove_mesh_$network_name
+    fi
+
+    if [ -d "/etc/$network_name" ]; then
+        rm -rf "/etc/${network_name:?}"
+    fi
+
+    local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+    webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+    network_settings_filename="$webadmin_install_dir/settings_${network_name}.html"
+    if [ -f "$network_settings_filename" ]; then
+        rm "$network_settings_filename"
+    fi
+    network_map_filename="$webadmin_install_dir/network_map.png"
+    if [ -f "$network_map_filename" ]; then
+        rm "$network_map_filename"
+    fi
+    network_markers_filename="$webadmin_install_dir/network_map_markers.txt"
+    if [ -f "$network_markers_filename" ]; then
+        rm "$network_markers_filename"
+    fi
+    if [ -f /etc/staticmap/generate_map.py ]; then
+        rm /etc/staticmap/generate_map.py
+    fi
+
+    sed -i '/COMMUNITY_NETWORK=/d' "$CONFIGURATION_FILE"
+    sed -i '/MAP_LONGITUDE=/d' "$CONFIGURATION_FILE"
+    sed -i '/MAP_LATITUDE=/d' "$CONFIGURATION_FILE"
+    sed -i '/MAP_ZONE=/d' "$CONFIGURATION_FILE"
+    webadmin_change_network "$network_name"
+}
+
+function reset_tripwire {
+    if [ ! -f /usr/bin/reset-tripwire ]; then
+        echo $'Missing /usr/bin/reset-tripwire'
+        return
+    fi
+    if [ ! -f "/etc/tripwire/${HOSTNAME}-local.key" ]; then
+        if [ -f "/etc/tripwire/${PROJECT_NAME}-local.key" ]; then
+            # shellcheck disable=SC2086
+            mv /etc/tripwire/${PROJECT_NAME}-local.key /etc/tripwire/${HOSTNAME}-local.key
+            # shellcheck disable=SC2086
+            mv /etc/tripwire/${PROJECT_NAME}-site.key /etc/tripwire/${HOSTNAME}-site.key
+        else
+            local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+            if [ -f "/etc/tripwire/${local_hostname}-local.key" ]; then
+                # shellcheck disable=SC2086
+                mv /etc/tripwire/${local_hostname}-local.key /etc/tripwire/${HOSTNAME}-local.key
+                # shellcheck disable=SC2086
+                mv /etc/tripwire/${local_hostname}-site.key /etc/tripwire/${HOSTNAME}-site.key
+            else
+                echo $'Tripwire not in operation'
+                return
+            fi
+        fi
+    fi
+    clear
+    echo $'Turing off logging...'
+    "${PROJECT_NAME}-logging" off
+    echo $'Locking down permissions...'
+    lockdown_permissions
+    echo $'Creating configuration...'
+    echo '
+
+       ' | twadmin --create-cfgfile -S "/etc/tripwire/${HOSTNAME}-site.key" /etc/tripwire/twcfg.txt
+    echo $'Resetting policy...'
+    echo '
+
+       ' | twadmin --create-polfile -S "/etc/tripwire/${HOSTNAME}-site.key" /etc/tripwire/twpol.txt
+    echo $'Creating tripwire database'
+    echo '
+
+' | tripwire --init --cfgfile /etc/tripwire/tw.cfg --polfile /etc/tripwire/tw.pol --dbfile "/var/lib/tripwire/${HOSTNAME}.twd"
+    echo $'Resetting the Tripwire...'
+    echo ''
+    echo '
+
+                ' | reset-tripwire
+    echo ''
+
+    fuser -k 80/tcp
+    fuser -k 443/tcp
+    systemctl restart nginx
+
+    if [ -f "/var/lib/tripwire/${HOSTNAME}.twd" ]; then
+        show_tripwire_verification_code
+        echo $'Tripwire is now reset. Take a note of the above hash, or record'
+        echo $'the QR code using a mobile device. This will enable you to independently'
+        echo $'verify the integrity of the tripwire.'
+    else
+        echo $'ERROR: tripwire database was not created'
+    fi
+}
+
+# NOTE: deliberately no exit 0

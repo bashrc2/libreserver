@@ -1,0 +1,204 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Vim editor
+#
+# License
+# =======
+#
+# Copyright (C) 2016-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VARIANTS='full-vim'
+
+IN_DEFAULT_INSTALL=0
+SHOW_ON_ABOUT=0
+NOT_ON_HOMEPAGE=1
+REQUIRES_APP=
+
+VIM_TEMP_DIR='.vimtemp'
+VIM_MUTT_EDITOR='vim \"+set nonumber\" \"+set insertmode\" \"+set spell\" +/^$/ +9'
+
+vim_variables=(MY_USERNAME
+               VIM_MUTT_EDITOR)
+
+function upgrade_distro_vim {
+    target_distro="$1"
+
+    if [[ "$target_distro" == 'bullseye' ]]; then
+        echo -n ''
+    fi
+}
+
+function logging_on_vim {
+    echo -n ''
+}
+
+function logging_off_vim {
+    echo -n ''
+}
+
+function reconfigure_vim {
+    echo -n ''
+}
+
+function upgrade_vim {
+    echo -n ''
+}
+
+function backup_local_vim {
+    for d in /home/*/ ; do
+        USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+        if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+            echo $"Backing up Vim config for $USERNAME"
+
+            # create a temporary directory
+            if [ ! -d "/home/$USERNAME/$VIM_TEMP_DIR" ]; then
+                mkdir "/home/$USERNAME/$VIM_TEMP_DIR"
+            fi
+
+            # copy config files into the directory
+            if [ -f "/home/$USERNAME/.vimrc" ]; then
+                cp "/home/$USERNAME/.vimrc" "/home/$USERNAME/$VIM_TEMP_DIR"
+                chown -R "$USERNAME":"$USERNAME" "/home/$USERNAME/$VIM_TEMP_DIR"
+            fi
+            if [ -f "/home/$USERNAME/.viminfo" ]; then
+                cp "/home/$USERNAME/.viminfo" "/home/$USERNAME/$VIM_TEMP_DIR"
+                chown -R "$USERNAME":"$USERNAME" "/home/$USERNAME/$VIM_TEMP_DIR"
+            fi
+
+            # backup the directory
+            function_check backup_directory_to_usb
+            backup_directory_to_usb "/home/$USERNAME/$VIM_TEMP_DIR" "vim/$USERNAME"
+
+            # remove temporary directory
+            if [ -d "/home/$USERNAME/$VIM_TEMP_DIR" ]; then
+                rm -rf "/home/${USERNAME:?}/$VIM_TEMP_DIR"
+            fi
+        fi
+    done
+}
+
+function restore_local_vim {
+    temp_restore_dir=/root/tempvim
+    if [ -d "$USB_MOUNT/backup/vim" ]; then
+        for d in $USB_MOUNT/backup/vim/*/ ; do
+            USERNAME=$(echo "$d" | awk -F '/' '{print $6}')
+            if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+                if [ ! -d "/home/$USERNAME" ]; then
+                    "${PROJECT_NAME}-adduser" "$USERNAME"
+                fi
+                echo $"Restoring Vim config for $USERNAME"
+                function_check restore_directory_from_usb
+                restore_directory_from_usb "$temp_restore_dir" "vim/$USERNAME"
+                if [ -d "$temp_restore_dir/home/$USERNAME/$VIM_TEMP_DIR" ]; then
+                    cp -r "$temp_restore_dir/home/$USERNAME/$VIM_TEMP_DIR" "/home/$USERNAME/"
+                else
+                    if [ ! -d "/home/$USERNAME/$VIM_TEMP_DIR" ]; then
+                        mkdir "/home/$USERNAME/$VIM_TEMP_DIR"
+                    fi
+                    cp -r "$temp_restore_dir/"* "/home/$USERNAME/$VIM_TEMP_DIR/"
+                fi
+                # shellcheck disable=SC2181
+                if [ ! "$?" = "0" ]; then
+                    rm -rf $temp_restore_dir
+                    function_check set_user_permissions
+                    set_user_permissions
+                    function_check backup_unmount_drive
+                    backup_unmount_drive
+                    exit 66
+                fi
+                cp "/home/$USERNAME/$VIM_TEMP_DIR/"* "/home/$USERNAME"
+                if [ -f "/home/$USERNAME/.viminfo" ]; then
+                    chown "$USERNAME":"$USERNAME" "/home/$USERNAME/.viminfo"
+                fi
+                if [ -f "/home/$USERNAME/.vimrc" ]; then
+                    chown "$USERNAME":"$USERNAME" "/home/$USERNAME/.vimrc"
+                fi
+                rm -rf "/home/${USERNAME:?}/$VIM_TEMP_DIR"
+                rm -rf $temp_restore_dir
+            fi
+        done
+    fi
+}
+
+function backup_remote_vim {
+    echo -n ''
+}
+
+function restore_remote_vim {
+    echo -n ''
+}
+
+function remove_vim {
+    # Don't remove vim because vim-common is needed for showing ssh host keys
+    $REMOVE_PACKAGES_PURGE vim
+    update-alternatives --set editor /usr/bin/nano
+    sed -i '/install_vim/d' "$COMPLETION_FILE"
+
+    # remove Vim as the mutt email editor
+    if [ -f /etc/Muttrc ]; then
+        if grep -q "set editor=" /etc/Muttrc; then
+            sed -i '/set editor=/d' /etc/Muttrc
+        fi
+        for d in /home/*/ ; do
+            USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+            if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+                if [ -f "/home/$USERNAME/.muttrc" ]; then
+                    if grep -q "set editor=" "/home/$USERNAME/.muttrc"; then
+                        sed -i '/set editor=/d' "/home/$USERNAME/.muttrc"
+                    fi
+                fi
+            fi
+        done
+    fi
+}
+
+function install_vim {
+    INSTALL_PACKAGES vim
+    update-alternatives --set editor /usr/bin/vim.tiny
+
+    # add a mutt entry to use Vim to compose emails
+    if [ -f /etc/Muttrc ]; then
+        if ! grep -q "set editor=" /etc/Muttrc; then
+            echo "set editor=\"$VIM_MUTT_EDITOR\"" >> /etc/Muttrc
+        else
+            sed -i "s|set editor=.*|set editor=\"$VIM_MUTT_EDITOR\"|g" /etc/Muttrc
+        fi
+        for d in /home/*/ ; do
+            USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+            if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+                if [ -f "/home/$USERNAME/.muttrc" ]; then
+                    if ! grep -q "set editor=" "/home/$USERNAME/.muttrc"; then
+                        echo "set editor=\"$VIM_MUTT_EDITOR\"" >> "/home/$USERNAME/.muttrc"
+                    else
+                        sed -i "s|set editor=.*|set editor=\"$VIM_MUTT_EDITOR\"|g" "/home/$USERNAME/.muttrc"
+                    fi
+                fi
+            fi
+        done
+    fi
+
+    APP_INSTALLED=1
+}
+
+function install_interactive_vim {
+    install_vim
+}
+
+# NOTE: deliberately no exit 0

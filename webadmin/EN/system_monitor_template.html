@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Refresh" content="10" charset="utf-8">
+    <style>
+      @import url("w3.css");
+      @import url("libreserver.css");
+
+      .img-spectre {
+          min-width: 30px;
+          width: 4%;
+      }
+
+      #iconpic {
+          width: 20%;
+          height: auto;
+          margin-right : auto;
+          margin-left : auto;
+          min-width : 120px;
+      }
+
+      .appurl {
+          font-size: 100%;
+      }
+
+      .titletext {
+          font-size: 100%;
+      }
+
+      .titletextbackupspace {
+          font-size: 100%;
+      }
+
+      .titletextcputemp {
+          font-size: 100%;
+      }
+
+      .appdesc {
+          font-size: 65%;
+      }
+
+      button {
+          border: none;
+          outline: 0;
+          display: inline-block;
+          padding: 8px;
+          color: white;
+          background-color: #000;
+          text-align: center;
+          cursor: pointer;
+          width: 100%;
+          font-size: 18px;
+      }
+
+      button:hover, a:hover {
+          opacity: 0.7;
+      }
+
+      .w3-light-grey,.w3-hover-light-grey:hover,.w3-light-gray,.w3-hover-light-gray:hover{
+          color:#000!important;
+          background-color:#f1f1f1!important
+      }
+
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <a href="settings.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
+
+      <p class="headertext" translate="yes">System Monitor</p>
+
+      <p class="titletext" translate="yes">Disk space used</p>
+      <div class="w3-light-grey w3-round-xlarge">
+        <div name="diskspace" class="w3-container w3-blue w3-round-xlarge" style="width:50%">50%</div>
+      </div>
+
+      <p class="titletextbackupspace" translate="yes">Backup drive space used</p>
+      <div class="w3-light-grey w3-round-xlarge">
+        <div name="backupspace" class="w3-container w3-blue w3-round-xlarge" style="width:100%"><label translate="yes">Not Connected</label></div>
+      </div>
+
+      <p class="titletext" translate="yes">CPU usage</p>
+      <div class="w3-light-grey w3-round-xlarge">
+        <div name="cpuusage" class="w3-container w3-blue w3-round-xlarge" style="width:50%">50%</div>
+      </div>
+
+      <p class="titletextcputemp" translate="yes">CPU temperature</p>
+      <div class="w3-light-grey w3-round-xlarge">
+        <div name="cputemp" class="w3-container w3-blue w3-round-xlarge" style="width:40%">40°C</div>
+      </div>
+
+      <p class="titletext" translate="yes">Disk I/O Speed</p>
+      <div class="w3-light-grey w3-round-xlarge">
+        <div name="diskio" class="w3-container w3-blue w3-round-xlarge" style="width:10%">20 MB/s</div>
+      </div>
+
+      <p class="titletext" translate="yes">RAM used</p>
+      <div class="w3-light-grey w3-round-xlarge">
+        <div name="memory" class="w3-container w3-blue w3-round-xlarge" style="width:80%">80%</div>
+      </div>
+
+      <br><br>
+
+      <form action="systemmonitor.php" method="post">
+        <input type="submit" name="submitsystemmonitorback" translate="yes" value="Go Back" />
+        <input type="submit" name="submitsystemmonitor" translate="yes" value="Update" />
+      </form>
+
+      <br><br>
+
+    </div>
+  </body>
+</html>

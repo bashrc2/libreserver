@@ -1,0 +1,55 @@
+#! /bin/bash
+#
+# Read a mail message on stdin and output X-Face using unicode block
+# characters.  Makes the output a 24x24 text block.
+# You obviously need a font that supports those.
+#
+# Created by Patrice Levesque in 2008, donated to the public domain.
+
+# Set this to 0 or 1 depending on your preference
+INVERSE=1
+
+UNCOMPFACE=`which uncompface` || exit
+PRINTF=`which printf` || exit
+SED=`which sed` || exit
+SEQ=`which seq` || exit
+CUT=`which cut` || exit
+
+COUNT=0;
+for i in 00a0 259d 2598 2580 2597 2590 259a 259c 2596 259e 258c 259b 2584 259f 2599 2588; do
+	UNICHAR[$COUNT]=`${PRINTF} "\u$i"`
+	let "COUNT += 1"
+done
+
+ODDLINES=
+EVENLINES=
+TOTALCOUNT=0
+ARRAYCOUNT=0
+
+for i in `cat "$@" \
+| ${SED} -n -e '/^X-Face:/,/^[^ \t]/ p' \
+| ${SED} -n -e 's/^X-Face://' -e '/^[ \t]/ p' \
+| ${SED} -e 's/^[ \t]\+//' \
+| { ${UNCOMPFACE}; }`; do
+	if [ $(( $TOTALCOUNT % 2 )) -eq 0 ]; then
+		EVENLINES[$ARRAYCOUNT]="$i";
+	else
+		ODDLINES[$ARRAYCOUNT]="$i";
+		let "ARRAYCOUNT += 1"
+	fi
+	let "TOTALCOUNT += 1"
+done
+
+for line in `${SEQ} 0 23`; do
+	for word in `${SEQ} 1 3`; do
+		EVEN=$( ${PRINTF} "%d" `echo ${EVENLINES[$line]} | ${CUT} -d, -f$word` )
+		ODD=$( ${PRINTF} "%d" `echo ${ODDLINES[$line]} | ${CUT} -d, -f$word` )
+		# We need two bits.  Shift then OR, then merge the two lines
+		for i in `${SEQ} 14 -2 0`; do
+			T=$((((($ODD >> $i ) & 3) << 2) + (($EVEN >> $i) & 3)))
+			[[ ${INVERSE} -eq 1 ]] && let "T ^= 15"
+			echo -n ${UNICHAR[$T]}
+		done;
+	done;
+	echo
+done

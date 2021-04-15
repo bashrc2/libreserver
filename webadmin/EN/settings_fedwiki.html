@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <meta charset="utf-8">
+  <style>
+    @import url("libreserver.css");
+
+    * {
+        box-sizing: border-box;
+    }
+
+    .row {
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+        padding: 0 4px;
+    }
+
+    .column {
+        -ms-flex: 25%;
+        flex: 25%;
+        max-width: 25%;
+        padding: 0 4px;
+    }
+
+    .column img {
+        margin-top: 8px;
+        vertical-align: middle;
+    }
+
+    @media screen and (max-width: 800px) {
+        .column {
+            -ms-flex: 25%;
+            flex: 25%;
+            max-width: 50%;
+        }
+    }
+
+    @media screen and (max-width: 500px) {
+        .column {
+            -ms-flex: 100%;
+            flex: 100%;
+            max-width: 100%;
+        }
+    }
+  </style>
+  <body>
+
+    <div class="header">
+      <a href="app_fedwiki.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
+
+      <p class="headertext" translate="yes">Fedwiki Settings</p>
+
+    <div class="row">
+      <div class="column">
+        <div>
+        </div>
+      </div>
+      <div class="column">
+        <div>
+          <a href="settings_fedwiki_password.html" title="Password">
+            <img src="images/login.png" style="width:100%" alt="Password">
+            <center translate="yes">Password</center>
+          </a>
+        </div>
+      </div>
+      <div class="column">
+        <div>
+          <a href="settings_fedwiki_favicon.html" title="Favicon">
+            <img src="images/emoji.png" style="width:100%" alt="Favicon">
+            <center translate="yes">Favicon</center>
+          </a>
+        </div>
+      </div>
+      <div class="column">
+        <div>
+        </div>
+      </div>
+    </div>
+    </div>
+
+  </body>
+</html>

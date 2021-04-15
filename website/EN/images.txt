@@ -1,0 +1,21 @@
+The following files can be downloaded using the dat command:
+
+    sudo npm install -g dat
+    dat clone [url]
+
+NOTE: This is *not* the allegro tool https://helpmanual.io/man1/dat
+
+Source code                       dat://c979feff64b9f69121b9e5659837de6792493b8aa362ab7401dff757cf54c870/
+
+amd64                             dat://b1f714cdd60eb8cbedf9112ce37f8a5e9601fc0d3e1734af8901002adfe0ed74/
+amd64 (onion only)                dat://86c5ad0c75022c459908348c44604e27c961d19fba8ed0395cbc7928f637185c/
+amd64 social instance             dat://231b24dbeef3c3f7b115b9c7cd02e416b382df0a1050ef66f94b988fc8dae92e/
+Banana Pro SATA                   dat://c3feadb5568aa29680f55fa16c0118c22f7b2330364d3a008396906d6f2f8e70/
+Beaglebone Black                  dat://eb4f994ee9e4397ddae1909fd8c387467c36a30f1ef3c0bcdbb1ef0a2835f40d/
+Beaglebone Black (onion only)     dat://ce37befb88fc975cae17c8f733d75c138da6a6bec1c636f676eba87d06de5b5a/
+Beagleboard X15                   dat://b7062c3259867004dced43e49220943631c01803ab0fc4699764cf7a077a095b
+Cubieboard 2 SATA                 dat://9418b0509619ac8ae3b99e296ccf0e4c248682d357e93bb975db3a5d54fb840d/
+Cubietruck SATA                   dat://86d924ceeb7a927ce0528b7a8f6f228a2a628f80a93cf4e6e83421f9d8985445/
+Mesh Client                       dat://e2ed9767d6ab64f4c43a2adbce65af225133fec7ba95737f0a2f6ae292ba358e/
+Mesh Client (unfree wifi drivers) dat://6d1b73d13b6f9b5c481c6dfd64be6aa58e1cd2d153a6bb04bbc177999ee9925e/
+Mesh Router Beaglebone Black      dat://a4e79e49c6e77b919d4ae4827037e813ef1ba2734c342d0d78146ce16a819ebb/

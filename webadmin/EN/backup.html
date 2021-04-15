@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <meta charset="utf-8">
+  <style>
+    @import url("libreserver.css");
+
+    * {
+        box-sizing: border-box;
+    }
+
+    .row {
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+        padding: 0 4px;
+    }
+
+    .column {
+        -ms-flex: 25%;
+        flex: 15%;
+        max-width: 25%;
+        padding: 0 4px;
+    }
+
+    .column img {
+        margin-top: 8px;
+        vertical-align: middle;
+    }
+
+    @media screen and (max-width: 800px) {
+        .column {
+            -ms-flex: 50%;
+            flex: 25%;
+            max-width: 50%;
+        }
+    }
+
+    @media screen and (max-width: 500px) {
+        .column {
+            -ms-flex: 50%;
+            flex: 25%;
+            max-width: 50%;
+        }
+    }
+  </style>
+  <body>
+
+    <div class="header">
+      <a href="index.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
+    </div>
+
+    <div class="row">
+      <div class="column">
+        <div>
+        </div>
+      </div>
+      <div class="column">
+        <div>
+          <a href="./backup_password.html" title="Backup">
+            <img src="images/admin_create_backup.png" style="width:100%" alt="Backup">
+            <center translate="yes">Backup</center>
+          </a>
+        </div>
+      </div>
+      <div class="column">
+        <div>
+          <a href="./restore_password.html" title="Restore">
+            <img src="images/admin_restore.png" style="width:100%" alt="Restore">
+            <center translate="yes">Restore</center>
+          </a>
+        </div>
+      </div>
+      <div class="column">
+        <div>
+        </div>
+      </div>
+    </div>
+
+    <br><br>
+
+  </body>
+</html>

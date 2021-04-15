@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Refresh" content="30" charset="utf-8">
+    <style>
+      @import url("libreserver.css");
+
+      #welcomeicon {
+          width: 20%;
+          height: auto;
+          margin-right : auto;
+          margin-left : auto;
+          min-width : 100px;
+      }
+
+      #iconpic {
+          width: 20%;
+          height: auto;
+          margin-right : auto;
+          margin-left : auto;
+          min-width : 120px;
+      }
+
+      .appurl {
+          font-size: 100%;
+      }
+
+      .welcomeheader {
+          font-size: 200%;
+          font-weight: bold;
+      }
+
+      .welcometext {
+          font-size: 90%;
+      }
+
+      .logintext {
+          font-size: 90%;
+          font-weight: bold;
+          color: #981737;
+      }
+
+      button {
+          border: none;
+          outline: 0;
+          display: inline-block;
+          padding: 8px;
+          color: white;
+          background-color: #000;
+          text-align: center;
+          cursor: pointer;
+          width: 100%;
+          font-size: 18px;
+      }
+
+      button:hover, a:hover {
+          opacity: 0.7;
+      }
+
+      .chip {
+          display: inline-block;
+          padding: 0 25px;
+          height: 50px;
+          font-size: 70%;
+          line-height: 50px;
+          border-radius: 25px;
+          background-color: #f1f1f1;
+      }
+
+      .chip img {
+          float: left;
+          margin: 0 10px 0 -25px;
+          height: 50px;
+          width: 50px;
+          border-radius: 50%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="header">
+        <img id="headerpic" class="img-responsive" src="images/logo.png" alt="LibreServer"><br>
+        <br>
+        <img id="welcomeicon" class="img-responsive" src="images/setup.png" alt="Setup icon">
+        <p class="welcometext" translate="yes">Have you written down or saved the login credentials and removed any backup drives from the system?</p>
+
+        <p class="logintext" translate="yes">Username: admin<br>
+          Password:<br>
+          WEBADMINPASSWORD
+        </p>
+
+        <br>
+
+        <form action="setupconfirm.php" method="post">
+          <p><input type="radio" name="setupconfirm" value="0" checked><label translate="yes">No</label>
+            <input type="radio" name="setupconfirm" value="1"><label translate="yes">Yes</label></p><br>
+          <input type="submit" name="setupconfirmsubmit" translate="yes" value="Continue" />
+        </form>
+
+        <br>
+      </div>
+    </div>
+  </body>
+</html>

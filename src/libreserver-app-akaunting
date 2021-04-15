@@ -1,0 +1,557 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Personal or small business accounts
+#
+# License
+# =======
+#
+# Copyright (C) 2018-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VARIANTS='full full-vim media'
+
+IN_DEFAULT_INSTALL=0
+SHOW_ON_ABOUT=1
+REQUIRES_APP=
+
+APP_CATEGORY=organization
+
+AKAUNTING_DOMAIN_NAME=
+AKAUNTING_CODE=
+AKAUNTING_ONION_PORT=8341
+AKAUNTING_REPO="https://github.com/akaunting/akaunting"
+AKAUNTING_COMMIT='12c1be09e659632fb715b8d95529f532fb4374c6'
+AKAUNTING_ADMIN_PASSWORD=
+
+AKAUNTING_BACKGROUND_IMAGE_URL=
+
+AKAUNTING_SHORT_DESCRIPTION=$'Personal accounting'
+AKAUNTING_DESCRIPTION=$'Personal or small business accounting'
+AKAUNTING_MOBILE_APP_URL=
+
+akaunting_variables=(ONION_ONLY
+                     AKAUNTING_DOMAIN_NAME
+                     AKAUNTING_CODE
+                     DDNS_PROVIDER
+                     MY_USERNAME
+                     MY_EMAIL_ADDRESS)
+
+function akaunting_update_email {
+    env_filename="/var/www/$AKAUNTING_DOMAIN_NAME/htdocs/.env"
+    if [ ! -f "$env_filename" ]; then
+        echo $'No .env file found'
+        return
+    fi
+    if ! grep -q 'MAIL_PORT=25' "$env_filename"; then
+        sed -i 's|MAIL_PORT=.*|MAIL_PORT=25|g' "$env_filename"
+    fi
+}
+
+function upgrade_distro_akaunting {
+    target_distro="$1"
+
+    if [[ "$target_distro" == 'bullseye' ]]; then
+        echo -n ''
+    fi
+}
+
+function akaunting_remove_bad_links {
+    cd "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs" || exit 36
+
+    cd "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs" || exit 32
+    jquery_download '1.12.4' '430f36f9b5f21aae8cc9dca6a81c4d3d84da5175eaedcf2fdc2c226302cb3575'
+
+    sed -i '/googleapi/d' resources/assets/sass/app.scss
+    sed -i "s|ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js|$AKAUNTING_DOMAIN_NAME/jquery-${jquery_version}.js|g" vendor/league/flysystem/docs/_layouts/default.html
+    sed -i '/googleapi/d' vendor/laravel/framework/src/Illuminate/Foundation/Exceptions/views/503.blade.php
+    sed -i '/googleapi/d' vendor/almasaeed2010/adminlte/build/less/AdminLTE-without-plugins.less
+    sed -i '/googleapi/d' vendor/almasaeed2010/adminlte/build/less/AdminLTE.less
+    sed -i '/googleapi/d' vendor/almasaeed2010/adminlte/dist/css/AdminLTE.css
+    sed -i '/googleapi/d' vendor/almasaeed2010/adminlte/dist/css/AdminLTE.min.css
+    sed -i '/googleapi/d' vendor/almasaeed2010/adminlte/dist/css/alt/AdminLTE-without-plugins.css
+    sed -i '/googleapi/d' vendor/almasaeed2010/adminlte/dist/css/alt/AdminLTE-without-plugins.min.css
+    sed -i "s|ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js|$AKAUNTING_DOMAIN_NAME/jquery-${jquery_version}.js|g" vendor/almasaeed2010/adminlte/plugins/ckeditor/samples/old/jquery.html
+
+    chown -R www-data:www-data "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs"
+}
+
+function logging_on_akaunting {
+    echo -n ''
+}
+
+function logging_off_akaunting {
+    echo -n ''
+}
+
+function remove_user_akaunting {
+    remove_username="$1"
+
+    # TODO: remove user
+    "${PROJECT_NAME}-pass" -u "$remove_username" --rmapp akaunting
+}
+
+function add_user_akaunting {
+    new_username="$1"
+    new_user_password="$2"
+
+    # TODO: add user
+    "${PROJECT_NAME}-pass" -u "$new_username" -a akaunting -p "$new_user_password"
+
+    echo '0'
+}
+
+function install_interactive_akaunting {
+    if [ ! "$ONION_ONLY" ]; then
+        ONION_ONLY='no'
+    fi
+
+    if [[ "$ONION_ONLY" != "no" ]]; then
+        AKAUNTING_DOMAIN_NAME='akaunting.local'
+    else
+        AKAUNTING_DETAILS_COMPLETE=
+        while [ ! $AKAUNTING_DETAILS_COMPLETE ]
+        do
+            data=$(mktemp 2>/dev/null)
+            dialog --backtitle $"LibreServer Configuration" \
+                   --title $"Akaunting Configuration" \
+                   --form $"\\nPlease enter your Akaunting details.\\n\\nIMPORTANT: This should be a domain name which is supported by Let's Encrypt:" 14 65 2 \
+                   $"Domain:" 1 1 "$(grep 'AKAUNTING_DOMAIN_NAME' temp.cfg | awk -F '=' '{print $2}')" 1 25 33 40 \
+                   2> "$data"
+            sel=$?
+            case $sel in
+                1) rm -f "$data"
+                   exit 1;;
+                255) rm -f "$data"
+                     exit 1;;
+            esac
+            AKAUNTING_DOMAIN_NAME=$(sed -n 1p < "$data")
+            if [ "$AKAUNTING_DOMAIN_NAME" ]; then
+                if [[ $AKAUNTING_DOMAIN_NAME == "$HUBZILLA_DOMAIN_NAME" ]]; then
+                    AKAUNTING_DOMAIN_NAME=""
+                fi
+                TEST_DOMAIN_NAME=$AKAUNTING_DOMAIN_NAME
+                validate_domain_name
+                if [[ "$TEST_DOMAIN_NAME" != "$AKAUNTING_DOMAIN_NAME" ]]; then
+                    AKAUNTING_DOMAIN_NAME=
+                    dialog --title $"Domain name validation" --msgbox "$TEST_DOMAIN_NAME" 15 50
+                fi
+            fi
+            if [ $AKAUNTING_DOMAIN_NAME ]; then
+                AKAUNTING_DETAILS_COMPLETE="yes"
+            fi
+            rm -f "$data"
+        done
+    fi
+    write_config_param "AKAUNTING_DOMAIN_NAME" "$AKAUNTING_DOMAIN_NAME"
+    APP_INSTALLED=1
+}
+
+function change_password_akaunting {
+    curr_username="$1"
+    new_user_password="$2"
+
+    read_config_param 'AKAUNTING_DOMAIN_NAME'
+
+    "${PROJECT_NAME}-pass" -u "$curr_username" -a akaunting -p "$new_user_password"
+}
+
+function akaunting_create_database {
+    if [ -f "$IMAGE_PASSWORD_FILE" ]; then
+        AKAUNTING_ADMIN_PASSWORD="$(printf "%s" "$(cat "$IMAGE_PASSWORD_FILE")")"
+    else
+        if [ ! "$AKAUNTING_ADMIN_PASSWORD" ]; then
+            AKAUNTING_ADMIN_PASSWORD="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
+        fi
+    fi
+    if [ ! "$AKAUNTING_ADMIN_PASSWORD" ]; then
+        return
+    fi
+
+    function_check create_database
+    create_database akaunting "$AKAUNTING_ADMIN_PASSWORD" "$MY_USERNAME"
+}
+
+function reconfigure_akaunting {
+    echo -n ''
+}
+
+function upgrade_akaunting {
+    CURR_AKAUNTING_COMMIT=$(get_completion_param "akaunting commit")
+    if [[ "$CURR_AKAUNTING_COMMIT" == "$AKAUNTING_COMMIT" ]]; then
+        return
+    fi
+
+    if grep -q "akaunting domain" "$COMPLETION_FILE"; then
+        AKAUNTING_DOMAIN_NAME=$(get_completion_param "akaunting domain")
+    fi
+
+    # update to the next commit
+    function_check set_repo_commit
+    set_repo_commit "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs" "akaunting commit" "$AKAUNTING_COMMIT" "$AKAUNTING_REPO"
+
+    cd "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs" || exit 36
+    install_composer
+    akaunting_update_email
+    akaunting_remove_bad_links
+
+    chown -R www-data:www-data "/var/www/${AKAUNTING_DOMAIN_NAME}/htdocs"
+}
+
+
+function backup_local_akaunting {
+    akaunting_path="/var/www/${AKAUNTING_DOMAIN_NAME}/htdocs"
+    if [ -d "$akaunting_path" ]; then
+        suspend_site "${AKAUNTING_DOMAIN_NAME}"
+        function_check backup_database_to_usb
+        backup_database_to_usb akaunting
+        backup_directory_to_usb "$akaunting_path" akaunting
+        restart_site
+    fi
+}
+
+function restore_local_akaunting {
+    temp_restore_dir=/root/tempakaunting
+    akaunting_dir="/var/www/${AKAUNTING_DOMAIN_NAME}/htdocs"
+
+    suspend_site "${AKAUNTING_DOMAIN_NAME}"
+
+    function_check akaunting_create_database
+    akaunting_create_database
+
+    restore_database akaunting "${AKAUNTING_DOMAIN_NAME}"
+    chown www-data:www-data "$akaunting_dir"
+
+    restart_site
+}
+
+function backup_remote_akaunting {
+    echo -n ''
+}
+
+function restore_remote_akaunting {
+    echo -n ''
+}
+
+function remove_akaunting {
+    if [ ${#AKAUNTING_DOMAIN_NAME} -eq 0 ]; then
+        return
+    fi
+
+    read_config_param "AKAUNTING_DOMAIN_NAME"
+    read_config_param "MY_USERNAME"
+    echo "Removing $AKAUNTING_DOMAIN_NAME"
+    nginx_dissite "$AKAUNTING_DOMAIN_NAME"
+    remove_certs "$AKAUNTING_DOMAIN_NAME"
+
+    if [ -d "/var/www/$AKAUNTING_DOMAIN_NAME" ]; then
+        rm -rf "/var/www/$AKAUNTING_DOMAIN_NAME"
+    fi
+    if [ -f "/etc/nginx/sites-available/$AKAUNTING_DOMAIN_NAME" ]; then
+        rm "/etc/nginx/sites-available/$AKAUNTING_DOMAIN_NAME"
+    fi
+    function_check drop_database
+    drop_database akaunting
+    function_check remove_onion_service
+    remove_onion_service akaunting "${AKAUNTING_ONION_PORT}"
+    if grep -q "akaunting" /etc/crontab; then
+        sed -i "/akaunting/d" /etc/crontab
+    fi
+    remove_app akaunting
+    remove_completion_param install_akaunting
+    sed -i '/akaunting/d' "$COMPLETION_FILE"
+
+    function_check remove_ddns_domain
+    remove_ddns_domain "$AKAUNTING_DOMAIN_NAME"
+}
+
+function install_akaunting {
+    if [ ! $ONION_ONLY ]; then
+        ONION_ONLY='no'
+    fi
+
+    if [ ! "$AKAUNTING_DOMAIN_NAME" ]; then
+        echo $'No domain name was given for akaunting'
+        exit 89
+    fi
+
+    increment_app_install_progress
+
+    function_check install_mariadb
+    install_mariadb
+
+    increment_app_install_progress
+
+    function_check get_mariadb_password
+    get_mariadb_password
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES php-php-gettext php-curl php-gd php-mysql git curl
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES memcached php-memcached php-intl exiftool libfcgi0ldbl
+
+    increment_app_install_progress
+
+    # shellcheck disable=SC2086
+    INSTALL_PACKAGES php${PHP_VERSION}-curl php${PHP_VERSION}-gd php${PHP_VERSION}-mbstring php${PHP_VERSION}-xml php${PHP_VERSION}-zip
+
+    increment_app_install_progress
+
+    if [ ! -d "/var/www/$AKAUNTING_DOMAIN_NAME" ]; then
+        mkdir "/var/www/$AKAUNTING_DOMAIN_NAME"
+    fi
+    if [ ! -d "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs" ]; then
+        if [ -d /repos/akaunting ]; then
+            mkdir -p "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs"
+            cp -r -p /repos/akaunting/. "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs"
+            cd "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs" || exit 23
+            git pull
+        else
+            function_check git_clone
+            git_clone "$AKAUNTING_REPO" "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs"
+        fi
+
+        if [ ! -d "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs" ]; then
+            echo $'Unable to clone akaunting repo'
+            exit 25
+        fi
+    fi
+
+    increment_app_install_progress
+
+    cd "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs" || exit 234
+    git checkout "$AKAUNTING_COMMIT" -b "$AKAUNTING_COMMIT"
+    set_completion_param "akaunting commit" "$AKAUNTING_COMMIT"
+
+    chmod g+w "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs"
+    chown -R www-data:www-data "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs"
+
+    increment_app_install_progress
+
+    cd "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs" || exit 34
+    install_composer
+
+    increment_app_install_progress
+
+    AKAUNTING_ONION_HOSTNAME=$(add_onion_service akaunting 80 ${AKAUNTING_ONION_PORT})
+
+    increment_app_install_progress
+
+    function_check akaunting_create_database
+    akaunting_create_database
+
+    increment_app_install_progress
+
+    MARIADB_PASSWORD=$("${PROJECT_NAME}-pass" -u root -a mariadb)
+
+    akaunting_url="https://${AKAUNTING_DOMAIN_NAME}"
+    if [[ "$ONION_ONLY" != 'no' ]]; then
+        akaunting_url="http://${AKAUNTING_ONION_HOSTNAME}"
+    fi
+
+    { echo 'APP_NAME=Akaunting';
+      echo 'APP_ENV=production';
+      echo 'APP_LOCALE=en-GB';
+      echo 'APP_INSTALLED=false';
+      echo 'APP_KEY=';
+      echo 'APP_DEBUG=true';
+      echo 'APP_LOG_LEVEL=debug';
+      echo "APP_URL=${akaunting_url}";
+      echo '';
+      echo 'DB_CONNECTION=mysql';
+      echo 'DB_HOST=localhost';
+      echo 'DB_PORT=3306';
+      echo 'DB_DATABASE=akaunting';
+      echo 'DB_USERNAME=root';
+      echo "DB_PASSWORD=$MARIADB_PASSWORD";
+      echo 'DB_PREFIX=';
+      echo '';
+      echo 'BROADCAST_DRIVER=log';
+      echo 'CACHE_DRIVER=file';
+      echo 'SESSION_DRIVER=file';
+      echo 'QUEUE_DRIVER=database';
+      echo '';
+      echo 'MAIL_DRIVER=mail';
+      echo 'MAIL_HOST=localhost';
+      echo 'MAIL_PORT=25';
+      echo 'MAIL_USERNAME=null';
+      echo 'MAIL_PASSWORD=null';
+      echo 'MAIL_ENCRYPTION=null';
+      echo 'MAIL_FROM_NAME=null';
+      echo 'MAIL_FROM_ADDRESS=null'; } > "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs/.env"
+    chown www-data:www-data "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs/.env"
+
+    if ! php artisan install -n \
+        --db-host=localhost \
+        --db-port=3306 \
+        --db-name=akaunting \
+        --db-username=root \
+        --db-password="$MARIADB_PASSWORD" \
+        --company-name="$PROJECT_NAME" \
+        --company-email="$MY_EMAIL_ADDRESS" \
+        --admin-email="$MY_EMAIL_ADDRESS" \
+        --admin-password="$AKAUNTING_ADMIN_PASSWORD"; then
+        echo $'Failed to create akaunting database with php artisan install'
+        exit 82
+    fi
+
+    increment_app_install_progress
+
+    if [ ! -f "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs/.env" ]; then
+        echo $'No .env file generated'
+        exit 72
+    fi
+    akaunting_update_email
+
+    increment_app_install_progress
+
+    function_check add_ddns_domain
+    add_ddns_domain "$AKAUNTING_DOMAIN_NAME"
+
+    increment_app_install_progress
+
+    akaunting_nginx_site=/etc/nginx/sites-available/$AKAUNTING_DOMAIN_NAME
+    if [[ $ONION_ONLY == "no" ]]; then
+        function_check nginx_http_redirect
+        nginx_http_redirect "$AKAUNTING_DOMAIN_NAME" "index index.php"
+        { echo 'server {';
+          echo '  listen 443 ssl;';
+          echo '  #listen [::]:443 ssl;';
+          echo "  server_name $AKAUNTING_DOMAIN_NAME;";
+          echo ''; } >> "$akaunting_nginx_site"
+        function_check nginx_compress
+        nginx_compress "$AKAUNTING_DOMAIN_NAME"
+        echo '' >> "$akaunting_nginx_site"
+        echo '  # Security' >> "$akaunting_nginx_site"
+        function_check nginx_ssl
+        nginx_ssl "$AKAUNTING_DOMAIN_NAME"
+
+        function_check nginx_security_options
+        nginx_security_options "$AKAUNTING_DOMAIN_NAME"
+        nginx_robots "$AKAUNTING_DOMAIN_NAME"
+
+        { echo '  add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
+	  echo "  add_header Onion-Location http://${AKAUNTING_ONION_HOSTNAME}\$request_uri;";
+          echo '';
+          echo '  access_log /dev/null;';
+          echo '  error_log /dev/null;';
+          echo '';
+          echo "  root /var/www/$AKAUNTING_DOMAIN_NAME/htdocs;";
+          echo '';
+          echo '  index index.php;';
+          echo '';
+          echo '  location ~ \.php {';
+          echo '    include snippets/fastcgi-php.conf;';
+          echo "    fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
+          echo '    fastcgi_read_timeout 30;';
+          echo '  }';
+          echo '';
+          echo '  location / {'; } >> "$akaunting_nginx_site"
+        function_check nginx_limits
+        nginx_limits "$AKAUNTING_DOMAIN_NAME" '15m'
+        { echo "    try_files \$uri \$uri/ @akaunting;";
+          echo '  }';
+          echo '';
+          echo '  location @akaunting {';
+          echo "    rewrite ^(.*)\$ /index.php?p=\$1 last;";
+          echo '  }';
+          echo '';
+          echo '  location ~ /\.(ht|git|env|log) {';
+          echo '    deny all;';
+          echo '  }';
+          echo '';
+          echo '}'; } >> "$akaunting_nginx_site"
+    else
+        echo -n '' > "$akaunting_nginx_site"
+    fi
+    { echo 'server {';
+      echo "    listen 127.0.0.1:$AKAUNTING_ONION_PORT default_server;";
+      echo '    port_in_redirect off;';
+      echo "    server_name $AKAUNTING_ONION_HOSTNAME;";
+      echo ''; } >> "$akaunting_nginx_site"
+      function_check nginx_compress
+    nginx_compress "$AKAUNTING_DOMAIN_NAME"
+    echo '' >> "$akaunting_nginx_site"
+    function_check nginx_security_options
+    nginx_security_options "$AKAUNTING_DOMAIN_NAME"
+    { echo '';
+      echo '  access_log /dev/null;';
+      echo '  error_log /dev/null;';
+      echo '';
+      echo "  root /var/www/$AKAUNTING_DOMAIN_NAME/htdocs;";
+      echo '';
+      echo '  index index.php;';
+      echo '';
+      echo '  location ~ \.(env|log) {';
+      echo '    deny all;';
+      echo '  }';
+      echo '';
+      echo '  location ~ \.php {';
+      echo '    include snippets/fastcgi-php.conf;';
+      echo "    fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
+      echo '    fastcgi_read_timeout 30;';
+      echo '  }';
+      echo '';
+      echo '  location / {'; } >> "$akaunting_nginx_site"
+    function_check nginx_limits
+    nginx_limits "$AKAUNTING_DOMAIN_NAME" '15m'
+    { echo "    try_files \$uri \$uri/ @akaunting;";
+      echo '  }';
+      echo '';
+      echo '  location @akaunting {';
+      echo "    rewrite ^(.*)\$ /index.php?p=\$1 last;";
+      echo '  }';
+      echo '';
+      echo '  location ~ /\.(ht|git|env|log) {';
+      echo '    deny all;';
+      echo '  }';
+      echo '}'; } >> "$akaunting_nginx_site"
+
+    function_check configure_php
+    configure_php
+
+    increment_app_install_progress
+
+    function_check create_site_certificate
+    create_site_certificate "$AKAUNTING_DOMAIN_NAME" 'yes'
+
+    increment_app_install_progress
+
+    function_check nginx_ensite
+    nginx_ensite "$AKAUNTING_DOMAIN_NAME"
+
+    akaunting_remove_bad_links
+
+    systemctl restart mariadb
+    # shellcheck disable=SC2086
+    systemctl restart php${PHP_VERSION}-fpm
+    systemctl restart nginx
+
+    increment_app_install_progress
+
+    "${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a akaunting -p "$AKAUNTING_ADMIN_PASSWORD"
+
+    set_completion_param "akaunting domain" "$AKAUNTING_DOMAIN_NAME"
+
+    APP_INSTALLED=1
+}
+
+# NOTE: deliberately there is no "exit 0"

@@ -1,0 +1,185 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Integration with the FreedomBox android app
+#
+# License
+# =======
+#
+# Copyright (C) 2018-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+function android_update_apps {
+    SECONDS=0
+    detect_installable_apps
+    echo "detect_installable_apps took $SECONDS seconds"
+
+    local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+    plinth_api="/var/www/${local_hostname}/htdocs/plinth/api.json"
+
+    if [[ "$1" != 'nowebadmin' ]]; then
+        install_web_admin
+    fi
+
+    SECONDS=0
+
+    # Create a self-signed cert if needed
+    # The FreedomBox app assumes a self-signed cert
+    if [ ! -f "/etc/ssl/certs/${local_hostname}.crt" ]; then
+        fuser -k 80/tcp
+        fuser -k 443/tcp
+        systemctl restart nginx
+    fi
+    echo "Restarting web server took $SECONDS seconds"
+
+    if [ ! -d "/var/www/${local_hostname}/htdocs/plinth" ]; then
+        mkdir -p "/var/www/${local_hostname}/htdocs/plinth"
+    fi
+    if [ ! -d "/var/www/${local_hostname}/htdocs/icons" ]; then
+        mkdir -p "/var/www/${local_hostname}/htdocs/icons"
+    fi
+
+    echo '{' > "$plinth_api"
+    echo '  "shortcuts": [' >> "$plinth_api"
+
+    SECONDS=0
+    android_ctr=0
+    app_index=0
+    # shellcheck disable=SC2068,SC2034
+    for a in ${APPS_INSTALLED[@]}
+    do
+        app_name=${APPS_INSTALLED_NAMES[$app_index]}
+
+        if [ "$app_name" ]; then
+            app_filename="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-${app_name}"
+            if [ -f "$app_filename" ]; then
+
+                if ! grep -q 'NOT_ON_API=1' "$app_filename"; then
+
+                    # get the icon for the app
+                    icon_filename="/usr/share/${PROJECT_NAME}/android-app/${app_name}.png"
+                    if [ -f "$icon_filename" ]; then
+                        cp "$icon_filename" "/var/www/${local_hostname}/htdocs/icons/${app_name}.png"
+                    else
+                        icon_filename=
+                    fi
+
+                    app_name_upper=$(echo "$app_name" | awk '{print toupper($0)}')
+                    SHORT_DESCRIPTION=
+                    DESCRIPTION=
+                    MOBILE_APP_URL=
+
+                    if ! grep -q "${app_name_upper}_SHORT_DESCRIPTION=" "$app_filename"; then
+                        app_index=$((app_index+1))
+                        continue
+                    fi
+                    if grep -q "#${app_name_upper}_SHORT_DESCRIPTION=" "$app_filename"; then
+                        app_index=$((app_index+1))
+                        continue
+                    fi
+                    SHORT_DESCRIPTION="$(grep "${app_name_upper}_SHORT_DESCRIPTION=" "$app_filename" | head -n 1 | sed 's|\$||g' | sed "s|'||g" | sed 's|\"||g' | awk -F '=' '{print $2}')"
+                    translated_short_description=$(web_admin_translate_text "$SHORT_DESCRIPTION")
+                    SHORT_DESCRIPTION="$translated_short_description"
+
+                    if grep -q "${app_name_upper}_DESCRIPTION=" "$app_filename"; then
+                        DESCRIPTION="$(grep "${app_name_upper}_DESCRIPTION=" "$app_filename" | head -n 1 | sed 's|\$||g' | sed "s|'||g" | sed 's|\"||g' | awk -F '=' '{print $2}')"
+                        translated_description=$(web_admin_translate_text "$DESCRIPTION")
+                        DESCRIPTION="$translated_description"
+                    fi
+                    if grep -q "${app_name_upper}_MOBILE_APP_URL=" "$app_filename"; then
+                        MOBILE_APP_URL="$(grep "${app_name_upper}_MOBILE_APP_URL=" "$app_filename" | head -n 1 | sed 's|\$||g' | sed 's|\$||g' | sed "s|'||g" | sed 's|\"||g' | awk -F '=' '{print $2}')"
+                    fi
+
+                    if [ $android_ctr -gt 0 ]; then
+                        echo ',' >> "$plinth_api"
+                    fi
+
+                    { echo '    {';
+                      echo "      \"name\": \"${app_name}\",";
+                      echo "      \"short_description\": \"$SHORT_DESCRIPTION\",";
+                      echo "      \"description\": [";
+                      echo "        \"$DESCRIPTION\"";
+                      echo '      ],';
+                      echo "      \"icon_url\": \"/icons/${app_name}.png\",";
+                      echo "      \"clients\": ["; } >> "$plinth_api"
+
+                    read_config_param "${app_name_upper}_DOMAIN_NAME"
+                    test_domain_name="${app_name_upper}_DOMAIN_NAME"
+                    domain_name=${!test_domain_name}
+                    if [ "$domain_name" ]; then
+                        if [[ "$domain_name" != *'.onion' ]]; then
+                            domain_name="https://${!test_domain_name}"
+                        else
+                            domain_name="http://${!test_domain_name}"
+                        fi
+                    fi
+                    if [[ "$domain_name" && "$app_name" != 'matrix' ]]; then
+                        { echo '        {';
+                          echo "          \"name\": \"${app_name}\",";
+                          echo "          \"platforms\": [";
+                          echo '            {';
+                          echo '              "type": "web",';
+                          echo "              \"url\": \"$domain_name\"";
+                          echo -n '            }'; } >> "$plinth_api"
+                    fi
+
+                    if [ "$MOBILE_APP_URL" ]; then
+                        if [[ "$domain_name" && "$app_name" != 'matrix' ]]; then
+                            echo ',' >> "$plinth_api"
+                        else
+                            { echo '        {';
+                              echo "          \"name\": \"${app_name}\",";
+                              echo "          \"platforms\": ["; } >> "$plinth_api"
+                        fi
+                        store_name='f-droid'
+                        if [[ "$MOBILE_APP_URL" == *'google'* ]]; then
+                            store_name='google-play'
+                        fi
+                        { echo '            {';
+                          echo '              "type": "store",';
+                          echo '              "os": "android",';
+                          echo "              \"store_name\": \"$store_name\",";
+                          echo "              \"url\": \"$MOBILE_APP_URL\"";
+                          echo '            }'; } >> "$plinth_api"
+                    else
+                        echo '' >> "$plinth_api"
+                    fi
+
+                    { echo '          ]';
+                      echo '        }';
+                      echo '      ]';
+                      echo -n '    }'; } >> "$plinth_api"
+
+                    android_ctr=$((android_ctr+1))
+                fi
+            fi
+        fi
+        app_index=$((app_index+1))
+    done
+
+    { echo '';
+      echo '  ]';
+      echo '}'; } >> "$plinth_api"
+
+    echo "Updating android app API took $SECONDS seconds"
+
+    chown -R www-data:www-data "/var/www/${local_hostname}/htdocs/plinth"
+    chown -R www-data:www-data "/var/www/${local_hostname}/htdocs/icons"
+}
+
+# NOTE: deliberately no exit 0

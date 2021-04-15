@@ -1,0 +1,93 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Checks and repairs a given database
+#
+# License
+# =======
+#
+# Copyright (C) 2015-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+PROJECT_NAME='libreserver'
+COMPLETION_FILE="$HOME/${PROJECT_NAME}-completed.txt"
+CONFIG_FILE="$HOME/${PROJECT_NAME}.cfg"
+
+export TEXTDOMAIN=${PROJECT_NAME}-repair-databases
+export TEXTDOMAINDIR="/usr/share/locale"
+
+# The database to be repaired
+DATABASE="$1"
+
+ADMIN_USERNAME=$(grep "Admin user" "$COMPLETION_FILE" | awk -F ':' '{print $2}')
+ADMIN_EMAIL_ADDRESS=${ADMIN_USERNAME}@${HOSTNAME}
+
+# Frequency - daily/weekly
+BACKUP_TYPE='daily'
+
+
+# migrate from database password file to using the password store
+DATABASE_PASSWORD_FILE=/root/dbpass
+if [ -f $DATABASE_PASSWORD_FILE ]; then
+    MARIADB_PASSWORD=$(cat $DATABASE_PASSWORD_FILE)
+    ${PROJECT_NAME}-pass -u root -a mariadb -p "$MARIADB_PASSWORD"
+    stored_password=$(${PROJECT_NAME}-pass -u root -a mariadb)
+    if [[ "$stored_password" == "$MARIADB_PASSWORD" ]]; then
+        rm $DATABASE_PASSWORD_FILE
+    fi
+fi
+
+MYSQL_ROOT_PASSWORD=$(${PROJECT_NAME}-pass -u root -a mariadb)
+
+TEMPFILE=/root/repair-database-$DATABASE
+
+umask 0077
+
+if [ "$2" ]; then
+    BACKUP_TYPE="$2"
+fi
+
+# check the database
+mysqlcheck -c -u root --password="$MYSQL_ROOT_PASSWORD" "$DATABASE" > "$TEMPFILE"
+
+# Attempt to repair the database if it contains errors
+if grep -q "Error" "$TEMPFILE"; then
+    mysqlcheck -u root --password="$MYSQL_ROOT_PASSWORD" --auto-repair "$DATABASE"
+else
+    # No errors were found, so exit
+    rm -f "$TEMPFILE"
+    exit 0
+fi
+rm -f "$TEMPFILE"
+
+# Check the database again
+mysqlcheck -c -u root --password="$MYSQL_ROOT_PASSWORD" "$DATABASE" > "$TEMPFILE"
+
+# If it still contains errors then restore from backup
+if grep -q "Error" "$TEMPFILE"; then
+    mysql -u root --password="$MYSQL_ROOT_PASSWORD" "$DATABASE" -o < "/var/backups/${DATABASE}_${BACKUP_TYPE}.sql"
+
+    # Send a warning email
+    /bin/bash /usr/local/bin/${PROJECT_NAME}-notification -m $"$DATABASE database corruption could not be repaired. Restored from backup." -s $"${PROJECT_NAME} database maintenance"
+    rm -f "$TEMPFILE"
+
+    exit 1
+fi
+rm -f "$TEMPFILE"
+
+exit 0

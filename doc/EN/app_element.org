@@ -1,0 +1,31 @@
+#+TITLE: LibreServer
+#+AUTHOR: Bob Mottram
+#+EMAIL: bob@libreserver.org
+#+KEYWORDS: libreserver, element
+#+DESCRIPTION: How to use Element Web
+#+OPTIONS: ^:nil toc:nil num:nil
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="libreserver.css" />
+
+#+attr_html: :width 80% :height 10% :align center
+[[file:images/logo.png]]
+
+* Element Web
+
+#+attr_html: :width 100% :align center
+[[file:images/elementweb.jpg]]
+
+Element Web is a browser based user interface for the [[./app_matrix.html][Matrix]] federated communications system. It allows you to do encrypted one-to-one or group chat, and has some fancy WebRTC features for voice and video conversations. The WebRTC stuff won't work in a Tor browser though. This type of system is fine for general public communications and collaboration on open source projects or gaming groups. For things which require real privacy though stick to XMPP with OMEMO.
+
+* Installation
+Log into your system with:
+
+#+begin_src bash
+ssh myusername@mydomain -p 2222
+#+end_src
+
+Using cursor keys and Enter key select *Administrator controls* and type in your password.
+
+Select *Add/Remove Apps* then *element* and also make sure that *matrix* is selected or was previously installed. You will then be asked for a domain name and if you are using FreeDNS also the code for the domain which can be found under *Dynamic DNS* on the FreeDNS site (the random string from "/quick cron example/" which appears after /update.php?/ and before />>/). For more details on obtaining a domain and making it accessible via dynamic DNS see the [[./faq.html][FAQ]]. Typically the domain name you use will be a subdomain, such as /element.mydomainname.net/. It will need to be a domain which you have bought somewhere and own and not one of the FreeDNS subdomains, otherwise you won't be able to get a SSL/TLS certificate for it.
+
+* Initial setup
+Go to the *Administrator control panel* and select *Passwords* then *matrix*. This will give you the password to initially log in using the Element Web user interface. Log in, and that's it. Happy chatting.

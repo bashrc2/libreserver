@@ -1,0 +1,466 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# License
+# =======
+#
+# Copyright (C) 2018-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VARIANTS='full full-vim'
+
+APP_CATEGORY=publishing
+
+IN_DEFAULT_INSTALL=0
+SHOW_ON_ABOUT=1
+REQUIRES_APP=
+
+BLUDIT_DOMAIN_NAME=
+BLUDIT_CODE=
+BLUDIT_ONION_PORT=9844
+BLUDIT_VERSION='3.13.1'
+BLUDIT_DOWNLOAD='https://www.bludit.com/releases'
+
+BLUDIT_SHORT_DESCRIPTION=$'Markdown blogging'
+BLUDIT_DESCRIPTION=$'Simple Markdown blogging'
+BLUDIT_MOBILE_APP_URL=
+
+bludit_variables=(ONION_ONLY
+                  BLUDIT_DOMAIN_NAME
+                  BLUDIT_CODE
+                  DDNS_PROVIDER
+                  MY_USERNAME)
+
+function upgrade_distro_bludit {
+    target_distro="$1"
+
+    if [[ "$target_distro" == 'bullseye' ]]; then
+        echo -n ''
+    fi
+}
+
+function bludit_remove_bad_links {
+    bludit_domain=$BLUDIT_DOMAIN_NAME
+    if [[ "$ONION_ONLY" != 'no' ]]; then
+        bludit_domain=$(cat /var/lib/tor/hidden_service_bludit/hostname)
+    fi
+
+    if [ ! "$BLUDIT_DOMAIN_NAME" ]; then
+        read_config_param BLUDIT_DOMAIN_NAME
+    fi
+    bludit_path="/var/www/${BLUDIT_DOMAIN_NAME}/htdocs"
+    if [ -f "$bludit_path/bl-plugins/simplemde/js/simplemde.min.js" ]; then
+        if grep -q 'cdn.jsdelivr.net' "$bludit_path/bl-plugins/simplemde/js/simplemde.min.js"; then
+            sed -i "s|cdn.jsdelivr.net|${bludit_domain}|g" "$bludit_path/bl-plugins/simplemde/js/simplemde.min.js"
+        fi
+        if grep -q 'jsdelivr.net' "$bludit_path/bl-plugins/simplemde/js/simplemde.min.js"; then
+            sed -i "s|jsdelivr.net|${bludit_domain}|g" "$bludit_path/bl-plugins/simplemde/js/simplemde.min.js"
+        fi
+    fi
+}
+
+function logging_on_bludit {
+    echo -n ''
+}
+
+function logging_off_bludit {
+    echo -n ''
+}
+
+function remove_user_bludit {
+    remove_username="$1"
+
+    # TODO: remove user
+    "${PROJECT_NAME}-pass" -u "$remove_username" --rmapp bludit
+}
+
+function add_user_bludit {
+    new_username="$1"
+    new_user_password="$2"
+
+    # TODO: add user
+    # See users.class.php function add($args)
+    "${PROJECT_NAME}-pass" -u "$new_username" -a bludit -p "$new_user_password"
+    echo '0'
+}
+
+function install_interactive_bludit {
+    if [ ! "$ONION_ONLY" ]; then
+        ONION_ONLY='no'
+    fi
+
+    if [[ "$ONION_ONLY" != "no" ]]; then
+        BLUDIT_DOMAIN_NAME='bludit.local'
+        write_config_param "BLUDIT_DOMAIN_NAME" "$BLUDIT_DOMAIN_NAME"
+    else
+        interactive_site_details "bludit" "BLUDIT_DOMAIN_NAME" "BLUDIT_CODE"
+    fi
+    APP_INSTALLED=1
+}
+
+function change_password_bludit {
+    curr_username="$1"
+    new_user_password="$2"
+
+    read_config_param 'BLUDIT_DOMAIN_NAME'
+
+    "${PROJECT_NAME}-pass" -u "$curr_username" -a bludit -p "$new_user_password"
+}
+
+function reconfigure_bludit {
+    # This is used if you need to switch identity. Dump old keys and generate new ones
+    echo -n ''
+}
+
+function bludit_install_from_download {
+    if [ ! "$BLUDIT_VERSION" ]; then
+        exit 32
+    fi
+    # shellcheck disable=SC2001
+    bludit_path="/var/www/${BLUDIT_DOMAIN_NAME}"/bludit-$(echo "$BLUDIT_VERSION" | sed 's|\.|-|g')
+    if [ -d "$bludit_path" ]; then
+        rm -rf "$bludit_path"
+    fi
+    if [ -f "$bludit_path".zip ]; then
+        rm "$bludit_path".zip
+    fi
+    # shellcheck disable=SC2001
+    bludit_download_zip=bludit-$(echo "$BLUDIT_VERSION" | sed 's|\.|-|g').zip
+    url=${BLUDIT_DOWNLOAD}/${bludit_download_zip}
+    cd "/var/www/${BLUDIT_DOMAIN_NAME}" || exit 36
+    if [ -f "/repos/${bludit_download_zip}" ]; then
+        cp "/repos/${bludit_download_zip}" .
+    else
+        if [[ "$ONION_ONLY" == 'no' ]]; then
+            wget "$url"
+        else
+            torsocks wget "$url"
+            if [ ! -f "${bludit_path}".zip ]; then
+                wget "$url"
+            fi
+        fi
+    fi
+    if [ ! -f "${bludit_path}".zip ]; then
+        echo $'Bludit zip file was not downloaded'
+        exit 25
+    fi
+    # shellcheck disable=SC2001,SC2046
+    unzip "${bludit_path}".zip
+    if [ ! -d "$bludit_path" ]; then
+        echo $"Unable to download or extract bludit from $url"
+        exit 26
+    fi
+    if [ -d "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs_prev" ]; then
+        rm -rf "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs_prev"
+    fi
+    mv "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs" "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs_prev"
+    mv "$bludit_path" "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs"
+    if [ ! -d "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs_prev/migrations" ]; then
+        cp -r "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs_prev/bl-content"/* "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs/bl-content/"
+    else
+        cp -r "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs_prev/migrations/bl-content"/* "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs/bl-content/"
+    fi
+    chmod g+w "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs"
+    chown -R www-data:www-data "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs"
+    rm "${bludit_path}".zip
+    set_completion_param "bludit version" "$BLUDIT_VERSION"
+}
+
+function upgrade_bludit {
+    convert_blog_to_gemini
+
+    if [ ! "$BLUDIT_VERSION" ]; then
+        return
+    fi
+
+    bludit_remove_bad_links
+
+    CURR_BLUDIT_VERSION=$(get_completion_param "bludit version")
+    if [[ "$CURR_BLUDIT_VERSION" == "$BLUDIT_VERSION" ]]; then
+        return
+    fi
+
+    if grep -q "bludit domain" "$COMPLETION_FILE"; then
+        BLUDIT_DOMAIN_NAME=$(get_completion_param "bludit domain")
+    fi
+
+    if [[ "$CURR_BLUDIT_VERSION" == "2."* ]]; then
+        if [ -d "/var/www/${BLUDIT_DOMAIN_NAME}/bludit-scripts" ]; then
+            rm -rf "/var/www/${BLUDIT_DOMAIN_NAME}/bludit-scripts"
+        fi
+        cd "/var/www/${BLUDIT_DOMAIN_NAME}" || exit 36
+        git clone https://github.com/anaggh/bludit-scripts
+        if [ ! -f "/var/www/${BLUDIT_DOMAIN_NAME}/bludit-scripts/migration-v2-to-v3/migrate.php" ]; then
+            exit 36
+        fi
+        cp "/var/www/${BLUDIT_DOMAIN_NAME}/bludit-scripts/migration-v2-to-v3/migrate.php" "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs"
+        cd "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs" || exit 36
+        php migrate.php
+        if [ ! -d "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs/migrations" ]; then
+            exit 23
+        fi
+        rm -rf "/var/www/${BLUDIT_DOMAIN_NAME}/bludit-scripts"
+    fi
+
+    bludit_install_from_download
+}
+
+function backup_local_bludit {
+    BLUDIT_DOMAIN_NAME='bludit'
+    if grep -q "bludit domain" "$COMPLETION_FILE"; then
+        BLUDIT_DOMAIN_NAME=$(get_completion_param "bludit domain")
+    fi
+
+    source_directory=/var/www/${BLUDIT_DOMAIN_NAME}/htdocs
+
+    suspend_site "${BLUDIT_DOMAIN_NAME}"
+
+    dest_directory=bludit
+    backup_directory_to_usb "$source_directory" $dest_directory
+
+    restart_site
+}
+
+function restore_local_bludit {
+    if ! grep -q "bludit domain" "$COMPLETION_FILE"; then
+        return
+    fi
+    BLUDIT_DOMAIN_NAME=$(get_completion_param "bludit domain")
+    if [ "$BLUDIT_DOMAIN_NAME" ]; then
+        temp_restore_dir=/root/tempbludit
+        bludit_dir=/var/www/${BLUDIT_DOMAIN_NAME}/htdocs
+
+        restore_directory_from_usb $temp_restore_dir bludit
+        if [ -d $temp_restore_dir ]; then
+            if [ -d "$temp_restore_dir$bludit_dir" ]; then
+                cp -rp "$temp_restore_dir$bludit_dir"/* "$bludit_dir"/
+            else
+                if [ ! -d "$bludit_dir" ]; then
+                    mkdir "$bludit_dir"
+                fi
+                cp -rp "$temp_restore_dir"/* "$bludit_dir"/
+            fi
+            chown -R www-data:www-data "$bludit_dir"
+            rm -rf $temp_restore_dir
+        fi
+
+    fi
+}
+
+function backup_remote_bludit {
+    echo -n ''
+}
+
+function restore_remote_bludit {
+    echo -n ''
+}
+
+function remove_bludit {
+    if [ -f /etc/cron.hourly/gemini-blog ]; then
+        rm /etc/cron.hourly/gemini-blog
+    fi
+
+    nginx_dissite "$BLUDIT_DOMAIN_NAME"
+    remove_certs "$BLUDIT_DOMAIN_NAME"
+
+    if [ -d "/var/www/$BLUDIT_DOMAIN_NAME" ]; then
+        rm -rf "/var/www/$BLUDIT_DOMAIN_NAME"
+    fi
+    if [ -f "/etc/nginx/sites-available/$BLUDIT_DOMAIN_NAME" ]; then
+        rm "/etc/nginx/sites-available/$BLUDIT_DOMAIN_NAME"
+    fi
+    remove_onion_service bludit ${BLUDIT_ONION_PORT}
+    if grep -q "bludit" /etc/crontab; then
+        sed -i "/bludit/d" /etc/crontab
+    fi
+    remove_app bludit
+    remove_completion_param install_bludit
+    sed -i '/bludit/d' "$COMPLETION_FILE"
+
+    remove_ddns_domain "$BLUDIT_DOMAIN_NAME"
+}
+
+function install_bludit {
+    increment_app_install_progress
+
+    INSTALL_PACKAGES php-php-gettext php-curl php-gd php-mysql git curl wget unzip
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES memcached php-memcached php-intl exiftool libfcgi0ldbl
+
+    if [ ! "$BLUDIT_DOMAIN_NAME" ]; then
+        echo $'No domain name was given for bludit'
+        exit 35
+    fi
+
+    if [ -d "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs" ]; then
+        rm -rf "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs"
+    fi
+    mkdir -p "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs"
+
+    increment_app_install_progress
+
+    bludit_install_from_download
+
+    add_ddns_domain "$BLUDIT_DOMAIN_NAME"
+
+    increment_app_install_progress
+
+    BLUDIT_ONION_HOSTNAME=$(add_onion_service bludit 80 ${BLUDIT_ONION_PORT})
+
+    increment_app_install_progress
+
+    bludit_nginx_site=/etc/nginx/sites-available/$BLUDIT_DOMAIN_NAME
+    if [[ "$ONION_ONLY" == "no" ]]; then
+        nginx_http_redirect "$BLUDIT_DOMAIN_NAME" "index index.php"
+        { echo 'server {';
+          echo '  listen 443 ssl;';
+          echo '  #listen [::]:443 ssl;';
+          echo "  server_name $BLUDIT_DOMAIN_NAME;";
+          echo ''; } >> "$bludit_nginx_site"
+        nginx_compress "$BLUDIT_DOMAIN_NAME"
+        echo '' >> "$bludit_nginx_site"
+        echo '  # Security' >> "$bludit_nginx_site"
+        nginx_ssl "$BLUDIT_DOMAIN_NAME"
+
+        nginx_security_options "$BLUDIT_DOMAIN_NAME"
+
+        { echo '  add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
+          echo "  add_header Onion-Location http://${BLUDIT_ONION_HOSTNAME}\$request_uri;";
+          echo '';
+          echo "  if (!-e \$request_filename) {";
+          echo "    set \$test P;";
+          echo '  }';
+          echo "  if (\$uri !~ ^/(plesk-stat|webstat|webstat-ssl|ftpstat|anon_ftpstat|awstats-icon|internal-nginx-static-location)) {";
+          echo "    set \$test \"\${test}C\";";
+          echo '  }';
+          echo "  if (\$test = PC) {";
+          echo "    rewrite ^/(.*)\$ /index.php?\$1;";
+          echo '  }';
+          echo '';
+          echo '  # Logs';
+          echo '  access_log /dev/null;';
+          echo '  error_log /dev/null;';
+          echo '';
+          echo '  # Root';
+          echo "  root /var/www/$BLUDIT_DOMAIN_NAME/htdocs;";
+          echo '';
+          echo '  location ~ \.(jpg|jpeg|gif|png|css|js|ico|svg|eot|ttf|woff|woff2|otf)$ {';
+          echo '    access_log        off;';
+          echo '    expires           30d;';
+          echo '  }';
+          echo '';
+          echo '  index index.php;';
+          echo '  location ~ \.php {';
+          echo '    include snippets/fastcgi-php.conf;';
+          echo "    fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
+          echo '    fastcgi_read_timeout 30;';
+          echo '  }';
+          echo '';
+          echo '  # Location';
+          echo '  location / {'; } >> "$bludit_nginx_site"
+        nginx_limits "$BLUDIT_DOMAIN_NAME" '15m'
+        { echo "    try_files \$uri \$uri/ /index.php?\$args;";
+          echo '  }';
+          echo '';
+          echo '  location ^~ /bl-content/tmp/ { deny all; }';
+          echo '  location ^~ /bl-content/pages/ { deny all; }';
+          echo '  location ^~ /bl-content/databases/ { deny all; } ';
+          echo '}'; } >> "$bludit_nginx_site"
+    else
+        echo -n '' > "$bludit_nginx_site"
+    fi
+    { echo 'server {';
+      echo "    listen 127.0.0.1:$BLUDIT_ONION_PORT default_server;";
+      echo '    port_in_redirect off;';
+      echo "    server_name $BLUDIT_ONION_HOSTNAME;";
+      echo ''; } >> "$bludit_nginx_site"
+    nginx_compress "$BLUDIT_DOMAIN_NAME"
+    echo '' >> "$bludit_nginx_site"
+    nginx_security_options "$BLUDIT_DOMAIN_NAME"
+    { echo '';
+      echo '  # Logs';
+      echo '  access_log /dev/null;';
+      echo '  error_log /dev/null;';
+      echo '';
+      echo "  if (!-e \$request_filename) {";
+      echo "    set \$test P;";
+      echo '  }';
+      echo "  if (\$uri !~ ^/(plesk-stat|webstat|webstat-ssl|ftpstat|anon_ftpstat|awstats-icon|internal-nginx-static-location)) {";
+      echo "    set \$test \"\${test}C\";";
+      echo '  }';
+      echo "  if (\$test = PC) {";
+      echo "    rewrite ^/(.*)\$ /index.php?\$1;";
+      echo '  }';
+      echo '';
+      echo '  # Root';
+      echo "  root /var/www/$BLUDIT_DOMAIN_NAME/htdocs;";
+      echo '';
+      echo '  location ~ \.(jpg|jpeg|gif|png|css|js|ico|svg|eot|ttf|woff|woff2|otf)$ {';
+      echo '    access_log        off;';
+      echo '    expires           30d;';
+      echo '  }';
+      echo '';
+      echo '  index index.php;';
+      echo '  location ~ \.php {';
+      echo '    include snippets/fastcgi-php.conf;';
+      echo "    fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
+      echo '    fastcgi_read_timeout 30;';
+      echo '  }';
+      echo '';
+      echo '  # Location';
+      echo '  location / {'; } >> "$bludit_nginx_site"
+    nginx_limits "$BLUDIT_DOMAIN_NAME" '15m'
+    { echo "    try_files \$uri \$uri/ index.php?\$args;";
+      echo '  }';
+      echo '';
+      echo '  location ^~ /bl-content/tmp/ { deny all; }';
+      echo '  location ^~ /bl-content/pages/ { deny all; }';
+      echo '  location ^~ /bl-content/databases/ { deny all; } ';
+      echo '}'; } >> "$bludit_nginx_site"
+
+    configure_php
+
+    increment_app_install_progress
+
+    bludit_remove_bad_links
+
+    increment_app_install_progress
+
+    create_site_certificate "$BLUDIT_DOMAIN_NAME" 'yes'
+
+    nginx_ensite "$BLUDIT_DOMAIN_NAME"
+
+    # shellcheck disable=SC2086
+    systemctl restart php${PHP_VERSION}-fpm
+    systemctl restart nginx
+
+    increment_app_install_progress
+
+    "${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a bludit -p "$BLUDIT_ADMIN_PASSWORD"
+    set_completion_param "bludit domain" "$BLUDIT_DOMAIN_NAME"
+
+    increment_app_install_progress
+
+    convert_blog_to_gemini
+
+    APP_INSTALLED=1
+}
+
+# NOTE: deliberately there is no "exit 0"

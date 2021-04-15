@@ -1,0 +1,36 @@
+#+TITLE: LibreServer
+#+AUTHOR: Bob Mottram
+#+EMAIL: bob@libreserver.org
+#+KEYWORDS: libreserver, cryptpad
+#+DESCRIPTION: How to use CryptPad
+#+OPTIONS: ^:nil toc:nil num:nil
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="libreserver.css" />
+
+#+attr_html: :width 80% :height 10% :align center
+[[file:images/logo.png]]
+
+* CryptPad
+
+#+attr_html: :width 80% :align center
+[[file:images/cryptpad.jpg]]
+
+This is similar to [[./app_etherpad.html][EtherPad]] but with better security and more document types which can be collaboratively edited in real time. It includes not just text editing but also creating presentations, voting and editing source code.
+
+For added security this system is only available via an onion address, so you and your collaborators will need to be using Tor compatible browsers.
+
+Enabling someone to edit a document is as simple as sending them the URL via a chat system. You can also send a read only URL for a document if you only want the recipient to be able to view but not edit.
+
+Documents are stored locally within the browser of each user and the server just acts as a coordinator. No documents are stored on the server.
+
+* Installation
+Log into your system with:
+
+#+begin_src bash
+ssh myusername@mydomain -p 2222
+#+end_src
+
+Using cursor keys and Enter key select *Administrator controls* and type in your password.
+
+Select *Add/Remove Apps* then *cryptpad*. When that is complete go to *About this system* and look up the onion address. Enter that into a Tor compatible browser.
+
+One thing to be aware of is that on this system registration and logins are disabled, so that only anonymous or pseudanonymous editing is available. This prevents anyone who discovers the onion address from then disabling your server by creating millions of accounts.

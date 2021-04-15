@@ -1,0 +1,278 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# License
+# =======
+#
+# Copyright (C) 2019-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VARIANTS='full full-vim'
+
+APP_CATEGORY=media
+
+IN_DEFAULT_INSTALL=0
+INSTALLED_ON_DEFAULT_DOMAIN=1
+SHOW_CLEARNET_ADDRESS_ON_ABOUT=0
+SHOW_ON_ABOUT=1
+NOT_ON_API=0
+
+SHOW_DOMAIN_IN_ADD_WEBADMIN=0
+
+# Whether to show on http://libreserver/home
+NOT_ON_HOMEPAGE=0
+
+# show port number within the URL on app screens
+SHOW_URL_PORT=8250
+
+# Whether another app is required to be installed before this one
+REQUIRES_APP=
+
+MPD_DOMAIN_NAME=
+MPD_PORT=6600
+MPD_PORT_HTTP=8250
+MPD_ADMIN_PASSWORD='mpd'
+
+# These parameters are used by the FreedomBox mobile app and web UI
+MPD_SHORT_DESCRIPTION="Stream music from your server"
+MPD_DESCRIPTION="Stream music from your server"
+MPD_MOBILE_APP_URL=https://f-droid.org/en/packages/org.gateshipone.malp
+
+MPD_FIREWALL_PORTS="$MPD_PORT_HTTP,$MPD_PORT"
+
+mpd_variables=(ONION_ONLY
+               MPD_DOMAIN_NAME
+               MY_USERNAME)
+
+function upgrade_distro_mpd {
+    target_distro="$1"
+
+    if [[ "$target_distro" == 'bullseye' ]]; then
+	echo -n ''
+    fi
+}
+
+function mpd_setting_fileformat {
+    mpd_file_format_index="$1"
+    mpd_file_format='lame'
+
+    if [[ "$mpd_file_format_index" == '0' ]]; then
+        mpd_file_format='lame'
+    fi
+    if [[ "$mpd_file_format_index" == '1' ]]; then
+        mpd_file_format='flac'
+    fi
+    if [[ "$mpd_file_format_index" == '2' ]]; then
+        mpd_file_format='vorbis'
+    fi
+
+    if ! grep -q "\"${mpd_file_format}\"" /etc/mpd.conf; then
+        sed -i "s| encoder .*| encoder         \"${mpd_file_format}\"|g" /etc/mpd.conf
+        systemctl restart mpd
+    fi
+}
+
+function mpd_nextcloud_integration {
+    if [ ! -f /etc/mpd.conf ]; then
+        return
+    fi
+    read_config_param NEXTCLOUD_DOMAIN_NAME
+    read_config_param MY_USERNAME
+    mpd_nextcloud_dir="/var/www/$NEXTCLOUD_DOMAIN_NAME/data/$MY_USERNAME/files"
+    if [ -d "$mpd_nextcloud_dir" ]; then
+        if [ ! -d "${mpd_nextcloud_dir}/Music" ]; then
+            mkdir "${mpd_nextcloud_dir}/Music"
+            chown -R www-data:www-data "${mpd_nextcloud_dir}/Music"
+        fi
+        if ! grep -q "${mpd_nextcloud_dir}/Music" /etc/mpd.conf; then
+            sed -i "s|music_directory.*|music_directory         \"${mpd_nextcloud_dir}/Music\"|g" /etc/mpd.conf
+            systemctl restart mpd
+        fi
+    else
+        if ! grep -q "\"/music\"" /etc/mpd.conf; then
+            sed -i "s|music_directory.*|music_directory         \"/music\"|g" /etc/mpd.conf
+            systemctl restart mpd
+        fi
+    fi
+}
+
+function change_default_domain_name_mpd {
+    new_default_domain_name="$1"
+    # If anything references DEFAULT_DOMAIN_NAME then change it here
+}
+
+function logging_on_mpd {
+    echo -n ''
+}
+
+function logging_off_mpd {
+    echo -n ''
+}
+
+function remove_user_mpd {
+    remove_username="$1"
+
+    "${PROJECT_NAME}-pass" -u "$remove_username" --rmapp mpd
+}
+
+function add_user_mpd {
+    new_username="$1"
+    new_user_password="$2"
+
+    "${PROJECT_NAME}-pass" -u "$new_username" -a mpd -p "$new_user_password"
+    echo '0'
+}
+
+function install_interactive_mpd {
+    echo -n ''
+    APP_INSTALLED=1
+}
+
+function change_password_mpd {
+    curr_username="$1"
+    new_user_password="$2"
+
+    "${PROJECT_NAME}-pass" -u "$curr_username" -a mpd -p "$MPD_ADMIN_PASSWORD"
+}
+
+function reconfigure_mpd {
+    # This is used if you need to switch identity. Dump old keys and generate new ones
+    echo -n ''
+}
+
+function upgrade_mpd {
+    mpd_nextcloud_integration
+}
+
+function backup_local_mpd {
+    echo -n ''
+}
+
+function restore_local_mpd {
+    echo -n ''
+}
+
+function backup_remote_mpd {
+    echo -n ''
+}
+
+function restore_remote_mpd {
+    echo -n ''
+}
+
+function remove_mpd {
+    sed -i "/ ${MPD_PORT} /d" "/etc/torrc.d/${PROJECT_NAME}"
+    remove_onion_service mpd "${MPD_PORT_HTTP}"
+
+    if grep -q "mpd" /etc/crontab; then
+        sed -i "/mpd/d" /etc/crontab
+    fi
+    remove_app mpd
+    remove_completion_param install_mpd
+    sed -i '/mpd/d' "$COMPLETION_FILE"
+
+    firewall_remove $MPD_PORT_HTTP tcp
+    firewall_remove $MPD_PORT_HTTP udp
+    firewall_remove $MPD_PORT tcp
+    firewall_remove $MPD_PORT udp
+
+    $REMOVE_PACKAGES alsa-utils timidity mpd
+}
+
+function mpd_create_configuration {
+    mpd_music_dir='/music'
+
+    { echo "music_directory         \"${mpd_music_dir}\"";
+      echo 'playlist_directory      "/var/lib/mpd/playlists"';
+      echo 'db_file                 "/var/lib/mpd/tag_cache"';
+      echo 'log_file                "/dev/null"';
+      echo 'pid_file                "/run/mpd/pid"';
+      echo 'state_file              "/var/lib/mpd/state"';
+      echo 'sticker_file            "/var/lib/mpd/sticker.sql"';
+      echo '#user                   "mpd"';
+      echo 'bind_to_address         "any"';
+      echo "port                    \"${MPD_PORT}\"";
+      echo 'log_level               "default"';
+      echo 'auto_update             "yes"';
+      echo 'follow_outside_symlinks "no"';
+      echo 'follow_inside_symlinks  "no"';
+      echo 'zeroconf_enabled        "yes"';
+      echo 'zeroconf_name           "Music Player"';
+      echo "password                \"${MPD_ADMIN_PASSWORD}@read,add,control,admin\"";
+      echo 'input {';
+      echo '        plugin "curl"';
+      echo '}';
+      echo 'audio_output {';
+      echo '       type            "httpd"';
+      echo '       name            "Music Stream"';
+      echo '       encoder         "lame"';
+      echo "       port            \"${MPD_PORT_HTTP}\"";
+      echo '       bind_to_address "0.0.0.0"';
+      echo '#      quality         "5.0"';
+      echo '       bitrate         "128"';
+      echo '       format          "44100:16:2"';
+      echo '       max_clients     "3"';
+      echo '}';
+      echo 'filter {';
+      echo '       plugin "volume"';
+      echo '       name "software volume"';
+      echo '}';
+      echo '#audio_output {';
+      echo '#       type            "alsa"';
+      echo '#       name            "My ALSA Device"';
+      echo '#}'; } > /etc/mpd.conf
+
+    systemctl restart mpd
+}
+
+function install_mpd {
+    increment_app_install_progress
+
+    INSTALL_PACKAGES alsa-utils timidity
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES mpd
+
+    increment_app_install_progress
+
+    MPD_ONION_HOSTNAME=$(add_onion_service mpd "${MPD_PORT_HTTP}" "${MPD_PORT_HTTP}")
+    sed -i "/ ${MPD_PORT_HTTP} /a HiddenServicePort ${MPD_PORT} 127.0.0.1:${MPD_PORT}" "/etc/torrc.d/${PROJECT_NAME}"
+    restart_tor_daemon
+
+    increment_app_install_progress
+
+    "${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a mpd -p "$MPD_ADMIN_PASSWORD"
+
+    increment_app_install_progress
+
+    firewall_add mpd $MPD_PORT_HTTP tcp
+    firewall_add mpd $MPD_PORT_HTTP udp
+    firewall_add mpd $MPD_PORT tcp
+    firewall_add mpd $MPD_PORT udp
+
+    mpd_create_configuration
+
+    increment_app_install_progress
+
+    mpd_nextcloud_integration
+
+    APP_INSTALLED=1
+}
+
+# NOTE: deliberately there is no "exit 0"

@@ -1,0 +1,231 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Functions for creating guifi.net nodes
+# This assumes two ethernet sockets, which only routers typically have
+#
+# License
+# =======
+#
+# Copyright © 2018-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# your local network
+GUIFINET_LOCAL=eth1
+
+# radio antenna
+GUIFINET_ANTENNA=eth0
+
+# The IP address to tunnel to
+GUIFINET_IP_ADDRESS=10.38.140.225
+
+function guifinet_add_network {
+    if [ ! -f /etc/network/interfaces ]; then
+        return
+    fi
+
+    if [ -f /etc/network/interfaces_pre_guifinet ]; then
+        return
+    fi
+
+    # store the old interfaces file
+    mv /etc/network/interfaces /etc/network/interfaces_pre_guifinet
+
+    # make a new one
+    { echo '# Wan network';
+      echo "auto $GUIFINET_ANTENNA";
+      echo "allow-hotplug $GUIFINET_ANTENNA";
+      echo "iface $GUIFINET_ANTENNA inet dhcp";
+      echo '';
+      echo '# local';
+      echo "auto $GUIFINET_LOCAL";
+      echo "allow-hotplug $GUIFINET_LOCAL";
+      echo "iface $GUIFINET_LOCAL inet static";
+      echo '    address 192.168.1.1';
+      echo '    netmask 255.255.255.0';
+      echo '    gateway 192.168.1.1'; } > /etc/network/interfaces
+
+    if [ ! -d /etc/network/if-up.d ]; then
+        mkdir /etc/network/if-up.d
+    fi
+    if [ ! -f /etc/network/if-up.d/staticroutes ]; then
+        { echo '#!/bin/bash';
+          echo "ip route add $GUIFINET_IP_ADDRESS via 10.1.15.129 dev $GUIFINET_ANTENNA"; } > /etc/network/if-up.d/staticroutes
+        chmod +x /etc/network/if-up.d/staticroutes
+    fi
+
+    systemctl restart networking
+}
+
+function guifinet_remove_network {
+    if [ ! -f /etc/network/interfaces_pre_guifinet ]; then
+        return
+    fi
+
+    cp /etc/network/interfaces_pre_guifinet /etc/network/interfaces
+    rm /etc/network/interfaces_pre_guifinet
+
+    if [ -f /etc/network/if-up.d/staticroutes ]; then
+        rm /etc/network/if-up.d/staticroutes
+    fi
+
+    systemctl restart networking
+}
+
+function guifinet_add_tunnel {
+    # creates a tunnel to the exo server https://exo.cat
+    # "eXO allows the establishment of a tunnel-type connection
+    #  between the residential network device and the connection
+    #  point located in the Internet access data center. The
+    #  residential device will have a public static IPv4 address
+    #  and an IPv6 prefix provided with the eXO."
+    GUIFINET_USERNAME="$1"
+    GUIFINET_PASSWORD="$2"
+
+    if [ ! "$GUIFINET_USERNAME" ]; then
+        echo $'No username given for guifinet tunnel'
+        return
+    fi
+
+    INSTALL_PACKAGES xl2tp ppp
+
+    if [ ! -d /etc/ppp ]; then
+        echo $'ppp not installed'
+        return
+    fi
+
+    if [ ! -f /etc/xl2tp/xl2tpd.conf ]; then
+        echo $'/etc/xl2tp/xl2tpd.conf not found'
+        return
+    fi
+
+    { echo '[global]';
+      echo 'access control = no';
+      echo 'port = 1723';
+      echo 'auth file = /etc/ppp/chap-secrets';
+      echo 'debug avp = no';
+      echo 'debug network = no';
+      echo 'debug packet = no';
+      echo 'debug state = no';
+      echo 'debug tunnel = no';
+      echo '[lac exo]';
+      echo "lns = $GUIFINET_IP_ADDRESS";
+      echo 'redial = yes';
+      echo 'redial timeout = 5';
+      echo 'require chap = yes';
+      echo 'require authentication = yes';
+      echo 'ppp debug = no';
+      echo 'pppoptfile = /etc/ppp/options.l2tpd';
+      echo 'require pap = no';
+      echo 'autodial = yes';
+      echo "name = $GUIFINET_USERNAME"; } > /etc/xl2tp/xl2tpd.conf
+
+    { echo 'ipcp-accept-local';
+      echo 'ipcp-accept-remote';
+      echo 'require-mschap-v2';
+      echo 'noccp';
+      echo 'noauth';
+      echo 'idle 1800';
+      echo 'mtu 1420';
+      echo 'mru 1410';
+      echo '';
+      echo 'defaultroute';
+      echo 'replacedefaultroute';
+      echo 'proxyarp';
+      echo 'connect-delay 5000';
+      echo "name $GUIFINET_USERNAME";
+      echo "password \"$GUIFINET_PASSWORD\""; } > /etc/ppp/options.l2tpd
+
+    systemctl restart xl2tpd
+}
+
+function guifinet_remove_tunnel {
+    if [ ! -d /etc/ppp ]; then
+        return
+    fi
+
+    $REMOVE_PACKAGES_PURGE xl2tp ppp
+}
+
+function guifinet_add_firewall {
+    sed -i 's|net.ipv4.ip_forward=.*|net.ipv4.ip_forward=1|g' /etc/sysctl.conf
+    echo 1 > /proc/sys/net/ipv4/ip_forward
+
+    #iptables -A POSTROUTING -s 192.168.1.0/24 -o ppp0 -j MASQUERADE
+    #iptables -A POSTROUTING -s 192.168.1.0/24 -o ppp1 -j MASQUERADE
+
+    #iptables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS -m tcpmss --mss 1361:1536 -o ppp0  --set-mss 1360
+    #iptables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS -m tcpmss --mss 1361:1536 -o ppp1  --set-mss 1360
+    #iptables -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+    #iptables -A FORWARD -s 192.168.1.0/24 -o ppp0 -m conntrack --ctstate NEW,INVALID -j ACCEPT
+    #iptables -A FORWARD -s 192.168.1.0/24 -o ppp1 -m conntrack --ctstate NEW,INVALID -j ACCEPT
+    #iptables -A FORWARD -s 192.168.1.0/24 -o ppp0 -j ACCEPT
+    #iptables -A FORWARD -s 192.168.1.0/24 -o ppp1 -j ACCEPT
+
+    #iptables -A OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS -m tcpmss --mss 1361:1536 -o ppp0  --set-mss 1360
+    #iptables -A OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS -m tcpmss --mss 1361:1536 -o ppp1  --set-mss 1360
+
+    save_firewall_settings
+}
+
+function guifinet_remove_firewall {
+    sed -i 's|net.ipv4.ip_forward=.*|net.ipv4.ip_forward=0|g' /etc/sysctl.conf
+    echo 0 > /proc/sys/net/ipv4/ip_forward
+
+    #iptables -D POSTROUTING -s 192.168.1.0/24 -o ppp0 -j MASQUERADE
+    #iptables -D POSTROUTING -s 192.168.1.0/24 -o ppp1 -j MASQUERADE
+
+    #iptables -D FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS -m tcpmss --mss 1361:1536 -o ppp0  --set-mss 1360
+    #iptables -D FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS -m tcpmss --mss 1361:1536 -o ppp1  --set-mss 1360
+    #iptables -D FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+    #iptables -D FORWARD -s 192.168.1.0/24 -o ppp0 -m conntrack --ctstate NEW,INVALID -j ACCEPT
+    #iptables -D FORWARD -s 192.168.1.0/24 -o ppp1 -m conntrack --ctstate NEW,INVALID -j ACCEPT
+    #iptables -D FORWARD -s 192.168.1.0/24 -o ppp0 -j ACCEPT
+    #iptables -D FORWARD -s 192.168.1.0/24 -o ppp1 -j ACCEPT
+
+    #iptables -D OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS -m tcpmss --mss 1361:1536 -o ppp0  --set-mss 1360
+    #iptables -D OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS -m tcpmss --mss 1361:1536 -o ppp1  --set-mss 1360
+
+    save_firewall_settings
+}
+
+function guifinet_enable {
+    GUIFINET_USERNAME="$1"
+    GUIFINET_PASSWORD="$2"
+
+    if [ ! "$GUIFINET_USERNAME" ]; then
+        echo $'Username needed to enable guifinet'
+        exit 64
+    fi
+    if [ ! "$GUIFINET_PASSWORD" ]; then
+        echo $'Password needed to enable guifinet'
+        exit 26
+    fi
+
+    guifinet_add_network
+    guifinet_add_tunnel "$GUIFINET_USERNAME" "$GUIFINET_PASSWORD"
+    guifinet_add_firewall
+}
+
+function guifinet_disable {
+    guifinet_remove_network
+    guifinet_remove_tunnel
+    guifinet_remove_firewall
+}
+
+# NOTE: deliberately no exit 0

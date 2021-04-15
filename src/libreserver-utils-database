@@ -1,0 +1,494 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Database functions
+#
+# License
+# =======
+#
+# Copyright (C) 2014-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# default MariaDB password
+MARIADB_PASSWORD=
+
+# Used to indicate whether the backup contains MariaDB databases or not
+BACKUP_INCLUDES_DATABASES="no"
+
+function store_original_mariadb_password {
+    if [ ! -f /root/.mariadboriginal ]; then
+        echo $'Storing original mariadb password'
+        ORIGINAL_MARIADB_PASSWORD=$("${PROJECT_NAME}-pass" -u root -a mariadb)
+        # We can store this in plaintext because it will soon be of historical interest only
+        echo -n "$ORIGINAL_MARIADB_PASSWORD" > /root/.mariadboriginal
+    fi
+}
+
+function keep_database_running {
+    if [ ! "$(daemon_is_running mariadb)" ]; then
+        systemctl start mariadb
+    fi
+}
+
+function remove_backup_database_local {
+    database_name="$1"
+
+    sed -i "/# Backup the ${database_name} database/,/# End of ${database_name} database backup/d" /usr/bin/backupdatabases
+    sed -i "/# Backup ${database_name}/,/# End of backup for ${database_name}/d" /etc/cron.weekly/backupdatabasesweekly
+    sed -i "/# Backup ${database_name}/,/# End of backup for ${database_name}/d" /etc/cron.monthly/backupdatabasesmonthly
+    sed -i "/${database_name}/d" /etc/cron.hourly/repair
+}
+
+function backup_database_local {
+    # Makes local backups of databases which can then be automatically rolled
+    # back if corruption is detected
+    database_name="$1"
+
+    backup_databases_script=/usr/bin/backupdatabases
+    if ! grep -q "# Check database daemon" /usr/bin/backupdatabases; then
+        { echo '';
+          echo '# Check database daemon is running';
+          echo "if [ ! \$(systemctl is-active mariadb >/dev/null 2>&1 && echo Running) ]; then";
+          echo '    systemctl start mariadb';
+          echo 'fi';
+          echo ''; } >> /usr/bin/backupdatabases
+    fi
+
+    if ! grep -q "# Backup the ${database_name} database" $backup_databases_script; then
+        { echo "# Backup the ${database_name} database";
+          echo "TEMPFILE=/root/${database_name}.sql";
+          echo "DAILYFILE=/var/backups/${database_name}_daily.sql";
+          echo "mysqldump --password=\"\$MYSQL_PASSWORD\" ${database_name} > \$TEMPFILE";
+          echo "FILESIZE=\$(stat -c%s \$TEMPFILE)";
+          echo "if [ \"\$FILESIZE\" -eq \"0\" ]; then";
+          echo "    if [ -f \$DAILYFILE ]; then";
+          echo "        cp \$DAILYFILE \$TEMPFILE";
+          echo '';
+          echo '        # try to restore yesterdays database';
+          echo "        mysql -u root --password=\"\$MYSQL_PASSWORD\" ${database_name} -o < \$DAILYFILE";
+          echo '';
+          echo '        # Send a warning email';
+          echo "        /bin/bash /usr/local/bin/${PROJECT_NAME}-notification -m \"Unable to create a backup of the ${database_name} database. Attempted to restore from yesterdays backup\" -s \"${database_name} backup\"";
+          echo '    else';
+          echo '        # Send a warning email';
+          echo "        /bin/bash /usr/local/bin/${PROJECT_NAME}-notification -m \"Unable to create a backup of the ${database_name} database.\" -s \"${database_name} backup\"";
+          echo '    fi';
+          echo 'else';
+          echo "    chmod 600 \$TEMPFILE";
+          echo "    mv \$TEMPFILE \$DAILYFILE";
+          echo '';
+          echo '    # Make the backup readable only by root';
+          echo "    chmod 600 \$DAILYFILE";
+          echo 'fi';
+          echo "# End of ${database_name} database backup"; } >> $backup_databases_script
+    fi
+
+    weekly_backup_script=/etc/cron.weekly/backupdatabasesweekly
+    if ! grep -q "Backup ${database_name}" ${weekly_backup_script}; then
+        { echo "# Backup ${database_name}";
+          echo "if [ -f /var/backups/${database_name}_weekly.sql ]; then";
+          echo "  cp -f /var/backups/${database_name}_weekly.sql /var/backups/${database_name}_2weekly.sql";
+          echo 'fi';
+          echo "if [ -f /var/backups/${database_name}_daily.sql ]; then";
+          echo "  cp -f /var/backups/${database_name}_daily.sql /var/backups/${database_name}_weekly.sql";
+          echo 'fi';
+          echo "# End of backup for ${database_name}"; } >> ${weekly_backup_script}
+    fi
+
+    monthly_backup_script=/etc/cron.monthly/backupdatabasesmonthly
+    if ! grep -q "Backup ${database_name}" ${monthly_backup_script}; then
+        { echo "# Backup ${database_name}";
+          echo "if [ -f /var/backups/${database_name}_monthly.sql ]; then";
+          echo "  cp -f /var/backups/${database_name}_monthly.sql /var/backups/${database_name}_2monthly.sql";
+          echo 'fi';
+          echo "if [ -f /var/backups/${database_name}_weekly.sql ]; then";
+          echo "  cp -f /var/backups/${database_name}_weekly.sql /var/backups/${database_name}_monthly.sql";
+          echo 'fi';
+          echo "# End of backup for ${database_name}"; } >> ${monthly_backup_script}
+    fi
+
+    if [ -f /etc/cron.hourly/repair ]; then
+        if ! grep -q "${database_name}" /etc/cron.hourly/repair; then
+            echo "${PROJECT_NAME}-repair-database ${database_name}" >> /etc/cron.hourly/repair
+            # remove legacy stuff
+            sed -i 's|/usr/bin/repairdatabase redmatrix||g' /etc/cron.hourly/repair
+        fi
+    fi
+}
+
+function get_mariadb_password {
+    # migrate from database password file to using the password store
+    DATABASE_PASSWORD_FILE=/root/dbpass
+    if [ -f $DATABASE_PASSWORD_FILE ]; then
+        MARIADB_PASSWORD=$(cat $DATABASE_PASSWORD_FILE)
+        "${PROJECT_NAME}-pass" -u root -a mariadb -p "$MARIADB_PASSWORD"
+        stored_password=$("${PROJECT_NAME}-pass" -u root -a mariadb)
+        if [[ "$stored_password" == "$MARIADB_PASSWORD" ]]; then
+            rm $DATABASE_PASSWORD_FILE
+            echo $'MariaDB password moved into password store'
+            return
+        fi
+    fi
+    MARIADB_PASSWORD=$("${PROJECT_NAME}-pass" -u root -a mariadb)
+    if [[ "$MARIADB_PASSWORD" == *'failed'* ]]; then
+        echo $'Could not obtain mariadb password'
+        exit 83
+    fi
+}
+
+function mariadb_kill_stone_dead {
+    systemctl stop mariadb
+    # shellcheck disable=SC2009
+    kill_pid=$(ps aux | grep mysqld_safe | grep -v grep | head -n 1 | awk -F ' ' '{print $2}')
+    kill -9 "$kill_pid"
+    # shellcheck disable=SC2009
+    kill_pid=$(ps aux | grep mysqld | grep -v grep | head -n 1 | awk -F ' ' '{print $2}')
+    kill -9 "$kill_pid"
+    # shellcheck disable=SC2009
+    kill_pid=$(ps aux | grep mysqld | grep -v grep | head -n 1 | awk -F ' ' '{print $2}')
+    kill -9 "$kill_pid"
+}
+
+function mariadb_change_user_password {
+    mariadb_user="$1"
+    mariadb_user_password="$2"
+    mysql -u root --password="$MARIADB_PASSWORD" << EOF
+use mysql;
+ALTER USER '${mariadb_user}'@'localhost' IDENTIFIED BY '${mariadb_user_password}';
+flush privileges;
+EOF
+}
+
+function mariadb_fix_authentication {
+    # See https://mariadb.com/kb/en/mariadb/unix_socket-authentication-plugin
+    remove_watchdog_daemon mariadb
+    mariadb_kill_stone_dead
+    mysqld_safe --skip-grant-tables &
+    sleep 5
+    mariadb_change_user_password root "$MARIADB_PASSWORD"
+    mariadb_kill_stone_dead
+
+    if grep -q "skip-grant-tables" /lib/systemd/system/mariadb.service; then
+        sed -i 's| --skip-grant-tables||g' /lib/systemd/system/mariadb.service
+        systemctl daemon-reload
+    fi
+    systemctl start mariadb
+    add_watchdog_daemon mariadb
+}
+
+function mariadb_create_root_user {
+    run_query mysql "CREATE USER 'root@localhost' IDENTIFIED BY '${MARIADB_PASSWORD}'; flush privileges;"
+    run_query mysql "ALTER USER 'root'@'localhost' IDENTIFIED BY '${MARIADB_PASSWORD}'; flush privileges;"
+    run_query mysql "GRANT ALL PRIVILEGES ON * TO 'root@localhost' WITH GRANT OPTION; flush privileges;"
+}
+
+function install_mariadb {
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+    INSTALL_PACKAGES software-properties-common debconf-utils
+    $UPDATE_PACKAGES
+
+    remove_watchdog_daemon mariadb
+
+    function_check get_mariadb_password
+    get_mariadb_password
+    if [ ! "$MARIADB_PASSWORD" ]; then
+        if [ -f "$IMAGE_PASSWORD_FILE" ]; then
+            passfile="$(cat "$IMAGE_PASSWORD_FILE")"
+            MARIADB_PASSWORD="$(printf "%s" "$passfile")"
+        else
+            MARIADB_PASSWORD=$(create_password "${MINIMUM_PASSWORD_LENGTH}")
+        fi
+    fi
+    "${PROJECT_NAME}-pass" -u root -a mariadb -p "$MARIADB_PASSWORD"
+
+    debconf-set-selections <<< "mariadb-server mariadb-server/root_password password $MARIADB_PASSWORD"
+    debconf-set-selections <<< "mariadb-server mariadb-server/root_password_again password $MARIADB_PASSWORD"
+    INSTALL_PACKAGES mariadb-server mariadb-client
+    $REMOVE_PACKAGES_PURGE apache2-bin*
+    if [ -d /etc/apache2 ]; then
+        rm -rf /etc/apache2
+        echo $'Removed Apache installation after MariaDB install'
+    fi
+
+    if [ ! -d /etc/mysql ]; then
+        echo $"ERROR: mariadb-server does not appear to have installed. $CHECK_MESSAGE"
+        exit 54
+    fi
+
+    if [ ! -f /usr/bin/mysql ]; then
+        echo $"ERROR: mariadb-server does not appear to have installed. $CHECK_MESSAGE"
+        exit 34
+    fi
+
+    sed -i 's|ExecStart=/usr/sbin/mysqld|ExecStart=/usr/sbin/mysqld --skip-grant-tables|g' /lib/systemd/system/mariadb.service
+    systemctl daemon-reload
+    systemctl restart mariadb
+
+    mariadb_fix_authentication
+
+    mariadb_create_root_user
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function backup_databases_script_header {
+    if [ ! -f /usr/bin/backupdatabases ]; then
+        # daily
+        { echo '#!/bin/sh';
+          echo '';
+          echo "EMAIL='$MY_EMAIL_ADDRESS'";
+          echo '';
+          echo "MYSQL_PASSWORD=\$(${PROJECT_NAME}-pass -u root -a mariadb)";
+          echo 'umask 0077';
+          echo '';
+          echo '# exit if we are backing up to friends servers';
+          echo "if [ -f $FRIENDS_SERVERS_LIST ]; then";
+          echo '  exit 1';
+          echo 'fi'; } > /usr/bin/backupdatabases
+        chmod 600 /usr/bin/backupdatabases
+        chmod +x /usr/bin/backupdatabases
+
+        { echo '#!/bin/sh';
+          echo '/usr/bin/backupdatabases'; } > /etc/cron.daily/backupdatabasesdaily
+        chmod 600 /etc/cron.daily/backupdatabasesdaily
+        chmod +x /etc/cron.daily/backupdatabasesdaily
+
+        # weekly
+        { echo '#!/bin/sh';
+          echo '';
+          echo 'umask 0077'; } > /etc/cron.weekly/backupdatabasesweekly
+
+        chmod 600 /etc/cron.weekly/backupdatabasesweekly
+        chmod +x /etc/cron.weekly/backupdatabasesweekly
+
+        # monthly
+        { echo '#!/bin/sh';
+          echo '';
+          echo 'umask 0077'; } > /etc/cron.monthly/backupdatabasesmonthly
+
+        chmod 600 /etc/cron.monthly/backupdatabasesmonthly
+        chmod +x /etc/cron.monthly/backupdatabasesmonthly
+    fi
+}
+
+function repair_databases_script {
+    if [ -f /etc/cron.hourly/repair ]; then
+        sed -i "s|/usr/bin/repairdatabase|${PROJECT_NAME}-repair-database|g" /etc/cron.hourly/repair
+    fi
+
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+
+    db_pass=$("${PROJECT_NAME}-pass" -u root -p mariadb)
+    if [[ "$db_pass" == 'Error:'* ]]; then
+        return
+    fi
+
+    echo '#!/bin/bash' > /etc/cron.hourly/repair
+    echo '' >> /etc/cron.hourly/repair
+    chmod 600 /etc/cron.hourly/repair
+    chmod +x /etc/cron.hourly/repair
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function remove_database {
+    app_name="$1"
+    if [ ! -d "$INSTALL_DIR" ]; then
+        mkdir "$INSTALL_DIR"
+    fi
+    echo "drop database ${app_name};
+quit" > "$INSTALL_DIR/batch.sql"
+    chmod 600 "$INSTALL_DIR/batch.sql"
+    keep_database_running
+    mysql -u root --password="$MARIADB_PASSWORD" < "$INSTALL_DIR/batch.sql"
+    if [ -f "$INSTALL_DIR/batch.sql" ]; then
+        rm "$INSTALL_DIR/batch.sql"
+    fi
+}
+
+function initialise_database {
+    database_name="$1"
+    database_file="$2"
+
+    if [ ! -f "$database_file" ]; then
+        echo $"Database file $database_file not found"
+        exit 62
+    fi
+
+    keep_database_running
+    mysql -u root --password="$MARIADB_PASSWORD" -D "$database_name" < "$database_file"
+    # NOTE: checking for failure here can create problems
+    keep_database_running
+}
+
+function run_query {
+    database_name="$1"
+    database_query="$2"
+    keep_database_running
+    mysql -u root --password="$MARIADB_PASSWORD" -e "$database_query" "$database_name"
+}
+
+function run_query_root {
+    database_name="$1"
+    database_query="$2"
+    keep_database_running
+    mysql -e "$database_query" "$database_name"
+}
+
+function create_database {
+    app_name="$1"
+    app_admin_password="$2"
+    app_admin_username="$3"
+    if [ ! -d "$INSTALL_DIR" ]; then
+        mkdir "$INSTALL_DIR"
+    fi
+    if [ ! "$app_admin_username" ]; then
+        app_admin_username="${app_name}admin"
+    fi
+
+    echo "Creating database ${app_name}"
+    echo "create database ${app_name};" > "${INSTALL_DIR}/create_database.sql"
+    mysql -u root --password="${MARIADB_PASSWORD}" < "${INSTALL_DIR}/create_database.sql"
+    rm "${INSTALL_DIR}/batch.sql"
+    echo "Creating database user ${app_admin_username}@localhost"
+    user_exists=$(database_user_exists "${app_admin_username}" | tail -n 1)
+    echo "User exists = ${user_exists}"
+    if [[ "${user_exists}" == "0" ]]; then
+        run_query "${app_name}" "CREATE USER '${app_admin_username}@localhost' IDENTIFIED BY '${app_admin_password}';"
+
+        echo "Setting database privileges for ${app_admin_username}@localhost in ${app_name}"
+        echo "GRANT ALL PRIVILEGES ON ${app_name}.* TO '${app_admin_username}@localhost' WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON ${app_name}.* TO 'root@localhost' WITH GRANT OPTION;
+flush privileges;
+quit" > "${INSTALL_DIR}/create_database.sql"
+        chmod 600 "${INSTALL_DIR}/create_database.sql"
+        keep_database_running
+        mysql -u root --password="${MARIADB_PASSWORD}" < "${INSTALL_DIR}/create_database.sql"
+        rm "${INSTALL_DIR}/create_database.sql"
+    fi
+}
+
+function database_user_exists {
+    database_username="$1"
+    database_query="SELECT User FROM mysql.user WHERE User='${database_username}@localhost';"
+    result=$(run_query_with_output mysql "${database_query}")
+    if [[ "${result}" == *"${database_username}@localhost"* ]]; then
+        echo "1"
+    else
+        echo "0"
+    fi
+}
+
+function run_query_with_output {
+    database_name="$1"
+    database_query="$2"
+    keep_database_running
+    output=$(mysql -u root --password="$MARIADB_PASSWORD" << EOF
+use $database_name;
+$database_query
+EOF
+)
+    echo "$output"
+}
+
+function drop_database {
+    database_name="$1"
+
+    get_mariadb_password
+
+    echo "drop database ${app_name};
+flush privileges;
+quit" > "$INSTALL_DIR/batch.sql"
+    chmod 600 "$INSTALL_DIR/batch.sql"
+    keep_database_running
+    mysql -u root --password="$MARIADB_PASSWORD" < "$INSTALL_DIR/batch.sql"
+    if [ -f "$INSTALL_DIR/batch.sql" ]; then
+        rm "$INSTALL_DIR/batch.sql"
+    fi
+}
+
+
+function database_reinstall {
+    $REMOVE_PURGE mariadb*
+    rm -rf /var/lib/mysql
+    rm -rf /etc/mysql
+    sed -i '/mariadb/d' "${HOME}/${PROJECT_NAME}-completed.txt"
+    install_mariadb
+}
+
+function install_rethinkdb {
+    if [[ "$(arch)" == "arm"* ]]; then
+        echo $'rethinkdb does not currently support ARM debian packages'
+        echo $"See http://download.rethinkdb.com/apt/dists/${DEBIAN_VERSION}/main"
+        exit 72
+    fi
+
+    if [ ! -d "$INSTALL_DIR" ]; then
+        mkdir -p "$INSTALL_DIR"
+    fi
+
+    cd "$INSTALL_DIR" || exit 63
+
+    gpg_add_key rethinkdb https://download.rethinkdb.com/apt/pubkey.gpg
+    echo "deb http://download.rethinkdb.com/apt $DEBIAN_VERSION main" | tee /etc/apt/sources.list.d/rethinkdb.list
+
+    $UPDATE_PACKAGES
+    INSTALL_PACKAGES rethinkdb
+
+    { echo 'runuser=rethinkdb';
+      echo 'rungroup=rethinkdb';
+      echo '# pid-file=/var/run/rethinkdb/rethinkdb.pid';
+      echo '# directory=/var/lib/rethinkdb/default';
+      echo '# log-file=/var/log/rethinkdb';
+      echo 'bind=127.0.0.1';
+      echo '# canonical-address=';
+      echo '# driver-port=28015';
+      echo '# cluster-port=29015';
+      echo '# join=example.com:29015';
+      echo '# port-offset=0';
+      echo '# reql-http-proxy=socks5://example.com:1080';
+      echo '# http-port=8091';
+      echo '# no-http-admin';
+      echo '# cores=2';
+      echo '# cache-size=1024';
+      echo '# io-threads=64';
+      echo '# direct-io';
+      echo '# server-name=server1'; } > /etc/rethinkdb/instances.d/default.conf
+
+    systemctl restart rethinkdb
+}
+
+function remove_rethinkdb {
+    if [ ! -d /etc/rethinkdb ]; then
+        return
+    fi
+    $REMOVE_PACKAGES rethinkdb
+    if [ -d /etc/rethinkdb ]; then
+        rm -rf /etc/rethinkdb
+    fi
+    if [ -f /etc/apt/sources.list.d/rethinkdb.list ]; then
+        rm /etc/apt/sources.list.d/rethinkdb.list
+        $UPDATE_PACKAGES
+    fi
+}
+
+# NOTE: deliberately there is no "exit 0"

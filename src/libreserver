@@ -1,0 +1,580 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# This install script is intended for use with Debian
+#
+# License
+# =======
+#
+# Copyright (C) 2014-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+NO_OF_ARGS=$#
+
+PROJECT_NAME='libreserver'
+
+export TEXTDOMAIN=$PROJECT_NAME
+export TEXTDOMAINDIR="/usr/share/locale"
+
+# ensure that sbin is in the path, so that commands
+# such as adduser are available
+if [[ "$PATH" != *"/usr/sbin"* ]]; then
+    echo "PATH=\$PATH:/usr/sbin" >> ~/.bashrc
+    PATH=$PATH:/usr/sbin
+fi
+
+# check that this is installing on an appropriate
+# debian system. If you try to install on an ubuntu
+# base then that will definitely fail
+installing_on_debian=1
+if [ ! -f /usr/bin/apt-get ]; then
+    installing_on_debian=
+fi
+
+if [ ! -f /etc/apt/sources.list ]; then
+    installing_on_debian=
+else
+    if ! grep -q 'bullseye' /etc/apt/sources.list; then
+        installing_on_debian=
+    fi
+    if ! grep -q 'debian' /etc/apt/sources.list; then
+        if ! grep -q 'raspbian' /etc/apt/sources.list; then
+            installing_on_debian=
+        else
+            installing_on_debian=1
+        fi
+    fi
+fi
+
+if [ ! $installing_on_debian ]; then
+    echo $'You should only run this on a Debian Buster based system'
+    exit 0
+fi
+
+# create the completions file if it doesn't already exist
+if [ ! -f /root/${PROJECT_NAME}-completed.txt ]; then
+    touch /root/${PROJECT_NAME}-completed.txt
+fi
+
+PROJECT_INSTALL_DIR=/usr/local/bin
+if [ -f /usr/bin/${PROJECT_NAME} ]; then
+    PROJECT_INSTALL_DIR=/usr/bin
+fi
+
+source $PROJECT_INSTALL_DIR/${PROJECT_NAME}-vars
+
+UTILS_FILES="/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-*"
+for f in $UTILS_FILES
+do
+    source "$f"
+done
+
+increment_install_progress "Running $PROJECT_NAME command"
+
+APP_FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
+for f in $APP_FILES
+do
+    source "$f"
+    increment_install_progress "source $f"
+done
+
+MENUCONFIG_NONINTERACTIVE='no'
+
+command_options="$1"
+
+# noninteractive menuconfig option
+if [[ "$2" == '--noninteractive' ]]; then
+    MENUCONFIG_NONINTERACTIVE='yes'
+    DEFAULT_DOMAIN_NAME="$3"
+    MY_USERNAME='admin'
+else
+    if [[ "$1" == '--noninteractive' ]]; then
+        MENUCONFIG_NONINTERACTIVE='yes'
+        DEFAULT_DOMAIN_NAME="$2"
+        MY_USERNAME='admin'
+        command_options="$3"
+    fi
+fi
+
+if [[ "$command_options" == "menuconfig"* ]]; then
+    if [[ $MENUCONFIG_NONINTERACTIVE == 'no' ]]; then
+        if [ ! -d /home/admin ]; then
+            echo $"First create an admin account with '/usr/sbin/adduser admin'."
+            exit 0
+        fi
+    fi
+fi
+
+if [[ "$command_options" == "menuconfig-full" ]]; then
+    MINIMAL_INSTALL="no"
+fi
+
+if [[ "$command_options" == "menuconfig-onion" ]]; then
+    MINIMAL_INSTALL="yes"
+    ONION_ONLY="yes"
+fi
+
+if [[ "$CONFIGURATION_FILE" != "/root/${PROJECT_NAME}.cfg" ]]; then
+    if [ -f "$CONFIGURATION_FILE" ]; then
+        cp "$CONFIGURATION_FILE" "/root/${PROJECT_NAME}.cfg"
+    fi
+fi
+CONFIGURATION_FILE="/root/${PROJECT_NAME}.cfg"
+
+if [[ "$COMPLETION_FILE" != "/root/${PROJECT_NAME}-completed.txt" ]]; then
+    if [ -f "$COMPLETION_FILE" ]; then
+        cp "$COMPLETION_FILE" "/root/${PROJECT_NAME}-completed.txt"
+    fi
+fi
+COMPLETION_FILE="/root/${PROJECT_NAME}-completed.txt"
+
+# before the interactive config so that wifi adaptors may be detected
+#function_check setup_wifi_atheros
+#setup_wifi_atheros
+
+if [[ "$command_options" == "menuconfig"* ]]; then
+    if [[ "$2" == "--reset" ]]; then
+        if [ -f "$CONFIGURATION_FILE" ]; then
+            rm "$CONFIGURATION_FILE"
+        fi
+        if [ -f "$COMPLETION_FILE" ]; then
+            rm "$COMPLETION_FILE"
+        fi
+        if [ -f "/usr/share/${PROJECT_NAME}/installed.txt" ]; then
+            rm "/usr/share/${PROJECT_NAME}/installed.txt"
+        fi
+        if [ -f /root/removed ]; then
+            rm /root/removed
+        fi
+    fi
+
+    # clear the interactive file which indicates configuration success
+    interactive_file="$HOME/.${PROJECT_NAME}-interactive"
+    if [ -f "$interactive_file" ]; then
+        rm "$interactive_file"
+    fi
+
+    function_check interactive_configuration
+    interactive_configuration
+
+    # check that the interactive file was created
+    if [ ! -f "$interactive_file" ]; then
+        exit 63
+    fi
+    rm "$interactive_file"
+else
+    while [ $# -gt 1 ]
+    do
+        key="$1"
+
+        case $key in
+            -h|--help)
+                show_help
+                ;;
+            # load a configuration file
+            -c|--config)
+                shift
+                CONFIGURATION_FILE="$1"
+                INSTALLING_FROM_CONFIGURATION_FILE="yes"
+                break
+                ;;
+            # username within /home
+            -u|--user)
+                shift
+                MY_USERNAME="$1"
+                ;;
+            # default domain name
+            -d|--domain)
+                shift
+                DEFAULT_DOMAIN_NAME="$1"
+                ;;
+            # The type of system
+            -s|--system)
+                shift
+                SYSTEM_TYPE="$1"
+                ;;
+            # The dynamic DNS provider
+            --ddns)
+                shift
+                DDNS_PROVIDER="$1"
+                ;;
+            # Username for the synamic DNS provider
+            --ddnsuser)
+                shift
+                DDNS_USERNAME="$1"
+                ;;
+            # Password for the synamic DNS provider
+            --ddnspass)
+                shift
+                DDNS_PASSWORD="$1"
+                ;;
+            # Whether this installation is on a Beaglebone Black
+            --bbb)
+                INSTALLING_ON_BBB="yes"
+                ;;
+            # Static IP address for the system
+            --ip)
+                shift
+                LOCAL_NETWORK_STATIC_IP_ADDRESS="$1"
+                ;;
+            # IP address for the internet router
+            --iprouter)
+                shift
+                ROUTER_IP_ADDRESS="$1"
+                ;;
+            # ssh port
+            --ssh)
+                shift
+                SSH_PORT=$1
+                ;;
+            # Number of CPU cores
+            --cores)
+                shift
+                CPU_CORES=$1
+                ;;
+            # my name
+            --name)
+                shift
+                MY_NAME="$1"
+                ;;
+            # my email address
+            --email)
+                shift
+                MY_EMAIL_ADDRESS="$1"
+                ;;
+            # USB drive
+            --usb)
+                shift
+                USB_DRIVE=$1
+                ;;
+            # Enable B.A.T.M.A.N
+            --batman)
+                shift
+                ENABLE_BATMAN="yes"
+                ;;
+            # Mumble server password
+            --vpass)
+                shift
+                MUMBLE_SERVER_PASSWORD="$1"
+                ;;
+            # Mumble server port
+            --vport)
+                shift
+                MUMBLE_PORT="$1"
+                ;;
+            # DNS Nameserver 1
+            --ns1)
+                shift
+                NAMESERVER1="$1"
+                ;;
+            # DNS Nameserver 2
+            --ns2)
+                shift
+                NAMESERVER2="$1"
+                ;;
+            # DNS Nameserver 3
+            --ns3)
+                shift
+                NAMESERVER3="$1"
+                ;;
+            # DNS Nameserver 4
+            --ns4)
+                shift
+                NAMESERVER4="$1"
+                ;;
+            # DNS Nameserver 5
+            --ns5)
+                shift
+                NAMESERVER5="$1"
+                ;;
+            # DNS Nameserver 6
+            --ns6)
+                shift
+                NAMESERVER6="$1"
+                ;;
+            # Debian repository
+            --repo)
+                shift
+                DEBIAN_REPO="$1"
+                ;;
+            # clear the config file
+            --reset)
+                if [ -f "$CONFIGURATION_FILE" ]; then
+                    rm "$CONFIGURATION_FILE"
+                fi
+                if [ -f "$COMPLETION_FILE" ]; then
+                    rm "$COMPLETION_FILE"
+                fi
+                ;;
+            # minimal install
+            --minimal)
+                shift
+                MINIMAL_INSTALL="$1"
+                ;;
+            --network|--mesh)
+                shift
+                COMMUNITY_NETWORK="$1"
+                ;;
+            *)
+                # unknown option
+                ;;
+        esac
+        shift
+    done
+fi
+
+function parse_args {
+    if [[ $NO_OF_ARGS == 0 ]]; then
+        echo 'no_of_args = 0'
+        show_help
+        exit 0
+    fi
+
+    function_check read_config_param
+    read_config_param 'DEFAULT_DOMAIN_NAME'
+    read_config_param 'MY_USERNAME'
+    read_config_param 'SYSTEM_TYPE'
+    read_config_param 'ONION_ONLY'
+    read_config_param 'DDNS_PROVIDER'
+    read_config_param 'DDNS_USERNAME'
+    read_config_param 'DDNS_PASSWORD'
+    read_config_param 'COMMUNITY_NETWORK'
+
+    if [ ! -d "/home/$MY_USERNAME" ]; then
+        echo $"There is no user '$MY_USERNAME' on the system. Use 'adduser $MY_USERNAME' to create the user."
+        exit 1
+    fi
+    if [ ! "$DEFAULT_DOMAIN_NAME" ]; then
+        if [[ $SYSTEM_TYPE != "mesh"* ]]; then
+            echo 'No default domain specified'
+            show_help
+            exit 2
+        fi
+    fi
+    if [ ! "$MY_USERNAME" ]; then
+        echo 'No username specified'
+        show_help
+        exit 3
+    fi
+    if [[ $SYSTEM_TYPE != "mesh"* ]]; then
+        if [[ "$DDNS_PROVIDER" != 'none' ]]; then
+            if [[ $ONION_ONLY == "no" ]]; then
+                if [ ! "$DDNS_USERNAME" ]; then
+                    DDNS_USERNAME='none'
+                fi
+                if [ ! "$DDNS_PASSWORD" ]; then
+                    DDNS_USERNAME='none'
+                fi
+            fi
+        fi
+    fi
+
+    if [ ! "$SYSTEM_TYPE" ]; then
+        SYSTEM_TYPE=$'full'
+        write_config_param "SYSTEM_TYPE" "$SYSTEM_TYPE"
+    fi
+
+    if [[ $(is_valid_variant) == "0" ]]; then
+        echo $"'$SYSTEM_TYPE' is an unrecognised ${PROJECT_NAME} variant. Possible variants are:"
+        show_available_variants
+        exit 36
+    fi
+}
+
+function finish_manual_install {
+    # Performs the last stage of a manual install
+    # initiated by libreserver menuconfig
+    if [ -f /root/.doing_initial_upgrade.txt ]; then
+        return
+    fi
+    if [ -f /root/.manualinstall ]; then
+        if [ -f /root/login.txt ]; then
+            if ! grep -q 'manual_install_changed_admin_password' "$COMPLETION_FILE"; then
+                ADMIN_USER=$(get_completion_param "Admin user")
+                if [ ! "$ADMIN_USER" ]; then
+                    ADMIN_USER='admin'
+                fi
+                echo -n "${ADMIN_USER}:$(cat /root/login.txt)" | /usr/sbin/chpasswd
+                echo $'Changed admin password'
+                echo 'manual_install_changed_admin_password' >> "$COMPLETION_FILE"
+
+                INSTALL_STATE_COMMAND_SUCCESS=4
+                echo $"Set install state to ${INSTALL_STATE_COMMAND_SUCCESS}"
+                install_state_file="/root/.install_state.txt"
+                echo -n "$INSTALL_STATE_COMMAND_SUCCESS" > "$install_state_file"
+                touch /root/.doing_initial_upgrade.txt
+
+                echo $'Performing initial upgrade'
+                ${PROJECT_NAME}-upgrade
+
+                if [ -f /root/.doing_initial_upgrade.txt ]; then
+                    echo $'Removing initial upgrade file'
+                    rm /root/.doing_initial_upgrade.txt
+                fi
+
+                echo $'Final web interface setup'
+                # creating the setup file allows the webadmin damon to run
+                # the last stage of setup
+                local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+                webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+                touch ${webadmin_install_dir}/setup.txt
+
+                echo $'Restart webadmin daemon'
+                systemctl restart webadmin
+            fi
+        fi
+    fi
+}
+
+# run some initial tests
+clear
+if ! "${PROJECT_NAME}-tests"; then
+    exit 76
+fi
+
+clear
+
+if [[ "$(uname -a)" == *"odroidc4"* ]]; then
+    echo ''
+    echo $'Avoid kernel upgrades for Odroid C4'
+    echo ''
+    $PACKAGE_HOLD linux-image*
+fi
+
+if [ -f /etc/apt/sources.list.d/armbian.list ]; then
+    if ! grep -q 'beta' /etc/apt/sources.list.d/armbian.list; then
+        echo ''
+        echo $'Use nightly Armbian builds'
+        echo ''
+        sed -i "s/apt/beta/" /etc/apt/sources.list.d/armbian.list
+        $UPDATE_PACKAGES
+        $UPGRADE_PACKAGES
+    fi
+fi
+
+echo ''
+echo $'Setting up the base installation'
+echo ''
+
+export DEBIAN_FRONTEND=noninteractive
+
+install_counter=0
+
+function_check upgrade_installation_from_previous_versions
+upgrade_installation_from_previous_versions
+
+function_check setup_utils
+setup_utils
+
+function_check setup_email
+setup_email
+
+function_check setup_web
+setup_web
+
+function_check setup_apps
+setup_apps "$command_options"
+
+function_check install_web_admin
+install_web_admin
+
+function_check install_wireguard
+install_wireguard
+
+if [ -f "$IMAGE_PASSWORD_FILE" ]; then
+    simplebackup_password=$(cat "$IMAGE_PASSWORD_FILE")
+    ${PROJECT_NAME}-pass -u admin -a simplebackup -p "$simplebackup_password"
+fi
+
+function_check hostname_check
+echo $'hostname_check'
+hostname_check
+
+function_check install_community_network
+echo $'install_community_network'
+install_community_network
+
+function_check notify_logins
+echo $'notify_logins'
+notify_logins
+
+function_check tor_daemon_watchdog
+echo $'tor_daemon_watchdog'
+tor_daemon_watchdog
+
+function_check tor_entry_node_watchdog
+echo $'tor_entry_node_watchdog'
+tor_entry_node_watchdog
+
+function_check setup_final
+echo $'setup_final'
+setup_final
+
+function_check store_drives_baseline
+echo $'store_drives_baseline'
+store_drives_baseline
+
+# add basic authentication to webadmin
+nginx_config_filename=/etc/nginx/sites-available/foo.local
+if [ -f "$nginx_config_filename" ]; then
+    if grep -q "#auth_basic" "$nginx_config_filename"; then
+        echo "Enabling basic auth on webadmin"
+        cat /root/login.txt | htpasswd -i -s -c /etc/nginx/.webadminpasswd admin
+        sed -i 's|#auth_basic|auth_basic|g' "$nginx_config_filename"
+        systemctl restart nginx
+    fi
+fi
+
+finish_manual_install
+
+echo ''
+echo $"${PROJECT_NAME} installation is complete."
+echo ''
+date
+echo ''
+localIP=$(get_local_ipv4_address)
+echo $"Navigate to: http://${localIP}/admin"
+echo ''
+onionDomain=$(cat /var/lib/tor/hidden_service_webadmin/hostname)
+echo $"Or in a Tor browser http://${onionDomain}/admin"
+echo ''
+if [ -f /usr/bin/raspi-config ]; then
+    echo 'Run raspi-config for Raspberry Pi specific tweaks, such as booting '
+    echo 'from USB.'
+    echo ''
+fi
+echo 'Login with username "admin" and the password provided during setup.'
+echo ''
+if [ ! -f /home/admin/.ssh/authorized_keys ]; then
+    echo 'SSH access will now be disabled, but if you need it then re-enable '
+    echo 'it by supplying a public key from the Settings screen of the '
+    echo 'web interface.'
+    echo ''
+fi
+
+INSTALL_STATE_COMMAND_SUCCESS=4
+install_state_file="/root/.install_state.txt"
+echo -n "$INSTALL_STATE_COMMAND_SUCCESS" > "$install_state_file"
+
+if [ -d /home/libreserver ]; then
+    echo $'The default libreserver user will be deleted when the system restarts.'
+    echo $'Next time you login use the username you gave during the install.'
+    echo ''
+fi
+
+exit 0

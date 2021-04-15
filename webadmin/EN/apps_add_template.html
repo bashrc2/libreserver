@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Refresh" content="240" charset="utf-8">
+    <style>
+      @import url("libreserver.css");
+
+      * {
+          box-sizing: border-box;
+      }
+
+      .category {
+          text-align: left;
+          color: var(--main-fg-color);
+          font-size: 130%;
+          padding-top: 2%;
+          padding-bottom: 2%;
+      }
+
+      .field_set{
+          border-color: var(--apps-border);
+          border-style: solid;
+      }
+
+      .row {
+          display: -ms-flexbox;
+          display: flex;
+          -ms-flex-wrap: wrap;
+          flex-wrap: wrap;
+          padding: 0 4px;
+      }
+
+      .column {
+          -ms-flex: 15%;
+          flex: 15%;
+          max-width: 25%;
+          padding: 0 4px;
+      }
+
+      .column img {
+          margin-top: 8px;
+          vertical-align: middle;
+          max-width: 60%;
+      }
+
+      .installing {
+          opacity: 0.5;
+          font-weight: bold;
+      }
+
+      @media screen and (min-width: 400px) {
+          .column {
+              -ms-flex: 25%;
+              flex: 25%;
+              max-width: 25%;
+          }
+      }
+
+      @media screen and (max-width: 400px) {
+          .column {
+              -ms-flex: 50%;
+              flex: 50%;
+              max-width: 50%;
+          }
+      }
+    </style>
+  </head>
+  <body>
+
+    <div class="header">
+      <a href="apps.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
+    </div>
+
+  </body>
+</html>

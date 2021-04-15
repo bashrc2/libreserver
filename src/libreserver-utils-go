@@ -1,0 +1,244 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Go functions
+#
+# License
+# =======
+#
+# Copyright (C) 2014-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# For reasons unknown we initially have to upgrade to an intermediate version
+# before getting to the version we want
+GO_INTERMEDIATE_VERSION=1.4.2
+
+GO_VERSION=1.16
+
+GO_REPO="https://go.googlesource.com/go"
+GO_PACKAGE_MANAGER_REPO="https://github.com/gpmgo/gopm"
+GVM_HOME=/home/git/gvm
+
+function select_go_version {
+    if [ ! -d $GVM_HOME/bin ]; then
+        echo $'GVM was not installed'
+        exit 62
+    fi
+    export GVM_ROOT=$GVM_HOME
+    if ! grep -q "GVM_ROOT=" ~/.bashrc; then
+        echo "export GVM_ROOT=$GVM_ROOT" >> ~/.bashrc
+    else
+        sed -i "s|export GVM_ROOT=.*|export GVM_ROOT=$GVM_ROOT|g" ~/.bashrc
+    fi
+    cd "$GVM_ROOT/bin" || exit 38
+    # shellcheck disable=SC1090
+    [[ -s "$GVM_ROOT/scripts/gvm" ]] && source "$GVM_ROOT/scripts/gvm"
+    gvm use go${GO_VERSION} --default
+
+    if [ ${#GOPATH} -lt 2 ]; then
+        echo $'GOPATH was not set'
+        exit 62
+    fi
+
+    systemctl set-environment GOPATH="$GOPATH"
+}
+
+function mesh_upgrade_golang_from_source {
+    chroot "$rootdir" adduser --disabled-login --gecos 'go' ipfs
+
+    git clone "$GO_REPO" "$rootdir/home/go/go${GO_VERSION}"
+    cd "$rootdir/home/go/go${GO_VERSION}" || exit 34
+    git checkout "go${GO_VERSION}" -b "go${GO_VERSION}"
+
+    git clone "$GO_REPO" "$rootdir/home/go/go${GO_INTERMEDIATE_VERSION}"
+    cd "$rootdir/home/go/go${GO_INTERMEDIATE_VERSION}" || exit 67
+    git checkout go${GO_INTERMEDIATE_VERSION} -b go${GO_INTERMEDIATE_VERSION}
+
+    cat <<EOF > "${rootdir}/root/upgrade_golang.sh"
+#!/bin/bash
+
+apt-get -yq ${CONFDEF_OPTION} install build-essential libc6-dev
+apt-get -yq ${CONFDEF_OPTION} install gcc-multilib g++-multilib make
+apt-get -yq ${CONFDEF_OPTION} install curl git mercurial binutils bison
+
+if [ -d /home/go/Maildir ]; then
+    rm -rf /home/go/Maildir
+fi
+
+export GOROOT=/home/go
+export GOPATH=/home/go/go${GO_INTERMEDIATE_VERSION}
+
+cd /home/go/go${GO_INTERMEDIATE_VERSION}/src
+./all.bash
+if [ ! -f /home/go/go${GO_INTERMEDIATE_VERSION}/bin/go ]; then
+    exit 63722
+fi
+
+export GOROOT_BOOTSTRAP=/home/go/go${GO_INTERMEDIATE_VERSION}
+
+cd /home/go/go${GO_VERSION}/src
+./all.bash
+if [ ! -f /home/go/go${GO_VERSION}/bin/go ]; then
+    exit 528352
+fi
+
+chown -R go:go /home/go
+
+export GOPATH=/home/go/go${GO_VERSION}
+export GOROOT=/home/go
+echo "export GOPATH=/home/go/go${GO_VERSION}" >> /home/go/.bashrc
+echo "export GOPATH=/home/go/go${GO_VERSION}" >> ~/.bashrc
+echo "export GOROOT=/home/go" >> /home/go/.bashrc
+echo "export GOROOT=/home/go" >> ~/.bashrc
+echo "systemctl set-environment GOPATH=\$GOPATH" >> ~/.bashrc
+echo "systemctl set-environment GOROOT=\$GOROOT" >> ~/.bashrc
+echo "systemctl set-environment GOPATH=\$GOPATH" >> /home/go/.bashrc
+echo "systemctl set-environment GOROOT=\$GOROOT" >> /home/go/.bashrc
+systemctl set-environment GOPATH=\$GOPATH
+systemctl set-environment GOROOT=\$GOROOT
+
+exit 0
+EOF
+    chroot "${rootdir}" chmod +x /root/upgrade_golang.sh
+    chroot "${rootdir}" /root/upgrade_golang.sh
+    if [ ! -f "${rootdir}/home/go/go${GO_VERSION}/bin/go" ]; then
+        echo $'Failed to upgrade golang'
+        cat "${rootdir}/root/upgrade_golang.sh"
+        rm -f "${rootdir}/root/upgrade_golang.sh"
+        exit 83
+    fi
+    rm -f "${rootdir}/root/upgrade_golang.sh"
+}
+
+function mesh_upgrade_golang {
+    prefix=
+    if [ "$rootdir" ]; then
+        prefix="chroot $rootdir"
+    fi
+    $prefix adduser --disabled-login --gecos 'go' go
+
+    GOARCH=
+    if [[ $ARCHITECTURE == *"386" || $ARCHITECTURE == *"686" ]]; then
+        GOARCH=386
+    fi
+    if [[ $ARCHITECTURE == *"amd64" || $ARCHITECTURE == "x86_64" ]]; then
+        GOARCH=amd64
+    fi
+    if [[ $ARCHITECTURE == *"arm"* ]]; then
+        GOARCH=armv6l
+    fi
+    if [[ $ARCHITECTURE == *"aarch"* || $ARCHITECTURE == *"arm64"* ]]; then
+        GOARCH=arm64
+    fi
+    if [ ! $GOARCH ]; then
+        echo $'No architecture specified'
+        ARCHITECTURE=$(uname -m)
+        if [[ $ARCHITECTURE == "arm"* ]]; then
+            GOARCH=armv6l
+            echo $"Using $GOARCH"
+        fi
+        if [[ $ARCHITECTURE == *"aarch"* || $ARCHITECTURE == *"arm64"* ]]; then
+            GOARCH=arm64
+            echo $"Using $GOARCH"
+        fi
+        if [[ $ARCHITECTURE == "amd"* || $ARCHITECTURE == "x86_64" ]]; then
+            GOARCH=amd64
+            echo $"Using $GOARCH"
+        fi
+        if [[ $ARCHITECTURE == *"386" || $ARCHITECTURE == *"686" ]]; then
+            GOARCH=386
+            echo $"Using $GOARCH"
+        fi
+    fi
+    if [ ! $GOARCH ]; then
+        echo $'System architecture was not detected when installing Go'
+        echo "uname reports: $(uname -m)"
+        exit 63
+    fi
+    GO_SOURCE=https://storage.googleapis.com/golang/go${GO_VERSION}.linux-${GOARCH}.tar.gz
+
+    if [ ! -d "${rootdir}${INSTALL_DIR}" ]; then
+        chroot "$rootdir" mkdir -p "${INSTALL_DIR}"
+    fi
+    cd "${rootdir}${INSTALL_DIR}" || exit 23
+    if [ ! -f "${rootdir}${INSTALL_DIR}/go${GO_VERSION}.linux-${GOARCH}.tar.gz" ]; then
+        wget ${GO_SOURCE}
+    fi
+    if [ ! -f "${rootdir}${INSTALL_DIR}/go${GO_VERSION}.linux-${GOARCH}.tar.gz" ]; then
+        exit 26
+    fi
+    $prefix tar -C /home/go -xzf "${INSTALL_DIR}/go${GO_VERSION}.linux-${GOARCH}.tar.gz"
+    if [ ! -d "${rootdir}/home/go/go/bin" ]; then
+        echo 'Go binary not installed'
+        exit 76
+    fi
+    # shellcheck disable=SC2086
+    mv ${rootdir}/home/go/go ${rootdir}/home/go/go${GO_VERSION}
+    if ! grep -q "export GOROOT=/home/go" "${rootdir}/root/.bashrc"; then
+	echo "export GOROOT=/home/go" >> "${rootdir}/root/.bashrc"
+	echo "export GOPATH=\$GOROOT/go${GO_VERSION}/bin" >> "${rootdir}/root/.bashrc"
+	echo "export PATH=\$PATH:\$GOPATH" >> "${rootdir}/root/.bashrc"
+    fi
+    if ! grep -q "export GOROOT=/home/go" "${rootdir}/etc/skel/.bashrc"; then
+	echo "export GOROOT=/home/go" >> "${rootdir}/etc/skel/.bashrc"
+	echo "export GOPATH=\$GOROOT/go${GO_VERSION}/bin" >> "${rootdir}/etc/skel/.bashrc"
+	echo "export PATH=\$PATH:\$GOPATH" >> "${rootdir}/etc/skel/.bashrc"
+    fi
+    if ! grep -q "export GOROOT=/home/go" "${rootdir}/home/$MY_USERNAME/.bashrc"; then
+	echo "export GOROOT=/home/go" >> "${rootdir}/home/$MY_USERNAME/.bashrc"
+	echo "export GOPATH=\$GOROOT/go${GO_VERSION}/bin" >> "${rootdir}/home/$MY_USERNAME/.bashrc"
+	echo "export PATH=\$PATH:\$GOPATH" >> "${rootdir}/home/$MY_USERNAME/.bashrc"
+    fi
+    if ! grep -q "export GOROOT=/home/go" "${rootdir}/home/go/.bashrc"; then
+	echo "export GOROOT=/home/go" >> "${rootdir}/home/go/.bashrc"
+	echo "export GOPATH=\$GOROOT/go${GO_VERSION}/bin" >> "${rootdir}/home/go/.bashrc"
+	echo "export PATH=\$PATH:\$GOPATH" >> "${rootdir}/home/go/.bashrc"
+    fi
+
+    $prefix chown -R "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME"
+    $prefix chown -R go:go /home/go
+    if [ ! -d "${rootdir}/home/go/go${GO_VERSION}/bin" ]; then
+        echo $"golang binaries directory not found ${rootdir}/home/go/go${GO_VERSION}/bin"
+        exit 35
+    fi
+    if ! cp "${rootdir}/home/go/go${GO_VERSION}/bin/"* "${rootdir}/usr/bin"; then
+        ls -la "${rootdir}/home/go/go${GO_VERSION}"
+        echo $'Copying golang binaries failed'
+        exit 24
+    fi
+}
+
+function upgrade_golang {
+    if grep -Fxq "upgrade_golang:$GO_VERSION" "$COMPLETION_FILE"; then
+        return
+    fi
+
+    rootdir=
+    mesh_upgrade_golang
+
+    # alter the go version used by the gogs daemon
+    if [ -f /etc/systemd/system/gogs.service ]; then
+        sed -i "s|Environment=.*|Environment=\"USER=gogs\" \"HOME=/home/gogs\" \"GOPATH=/home/go/go${GO_VERSION}\"|g" /etc/systemd/system/gogs.service
+        systemctl daemon-reload
+        systemctl restart gogs
+    fi
+
+    set_completion_param "${FUNCNAME[0]}" "$GO_VERSION"
+}
+
+# NOTE: deliberately there is no "exit 0"

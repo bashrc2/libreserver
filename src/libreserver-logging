@@ -1,0 +1,324 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Turn logging on or off
+#
+# License
+# =======
+#
+# Copyright (C) 2015-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+PROJECT_NAME='libreserver'
+
+export TEXTDOMAIN=${PROJECT_NAME}-logging
+export TEXTDOMAINDIR="/usr/share/locale"
+
+WEBSERVER_LOG_LEVEL='warn'
+
+REMOVE_FILES_COMMAND='rm -rf'
+
+source /usr/local/bin/${PROJECT_NAME}-vars
+
+UTILS_FILES="/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-*"
+for f in $UTILS_FILES
+do
+    source "$f"
+done
+
+APP_FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
+for f in $APP_FILES
+do
+    source "$f"
+done
+
+APPS_AVAILABLE=()
+
+function logging_get_app_names {
+    FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
+
+    for filename in $FILES
+    do
+        app_name=$(echo "${filename}" | awk -F '-app-' '{print $2}')
+        if grep -q "logging_on_" "${filename}"; then
+            if grep -q "logging_off_" "${filename}"; then
+                APPS_AVAILABLE+=("${app_name}")
+            fi
+        fi
+    done
+}
+
+function turn_logging_on {
+    logging_get_app_names
+
+    # shellcheck disable=SC2068
+    for a in ${APPS_AVAILABLE[@]}
+    do
+        echo $"Turning on logging for ${a}"
+        "logging_on_${a}"
+    done
+}
+
+function turn_logging_off {
+    logging_get_app_names
+
+    # shellcheck disable=SC2068
+    for a in ${APPS_AVAILABLE[@]}
+    do
+        echo $"Turning off logging for ${a}"
+        "logging_off_${a}"
+    done
+}
+
+function turn_on_rsys_logging {
+    save_rsys_header
+
+    { echo 'auth,authpriv.*         /var/log/auth.log';
+      echo '*.*;auth,authpriv.none -/var/log/syslog';
+      echo 'cron.*                  /var/log/cron.log';
+      echo 'daemon.*               -/var/log/daemon.log';
+      echo 'kern.*                 -/var/log/kern.log';
+      echo 'lpr.*                  -/var/log/lpr.log';
+      echo 'mail.*                 -/var/log/mail.log';
+      echo 'user.*                 -/var/log/user.log';
+      echo '';
+      echo 'mail.info              -/var/log/mail.info';
+      echo 'mail.warn              -/var/log/mail.warn';
+      echo 'mail.err                /var/log/mail.err';
+      echo '';
+      echo "*.=debug;\\";
+      echo "        auth,authpriv.none;\\";
+      echo '        news.none;mail.none -/var/log/debug';
+      echo "*.=info;*.=notice;*.=warn;\\";
+      echo "        auth,authpriv.none;\\";
+      echo "        cron,daemon.none;\\";
+      echo '        mail,news.none      -/var/log/messages';
+      echo '';
+      echo '*.emerg                         :omusrmsg:*'; } >> /etc/rsyslog.conf
+}
+
+if [ ! "$1" ]; then
+    exit 1
+fi
+
+if [[ "$1" == "on" || "$1" == "On" || "$1" == "ON" ]]; then
+    turn_logging_on
+
+    if [ -f /etc/mosquitto/mosquitto.conf ]; then
+	if grep -q 'log_dest ' /etc/mosquitto/mosquitto.conf; then	    
+	    sed -i 's|log_dest .*|log_dest stderr|g' /etc/mosquitto/mosquitto.conf
+	else
+	    echo 'log_dest stderr' >> /etc/mosquitto/mosquitto.conf
+	fi
+    fi
+
+    if [ -f /var/lib/turn/turnserver.conf ]; then
+        sed -i 's|log-file=.*|log-file=/var/lib/turn/turnserver.log|g' /var/lib/turn/turnserver.conf
+    fi
+
+    if [ -d /etc/tor ]; then
+        if [ ! -d /var/log/tor ]; then
+            mkdir /var/log/tor
+	    if ! grep -q "adm:" /etc/group; then
+		groupadd adm
+	    fi
+            chown -R debian-tor:adm /var/log/tor
+        fi
+        if [ ! -f /var/log/tor/notices.log ]; then
+            touch /var/log/tor/notices.log
+	    if ! grep -q "adm:" /etc/group; then
+		groupadd adm
+	    fi
+            chown debian-tor:adm /var/log/tor/notices.log
+        fi
+        echo 'Log debug file /var/log/tor/debug.log' > /etc/torrc.d/logging
+    fi
+    if [ -f "/etc/php/${PHP_VERSION}/fpm/php-fpm.conf" ]; then
+        sed -i 's|error_log =.*|error_log = /var/log/php-fpm.log|g' "/etc/php/${PHP_VERSION}/fpm/php-fpm.conf"
+    fi
+    if [ -d /etc/nginx ]; then
+        if [ ! -d /var/log/nginx ]; then
+            mkdir /var/log/nginx
+        fi
+        for filename in /etc/nginx/sites-available/* ; do
+            filename_domain=$(echo "$filename" | awk -F '/' '{print $5}')
+            sed -i "s|access_log.*|access_log /var/log/nginx/$filename_domain.access.log;|g" "$filename"
+            sed -i "s|error_log.*|error_log /var/log/nginx/$filename_domain.err.log $WEBSERVER_LOG_LEVEL;|g" "$filename"
+        done
+        sed -i 's|access_log.*|access_log /var/log/nginx/access.log;|g' /etc/nginx/nginx.conf
+        sed -i 's|error_log.*|error_log /var/log/nginx/error.log;|g' /etc/nginx/nginx.conf
+    fi
+    if [ -f /etc/init.d/spamassassin ]; then
+        sed -i "s|DOPTIONS=\"-s null -d --pidfile=\$PIDFILE\"|DOPTIONS=\"-d --pidfile=\$PIDFILE\"|g" /etc/init.d/spamassassin
+    fi
+    if [ -d /etc/exim4 ]; then
+        if [ ! -d /var/log/exim4 ]; then
+            mkdir /var/log/exim4
+        fi
+        sed -i 's|MAIN_LOG_SELECTOR = .*|MAIN_LOG_SELECTOR = +tls_peerdn|g' /etc/exim4/conf.d/main/01_exim4-config_listmacrosdefs
+        sed -i 's|MAIN_LOG_SELECTOR = .*|MAIN_LOG_SELECTOR = +tls_peerdn|g' /etc/exim4/exim4.conf.template
+        sed -i 's|log_selector =.*|log_selector = MAIN_LOG_SELECTOR|g' /etc/exim4/conf.d/main/90_exim4-config_log_selector
+    fi
+    if [ -f /etc/dovecot/dovecot.conf ]; then
+        sed -i 's|log_path =.*|log_path = /var/log/dovecot.log|g' /etc/dovecot/dovecot.conf
+        sed -i 's|info_log_path =.*|info_log_path = /var/log/dovecot-info.log|g' /etc/dovecot/dovecot.conf
+        sed -i 's|debug_log_path =.*|debug_log_path = /var/log/dovecot-debug.log|g' /etc/dovecot/dovecot.conf
+    fi
+    if [ -d /etc/mysql ]; then
+        if [ ! -d /var/log/mysql ]; then
+            mkdir /var/log/mysql
+        fi
+        if [ -f /etc/mysql/my.cnf ]; then
+            sed -i 's|log_error =.*|log_error = /var/log/mysql/error.log|g' /etc/mysql/my.cnf
+        fi
+    fi
+    turn_on_rsys_logging
+    turn_on_postgresql_logging
+else
+    turn_logging_off
+
+    if [ -f /etc/mosquitto/mosquitto.conf ]; then
+	if grep -q 'log_dest ' /etc/mosquitto/mosquitto.conf; then	    
+	    sed -i '/log_dest /d' /etc/mosquitto/mosquitto.conf
+	fi
+    fi
+    
+    if [ -f /var/lib/turn/turnserver.conf ]; then
+        sed -i 's|log-file=.*|log-file=/dev/null|g' /var/lib/turn/turnserver.conf
+    fi
+
+    if [ -d /etc/torrc.d ]; then
+        echo 'Log notice file /var/log/tor/notices.log' > /etc/torrc.d/logging
+    fi
+    if [ -d /var/log/radicale ]; then
+        $REMOVE_FILES_COMMAND /var/log/radicale/*
+        rm -rf /var/log/radicale
+    fi
+    if [ -f "/etc/php/${PHP_VERSION}/fpm/php-fpm.conf" ]; then
+        sed -i 's|error_log =.*|error_log = /dev/null|g' "/etc/php/${PHP_VERSION}/fpm/php-fpm.conf"
+        $REMOVE_FILES_COMMAND /var/log/php-fpm.*
+    fi
+    if [ -d /etc/nginx ]; then
+        for filename in /etc/nginx/sites-available/* ; do
+            sed -i 's|access_log.*|access_log /dev/null;|g' "$filename"
+            sed -i 's|warn_log.*|warn_log /dev/null;|g' "$filename"
+            sed -i 's|error_log.*|error_log /dev/null;|g' "$filename"
+        done
+        sed -i 's|access_log.*|access_log /dev/null;|g' /etc/nginx/nginx.conf
+        sed -i 's|error_log.*|error_log /dev/null;|g' /etc/nginx/nginx.conf
+        $REMOVE_FILES_COMMAND /var/log/nginx/*
+    fi
+    if [ -f /etc/init.d/spamassassin ]; then
+        sed -i "s|DOPTIONS=\"-d --pidfile=\$PIDFILE\"|DOPTIONS=\"-s null -d --pidfile=\$PIDFILE\"|g" /etc/init.d/spamassassin
+    fi
+    if [ -d /etc/exim4 ]; then
+        sed -i 's|MAIN_LOG_SELECTOR = .*|MAIN_LOG_SELECTOR = -all|g' /etc/exim4/conf.d/main/01_exim4-config_listmacrosdefs
+        sed -i 's|MAIN_LOG_SELECTOR = .*|MAIN_LOG_SELECTOR = -all|g' /etc/exim4/exim4.conf.template
+        sed -i 's|log_selector =.*|log_selector = -all|g' /etc/exim4/conf.d/main/90_exim4-config_log_selector
+        $REMOVE_FILES_COMMAND /var/log/exim4/*
+    fi
+    if [ -f /etc/dovecot/dovecot.conf ]; then
+        sed -i 's|log_path =.*|log_path = /dev/null|g' /etc/dovecot/dovecot.conf
+        sed -i 's|info_log_path =.*|info_log_path = /dev/null|g' /etc/dovecot/dovecot.conf
+        sed -i 's|debug_log_path =.*|debug_log_path = /dev/null|g' /etc/dovecot/dovecot.conf
+        $REMOVE_FILES_COMMAND /var/log/mail.*
+        $REMOVE_FILES_COMMAND /var/log/dovecot*
+    fi
+    if [ -d /etc/mysql ]; then
+        if [ -d /var/log/mysql ]; then
+            $REMOVE_FILES_COMMAND /var/log/mysql/*
+        fi
+        if [ -f /var/log/mysql.err ]; then
+            $REMOVE_FILES_COMMAND /var/log/mysql.err
+        fi
+        if [ -f /var/log/mysql.log ]; then
+            $REMOVE_FILES_COMMAND /var/log/mysql.log
+        fi
+        if [ -f /etc/mysql/my.cnf ]; then
+            sed -i 's|log_error =.*|log_error = /dev/null|g' /etc/mysql/my.cnf
+        fi
+    fi
+    turn_off_rsys_logging
+    turn_off_postgresql_logging
+fi
+
+if [ -d /etc/exim4 ]; then
+    update-exim4.conf.template -r
+    update-exim4.conf
+    dpkg-reconfigure --frontend noninteractive exim4-config
+fi
+
+if [[ "$2" == "--reboot"* || "$2" == "--restart"* ]]; then
+    # if we are rebooting anyway then there is no need to
+    # restart the daemons
+    if [ -f /tmp/.upgrading ]; then
+        rm /tmp/.upgrading
+    fi
+    exit 0
+fi
+
+if [ -d /etc/exim4 ]; then
+    systemctl restart exim4
+fi
+systemctl restart syslog
+if [ -d /etc/tor ]; then
+    if [[ "$2" != "--onion" ]]; then
+	restart_tor_daemon
+    fi
+fi
+if [ -f /etc/init.d/spamassassin ]; then
+    systemctl restart spamassassin
+fi
+if [ -d /etc/ices2 ]; then
+    systemctl restart icecast2
+fi
+if [ -d /etc/dovecot ]; then
+    systemctl restart dovecot
+fi
+if [ -f /etc/mumble-server.ini ]; then
+    systemctl restart mumble-server
+fi
+if [ -d /var/www/radicale ]; then
+    systemctl restart radicale
+fi
+if [ -d /etc/matrix ]; then
+    systemctl restart matrix
+fi
+if [ -d /etc/postgresql ]; then
+    systemctl restart postgresql
+fi
+if [ -f /var/lib/turn/turnserver.conf ]; then
+    systemctl restart turn
+fi
+if [ -d /etc/mosquitto ]; then
+    systemctl restart mosquitto
+fi
+if [ -d /etc/prosody ]; then
+    systemctl restart prosody
+fi
+if [ -d /etc/epicyon ]; then
+    systemctl restart epicyon
+fi
+
+fuser -k 80/tcp
+fuser -k 443/tcp
+# shellcheck disable=SC2086
+systemctl restart php${PHP_VERSION}-fpm
+systemctl restart nginx
+
+exit 0

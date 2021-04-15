@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <meta charset="utf-8">
+  <style>
+    @import url("libreserver.css");
+
+    * {
+        box-sizing: border-box;
+    }
+
+    .subheadertext {
+        margin-left : 10%;
+        text-align: left;
+        font-size: 110%;
+        font-weight: bold;
+    }
+
+    .subheaderports {
+        margin-left : 10%;
+        text-align: left;
+        font-size: 110%;
+        font-weight: bold;
+    }
+
+    .helptext {
+        width: 80%;
+        text-align: left;
+        font-size: 100%;
+        margin-left : 10%;
+    }
+
+    .portstext {
+        width: 80%;
+        text-align: left;
+        font-size: 100%;
+        margin-left : 10%;
+    }
+
+    .row {
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+        padding: 0 4px;
+    }
+
+    .column {
+        -ms-flex: 25%;
+        flex: 15%;
+        max-width: 25%;
+        padding: 0 4px;
+    }
+
+    .column img {
+        margin-top: 8px;
+        vertical-align: middle;
+    }
+
+    @media screen and (max-width: 800px) {
+        .column {
+            -ms-flex: 50%;
+            flex: 50%;
+            max-width: 50%;
+        }
+    }
+
+    @media screen and (max-width: 200px) {
+        .column {
+            -ms-flex: 100%;
+            flex: 100%;
+            max-width: 100%;
+        }
+    }
+  </style>
+  <body>
+
+    <div class="header">
+      <a href="app_xmpp.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
+    </div>
+
+    <p class="headertext" translate="yes">XMPP</p>
+
+    <p class="subheaderports" translate="yes">Ports</p>
+
+    <p class="portstext" translate="yes">Forward the following ports from your internet router:</p>
+
+    <p class="portstext" translate="no">5222, 5223, 5269, 5280, 5281</p>
+
+    <p class="subheadertext" translate="yes">Setting up with an Android phone</p>
+
+    <p class="helptext"><b>1.</b> <span translate="yes">Install F-Droid</span></p>
+
+    <p class="helptext"><b>2.</b> <span translate="yes">Open the F-droid app and select 'Settings' then 'Repositories'. Make sure that 'Guardian Project Official Releases' is enabled</span></p>
+
+    <p class="helptext"><b>3.</b> <span translate="yes">Go back to the F-droid initial screen and update the repositories by swiping downwards. You'll see it say "updating repositories". This might take a few minutes.</span></p>
+
+    <p class="helptext"><b>4.</b> <span translate="yes">Select search (magnifying glass icon) and search for 'Orbot' (not the legacy version), then select 'install'</span></p>
+
+    <p class="helptext"><b>5.</b> <span translate="yes">Search again for 'Conversations' (not the legacy version), then select 'install'</span></p>
+
+    <p class="helptext"><b>6.</b> <span translate="yes">Open up the Conversations app and select the menu (three dots), scroll down and select 'Expert Settings' then select 'Connect to Tor'</span></p>
+
+    <p class="helptext"><b>7.</b> <span translate="yes">Go back to the initial screen of the Conversations app, select the menu again, then 'Manage accounts'. Add an account by selecting the person icon with the plus next to it.</span></p>
+
+    <p class="helptext"><b>8.</b> <span translate="yes">For the Jabber ID enter the email address from your LibreServer user settings</span></p>
+
+    <p class="helptext"><b>9.</b> <span translate="yes">For the password use the password which you initially wrote down or stored during the setup of the LibreServer system</span></p>
+
+    <p class="helptext"><b>10.</b> <span translate="yes">Select 'Next' to create the account. If eveything is working after a couple of minutes you should see the account status change to 'online' in green</span></p>
+
+    <p class="helptext"><b>11.</b> <span translate="yes">You can now go back to the initial Conversations app screen and start using it. You'll probably want to add contacts using the icon at the bottom right. For more information see the Conversations website (conversations.im) or subscribe to the chat group conversations@conference.siacs.eu</span></p>
+
+  </body>
+</html>

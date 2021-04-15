@@ -1,0 +1,2011 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Administrator control panel for the LibreServer system
+#
+# License
+# =======
+#
+# Copyright (C) 2015-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+PROJECT_NAME='libreserver'
+
+export TEXTDOMAIN=${PROJECT_NAME}-controlpanel
+export TEXTDOMAINDIR="/usr/share/locale"
+
+if [[ $USER != 'root' ]]; then
+    # show the user version of the control panel
+    #${PROJECT_NAME}-controlpanel-user
+    controluser
+    exit 0
+fi
+
+function please_wait {
+        local str width height length
+
+        width=$(tput cols)
+        height=$(tput lines)
+        str=$"Please wait"
+        length=${#str}
+        clear
+        tput cup $((height / 2)) $(((width / 2) - (length / 2)))
+        echo "$str"
+        tput cup $((height * 3 / 5)) $(((width / 2)))
+        echo -n ''
+}
+
+please_wait
+
+# Start including files
+
+source /usr/local/bin/${PROJECT_NAME}-vars
+
+UTILS_FILES="/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-*"
+for f in $UTILS_FILES
+do
+    source "$f"
+done
+
+source "/usr/share/${PROJECT_NAME}/base/${PROJECT_NAME}-base-email"
+
+APP_FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
+for f in $APP_FILES
+do
+    source "$f"
+done
+
+# End including files
+
+COMPLETION_FILE="$HOME/${PROJECT_NAME}-completed.txt"
+SELECTED_USERNAME=
+ADMIN_USER=
+UPGRADE_SCRIPT_NAME="${PROJECT_NAME}-upgrade"
+UPDATE_DATE_SCRIPT=/usr/bin/updatedate
+
+# Minimum number of characters in a password
+MINIMUM_PASSWORD_LENGTH=$(grep 'MINIMUM_PASSWORD_LENGTH=' "/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-passwords" | head -n 1 | awk -F '=' '{print $2}')
+
+# Mumble
+MUMBLE_PORT=64738
+MUMBLE_ONION_PORT=8095
+
+SSH_PORT=2222
+
+WIFI_INTERFACE=wlan0
+WIFI_SSID=
+WIFI_TYPE='wpa2-psk'
+WIFI_PASSPHRASE=
+WIFI_HOTSPOT='no'
+WIFI_NETWORKS_FILE="$HOME/${PROJECT_NAME}-wifi.cfg"
+
+USB_DRIVE=sdb
+# get default USB from config file
+CONFIGURATION_FILE="$HOME/${PROJECT_NAME}.cfg"
+
+read_config_param WIFI_HOTSPOT
+read_config_param WIFI_INTERFACE
+read_config_param WIFI_TYPE
+read_config_param WIFI_SSID
+read_config_param WIFI_PASSPHRASE
+read_config_param SSH_PORT
+read_config_param USB_DRIVE
+read_config_param MY_USERNAME
+read_config_param ONION_ONLY
+if [[ $USB_DRIVE == *"dev"* ]]; then
+    USB_DRIVE=$(echo ${USB_DRIVE} | awk -F '/' '{print $3}' | sed 's|1||g' | sed 's|2||g')
+fi
+
+function any_key {
+    echo ''
+    # shellcheck disable=SC2034
+    read -n1 -rsp $"Press any key to continue..." key
+}
+
+function reset_password_tries {
+    passwords_select_user
+    if [ ! "$SELECTED_USERNAME" ]; then
+        return
+    fi
+    pam_faillock --user "$SELECTED_USERNAME" --reset
+    dialog --title $"Reset password tries" \
+           --msgbox $"Password tries have been reset for $SELECTED_USERNAME" 6 60
+}
+
+function check_for_updates {
+    if [ ! -f "/etc/cron.weekly/$UPGRADE_SCRIPT_NAME" ]; then
+        dialog --title $"Check for updates" \
+               --msgbox $"Upgrade script was not found" 6 40
+        return
+    fi
+
+    clear
+    /etc/cron.weekly/$UPGRADE_SCRIPT_NAME
+    any_key
+}
+
+function add_user {
+    data=$(mktemp 2>/dev/null)
+    dialog --backtitle $"LibreServer Control Panel" \
+           --title $"Add new user" \
+           --form "\\n" 8 60 3 \
+           $"Username:" 1 1 "" 1 28 16 15 \
+           $"ssh public key (optional):" 2 1 "" 2 28 40 10000 \
+           2> "$data"
+    sel=$?
+    case $sel in
+        1) rm -f "$data"
+           return;;
+        255) rm -f "$data"
+             return;;
+    esac
+    new_user_username=$(sed -n 1p < "$data")
+    new_user_ssh_public_key=$(sed -n 2p < "$data")
+    rm -f "$data"
+    if [ ${#new_user_username} -lt 2 ]; then
+        dialog --title $"New username" \
+               --msgbox $"No username was given" 6 40
+        return
+    fi
+    if [[ "$new_user_username" == *" "* ]]; then
+        dialog --title $"Invalid username" \
+               --msgbox $"The username should not contain any spaces" 6 40
+        return
+    fi
+    if [ ${#new_user_ssh_public_key} -lt 20 ]; then
+        clear
+        "${PROJECT_NAME}-adduser" "$new_user_username"
+        any_key
+    else
+        if [[ "$new_user_ssh_public_key" == 'ssh-'* ]]; then
+            clear
+            "${PROJECT_NAME}-adduser" "$new_user_username" "$new_user_ssh_public_key"
+            any_key
+        else
+            dialog --title $"ssh public key" \
+                   --msgbox $"This does not look like an ssh public key" 6 40
+        fi
+    fi
+}
+
+function pad_string {
+    echo -n -e "$1" | sed -e :a -e 's/^.\{1,25\}$/& /;ta'
+}
+
+function show_tor_bridges {
+    if ! grep -q "#BridgeRelay" /etc/tor/torrc; then
+        if grep -q "BridgeRelay 1" /etc/tor/torrc; then
+            read_config_param 'TOR_BRIDGE_PORT'
+            read_config_param 'TOR_BRIDGE_NICKNAME'
+            if [ ${#TOR_BRIDGE_NICKNAME} -gt 0 ]; then
+                W+=($"Your Tor Bridge" "$(get_ipv4_address):${TOR_BRIDGE_PORT} ${TOR_BRIDGE_NICKNAME}")
+            fi
+        fi
+    fi
+    bridges_list=$(grep "Bridge " /etc/tor/torrc | grep -v '##')
+    if [ ${#bridges_list} -gt 0 ]; then
+        for i in "${bridges_list[@]}"
+        do
+            bridgestr=$(i//Bridge /)
+            W+=($"Tor Bridge" "$bridgestr")
+        done
+    fi
+}
+
+function show_domains {
+    read_config_param "DEFAULT_DOMAIN_NAME"
+
+    while true
+    do
+        W=()
+
+        W+=("IPv4" "$(get_ipv4_address) / $(get_external_ipv4_address)")
+        ipv6_address="$(get_ipv6_address)"
+        if [ ${#ipv6_address} -gt 0 ]; then
+            W+=("IPv6" "${ipv6_address}")
+        fi
+
+        if [ -f /etc/ssh/ssh_host_rsa_key.pub ]; then
+            W+=("ssh rsa sha256" "$(awk '{print $2}' /etc/ssh/ssh_host_rsa_key.pub | base64 -d | sha256sum -b | awk '{print $1}' | xxd -r -p | base64 | sed 's|=||g')")
+        fi
+        if [ -f /etc/ssh/ssh_host_ed25519_key.pub ]; then
+            W+=("ssh ed25519 sha256" "$(awk '{print $2}' /etc/ssh/ssh_host_ed25519_key.pub | base64 -d | sha256sum -b | awk '{print $1}' | xxd -r -p | base64 | sed 's|=||g')")
+        fi
+
+        if grep -q "ssh onion domain" "$COMPLETION_FILE"; then
+            domain_onion=$(grep 'ssh onion domain' "${COMPLETION_FILE}" | awk -F ':' '{print $2}')
+            W+=("ssh" "${DEFAULT_DOMAIN_NAME} / ${domain_onion}")
+        fi
+        if grep -q "email onion domain" "$COMPLETION_FILE"; then
+            domain_onion=$(grep 'email onion domain' "${COMPLETION_FILE}" | awk -F ':' '{print $2}')
+            W+=("Email" "${DEFAULT_DOMAIN_NAME} / ${domain_onion}")
+        fi
+        if grep -q "sks onion domain" "$COMPLETION_FILE"; then
+            read_config_param "KEYSERVER_DOMAIN_NAME"
+            domain_onion=$(grep 'sks onion domain' "${COMPLETION_FILE}" | awk -F ':' '{print $2}')
+            W+=("SKS" "${KEYSERVER_DOMAIN_NAME} / ${domain_onion}")
+        fi
+
+        if [ -f /var/lib/turn/turnserver.conf ]; then
+            W+=("TURN secret" "$(grep 'static-auth-secret' /var/lib/turn/turnserver.conf | awk -F '=' '{print $2}')")
+        fi
+
+        show_tor_bridges
+
+        # shellcheck disable=SC2068
+        for app_name in ${APPS_INSTALLED_NAMES[@]}
+        do
+            if ! grep -q "SHOW_ON_ABOUT=1" "/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-${app_name}"; then
+                continue
+            fi
+
+            # handle the foibles of capitalisation
+            if ! grep -q "${app_name} domain" "$COMPLETION_FILE"; then
+                app_name_upper=$(echo "${app_name}" | awk '{print toupper($0)}')
+                if grep -q "${app_name_upper} domain" "$COMPLETION_FILE"; then
+                    app_name=${app_name_upper}
+                else
+                    app_name_first_upper="$(tr '[:lower:]' '[:upper:]' <<< "${app_name:0:1}")${app_name:1}"
+                    if grep -q "${app_name_first_upper} domain" "$COMPLETION_FILE"; then
+                        app_name=${app_name_first_upper}
+                    fi
+                fi
+            fi
+
+            if [ ${#app_name} -gt 0 ]; then
+                icann_address=$(get_app_icann_address "$app_name")
+                if grep -q "SHOW_CLEARNET_ADDRESS_ON_ABOUT=0" "/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-${app_name}"; then
+                    icann_address='-'
+                fi
+                if [[ "$ONION_ONLY" != 'no' ]]; then
+                    if [[ "${icann_address}" != "${LOCAL_NAME}.local" ]]; then
+                        icann_address='-'
+                    fi
+                fi
+                onion_address=$(get_app_onion_address "$app_name")
+                if [ ${#onion_address} -eq 0 ]; then
+                    onion_address="-"
+                fi
+
+                if [[ "${icann_address}" != '-' ]]; then
+                    if [[ "${onion_address}" != '-' ]]; then
+                        W+=("${app_name}" "${icann_address} / ${onion_address}")
+                    else
+                        W+=("${app_name}" "${icann_address}")
+                    fi
+                else
+                    W+=("${app_name}" "${onion_address}")
+                fi
+
+                if grep -q "mobile${app_name} onion domain" "$COMPLETION_FILE"; then
+                    onion_address=$(get_app_onion_address "${app_name}" "mobile")
+                    if [[ "${icann_address}" != '-' ]]; then
+                        W+=("${app_name} (mobile)" "${icann_address} / ${onion_address}")
+                    else
+                        W+=("${app_name} (mobile)" "${onion_address}")
+                    fi
+                fi
+            fi
+        done
+
+        if grep -q "rss reader domain" "$COMPLETION_FILE"; then
+            if [ -d /var/lib/tor/hidden_service_ttrss ]; then
+                domain_onion=$(cat /var/lib/tor/hidden_service_ttrss/hostname)
+                W+=("RSS Reader" "${domain_onion}")
+            fi
+            if [ -d /var/lib/tor/hidden_service_mobilerss ]; then
+                domain_onion=$(cat /var/lib/tor/hidden_service_mobilerss/hostname)
+                W+=("RSS mobile" "${domain_onion}")
+            fi
+        fi
+
+        width=$(tput cols)
+        height=$(tput lines)
+
+        # shellcheck disable=SC2068
+        selected=$(dialog --backtitle $"LibreServer Control Panel" --title $"Domains" --menu $"Use Shift+cursors to select and copy onion addresses" $((height-4)) $((width-4)) $((height-4)) "${W[@]}" 3>&2 2>&1 1>&3)
+        if [ ! "$selected" ]; then
+            break
+        fi
+        # obtain the addresses from the key by itterating through
+        # the array. This is quite crude and maybe there's a better way
+        key_found=
+        selected_addresses=
+        for key in "${W[@]}";
+        do
+            if [ $key_found ]; then
+                selected_addresses="$key"
+                break
+            fi
+            if [[ "$key" == "$selected" ]]; then
+                key_found=1
+            fi
+        done
+        # Was the key matched?
+        if [ ! "$selected_addresses" ]; then
+            break
+        fi
+        # addresses were found - is this an onion?
+        if [[ "$selected_addresses" != *".onion"* ]]; then
+            continue
+        fi
+        # There are two forms of addresses: "x / y.onion" and "x.onion"
+        if [[ "$selected_addresses" == *'/'* ]]; then
+            onion_addr=$(echo "$selected_addresses" | awk -F '/' '{print $2}' | awk -F ' ' '{print $1}')
+        else
+            onion_addr="$selected_addresses"
+        fi
+        # show the onion address as a QR code
+        clear
+        echo "${selected}: ${onion_addr}"
+        echo -n "$onion_addr" | qrencode -t UTF8
+        any_key
+    done
+}
+
+function show_users {
+    echo 'Users'
+    echo '====='
+    echo ''
+    echo -n -e "$(pad_string 'Name')"
+    echo -n -e "$(pad_string 'Data')"
+    echo ''
+    echo '----------------------------------'
+    for d in /home/*/ ; do
+        USRNAME=$(echo "$d" | awk -F '/' '{print $3}')
+        if [[ $(is_valid_user "$USRNAME") == "1" ]]; then
+            echo -n -e "$(pad_string "${USRNAME}")"
+
+            # size of the home directory
+            du -s -h "/home/${USRNAME}" | awk -F ' ' '{print $1}'
+        fi
+    done
+    echo ''
+}
+
+function show_about {
+    detect_apps
+    get_apps_installed_names
+    show_domains
+}
+
+function select_user {
+    SELECTED_USERNAME=
+
+    # shellcheck disable=SC2207
+    users_array=($(ls /home))
+
+    delete=(git)
+    # shellcheck disable=SC2068
+    for del in ${delete[@]}
+    do
+        # shellcheck disable=SC2206
+        users_array=(${users_array[@]/$del})
+    done
+
+    i=0
+    W=()
+    name=()
+    # shellcheck disable=SC2068
+    for u in ${users_array[@]}
+    do
+        if [[ $(is_valid_user "$u") == "1" ]]; then
+            i=$((i+1))
+            W+=("$i" "$u")
+            name+=("$u")
+        fi
+    done
+
+    if [ $i -eq 1 ]; then
+        SELECTED_USERNAME="${name[0]}"
+    else
+        # shellcheck disable=SC2068
+        user_index=$(dialog --backtitle $"LibreServer Control Panel" --title $"Select User" --menu $"Select one of the following:" 24 40 17 ${W[@]} 3>&2 2>&1 1>&3)
+
+        # shellcheck disable=SC2181
+        if [ $? -eq 0 ]; then
+            SELECTED_USERNAME="${name[$((user_index-1))]}"
+        fi
+    fi
+}
+
+function delete_user {
+    select_user
+    if [ ! "$SELECTED_USERNAME" ]; then
+        return
+    fi
+    if grep -Fxq "Admin user:$SELECTED_USERNAME" "$COMPLETION_FILE"; then
+        dialog --title $"Administrator user" \
+               --msgbox $"You can't delete the administrator user" 6 40
+        return
+    fi
+    clear
+    "${PROJECT_NAME}-rmuser" "$SELECTED_USERNAME"
+    any_key
+}
+
+function change_password {
+    select_user
+    if [ ! "$SELECTED_USERNAME" ]; then
+        return
+    fi
+
+    dialog --title $"Change password" \
+           --passwordbox $"New password for user $SELECTED_USERNAME" 8 40 2> "$data"
+    newpassword=$(<"$data")
+    rm -f "$data"
+    if [ "${#newpassword}" -lt "${MINIMUM_PASSWORD_LENGTH}" ]; then
+        dialog --title $"Change password" \
+               --msgbox $"The password should be ${MINIMUM_PASSWORD_LENGTH} or more characters" 6 40
+        return
+    fi
+
+    echo -n "$SELECTED_USERNAME:$newpassword" | /usr/sbin/chpasswd
+
+    dialog --title $"Change password" \
+           --msgbox $"Password for $SELECTED_USERNAME was changed" 6 40
+}
+
+function change_ssh_public_key {
+    select_user
+    if [ ! "$SELECTED_USERNAME" ]; then
+        return
+    fi
+
+    if grep -Fxq "Admin user:$SELECTED_USERNAME" "$COMPLETION_FILE"; then
+        dialog --title $"Change ssh public key" \
+               --backtitle $"LibreServer Control Panel" \
+               --defaultno \
+               --yesno $"\\nThis is the administrator user.\\n\\nAre you sure you want to change the ssh public key for the administrator?" 10 60
+        sel=$?
+        case $sel in
+            1) return;;
+            255) return;;
+        esac
+    fi
+
+    data=$(mktemp 2>/dev/null)
+    dialog --title $"Change ssh public key for $SELECTED_USERNAME" \
+           --backtitle $"LibreServer Control Panel" \
+           --inputbox $"Paste the ssh public key below" 8 60 2>"$data"
+    sel=$?
+    case $sel in
+        0)
+            SSH_PUBLIC_KEY=$(<"$data")
+            if [ "$SSH_PUBLIC_KEY" ]; then
+                if [ ${#SSH_PUBLIC_KEY} -gt 5 ]; then
+                    if [ -f "$SSH_PUBLIC_KEY" ]; then
+                        if [ ! -d "/home/$SELECTED_USERNAME/.ssh" ]; then
+                            mkdir "/home/$SELECTED_USERNAME/.ssh"
+                        fi
+                        cp "$SSH_PUBLIC_KEY" \
+                           "/home/$SELECTED_USERNAME/.ssh/authorized_keys"
+                        chown -R "$SELECTED_USERNAME":"$SELECTED_USERNAME" \
+                              "/home/$SELECTED_USERNAME/.ssh"
+                        dialog --title $"Change ssh public key" \
+                               --msgbox $"ssh public key was installed" 6 40
+                    else
+                        if [[ "$SSH_PUBLIC_KEY" == 'ssh-'* ]]; then
+                            if [ ! -d "/home/$SELECTED_USERNAME/.ssh" ]; then
+                                mkdir "/home/$SELECTED_USERNAME/.ssh"
+                            fi
+                            echo "$SSH_PUBLIC_KEY" > \
+                                 "/home/$SELECTED_USERNAME/.ssh/authorized_keys"
+                            chown -R "$SELECTED_USERNAME":"$SELECTED_USERNAME" \
+                                  "/home/$SELECTED_USERNAME/.ssh"
+                            dialog --title $"Change ssh public key" \
+                                   --msgbox $"ssh public key was installed" 6 40
+                        fi
+                    fi
+                fi
+            fi
+            ;;
+    esac
+    rm -f "$data"
+}
+
+function remove_user_from_mailing_list {
+    select_user
+    if [ ! "$SELECTED_USERNAME" ]; then
+        return
+    fi
+    USER_MAILING_LISTS=$(grep '\[' "/home/$SELECTED_USERNAME/.procmailrc" | grep '\]' | awk -F '\[' '{print $2}' | awk -F '\\' '{print $1}')
+
+    i=0
+    W=()
+    list_name=()
+    while read -r listname; do
+        i=$((i+1))
+        W+=("$i" "$listname")
+        list_name+=("$listname")
+        echo "$listname"
+    done <<< "$USER_MAILING_LISTS"
+
+    i=$((i+1))
+    W+=("$i" $"Exit back to user mainenance")
+
+    # shellcheck disable=SC2068
+    list_selected=$(dialog --default-item "$i" --backtitle $"LibreServer Control Panel" --title $"Remove a mailing list for $SELECTED_USERNAME" --menu $"Select one of the following:" 24 50 17 ${W[@]} 3>&2 2>&1 1>&3)
+
+    # shellcheck disable=SC2181
+    if [ $? -eq 0 ]; then # Exit with OK
+        if [ "${list_selected}" -ne "${i}" ]; then
+            remove_list_name="${list_name[$((list_selected-1))]}"
+
+            # find the line number where the list is defined
+            line_number=0
+            i=0
+            while read -r line
+            do
+                if [[ "$line" == *"\\[${remove_list_name}\\]"* ]]; then
+                    line_number=${i}
+                fi
+                i=$((i+1))
+            done < "/home/$SELECTED_USERNAME/.procmailrc"
+
+            if [ ${line_number} -eq 0 ]; then
+                # no match was found
+                return
+            fi
+
+            # recreate the file
+            if [ -f "/home/${SELECTED_USERNAME}/.procmailrc_new" ]; then
+                rm "/home/${SELECTED_USERNAME}/.procmailrc_new"
+            fi
+            i=0
+            clip=0
+            while read -r line
+            do
+                i=$((i+1))
+                if [ ${i} -gt $((line_number-1)) ]; then
+                    if [ ${clip} -eq 0 ]; then
+                        clip=1
+                    fi
+                    if [ ${clip} -eq 1 ]; then
+                        if [ ${i} -lt $((line_number+2)) ]; then
+                            continue
+                        else
+                            if [ ${#line} -lt 1 ]; then
+                                clip=2
+                                continue
+                            fi
+                            if [[ "$line" == ":"* || "$line" == "#"* ]]; then
+                                clip=2
+                            else
+                                continue
+                            fi
+                        fi
+                    fi
+                fi
+
+                echo "$line" >> "/home/${SELECTED_USERNAME}/.procmailrc_new"
+
+                if [[ "$line" == *"\\[${remove_list_name}\\]"* ]]; then
+                    line_number=${i}
+                fi
+            done < "/home/$SELECTED_USERNAME/.procmailrc"
+            cp "/home/${SELECTED_USERNAME}/.procmailrc_new" "/home/${SELECTED_USERNAME}/.procmailrc"
+            rm "/home/${SELECTED_USERNAME}/.procmailrc_new"
+            chown "${SELECTED_USERNAME}":"${SELECTED_USERNAME}" "/home/${SELECTED_USERNAME}/.procmailrc"
+            dialog --title $"Remove user from mailing list" \
+                   --msgbox $"${SELECTED_USERNAME} has been removed from ${remove_list_name}" 6 50
+        fi
+    fi
+}
+
+function add_to_mailing_list {
+    select_user
+    if [ ! "$SELECTED_USERNAME" ]; then
+        return
+    fi
+    data=$(mktemp 2>/dev/null)
+    dialog --backtitle $"LibreServer Control Panel" \
+           --title $"Subscribe $SELECTED_USERNAME to a mailing list" \
+           --form $"You can either enter a subject or an email address\\n" 11 68 4 \
+           $"List folder name:" 1 1 "" 1 35 26 25 \
+           $"Name between [] on subject line:" 2 1 "" 2 35 26 25 \
+           $"List email address:" 3 1 "" 3 35 46 45 \
+           $"Public:" 4 1 $"yes" 4 35 4 25 \
+           2> "$data"
+    sel=$?
+    case $sel in
+        1)  rm -f "$data"
+            return;;
+        255) rm -f "$data"
+             return;;
+    esac
+    LIST_NAME=$(sed -n 1p < "$data")
+    LIST_SUBJECT=$(sed -n 2p < "$data")
+    LIST_EMAIL=$(sed -n 3p < "$data")
+    LIST_PUBLIC=$(sed -n 4p < "$data")
+
+    if [ ${#LIST_PUBLIC} -lt 1 ]; then
+        LIST_PUBLIC='no'
+    fi
+    if [[ $LIST_PUBLIC == $'y' || $LIST_PUBLIC == $'Y' || $LIST_PUBLIC == $'true' || $LIST_PUBLIC == $'True' || $LIST_PUBLIC == $'yes' || $LIST_PUBLIC == $'Yes' || $LIST_PUBLIC == $'YES' ]]; then
+        LIST_PUBLIC='yes'
+    else
+        LIST_PUBLIC='no'
+    fi
+    if [ ${#LIST_NAME} -lt 2 ]; then
+        dialog --title $"Add mailing list" \
+               --msgbox $"No mailing list name was given" 6 40
+        rm -f "$data"
+        return
+    fi
+    if [ ${#LIST_SUBJECT} -lt 2 ]; then
+        if [ ${#LIST_EMAIL} -lt 2 ]; then
+            dialog --title $"Add mailing list" \
+                   --msgbox $"No mailing list subject or address was given" 6 40
+            rm -f "$data"
+            return
+        fi
+    fi
+    if [ ${#LIST_SUBJECT} -gt 1 ]; then
+        "${PROJECT_NAME}-addlist" -u "$SELECTED_USERNAME" -l "$LIST_NAME" \
+                       -s "$LIST_SUBJECT" --public "$LIST_PUBLIC"
+    else
+        if [[ "$LIST_EMAIL" != *"@"* || "$LIST_EMAIL" != *"."* ]]; then
+            dialog --title $"Add mailing list" \
+                   --msgbox $"Unrecognised email address" 6 40
+            rm -f "$data"
+            return
+        else
+            "${PROJECT_NAME}-addlist" -u "$SELECTED_USERNAME" -l "$LIST_NAME" \
+                           -e "$LIST_EMAIL" --public "$LIST_PUBLIC"
+        fi
+    fi
+
+    dialog --title $"Add mailing list" \
+           --msgbox $"$LIST_NAME list was added" 6 40
+    rm -f "$data"
+}
+
+function email_rule {
+    select_user
+    if [ ! "$SELECTED_USERNAME" ]; then
+        return
+    fi
+    data=$(mktemp 2>/dev/null)
+    dialog --backtitle $"LibreServer Control Panel" \
+           --title $"Email rule for user $SELECTED_USERNAME" \
+           --form "\\n" 9 65 4 \
+           $"When email arrives from address:" 1 1 "" 1 35 24 28 \
+           $"Move to folder:" 2 1 "" 2 35 24 28 \
+           $"Public:" 3 1 $"no" 3 35 4 25 \
+           2> "$data"
+    sel=$?
+    case $sel in
+        1) rm -f "$data"
+           return;;
+        255) rm -f "$data"
+             return;;
+    esac
+    RULE_EMAIL=$(sed -n 1p < "$data")
+    RULE_FOLDER=$(sed -n 2p < "$data")
+    RULE_PUBLIC=$(sed -n 3p < "$data")
+
+    if [ ${#RULE_PUBLIC} -lt 1 ]; then
+        RULE_PUBLIC='no'
+    fi
+    if [[ $RULE_PUBLIC == $'y' || $RULE_PUBLIC == $'Y' || $RULE_PUBLIC == $'true' || $RULE_PUBLIC == $'True' || $RULE_PUBLIC == $'yes' || $RULE_PUBLIC == $'Yes' || $RULE_PUBLIC == $'YES' ]]; then
+        RULE_PUBLIC='yes'
+    else
+        RULE_PUBLIC='no'
+    fi
+    if [ ${#RULE_EMAIL} -lt 2 ]; then
+        dialog --title $"Add email rule" \
+               --msgbox $"No email address was given" 6 40
+        rm -f "$data"
+        return
+    fi
+    if [ ${#RULE_FOLDER} -lt 2 ]; then
+        dialog --title $"Add email rule" \
+               --msgbox $"No folder name was given" 6 40
+        rm -f "$data"
+        return
+    fi
+    if [[ "$RULE_EMAIL" != *"@"* || "$RULE_EMAIL" != *"."* ]]; then
+        dialog --title $"Add email rule" \
+               --msgbox $"Unrecognised email address" 6 40
+        rm -f "$data"
+        return
+    fi
+
+    "${PROJECT_NAME}-addemail" -u "$SELECTED_USERNAME" -e "$RULE_EMAIL" \
+                   -g "$RULE_FOLDER" --public $RULE_PUBLIC
+    dialog --title $"Add email rule" \
+           --msgbox $"Email rule for $RULE_EMAIL was added" 6 40
+    rm -f "$data"
+}
+
+function block_unblock_email {
+    select_user
+    if [ ! "$SELECTED_USERNAME" ]; then
+        return
+    fi
+    blockstr=$"Block/Unblock email going to"
+    data=$(mktemp 2>/dev/null)
+    dialog --backtitle $"LibreServer Control Panel" \
+           --title "$blockstr $SELECTED_USERNAME" \
+           --form "\\n" 8 65 3 \
+           $"When email arrives from address:" 1 1 "" 1 35 24 100 \
+           $"Block it:" 2 1 "yes" 2 35 4 4 \
+           2> "$data"
+    sel=$?
+    case $sel in
+        1) rm -f "$data"
+           return;;
+        255) rm -f "$data"
+             return;;
+    esac
+    BLOCK_EMAIL=$(sed -n 1p < "$data")
+    BLOCK=$(sed -n 2p < "$data")
+    rm -f "$data"
+    if [ ${#BLOCK_EMAIL} -lt 2 ]; then
+        dialog --title $"Block/Unblock an email" \
+               --msgbox $"No email address was given" 6 40
+        return
+    fi
+    if [[ "$BLOCK_EMAIL" != *"@"* || "$BLOCK_EMAIL" != *"."* ]]; then
+        dialog --title $"Block/Unblock an email" \
+               --msgbox $"Unrecognised email address" 6 40
+        return
+    fi
+    if [[ $BLOCK == "y"* || $BLOCK == "Y"* ]]; then
+        "${PROJECT_NAME}-ignore" -u "$SELECTED_USERNAME" -e "$BLOCK_EMAIL"
+        dialog --title $"Block an email" \
+               --msgbox "Email from $BLOCK_EMAIL to $SELECTED_USERNAME blocked" 6 75
+    else
+        "${PROJECT_NAME}-unignore" -u "$SELECTED_USERNAME" -e "$BLOCK_EMAIL"
+        dialog --title $"Unblock an email" \
+               --msgbox "Email from $BLOCK_EMAIL to $SELECTED_USERNAME unblocked" 6 75
+    fi
+}
+
+function block_unblock_subject {
+    select_user
+    if [ ! "$SELECTED_USERNAME" ]; then
+        return
+    fi
+    blockstr=$"Block/Unblock email going to"
+    data=$(mktemp 2>/dev/null)
+    dialog --backtitle $"LibreServer Control Panel" \
+           --title "$blockstr $SELECTED_USERNAME" \
+           --form "\\n" 8 70 3 \
+           $"When email arrives with subject text:" 1 1 "" 1 40 24 28 \
+           $"Block it:" 2 1 "yes" 2 40 4 4 \
+           2> "$data"
+    sel=$?
+    case $sel in
+        1) rm -f "$data"
+           return;;
+        255) rm -f "$data"
+             return;;
+    esac
+    BLOCK_SUBJECT=$(sed -n 1p < "$data")
+    BLOCK=$(sed -n 2p < "$data")
+    rm -f "$data"
+    if [ ${#BLOCK_SUBJECT} -lt 2 ]; then
+        dialog --title $"Block/Unblock an email" \
+               --msgbox $"No subject was given" 6 40
+        return
+    fi
+    if [[ $BLOCK == "y"* || $BLOCK == "Y"* ]]; then
+        "${PROJECT_NAME}-ignore" -u "$SELECTED_USERNAME" -t "$BLOCK_SUBJECT"
+        dialog --title $"Block an email" \
+               --msgbox "Email with subject $BLOCK_SUBJECT to $SELECTED_USERNAME blocked" 6 40
+    else
+        "${PROJECT_NAME}-unignore" -u "$SELECTED_USERNAME" -t "$BLOCK_SUBJECT"
+        dialog --title $"Unblock an email" \
+               --msgbox "Email with subject $BLOCK_SUBJECT to $SELECTED_USERNAME unblocked" 6 40
+    fi
+}
+
+function backup_data {
+    dialog --title $"Backup data to USB drive" \
+           --msgbox $"Plug in a USB drive now" 6 40
+
+    backup_password=$(${PROJECT_NAME}-pass -u "$ADMIN_USER" -a simplebackup)
+
+    # get password with the --insecure option
+    data=$(mktemp 2>/dev/null)
+    dialog --title "Backup Drive Password" \
+           --clear \
+           --insecure \
+           --passwordbox "Enter a password which will be used to encrypt the backup" 10 30 "$backup_password" 2> "$data"
+
+    ret=$?
+
+    # make decison
+    case $ret in
+        0)  backup_password=$(cat "$data")
+            rm "$data"
+            if [ "$backup_password" ]; then
+                if [ ${#backup_password} -ge 8 ]; then
+                    clear
+                    # shellcheck disable=SC2086
+                    if /usr/bin/timeout $BACKUP_TIMEOUT_SEC /usr/local/bin/${PROJECT_NAME}-backup-local simple "$backup_password"; then
+                        dialog --title $"Backup" \
+                               --msgbox $"The backup succeeded" 6 40
+                    else
+                        any_key
+                    fi
+                else
+                    dialog --title $"Backup" \
+                           --msgbox $"Password is too short. Make it at least 8 characters" 6 40
+                fi
+            fi
+            return
+            ;;
+    esac
+    rm "$data"
+}
+
+function restore_data_from_storage {
+    restore_type="$1"
+
+    AllStr=$"all"
+    ExitStr=$"Exit"
+    RestoreStr=$"Restore apps"
+
+    if [[ $restore_type == "local" ]]; then
+        USB_DRIVE=$(detect_connected_drives)
+        restore_command="${PROJECT_NAME}-restore-local $USB_DRIVE"
+        RestoreStr=$"Restore apps from USB drive $USB_DRIVE"
+    fi
+
+    utils_installed=(configfiles
+                     blocklist
+                     mariadb
+                     postgresql
+                     letsencrypt
+                     passwords
+                     mutt
+                     gpg
+                     procmail
+                     spamassassin
+                     readme
+                     ssh
+                     userconfig
+                     userlocal
+                     userfin
+                     certs
+                     personal
+                     email)
+
+    detect_apps
+
+    while true
+    do
+
+        app_list=()
+        n=1
+        applist="$n $AllStr off"
+        n=$((n+1))
+        app_list+=("$AllStr")
+
+        util_index=0
+        # shellcheck disable=SC2068
+        for a in ${utils_installed[@]}
+        do
+            applist="$applist $n $a off"
+            app_name=${utils_installed[util_index]}
+            n=$((n+1))
+            util_index=$((util_index+1))
+            app_list+=("$app_name")
+        done
+
+        app_index=0
+        # shellcheck disable=SC2068
+        for a in ${APPS_INSTALLED_NAMES[@]}
+        do
+            applist="$applist $n $a off"
+            n=$((n+1))
+            app_name=${APPS_INSTALLED_NAMES[app_index]}
+            app_index=$((app_index+1))
+            app_list+=("$app_name")
+        done
+        applist="$applist $n $ExitStr on"
+        n=$((n+1))
+        app_list+=("$ExitStr")
+
+        # shellcheck disable=SC2086
+        choice=$(dialog --stdout --backtitle $"LibreServer" \
+                        --title "$RestoreStr" \
+                        --radiolist $'Choose:' \
+                        30 50 20 $applist)
+
+        # shellcheck disable=SC2181
+        if [ $? -ne 0 ]; then
+            break
+        fi
+        app_index=$((choice-1))
+        app_name=${app_list[app_index]}
+
+        # exit
+        if [[ "$app_name" == "$ExitStr" ]]; then
+            break
+        fi
+
+        clear
+
+        # Restore all
+        if [[ "$app_name" == "$AllStr" ]]; then
+            $restore_command
+            retcode="$?"
+            if [[ "$retcode" != "0" ]]; then
+                any_key
+                if [[ "$1" == "local" ]]; then
+                    dialog --title $"Restore all apps from USB" \
+                           --msgbox $"Restore failed with code $retcode" 6 60
+                else
+                    dialog --title $"Restore all apps from $1" \
+                           --msgbox $"Restore failed with code $retcode" 6 60
+                fi
+                break
+            fi
+
+            if [[ "$1" == "local" ]]; then
+                dialog --title $"Restore all apps from USB" \
+                       --msgbox $"Restore complete" 6 40
+            else
+                dialog --title $"Restore all apps from $1" \
+                       --msgbox $"Restore complete" 6 40
+            fi
+            break
+        fi
+
+        # Restore an app
+        $restore_command "${app_name}"
+        retcode="$?"
+        if [[ "$retcode" != "0" ]]; then
+            ${PROJECT_NAME}-notification -m $"Restore of ${app_name} failed with code $retcode" -s "Restore app status"
+            any_key
+            dialog --title $"Restore apps from USB" \
+                   --msgbox $"Restore of ${app_name} failed with code $retcode" 6 60
+            return
+        fi
+
+        ${PROJECT_NAME}-notification -m $"Restore of ${app_name} succeeded" -s "Restore app status"
+
+        # finished
+        if [[ "$1" == "local" ]]; then
+            dialog --title $"Restore apps from USB" \
+                   --msgbox $"Restore complete" 6 40
+        else
+            dialog --title $"Restore apps from $1" \
+                   --msgbox $"Restore complete" 6 40
+        fi
+
+    done
+}
+
+function restore_data {
+    dialog --title $"Restore data from USB" \
+           --msgbox $"Plug in your backup USB drive now" 6 40
+
+    backup_password=$(${PROJECT_NAME}-pass -u "$ADMIN_USER" -a simplebackup)
+
+    data=$(mktemp 2>/dev/null)
+    dialog --title "Backup drive Password" \
+           --clear \
+           --insecure \
+           --passwordbox "Enter the password for the backup drive" 10 30 "$backup_password" 2> "$data"
+
+    ret=$?
+
+    # make decison
+    case $ret in
+        0)  backup_password=$(cat "$data")
+            rm "$data"
+            if [ "$backup_password" ]; then
+                if [ ${#backup_password} -ge 8 ]; then
+                    clear
+                    # shellcheck disable=SC2086
+                    if /usr/bin/timeout $BACKUP_TIMEOUT_SEC /usr/local/bin/${PROJECT_NAME}-restore-local simple "$backup_password"; then
+                        dialog --title $"Restore" \
+                               --msgbox $"Restore from backup succeeded" 6 40
+                    else
+                        any_key
+                    fi
+                else
+                    dialog --title $"Restore" \
+                           --msgbox $"Password is too short. Make it at least 8 characters" 6 40
+                fi
+            fi
+            return
+            ;;
+    esac
+    rm "$data"
+}
+
+function logging_on_off {
+    logging="no"
+    dialog --title $"Logging" \
+           --backtitle $"LibreServer Control Panel" \
+           --defaultno \
+           --yesno $"\\nDo you want to turn logging on?" 7 60
+    sel=$?
+    case $sel in
+        0) logging="yes";;
+        255) return;;
+    esac
+
+    clear
+    echo ''
+    echo $'This may take a few seconds. Please wait...'
+    if [[ $logging == "no" ]]; then
+        ${PROJECT_NAME}-logging off
+    else
+        ${PROJECT_NAME}-logging on
+    fi
+}
+
+function restore_gpg_key {
+    select_user
+    if [ ! "$SELECTED_USERNAME" ]; then
+        return
+    fi
+    restorestr=$"Restore GPG key for user"
+    dialog --title "$restorestr $SELECTED_USERNAME" \
+           --msgbox $"Plug in your USB keydrive" 6 40
+    clear
+    "${PROJECT_NAME}-recoverkey" -u "$SELECTED_USERNAME" -d simple
+    any_key
+}
+
+function security_settings {
+    "${PROJECT_NAME}-sec"
+}
+
+function format_drive {
+    USB_DRIVE=$(detect_connected_drives)
+    dialog --title $"Format USB drive $USB_DRIVE" \
+           --backtitle $"LibreServer Control Panel" \
+           --defaultno \
+           --yesno $"\\nPlease confirm that you wish to format drive\\n\\n    ${USB_DRIVE}\\n\\nAll current data on the drive will be lost, and you will be prompted to give a password used to encrypt the drive.\\n\\nDANGER: If you screw up here and format the wrong drive it's your own fault!" 16 60
+    sel=$?
+    case $sel in
+        1) return;;
+        255) return;;
+    esac
+
+    clear
+    echo ''
+    echo $"Formatting drive $USB_DRIVE. ALL CONTENTS WILL BE LOST."
+    echo ''
+    "${PROJECT_NAME}-format" simple
+    any_key
+}
+
+function remove_backups {
+    USB_DRIVE=$(detect_connected_drives)
+    # shellcheck disable=SC2154
+    dialog --title $"Remove backups from a USB drive $USB_DRIVE" \
+           --backtitle $"LibreServer Control Panel" \
+           --defaultno \
+           --yesno $"\\nPlease confirm that you wish to remove backups from this drive\\n\\n    ${drive}\\n\\nYou will not be able to recover them afterwards." 12 60
+    sel=$?
+    case $sel in
+        1) return;;
+        255) return;;
+    esac
+
+    clear
+    "${PROJECT_NAME}-backup-local" "$USB_DRIVE" remove
+    any_key
+}
+
+function shut_down_system {
+    dialog --title $"Power off the system" \
+           --backtitle $"LibreServer Control Panel" \
+           --defaultno \
+           --yesno $"\\nPlease confirm that you wish to power off the system.\\n\\nWARNING: to power on again you will need to have physical access to the hardware." 10 60
+    sel=$?
+    case $sel in
+        1) return;;
+        255) return;;
+    esac
+    systemctl poweroff
+}
+
+function restart_system {
+    dialog --title $"Restart the system" \
+           --backtitle $"LibreServer Control Panel" \
+           --defaultno \
+           --yesno $"\\nPlease confirm that you wish to restart the system.\\n\\nWARNING: If you are using full disk encryption then you will need physical access to the hardware to type in the password" 10 60
+    sel=$?
+    case $sel in
+        1) return;;
+        255) return;;
+    esac
+    systemctl reboot -i
+    reboot
+}
+
+function change_system_name {
+    data=$(mktemp 2>/dev/null)
+    dialog --title $"Change the name of this system" \
+           --backtitle $"LibreServer Control Panel" \
+           --inputbox $'Enter a new name for this system on your local network\\n\\nIt will appear as newname.local' 10 60 2>"$data"
+    sel=$?
+    case $sel in
+        0) NEW_SYSTEM_NAME=$(<"$data")
+           change_system_local_name "${NEW_SYSTEM_NAME}" interactive
+           ;;
+    esac
+    rm -f "$data"
+}
+
+function set_dynamic_IP {
+    revert_to_dynamic=
+    dialog --title $"Return to using a dynamic IP address" \
+           --backtitle $"LibreServer Control Panel" \
+           --yesno $"\\nDo you wish to go back to using a dynamic IP address?" 8 60
+    sel=$?
+    case $sel in
+        0) revert_to_dynamic=1
+           ;;
+        1) return;;
+    esac
+
+    if [ $revert_to_dynamic ]; then
+        wifi_original_network_settings
+        clear
+        echo ''
+        echo $'Changing to a dynamic IP address.'
+        echo ''
+        echo $"System is rebooting. You may need to close this terminal and log in from a new one."
+        systemctl reboot -i
+        reboot
+    fi
+}
+
+function set_static_IP {
+    IPv4_address=$(get_ipv4_address)
+    IPv4_address_base=$(echo "$IPv4_address" | awk -F '.' '{print $1"."$2"."$3}')
+    STATIC_IP="${IPv4_address_base}.60"
+    STATIC_GATEWAY="${IPv4_address_base}.1"
+
+    NEW_STATIC_IP=
+    NEW_STATIC_GATEWAY=
+    if [ -f /etc/network/interfaces.d/static ]; then
+        STATIC_IP=$(grep "address " /etc/network/interfaces.d/static | head -n 1 | awk -F ' ' '{print $2}')
+        STATIC_GATEWAY=$(grep "gateway " /etc/network/interfaces.d/static | head -n 1 | awk -F ' ' '{print $2}')
+    fi
+
+    # get the IP for the box
+    data=$(mktemp 2>/dev/null)
+    dialog --title $"Set a static local IP address" \
+           --backtitle $"LibreServer Control Panel" \
+           --inputbox $"In order to forward incoming internet traffic to this system most internet routers need to know a static local IP address to send the data to.\\n\\n
+Enter a static local IP address for this system.\\n\\nIt will typically be ${IPv4_address_base}.x\\n\\nIf you leave this field blank then the system will revert to using a dynamic IP address." 18 60 "$STATIC_IP" 2>"$data"
+    sel=$?
+    case $sel in
+        0) NEW_STATIC_IP=$(<"$data")
+           if [[ "$NEW_STATIC_IP" != *"."* ]]; then
+               set_dynamic_IP
+               rm -f "$data"
+               return
+           fi
+           ;;
+        1) rm -f "$data"
+           return;;
+    esac
+    rm -f "$data"
+
+    # get the gateway
+    data=$(mktemp 2>/dev/null)
+    dialog --title $"Set the IP address of your internet router/modem" \
+           --backtitle $"LibreServer Control Panel" \
+           --inputbox $"Set the local IP address for your internet router or ADSL modem.\\n\\nIt will typically be ${IPv4_address_base}.1, ${IPv4_address_base}.254, or similar" 12 60 "$STATIC_GATEWAY" 2>"$data"
+    sel=$?
+    case $sel in
+        0) NEW_STATIC_GATEWAY=$(<"$data")
+           if [[ "$NEW_STATIC_GATEWAY" != *"."* ]]; then
+               rm -f "$data"
+               return
+           fi
+           ;;
+        1) rm -f "$data"
+           return;;
+    esac
+
+    if [[ "$NEW_STATIC_GATEWAY" == *"."* && "$NEW_STATIC_IP" == *"."* ]]; then
+        ip_addresses_have_changed=1
+        if [ -f /etc/network/interfaces.d/static ]; then
+            ip_addresses_have_changed=
+            if ! grep -q "address ${NEW_STATIC_IP}" /etc/network/interfaces.d/static; then
+                ip_addresses_have_changed=1
+            fi
+            if ! grep -q "gateway ${NEW_STATIC_GATEWAY}" /etc/network/interfaces.d/static; then
+                ip_addresses_have_changed=1
+            fi
+        fi
+        if [ $ip_addresses_have_changed ]; then
+            write_config_param "NETWORK_IS_STATIC" "1"
+            write_config_param "LOCAL_NETWORK_STATIC_IP_ADDRESS" "$NEW_STATIC_IP"
+            write_config_param "ROUTER_IP_ADDRESS" "$NEW_STATIC_GATEWAY"
+
+            email_change_relay "$NEW_STATIC_IP"
+
+            static_wifi_address=
+            if [[ $(config_param_exists "WIFI_INTERFACE") == "1" ]]; then
+                dialog --title $"Static local IP address" \
+                       --backtitle $"LibreServer Control Panel" \
+                       --yesno $"\\nSet a static address for the wifi adapter?\\n\\nIf you select 'no' then wired ethernet will be used." 10 60
+                sel=$?
+                case $sel in
+                    0) static_wifi_address=1
+                       write_config_param "NETWORK_IS_STATIC" "1"
+                       ;;
+                esac
+            fi
+
+            echo '# This file describes the network interfaces available on your system' > /etc/network/interfaces
+            echo '# and how to activate them. For more information, see interfaces(5).' >> /etc/network/interfaces
+            echo 'source /etc/network/interfaces.d/*' >> /etc/network/interfaces
+
+            if [ ! $static_wifi_address ]; then
+                # wired network
+                remove_wifi_startup_script
+
+                { echo 'auto eth0';
+                  echo 'allow-hotplug eth0';
+                  echo 'iface eth0 inet static';
+                  echo "    address ${NEW_STATIC_IP}";
+                  echo '    netmask 255.255.255.0';
+                  echo "    gateway ${NEW_STATIC_GATEWAY}"; } >> /etc/network/interfaces.d/static
+            else
+                # wifi network
+                wifi_settings
+            fi
+
+            clear
+            echo ''
+            echo $'Restarting the network daemon.'
+            echo ''
+            echo $'If you logged in using the previous IP address then you may need to close this terminal and log in again on the new one.'
+
+            function_check pihole_change_ipv4
+            pihole_change_ipv4 "${NEW_STATIC_IP}"
+
+            dialog --title $"Static local IP address" \
+                   --backtitle $"LibreServer Control Panel" \
+                   --yesno $"\\nFor the change to take effect your system will now need to reboot. Do this now?" 8 60
+            sel=$?
+            case $sel in
+                0) systemctl reboot -i
+                   reboot
+                   ;;
+            esac
+        fi
+    fi
+    rm -f "$data"
+}
+
+function wifi_settings {
+    if [ -f /etc/hostapd/hostapd.conf ]; then
+        return
+    fi
+
+    TEMP_WIFI_NETWORKS_FILE=~/.temp-${PROJECT_NAME}-wifi.cfg
+    ${PROJECT_NAME}-wifi --networksinteractive $TEMP_WIFI_NETWORKS_FILE
+    if [ -f $TEMP_WIFI_NETWORKS_FILE ]; then
+        cp "$TEMP_WIFI_NETWORKS_FILE" "$WIFI_NETWORKS_FILE"
+        rm $TEMP_WIFI_NETWORKS_FILE
+        "${PROJECT_NAME}-wifi" --networks "$WIFI_NETWORKS_FILE"
+        create_wifi_startup_script
+        if [[ $(wifi_is_running) == "1" ]]; then
+            dialog --title $"Wifi Settings" \
+                   --msgbox $"Wifi settings were changed." 6 60
+        else
+            dialog --title $"Wifi Settings" \
+                   --msgbox $"Wifi settings were changed. You will need to restart the system with ethernet cable removed for the changes to take effect." 7 60
+        fi
+    else
+        remove_wifi_startup_script
+    fi
+}
+
+function wifi_edit_networks {
+    if [ -f /etc/hostapd/hostapd.conf ]; then
+        return
+    fi
+    if [ ! -f "$WIFI_NETWORKS_FILE" ]; then
+        { echo $'# Add wifi networks as follows:';
+          echo '#';
+          echo $'# MySSID';
+          echo $'# wpa2-psk';
+          echo $'# myWifiPassphrase';
+          echo '#';
+          echo $'# AnotherSSID';
+          echo $'# none';
+          echo '#'; } > "$WIFI_NETWORKS_FILE"
+    fi
+    editor "$WIFI_NETWORKS_FILE"
+    "${PROJECT_NAME}-wifi" --networks "$WIFI_NETWORKS_FILE"
+}
+
+function hotspot_settings {
+    data=$(mktemp 2>/dev/null)
+    dialog --backtitle $"LibreServer Control Panel" \
+           --title $"Hotspot Settings" \
+           --form $"" 10 60 4 \
+           $"Enabled (yes/no):" 1 1 "$WIFI_HOTSPOT" 1 24 5 5 \
+           $"SSID:" 2 1 "$WIFI_SSID" 2 24 256 256 \
+           $"Type (wpa2-psk/none):" 3 1 "$WIFI_TYPE" 3 24 10 10 \
+           $"Passphrase:" 4 1 "$WIFI_PASSPHRASE" 4 24 256 256 \
+           2> "$data"
+    sel=$?
+    case $sel in
+        1) rm -f "$data"
+           return;;
+        255) rm -f "$data"
+             return;;
+    esac
+    TEMP_WIFI_HOTSPOT=$(sed -n 1p < "$data")
+    TEMP_WIFI_SSID=$(sed -n 2p < "$data")
+    TEMP_WIFI_TYPE=$(sed -n 3p < "$data")
+    TEMP_WIFI_PASSPHRASE=$(sed -n 4p < "$data")
+    rm -f "$data"
+
+    if [ ${#TEMP_WIFI_SSID} -lt 2 ]; then
+        return
+    fi
+    if [ ${#TEMP_WIFI_TYPE} -lt 2 ]; then
+        return
+    fi
+
+    WIFI_EXTRA=''
+    if [[ $TEMP_WIFI_HOTSPOT == $'yes' || $TEMP_WIFI_HOTSPOT == $'y' || $TEMP_WIFI_HOTSPOT == $'on' ]]; then
+        TEMP_WIFI_HOTSPOT='yes'
+    else
+        TEMP_WIFI_HOTSPOT='no'
+        if [ -f "$WIFI_NETWORKS_FILE" ]; then
+            WIFI_EXTRA="--networks $WIFI_NETWORKS_FILE"
+        fi
+    fi
+
+    if [[ $TEMP_WIFI_TYPE != $'none' ]]; then
+        if [ ! "$TEMP_WIFI_PASSPHRASE" ]; then
+            dialog --title $"Wifi Settings" \
+                   --msgbox $"No wifi hotspot passphrase was given" 6 40
+            return
+        fi
+        if [ ${#TEMP_WIFI_PASSPHRASE} -lt 2 ]; then
+            dialog --title $"Wifi Settings" \
+                   --msgbox $"Wifi hotspot passphrase was too short" 6 40
+            return
+        fi
+
+        WIFI_HOTSPOT=$TEMP_WIFI_HOTSPOT
+        WIFI_SSID=$TEMP_WIFI_SSID
+        WIFI_TYPE=$TEMP_WIFI_TYPE
+        WIFI_PASSPHRASE=$TEMP_WIFI_PASSPHRASE
+
+        if ! "${PROJECT_NAME}-wifi" -i "$WIFI_INTERFACE" -s "$WIFI_SSID" -t "$WIFI_TYPE" -p "$WIFI_PASSPHRASE" --hotspot "$WIFI_HOTSPOT" "$WIFI_EXTRA"; then
+            echo $"Can't enable wifi hotspot"
+            any_key
+        fi
+    else
+        WIFI_HOTSPOT=$TEMP_WIFI_HOTSPOT
+        WIFI_SSID=$TEMP_WIFI_SSID
+        WIFI_TYPE=$TEMP_WIFI_TYPE
+        WIFI_PASSPHRASE=$TEMP_WIFI_PASSPHRASE
+
+        "${PROJECT_NAME}-wifi" -i "$WIFI_INTERFACE" -s "$WIFI_SSID" -t "$WIFI_TYPE" --hotspot "$WIFI_HOTSPOT" "$WIFI_EXTRA"
+    fi
+
+    # store any changes
+    write_config_param "WIFI_HOTSPOT" "$WIFI_HOTSPOT"
+    write_config_param "WIFI_SSID" "$WIFI_SSID"
+    write_config_param "WIFI_TYPE" "$WIFI_TYPE"
+    write_config_param "WIFI_PASSPHRASE" "$WIFI_PASSPHRASE"
+
+    dialog --title $"Wifi Settings" \
+           --msgbox $"Hotspot settings were changed" 6 40
+}
+
+function reinstall_mariadb {
+    dialog --title $"Reinstall MariaDB" \
+           --backtitle $"LibreServer Control Panel" \
+           --defaultno \
+           --yesno $"\\nThis should be a LAST RESORT, if the mysql daemon won't start. You will lose ALL databases and will then need to restore them from backup.\\n\\nAre you sure that you wish to continue?" 12 60
+    sel=$?
+    case $sel in
+        1) return;;
+        255) return;;
+    esac
+
+    clear
+    database_reinstall
+
+    dialog --title $"Reinstall MariaDB" \
+           --msgbox $"MariaDB has been reinstalled" 6 40
+}
+
+function email_extra_domains {
+    email_hostnames=$(grep "dc_other_hostnames" /etc/exim4/update-exim4.conf.conf | awk -F "'" '{print $2}')
+
+    data=$(mktemp 2>/dev/null)
+    dialog --title $"Email Domains" \
+           --backtitle $"LibreServer Control Panel" \
+           --inputbox $"Enter the list of email domains to use, separated by semicolons" 8 60 "$email_hostnames" 2>"$data"
+    sel=$?
+    case $sel in
+        0)
+            emailhostnames=$(<"$data")
+            if [ ${#emailhostnames} -gt 2 ]; then
+                if [[ "$email_hostnames" != "$emailhostnames" ]]; then
+                    if [[ "$emailhostnames" == *"."* ]]; then
+                        if [[ "$emailhostnames" != *" "* ]]; then
+                            sed -i "s|dc_other_hostnames=.*|dc_other_hostnames='$emailhostnames'|g" /etc/exim4/update-exim4.conf.conf
+                            update-exim4.conf
+                            dpkg-reconfigure --frontend noninteractive exim4-config
+                            systemctl restart saslauthd
+                            dialog --title $"Email Domains" \
+                                   --backtitle $"LibreServer Control Panel" \
+                                   --msgbox $"Email domains were changed" 6 50
+                        else
+                            dialog --title $"Email Domains not set" \
+                                   --backtitle $"LibreServer Control Panel" \
+                                   --msgbox $"There should be no spaces in the list" 6 50
+                        fi
+                    fi
+                fi
+            fi
+            ;;
+    esac
+    rm -f "$data"
+}
+
+function email_smtp_proxy {
+    MUTTRC_FILE=/home/$ADMIN_USER/.muttrc
+
+    isp_smtp_domain=
+    isp_smtp_port=465
+    isp_smtp_username=
+
+    if [ -f /etc/exim4/passwd.client ]; then
+        line_str=$(tail -n 1 /etc/exim4/passwd.client)
+        if [[ "$line_str" != '#'* ]]; then
+            isp_smtp_domain=$(tail -n 1 /etc/exim4/passwd.client | awk -F ':' '{print $1}')
+            isp_smtp_username=$(tail -n 1 /etc/exim4/passwd.client | awk -F ':' '{print $2}')
+        fi
+    fi
+
+    # get the remote SMTP port number
+    if [ -f /etc/exim4/update-exim4.conf.conf ]; then
+        smarthost_str=$(grep 'dc_smarthost=' /etc/exim4/update-exim4.conf.conf)
+        if [[ "$smarthost_str" == *'::'* ]]; then
+            isp_smtp_port=$(echo "$smarthost_str" | awk -F '::' '{print $2}' | sed "s|'||g")
+        fi
+    fi
+
+    data=$(mktemp 2>/dev/null)
+    dialog --backtitle $"LibreServer Control Panel" \
+           --title $"SMTP Proxy" \
+           --form $"You may need to proxy outgoing email via your ISP's mail server. If so enter the details below." 14 75 4 \
+           $"SMTP domain:" 1 1 "$isp_smtp_domain" 1 24 40 10000 \
+           $"Port:" 2 1 "$isp_smtp_port" 2 24 5 5 \
+           $"Username:" 3 1 "$isp_smtp_username" 3 24 40 10000 \
+           $"Password:" 4 1 "" 4 24 40 10000 \
+           2> "$data"
+    sel=$?
+    case $sel in
+        1) rm -f "$data"
+           return;;
+        255) rm -f "$data"
+             return;;
+    esac
+    isp_smtp_domain=$(sed -n 1p < "$data")
+    isp_smtp_port=$(sed -n 2p < "$data")
+    isp_smtp_username=$(sed -n 3p < "$data")
+    isp_smtp_password=$(sed -n 4p < "$data")
+    rm -f "$data"
+
+    email_smtp_proxy_through_isp "$isp_smtp_domain" "$isp_smtp_port" "$isp_smtp_username" "$isp_smtp_password"
+}
+
+function menu_backup_restore {
+    while true
+    do
+        W=(1 $"Backup data to USB drive"
+           2 $"Restore GPG key from USB keydrive"
+           3 $"Restore data from USB drive"
+           4 $"Reinstall mariadb"
+           5 $"Format a USB drive"
+           6 $"Remove backups from a USB drive")
+
+        # shellcheck disable=SC2068
+        selection=$(dialog --backtitle $"LibreServer Administrator Control Panel" --title $"Backup and Restore" --menu $"Choose an operation, or ESC for main menu:" 19 70 12 "${W[@]}" 3>&2 2>&1 1>&3)
+
+        if [ ! "$selection" ]; then
+           break
+        fi
+
+        case $selection in
+            1) backup_data;;
+            2) restore_gpg_key;;
+            3) restore_data;;
+            4) reinstall_mariadb;;
+            5) format_drive;;
+            6) remove_backups;;
+        esac
+    done
+}
+
+function menu_email {
+    while true
+    do
+        W=(1 $"Add a user to a mailing list"
+           2 $"Remove a user from a mailing list"
+           3 $"Add an email rule"
+           4 $"Block/Unblock an email address"
+           5 $"Block/Unblock email with subject text"
+           6 $"Outgoing Email Proxy"
+           7 $"Extra email domains")
+
+        # shellcheck disable=SC2068
+        selection=$(dialog --backtitle $"LibreServer Administrator Control Panel" --title $"Email Menu" --menu $"Choose an operation, or ESC for main menu:" 15 70 8 "${W[@]}" 3>&2 2>&1 1>&3)
+
+        if [ ! "$selection" ]; then
+           break
+        fi
+
+        case $selection in
+            1) add_to_mailing_list;;
+            2) remove_user_from_mailing_list;;
+            3) email_rule;;
+            4) block_unblock_email;;
+            5) block_unblock_subject;;
+            6) email_smtp_proxy;;
+            7) email_extra_domains;;
+        esac
+    done
+}
+
+function domain_blocking_add {
+    data=$(mktemp 2>/dev/null)
+    dialog --title $"Block a domain or user" \
+           --backtitle $"LibreServer Control Panel" \
+           --inputbox $"Enter the domain name or fediverse nick@domain that you wish to block" 8 60 "" 2>"$data"
+    sel=$?
+    case $sel in
+        0)
+            blocked_domain=$(<"$data")
+            if [ ${#blocked_domain} -gt 2 ]; then
+                if [[ "${blocked_domain}" == *'.'* ]]; then
+                    firewall_block_domain "$blocked_domain"
+                    if [ -d /etc/prosody ]; then
+                        xmpp_server_blocklist /etc/prosody/prosody.cfg.lua
+                        systemctl restart prosody
+                    fi
+                    if [ -d /etc/epicyon ]; then
+                        epicyon_server_blocklist
+                        systemctl restart epicyon
+                    fi
+                    if [[ "${blocked_domain}" != *'@'* ]]; then
+                        dialog --title $"Block a domain" \
+                               --msgbox $"The domain $blocked_domain has been blocked" 6 40
+                    else
+                        dialog --title $"Block a fediverse nickname" \
+                               --msgbox $"$blocked_domain has been blocked" 6 40
+                    fi
+                fi
+            fi
+            ;;
+    esac
+    rm -f "$data"
+}
+
+function ip_blocking_add {
+    data=$(mktemp 2>/dev/null)
+    dialog --title $"Block an IP address" \
+           --backtitle $"LibreServer Control Panel" \
+           --inputbox $"Enter the IP address that you wish to block" 8 60 "" 2>"$data"
+    sel=$?
+    case $sel in
+        0)
+            blocked_ip=$(<"$data")
+            if [ ${#blocked_ip} -gt 2 ]; then
+                if [[ "${blocked_ip}" == *'.'* ]]; then
+                    firewall_block_ip "$blocked_ip"
+                    if [[ "${blocked_ip}" != *'@'* ]]; then
+                        dialog --title $"Block an IP address" \
+                               --msgbox $"The IP address $blocked_ip has been blocked" 6 40
+                    fi
+                fi
+            fi
+            ;;
+    esac
+    rm -f "$data"
+}
+
+function domain_blocking_remove {
+    data=$(mktemp 2>/dev/null)
+    dialog --title $"Unblock a domain or user" \
+           --backtitle $"LibreServer Control Panel" \
+           --inputbox $"Enter the domain name or fediverse address that you wish to unblock" 8 60 "" 2>"$data"
+    sel=$?
+    case $sel in
+        0)
+            unblocked_domain=$(<"$data")
+            if [ ${#unblocked_domain} -gt 2 ]; then
+                if [[ "${unblocked_domain}" == *'.'* ]]; then
+                    firewall_unblock_domain "$unblocked_domain"
+                    if [ -d /etc/prosody ]; then
+                        xmpp_server_blocklist /etc/prosody/prosody.cfg.lua
+                        systemctl restart prosody
+                    fi
+                    if [ -d /etc/epicyon ]; then
+                        epicyon_server_blocklist
+                        systemctl restart epicyon
+                    fi
+                    if [[ "${unblocked_domain}" != *'@'* ]]; then
+                        dialog --title $"Unblock a domain" \
+                               --msgbox $"The domain $unblocked_domain has been unblocked" 6 40
+                    else
+                        dialog --title $"Unblock a fediverse address" \
+                               --msgbox $"$unblocked_domain has been unblocked" 6 40
+                    fi
+                fi
+            fi
+            ;;
+    esac
+    rm -f "$data"
+}
+
+function ip_blocking_remove {
+    data=$(mktemp 2>/dev/null)
+    dialog --title $"Unblock an IP address" \
+           --backtitle $"LibreServer Control Panel" \
+           --inputbox $"Enter the IP address that you wish to unblock" 8 60 "" 2>"$data"
+    sel=$?
+    case $sel in
+        0)
+            unblocked_ip=$(<"$data")
+            if [ ${#unblocked_ip} -gt 2 ]; then
+                if [[ "${unblocked_ip}" == *'.'* ]]; then
+                    firewall_unblock_ip "$unblocked_ip"
+                    if [[ "${unblocked_ip}" != *'@'* ]]; then
+                        dialog --title $"Unblock an IP address" \
+                               --msgbox $"The IP address $unblocked_ip has been unblocked" 6 40
+                    fi
+                fi
+            fi
+            ;;
+    esac
+    rm -f "$data"
+}
+
+function domain_blocking_show {
+    if [ -f "$FIREWALL_DOMAINS" ]; then
+        clear
+        echo ''
+        echo $'The following domains or users have been blocked:'
+        echo ''
+        sort < "$FIREWALL_DOMAINS"
+        any_key
+    else
+        dialog --title $"Show blocked domains or users" \
+               --msgbox $"No domains or users are currently blocked" 6 40
+    fi
+}
+
+function domain_blocking {
+    while true
+    do
+        W=(1 $"Block a domain or user"
+           2 $"Unblock a domain or user"
+           3 $"Block an IP address"
+           4 $"Unblock an IP address"
+           5 $"Show blocked domains and users")
+
+        # shellcheck disable=SC2068
+        selection=$(dialog --backtitle $"LibreServer Administrator Control Panel" --title $"Domain or User Blocking" --menu $"Choose an operation, or ESC for main menu:" 13 70 6 "${W[@]}" 3>&2 2>&1 1>&3)
+
+        if [ ! "$selection" ]; then
+           break
+        fi
+
+        case $selection in
+            1) domain_blocking_add;;
+            2) domain_blocking_remove;;
+            3) ip_blocking_add;;
+            4) ip_blocking_remove;;
+            5) domain_blocking_show;;
+        esac
+    done
+}
+
+function menu_users {
+    while true
+    do
+        W=(1 $"Add a user"
+           2 $"Delete a user"
+           3 $"Change user password"
+           4 $"Change user ssh public key"
+           5 $"Reset password tries")
+
+        # shellcheck disable=SC2068
+        selection=$(dialog --backtitle $"LibreServer Administrator Control Panel" --title $"Manage Users" --menu $"Choose an operation, or ESC for main menu:" 13 70 6 "${W[@]}" 3>&2 2>&1 1>&3)
+
+        if [ ! "$selection" ]; then
+            break
+        fi
+
+        case $selection in
+            1) add_user;;
+            2) delete_user;;
+            3) change_password;;
+            4) change_ssh_public_key;;
+            5) reset_password_tries;;
+        esac
+    done
+}
+
+function wifi_enable {
+    disable_wifi='yes'
+    dialog --title $"Enable Wifi" \
+           --backtitle $"LibreServer Control Panel" \
+           --defaultno \
+           --yesno $"\\nDo you wish to enable wifi?" 10 50
+    sel=$?
+    case $sel in
+        0) disable_wifi='no';;
+        1) disable_wifi='yes';;
+        255) return;;
+    esac
+    "${PROJECT_NAME}-wifi" --disable $disable_wifi
+}
+
+function performance_benchmarks {
+    clear
+
+    if [ ! -f /sbin/hdparm ]; then
+        INSTALL_PACKAGES hdparm
+    fi
+
+    drives_list=$(df -h | grep "/dev/")
+    test_drive=/dev/sda2
+
+    # if this is raspbian running from usb drive
+    if grep -q 'raspbian' /etc/apt/sources.list; then
+        # no microSD connected
+        if [ ! -f /dev/mmcblk0p1 ]; then
+            test_drive=/dev/root
+            backup_drive=/dev/sdb1
+            if grep -q "USB_DRIVE=" "${CONFIGURATION_FILE}"; then
+                if ! grep -q "USB_DRIVE=${backup_drive}" "${CONFIGURATION_FILE}"; then
+                    sed -i "s|USB_DRIVE=.*|USB_DRIVE=${backup_drive}|g" "${CONFIGURATION_FILE}"
+                fi
+            else
+                echo "USB_DRIVE=${backup_drive}" >> "${CONFIGURATION_FILE}"
+            fi
+        fi
+    fi
+
+    if [[ "$drives_list" != *"$test_drive"* ]]; then
+        test_drive=/dev/sda1
+        if [[ "$drives_list" != *"$test_drive"* ]]; then
+            test_drive=/dev/mmcblk0p2
+            if [[ "$drives_list" != *"$test_drive"* ]]; then
+                test_drive=/dev/mmcblk0p1
+            fi
+        fi
+    fi
+
+    clear
+    echo ''
+    echo $"Testing read speed of drive $test_drive"
+    hdparm -tT $test_drive
+    any_key
+}
+
+function add_clacks {
+    clacks=
+
+    data=$(mktemp 2>/dev/null)
+    dialog --title $"Add Clacks Overhead" \
+           --backtitle $"LibreServer Control Panel" \
+           --inputbox $"" 7 60 2>"$data"
+    sel=$?
+    case $sel in
+        0)
+            clacks=$(<"$data")
+            if [ ${#clacks} -gt 1 ]; then
+
+                WEB_FILES="/etc/nginx/sites-available/*"
+                for f in $WEB_FILES
+                do
+                    if grep -q "X-Clacks-Overhead" "$f"; then
+                        sed -i "s|X-Clacks-Overhead .*|X-Clacks-Overhead \"GNU $clacks\";|g" "$f"
+                    else
+                        sed -i "/X-Content-Type-Options/a add_header X-Clacks-Overhead \"GNU $clacks\";" "$f"
+                    fi
+                done
+
+                fuser -k 80/tcp
+                fuser -k 443/tcp
+                systemctl restart nginx
+
+                dialog --title $"Add Clacks Overhead" \
+                       --msgbox $"\\nAdded for $clacks" 10 60
+            fi
+            ;;
+    esac
+    rm -f "$data"
+}
+
+function menu_wifi {
+    if [[ "$(wifi_exists)" == "0" ]]; then
+        dialog --title $"Wifi" \
+               --msgbox $"No wifi adaptors were detected" 6 40
+        return
+    fi
+
+    while true
+    do
+        status_str=$'Wifi OFF'
+        if [ -f /etc/hostapd/hostapd.conf ]; then
+            status_str=$'Hotspot ON'
+        else
+            if [ -f /etc/network/interfaces.d/wifi ]; then
+                status_str=$'Wifi ON'
+            fi
+        fi
+
+        W=(1 $"Enable or disable Wifi"
+           2 $"Configure wifi networks"
+           3 $"Manually edit wifi networks file"
+           4 $"Hotspot settings")
+
+        # shellcheck disable=SC2068
+        selection=$(dialog --backtitle $"LibreServer Administrator Control Panel" --title $"Wifi Menu" --menu $"${status_str}\\n\\nChoose an operation, or ESC for main menu:" 14 70 6 "${W[@]}" 3>&2 2>&1 1>&3)
+
+        if [ ! "$selection" ]; then
+            break
+        fi
+
+        case $selection in
+            1) wifi_enable;;
+            2) wifi_settings;;
+            3) wifi_edit_networks;;
+            4) hotspot_settings;;
+        esac
+    done
+}
+
+function menu_app_settings {
+    detect_installable_apps
+
+    W=()
+    appnames=()
+    n=1
+    app_index=0
+    # shellcheck disable=SC2068
+    for a in ${APPS_AVAILABLE[@]}
+    do
+        if [[ ${APPS_INSTALLED[$app_index]} != "0" ]]; then
+            if [[ $(function_exists "configure_interactive_${a}") == "1" ]]; then
+                W+=("$n" "$a")
+                n=$((n+1))
+                appnames+=("$a")
+            fi
+        fi
+        app_index=$((app_index+1))
+    done
+    if [ $n -le 1 ]; then
+        return
+    fi
+
+    # shellcheck disable=SC2086
+    choice=$(dialog --backtitle $"LibreServer" \
+                    --title $"Change settings for an App" \
+                    --menu $'Choose:' \
+                    26 40 30 "${W[@]}" 3>&2 2>&1 1>&3)
+
+    # shellcheck disable=SC2181
+    if [ "$choice" ]; then
+        app_index=$((choice-1))
+        chosen_app=${appnames[$app_index]}
+        "configure_interactive_${chosen_app}"
+    fi
+}
+
+function menu_top_level {
+    while true
+    do
+        W=(1 $"About this system"
+           2 $"Backup and Restore"
+           3 $"App Settings"
+           4 $"Add/Remove Apps"
+           5 $"Logging on/off"
+           6 $"Manage Users"
+           7 $"Email Menu"
+           8 $"Domain or User Blocking"
+           9 $"Security Settings"
+           10 $"Change the name of this system"
+           11 $"Set a static local IP address"
+           12 $"Wifi menu"
+           13 $"Add Clacks"
+           14 $"Check for updates"
+           15 $"Performance Benchmarks"
+           16 $"Change Dynamic DNS settings"
+           17 $"Power off the system"
+           18 $"Restart the system")
+
+        # shellcheck disable=SC2068
+        selection=$(dialog --backtitle $"LibreServer Administrator Control Panel" --title $"Administrator Control Panel" --menu $"Choose an operation, or ESC to exit:" 25 60 25 "${W[@]}" 3>&2 2>&1 1>&3)
+
+        if [ ! "$selection" ]; then
+            break
+        fi
+
+        please_wait
+
+        case $selection in
+            1) show_about;;
+            2) menu_backup_restore;;
+            3) menu_app_settings;;
+            4) if ! /usr/local/bin/addremove; then
+                   fuser -k 80/tcp
+                   fuser -k 443/tcp
+                   systemctl restart nginx
+                   any_key
+               else
+                   fuser -k 80/tcp
+                   fuser -k 443/tcp
+                   systemctl restart nginx
+               fi
+               ;;
+            5) logging_on_off;;
+            6) menu_users;;
+            7) menu_email;;
+            8) domain_blocking;;
+            9) security_settings;;
+            10) change_system_name;;
+            11) set_static_IP;;
+            12) menu_wifi;;
+            13) add_clacks;;
+            14) check_for_updates;;
+            15) performance_benchmarks;;
+            16) "${PROJECT_NAME}-ddns";;
+            17) shut_down_system;;
+            18) restart_system;;
+        esac
+    done
+}
+
+if [ ! -f "$COMPLETION_FILE" ]; then
+    echo $'This command should only be run on an installed LibreServer system'
+    exit 1
+fi
+
+ADMIN_USER=$(get_completion_param "Admin user")
+menu_top_level
+clear
+if [ -f ~/motd ]; then
+    cat ~/motd
+else
+    cat /etc/motd
+fi
+exit 0

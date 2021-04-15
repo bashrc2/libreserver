@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <style>
+      @import url("libreserver.css");
+
+      #domainicon {
+          width: 20%;
+          height: auto;
+          margin-right : auto;
+          margin-left : auto;
+          min-width : 100px;
+      }
+
+      #iconpic {
+          width: 20%;
+          height: auto;
+          margin-right : auto;
+          margin-left : auto;
+          min-width : 120px;
+      }
+
+      .appurl {
+          font-size: 100%;
+      }
+
+      .welcomeheader {
+          font-size: 200%;
+          font-weight: bold;
+      }
+
+      .domaintext {
+          font-size: 90%;
+      }
+
+      .passwordtext {
+          font-size: 120%;
+          font-weight: bold;
+      }
+
+      button {
+          border: none;
+          outline: 0;
+          display: inline-block;
+          padding: 8px;
+          color: white;
+          background-color: #000;
+          text-align: center;
+          cursor: pointer;
+          width: 100%;
+          font-size: 18px;
+      }
+
+      button:hover, a:hover {
+          opacity: 0.7;
+      }
+
+      .chip {
+          display: inline-block;
+          padding: 0 25px;
+          height: 50px;
+          font-size: 70%;
+          line-height: 50px;
+          border-radius: 25px;
+          background-color: #f1f1f1;
+      }
+
+      .chip img {
+          float: left;
+          margin: 0 10px 0 -25px;
+          height: 50px;
+          width: 50px;
+          border-radius: 50%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="header">
+        <a href="users.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a><br>
+        <img id="domainicon" class="img-responsive" src="images/new_user.png" alt="New Member">
+        <h2 translate="yes">New Member</h2>
+
+        <p class="domaintext" translate="yes">A new member is being added. This may take a minute or two.<p>
+        <p class="domaintext" translate="yes">Write down or save their password.</p>
+        <p class="passwordtext" translate="no">NEWPASSWORD</p>
+
+        <form action="users.html" method="post">
+          <input type="submit" name="submitnewuserconfirm" translate="yes" value="Go Back">
+        </form>
+
+        <br><br>
+
+      </div>
+    </div>
+  </body>
+</html>

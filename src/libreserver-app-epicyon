@@ -1,0 +1,769 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# License
+# =======
+#
+# Copyright (C) 2019-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VARIANTS='full full-vim'
+
+APP_CATEGORY=social
+
+IN_DEFAULT_INSTALL=0
+INSTALLED_ON_DEFAULT_DOMAIN=0
+SHOW_ON_ABOUT=1
+
+# whether to show the domain name in the web UI
+SHOW_DOMAIN_IN_WEBADMIN=1
+
+# whether to show https://domain or just teh domain on its own on app screen
+SHOW_DOMAIN_ONLY=0
+
+# whether this app will be included in the hson API for the FreedomBox android app
+NOT_ON_API=0
+
+# Whether to show on http://libreserver/home
+NOT_ON_HOMEPAGE=0
+
+# show port number within the URL on app screens
+SHOW_URL_PORT=
+
+# Whether another app is required to be installed before this one
+REQUIRES_APP=
+
+EPICYON_DOMAIN_NAME=
+EPICYON_CODE=
+EPICYON_ONION_PORT=9552
+EPICYON_REPO="https://gitlab.com/bashrc2/epicyon"
+EPICYON_COMMIT='6a9bcd33e6881341b120938f3c5de5f7df59fe99'
+EPICYON_PORT_INTERNAL=7156
+
+# These parameters are used by the FreedomBox mobile app and web UI
+EPICYON_SHORT_DESCRIPTION='Modern ActivityPub compliant server'
+EPICYON_DESCRIPTION='Modern ActivityPub compliant server'
+EPICYON_MOBILE_APP_URL=
+
+# Any ports which should be added to the firewall, separated by commas
+EPICYON_FIREWALL_PORTS=""
+
+epicyon_variables=(ONION_ONLY
+                   EPICYON_DOMAIN_NAME
+                   EPICYON_CODE
+                   DDNS_PROVIDER
+                   MY_USERNAME)
+
+function run_client_epicyon {
+    if [ ! -f ~/.epicyon_domain_name ]; then
+	return
+    fi
+    EPICYONDOMAIN=$(cat ~/.epicyon_domain_name)
+    clear
+    if [ ! -d ~/.epicyon ]; then
+	git clone ${EPICYON_REPO} ~/.epicyon
+    else
+	cd ~/.epicyon || return
+	git pull
+    fi
+    clear
+    echo 'Epicyon Client'
+    echo ''
+    cd ~/.epicyon || return
+    if [[ "${EPICYONDOMAIN}" != *'.onion' ]]; then
+	python3 epicyon.py --desktop ${USER}@${EPICYONDOMAIN}
+    else
+	python3 epicyon.py --desktop ${USER}@${EPICYONDOMAIN} --http
+    fi
+}
+
+function epicyon_clear_browser_cache {
+    { echo '#!/bin/bash';
+      echo 'if [ -f /etc/epicyon/accounts/.clear_cache ]; then';
+      echo '    rm -rf /var/www/cache/*';
+      echo '    rm /etc/epicyon/accounts/.clear_cache';
+      echo 'fi'; } > /usr/bin/epicyon_clear_cache
+    cron_add_mins 1 "/usr/bin/epicyon_clear_cache"
+}
+
+function epicyon_server_blocklist {
+    blocklisted_addresses_filename=/etc/epicyon/accounts/blocking.txt
+    blocklisted_addresses_filename_new=/tmp/epicyon_blocked_addresses.txt
+
+    if [ -f "${blocklisted_addresses_filename_new}" ]; then
+        rm "${blocklisted_addresses_filename_new}"
+    fi
+
+    # ensure that any blocks added within the epicyon web interface
+    # are added to the central blocklist
+    if [ -f "$blocklisted_addresses_filename" ]; then
+        while read -r blocked; do
+            if [[ "$blocked" == '*@'* ]]; then
+                blocked=$(cut -d "@" -f 2 <<< "$blocked")
+            fi
+            if ! grep -q "$blocked" "$FIREWALL_DOMAINS"; then
+                echo "$blocked" >> "$FIREWALL_DOMAINS"
+            fi
+        done <"$blocklisted_addresses_filename"
+    fi
+
+    # convert the central blocklist to epicyon format
+    while read -r blocked; do
+        if [ ${#blocked} -gt 4 ]; then
+            if [[ "$blocked" == *"."* ]]; then
+                if [[ "$blocked" != *"@"* ]]; then
+                    echo "*@${blocked}" >> "${blocklisted_addresses_filename_new}"
+                else
+                    # if there is a preceding @ then remove it
+                    if [[ "$blocked" == '@'* ]]; then
+                        blockedusername=$(cut -d "@" -f 2 <<< "$blocked")
+                        blockeddomain=$(cut -d "@" -f 3 <<< "$blocked")
+                        if [ "$blockedusername" ]; then
+                            if [ "$blockeddomain" ]; then
+                                blocked="${blockedusername}@${blockeddomain}"
+                            fi
+                        fi
+                    fi
+                    echo "$blocked" >> "${blocklisted_addresses_filename_new}"
+                fi
+            fi
+        fi
+    done <"$FIREWALL_DOMAINS"
+
+    # update the epicyon blocklist
+    if [ -f "${blocklisted_addresses_filename_new}" ]; then
+        cp "${blocklisted_addresses_filename_new}" "${blocklisted_addresses_filename}"
+        rm "${blocklisted_addresses_filename_new}"
+        chown epicyon:epicyon "${blocklisted_addresses_filename}"
+    fi
+}
+
+function change_default_domain_name_epicyon {
+    new_default_domain_name="$1"
+    # If anything references DEFAULT_DOMAIN_NAME then change it here
+}
+
+function logging_on_epicyon {
+    daemonFile=/etc/systemd/system/epicyon.service
+    if [ ! -f "$daemonFile" ]; then
+        return
+    fi
+    if ! grep -q "\-\-debug" "$daemonFile"; then
+        sed -i 's|/etc/epicyon/epicyon.py |/etc/epicyon/epicyon.py --debug |g' "$daemonFile"
+        systemctl daemon-reload
+        systemctl restart epicyon
+    fi
+}
+
+function logging_off_epicyon {
+    daemonFile=/etc/systemd/system/epicyon.service
+    if [ ! -f "$daemonFile" ]; then
+        return
+    fi
+    if grep -q " \-\-debug" "$daemonFile"; then
+        sed -i 's| --debug||g' "$daemonFile"
+        systemctl daemon-reload
+        systemctl restart epicyon
+    fi
+}
+
+function epicyon_create_archive {
+    { echo '#!/bin/bash';
+      echo 'cd /etc/epicyon || exit 0';
+      echo '/usr/bin/python3 epicyon.py --archive none'; } > "/usr/bin/epicyon-archive"
+    cron_add_mins 60 "/usr/bin/epicyon-archive"
+}
+
+function remove_user_epicyon {
+    remove_username="$1"
+
+    if [ ! "$EPICYON_DOMAIN_NAME" ]; then
+        read_config_param 'EPICYON_DOMAIN_NAME'
+    fi
+    if [ ! "$ONION_ONLY" ]; then
+        read_config_param 'ONION_ONLY'
+    fi
+    epicyon_domain=$EPICYON_DOMAIN_NAME
+    if [[ "$ONION_ONLY" != 'no' ]]; then
+        epicyon_domain=$(cat /var/lib/tor/hidden_service_epicyon/hostname)
+    fi
+    cd /etc/epicyon || exit 82
+    #shellcheck disable=SC2230
+    $(which python3) epicyon.py --rmaccount "${remove_username}@${epicyon_domain}"
+    "${PROJECT_NAME}-pass" -u "$remove_username" --rmapp epicyon
+    chown -R epicyon:epicyon "/etc/epicyon"
+    systemctl restart epicyon
+}
+
+function add_user_epicyon {
+    new_username="$1"
+    new_user_password="$2"
+
+    if [ ! "$EPICYON_DOMAIN_NAME" ]; then
+        read_config_param 'EPICYON_DOMAIN_NAME'
+    fi
+    if [ ! "$ONION_ONLY" ]; then
+        read_config_param 'ONION_ONLY'
+    fi
+    epicyon_domain=$EPICYON_DOMAIN_NAME
+    extraParams=
+    if [[ "$ONION_ONLY" != 'no' ]]; then
+        epicyon_domain=$(cat /var/lib/tor/hidden_service_epicyon/hostname)
+        extraParams='--http'
+    fi
+
+    echo "$epicyon_domain" > "/home/${new_username}/.epicyon_domain_name"
+    chown "${new_username}":"${new_username}" "/home/${new_username}/.epicyon_domain_name"
+
+    cd /etc/epicyon || exit 82
+    python3 epicyon.py --addaccount "${new_username}@${epicyon_domain}" --password "$new_user_password" $extraParams
+    "${PROJECT_NAME}-pass" -u "$new_username" -a epicyon -p "$new_user_password"
+    chown -R epicyon:epicyon "/etc/epicyon"
+    systemctl restart epicyon
+    echo '0'
+}
+
+function install_interactive_epicyon {
+    if [ ! "$ONION_ONLY" ]; then
+        ONION_ONLY='no'
+    fi
+
+    if [[ "$ONION_ONLY" != "no" ]]; then
+        EPICYON_DOMAIN_NAME='epicyon.local'
+        write_config_param "EPICYON_DOMAIN_NAME" "$EPICYON_DOMAIN_NAME"
+    else
+        interactive_site_details "epicyon" "EPICYON_DOMAIN_NAME" "EPICYON_CODE"
+    fi
+    APP_INSTALLED=1
+}
+
+function change_password_epicyon {
+    curr_username="$1"
+    new_user_password="$2"
+
+    read_config_param 'EPICYON_DOMAIN_NAME'
+    read_config_param 'ONION_ONLY'
+    epicyon_domain=$EPICYON_DOMAIN_NAME
+    if [[ "$ONION_ONLY" != 'no' ]]; then
+        epicyon_domain=$(cat /var/lib/tor/hidden_service_epicyon/hostname)
+    fi
+
+    cd /etc/epicyon || exit 82
+    #shellcheck disable=SC2230
+    $(which python3) epicyon.py --changepassword "${curr_username}@${epicyon_domain}" "$new_user_password"
+    "${PROJECT_NAME}-pass" -u "$curr_username" -a epicyon -p "$new_user_password"
+}
+
+function reconfigure_epicyon {
+    # This is used if you need to switch identity. Dump old keys and generate new ones
+    cd /etc/epicyon || exit 82
+    rm -rf /etc/epicyon/accounts /etc/epicyon/keys /etc/epicyon/wfendpoints /etc/epicyon/media /etc/epicyon/sharefiles /etc/epicyon/tags
+}
+
+function configure_interactive_epicyon {
+    W=(1 $"Option 1"
+       2 $"Option 2")
+
+    while true
+    do
+        # shellcheck disable=SC2068
+        selection=$(dialog --backtitle $"LibreServer Administrator Control Panel" --title $"epicyon" --menu $"Choose an operation, or ESC for main menu:" 14 70 3 "${W[@]}" 3>&2 2>&1 1>&3)
+
+        if [ ! "$selection" ]; then
+           break
+        fi
+        case $selection in
+            1) # call some function for option 1
+               ;;
+            2) # call some function for option 2
+               ;;
+        esac
+    done
+}
+
+function upgrade_distro_epicyon {
+    target_distro="$1"
+    # include anything here needed to upgrade to the target distro
+}
+
+function upgrade_epicyon {
+    epicyon_clear_browser_cache
+    if [ -d "/usr/local/lib/${PYTHON_VERSION}/dist-packages/six.py" ]; then
+        pip3 uninstall -y six
+        INSTALL_PACKAGES python3-six --reinstall	
+    fi
+    if [ ! -d /usr/lib/python3/dist-packages/cryptography ]; then
+        INSTALL_PACKAGES python3-cryptography
+    fi
+    if [ ! -d /usr/lib/python3/dist-packages/pyld ]; then
+        INSTALL_PACKAGES python3-pyld
+    fi
+
+    if [ ! -f /usr/bin/exiftool ]; then
+        INSTALL_PACKAGES libimage-exiftool-perl
+    fi
+
+    if [ ! -d /usr/lib/python3/dist-packages/pyqrcode ]; then
+        INSTALL_PACKAGES python3-pyqrcode python3-png
+    fi
+
+    epicyon_create_archive
+
+    cron_add_mins 1 "/usr/local/bin/${PROJECT_NAME}-notification --epicyon yes"
+
+    if [[ "$ONION_ONLY" != "yes" ]]; then
+        EPICYON_ONION_HOSTNAME=$(cat /var/lib/tor/hidden_service_epicyon/hostname)
+        epicyonOnionDomain="onion $EPICYON_ONION_HOSTNAME"
+        if ! grep -q "$epicyonOnionDomain" /etc/systemd/system/epicyon.service; then
+            sed -i "s|epicyon.py|epicyon.py --${epicyonOnionDomain}|g" /etc/systemd/system/epicyon.service
+            systemctl daemon-reload
+            systemctl restart epicyon
+        fi
+    fi
+
+    CURR_EPICYON_COMMIT=$(get_completion_param "epicyon commit")
+    if [[ "$CURR_EPICYON_COMMIT" == "$EPICYON_COMMIT" ]]; then
+        return
+    fi
+
+    if grep -q "epicyon domain" "$COMPLETION_FILE"; then
+        EPICYON_DOMAIN_NAME=$(get_completion_param "epicyon domain")
+    fi
+
+    # update to the next commit
+    set_repo_commit "/etc/epicyon" "epicyon commit" "$EPICYON_COMMIT" "$EPICYON_REPO"
+    chown -R epicyon:epicyon "/etc/epicyon"
+    systemctl restart epicyon
+    epicyon_update_domain_name_users
+}
+
+function backup_local_epicyon {
+    EPICYON_DOMAIN_NAME='epicyon'
+    if grep -q "epicyon domain" "$COMPLETION_FILE"; then
+        EPICYON_DOMAIN_NAME=$(get_completion_param "epicyon domain")
+    fi
+
+    source_directory=/etc/epicyon
+
+    suspend_site "${EPICYON_DOMAIN_NAME}"
+
+    systemctl stop epicyon
+
+    dest_directory=epicyon
+    backup_directory_to_usb "$source_directory" $dest_directory
+    backup_tor_config_to_usb epicyon
+
+    restart_site
+    systemctl start epicyon
+}
+
+function restore_local_epicyon {
+    if ! grep -q "epicyon domain" "$COMPLETION_FILE"; then
+        return
+    fi
+    EPICYON_DOMAIN_NAME=$(get_completion_param "epicyon domain")
+    if [ ! "$EPICYON_DOMAIN_NAME" ]; then
+        return
+    fi
+    suspend_site "${EPICYON_DOMAIN_NAME}"
+    systemctl stop epicyon
+
+    temp_restore_dir=/root/tempepicyon
+    epicyon_dir=/etc/epicyon
+
+    restore_directory_from_usb $temp_restore_dir epicyon
+    if [ -d $temp_restore_dir ]; then
+        if [ -d "$temp_restore_dir$epicyon_dir" ]; then
+            cp -rp "$temp_restore_dir$epicyon_dir"/* "$epicyon_dir"/
+        else
+            if [ ! -d "$epicyon_dir" ]; then
+                mkdir "$epicyon_dir"
+            fi
+            cp -rp "$temp_restore_dir"/* "$epicyon_dir"/
+        fi
+        chown -R epicyon:epicyon "$epicyon_dir"
+        rm -rf $temp_restore_dir
+    fi
+
+    restore_tor_config_from_usb epicyon
+
+    systemctl start epicyon
+
+    restart_site
+}
+
+function backup_remote_epicyon {
+    echo -n ''
+}
+
+function restore_remote_epicyon {
+    echo -n ''
+}
+
+function remove_epicyon {
+    nginx_dissite "$EPICYON_DOMAIN_NAME"
+    remove_certs "$EPICYON_DOMAIN_NAME"
+
+    if [ -f /etc/systemd/system/epicyon.service ]; then
+        systemctl stop epicyon
+        systemctl disable epicyon
+        rm /etc/systemd/system/epicyon.service
+    fi
+    userdel -r epicyon
+
+    if [ -d "/var/www/$EPICYON_DOMAIN_NAME" ]; then
+        rm -rf "/var/www/$EPICYON_DOMAIN_NAME"
+    fi
+    if [ -f "/etc/nginx/sites-available/$EPICYON_DOMAIN_NAME" ]; then
+        rm "/etc/nginx/sites-available/$EPICYON_DOMAIN_NAME"
+    fi
+    remove_onion_service epicyon "${EPICYON_ONION_PORT}"
+    if grep -q "epicyon" /etc/crontab; then
+        sed -i "/epicyon/d" /etc/crontab
+    fi
+    if [ -d /etc/epicyon ]; then
+        rm -rf /etc/epicyon
+    fi
+    remove_app epicyon
+    remove_completion_param install_epicyon
+    sed -i '/epicyon/d' "$COMPLETION_FILE"
+
+    remove_ddns_domain "$EPICYON_DOMAIN_NAME"
+}
+
+function epicyon_update_domain_name_users {
+    # updates the domain name for each user account
+    # so that the desktop client knows its domain
+    epicyon_domain=${EPICYON_DOMAIN_NAME}
+    if [[ "${ONION_ONLY}" != 'no' ]]; then
+	epicyon_domain=$(cat /var/lib/tor/hidden_service_epicyon/hostname)
+    fi
+    for d in /home/*/ ; do
+        USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+	echo -n "${epicyon_domain}" > "/home/${USERNAME}/.epicyon_domain_name"
+	chown "${USERNAME}":"${USERNAME}" "/home/${USERNAME}/.epicyon_domain_name"
+    done
+}
+
+function install_epicyon {
+    increment_app_install_progress
+    if [ ! "$EPICYON_DOMAIN_NAME" ]; then
+        echo $'No domain name was given for epicyon'
+        exit 35
+    fi
+
+    if [ -d "/usr/local/lib/${PYTHON_VERSION}/dist-packages/six.py" ]; then
+        pip3 uninstall -y six
+        INSTALL_PACKAGES python3-six --reinstall
+    fi
+    INSTALL_PACKAGES python3-socks imagemagick python3-setuptools python3-cryptography python3-dateutil libimage-exiftool-perl python3-flake8 python3-pyqrcode python3-png python3-pyld python3-six wget
+
+    increment_app_install_progress
+
+    if [ -d "/var/www/$EPICYON_DOMAIN_NAME/htdocs" ]; then
+        rm -rf "/var/www/$EPICYON_DOMAIN_NAME/htdocs"
+    fi
+    mkdir "/var/www/$EPICYON_DOMAIN_NAME"
+    if [ -d /repos/epicyon ]; then
+        mkdir -p "/var/www/$EPICYON_DOMAIN_NAME/htdocs"
+        cp -r -p /repos/epicyon/. "/etc/epicyon"
+        cd "/etc/epicyon" || exit 36
+        git pull
+    else
+        mkdir -p "/var/www/$EPICYON_DOMAIN_NAME/htdocs"
+        git_clone "$EPICYON_REPO" "/etc/epicyon"
+    fi
+
+    if [ ! -d "/etc/epicyon" ]; then
+        echo $'Unable to clone epicyon repo'
+        exit 87
+    fi
+
+    cd "/etc/epicyon" || exit 34
+    git checkout "$EPICYON_COMMIT" -b "$EPICYON_COMMIT"
+    set_completion_param "epicyon commit" "$EPICYON_COMMIT"
+
+    chmod g+w "/var/www/$EPICYON_DOMAIN_NAME/htdocs"
+    chown -R www-data:www-data "/var/www/$EPICYON_DOMAIN_NAME/htdocs"
+
+    add_ddns_domain "$EPICYON_DOMAIN_NAME"
+
+    increment_app_install_progress
+
+    EPICYON_ONION_HOSTNAME=$(add_onion_service epicyon 80 "${EPICYON_ONION_PORT}")
+
+    increment_app_install_progress
+
+    if [ ! -d /var/www/cache ]; then
+        mkdir /var/www/cache
+        chown www-data:www-data /var/www/cache
+    fi
+
+    epicyon_nginx_site=/etc/nginx/sites-available/$EPICYON_DOMAIN_NAME
+    if [[ "$ONION_ONLY" == "no" ]]; then
+        nginx_http_redirect "$EPICYON_DOMAIN_NAME" "index index.html"
+        { echo 'proxy_cache_path /var/www/cache levels=1:2 keys_zone=my_cache:10m max_size=10g';
+          echo '                 inactive=60m use_temp_path=off;';
+          echo '';
+          echo 'server {';
+          echo '  listen 443 ssl;';
+          echo '  #listen [::]:443 ssl;';
+          echo "  server_name $EPICYON_DOMAIN_NAME;";
+          echo ''; } >> "$epicyon_nginx_site"
+        nginx_compress "$EPICYON_DOMAIN_NAME"
+        echo '  # Security' >> "$epicyon_nginx_site"
+        nginx_ssl "$EPICYON_DOMAIN_NAME"
+
+        nginx_security_options "$EPICYON_DOMAIN_NAME"
+        nginx_robots "$EPICYON_DOMAIN_NAME"
+
+        { echo '  add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
+          echo "  add_header Onion-Location http://${EPICYON_ONION_HOSTNAME}\$request_uri;";
+          echo '';
+          echo '  access_log /dev/null;';
+          echo '  error_log /dev/null;';
+          echo '';
+          echo "  root /var/www/$EPICYON_DOMAIN_NAME/htdocs;";
+          echo '';
+          echo '  index index.html;';
+          echo '';
+          echo '  location /newsmirror {';
+          echo '    try_files $uri =404;';
+          echo '  }';
+          echo '';
+          echo '  location / {';
+          echo '    proxy_http_version 1.1;';
+          echo '    client_max_body_size 31M;';
+          echo "    proxy_set_header Upgrade \$http_upgrade;";
+          echo '    proxy_set_header Connection "upgrade";';
+          echo "    proxy_set_header Host \$http_host;";
+          echo "    proxy_set_header X-Real-IP \$remote_addr;";
+          echo "    proxy_set_header X-Forward-For \$proxy_add_x_forwarded_for;";
+          echo '    proxy_set_header X-Forward-Proto http;';
+          echo '    proxy_set_header X-Nginx-Proxy true;';
+          echo '    expires epoch;';
+          echo '    proxy_no_cache 0;';
+          echo '    proxy_temp_file_write_size 64k;';
+          echo '    proxy_connect_timeout 10080s;';
+          echo '    proxy_send_timeout 10080;';
+          echo '    proxy_read_timeout 10080;';
+          echo '    proxy_buffer_size 64k;';
+          echo '    proxy_buffers 16 32k;';
+          echo '    proxy_busy_buffers_size 64k;';
+          echo '    proxy_redirect off;';
+          echo '    proxy_request_buffering on;';
+          echo '    proxy_buffering on;';
+          echo '    proxy_cache my_cache;';
+          echo '    proxy_cache_use_stale error timeout http_500 http_502 http_503 http_504;';
+          echo '    location ~ ^/(icons|images|media|emoji)/(.*)/(.*).(png|jpg|gif|webp|svg|mp3|ogv|ogg|mp4) {';
+          echo '        expires 7d;';
+          echo "        proxy_pass http://localhost:$EPICYON_PORT_INTERNAL;";
+          echo '    }';
+          echo '    location ~ ^/icons/(.*)/(like|repeat|calendar)(.*).(png|jpg|gif|webp|svg|mp3|ogv|ogg|mp4) {';
+          echo '        expires epoch;';
+          echo '        proxy_no_cache 0;';
+          echo "        proxy_pass http://localhost:$EPICYON_PORT_INTERNAL;";
+          echo '    }';
+          echo '    location ~ ^/icons/(like|repeat|calendar)(.*).(png|jpg|gif|webp|svg|mp3|ogv|ogg|mp4) {';
+          echo '        expires epoch;';
+          echo '        proxy_no_cache 0;';
+          echo "        proxy_pass http://localhost:$EPICYON_PORT_INTERNAL;";
+          echo '    }';
+          echo '    location ~ ^/users/(.*)/(image|banner).(png|jpg|gif|webp|svg|mp3|ogv|ogg|mp4) {';
+          echo '        expires epoch;';
+          echo '        proxy_no_cache 0;';
+          echo "        proxy_pass http://localhost:$EPICYON_PORT_INTERNAL;";
+          echo '    }';
+          echo "    proxy_pass http://localhost:$EPICYON_PORT_INTERNAL;";
+          echo '  }';
+          echo '}'; } >> "$epicyon_nginx_site"
+    else
+        { echo 'proxy_cache_path /var/www/cache levels=1:2 keys_zone=my_cache:10m max_size=10g';
+          echo '                 inactive=60m use_temp_path=off;';
+          echo ''; } > "$epicyon_nginx_site"
+    fi
+    { echo 'server {';
+      echo "    listen 127.0.0.1:$EPICYON_ONION_PORT default_server;";
+      echo "    server_name $EPICYON_ONION_HOSTNAME;";
+      echo ''; } >> "$epicyon_nginx_site"
+    nginx_compress "$EPICYON_DOMAIN_NAME"
+    nginx_security_options "$EPICYON_DOMAIN_NAME"
+    { echo '';
+      echo '    access_log /dev/null;';
+      echo '    error_log /dev/null;';
+      echo '';
+      echo "    root /var/www/$EPICYON_DOMAIN_NAME/htdocs;";
+      echo '';
+      echo '  index index.html;';
+      echo '';
+      echo '  location /newsmirror {';
+      echo '    try_files $uri =404;';
+      echo '  }';
+      echo '';
+      echo '  location / {';
+      echo '    proxy_http_version 1.1;';
+      echo '    client_max_body_size 31M;';
+      echo "    proxy_set_header Upgrade \$http_upgrade;";
+      echo '    proxy_set_header Connection "upgrade";';
+      echo "    proxy_set_header Host \$http_host;";
+      echo "    proxy_set_header X-Real-IP \$remote_addr;";
+      echo "    proxy_set_header X-Forward-For \$proxy_add_x_forwarded_for;";
+      echo '    proxy_set_header X-Forward-Proto http;';
+      echo '    proxy_set_header X-Nginx-Proxy true;';
+      echo '    expires epoch;';
+      echo '    proxy_no_cache 0;';
+      echo '    proxy_temp_file_write_size 64k;';
+      echo '    proxy_connect_timeout 10080s;';
+      echo '    proxy_send_timeout 10080;';
+      echo '    proxy_read_timeout 10080;';
+      echo '    proxy_buffer_size 64k;';
+      echo '    proxy_buffers 16 32k;';
+      echo '    proxy_busy_buffers_size 64k;';
+      echo '    proxy_redirect off;';
+      echo '    proxy_request_buffering on;';
+      echo '    proxy_buffering on;';
+      echo '    proxy_cache my_cache;';
+      echo '    proxy_cache_use_stale error timeout http_500 http_502 http_503 http_504;';
+      echo '    location ~ ^/(icons|images|media|emoji)/(.*)/(.*).(png|jpg|gif|webp|svg|mp3|ogv|ogg|mp4) {';
+      echo '        expires 7d;';
+      echo "        proxy_pass http://localhost:$EPICYON_PORT_INTERNAL;";
+      echo '    }';
+      echo '    location ~ ^/icons/(.*)/(like|repeat|calendar)(.*).(png|jpg|gif|webp|svg|mp3|ogv|ogg|mp4) {';
+      echo '        expires epoch;';
+      echo '        proxy_no_cache 0;';
+      echo "        proxy_pass http://localhost:$EPICYON_PORT_INTERNAL;";
+      echo '    }';
+      echo '    location ~ ^/icons/(like|repeat|calendar)(.*).(png|jpg|gif|webp|svg|mp3|ogv|ogg|mp4) {';
+      echo '        expires epoch;';
+      echo '        proxy_no_cache 0;';
+      echo "        proxy_pass http://localhost:$EPICYON_PORT_INTERNAL;";
+      echo '    }';
+      echo '    location ~ ^/users/(.*)/(image|banner).(png|jpg|gif|webp|svg|mp3|ogv|ogg|mp4) {';
+      echo '        expires epoch;';
+      echo '        proxy_no_cache 0;';
+      echo "        proxy_pass http://localhost:$EPICYON_PORT_INTERNAL;";
+      echo '    }';
+      echo "    proxy_pass http://localhost:$EPICYON_PORT_INTERNAL;";
+      echo '  }';
+      echo '}'; } >> "$epicyon_nginx_site"
+
+    increment_app_install_progress
+
+    adduser --system --home="/etc/epicyon" --group epicyon
+
+    epicyon_domain=$EPICYON_DOMAIN_NAME
+    epicyon_port=443
+    EPICYON_TOR_OPTION='--tor'
+    extraParams=
+    epicyonOnionDomain="--onion $EPICYON_ONION_HOSTNAME"
+    if [[ "$ONION_ONLY" != 'no' ]]; then
+        epicyon_domain=$EPICYON_ONION_HOSTNAME
+        epicyon_port=80
+        EPICYON_TOR_OPTION='--tor --http'
+        extraParams='--http'
+        epicyonOnionDomain=''
+    fi
+
+    { echo '[Unit]';
+      echo 'Description=epicyon';
+      echo 'After=network.target';
+      echo "Documentation=$EPICYON_REPO";
+      echo '';
+      echo '[Service]';
+      echo 'Type=simple';
+      echo 'User=epicyon';
+      echo 'Group=epicyon';
+      echo 'WorkingDirectory=/etc/epicyon';
+      # shellcheck disable=SC2230
+      echo "ExecStart=$(which python3) /etc/epicyon/epicyon.py --port $epicyon_port --proxy $EPICYON_PORT_INTERNAL --domain $epicyon_domain $epicyonOnionDomain --registration closed $EPICYON_TOR_OPTION";
+      echo 'Environment=USER=epicyon';
+      echo 'Restart=always';
+      echo 'CPUQuota=80%';
+      echo 'ProtectSystem=yes';
+      echo 'ProtectHome=yes';
+      echo 'ProtectClock=yes';
+      echo 'ProtectHostname=yes';
+      echo 'PrivateUsers=yes';
+      echo 'ProtectKernelModules=yes';
+      echo 'ProtectKernelTunables=yes';
+      echo 'NoNewPrivileges=true';
+      echo '';
+      echo '[Install]';
+      echo 'WantedBy=multi-user.target'; } > "/etc/systemd/system/epicyon.service"
+    systemctl enable epicyon
+    chown -R epicyon:epicyon "/etc/epicyon"
+    systemctl start epicyon
+
+    increment_app_install_progress
+
+    create_site_certificate "$EPICYON_DOMAIN_NAME" 'yes'
+
+    nginx_ensite "$EPICYON_DOMAIN_NAME"
+
+    systemctl restart nginx
+
+    increment_app_install_progress
+
+    if [ -f "$IMAGE_PASSWORD_FILE" ]; then
+        EPICYON_ADMIN_PASSWORD="$(printf "%s" "$(cat "$IMAGE_PASSWORD_FILE")")"
+    fi
+    if [ ! "$EPICYON_ADMIN_PASSWORD" ]; then
+        EPICYON_ADMIN_PASSWORD="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
+    fi
+    "${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a epicyon -p "$EPICYON_ADMIN_PASSWORD"
+    if [ ! "$EPICYON_ADMIN_PASSWORD" ]; then
+        return
+    fi
+
+    # create an admin account
+    cd /etc/epicyon || exit 82
+    python3 epicyon.py --addaccount "admin@${epicyon_domain}" --password "${EPICYON_ADMIN_PASSWORD}" $extraParams
+    # shellcheck disable=SC2012
+    curr_epicyon_accounts=$(ls -l /etc/epicyon/accounts/admin@*.json | wc -l)
+    # shellcheck disable=SC2086
+    if [ $curr_epicyon_accounts -ne 1 ]; then
+        echo "Unable to create admin account:"
+        echo "python3 epicyon.py --addaccount \"admin@${epicyon_domain}\" --password \"yourpassword\""
+        exit 87
+    fi
+
+    mkdir -p /etc/epicyon/accounts/newsmirror
+    chown -R epicyon:epicyon "/etc/epicyon"
+    ln -s /etc/epicyon/accounts/newsmirror "/var/www/${EPICYON_DOMAIN_NAME}/htdocs/newsmirror"
+    systemctl restart epicyon
+
+    increment_app_install_progress
+
+    epicyon_create_archive
+
+    increment_app_install_progress
+
+    epicyon_update_domain_name_users
+
+    increment_app_install_progress
+
+    cron_add_mins 1 "/usr/local/bin/${PROJECT_NAME}-notification --epicyon yes"
+    epicyon_clear_browser_cache
+
+    "${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a epicyon -p "$EPICYON_ADMIN_PASSWORD"
+    set_completion_param "epicyon domain" "$EPICYON_DOMAIN_NAME"
+
+    APP_INSTALLED=1
+}
+
+# NOTE: deliberately there is no "exit 0"

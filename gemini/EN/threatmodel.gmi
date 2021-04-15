@@ -1,0 +1,133 @@
+=> faq.gmi ⯇ Go Back
+
+# LibreServer Threat Model
+
+# Expected Deployment
+
+## 🏠 Located at your place of residence
+
+Not in a data center or as a (Virtual Private Server) VPS. You are expected to have physical access to the hardware.
+
+## 🚹 You own the hardware
+
+Or it could be owned by someone living at your place of residence
+
+## 💻 Running on an ARM single board computer or desktop/laptop/netbook
+
+Not (yet) intended to run on tablets or phones, though that might become possible in future.
+
+## 🌏 Running on Debian
+
+The stable version, or a closely related derivative such as Armbian
+
+## ⟲ Continuous operation
+
+The system runs continuously 24/7. Power downs are not expected under normal use.
+
+# ⚠ Threats
+
+## Adversary gains access to uninstalled server
+
+You might copy an image to a drive, power on your server and then do something else for a few hours or days. An adversary could ssh in using the default password and add an implant.
+
+To mitigate this, your're forced to change the default password on first login and the adversary would also have to do this. So if you havn't yet installed the system but you notice that you can't do the initial login then this indicates that the system could be compromised.
+
+## USB port access
+
+Anyone at your place of residence could plug in external devices, such as USB sticks. The system has a USB canary feature which informs the administrator if a USB device has been plugged in or removed, but it doesn't prevent the delivery of malicious payloads via USB.
+
+## Serial console access
+
+This is useful for diagnosing boot sequence problems but could also be used as a way of logging into the system. Even if an adversary within your household connects a serial cable to the relevant pins they still need to know the admin password, or password of another member, to be able to log in and do anything harmful.
+
+## Exploitation of CPU design flaws
+
+Currently many CPUs used on laptops or single board computers are vulnerable to Spectre type bugs which are difficult to mitigate in software. However, these design flaws are most exploitable within a different kind of deployment, such as shared hosting within a data center in which multiple virtual machines are running on the same CPU. That kind of threat doesn't apply in the self-hosted situation where the hardware is in your home under your direct supervision.
+
+## ssh access using default password
+
+By default ssh access to the system, even from within the local network, is not enabled. There is also no default password and instead a random password is generated on first boot and shown during the setup procedure.
+
+## Access to the web interface
+
+Anyone with access to the administrator part of the web interface could potentially cause significant trouble, such as uninstalling apps or changing DNS settings. Access to the web interface is restricted in a few ways:
+
+* Login password needed via web server authentication method
+* There is no clearnet access to the web interface via ports 80 or 443
+* Remote access is only enabled via an onion address. An adversary needs to know both the address and the login password.
+
+## Adversary uses an out of band method to run web interface scripts
+
+Scripts which are run from the web interface are restricted to only being executable via that interface. So trying to run them via the commandline or another method should not be possible.
+
+## icmp based exploits
+
+Such as "ping of death". icmp is a sufficiently boring aspect of servers that probably the code hasn't had a lot of oversight in recent years. To mitigate possible exploits icmp is turned off by default.
+
+## Adversary determines running applications via a port scan
+
+The system tries to detect port scanning and adds a 24 hour firewall block to any IP address from which a scan appears to originate.
+
+## Denial of service attack
+
+The mitigations against this are fairly limited and so denial of service attacks are a possible way in which the system could fail. There are rate limits at the firewall level and also within the web server configuration. Where it's relevant the number of connected users for an app is limited to ten or fewer.
+
+## Adversary runs an exploit from /tmp
+
+Execute permissions for the /tmp directory are denied. Also the directory size of /tmp is quite small, so trying to run a large program from there or use it as a way of transferring a lot of data would be more difficult.
+
+## Adversary changes permissions
+
+The system periodically runs tests to check permissions on critical files and directories. If a problem is found then permissions are automatically reset and a report is sent to the administrator.
+
+## Obtaining IP addresses from logs
+
+For example, suppose that an authority orders you to hand over your server and they then search it to try to find out who has been reading your blog. Logging is turned off by default, so there are no IP addresses to be discovered.
+
+## You want to use onion addresses but Tor is blocked in your area
+
+You can add Tor bridges via the settings screen of the web interface.
+
+## Harrassment
+
+An adversary sends you repeated unwanted correspondence, to intimidate, annoy or manipulate (psychological warfare). It is possible to block addresses or domains for email and XMPP systems from the blocking controls within the web interface settings screen. Systems like Hubzilla and Zap have more sophisticated controls over how other users can interact with you, such as who can reply to posts. Blocked emails are dropped at the email server level. An adversary can repeatedly change their address, but domain based blocking may limit their ability to mutate.
+
+Advanced adversaries with financial resources may be able to rapidly spin up throwaway VMs or containers on different domains and this is hard to defend against. On the blocking controls screen there is also the ability to block communications containing certain words, and this could help in such cases.
+
+## Adversary tries to get illegal content onto your server
+
+So that they can then call law enforcement on you. The laws in some jurisdictions mandate that illegal content be removed within a few hours of discovery (or an even shorted time), and this may be difficult to comply with if your are running a small site and are asleep, at work or otherwise not continuously monitoring your server.
+
+Wherever possible, content may only be added by authorized members on the system. Possible exceptions to this might be attachments within XMPP multi user chat or Matrix rooms. If this is a potential hazard then it is possible to create private Matrix rooms and restrict access to XMPP chat.
+
+## Adversary controls the internet router at your place of residence
+
+You have physical access to the internet router to connect your server but don't have login credentials for it and are not likely to be authorized. Perhaps you are a kid whose parents don't want you messing with their internet setup, or someone in an abusive relationship. In this case you can use the onion version of the system, which doesn't require port forwarding from the internet router. It will mean that your content is only available via onion addresses, but you will still have an independent internet presence.
+
+## Adversary fingerprints your server via cron activity
+
+The times at which the main cron tasks run are randomized for each install of the system. A passive adversary should not be able to identify LibreServer systems via a particular pattern of cron activity.
+
+## Protection of data at rest
+
+Currently full disk encryption is not enabled and this is a deliberate security tradeoff. Full disk encryption only protects data when the system is powered off and this system is intended to run continuously. If your server is obtained by an adversary then they may be able to read any data stored on it. This may be partly mitigated due to logging being turned off and there being no logged IP addresses.
+
+Full disk encryption requires authentication on boot and this system is intended to be operational even in the presence of occasional electrical power cuts. The small benefit which it would provide is greatly outweighed by the advantages of being able to maintain a continuous internet presence despite some level of unreliability of the surrounding infrastructure.
+
+## Insufficient entropy
+
+Entropy level is checked before the creation of new passwords.
+
+Some single board computers like the Beaglebone Black have their own hardware random number generators. The quality of these is unknown and their design could be a trade secret of the chip manufacturer. This is difficult to mitigate, but USB hardware random number generators based upon published schematics are available if this is a concern.
+
+## Adversary uses a known debian exploit
+
+Security updates are applied automatically. Since new exploits are always being found this isn't perfect but may defend you against already known issues.
+
+## Adversary tries to modify debian package downloads
+
+https transport is enabled for package downloads and also the debian repo GPG keys are regularly checked via STIG tests. If the debian repo public keys change then the administrator will be alerted.
+
+## Passive bulk surveillance
+
+For the standard install https is used with LetsEncrypt ceryificates. http is redirected to https. Recording of DNS lookups may still be a problem. If you access your apps via their onion addresses then this makes it difficult for passive surveillance to obtain any useful personally identifiable information.

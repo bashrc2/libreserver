@@ -1,0 +1,43 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Creates an SSB/scuttlebot invite
+#
+# License
+# =======
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+PROJECT_NAME='libreserver'
+
+export TEXTDOMAIN=${PROJECT_NAME}-mesh-invite
+export TEXTDOMAINDIR="/usr/share/locale"
+
+invite=$(sudo -- bash -c 'su -c "sbot invite.create 1" - scuttlebot' | awk -F '"' '{print $2}')
+
+if [ ${#invite} -lt 10 ]; then
+   dialog --title $"Create Invite" \
+          --msgbox $"\\nThe invite could not be created" 7 70
+   exit 1
+fi
+
+echo "$invite" | xclip -selection c
+
+dialog --title $"Create Invite" \
+       --msgbox $"\\nThe invite has been copied to the clipboard.\\n\\nYou can paste it with CTRL+v" 9 70
+
+exit 0

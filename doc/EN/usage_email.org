@@ -1,0 +1,233 @@
+#+TITLE: LibreServer
+#+AUTHOR: Bob Mottram
+#+EMAIL: bob@libreserver.org
+#+KEYWORDS: libreserver, email
+#+DESCRIPTION: How to use email on LibreServer
+#+OPTIONS: ^:nil toc:nil num:nil
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="libreserver.css" />
+
+#+attr_html: :width 80% :height 10% :align center
+[[file:images/logo.png]]
+
+| [[Things to be aware of]]                           |
+| [[A technical note about email transport security]] |
+| [[Add a password to your GPG key]]                  |
+| [[Publishing your GPG public key]]                  |
+| [[Mutt email client]]                               |
+| [[Thunderbird/Icedove]]                             |
+| [[Android apps]]                                    |
+| [[Subscribing to mailing lists]]                    |
+| [[Adding email addresses to a group/folder]]        |
+| [[Ignoring incoming emails]]                        |
+| [[Using I2P for email transport]]                   |
+
+* Things to be aware of
+Even though this system makes it easy to set up an email server, running your own email system is still not easy and this is mainly due to the huge amount of collatoral damage caused by spammers over a long period of time, which in turn is due to the inherent insecurity of email protocols which enabled spam to become a big problem. Email is still very popular though and most internet services require that you have an email address in order to register.
+
+In using an email address hosted on your own system you will quite likely find that it is blocked and bounced by other popular email systems. Such blocking is almost never based upon any evidence that your system is actually producing spam and usually it's just because your IP address happens to be within a certain range.  Rather arrogantly many of the anti-spam rule sets assume that if an email is sent from an IP address range which is "residential" (i.e. not a company or other organisation) then /it must therefore be spam/.
+
+So if you want to use your own email address hosted on your own system you do need to be prepared to encounter some difficulties and annoyances. Sadly, often these annoyances will be unsolvable and are not a matter of using different software or configuring things differently.
+* A technical note about email transport security
+Port 465 is used for SMTP and this is supposedly deprecated for secure email. However, using TLS from the start of the communications seems far more secure than starting off with insecure communications and then trying to upgrade it with a command to begin TLS, as happens with STARTTLS. There are [[https://www.eff.org/deeplinks/2014/11/starttls-downgrade-attacks][possible attacks against STARTTLS]] in which the command to begin secure communications is removed or overwritten which could then result in email being transferred in plain text over the internet and be readable by third parties.
+
+From https://motherboard.vice.com/read/email-encryption-is-broken:
+
+#+BEGIN_QUOTE
+/The researchers also uncovered mass scale attacks of STARTTLS sessions being stripped of their encryption. That attack itself isn't new: internet service providers sometimes do it to monitor users; organizations may use it to keep an eye on employees; or it may come from a malicious actor/
+#+END_QUOTE
+
+A way to avoid these pitfalls altogether is to use onion addresses (see the section below) or [[./app_bdsmail.html][I2P addresses]] for email. These are not so convenient because they use long random strings which aren't memorable as addresses, but they do give a strong assurance that whoever recieves the message is the intended recipient and that emails can't be read passively during their transport across the internet.
+* Add a password to your GPG key
+If you didn't use existing GPG keys during the LibreServer installation then you'll need to add a password to your newly generated private key. This is highly recommended. Go through the following sequence of commands to ssh into the LibreServer and then change your GPG password.
+
+#+BEGIN_SRC bash
+ssh username@domainname -p 2222
+gpg --edit-key username@domain
+passwd
+save
+quit
+exit
+#+END_SRC
+
+Having a password on your GPG key will prevent someone from reading your email /even if your server gets lost or stolen/ or if someone else has physical access to it. Make the password something long and unlikely to be guessable or vulnerable to a brute force [[https://en.wikipedia.org/wiki/Dictionary_attack][dictionary attack]].
+
+* Publishing your GPG public key
+If you havn't already then you should publish your GPG public key so that others can find it.
+
+#+BEGIN_SRC bash
+ssh username@domainname -p 2222
+gpg --send-keys username@domainname
+exit
+#+END_SRC
+* Mutt email client
+#+attr_html: :width 80% :align center
+[[./images/mutt.jpeg]]
+
+Mutt is a terminal based email client which comes already installed onto the LibreServer. To access it you'll need to access it via ssh with:
+
+#+BEGIN_SRC bash
+ssh username@domainname -p 2222
+#+END_SRC
+
+If you're using Windows there is an ssh client called putty, on Linux just open a terminal and enter the above command with your username and domain name. On Android you can use the ConnectBot app with the hostname *username@domain:2222*
+
+Once you have logged in via ssh then just type *mutt*. Like most terminal programs mutt is quite easy once you've learned the main keys.
+
+Some useful keys to know are:
+
+| "/"    | Search for text within headers                          |
+| *      | Move to the last message                                |
+| TAB    | Move to the next unread message                         |
+| d      | Delete a message                                        |
+| u      | Undelete a mail which is pending deletion               |
+| $      | Delete all messages selected and check for new messages |
+| a      | Add to the address book                                 |
+| m      | Send a new mail                                         |
+| ESC-m  | Mark all messages as having been read                   |
+| S      | Mark a message as spam                                  |
+| H      | Mark a message as ham                                   |
+| CTRL-b | Toggle side bar on/off                                  |
+| CTRL-n | Next mailbox (on side bar)                              |
+| CTRL-p | Previous mailbox (on side bar)                          |
+| CTRL-o | Open mailbox (on side bar)                              |
+| r      | Reply to an email                                       |
+| L      | Reply to a mailing list email                           |
+| ]      | Expand or collapse all threads                          |
+| [      | Expand of collapse the current thread                   |
+| CTRL-k | Import a PGP/GPG public key                             |
+| v      | View current email in different formats, such as HTML   |
+| CTRL-u | View long URLs                                          |
+| q      | Quit                                                    |
+
+To use the address book system open an email by pressing the enter key on it and then to add the sender to the address list press the A key.  It will ask you for an alias which may be used the next time you want to send a mail.  Alternatively you may just edit the *~/.mutt-alias* file directly to add email addresses.
+
+One of the most common things which you might wish to do is to send an email.  To do this first press /m/ to create a new message.  Enter the address to send to and the subject, then after a few seconds the Emacs editor will appear with a blank document.  Type your email then press /CTRL-x CTRL-s/ to save it and /CTRL-x CTRL-c/ to exit.  You will then see a summary of the email to be sent out.  Press /y/ to send it and then enter your GPG key passphrase (the one you gave when creating a PGP/GPG key).  The purpose of that is to add a signature which is a strong proof that the email was written by you and not by someone else.
+
+When reading emails you will initially need to enter your GPG password. It will be retained in RAM for a while afterwards.
+
+There is one irksome thing about email within mutt, and that's if you get sent a confirmation with a very long URL. It's usually not possible to view URLs which span over multiple lines, and trying to copy/paste them is annoying. A solution is to use /CTRL-u/ then select the url and press Enter. You can then navigate to it via the lynx browser.
+
+* Thunderbird/Icedove
+Another common way in which you may want to access email is via Thunderbird (also known as Icedove on Debian).  This may be especially useful if you're trying to convert former Windows users who may previously have been using some version of Outlook.
+
+The following instructions should be carried out on the client machines (laptop, etc), not on the BBB itself.
+
+*** Initial setup
+
+Install *Thunderbird* and *Enigmail*.  How you do this just depends upon your distro and software manager or "app store".
+
+Open Thinderbird
+
+Select "*Skip this and use existing email*"
+
+Enter your name, email address (myusername@mydomainname.com) and the password for your user.
+
+You'll get a message saying "/Thunderbird failed to find the settings/"
+
+The settings should be as follows, substituting /mydomainname.com/ for your domain name and /myusername/ for the username.
+
+  * Incoming: IMAP, mydomainname.com, 993, SSL/TLS, Normal Password
+  * Outgoing: SMTP, mydomainname.com, 465, SSL/TLS, Normal Password
+  * Username: myusername
+
+Click *Done*.
+
+Click *Get Certificate* and make sure "*permanently store this exception*" is selected", then click *Store Security Exception*.
+
+From OpenPGP setup select "*Yes, I would like the wizard to get me started*".  If the wizard doesn't start automatically then "setup wizard" can be selected from OpenPGP on the menu bar.
+
+Select "*Yes, I want to sign all of my email*"
+
+Select "*No, I will create per-recipient rules*"
+
+Select "*yes*" to change default settings.
+*** Import your GPG keys
+On the LibreServer export your GPG public and private keys.
+
+#+BEGIN_SRC bash
+ssh username@domainname -p 2222
+gpg --list-keys username@domainname
+gpg --output ~/public_key.gpg --armor --export KEY_ID
+gpg --output ~/private_key.gpg --armor --export-secret-key KEY_ID
+#+END_SRC
+
+On your laptop or desktop you can import the keys with:
+
+#+BEGIN_SRC bash
+scp -P 2222 username@domain:/home/username/*.gpg ~/
+#+END_SRC
+
+Select "*I have existing public and private keys*".
+
+Select your public and private GPG exported key files.
+
+Select the account which you want to use and click *Next*, *Next* and *Finish*.
+
+Remove your exported key files, both on your laptop/desktop and also on the LibreServer.
+
+#+BEGIN_SRC bash
+shred -zu ~/public_key.gpg
+shred -zu ~/private_key.gpg
+#+END_SRC
+
+*** Using for the first time
+
+Click on the Thunderbird menu, which looks like three horizontal bars on the right hand side.
+
+Hover over *preferences* and then *Account settings*.
+
+Select *OpenPGP Security* and make sure that *use PGP/MIME by default* is ticked. This will enable you to sign/encrypt attachments, HTML bodies and UTF-8 without any problems.
+
+Select *Synchronization & Storage*.
+
+Make sure that *Keep messages for this account on this computer* is unticked, then click *Ok*.
+
+Click on *Inbox*.  Depending upon how much email you have it may take a while to import the subject lines.
+
+Note that when sending an email for the first time you will also need to accept the SSL certificate.
+
+Get into the habit of using email encryption and encourage others to do so.  Remember that you may not think that your emails are very interesting but the Surveillance State is highly interested in them and will be actively trying to data mine your private life looking for "suspicious" patterns, regardless of whether you are guilty of any crime or not.
+
+*** Making folders visible
+By default you won't be able to see any folders which you may have created earlier using the /mailinglistrule/ script.  To make folders visible select:
+
+*Menu*, hover over *Preferences*, select *Account Settings*, select *Server Settings* then click on the *Advanced* button.
+
+Make sure that "*show only subscribed folders*" is not checked.  Then click the *ok* buttons.  Folders will be re-scanned, which may take some time depending upon how much email you have, but your folders will then appear.
+
+* Android apps
+Mobile devices have a reputation for being quite insecure, so it's recommended that you don't store emails or GPG keys on your phone. Instead install *NextCloud* and then its *mail app*.
+* Subscribing to mailing lists
+To subscribe to a mailing list log in as your user (i.e. not the root user).
+
+#+BEGIN_SRC bash
+ssh username@domainname -p 2222
+#+END_SRC
+
+Select /Administrator controls/ then *Email filtering rules* then *Add a user to a mailing list*. If you want to do it purely from the commandline then see the manpage for *libreserver-addlist*.
+* Adding email addresses to a group/folder
+Similar to adding mailing list folders you can also add specified email addresses into a group/folder.
+
+#+BEGIN_SRC bash
+ssh username@domainname -p 2222
+#+END_SRC
+
+Select /Administrator controls/ then *Email filtering rules* then *Add email rule*. To do the same from the commandline see the manpage for *libreserver-addemail*.
+* Ignoring incoming emails
+It is possible to ignore incoming emails if they are from a particular email address or if the subject line contains particular text.
+
+#+BEGIN_SRC bash
+ssh username@domainname -p 2222
+#+END_SRC
+
+Select /Administrator controls/ then *Email filtering rules* then *Block/Unblock and email address* or *Block/Unblock email with subject line*. Also see the manpage for *libreserver-ignore*.
+* Using onion email addresses
+By default this system comes with the ability to send and receive emails using onion addresses as the domain name. On the *user control panel* if you select *Show your email address* then you should find one ending with /dot onion/. You will also see a QR code for that address, which provides a simple way to transfer it to a mobile phone if necessary.
+
+If you want to give your onion email address to someone else securely then you can use the QR code to transfer it to a phone and copy and paste the address into an encrypted chat app, such as Conversations. Of course they will probably also need to be running LibreServer or some system capable of handling onion email addresses.
+
+When sending email from an onion address it's not strictly necessary to use GPG/PGP. Tor handles the transport security by itself. You can still use it though if you prefer to have an extra layer of message security. You can also still use onion email addresses even if your ISP blocks the typical email ports (25 and 465).
+
+If you don't make your onion email address public then it should be fairly resisent to spam, since spammers won't be able to randomly guess onion addresses (there are far too many), whereas it's a lot easier for them to do that with conventional domain names.
+* Using I2P for email transport
+For the most paranoid use cases it is also possible to use I2P as an email transport mechanism. This will of course require the people you're communicating with to have a similar setup in place. For details see the [[./app_bdsmail.html][bdsmail app]]. An advantage of this is that it's very unlikely that your email will get blocked. The disadvantage is that few others will be capable of receiving email this way, and it's only really usable via the Mutt email client.

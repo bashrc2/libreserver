@@ -1,0 +1,392 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# vpn functions
+#
+# License
+# =======
+#
+# Copyright (C) 2019-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+WIREGUARD_PORT=51820
+WIREGUARD_MAX_CONNECTIONS=10
+wireguard_client_ctr=0
+
+function regenerate_vpn {
+    if [ ! -f /etc/wireguard/publickey ]; then
+        return
+    fi
+    local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+    webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+    vpn_file="$webadmin_install_dir/vpn.txt"
+    if [ -f "$webadmin_install_dir/vpn_template.html" ]; then
+        cp "$webadmin_install_dir/vpn_template.html" "$webadmin_install_dir/vpn.html"
+        if [ -f "$vpn_file" ]; then
+            vpnlist=$(sed 's@[/\&]@\\&@g;s/$/\\/' "$vpn_file"; echo .)
+            vpnlist=${vpnlist%.}
+            sed -i "s|VPNLIST|$vpnlist|g" "$webadmin_install_dir/vpn.html"
+        else
+            sed -i "s|VPNLIST||g" "$webadmin_install_dir/vpn.html"
+        fi
+
+        if grep -q 'VPN_DOMAIN=' "$CONFIGURATION_FILE"; then
+            # NOTE: Don't use read_config_param here
+            VPN_DOMAIN=$(grep 'VPN_DOMAIN=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+            if [[ "$VPN_DOMAIN" == *'.'* ]]; then
+                sed -i "s|name=\"remotevpndomain\".*|name=\"remotevpndomain\" value=\"${VPN_DOMAIN}\" autofocus>|g" "$webadmin_install_dir/vpn.html"
+            fi
+        fi
+
+        if grep -q 'VPN_PUBLIC_KEY=' "$CONFIGURATION_FILE"; then
+            # NOTE: Don't use read_config_param here
+            VPN_PUBLIC_KEY=$(grep 'VPN_PUBLIC_KEY=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+            sed -i "s|name=\"remotevpnpublickey\".*|name=\"remotevpnpublickey\" value=\"${VPN_PUBLIC_KEY}\">|g" "$webadmin_install_dir/vpn.html"
+        fi
+
+        vpn_public_key=$(cat /etc/wireguard/publickey)
+        sed -i "s|VPNPUBLICKEY|$vpn_public_key|g" "$webadmin_install_dir/vpn.html"
+        chown www-data:www-data "$webadmin_install_dir/vpn.html"
+    fi
+}
+
+function wireguard_check_public_key_screen {
+    if [ -f /etc/wireguard/publickey ]; then
+        if [ -f "$webadmin_install_dir/vpn.html" ]; then
+            wireguard_publickey=$(cat /etc/wireguard/publickey)
+            if ! grep -q "$wireguard_publickey" "$webadmin_install_dir/vpn.html"; then
+                regenerate_vpn
+            fi
+        fi
+    fi
+}
+
+# shellcheck disable=SC2120
+function wireguard_install_wg_command {
+    if [ ! -f /usr/bin/wg ]; then
+        cd /etc/wireguard/src || return
+        make install
+        if [ ! -f /usr/bin/wg ]; then
+            echo $'Unable to install wg command'
+            return
+        else
+            if [ "$1" ]; then
+                wireguard_enable
+                regenerate_vpn
+            fi
+        fi
+    fi
+}
+
+function wireguard_remove_client_firewall {
+    if [ ! -f /etc/wireguard/wg0.conf ]; then
+        return
+    fi
+    if ! grep -q 'Peer' /etc/wireguard/wg0.conf; then
+        firewall_remove ${WIREGUARD_PORT} udp
+        firewall_max_connections ${WIREGUARD_PORT} $WIREGUARD_MAX_CONNECTIONS remove
+    fi
+}
+
+function image_install_wireguard {
+    # shellcheck disable=SC2154,SC2046,SC2086,SC2090
+    if [ "$rootdir" ]; then
+        # shellcheck disable=SC2086
+        chroot "$rootdir" $CLEAN_PACKAGES
+        chroot "$rootdir" /bin/rm -rf /var/lib/apt/lists/*
+        chroot "$rootdir" INSTALL_PACKAGES wireguard
+        if [ ! -d "$rootdir/etc/wireguard" ]; then
+            echo $'Wireguard failed to install'
+            exit 8
+        fi
+    else
+        # Note on Armbian wireguard may already be installed
+        if [ ! -d /etc/wireguard ]; then
+            INSTALL_PACKAGES wireguard
+        fi
+        if [ ! -d /etc/wireguard ]; then
+            echo $'Wireguard failed to install'
+            exit 8
+        fi
+    fi
+
+    if [ "$rootdir" ]; then
+        echo 'install_wireguard' >> "$rootdir$COMPLETION_FILE"
+    else
+        echo 'install_wireguard' >> "$COMPLETION_FILE"
+    fi
+}
+
+function install_wireguard {
+    echo $'install_wireguard'
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        wireguard_enable
+        return
+    fi
+
+    rootdir=
+    image_install_wireguard
+    wireguard_enable
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function wireguard_allow_forwarding {
+    allow_forwarding="$1"
+
+    # shellcheck disable=SC2086
+    sysctl net.ipv4.ip_forward=$allow_forwarding
+    if grep -q 'net.ipv4.ip_forward=' /etc/sysctl.d/99-sysctl.conf; then
+        sed -i "s|net.ipv4.ip_forward=.*|net.ipv4.ip_forward=$allow_forwarding|g" /etc/sysctl.d/99-sysctl.conf
+    else
+        echo "net.ipv4.ip_forward=$allow_forwarding" >> /etc/sysctl.d/99-sysctl.conf
+    fi
+}
+
+function wireguard_disable {
+    if [ ! -f /etc/wireguard/wg0.conf ]; then
+        return
+    fi
+    # shellcheck disable=SC2119
+    wireguard_install_wg_command
+
+    # check if there is a client configuration
+    wireguard_disable_firewall_port=
+    if ! grep -q 'VPN_PUBLIC_KEY=' "$CONFIGURATION_FILE"; then
+        wireguard_disable_firewall_port=1
+    else
+        # NOTE: Don't use read_config_param here
+        VPN_PUBLIC_KEY=$(grep 'VPN_PUBLIC_KEY=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+        if [ ! "$VPN_PUBLIC_KEY" ]; then
+            wireguard_disable_firewall_port=1
+        fi
+    fi
+    if ! grep -q 'VPN_DOMAIN=' "$CONFIGURATION_FILE"; then
+        wireguard_disable_firewall_port=1
+    else
+        # NOTE: Don't use read_config_param here
+        VPN_DOMAIN=$(grep 'VPN_DOMAIN=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+        if [ ! "$VPN_DOMAIN" ]; then
+            wireguard_disable_firewall_port=1
+        fi
+    fi
+    # if there is no client configuration then we can remove
+    # wireguard from the firewall
+    if [ $wireguard_disable_firewall_port ]; then
+        firewall_remove ${WIREGUARD_PORT} udp
+        firewall_max_connections ${WIREGUARD_PORT} $WIREGUARD_MAX_CONNECTIONS remove
+    fi
+
+    if [ -d /etc/wireguard ]; then
+        wg-quick down wg0
+    fi
+    wireguard_allow_forwarding 0
+}
+
+function wireguard_enable_client {
+    # shellcheck disable=SC2119
+    wireguard_install_wg_command
+
+    # Obtain the VPN public key
+    VPN_PUBLIC_KEY=
+    if grep -q 'VPN_PUBLIC_KEY=' "$CONFIGURATION_FILE"; then
+        # NOTE: Don't use read_config_param here
+        VPN_PUBLIC_KEY=$(grep 'VPN_PUBLIC_KEY=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+    fi
+
+    if [ ! "$VPN_PUBLIC_KEY" ]; then
+        if [ -f /etc/wireguard/wg0-client.conf ]; then
+            wg-quick down wg0-client
+            wireguard_remove_client_firewall
+            rm /etc/wireguard/wg0-client.conf
+        fi
+        return
+    fi
+
+    # Obtain the VPN ip address
+    VPN_IP_ADDRESS=
+    if grep -q 'VPN_DOMAIN=' "$CONFIGURATION_FILE"; then
+        # NOTE: Don't use read_config_param here
+        VPN_DOMAIN=$(grep 'VPN_DOMAIN=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+        if [[ "$VPN_DOMAIN" == *'.'* ]]; then
+            if [[ "$VPN_DOMAIN" =~ ^[a-zA-Z.] ]]; then
+                # shellcheck disable=SC2086
+                VPN_IP_ADDRESS=$(nslookup $VPN_DOMAIN | head -n 1 | awk -F ' ' '{print $2}')
+            else
+                VPN_IP_ADDRESS="$VPN_DOMAIN"
+            fi
+        fi
+    fi
+
+    # Does an IP address exist for the VPN?
+    if [ ! "$VPN_IP_ADDRESS" ]; then
+        if [ -f /etc/wireguard/wg0-client.conf ]; then
+            wg-quick down wg0-client
+            wireguard_remove_client_firewall
+            rm /etc/wireguard/wg0-client.conf
+        fi
+        return
+    fi
+
+    if [ -f /etc/wireguard/wg0-client.conf ]; then
+        if grep -q "Endpoint = ${VPN_IP_ADDRESS}" /etc/wireguard/wg0-client.conf; then
+            # Configuration hasn't changed
+            wg-quick up wg0-client
+            firewall_add wireguard ${WIREGUARD_PORT} udp
+            firewall_max_connections ${WIREGUARD_PORT} ${WIREGUARD_MAX_CONNECTIONS}
+            return
+        else
+            # Take connection down before changing it
+            wg-quick down wg0-client
+            wireguard_remove_client_firewall
+        fi
+    fi
+
+    { echo '[Interface]';
+      echo 'Address = 10.100.100.2/32';
+      echo "PrivateKey = $(cat /etc/wireguard/privatekey)";
+      echo '';
+      echo '[Peer]';
+      echo "PublicKey = ${VPN_PUBLIC_KEY}";
+      echo "Endpoint = ${VPN_IP_ADDRESS}:${WIREGUARD_PORT}";
+      echo 'AllowedIPs = 0.0.0.0/0';
+      echo 'PersistentKeepalive = 21'; } > /etc/wireguard/wg0-client.conf
+    chmod 600 /etc/wireguard/wg0-client.conf
+
+    wg-quick up wg0-client
+    firewall_add wireguard ${WIREGUARD_PORT} udp
+    firewall_max_connections ${WIREGUARD_PORT} $WIREGUARD_MAX_CONNECTIONS
+}
+
+function update_wireguard_client {
+    # We don't need to update very fequently, so this happens
+    # on every N calls
+    wireguard_client_ctr=$((wireguard_client_ctr+1))
+    if [ $wireguard_client_ctr -gt 10 ]; then
+        wireguard_enable_client
+        wireguard_client_ctr=0
+    fi
+}
+
+function wireguard_enable {
+    # shellcheck disable=SC2119
+    wireguard_install_wg_command
+
+    cd /etc/wireguard || return
+
+    local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+    webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+
+    # create keys if needed
+    if [ ! -f /etc/wireguard/publickey ]; then
+        wg genkey | tee /etc/wireguard/privatekey | wg pubkey > /etc/wireguard/publickey
+    fi
+
+    # make the public key accessible from the web interface
+    cp /etc/wireguard/publickey "$webadmin_install_dir/vpn_public_key.txt"
+    chown www-data:www-data "$webadmin_install_dir/vpn_public_key.txt"
+
+    { echo '[Interface]';
+      echo 'Address = 10.100.100.1/24';
+      echo 'SaveConfig = true';
+      echo "PrivateKey = $(cat /etc/wireguard/privatekey)";
+      echo "ListenPort = $WIREGUARD_PORT";
+      echo 'PostUp = /usr/sbin/nft add rule inet filter FORWARD iifname %i counter accept; nft add rule inet filter FORWARD oifname %i counter accept; nft add rule inet nat POSTROUTING oifname eth0 counter masquerade';
+      echo '';
+      echo 'PostDown = /usr/sbin/nft delete rule inet filter FORWARD iifname %i counter accept; nft delete rule inet filter FORWARD oifname %i counter accept; nft delete rule inet nat POSTROUTING oifname eth0 counter masquerade'; } > /tmp/wg0.conf
+
+    vpn_file="$webadmin_install_dir/.vpn.txt"
+    if [ -f "$vpn_file" ]; then
+        # This file is used to update the webadmin vpn screen
+        vpn_file_display="$webadmin_install_dir/vpn.txt"
+        if [ -f "$vpn_file_display" ]; then
+            rm "$vpn_file_display"
+        fi
+        vpn_peers_ctr=0
+        while read -r line; do
+            if [ $vpn_peers_ctr -gt 10 ]; then
+                # restrict the maximum vpn connections
+                break
+            fi
+
+            if [ "$line" ]; then
+                # remove leading and trailing spaces
+                newline="$(echo -e "${line}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+                line="$newline"
+                if [ ${#$line} -gt 10 ]; then
+                    vpn_peers_ctr=$((vpn_peers_ctr + 1))
+                    vpn_client_public_key="$line"
+                    { echo '';
+                      echo '[Peer]';
+                      echo "PublicKey = ${vpn_client_public_key}";
+                      echo 'AllowedIPs = 10.100.100.2/32'; } >> /tmp/wg0.conf
+                    echo "$vpn_client_public_key" >> "$vpn_file_display"
+                fi
+            fi
+        done < "$vpn_file"
+
+        if [ -f "$vpn_file_display" ]; then
+            chown www-data:www-data "$vpn_file_display"
+        fi
+
+        if [ $vpn_peers_ctr -gt 0 ]; then
+            firewall_add wireguard ${WIREGUARD_PORT} udp
+            firewall_max_connections ${WIREGUARD_PORT} $WIREGUARD_MAX_CONNECTIONS
+            wireguard_allow_forwarding 1
+            mv /tmp/wg0.conf /etc/wireguard/wg0.conf
+            chmod 600 /etc/wireguard/wg0.conf
+            systemctl enable wg-quick@wg0.service
+            systemctl start wg-quick@wg0.service
+            wg-quick up wg0
+        else
+            firewall_remove ${WIREGUARD_PORT} udp
+            firewall_max_connections ${WIREGUARD_PORT} $WIREGUARD_MAX_CONNECTIONS remove
+            wireguard_allow_forwarding 0
+            wg-quick down wg0
+            systemctl stop wg-quick@wg0.service
+            systemctl disable wg-quick@wg0.service
+            if [ -f /tmp/wg0.conf ]; then
+                rm /tmp/wg0.conf
+            fi
+            if [ -f /etc/wireguard/wg0.conf ]; then
+                rm /etc/wireguard/wg0.conf
+            fi
+        fi
+    fi
+
+    wireguard_enable_client
+
+    if [ -f "$vpn_file" ]; then
+        cp "$vpn_file" "/root/${PROJECT_NAME}-vpn-peers.cfg"
+        rm "$vpn_file"
+    fi
+}
+
+function wireguard_webadmin_setup {
+    { echo '#!/bin/bash';
+      echo "source \"/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-vpn\"";
+      echo "source \"/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-firewall\"";
+      echo "CONFIGURATION_FILE=/root/${PROJECT_NAME}.cfg";
+      echo "COMPLETION_FILE=/root/${PROJECT_NAME}-completed.txt";
+      echo 'wireguard_enable';
+      echo 'wireguard_check_public_key_screen'; } > /root/.libreserver_wireguard.sh
+    chmod +x /root/.libreserver_wireguard.sh
+    ./root/.libreserver_wireguard.sh &
+}
+
+# NOTE: deliberately no exit 0

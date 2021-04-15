@@ -1,0 +1,167 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Removes a user from the system
+#
+# License
+# =======
+#
+# Copyright (C) 2015-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+PROJECT_NAME='libreserver'
+
+export TEXTDOMAIN=${PROJECT_NAME}-rmuser
+export TEXTDOMAINDIR="/usr/share/locale"
+
+COMPLETION_FILE=$HOME/${PROJECT_NAME}-completed.txt
+
+UTILS_FILES="/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-*"
+for f in $UTILS_FILES
+do
+    source "$f"
+done
+
+APP_FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
+for f in $APP_FILES
+do
+    source "$f"
+done
+
+read_config_param MY_USERNAME
+
+REMOVE_USERNAME=$1
+REMOVE_OPTIONS="$2"
+
+if [ ! "$REMOVE_USERNAME" ]; then
+    echo $'Please specify a username to remove'
+    exit 1
+fi
+
+if [[ "$REMOVE_USERNAME" == "$MY_USERNAME" ]]; then
+    echo $'You cannot remove the administrator user'
+    exit 2
+fi
+
+if [[ $(is_valid_user "$REMOVE_USERNAME") == "0" ]]; then
+    echo $'Cannot remove reserved users'
+    exit 3
+fi
+
+if [ ! -d "/home/$REMOVE_USERNAME" ]; then
+    echo $"Home directory does not exist for $REMOVE_USERNAME"
+    exit 4
+fi
+
+if [ ! -f "$COMPLETION_FILE" ]; then
+    echo $"$COMPLETION_FILE not found"
+    exit 5
+fi
+
+if ! grep -q "Admin user" "$COMPLETION_FILE"; then
+    echo $"No admin user specified in $COMPLETION_FILE"
+    exit 6
+fi
+
+ADMIN_USERNAME=$(get_completion_param "Admin user")
+if [ ! "$ADMIN_USERNAME" ]; then
+    echo $"No admin username specified in $COMPLETION_FILE"
+    exit 7
+fi
+
+if [[ "$REMOVE_USERNAME" == "$ADMIN_USERNAME" ]]; then
+    echo $"The administrator user cannot be removed"
+    exit 8
+fi
+
+if [[ "$REMOVE_OPTIONS" != '-f' && "$REMOVE_OPTIONS" != '-y' && "$REMOVE_OPTIONS" != '--force' ]]; then
+    echo $'>>> REMOVE USER <<<'
+    read -r -p $"Do you really wish to remove the user '$REMOVE_USERNAME' (y/n) ?" yn
+    if [[ $yn != 'y' && $yn != 'Y' && $yn != 'yes' && $yn != 'Yes' && $yn != 'YES' ]]; then
+        echo $"User $REMOVE_USERNAME was not removed"
+        exit 9
+    fi
+else
+    echo $"Forced removal of user $REMOVE_USERNAME"
+fi
+
+if [ -f /etc/nginx/.htpasswd ]; then
+    if grep -q "${REMOVE_USERNAME}:" /etc/nginx/.htpasswd; then
+        htpasswd -D /etc/nginx/.htpasswd "$REMOVE_USERNAME"
+    fi
+fi
+
+# remove gpg keys
+if [ -d "/home/$REMOVE_USERNAME/.gnupg" ]; then
+    rm "/home/$REMOVE_USERNAME/.gnupg/"*
+fi
+
+# remove ssh keys
+if [ -d "/home/$REMOVE_USERNAME/.ssh" ]; then
+    rm "/home/$REMOVE_USERNAME/.ssh/"*
+fi
+
+echo $'Detecting installed apps...'
+detect_apps
+get_apps_installed_names
+# shellcheck disable=SC2068
+for app_name in ${APPS_INSTALLED_NAMES[@]}
+do
+    if [[ $(function_exists "remove_user_${app_name}") == "1" ]]; then
+        echo $"Removing user from ${app_name}"
+        app_load_variables "${app_name}"
+        "remove_user_${app_name}" "$REMOVE_USERNAME"
+        if grep -q "${app_name}_${REMOVE_USERNAME}" "$APP_USERS_FILE"; then
+            sed -i "/${app_name}_${REMOVE_USERNAME}/d" "$APP_USERS_FILE"
+        fi
+    fi
+done
+
+chmod 600 /etc/shadow
+chmod 600 /etc/gshadow
+userdel -r "$REMOVE_USERNAME"
+groupdel "$REMOVE_USERNAME"
+chmod 0000 /etc/shadow
+chmod 0000 /etc/gshadow
+
+if [ -d "/home/$REMOVE_USERNAME" ]; then
+    rm -rf "/home/${REMOVE_USERNAME:?}"
+fi
+
+echo "Updating web admin"
+web_admin_create_users
+
+# create qrcode for the user's public key
+local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+if [ -d "$webadmin_install_dir" ]; then
+    pubkey_qrcode="$webadmin_install_dir/images/userprofile_${REMOVE_USERNAME}.png"
+    if [ -f "$pubkey_qrcode" ]; then
+        rm "$pubkey_qrcode"
+    fi
+    xmpp_qrcode="$webadmin_install_dir/images/userprofile_${REMOVE_USERNAME}_xmpp.png"
+    if [ -f "$xmpp_qrcode" ]; then
+        rm "$xmpp_qrcode"
+    fi
+fi
+
+echo "Notifying"
+${PROJECT_NAME}-notification -m $"User $REMOVE_USERNAME was removed $(date)" -s $"[${PROJECT_NAME}] User removed"
+echo $"User $REMOVE_USERNAME was removed"
+
+exit 0

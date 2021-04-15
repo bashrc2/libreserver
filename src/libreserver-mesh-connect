@@ -1,0 +1,192 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# This script is connected to the VPN icon on the mesh
+# desktop, and enables VPN connection to other meshes
+#
+# License
+# =======
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+PROJECT_NAME='libreserver'
+
+export TEXTDOMAIN=${PROJECT_NAME}-mesh-connect
+export TEXTDOMAINDIR="/usr/share/locale"
+
+MY_USERNAME='libreserver'
+
+WIREGUARD_PORT=51820
+WIREGUARD_MAX_CONNECTIONS=10
+
+# Functions from libreserver-utils-firewall-----------------------------------
+
+function save_firewall_settings {
+    # shellcheck disable=SC2154
+    if [ ! "$rootdir" ]; then
+	if [ ! -f /usr/sbin/nft ]; then
+	    if ! grep -q "crontab:" /etc/group; then
+		groupadd crontab
+	    fi
+	    if ! grep -q "messagebus:" /etc/group; then
+		groupadd messagebus
+	    fi
+	    INSTALL_PACKAGES nftables
+	fi
+        /usr/sbin/nft list ruleset > "$rootdir/etc/firewall.conf"
+    else
+        chroot "$rootdir" /usr/sbin/nft list ruleset > /etc/firewall.conf
+    fi
+    if [ ! -d "$rootdir/etc/network/if-up.d" ]; then
+        mkdir -p "$rootdir/etc/network/if-up.d"
+    fi
+    { echo '#!/bin/sh';
+      echo '/usr/sbin/nft flush ruleset';
+      echo '/usr/sbin/nft -f /etc/firewall.conf'; } > "$rootdir/etc/network/if-up.d/firewall"
+    chmod +x "$rootdir/etc/network/if-up.d/firewall"
+}
+
+function firewall_add {
+    firewall_name=$(string="$1" ; echo "${string// /-}")
+    firewall_port=$2
+    firewall_protocol="$3"
+
+    if [ ! "${firewall_protocol}" ]; then
+        /usr/sbin/nft add rule inet filter INPUT tcp dport "${firewall_port}" accept comment \""${firewall_name}"\"
+        /usr/sbin/nft add rule inet filter INPUT udp dport "${firewall_port}" accept comment \""${firewall_name}"\"
+    else
+        if [[ "${firewall_protocol}" == *"udp"* ]]; then
+            /usr/sbin/nft add rule inet filter INPUT udp dport "${firewall_port}" accept comment \""${firewall_name}"\"
+        fi
+        if [[ "${firewall_protocol}" == *"tcp"* ]]; then
+            /usr/sbin/nft add rule inet filter INPUT tcp dport "${firewall_port}" accept comment \""${firewall_name}"\"
+        fi
+    fi
+    save_firewall_settings
+}
+
+function delete_firewall_port_via_handle {
+    # NOTE: this is crude, but seems to be the only reliable way of removing firewall rules
+    firewall_port="$1"
+
+    # get the handles for all lines containing the port number
+    nft_handles=$(/usr/sbin/nft list ruleset -a | grep "dport ${firewall_port} \|daddr ${firewall_port} \|saddr ${firewall_port} \|icmp ${firewall_port} " | awk -F '#' '{print $2}' | uniq)
+    if [ "$nft_handles" ]; then
+	# remove using the handle numbers
+	IFS=$'\n'
+	while IFS= read -r nft_handle; do
+	    # shellcheck disable=SC2086
+	    /usr/sbin/nft delete rule inet filter INPUT ${nft_handle} 2> /dev/null
+	    # shellcheck disable=SC2086
+	    /usr/sbin/nft delete rule inet filter FORWARD ${nft_handle} 2> /dev/null
+	    # shellcheck disable=SC2086
+	    /usr/sbin/nft delete rule inet filter OUTPUT ${nft_handle} 2> /dev/null
+	done <<< "$nft_handles"
+    fi
+}
+
+function firewall_max_connections {
+    firewall_port="$1"
+    firewall_connections="$2"
+    firewall_remove_connections="$3"
+    if [ ! "$firewall_remove_connections" ]; then
+        # shellcheck disable=SC2086
+        /usr/sbin/nft add rule inet filter INPUT tcp dport $firewall_port meter test-${firewall_port}-count-meter "{ ip saddr & 255.255.255.0 ct count over $firewall_connections }" counter reject with tcp reset
+    else
+	if grep -q "test-${firewall_port}-count-meter" /etc/firewall.conf; then
+	    # shellcheck disable=SC2086
+	    delete_firewall_port_via_handle $firewall_port
+	fi
+    fi
+    save_firewall_settings
+}
+
+# Mesh connect functions------------------------------------------------------
+
+function connect_to_mesh {
+    connect_title=$"Connect to another mesh network"
+
+    if [ ! -f /home/libreserver/.wireguard_publickey ]; then
+	exit 3
+    fi
+    your_vpn_public_key=$(cat /home/libreserver/.wireguard_publickey)
+    ipv4_result=$(curl -s ipinfo.io/ip)
+
+    if [ ! "$ipv4_result" ]; then
+	zenity --info --text="This system needs to be connected to the internet in order to VPN to another mesh. Plug in an ethernet cable and connect it to your internet router." --title="VPN connection to another mesh" --width 600
+	exit 0
+    fi
+
+    VPN_IP_ADDRESS=
+    data=$(zenity --entry --title "$connect_title" --text $"Your IP address is:\n\n${ipv4_result}\n\nYour Wireguard public key is:\n\n${your_vpn_public_key}\n\nEnter the IP address of the other mesh")
+    sel=$?
+    case $sel in
+        0)
+            ip_or_domain="$data"
+            if [ ${#ip_or_domain} -gt 1 ]; then
+                if [[ "$ip_or_domain" == *'.'* ]]; then
+		    VPN_IP_ADDRESS="$ip_or_domain"
+                fi
+            fi
+            ;;
+    esac
+
+    if [ ! "$VPN_IP_ADDRESS" ]; then
+        clear
+        cd ~/ || exit 23
+        exit 1
+    fi
+
+    VPN_PUBLIC_KEY=
+    data=$(zenity --entry --title "$connect_title" --text $'Enter the Wireguard public key of the other mesh')
+    sel=$?
+    case $sel in
+        0)
+            VPN_PUBLIC_KEY="$data"
+            ;;
+    esac
+
+    if [ ! "$VPN_PUBLIC_KEY" ]; then
+        clear
+        cd ~/ || exit 23
+        exit 1
+    fi
+
+    # start connection
+    if [ ! -f /usr/bin/wg ]; then
+        cd /etc/wireguard/src || exit 82
+        make install
+    fi
+    { echo '[Interface]';
+      echo 'Address = 10.100.100.2/32';
+      echo "PrivateKey = $(cat /etc/wireguard/privatekey)";
+      echo '';
+      echo '[Peer]';
+      echo "PublicKey = ${VPN_PUBLIC_KEY}";
+      echo "Endpoint = ${VPN_IP_ADDRESS}:${WIREGUARD_PORT}";
+      echo 'AllowedIPs = 0.0.0.0/0';
+      echo 'PersistentKeepalive = 21'; } > /etc/wireguard/wg0-client.conf
+    chmod 600 /etc/wireguard/wg0-client.conf
+    wg-quick down wg0-client
+    wg-quick up wg0-client
+    firewall_add wireguard ${WIREGUARD_PORT} udp
+    firewall_max_connections ${WIREGUARD_PORT} ${WIREGUARD_MAX_CONNECTIONS}
+}
+
+connect_to_mesh
+
+exit 0

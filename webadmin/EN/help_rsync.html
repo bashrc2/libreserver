@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+  <meta charset="utf-8">
+  <style>
+    @import url("libreserver.css");
+
+    * {
+        box-sizing: border-box;
+    }
+
+    .headertext {
+        text-align: center;
+        font-size: 120%;
+        font-weight: bold;
+    }
+
+    .subheadertext {
+        margin-left : 10%;
+        text-align: left;
+        font-size: 110%;
+        font-weight: bold;
+    }
+
+    .subheaderports {
+        margin-left : 10%;
+        text-align: left;
+        font-size: 110%;
+        font-weight: bold;
+    }
+
+    .helptext {
+        width: 80%;
+        text-align: left;
+        font-size: 100%;
+        margin-left : 10%;
+    }
+
+    .portstext {
+        width: 80%;
+        text-align: left;
+        font-size: 100%;
+        margin-left : 10%;
+    }
+
+    .row {
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+        padding: 0 4px;
+    }
+
+    .column {
+        -ms-flex: 25%;
+        flex: 15%;
+        max-width: 25%;
+        padding: 0 4px;
+    }
+
+    .column img {
+        margin-top: 8px;
+        vertical-align: middle;
+    }
+
+    @media screen and (max-width: 800px) {
+        .column {
+            -ms-flex: 50%;
+            flex: 50%;
+            max-width: 50%;
+        }
+    }
+
+    @media screen and (max-width: 200px) {
+        .column {
+            -ms-flex: 100%;
+            flex: 100%;
+            max-width: 100%;
+        }
+    }
+  </style>
+  <body>
+
+    <div class="header">
+      <a href="app_rsync.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
+    </div>
+
+    <p class="headertext" translate="yes">rsync</p>
+
+    <p class="subheaderports" translate="yes">Ports</p>
+
+    <p class="portstext" translate="yes">Forward the following ports from your internet router:</p>
+
+    <p class="portstext" translate="no">873</p>
+
+    <p class="subheadertext" translate="yes">About</p>
+
+    <p class="helptext" translate="yes">For most purposes Syncthing is an easier file synchronization system, but rsync is still a reliable solution if you prefer to do things the more traditional way or if you just want to create a mirror from an existing rsync server.</p>
+
+    <p class="helptext" translate="yes">Rsync is unencrypted but can be used via an onion address for transport security. If you are using it via your domain name then third parties will be able to see the content, but this may not matter if you are synchronizing already public files, such as GNU/Linux distro downloads.</p>
+
+    <p class="helptext">Avoid using this for private data, unless you are exclusively using rsync via the onion address.</p>
+
+    <p class="subheadertext" translate="yes">Creating a Mirror</p>
+
+    <p class="helptext" translate="yes">Select the Settings button then enter the domain and module name for the mirror. From then on synchronization will happen once per day.</p>
+
+    <p class="subheadertext" translate="yes">Local Sync</p>
+
+    <p class="helptext" translate="yes">If you created a mirror to your server you can then sync those files to other machines or devices on your local network as follows:</p>
+
+    <p class="codetext" translate="no">
+      rsync -avmr --delete libreserver::files ~/your_directory/<br>
+      rsync -avmr --delete ~/your_directory/ libreserver::files
+    </p>
+
+    <p class="helptext" translate="yes">If "libreserver" doesn't work then you can substitute the local IP address of your server.</p>
+
+  </body>
+</html>

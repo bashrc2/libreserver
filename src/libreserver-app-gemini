@@ -1,0 +1,413 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# License
+# =======
+#
+# Copyright (C) 2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VARIANTS='full full-vim writer'
+
+APP_CATEGORY=publishing
+
+IN_DEFAULT_INSTALL=0
+INSTALLED_ON_DEFAULT_DOMAIN=1
+SHOW_ON_ABOUT=1
+
+# whether to show https://domain or just the domain on its own on app screen
+SHOW_DOMAIN_ONLY=1
+
+# whether this app will be included in the json API for the FreedomBox android app
+NOT_ON_API=1
+
+# Whether to show on http://libreserver/home
+NOT_ON_HOMEPAGE=1
+
+# show port number within the URL on app screens
+SHOW_URL_PORT=0
+
+# Whether another app is required to be installed before this one
+REQUIRES_APP=
+
+GEMINI_PORT=1965
+
+GEMINI_PATH='tildegit.org/solderpunk/molly-brown'
+
+# These parameters are used by the FreedomBox mobile app and web UI
+GEMINI_SHORT_DESCRIPTION='Molly Brown Gemini Server'
+GEMINI_DESCRIPTION='Molly Brown Gemini Server'
+GEMINI_MOBILE_APP_URL=
+
+# Any ports which should be added to the firewall, separated by commas
+GEMINI_FIREWALL_PORTS="${GEMINI_PORT}"
+
+gemini_variables=(ONION_ONLY
+                  DEFAULT_DOMAIN_NAME
+                  DDNS_PROVIDER
+                  MY_USERNAME)
+
+function convert_blog_to_gemini {
+    remove_gemini_blog_cron=
+    if [ ! -d /var/gemini ]; then
+	remove_gemini_blog_cron=1
+    fi
+    if ! grep -q "BLUDIT_DOMAIN_NAME=" "$CONFIGURATION_FILE"; then
+	remove_gemini_blog_cron=1
+    fi
+    if [ $remove_gemini_blog_cron ]; then
+	if [ -f /etc/cron.hourly/gemini-blog ]; then
+	    rm /etc/cron.hourly/gemini-blog
+	fi
+	return
+    fi
+    if [ ! -d /var/gemini/blog ]; then
+	mkdir /var/gemini/blog
+	chown -R gemini:gemini /var/gemini
+    fi
+    read_config_param BLUDIT_DOMAIN_NAME
+    if [ "$BLUDIT_DOMAIN_NAME" ]; then
+	{ echo '#!/bin/bash';
+	  echo "/usr/bin/python3 /usr/local/bin/libreserver-blog-to-gmi --geminidomain \$HOSTNAME --blogdomain $BLUDIT_DOMAIN_NAME";
+	  echo 'chown -R gemini:gemini /var/gemini'; } > /etc/cron.hourly/gemini-blog
+	chmod +x /etc/cron.hourly/gemini-blog
+    fi
+}
+
+function change_default_domain_name_gemini {
+    # shellcheck disable=SC2034
+    new_default_domain_name="$1"
+    # If anything references DEFAULT_DOMAIN_NAME then change it here
+}
+
+function logging_on_gemini {
+    if [ ! -f /etc/molly.conf ]; then
+	return
+    fi
+    sed -i 's|LogPath.*|LogPath = "/home/gemini/molly.log"|g' /etc/molly.conf
+    systemctl restart gemini
+}
+
+function logging_off_gemini {
+    if [ ! -f /etc/molly.conf ]; then
+	return
+    fi
+    sed -i 's|LogPath.*|LogPath = "/dev/null"|g' /etc/molly.conf
+    systemctl restart gemini
+}
+
+function remove_user_gemini {
+    remove_username="$1"
+
+    "${PROJECT_NAME}-pass" -u "$remove_username" --rmapp gemini
+}
+
+function add_user_gemini {
+    new_username="$1"
+    new_user_password="$2"
+
+    "${PROJECT_NAME}-pass" -u "$new_username" -a gemini -p "$new_user_password"
+    echo '0'
+}
+
+function install_interactive_gemini {
+    echo -n ''
+    APP_INSTALLED=1
+}
+
+function change_password_gemini {
+    curr_username="$1"
+    new_user_password="$2"
+
+    "${PROJECT_NAME}-pass" -u "$curr_username" -a gemini -p "$new_user_password"
+}
+
+function reconfigure_gemini {
+    # This is used if you need to switch identity. Dump old keys and generate new ones
+    echo -n ''
+}
+
+function upgrade_distro_gemini {
+    # shellcheck disable=SC2034
+    target_distro="$1"
+    # include anything here needed to upgrade to the target distro
+}
+
+function upgrade_gemini {
+    convert_blog_to_gemini
+    cd "/home/gemini" || return
+    GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/gemini PATH=$PATH:/home/gemini:/home/go/go${GO_VERSION}/bin go get -u -v $GEMINI_PATH
+    chown -R gemini:gemini /home/gemini
+    if ! grep -q "go${GO_VERSION}" /etc/systemd/system/gemini.service; then
+	sed -i "s|Environment=.*|Environment=\"USER=gemini\" \"HOME=/home/gemini\" \"GOPATH=/home/go/go${GO_VERSION}\"|g" /etc/systemd/system/gemini.service
+	systemctl daemon-reload
+    fi
+    systemctl restart gemini
+}
+
+function backup_local_gemini {
+    systemctl stop gemini
+
+    source_directory=/var/gemini
+    cp /home/gemini/*.crt ${source_directory}
+    cp /home/gemini/*.key ${source_directory}
+    dest_directory=gemini
+    backup_directory_to_usb "${source_directory}" ${dest_directory}
+    rm ${source_directory}/*.crt
+    rm ${source_directory}/*.key
+
+    systemctl start gemini
+}
+
+function restore_local_gemini {
+    systemctl stop gemini
+
+    temp_restore_dir=/root/tempgemini
+
+    gemini_dir=/var/gemini
+
+    restore_directory_from_usb $temp_restore_dir gemini
+    if [ -d $temp_restore_dir ]; then
+        if [ -d "$temp_restore_dir$gemini_dir" ]; then
+            cp -rp "$temp_restore_dir$gemini_dir"/* "$gemini_dir"/
+        else
+            if [ ! -d "$gemini_dir" ]; then
+                mkdir "$gemini_dir"
+            fi
+            cp -rp "$temp_restore_dir"/* "$gemini_dir"/
+        fi
+	mv ${gemini_dir}/*.crt /home/gemini
+	mv ${gemini_dir}/*.key /home/gemini	
+        chown -R gemini:gemini /home/gemini
+        chown -R gemini:gemini "$gemini_dir"
+        rm -rf $temp_restore_dir
+    fi
+
+    systemctl start gemini
+}
+
+function backup_remote_gemini {
+    echo -n ''
+}
+
+function restore_remote_gemini {
+    echo -n ''
+}
+
+function remove_gemini {
+    if [ -f /etc/cron.hourly/gemini-blog ]; then
+	rm /etc/cron.hourly/gemini-blog
+    fi
+    if [ -f /etc/systemd/system/gemini.service ]; then
+        systemctl stop gemini
+        systemctl disable gemini
+        rm /etc/systemd/system/gemini.service
+    fi
+    if grep -q "127.0.0.1:${GEMINI_PORT}" "/etc/torrc.d/${PROJECT_NAME}"; then
+	sed -i "/127.0.0.1:${GEMINI_PORT}/d" "/etc/torrc.d/${PROJECT_NAME}"
+	restart_tor_daemon
+    fi
+    userdel -r gemini
+    groupdel -f gemini
+    if grep -q "gemini" /etc/crontab; then
+        sed -i "/gemini/d" /etc/crontab
+    fi
+    remove_app gemini
+    remove_completion_param install_gemini
+    sed -i '/gemini/d' "$COMPLETION_FILE"
+
+    if [ -f /etc/molly.conf ]; then
+	rm /etc/molly.conf
+    fi
+    if [ -d /home/gemini ]; then
+	rm -rf /home/gemini
+    fi
+    if [ -d /var/gemini ]; then
+	rm -rf /var/gemini
+    fi
+
+    firewall_remove "${GEMINI_PORT}" tcp
+}
+
+function install_gemini {
+    increment_app_install_progress
+
+    # remove existing directories
+    if [ -d "/var/gemini" ]; then
+	rm -rf "/var/gemini"
+    fi
+
+    # create new directories
+    mkdir "/var/gemini"
+
+    increment_app_install_progress
+
+    groupdel -f gemini
+    userdel -r gemini
+    if [ -d "/home/gemini" ]; then
+	rm -rf "/home/gemini"
+    fi
+    if ! grep -q "gemini:" /etc/group; then
+	groupadd gemini
+    fi
+    useradd -c "gemini account" -d "/home/gemini" -m -r -g gemini gemini
+    # add this user to the go group
+    usermod -a -G go gemini
+
+    if [ ! -d /home/gemini ]; then
+	echo $'gemini user account was not created'
+	exit 92
+    fi
+
+    increment_app_install_progress
+
+    if [ ! -f /home/gemini/.bashrc ]; then
+	echo "No .bashrc found for gemini user home directory"
+	exit 39
+    fi
+    # add go path setup for the gemini user
+    if ! grep -q "GOPATH=" /home/gemini/.bashrc; then
+	{ echo "export GOROOT=/home/go/go${GO_VERSION}";
+	  echo "export GOPATH=/home/gemini";
+	  echo "export PATH=\$PATH:\$GOPATH:/home/go/go${GO_VERSION}/bin"; } >> /home/gemini/.bashrc
+    else
+	sed -i "s|GOPATH=.*|GOPATH=/home/gemini|g" /home/gemini/.bashrc
+    fi
+    chown -R gemini:gemini /home/gemini
+
+    increment_app_install_progress
+
+    # get the source code
+    cd "/home/gemini" || exit 24
+    GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/gemini PATH=$PATH:/home/gemini:/home/go/go${GO_VERSION}/bin go get -u -v $GEMINI_PATH
+
+    # check that the source directory exists
+    molly_dir="/home/gemini/src"
+    if [ ! -d "$molly_dir" ]; then
+	find "/home/gemini" -name molly-brown
+	echo "Missing directory ${molly_dir}"
+	exit 52
+    fi
+
+    increment_app_install_progress
+
+    # check that the executable exists
+    # shellcheck disable=SC2086
+    molly_filename="/home/gemini/bin/molly-brown"
+    if [ ! -f "$molly_filename" ]; then
+	echo "molly-brown file not found $molly_filename"
+	exit 61
+    fi
+
+    cd "/home/gemini" || exit 34
+
+    increment_app_install_progress
+
+    openssl req -x509 -newkey rsa:2048 \
+	    -keyout "/home/gemini/molly.key" \
+	    -out "/home/gemini/molly.crt" \
+	    -days 9999 -nodes -subj "/CN=${DEFAULT_DOMAIN_NAME}"
+
+    if [ ! -f "/home/gemini/molly.key" ]; then
+	exit 82
+    fi
+    if [ ! -f "/home/gemini/molly.crt" ]; then
+	exit 83
+    fi
+
+    # add gemini to the email/xmpp onion address
+    if ! grep -q "127.0.0.1:${GEMINI_PORT}" "/etc/torrc.d/${PROJECT_NAME}"; then
+	sed -i "/127.0.0.1:5222/a HiddenServicePort ${GEMINI_PORT} 127.0.0.1:${GEMINI_PORT}" "/etc/torrc.d/${PROJECT_NAME}"
+	restart_tor_daemon
+    fi
+    
+    # shellcheck disable=SC2034
+    #GEMINI_ONION_HOSTNAME=$(cat /var/lib/tor/hidden_service_email/hostname)
+
+    increment_app_install_progress
+
+    cp "${molly_filename}" /home/gemini/molly-brown
+
+    { echo "CertPath = \"/home/gemini/molly.crt\"";
+      echo "DocBase = \"/var/gemini/\"";
+      echo "#HomeDocBase = \"users\"";
+      echo "#Hostname = \"localhost\"";
+      echo "KeyPath = \"/home/gemini/molly.key\"";
+      echo "LogPath = \"/dev/null\"";
+      echo "Port = ${GEMINI_PORT}";
+      echo "#CGIPath = \"^/var/gemini/cgi-bin/\""; } > /etc/molly.conf
+
+    increment_app_install_progress
+
+    { echo '[Unit]';
+      echo 'Description=Molly Brown Gemini Server';
+      echo 'After=network.target';
+      echo '';
+      echo '[Service]';
+      echo 'Type=simple';
+      echo 'User=gemini';
+      echo 'Group=gemini';
+      echo 'WorkingDirectory=/home/gemini';
+      echo 'ExecStart=/home/gemini/bin/molly-brown';
+      echo "Environment=\"USER=gemini\" \"HOME=/home/gemini\" \"GOPATH=/home/go/go${GO_VERSION}\""
+      echo 'Restart=always';
+      echo 'RestartSec=10';
+      echo 'PrivateTmp=true';
+      echo 'PrivateDevices=false';
+      echo 'CapabilityBoundingSet=~CAP_SYS_ADMIN';
+      echo 'ProtectSystem=yes';
+      echo 'ProtectHome=no';
+      echo 'CPUQuota=10%';
+      echo 'BlockIOWeight=500';
+      echo 'CPUShares=500';
+      echo 'ProtectClock=yes';
+      echo 'ProtectHostname=yes';
+      echo 'PrivateUsers=yes';
+      echo 'ProtectKernelModules=yes';
+      echo 'ProtectKernelTunables=yes';
+      echo 'NoNewPrivileges=true';
+      echo '';
+      echo '[Install]';
+      echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/gemini.service
+    systemctl enable gemini
+    chown -R gemini:gemini "/home/gemini"
+    systemctl start gemini
+
+    increment_app_install_progress
+
+    firewall_add gemini ${GEMINI_PORT} tcp
+    firewall_max_connections ${GEMINI_PORT} 200
+
+    # make an initial example site
+    { echo '# LibreServer Gemini Server';
+      echo '';
+      echo 'This is an example Gemini page.';
+      echo '';
+      echo '=> gemini://gemini.circumlunar.space Circumlunar Space';
+      echo '=> https://libreserver.org LibreServer site';
+      echo '=> https://blog.libreserver.org LibreServer Blog'; } > /var/gemini/index.gmi
+    chown -R gemini:gemini "/var/gemini"
+    
+    increment_app_install_progress
+
+    convert_blog_to_gemini
+
+    APP_INSTALLED=1
+}
+
+# NOTE: deliberately there is no "exit 0"

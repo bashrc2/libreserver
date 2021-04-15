@@ -1,0 +1,1146 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Firewall functions
+#
+# There are lists of allegedly exploited servers out there,
+# which could be blocked, but it's probably not a good idea
+# to use those unless they can be independently verified.
+#
+# License
+# =======
+#
+# Copyright (C) 2014-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+FIREWALL_CONFIG=$HOME/${PROJECT_NAME}-firewall.cfg
+FIREWALL_DOMAINS=$HOME/${PROJECT_NAME}-firewall-domains.cfg
+FIREWALL_ALLOW_DOMAINS=$HOME/${PROJECT_NAME}-firewall-allowlist.cfg
+FIREWALL_DOMAINS_MASKED=$HOME/${PROJECT_NAME}-firewall-masked.cfg
+MUTED_WORDS=$HOME/${PROJECT_NAME}-firewall-words.cfg
+FIREWALL_EIFACE=eth0
+EXTERNAL_IPV4_ADDRESS=
+FIREFOX_TELEMETRY_IP='52.88.27.118'
+
+# If these ports are scanned from outside of the local network
+# then the IP address will be blocked for 24 hours
+# View the contents of the blackhole with:
+#   nft list set inet filter blackhole
+FIREWALL_PORTSCAN='20, 21, 90, 23, 109, 118, 119, 135, 222, 389, 563, 636, 843, 992, 995, 2022, 2122, 2323, 3333, 5279, 5900, 5901, 5902, 5903, 5931, 5944, 5950, 6039, 6040, 7070, 9389'
+
+function update_portscan_defense {
+    # If the portscan ports have changed then update the firewall
+    if grep -q "$FIREWALL_PORTSCAN" /etc/firewall.conf; then
+        return
+    fi
+    # make a backup just in case
+    cp /etc/firewall.conf /etc/firewall.conf.backup
+    # change the ports
+    sed -i "/ add @blackhole/c\tcp dport { $FIREWALL_PORTSCAN } add @blackhole { ip saddr timeout 1d }  counter packets 0 bytes 0 drop comment \"portscan\"" /etc/firewall.conf
+    sed -i "s|tcp dport { $FIREWALL_PORTSCAN } add @blackhole|        tcp dport { $FIREWALL_PORTSCAN } add @blackhole|g" /etc/firewall.conf
+    # reload the firewall
+    /usr/sbin/nft flush ruleset
+    /usr/sbin/nft -f /etc/firewall.conf
+    echo 'Port scan defense upgraded'
+}
+
+function delete_firewall_port_via_handle {
+    # NOTE: this is crude, but seems to be the only reliable way of removing firewall rules
+    firewall_port="$1"
+
+    # get the handles for all lines containing the port number
+    nft_handles=$(/usr/sbin/nft list ruleset -a | grep "dport ${firewall_port} \|daddr ${firewall_port} \|saddr ${firewall_port} \|icmp ${firewall_port} \| meter ${firewall_port} " | awk -F '#' '{print $2}' | uniq)
+    if [ "$nft_handles" ]; then
+        # remove using the handle numbers
+        IFS=$'\n'
+        while IFS= read -r nft_handle; do
+            # shellcheck disable=SC2086
+            /usr/sbin/nft delete rule inet filter INPUT ${nft_handle} 2> /dev/null
+            # shellcheck disable=SC2086
+            /usr/sbin/nft delete rule inet filter FORWARD ${nft_handle} 2> /dev/null
+            # shellcheck disable=SC2086
+            /usr/sbin/nft delete rule inet filter OUTPUT ${nft_handle} 2> /dev/null
+        done <<< "$nft_handles"
+    fi
+}
+
+function save_firewall_settings {
+    # shellcheck disable=SC2154
+    if [ ! "$rootdir" ]; then
+        if [ ! -f /usr/sbin/nft ]; then
+            if ! grep -q "crontab:" /etc/group; then
+                groupadd crontab
+            fi
+            if ! grep -q "messagebus:" /etc/group; then
+                groupadd messagebus
+            fi
+            INSTALL_PACKAGES nftables
+        fi
+        /usr/sbin/nft list ruleset > "$rootdir/etc/firewall.conf"
+    else
+        chroot "$rootdir" /usr/sbin/nft list ruleset > /etc/firewall.conf
+    fi
+    if [ ! -d "$rootdir/etc/network/if-up.d" ]; then
+        mkdir -p "$rootdir/etc/network/if-up.d"
+    fi
+    { echo '#!/bin/sh';
+      echo '/usr/sbin/nft flush ruleset';
+      echo '/usr/sbin/nft -f /etc/firewall.conf'; } > "$rootdir/etc/network/if-up.d/firewall"
+    chmod +x "$rootdir/etc/network/if-up.d/firewall"
+}
+
+function block_microsoft_on_raspbian {
+    # On Raspbian Microsoft repos may be downloaded, and since
+    # the boot process is closed this type of thing might not be
+    # easily preventable. This is a workaround.
+    # See https://www.cyberciti.biz/linux-news/
+    # heads-up-microsoft-repo-secretly-installed-on-all-
+    # raspberry-pis-linux-os/
+    if ! grep -q 'raspbian' /etc/apt/sources.list; then
+        return
+    fi
+    if ! grep -q 'packages.microsoft.com' /etc/hosts; then
+        echo '127.0.0.1  packages.microsoft.com' >> /etc/hosts
+    fi
+    apt-mark hold raspberrypi-sys-mods
+    if [ -f /etc/apt/trusted.gpg.d/microsoft.gpg ]; then
+        chattr -i /etc/apt/trusted.gpg.d/microsoft.gpg
+        rm -vf /etc/apt/trusted.gpg.d/microsoft.gpg
+        touch /etc/apt/trusted.gpg.d/microsoft.gpg
+        chattr +i /etc/apt/trusted.gpg.d/microsoft.gpg
+        lsattr /etc/apt/trusted.gpg.d/microsoft.gpg
+    fi
+}
+
+function block_firefox_telemetry {
+    # This shouldn't be needed on a server, but we'll do it anyway
+    # to be on the safe side
+    # Within firefox source code see submit_telemetry_data.py
+
+    if ! grep -q 'telemetry.mozilla' /etc/hosts; then
+        echo '127.0.0.1  telemetry.mozilla.org' >> /etc/hosts
+    fi
+
+    if grep -q "$FIREFOX_TELEMETRY_IP" /etc/firewall.conf; then
+        return
+    fi
+
+    /usr/sbin/nft add rule inet filter OUTPUT ip saddr "$FIREFOX_TELEMETRY_IP" counter drop comment \"firefox telemetry\"
+    save_firewall_settings
+}
+
+function firewall_block_bad_ip_ranges {
+    if [ "$INSTALLING_MESH" ]; then
+        return
+    fi
+    ruleset=$(/usr/sbin/nft list ruleset)
+    # does the firewall exist?
+    if [ ! "$ruleset" ]; then
+        return
+    fi
+    # is military already configured?
+    if [[ "$ruleset" == *"military"* ]]; then
+        return
+    fi
+
+    # There are various blocklists out there, but they're difficult
+    # to verify. Indiscriminately blocking ranges without evidence
+    # would be a bad idea.
+
+    # From Wikipedia and elsewhere: US military addresses
+    /usr/sbin/nft add rule inet filter OUTPUT ip daddr 6.0.0.0/8 counter drop comment \"military\"
+    /usr/sbin/nft add rule inet filter INPUT ip saddr 7.0.0.0/8 counter drop comment \"military\"
+    /usr/sbin/nft add rule inet filter OUTPUT ip daddr 7.0.0.0/8 counter drop comment \"military\"
+    /usr/sbin/nft add rule inet filter INPUT ip saddr 11.0.0.0/8 counter drop comment \"military\"
+    /usr/sbin/nft add rule inet filter OUTPUT ip daddr 11.0.0.0/8 counter drop comment \"military\"
+    /usr/sbin/nft add rule inet filter INPUT ip saddr 21.0.0.0/8 counter drop comment \"military\"
+    /usr/sbin/nft add rule inet filter OUTPUT ip daddr 21.0.0.0/8 counter drop comment \"military\"
+    /usr/sbin/nft add rule inet filter INPUT ip saddr 22.0.0.0/8 counter drop comment \"military\"
+    /usr/sbin/nft add rule inet filter OUTPUT ip daddr 22.0.0.0/8 counter drop comment \"military\"
+    /usr/sbin/nft add rule inet filter INPUT ip saddr 26.0.0.0/8 counter drop comment \"military\"
+    /usr/sbin/nft add rule inet filter OUTPUT ip daddr 26.0.0.0/8 counter drop comment \"military\"
+    /usr/sbin/nft add rule inet filter INPUT ip saddr 28.0.0.0/8 counter drop comment \"military\"
+    /usr/sbin/nft add rule inet filter OUTPUT ip daddr 28.0.0.0/8 counter drop comment \"military\"
+    /usr/sbin/nft add rule inet filter INPUT ip saddr 29.0.0.0/8 counter drop comment \"military\"
+    /usr/sbin/nft add rule inet filter OUTPUT ip daddr 29.0.0.0/8 counter drop comment \"military\"
+    /usr/sbin/nft add rule inet filter INPUT ip saddr 30.0.0.0/8 counter drop comment \"military\"
+    /usr/sbin/nft add rule inet filter OUTPUT ip daddr 30.0.0.0/8 counter drop comment \"military\"
+    /usr/sbin/nft add rule inet filter INPUT ip saddr 33.0.0.0/8 counter drop comment \"military\"
+    /usr/sbin/nft add rule inet filter OUTPUT ip daddr 33.0.0.0/8 counter drop comment \"military\"
+    /usr/sbin/nft add rule inet filter INPUT ip saddr 55.0.0.0/8 counter drop comment \"military\"
+    /usr/sbin/nft add rule inet filter OUTPUT ip daddr 55.0.0.0/8 counter drop comment \"military\"
+    /usr/sbin/nft add rule inet filter INPUT ip saddr 214.0.0.0/8 counter drop comment \"military\"
+    /usr/sbin/nft add rule inet filter OUTPUT ip daddr 214.0.0.0/8 counter drop comment \"military\"
+    /usr/sbin/nft add rule inet filter INPUT ip saddr 215.0.0.0/8 counter drop comment \"military\"
+    /usr/sbin/nft add rule inet filter OUTPUT ip daddr 215.0.0.0/8 counter drop comment \"military\"
+
+    save_firewall_settings
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function global_rate_limit {
+    if ! grep -q "tcp_challenge_ack_limit" /etc/sysctl.conf; then
+        echo 'net.ipv4.tcp_challenge_ack_limit = 999999999' >> /etc/sysctl.conf
+        sysctl -p -q
+    else
+        if ! grep -q "net.ipv4.tcp_challenge_ack_limit = 999999999" /etc/sysctl.conf; then
+            sed -i 's|net.ipv4.tcp_challenge_ack_limit.*|net.ipv4.tcp_challenge_ack_limit = 999999999|g' /etc/sysctl.conf
+            sysctl -p -q
+        fi
+    fi
+}
+
+function enable_ipv6 {
+    # endure that ipv6 is enabled and can route
+    sed -i 's/net.ipv6.conf.all.disable_ipv6.*/net.ipv6.conf.all.disable_ipv6 = 0/g' /etc/sysctl.conf
+    # sed -i "s/net.ipv6.conf.all.accept_redirects.*/net.ipv6.conf.all.accept_redirects = 1/g" /etc/sysctl.conf
+    # sed -i "s/net.ipv6.conf.all.accept_source_route.*/net.ipv6.conf.all.accept_source_route = 1/g" /etc/sysctl.conf
+    sed -i "s/net.ipv6.conf.all.forwarding.*/net.ipv6.conf.all.forwarding=1/g" /etc/sysctl.conf
+    echo 1 > /proc/sys/net/ipv6/conf/all/forwarding
+}
+
+function disable_ipv6 {
+    # endure that ipv6 is enabled and can route
+    sed -i 's/net.ipv6.conf.all.disable_ipv6.*/net.ipv6.conf.all.disable_ipv6 = 1/g' /etc/sysctl.conf
+    # sed -i "s/net.ipv6.conf.all.accept_redirects.*/net.ipv6.conf.all.accept_redirects = 0/g" /etc/sysctl.conf
+    # sed -i "s/net.ipv6.conf.all.accept_source_route.*/net.ipv6.conf.all.accept_source_route = 0/g" /etc/sysctl.conf
+    sed -i "s/net.ipv6.conf.all.forwarding.*/net.ipv6.conf.all.forwarding=0/g" /etc/sysctl.conf
+    echo 0 > /proc/sys/net/ipv6/conf/all/forwarding
+}
+
+function firewall_disable_vpn {
+    firewall_remove VPN 1194
+    save_firewall_settings
+}
+
+function firewall_enable_vpn {
+    firewall_add VPN 1194 tcp
+    save_firewall_settings
+}
+
+function configure_firewall_base {
+    filename="$1"
+
+    { echo '#!/usr/sbin/nft -f';
+      echo '';
+      echo 'flush ruleset';
+      echo '';
+      echo 'table inet filter {';
+      echo '    set blackhole {';
+      echo '        type ipv4_addr';
+      echo '        size 65536';
+      echo '        flags timeout';
+      echo '    }';
+      echo '';
+      echo '    chain INPUT {';
+      echo '        type filter hook input priority filter; policy drop;';
+      echo '';
+      echo '        tcp flags & (fin|syn) == (fin|syn) drop';
+      echo '        tcp flags & (syn|rst) == (syn|rst) drop';
+      echo '        tcp flags & (fin|syn|rst|psh|ack|urg) < (fin) drop';
+      echo '        tcp flags & (fin|syn|rst|psh|ack|urg) == (fin|psh|urg) drop';
+      echo '        ip frag-off & 8191 != 0 counter packets 0 bytes 0 drop';
+      echo '';
+      echo '        ip saddr @blackhole counter packets 0 bytes 0 drop comment "portscan"';
+      echo '';
+      echo '        iif lo accept comment "localhost traffic"';
+      echo '';
+      echo '        ct state established,related accept comment "traffic originated from us"';
+      echo '';
+      echo '        ct state invalid counter drop comment "drop invalid packets"';
+      echo '';
+      echo '        ip protocol icmp counter drop comment "drop icmp"';
+      echo '';
+      echo '        tcp dport { 2222, 80, 443 } ct state new accept';
+      echo '';
+      echo "        tcp dport { $FIREWALL_PORTSCAN } add @blackhole { ip saddr timeout 1d }  counter packets 0 bytes 0 drop comment \"portscan\"";
+      echo '        tcp dport 2222 meter test-2222-count-meter size 65535 { ip saddr & 255.255.255.0 ct count over 3 }  counter packets 0 bytes 0 reject with tcp reset';
+      echo '        tcp dport http meter test-80-count-meter size 65535 { ip saddr & 255.255.255.0 ct count over 200 }  counter packets 0 bytes 0 reject with tcp reset';
+      echo '        tcp dport https meter test-443-count-meter size 65535 { ip saddr & 255.255.255.0 ct count over 100 }  counter packets 0 bytes 0 reject with tcp reset';
+      echo '    }';
+      echo '';
+      echo '    chain FORWARD {';
+      echo '        type filter hook forward priority 0; policy drop;';
+      echo '    }';
+      echo '';
+      echo '    chain OUTPUT {';
+      echo '        type filter hook output priority 0; policy accept;';
+      echo '    }';
+      echo '}'; } >> "$filename"
+}
+
+function firewall_max_connections {
+    firewall_port="$1"
+    firewall_connections="$2"
+    firewall_remove_connections="$3"
+    if [ ! "$firewall_remove_connections" ]; then
+        # shellcheck disable=SC2086
+        /usr/sbin/nft add rule inet filter INPUT tcp dport $firewall_port meter test-${firewall_port}-count-meter "{ ip saddr & 255.255.255.0 ct count over $firewall_connections }" counter reject with tcp reset
+    else
+        if grep -q "test-${firewall_port}-count-meter" /etc/firewall.conf; then
+            # shellcheck disable=SC2086
+            delete_firewall_port_via_handle "${firewall_port}"
+        fi
+    fi
+    save_firewall_settings
+}
+
+function configure_firewall {
+    if [ ! -f "$rootdir/usr/sbin/nft" ]; then
+        if ! grep -q "crontab:" /etc/group; then
+            groupadd crontab
+        fi
+        if ! grep -q "messagebus:" /etc/group; then
+            groupadd messagebus
+        fi
+        INSTALL_PACKAGES nftables
+    fi
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        # check that the ruleset exists
+        ruleset=$(/usr/sbin/nft list ruleset)
+        # does the firewall exist?
+        if [ ! "$ruleset" ]; then
+            if grep -q "firewall" "$COMPLETION_FILE"; then
+                sed -i '/firewall/d' "$COMPLETION_FILE"
+                if [ -f "$FIREWALL_DOMAINS" ]; then
+                    rm "$FIREWALL_DOMAINS"
+                fi
+                if [ -f "$FIREWALL_ALLOW_DOMAINS" ]; then
+                    rm "$FIREWALL_ALLOW_DOMAINS"
+                fi
+                if [ -f "$MUTED_WORDS" ]; then
+                    rm "$MUTED_WORDS"
+                fi
+                if [ -f "$FIREWALL_DOMAINS_MASKED" ]; then
+                    rm "$FIREWALL_DOMAINS_MASKED"
+                fi
+            fi
+        else
+            # does the firewall contain expected entries?
+            if [[ "$ruleset" != *"tcp flags"* || "$ruleset" != *"ip saddr"* || "$ruleset" != *"facebook"* ]]; then
+                if grep -q "firewall" "$COMPLETION_FILE"; then
+                    sed -i '/firewall/d' "$COMPLETION_FILE"
+                    if [ -f "$FIREWALL_DOMAINS" ]; then
+                        rm "$FIREWALL_DOMAINS"
+                    fi
+                    if [ -f "$MUTED_WORDS" ]; then
+                        rm "$MUTED_WORDS"
+                    fi
+                    if [ -f "$FIREWALL_ALLOW_DOMAINS" ]; then
+                        rm "$FIREWALL_ALLOW_DOMAINS"
+                    fi
+                    if [ -f "$FIREWALL_DOMAINS_MASKED" ]; then
+                        rm "$FIREWALL_DOMAINS_MASKED"
+                    fi
+                fi
+            else
+                return
+            fi
+        fi
+    fi
+    if [[ $INSTALLED_WITHIN_DOCKER == "yes" ]]; then
+        # docker does its own firewalling
+        return
+    fi
+
+    echo "Configuring firewall"
+
+    if [ -f /usr/sbin/iptables ]; then
+        # disable iptables
+        iptables -F
+        ip6tables -F
+    fi
+
+    configure_firewall_base /etc/firewall.conf
+    configure_firewall_base /etc/firewall_test.conf
+    /usr/sbin/nft -f /etc/firewall.conf
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function firewall_drop_telnet {
+    ruleset=$(/usr/sbin/nft list ruleset)
+    # does the firewall exist?
+    if [ ! "$ruleset" ]; then
+        return
+    fi
+    # is telnet already configured?
+    if [[ "$ruleset" == *"telnet"* ]]; then
+        return
+    fi
+    # telnet isn't enabled as an input and we can also
+    # drop any outgoing telnet, just in case
+    /usr/sbin/nft add rule inet filter OUTPUT tcp dport 23 counter reject comment \"reject outgoing telnet\"
+    /usr/sbin/nft add rule inet filter OUTPUT udp dport 23 counter reject comment \"reject outgoing telnet\"
+    function_check save_firewall_settings
+    save_firewall_settings
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function configure_firewall_ping {
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+    # Only allow ping for mesh installs
+    if [[ $SYSTEM_TYPE != "mesh"* ]]; then
+        return
+    fi
+    /usr/sbin/nft add rule inet filter INPUT icmp type echo-request counter accept
+    /usr/sbin/nft add rule inet filter OUTPUT icmp type echo-reply counter accept
+    function_check save_firewall_settings
+    save_firewall_settings
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function configure_internet_protocol {
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+    if [[ $SYSTEM_TYPE == "mesh"* ]]; then
+        return
+    fi
+
+    sed -i "s/#net.ipv4.tcp_syncookies.*/net.ipv4.tcp_syncookies=1/g" /etc/sysctl.conf
+    sed -i "s/#net.ipv4.conf.all.accept_redirects.*/net.ipv4.conf.all.accept_redirects = 0/g" /etc/sysctl.conf
+    sed -i "s/#net.ipv6.conf.all.accept_redirects.*/net.ipv6.conf.all.accept_redirects = 0/g" /etc/sysctl.conf
+    sed -i "s/#net.ipv4.conf.all.send_redirects.*/net.ipv4.conf.all.send_redirects = 0/g" /etc/sysctl.conf
+    sed -i "s/#net.ipv4.conf.all.accept_source_route.*/net.ipv4.conf.all.accept_source_route = 0/g" /etc/sysctl.conf
+    sed -i "s/#net.ipv6.conf.all.accept_source_route.*/net.ipv6.conf.all.accept_source_route = 0/g" /etc/sysctl.conf
+    sed -i "s/#net.ipv4.conf.default.rp_filter.*/net.ipv4.conf.default.rp_filter=1/g" /etc/sysctl.conf
+    sed -i "s/#net.ipv4.conf.all.rp_filter.*/net.ipv4.conf.all.rp_filter=1/g" /etc/sysctl.conf
+    sed -i "s/#net.ipv4.ip_forward.*/net.ipv4.ip_forward=0/g" /etc/sysctl.conf
+    sed -i "s/#net.ipv6.conf.all.forwarding.*/net.ipv6.conf.all.forwarding=0/g" /etc/sysctl.conf
+
+    sed -i "s/# net.ipv4.tcp_syncookies.*/net.ipv4.tcp_syncookies=1/g" /etc/sysctl.conf
+    sed -i "s/# net.ipv4.conf.all.accept_redirects.*/net.ipv4.conf.all.accept_redirects = 0/g" /etc/sysctl.conf
+    sed -i "s/# net.ipv6.conf.all.accept_redirects.*/net.ipv6.conf.all.accept_redirects = 0/g" /etc/sysctl.conf
+    sed -i "s/# net.ipv4.conf.all.send_redirects.*/net.ipv4.conf.all.send_redirects = 0/g" /etc/sysctl.conf
+    sed -i "s/# net.ipv4.conf.all.accept_source_route.*/net.ipv4.conf.all.accept_source_route = 0/g" /etc/sysctl.conf
+    sed -i "s/# net.ipv6.conf.all.accept_source_route.*/net.ipv6.conf.all.accept_source_route = 0/g" /etc/sysctl.conf
+    sed -i "s/# net.ipv4.conf.default.rp_filter.*/net.ipv4.conf.default.rp_filter=1/g" /etc/sysctl.conf
+    sed -i "s/# net.ipv4.conf.all.rp_filter.*/net.ipv4.conf.all.rp_filter=1/g" /etc/sysctl.conf
+    sed -i "s/# net.ipv4.ip_forward.*/net.ipv4.ip_forward=0/g" /etc/sysctl.conf
+    sed -i "s/# net.ipv6.conf.all.forwarding.*/net.ipv6.conf.all.forwarding=0/g" /etc/sysctl.conf
+
+
+    if ! grep -q "ignore pings" /etc/sysctl.conf; then
+        echo '# ignore pings' >> /etc/sysctl.conf
+        echo 'net.ipv4.icmp_echo_ignore_all = 1' >> /etc/sysctl.conf
+        #echo 'net.ipv6.icmp_echo_ignore_all = 1' >> /etc/sysctl.conf
+    fi
+    if ! grep -q "disable ipv6" /etc/sysctl.conf; then
+        echo '# disable ipv6' >> /etc/sysctl.conf
+        echo 'net.ipv6.conf.all.disable_ipv6 = 1' >> /etc/sysctl.conf
+    fi
+    if ! grep -q "net.ipv4.tcp_synack_retries" /etc/sysctl.conf; then
+        echo 'net.ipv4.tcp_synack_retries = 2' >> /etc/sysctl.conf
+        echo 'net.ipv4.tcp_syn_retries = 1' >> /etc/sysctl.conf
+    fi
+    if ! grep -q "keepalive" /etc/sysctl.conf; then
+        { echo '# keepalive';
+          echo 'net.ipv4.tcp_keepalive_probes = 9';
+          echo 'net.ipv4.tcp_keepalive_intvl = 75';
+          echo 'net.ipv4.tcp_keepalive_time = 7200'; } >> /etc/sysctl.conf
+    fi
+    if ! grep -q "net.ipv4.conf.default.send_redirects" /etc/sysctl.conf; then
+        echo "net.ipv4.conf.default.send_redirects = 0" >> /etc/sysctl.conf
+    else
+        sed -i "s|# net.ipv4.conf.default.send_redirects.*|net.ipv4.conf.default.send_redirects = 0|g" /etc/sysctl.conf
+        sed -i "s|#net.ipv4.conf.default.send_redirects.*|net.ipv4.conf.default.send_redirects = 0|g" /etc/sysctl.conf
+        sed -i "s|net.ipv4.conf.default.send_redirects.*|net.ipv4.conf.default.send_redirects = 0|g" /etc/sysctl.conf
+    fi
+    if ! grep -q "net.ipv4.conf.all.secure_redirects" /etc/sysctl.conf; then
+        echo "net.ipv4.conf.all.secure_redirects = 0" >> /etc/sysctl.conf
+    else
+        sed -i "s|# net.ipv4.conf.all.secure_redirects.*|net.ipv4.conf.all.secure_redirects = 0|g" /etc/sysctl.conf
+        sed -i "s|#net.ipv4.conf.all.secure_redirects.*|net.ipv4.conf.all.secure_redirects = 0|g" /etc/sysctl.conf
+        sed -i "s|net.ipv4.conf.all.secure_redirects.*|net.ipv4.conf.all.secure_redirects = 0|g" /etc/sysctl.conf
+    fi
+    if ! grep -q "net.ipv4.conf.default.accept_source_route" /etc/sysctl.conf; then
+        echo "net.ipv4.conf.default.accept_source_route = 0" >> /etc/sysctl.conf
+    else
+        sed -i "s|# net.ipv4.conf.default.accept_source_route.*|net.ipv4.conf.default.accept_source_route = 0|g" /etc/sysctl.conf
+        sed -i "s|#net.ipv4.conf.default.accept_source_route.*|net.ipv4.conf.default.accept_source_route = 0|g" /etc/sysctl.conf
+        sed -i "s|net.ipv4.conf.default.accept_source_route.*|net.ipv4.conf.default.accept_source_route = 0|g" /etc/sysctl.conf
+    fi
+    if ! grep -q "net.ipv4.conf.default.secure_redirects" /etc/sysctl.conf; then
+        echo "net.ipv4.conf.default.secure_redirects = 0" >> /etc/sysctl.conf
+    else
+        sed -i "s|# net.ipv4.conf.default.secure_redirects.*|net.ipv4.conf.default.secure_redirects = 0|g" /etc/sysctl.conf
+        sed -i "s|#net.ipv4.conf.default.secure_redirects.*|net.ipv4.conf.default.secure_redirects = 0|g" /etc/sysctl.conf
+        sed -i "s|net.ipv4.conf.default.secure_redirects.*|net.ipv4.conf.default.secure_redirects = 0|g" /etc/sysctl.conf
+    fi
+    if ! grep -q "net.ipv4.conf.default.accept_redirects" /etc/sysctl.conf; then
+        echo "net.ipv4.conf.default.accept_redirects = 0" >> /etc/sysctl.conf
+    else
+        sed -i "s|# net.ipv4.conf.default.accept_redirects.*|net.ipv4.conf.default.accept_redirects = 0|g" /etc/sysctl.conf
+        sed -i "s|#net.ipv4.conf.default.accept_redirects.*|net.ipv4.conf.default.accept_redirects = 0|g" /etc/sysctl.conf
+        sed -i "s|net.ipv4.conf.default.accept_redirects.*|net.ipv4.conf.default.accept_redirects = 0|g" /etc/sysctl.conf
+    fi
+
+    # Randomize kernel
+    if ! grep -q "kernel.randomize_va_space" /etc/sysctl.conf; then
+        echo "kernel.randomize_va_space=2" >> /etc/sysctl.conf
+    else
+        sed -i 's|kernel.randomize_va_space.*|kernel.randomize_va_space=2|g' /etc/sysctl.conf
+    fi
+
+    # Turn off the tcp_timestamps
+    if ! grep -q "net.ipv4.tcp_timestamps" /etc/sysctl.conf; then
+        echo "net.ipv4.tcp_timestamps=0" >> /etc/sysctl.conf
+    else
+        sed -i 's|net.ipv4.tcp_timestamps.*|net.ipv4.tcp_timestamps=0|g' /etc/sysctl.conf
+    fi
+    /sbin/sysctl -p
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function firewall_add {
+    firewall_name=$(string="$1" ; echo "${string// /-}")
+    firewall_port=$2
+    firewall_protocol="$3"
+
+    if [ ! -f /usr/sbin/nft ]; then
+        if ! grep -q "crontab:" /etc/group; then
+            groupadd crontab
+        fi
+        if ! grep -q "messagebus:" /etc/group; then
+            groupadd messagebus
+        fi
+        INSTALL_PACKAGES nftables
+    fi
+
+    if ! grep -q "${firewall_name}=${firewall_port}" "$FIREWALL_CONFIG"; then
+        if [ ! "${firewall_protocol}" ]; then
+            /usr/sbin/nft add rule inet filter INPUT tcp dport "${firewall_port}" accept comment \""${firewall_name}"\"
+            /usr/sbin/nft add rule inet filter INPUT udp dport "${firewall_port}" accept comment \""${firewall_name}"\"
+        else
+            if [[ "${firewall_protocol}" == *"udp"* ]]; then
+                /usr/sbin/nft add rule inet filter INPUT udp dport "${firewall_port}" accept comment \""${firewall_name}"\"
+            fi
+            if [[ "${firewall_protocol}" == *"tcp"* ]]; then
+                /usr/sbin/nft add rule inet filter INPUT tcp dport "${firewall_port}" accept comment \""${firewall_name}"\"
+            fi
+        fi
+        echo "${firewall_name}=${firewall_port}" >> "$FIREWALL_CONFIG"
+        save_firewall_settings
+    fi
+}
+
+function firewall_add_range {
+    firewall_name=$(string="$1" ; echo "${string// /-}")
+    firewall_port_start=$2
+    firewall_port_end=$3
+    firewall_protocol="$4"
+    add_range_comment="$5"
+
+    if ! grep -q "${firewall_name}=${firewall_port_start}:${firewall_port_end}" "$FIREWALL_CONFIG"; then
+        echo "${firewall_name}=${firewall_port_start}:${firewall_port_end}" >> "$FIREWALL_CONFIG"
+        if [ ! "${firewall_protocol}" ]; then
+            if [ "$add_range_comment" ]; then
+                # shellcheck disable=SC2086
+                /usr/sbin/nft add rule inet filter INPUT tcp dport "${firewall_port_start}"-"${firewall_port_end}" accept comment \"$add_range_comment\"
+                # shellcheck disable=SC2086
+                /usr/sbin/nft add rule inet filter INPUT udp dport "${firewall_port_start}"-"${firewall_port_end}" accept comment \"$add_range_comment\"
+            else
+                /usr/sbin/nft add rule inet filter INPUT tcp dport "${firewall_port_start}"-"${firewall_port_end}" accept
+                /usr/sbin/nft add rule inet filter INPUT udp dport "${firewall_port_start}"-"${firewall_port_end}" accept
+            fi
+        else
+            if [[ "${firewall_protocol}" == *"udp"* ]]; then
+                if [ "$add_range_comment" ]; then
+                    # shellcheck disable=SC2086
+                    /usr/sbin/nft add rule inet filter INPUT udp dport "${firewall_port_start}"-"${firewall_port_end}" accept comment \"$add_range_comment\"
+                else
+                    /usr/sbin/nft add rule inet filter INPUT udp dport "${firewall_port_start}"-"${firewall_port_end}" accept
+                fi
+            fi
+            if [[ "${firewall_protocol}" == *"tcp"* ]]; then
+                if [ "$add_range_comment" ]; then
+                    # shellcheck disable=SC2086
+                    /usr/sbin/nft add rule inet filter INPUT tcp dport "${firewall_port_start}"-"${firewall_port_end}" accept comment \"$add_range_comment\"
+                else
+                    /usr/sbin/nft add rule inet filter INPUT tcp dport "${firewall_port_start}"-"${firewall_port_end}" accept
+                fi
+            fi
+        fi
+        save_firewall_settings
+    fi
+}
+
+function firewall_block_range {
+    firewall_name=$(string="$1" ; echo "${string// /-}")
+    firewall_port_start=$2
+    firewall_port_end=$3
+    block_range_comment="$4"
+
+    if ! grep -q "${firewall_name}=${firewall_port_start}:${firewall_port_end}" "$FIREWALL_CONFIG"; then
+        echo "${firewall_name}=${firewall_port_start}:${firewall_port_end}" >> "$FIREWALL_CONFIG"
+        if [ "$block_range_comment" ]; then
+            # shellcheck disable=SC2086
+            /usr/sbin/nft add rule inet filter INPUT ip daddr "${firewall_port_start}"-"${firewall_port_end}" drop comment \"$block_range_comment\"
+        else
+            /usr/sbin/nft add rule inet filter INPUT ip daddr "${firewall_port_start}"-"${firewall_port_end}" drop
+        fi
+        save_firewall_settings
+    fi
+}
+
+function firewall_unblock_range {
+    firewall_name=$(string="$1" ; echo "${string// /-}")
+    firewall_port_start=$2
+    firewall_port_end=$3
+    block_range_comment="$4"
+
+    if grep -q "=${firewall_port_start}:${firewall_port_end}" "$FIREWALL_CONFIG"; then
+        sed -i "/${firewall_port_start}:${firewall_port_end}/d" "$FIREWALL_CONFIG"
+        delete_firewall_port_via_handle "${firewall_port_start}-${firewall_port_end}"
+        save_firewall_settings
+    fi
+}
+
+function firewall_block_cloudflare {
+    # A possible problem with this is that cloudflare has become so pervasive
+    # that blocking it could cause significant issues
+    ruleset=$(/usr/sbin/nft list ruleset)
+    # does the firewall exist?
+    if [ ! "$ruleset" ]; then
+        return
+    fi
+    cf_comment="MITM(cloudflare)"
+    # is cloudflare already configured?
+    if [[ "$ruleset" == *"$cf_comment"* ]]; then
+        return
+    fi
+    cloudflare_ips="/root/${PROJECT_NAME}/image_build/cloudflare.txt"
+    if [ ! -f "$cloudflare_ips" ]; then
+        return
+    fi
+    # make a backup of the firewall before adding many extra entries
+    if [ -f /etc/firewall.conf ]; then
+        cp /etc/firewall.conf /etc/firewall_without_cloudflare.conf
+    fi
+    echo ''
+    while read -r cf_ip; do
+        if [[ "$cf_ip" != '#'* ]]; then
+            if [[ "$cf_ip" == *'.'* ]]; then
+                firewall_block_ip "$cf_ip" "$cf_comment" "nosave"
+                echo -n '.'
+            fi
+        fi
+    done <"$cloudflare_ips"
+    save_firewall_settings
+
+    if ! grep -q "cloudflare" /etc/hosts; then
+        { echo '127.0.0.1  betterinternet.com'
+          echo '127.0.0.1  brokendnssec.net';
+          echo '127.0.0.1  cloudflare-dns.com';
+          echo '127.0.0.1  cloudflare-free.com';
+          echo '127.0.0.1  cloudflare-ipfs.com';
+          echo '127.0.0.1  cloudflare-quic.com';
+          echo '127.0.0.1  cloudflare.com';
+          echo '127.0.0.1  cloudflare.com.ve';
+          echo '127.0.0.1  cloudflare.net';
+          echo '127.0.0.1  cloudflareaccess.com';
+          echo '127.0.0.1  cloudflareapi.com';
+          echo '127.0.0.1  cloudflareapps.com';
+          echo '127.0.0.1  cloudflarechallenge.com';
+          echo '127.0.0.1  cloudflareclient.com';
+          echo '127.0.0.1  cloudflareenterprise.com';
+          echo '127.0.0.1  cloudflareinsights.com';
+          echo '127.0.0.1  cloudflarepreview.com';
+          echo '127.0.0.1  cloudflarepreviews.com';
+          echo '127.0.0.1  cloudflareresolve.com';
+          echo '127.0.0.1  cloudflarespeedtest.com';
+          echo '127.0.0.1  cloudflaressl.com';
+          echo '127.0.0.1  cloudflarestatus.com';
+          echo '127.0.0.1  cloudflaresupport.com';
+          echo '127.0.0.1  cloudflarewarp.com';
+          echo '127.0.0.1  encryptedsni.com';
+          echo '127.0.0.1  mycloudflare.com';
+          echo '127.0.0.1  one.one';
+          echo '127.0.0.1  trycloudflare.com';
+          echo '127.0.0.1  warp.plus';
+          echo '127.0.0.1  workers.dev'; } >> /etc/hosts
+    fi
+
+    echo ''
+    echo 'Cloudflare blocked'
+}
+
+function firewall_unblock_cloudflare {
+    ruleset=$(/usr/sbin/nft list ruleset)
+    # does the firewall exist?
+    if [ ! "$ruleset" ]; then
+        return
+    fi
+    cf_comment="MITM(cloudflare)"
+    # is cloudflare already configured?
+    if [[ "$ruleset" != *"$cf_comment"* ]]; then
+        return
+    fi
+    cloudflare_ips="/root/${PROJECT_NAME}/image_build/cloudflare.txt"
+    if [ ! -f "$cloudflare_ips" ]; then
+        return
+    fi
+
+    echo ''
+    while read -r cf_ip; do
+        if [[ "$cf_ip" != '#'* ]]; then
+            if [[ "$cf_ip" == *'.'* ]]; then
+                firewall_unblock_ip "$cf_ip" "nosave"
+                echo -n '.'
+            fi
+        fi
+    done <"$cloudflare_ips"
+
+    if grep -q "${cf_comment}" /etc/firewall.conf; then
+       sed -i "/${cf_comment}/d" /etc/firewall.conf
+    fi
+    save_firewall_settings
+    /etc/network/if-up.d/firewall
+
+    if grep -q "cloudflare" /etc/hosts; then
+        sed -i '/cloudflare/d' /etc/hosts
+        sed -i '/betterinternet.com/d' /etc/hosts
+        sed -i '/brokendnssec.net/d' /etc/hosts
+        sed -i '/encryptedsni.com/d' /etc/hosts
+        sed -i '/ one.one/d' /etc/hosts
+        sed -i '/trycloudflare.com/d' /etc/hosts
+        sed -i '/ warp.plus/d' /etc/hosts
+        sed -i '/workers.dev/d' /etc/hosts
+    fi
+
+    echo ''
+    echo 'Cloudflare unblocked'
+}
+
+function firewall_google {
+    ruleset=$(/usr/sbin/nft list ruleset)
+    # does the firewall exist?
+    if [ ! "$ruleset" ]; then
+        return
+    fi
+    block_google_comment="google"
+    # is google already configured?
+    if [[ "$ruleset" == *"$block_google_comment"* ]]; then
+        return
+    fi
+
+    # google's web crawler
+    firewall_block_range googlebot1 64.18.0.0 64.18.15.255 "${block_google_comment}"
+    firewall_block_range googlebot2 64.233.160.0 64.233.191.255 "${block_google_comment}"
+    firewall_block_range googlebot3 66.102.0.0 66.102.15.255 "${block_google_comment}"
+    firewall_block_range googlebot4 66.249.80.0 66.249.95.255 "${block_google_comment}"
+    firewall_block_range googlebot5 72.14.192.0 72.14.255.255 "${block_google_comment}"
+    firewall_block_range googlebot6 74.125.0.0 74.125.255.255 "${block_google_comment}"
+    firewall_block_range googlebot7 108.177.8.0 108.177.15.255 "${block_google_comment}"
+    firewall_block_range googlebot8 172.217.0.0 172.217.31.255 "${block_google_comment}"
+    firewall_block_range googlebot9 173.194.0.0 173.194.255.255 "${block_google_comment}"
+    firewall_block_range googlebot10 207.126.144.0 207.126.159.255 "${block_google_comment}"
+    firewall_block_range googlebot11 209.85.128.0 209.85.255.255 "${block_google_comment}"
+    firewall_block_range googlebot12 216.58.192.0 216.58.223.255 "${block_google_comment}"
+    firewall_block_range googlebot13 216.239.32.0 216.239.63.255 "${block_google_comment}"
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function firewall_remove {
+    firewall_port=$1
+    firewall_protocol="$2"
+
+    if [ ! -f "$FIREWALL_CONFIG" ]; then
+        return
+    fi
+
+    if grep -q "=${firewall_port}" "$FIREWALL_CONFIG"; then
+        # shellcheck disable=SC2086
+        delete_firewall_port_via_handle $firewall_port
+        sed -i "/=${firewall_port}/d" "$FIREWALL_CONFIG"
+        save_firewall_settings
+    fi
+}
+
+function firewall_remove_range {
+    firewall_port_start=$1
+    firewall_port_end=$2
+    firewall_protocol="$3"
+
+    if grep -q "=${firewall_port_start}:${firewall_port_end}" "$FIREWALL_CONFIG"; then
+        sed -i "/${firewall_port_start}:${firewall_port_end}/d" "$FIREWALL_CONFIG"
+        delete_firewall_port_via_handle "${firewall_port_start}-${firewall_port_end}"
+        save_firewall_settings
+    fi
+}
+
+function domain_to_hex_string {
+    domain="$1"
+    ctr=1
+    segment=$(echo "$domain" | awk -F '.' -v value="$ctr" '{print $value}')
+    while [ ${#segment} -gt 0 ]
+    do
+        characters=$(echo -n "$segment" | wc -c)
+        hexnum=$(echo "obase=16; $characters" | bc)
+        echo -n "|"
+        if [ "$(echo -n "$hexnum" | wc -c)" -lt 2 ]; then
+            echo -n "0"
+        fi
+        echo -n "$hexnum|$segment"
+        ctr=$((ctr + 1))
+        segment=$(echo "$domain" | awk -F '.' -v value="$ctr" '{print $value}')
+    done
+    echo ""
+}
+
+function firewall_block_domain {
+    blocked_domain="$1"
+    if [[ "$blocked_domain" == *'@'* ]]; then
+        # Don't try to block email/microblog addresses
+        echo "${blocked_domain}" >> "$FIREWALL_DOMAINS"
+        return
+    fi
+    regenerate_webadmin_blocklist
+}
+
+function firewall_allow_domain {
+    allowed_domain="$1"
+    if [[ "$allowed_domain" != *'.'* ]]; then
+        return
+    fi
+    if [[ "$allowed_domain" == *'.local' ]]; then
+        return
+    fi
+    if [[ "$allowed_domain" == *'@'* ]]; then
+        # Don't try to block email/microblog addresses
+        echo "${allowed_domain}" >> "$FIREWALL_ALLOW_DOMAINS"
+        return
+    fi
+    #if ! grep -q "$allowed_domain" "$FIREWALL_ALLOW_DOMAINS"; then
+    #fi
+    regenerate_webadmin_federationlist
+}
+
+function firewall_remove_allowed_domain {
+    allowed_domain="$1"
+    if [[ "$allowed_domain" != *'.'* ]]; then
+        return
+    fi
+    if [ ! -f "$FIREWALL_ALLOW_DOMAINS" ]; then
+        return
+    fi
+    if ! grep -q "$allowed_domain" "$FIREWALL_ALLOW_DOMAINS"; then
+        return
+    fi
+    sed -i "/$allowed_domain/d" "$FIREWALL_ALLOW_DOMAINS"
+}
+
+function firewall_block_words {
+    blocked_words="$1"
+    if [ ! -f "$MUTED_WORDS" ]; then
+        touch "$MUTED_WORDS"
+    fi
+    if ! grep -q "$blocked_words" "$MUTED_WORDS"; then
+        echo "${blocked_words}" >> "$MUTED_WORDS"
+    fi
+    regenerate_webadmin_blocklist_muted_words
+}
+
+function firewall_block_ip {
+    blocked_ip="$1"
+    if [[ "$blocked_ip" == *'@'* ]]; then
+        # Don't try to block email/microblog addresses
+        return
+    fi
+
+    firewall_domains_file="$FIREWALL_DOMAINS"
+    if [[ "$blocked_ip" == *'/'* ]]; then
+        firewall_domains_file="$FIREWALL_DOMAINS_MASKED"
+    fi
+
+    if [ ! -f "$firewall_domains_file" ]; then
+        touch "$firewall_domains_file"
+    fi
+
+    if ! grep -q "$blocked_ip" "$firewall_domains_file"; then
+        block_ip_comment="$2"
+        if [ "$block_ip_comment" ]; then
+            # shellcheck disable=SC2086
+            /usr/sbin/nft add rule inet filter INPUT ip saddr "$blocked_ip" drop comment \"${block_ip_comment}\"
+            # shellcheck disable=SC2086
+            /usr/sbin/nft add rule inet filter OUTPUT ip daddr "$blocked_ip" drop comment \"${block_ip_comment}\"
+        else
+            /usr/sbin/nft add rule inet filter INPUT ip saddr "$blocked_ip" drop
+            /usr/sbin/nft add rule inet filter OUTPUT ip daddr "$blocked_ip" drop
+        fi
+
+        echo "${blocked_ip}" >> "$firewall_domains_file"
+        if [ "$3" ]; then
+            if [[ "$3" != "nosave" ]]; then
+                save_firewall_settings
+            fi
+        else
+            save_firewall_settings
+        fi
+    fi
+}
+
+function firewall_facebook {
+    ruleset=$(/usr/sbin/nft list ruleset)
+    # does the firewall exist?
+    if [ ! "$ruleset" ]; then
+        return
+    fi
+    # is facebook already configured?
+    if [[ "$ruleset" == *"facebook"* ]]; then
+        return
+    fi
+
+    block_facebook_comment='facebook'
+    # see https://ipinfo.io/AS32934
+    firewall_block_ip 102.132.96.0/20 "$block_facebook_comment"
+    firewall_block_ip 102.132.96.0/24 "$block_facebook_comment"
+    firewall_block_ip 103.4.96.0/22 "$block_facebook_comment"
+    firewall_block_ip 129.134.0.0/17 "$block_facebook_comment"
+    firewall_block_ip 157.240.0.0/17 "$block_facebook_comment"
+    firewall_block_ip 157.240.10.0/24 "$block_facebook_comment"
+    firewall_block_ip 157.240.1.0/24 "$block_facebook_comment"
+    firewall_block_ip 157.240.11.0/24 "$block_facebook_comment"
+    firewall_block_ip 157.240.12.0/24 "$block_facebook_comment"
+    firewall_block_ip 157.240.13.0/24 "$block_facebook_comment"
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function firewall_unblock_ip {
+    blocked_ip="$1"
+    if [[ "$blocked_ip" == *'@'* ]]; then
+        # Don't try to block email/microblog addresses
+        return
+    fi
+
+    firewall_domains_file="$FIREWALL_DOMAINS"
+    if [[ "$blocked_ip" == *'/'* ]]; then
+        firewall_domains_file="$FIREWALL_DOMAINS_MASKED"
+    fi
+
+    if grep -q "$blocked_ip" "$firewall_domains_file"; then
+        delete_firewall_port_via_handle "$blocked_ip"
+
+        if grep -q "$blocked_ip" "$firewall_domains_file"; then
+            sed -i "/$blocked_ip/d" "$firewall_domains_file"
+        fi
+
+        if [ "$2" ]; then
+            if [[ "$2" != "nosave" ]]; then
+                save_firewall_settings
+            fi
+        else
+            save_firewall_settings
+        fi
+    fi
+}
+
+function firewall_refresh_blocklist {
+    if [ ! -f "/root/${PROJECT_NAME}-firewall-domains.cfg" ]; then
+        return
+    fi
+
+    while read -r blocked_domain; do
+        firewall_block_domain "$blocked_domain"
+    done <"/root/${PROJECT_NAME}-firewall-domains.cfg"
+}
+
+function firewall_unblock_domain {
+    unblocked_domain="$1"
+    if grep -q "${unblocked_domain}" "$FIREWALL_DOMAINS"; then
+        sed -i "/${unblocked_domain}/d" "$FIREWALL_DOMAINS"
+    fi
+    if grep -q " $unblocked_domain" /etc/hosts; then
+        sed -i "/ $unblocked_domain/d" /etc/hosts
+    fi
+    regenerate_webadmin_blocklist
+}
+
+function firewall_unblock_words {
+    unblocked_words="$1"
+
+    if [ ! -f "$MUTED_WORDS" ]; then
+        touch "$MUTED_WORDS"
+    fi
+
+    if grep -q "${unblocked_words}" "$MUTED_WORDS"; then
+        sed -i "/${unblocked_domain}/d" "$MUTED_WORDS"
+    fi
+
+    regenerate_webadmin_blocklist_muted_words
+}
+
+function firewall_rate_limits {
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+
+    # Limit new TCP connections per second per source IP
+    #/usr/sbin/nft add rule inet filter INPUT tcp limit rate 60/second burst 20 accept
+
+    /usr/sbin/nft add rule inet filter INPUT ip protocol tcp tcp flags \& rst == rst limit rate 2/second accept
+
+    #/usr/sbin/nft add rule inet filter INPUT limit rate 10 mbytes/second accept
+
+    function_check save_firewall_settings
+    save_firewall_settings
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function regenerate_webadmin_blocklist {
+    if [ ! -f "$FIREWALL_DOMAINS" ]; then
+        touch "$FIREWALL_DOMAINS"
+    fi
+    local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+    webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+    if [ -f "$webadmin_install_dir/blocking_template.html" ]; then
+        cp "$webadmin_install_dir/blocking_template.html" "$webadmin_install_dir/blocking.html"
+        blockedlist=$(sed 's@[/\&]@\\&@g;s/$/\\/' "$FIREWALL_DOMAINS"; echo .)
+        blockedlist=${blockedlist%.}
+        sed -i "s|BLOCKEDLIST|$blockedlist|g" "$webadmin_install_dir/blocking.html"
+        chown www-data:www-data "$webadmin_install_dir/blocking.html"
+    fi
+}
+
+function regenerate_webadmin_federationlist {
+    if [ ! -f "$FIREWALL_ALLOW_DOMAINS" ]; then
+        touch "$FIREWALL_ALLOW_DOMAINS"
+    fi
+    local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+    webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+    # TODO
+}
+
+function regenerate_webadmin_vpn {
+    if [ ! -f /etc/wireguard/publickey ]; then
+        install_wireguard
+    fi
+    local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+    webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+    vpn_file="$webadmin_install_dir/vpn.txt"
+    if [ -f "$webadmin_install_dir/vpn_template.html" ]; then
+        cp "$webadmin_install_dir/vpn_template.html" "$webadmin_install_dir/vpn.html"
+        if [ -f "$vpn_file" ]; then
+            vpnlist=$(sed 's@[/\&]@\\&@g;s/$/\\/' "$vpn_file"; echo .)
+            vpnlist=${vpnlist%.}
+            sed -i "s|VPNLIST|$vpnlist|g" "$webadmin_install_dir/vpn.html"
+        else
+            sed -i "s|VPNLIST||g" "$webadmin_install_dir/vpn.html"
+        fi
+
+        if grep -q 'VPN_DOMAIN=' "$CONFIGURATION_FILE"; then
+            # NOTE: Don't use read_config_param here
+            VPN_DOMAIN=$(grep 'VPN_DOMAIN=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+            if [[ "$VPN_DOMAIN" == *'.'* ]]; then
+                sed -i "s|name=\"remotevpndomain\".*|name=\"remotevpndomain\" value=\"${VPN_DOMAIN}\" autofocus>|g" "$webadmin_install_dir/vpn.html"
+            fi
+        fi
+
+        if grep -q 'VPN_PUBLIC_KEY=' "$CONFIGURATION_FILE"; then
+            # NOTE: Don't use read_config_param here
+            VPN_PUBLIC_KEY=$(grep 'VPN_PUBLIC_KEY=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+            sed -i "s|name=\"remotevpnpublickey\".*|name=\"remotevpnpublickey\" value=\"${VPN_PUBLIC_KEY}\">|g" "$webadmin_install_dir/vpn.html"
+        fi
+
+        vpn_public_key=$(cat /etc/wireguard/publickey)
+        sed -i "s|VPNPUBLICKEY|$vpn_public_key|g" "$webadmin_install_dir/vpn.html"
+        chown www-data:www-data "$webadmin_install_dir/vpn.html"
+    fi
+}
+
+
+function regenerate_webadmin_blocklist_muted_words {
+    if [ ! -f "$MUTED_WORDS" ]; then
+        touch "$MUTED_WORDS"
+    fi
+    local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+    webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+    if [ -f "$webadmin_install_dir/blocking_words_template.html" ]; then
+        cp "$webadmin_install_dir/blocking_words_template.html" "$webadmin_install_dir/blocking_words.html"
+        blockedlistwords=$(sed 's@[/\&]@\\&@g;s/$/\\/' "$MUTED_WORDS"; echo .)
+        blockedlistwords=${blockedlistwords%.}
+        sed -i "s|BLOCKEDWORDSLIST|$blockedlistwords|g" "$webadmin_install_dir/blocking_words.html"
+        chown www-data:www-data "$webadmin_install_dir/blocking_words.html"
+    fi
+}
+
+function upgrade_iptables {
+    if [ ! -f /etc/network/if-up.d/iptables ]; then
+        return
+    fi
+
+    # clear existing installed firewall functions
+    sed -i '/firewall/d' "$COMPLETION_FILE"
+
+    # run the firewall setup again
+    setup_firewall
+
+    # email ports
+    sed -i '/=25$/d' "$FIREWALL_CONFIG"
+    firewall_add Email 25 tcp
+    sed -i '/=587$/d' "$FIREWALL_CONFIG"
+    firewall_add Email 587 tcp
+    sed -i '/=465$/d' "$FIREWALL_CONFIG"
+    firewall_add Email 465 tcp
+    sed -i '/=993$/d' "$FIREWALL_CONFIG"
+    firewall_add Imap 993 tcp
+
+    # upgrade firewall ports each app
+    FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
+    for filename in $FILES
+    do
+        app_name=$(echo "${filename}" | awk -F '-app-' '{print $2}')
+        if grep -q "_FIREWALL_PORTS=" "${filename}"; then
+            app_firewall_ports=$(grep "_FIREWALL_PORTS=" "${filename}" | awk -F'=' '{print $2}' | sed 's|"||g' | sed 's| |,|g')
+            echo $"Update firewall for $app_name"
+
+            if [[ "$app_firewall_ports" != *','* ]]; then
+                if grep -q "=${app_firewall_ports}\$" "$FIREWALL_CONFIG"; then
+                    sed -i "/=${app_firewall_ports}\$/d" "$FIREWALL_CONFIG"
+                fi
+                firewall_add "$app_name" "$app_firewall_ports"
+            else
+                no_of_ports=$(awk -F"," '{print NF}' <<< "${app_firewall_ports}")
+                port_ctr=1
+                # shellcheck disable=SC2086
+                while [ $port_ctr -le $no_of_ports ]
+                do
+                    curr_port=$(echo "$app_firewall_ports" | awk -F ',' "{print \$${port_ctr}}")
+                    if grep -q "=${curr_port}\$" "$FIREWALL_CONFIG"; then
+                        sed -i "/=${curr_port}\$/d" "$FIREWALL_CONFIG"
+                    fi
+                    firewall_add "${app_name}${port_ctr}" "${curr_port}"
+                    port_ctr=$((port_ctr + 1))
+                done
+            fi
+        fi
+    done
+
+    echo $'Saving firewall'
+    save_firewall_settings
+
+    echo $'Removing old iptables script'
+    rm /etc/network/if-up.d/iptables
+}
+
+# NOTE: deliberately no exit 0

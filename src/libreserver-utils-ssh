@@ -1,0 +1,284 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# ssh functions
+#
+# License
+# =======
+#
+# Copyright (C) 2014-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+SSH_PORT=2222
+
+# Settings from bettercrypto.org openssh 6.6+
+SSH_CIPHERS="chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes128-ctr"
+SSH_MACS="hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-512,hmac-sha2-256"
+SSH_KEX="curve25519-sha256@libssh.org,diffie-hellman-group-exchange-sha256,diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha1"
+SSH_HOST_KEY_ALGORITHMS="ssh-ed25519-cert-v01@openssh.com,ssh-rsa-cert-v01@openssh.com,ssh-rsa-cert-v00@openssh.com,ssh-ed25519,ssh-rsa"
+
+function configure_ssh {
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+
+    if ! grep -q 'RhostsRSAAuthentication' /etc/ssh/sshd_config; then
+        echo 'RhostsRSAAuthentication yes' >> /etc/ssh/sshd_config
+    fi
+    sed -i 's|#AllowAgentForwarding|AllowAgentForwarding|g' /etc/ssh/sshd_config
+    sed -i 's|AllowAgentForwarding.*|AllowAgentForwarding no|g' /etc/ssh/sshd_config
+    sed -i 's|#RhostsRSAAuthentication.*|RhostsRSAAuthentication yes|g' /etc/ssh/sshd_config
+    sed -i 's|RhostsRSAAuthentication.*|RhostsRSAAuthentication yes|g' /etc/ssh/sshd_config
+    sed -i 's|#StrictModes.*|StrictModes yes|g' /etc/ssh/sshd_config
+    sed -i 's|StrictModes.*|StrictModes yes|g' /etc/ssh/sshd_config
+    sed -i 's|#KerberosAuthentication.*|KerberosAuthentication no|g' /etc/ssh/sshd_config
+    sed -i 's|KerberosAuthentication.*|KerberosAuthentication no|g' /etc/ssh/sshd_config
+    sed -i 's|#GSSAPIAuthentication.*|GSSAPIAuthentication no|g' /etc/ssh/sshd_config
+    sed -i 's|GSSAPIAuthentication.*|GSSAPIAuthentication no|g' /etc/ssh/sshd_config
+    sed -i 's|#IgnoreUserKnownHosts.*|IgnoreUserKnownHosts yes|g' /etc/ssh/sshd_config
+    sed -i 's|IgnoreUserKnownHosts.*|IgnoreUserKnownHosts yes|g' /etc/ssh/sshd_config
+    sed -i 's|#Compression.*|Compression delayed|g' /etc/ssh/sshd_config
+    sed -i 's|Compression.*|Compression delayed|g' /etc/ssh/sshd_config
+    if ! grep -q 'HostbasedAuthentication' /etc/ssh/sshd_config; then
+        echo 'HostbasedAuthentication no' >> /etc/ssh/sshd_config
+    fi
+    sed -i 's|#HostbasedAuthentication.*|HostbasedAuthentication no|g' /etc/ssh/sshd_config
+    sed -i 's|HostbasedAuthentication.*|HostbasedAuthentication no|g' /etc/ssh/sshd_config
+    sed -i 's|#PrintLastLog.*|PrintLastLog yes|g' /etc/ssh/sshd_config
+    sed -i 's|PrintLastLog.*|PrintLastLog yes|g' /etc/ssh/sshd_config
+    sed -i 's|#IgnoreRhosts.*|IgnoreRhosts yes|g' /etc/ssh/sshd_config
+    sed -i 's|IgnoreRhosts.*|IgnoreRhosts yes|g' /etc/ssh/sshd_config
+    sed -i "s/Port .*/Port $SSH_PORT/g" /etc/ssh/sshd_config
+    sed -i "s/#Port ${SSH_PORT}/Port ${SSH_PORT}/g" /etc/ssh/sshd_config
+    sed -i 's|#PermitEmptyPasswords.*|PermitEmptyPasswords no|g' /etc/ssh/sshd_config
+    sed -i 's|PermitEmptyPasswords.*|PermitEmptyPasswords no|g' /etc/ssh/sshd_config
+    sed -i 's/PermitRootLogin.*/PermitRootLogin no/g' /etc/ssh/sshd_config
+    sed -i 's/#PermitRootLogin no/PermitRootLogin no/g' /etc/ssh/sshd_config
+    sed -i 's/X11Forwarding.*/X11Forwarding no/g' /etc/ssh/sshd_config
+    sed -i 's/#X11Forwarding no/X11Forwarding no/g' /etc/ssh/sshd_config
+    sed -i 's/ServerKeyBits.*/ServerKeyBits 2048/g' /etc/ssh/sshd_config
+    sed -i 's/#ServerKeyBits 2048/ServerKeyBits 2048/g' /etc/ssh/sshd_config
+    sed -i 's/TCPKeepAlive.*/TCPKeepAlive no/g' /etc/ssh/sshd_config
+    sed -i 's/#TCPKeepAlive no/TCPKeepAlive no/g' /etc/ssh/sshd_config
+    sed -i 's|HostKey /etc/ssh/ssh_host_dsa_key|#HostKey /etc/ssh/ssh_host_dsa_key|g' /etc/ssh/sshd_config
+    sed -i 's|HostKey /etc/ssh/ssh_host_ecdsa_key|#HostKey /etc/ssh/ssh_host_ecdsa_key|g' /etc/ssh/sshd_config
+    sed -i 's|#HostKey /etc/ssh/ssh_host_ed25519_key|HostKey /etc/ssh/ssh_host_ed25519_key|g' /etc/ssh/sshd_config
+    if ! grep -q 'DebianBanner' /etc/ssh/sshd_config; then
+        echo 'DebianBanner no' >> /etc/ssh/sshd_config
+    else
+        sed -i 's|DebianBanner.*|DebianBanner no|g' /etc/ssh/sshd_config
+    fi
+    if grep -q 'ClientAliveInterval' /etc/ssh/sshd_config; then
+        sed -i 's/ClientAliveInterval.*/ClientAliveInterval 60/g' /etc/ssh/sshd_config
+    else
+        echo 'ClientAliveInterval 60' >> /etc/ssh/sshd_config
+    fi
+    sed -i 's/#ClientAliveInterval 60/ClientAliveInterval 60/g' /etc/ssh/sshd_config
+    if grep -q 'ClientAliveCountMax' /etc/ssh/sshd_config; then
+        sed -i 's/ClientAliveCountMax.*/ClientAliveCountMax 3/g' /etc/ssh/sshd_config
+    else
+        echo 'ClientAliveCountMax 3' >> /etc/ssh/sshd_config
+    fi
+    sed -i 's/#ClientAliveCountMax 3/ClientAliveCountMax 3/g' /etc/ssh/sshd_config
+    if grep -q 'Ciphers' /etc/ssh/sshd_config; then
+        sed -i "s|Ciphers.*|Ciphers $SSH_CIPHERS|g" /etc/ssh/sshd_config
+    else
+        echo "Ciphers $SSH_CIPHERS" >> /etc/ssh/sshd_config
+    fi
+    sed -i "s|#Ciphers $SSH_CIPHERS|Ciphers $SSH_CIPHERS|g" /etc/ssh/sshd_config
+    if grep -q 'MACs' /etc/ssh/sshd_config; then
+        sed -i "s|MACs.*|MACs $SSH_MACS|g" /etc/ssh/sshd_config
+    else
+        echo "MACs $SSH_MACS" >> /etc/ssh/sshd_config
+    fi
+    sed -i "s|#MACs $SSH_MACS|MACs $SSH_MACS|g" /etc/ssh/sshd_config
+    if grep -q 'KexAlgorithms' /etc/ssh/sshd_config; then
+        sed -i "s|KexAlgorithms.*|KexAlgorithms $SSH_KEX|g" /etc/ssh/sshd_config
+    else
+        echo "KexAlgorithms $SSH_KEX" >> /etc/ssh/sshd_config
+    fi
+    sed -i "s|#KexAlgorithms $SSH_KEX|KexAlgorithms $SSH_KEX|g" /etc/ssh/sshd_config
+    if ! grep -q 'UsePrivilegeSeparation' /etc/ssh/sshd_config; then
+        echo 'UsePrivilegeSeparation sandbox' >> /etc/ssh/sshd_config
+    fi
+    sed -i 's|#UsePrivilegeSeparation .*|UsePrivilegeSeparation sandbox|g' /etc/ssh/sshd_config
+    sed -i 's|UsePrivilegeSeparation .*|UsePrivilegeSeparation sandbox|g' /etc/ssh/sshd_config
+
+    # No password login by default, use the webadmin to enable it if needed
+    sed -i 's|#PasswordAuthentication|PasswordAuthentication|g' /etc/ssh/sshd_config
+    sed -i 's|PasswordAuthentication.*|PasswordAuthentication no|g' /etc/ssh/sshd_config
+
+    INSTALL_PACKAGES vim-common
+
+    # Don't allow ssh login by default, enable via webadmin instead
+    #function_check configure_firewall_for_ssh
+    #configure_firewall_for_ssh
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+# see https://stribika.github.io/2015/01/04/secure-secure-shell.html
+function ssh_remove_small_moduli {
+    awk '$5 > 2000' /etc/ssh/moduli > ~/moduli
+    mv ~/moduli /etc/ssh/moduli
+}
+
+function configure_ssh_client {
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+    #sed -i 's/#   PasswordAuthentication.*/   PasswordAuthentication no/g' /etc/ssh/ssh_config
+    #sed -i 's/#   ChallengeResponseAuthentication.*/   ChallengeResponseAuthentication no/g' /etc/ssh/ssh_config
+    sed -i "s/#   HostKeyAlgorithms.*/   HostKeyAlgorithms $SSH_HOST_KEY_ALGORITHMS/g" /etc/ssh/ssh_config
+    sed -i "s/#   Ciphers.*/   Ciphers $SSH_CIPHERS/g" /etc/ssh/ssh_config
+    sed -i "s/#   MACs.*/   MACs $SSH_MACS/g" /etc/ssh/ssh_config
+    if ! grep -q "HostKeyAlgorithms" /etc/ssh/ssh_config; then
+        echo "   HostKeyAlgorithms $SSH_HOST_KEY_ALGORITHMS" >> /etc/ssh/ssh_config
+    fi
+    sed -i "s/Ciphers.*/Ciphers $SSH_CIPHERS/g" /etc/ssh/ssh_config
+    if ! grep -q "Ciphers " /etc/ssh/ssh_config; then
+        echo "   Ciphers $SSH_CIPHERS" >> /etc/ssh/ssh_config
+    fi
+    sed -i "s/MACs.*/MACs $SSH_MACS/g" /etc/ssh/ssh_config
+    if ! grep -q "MACs " /etc/ssh/ssh_config; then
+        echo "   MACs $SSH_MACS" >> /etc/ssh/ssh_config
+    fi
+
+    # Create ssh keys
+    if [ ! -f ~/.ssh/id_ed25519 ]; then
+        ssh-keygen -t ed25519 -o -a 100
+    fi
+    #if [ ! -f ~/.ssh/id_rsa ]; then
+    #    ssh-keygen -t rsa -b 2048 -o -a 100
+    #fi
+
+    function_check ssh_remove_small_moduli
+    ssh_remove_small_moduli
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function regenerate_ssh_keys {
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+    rm -f /etc/ssh/ssh_host_*
+    dpkg-reconfigure openssh-server
+
+    function_check ssh_remove_small_moduli
+    ssh_remove_small_moduli
+
+    systemctl restart ssh
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function configure_firewall_for_ssh {
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+    if [[ $INSTALLED_WITHIN_DOCKER == "yes" ]]; then
+        # docker does its own firewalling
+        return
+    fi
+
+    firewall_add SSH ${SSH_PORT} tcp
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function get_ssh_server_key {
+    if [ -f /etc/ssh/ssh_host_rsa_key.pub ]; then
+        echo "RSA Md5:       $(ssh-keygen -lf /etc/ssh/ssh_host_rsa_key.pub | awk -F ' ' '{print $2}')"
+        echo "RSA SHA256:    $(awk '{print $2}' /etc/ssh/ssh_host_rsa_key.pub | base64 -d | sha256sum -b | awk '{print $1}' | xxd -r -p | base64 | sed 's|=||g')"
+    fi
+    if [ -f /etc/ssh/ssh_host_ed25519_key.pub ]; then
+        echo "ED25519 Md5:   $(ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub | awk -F ' ' '{print $2}')"
+        echo "ED25519 SHA256:$(awk '{print $2}' /etc/ssh/ssh_host_ed25519_key.pub | base64 -d | sha256sum -b | awk '{print $1}' | xxd -r -p | base64 | sed 's|=||g')"
+    fi
+}
+
+function notify_logins {
+    # monitor root logins
+
+    if ! grep -q "${PROJECT_NAME}-notification" /root/.bashrc; then
+        echo "/usr/local/bin/${PROJECT_NAME}-notification -s \"ssh root login\" -m \"ssh root login \$(date)\"" >> /root/.bashrc
+    fi
+
+    # script which monitors user logins
+
+    { echo '#!/bin/bash';
+      echo 'while true';
+      echo 'do';
+      echo '    # clear existing list of logins';
+      echo '    if [ -f /tmp/.logins ]; then';
+      echo '        rm /tmp/.logins';
+      echo '    fi';
+      echo '';
+      echo '    # For each user account';
+      echo '    for d in /home/*/ ; do';
+      echo "        USERNAME=\$(echo \"\$d\" | awk -F '/' '{print \$3}')";
+      echo '';
+      echo '        # ensure that logins get reported';
+      echo "        if ! grep -q \"touch /tmp/.login_\$USERNAME\" \"/home/\$USERNAME/.bashrc\"; then";
+      echo "            sed -i \"/controluser/d\" \"/home/\$USERNAME/.bashrc\"";
+      echo "            sed -i \"/.login_\$USERNAME/d\" \"/home/\$USERNAME/.bashrc\"";
+      echo "            echo \"touch /tmp/.login_\$USERNAME\" >> \"/home/\$USERNAME/.bashrc\"";
+      echo "            echo \"controluser\" >> \"/home/\$USERNAME/.bashrc\"";
+      echo '        fi';
+      echo '';
+      echo '        # detect login for this user';
+      echo "        # Note that we don't trust the file contents or creation date to be accurate";
+      echo "        if [ -f \"/tmp/.login_\$USERNAME\" ]; then";
+      echo '            # append to the list of logins';
+      echo "            echo \"\$USERNAME logged in \$(date)\" >> /tmp/.logins";
+      echo "            rm \"/tmp/.login_\$USERNAME\"";
+      echo '        fi';
+      echo '    done';
+      echo '';
+      echo '    # notify if there were logins';
+      echo '    if [ -f /tmp/.logins ]; then';
+      echo '        # shellcheck disable=SC2086';
+      echo "        /usr/local/bin/${PROJECT_NAME}-notification -s \"ssh user login\" -m \"ssh user login \$(cat /tmp/.logins)\"";
+      echo '        rm /tmp/.logins';
+      echo '    fi';
+      echo '';
+      echo '    sleep 2';
+      echo 'done'; } > /usr/bin/check-user-logins
+    chmod +x /usr/bin/check-user-logins
+
+    # daemon to monitor user logins
+
+    { echo '[Unit]';
+      echo 'Description=Check for user logins';
+      echo 'After=network.target';
+      echo '';
+      echo '[Service]';
+      echo 'User=root';
+      echo "ExecStart=/usr/bin/check-user-logins";
+      echo "ExecReload=/bin/kill \$MAINPID";
+      echo 'KillMode=process';
+      echo 'Restart=always';
+      echo 'RestartSec=2';
+      echo '';
+      echo '[Install]';
+      echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/userlogins.service
+
+    systemctl enable userlogins
+    systemctl daemon-reload
+    systemctl restart userlogins
+}
+
+# NOTE: deliberately no exit 0

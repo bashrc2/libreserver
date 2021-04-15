@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <style>
+      @import url("libreserver.css");
+
+      .img-onion {
+          width: 30%;
+          height: auto;
+          min-width : 120px;
+      }
+
+      .versiontext {
+          color: var(--main-fg-color);
+          text-align: center;
+          font-size: 120%;
+          font-weight: bold;
+      }
+
+      .remotetext {
+          color: var(--main-fg-color);
+          text-align: center;
+          font-size: 120%;
+          font-weight: bold;
+      }
+
+      .onionaddress {
+          text-align: center;
+          font-size: 70%;
+          font-weight: bold;
+      }
+
+      #iconpic {
+          width: 20%;
+          height: auto;
+          margin-right : auto;
+          margin-left : auto;
+          min-width : 120px;
+      }
+
+      .appurl {
+          font-size: 100%;
+      }
+
+      .desc {
+          font-size: 100%;
+      }
+
+      button {
+          border: none;
+          outline: 0;
+          display: inline-block;
+          padding: 8px;
+          color: var(--main-bg-color);
+          background-color: #000;
+          text-align: center;
+          cursor: pointer;
+          width: 100%;
+          font-size: 18px;
+      }
+
+      button:hover {
+          opacity: 0.7;
+      }
+
+      .row {
+          display: -ms-flexbox;
+          display: flex;
+          -ms-flex-wrap: wrap;
+          flex-wrap: wrap;
+          padding: 0 25%;
+      }
+
+      .column {
+          -ms-flex: 15%;
+          flex: 15%;
+          max-width: 50%;
+          padding: 0 4px;
+      }
+
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <a href="index.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
+
+      <p class="desc" translate="yes">Recommended Firefox Add-ons:</p>
+
+      <div class="row">
+        <div class="column">
+          <div>
+            <a href="https://addons.mozilla.org/en-US/firefox/addon/ublock-origin/">
+              <center translate="no">uBlock Origin</center>
+            </a>
+          </div>
+        </div>
+        <div class="column">
+          <div>
+            <a href="https://addons.mozilla.org/en-US/firefox/addon/umatrix/">
+              <center translate="no">uMatrix</center>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <p class="desc" translate="yes">Your homepage can also be accessed with a Tor browser on:</p>
+
+      <p class="onionaddress" translate="no">http://WEBADMINONIONADDRESS/home</p>
+
+      <img class="img-onion" src="images/homepage_qrcode.png" alt="QR code">
+
+      <form action="index.html">
+        <input type="submit" translate="yes" value="Go Back" />
+      </form>
+    </div>
+
+  </body>
+</html>

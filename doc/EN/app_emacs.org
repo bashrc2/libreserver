@@ -1,0 +1,40 @@
+#+TITLE: LibreServer
+#+AUTHOR: Bob Mottram
+#+EMAIL: bob@libreserver.org
+#+KEYWORDS: libreserver, emacs
+#+DESCRIPTION: How to use Emacs
+#+OPTIONS: ^:nil toc:nil num:nil
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="libreserver.css" />
+
+#+attr_html: :width 80% :height 10% :align center
+[[file:images/logo.png]]
+
+* Emacs
+
+Emacs is a text editor popular with software developers or anyone who needs to take notes at high speed or be able to customise their editing environment to a high degree. When installed on LibreServer it can be used together the Mutt email client to edit new emails or if you need to manually edit configuration files.
+
+* Installation
+Log into your system with:
+
+#+begin_src bash
+ssh myusername@mydomain -p 2222
+#+end_src
+
+Using cursor keys and Enter key select *Administrator controls* and type in your password.
+
+Select *Add/Remove Apps*. If Vim is selected then you might want to unselect and uninstall it first, then select *emacs*.
+
+* Common key combinations
+For anyone new to Emacs some common keys are:
+
+| CTRL-x CTRL-s | Save                      |
+| CTRL-x CTRL-c | Exit                      |
+| CTRL-l        | Go to a line number       |
+| CTRL-x CTRL-f | Open a file               |
+| SHIFT-ALT-<   | Go to the top of the file |
+| SHIFT-ALT->   | Go to the end of the file |
+| SHIFT cursors | Select text               |
+| CTRL-x CTRL-h | Highlight all text        |
+| ALT-w         | Copy selected text        |
+| CTRL-y        | Paste selected text       |
+| ESC-ESC-ESC   | Undo current selection    |

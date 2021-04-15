@@ -1,0 +1,242 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# postgresql database functions
+#
+# License
+# =======
+#
+# Copyright (C) 2017-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# Set this when calling backup and restore commands
+USE_POSTGRESQL=
+POSTGRESQL_VERSION=13
+POSTGRESQL_PACKAGES="postgresql-${POSTGRESQL_VERSION} postgresql-contrib-${POSTGRESQL_VERSION} postgresql-client"
+
+function turn_off_postgresql_logging {
+    if [ ! -f /etc/postgresql/${POSTGRESQL_VERSION}/main/postgresql.conf ]; then
+        return
+    fi
+    sed -i 's|#log_destination|log_destination|g' /etc/postgresql/${POSTGRESQL_VERSION}/main/postgresql.conf
+    sed -i "s|log_destination.*|log_destination = 'syslog'|g" /etc/postgresql/${POSTGRESQL_VERSION}/main/postgresql.conf
+    if [ -d /var/log/postgresql ]; then
+        $REMOVE_FILES_COMMAND /var/log/postgresql/*
+    fi
+}
+
+function turn_on_postgresql_logging {
+    if [ ! -f /etc/postgresql/${POSTGRESQL_VERSION}/main/postgresql.conf ]; then
+        return
+    fi
+    sed -i 's|log_destination|#log_destination|g' /etc/postgresql/${POSTGRESQL_VERSION}/main/postgresql.conf
+    sed -i "s|log_destination.*|log_destination = 'stderr'|g" /etc/postgresql/${POSTGRESQL_VERSION}/main/postgresql.conf
+}
+
+function store_original_postgresql_password {
+    if [ ! -f /root/.postgresqloriginal ]; then
+        echo $'Storing original postgresql password'
+        ORIGINAL_POSTGRESQL_PASSWORD=$("${PROJECT_NAME}-pass" -u root -a postgresql)
+        # We can store this in plaintext because it will soon be of historical interest only
+        echo -n "${ORIGINAL_POSTGRESQL_PASSWORD}" > /root/.postgresqloriginal
+    fi
+}
+
+function get_postgresql_password {
+    POSTGRESQL_PASSWORD=$("${PROJECT_NAME}-pass" -u root -a postgresql)
+    if [[ "${POSTGRESQL_PASSWORD}" == *'failed'* ]]; then
+        echo $'Could not obtain postgresql password'
+        exit 78
+    fi
+}
+
+function image_install_postgresql {
+    # shellcheck disable=SC2154,SC2086
+    chroot "$rootdir" INSTALL_PACKAGES ${POSTGRESQL_PACKAGES}
+
+    if [ ! -d "$rootdir/etc/postgresql" ]; then
+        echo $"ERROR: postgresql does not appear to have installed."
+        exit 78
+    fi
+
+    if [ ! -f "$rootdir/usr/bin/psql" ]; then
+        echo $"ERROR: psql command does not appear to have installed."
+        exit 83
+    fi
+}
+
+function install_postgresql {
+    if [[ $VARIANT == "mesh"* ]]; then
+        image_install_postgresql
+        return
+    fi
+
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+
+    function_check get_postgresql_password
+    get_postgresql_password
+    if [ ! "${POSTGRESQL_PASSWORD}" ]; then
+        if [ -f "${IMAGE_PASSWORD_FILE}" ]; then
+            POSTGRESQL_PASSWORD="$(printf "%s" "$(cat "$IMAGE_PASSWORD_FILE")")"
+        else
+            POSTGRESQL_PASSWORD="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
+        fi
+    fi
+    "${PROJECT_NAME}-pass" -u root -a postgresql -p "${POSTGRESQL_PASSWORD}"
+
+    # shellcheck disable=SC2086
+    INSTALL_PACKAGES ${POSTGRESQL_PACKAGES}
+    $REMOVE_PACKAGES_PURGE apache2-bin*
+    if [ -d /etc/apache2 ]; then
+        rm -rf /etc/apache2
+        echo $'Removed Apache installation after postgresql install'
+    fi
+
+    if [ ! -d /etc/postgresql ]; then
+        echo $"ERROR: postgresql does not appear to have installed."
+        exit 78
+    fi
+
+    if [ ! -f /usr/bin/psql ]; then
+        echo $"ERROR: psql command does not appear to have installed."
+        exit 83
+    fi
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function add_postgresql_user {
+    postgresql_username="$1"
+    postgresql_password="$2"
+    cd /etc/postgresql || exit 24
+    if [[ "$3" != 'encrypt'* ]]; then
+        sudo -u postgres psql -c "create user ${postgresql_username} password '${postgresql_password}';"
+    else
+        sudo -u postgres psql -c "create user ${postgresql_username};"
+        sudo -u postgres psql -c "ALTER user ${postgresql_username} with encrypted password '${postgresql_password}';"
+    fi
+}
+
+function remove_postgresql_user {
+    postgresql_username="$1"
+    cd /etc/postgresql || exit 24
+    sudo -u postgres psql -c "REASSIGN OWNED BY ${postgresql_username} TO postgres; DROP OWNED BY ${postgresql_username}; drop user ${postgresql_username}"
+}
+
+function drop_database_postgresql {
+    database_name="$1"
+    database_owner_name="$2"
+    cd /etc/postgresql || exit 24
+    if [ ${#database_owner_name} -gt 0 ]; then
+	remove_postgresql_user "${database_owner_name}"
+    fi
+    sudo -u postgres psql -c "drop database ${database_name}"
+}
+
+function run_system_query_postgresql {
+    query="$1"
+    cd /etc/postgresql || exit 24
+    sudo -u postgres psql -c "${query}"
+}
+
+function run_query_postgresql {
+    database_name="$1"
+    database_query="$2"
+    cd /etc/postgresql || exit 24
+    sudo -u postgres psql -d "${database_name}" -c "${database_query}"
+}
+
+function create_user_postgresql {
+    username="$1"
+    password="$2"
+    cd /etc/postgresql || exit 25
+    PGPASSWORD="${password}" sudo -u postgres createuser "${username}"
+}
+
+function create_database_postgrasql {
+    database_name="$1"
+    cd /etc/postgresql || exit 25
+    sudo -u postgres createdb -O "${database_name}" -E UTF8 -T template0 "${database_name}"
+}
+
+function run_query_postgresql_with_output {
+    database_name="$1"
+    database_query="$2"
+    cd /etc/postgresql || exit 24
+    output=$(sudo -u postgres psql -d "${database_name}" -c "${database_query}")
+    echo "${output}"
+}
+
+function initialise_database_postgresql {
+    database_name="$1"
+    database_file="$2"
+    cd /etc/postgresql || exit 23
+    # shellcheck disable=SC2024
+    if ! sudo -u postgres psql "${database_name}" < "${database_file}"; then
+        exit 72
+    fi
+}
+
+function create_database_postgresql {
+    app_name="$1"
+    app_admin_password="$2"
+    app_admin_username="$3"
+    if [ ! -d "${INSTALL_DIR}" ]; then
+        mkdir "${INSTALL_DIR}"
+    fi
+    if [ ! "${app_admin_username}" ]; then
+        app_admin_username=${app_name}admin
+    fi
+
+    readonly_role="${app_name}_readonly"
+    admins_role="${app_name}_admins"
+    admins_schema="${app_name}_schema"
+    # note that flush privileges has no semicolon
+    echo "create database ${app_name};
+REVOKE CREATE ON SCHEMA public FROM PUBLIC;
+REVOKE ALL ON DATABASE ${app_name} FROM PUBLIC;
+
+CREATE ROLE ${readonly_role};
+GRANT CONNECT ON DATABASE ${app_name} TO ${readonly_role};
+CREATE SCHEMA ${admins_schema};
+GRANT USAGE ON SCHEMA ${admins_schema} TO ${readonly_role};
+GRANT SELECT ON ALL TABLES IN SCHEMA ${admins_schema} TO ${readonly_role};
+ALTER DEFAULT PRIVILEGES IN SCHEMA ${admins_schema} GRANT SELECT ON TABLES TO ${readonly_role};
+
+CREATE ROLE ${admins_role};
+GRANT CONNECT ON DATABASE ${app_name} TO ${admins_role};
+GRANT USAGE, CREATE ON SCHEMA ${admins_schema} TO ${admins_role};
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA ${admins_schema} TO ${admins_role};
+ALTER DEFAULT PRIVILEGES IN SCHEMA ${admins_schema} GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO ${admins_role};
+GRANT USAGE ON ALL SEQUENCES IN SCHEMA ${admins_schema} TO ${admins_role};
+ALTER DEFAULT PRIVILEGES IN SCHEMA ${admins_schema} GRANT USAGE ON SEQUENCES TO ${admins_role};
+
+CREATE USER ${app_admin_username} WITH PASSWORD '${app_admin_password}';
+GRANT ${admins_role} TO ${app_admin_username};
+
+flush privileges
+\q" > "${INSTALL_DIR}/batch.sql"
+    chmod 600 "${INSTALL_DIR}/batch.sql"
+    cd /etc/postgresql || exit 24
+    sudo -u postgres psql -d "${database_name}" --file="${INSTALL_DIR}/batch.sql"
+    rm "${INSTALL_DIR}/batch.sql"
+}
+
+# NOTE: deliberately there is no "exit 0"

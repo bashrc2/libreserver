@@ -1,0 +1,101 @@
+#+TITLE: LibreServer
+#+AUTHOR: Bob Mottram
+#+EMAIL: bob@libreserver.org
+#+KEYWORDS: libreserver, debian, armbian, sbc
+#+DESCRIPTION: Installing LibreServer on Armbian
+#+OPTIONS: ^:nil toc:nil num:nil
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="libreserver.css" />
+
+#+attr_html: :width 80% :height 10% :align center
+[[file:images/logo.png]]
+
+#+begin_quote
+"/we are the music makers, we are the dreamers of dreams. cyberpunks and pirates. chaotic spectres haunting cyberspace. engineers, artists, hackers./"
+#+end_quote
+
+If you have a single board ARM computer which isn't one of the supported ones then you can probably still install LibreServer onto it if it has a [[https://www.armbian.com/download/][Debian Buster Armbian image]] available for it.
+
+Download the Armbian image for your board. It must be version 10 (Buster), otherwise it won't work. Extract the image from its archive, then copy it to a microSD card:
+
+#+begin_src bash
+sudo dd bs=32M if=[Armbian .img file] of=/dev/sdX conv=fdatasync,sync,noerror
+#+end_src
+
+Where */dev/sdX* is the path for the microSD drive on your system.
+
+When that's done use a tool such as *Gparted* to resize the partition on the microSD card to fill up any remaining available space.
+
+Insert the microSD drive into your ARM board, connect it to your internet router with an ethernet cable and plug in the power.
+
+The board should then show up somewhere on your local network. You can log into your internet router to see what devices are connected and obtain the local IP address for the board that way, or use a network scanning tool.
+
+Once you know the local IP address of your ARM board then you can log into it with:
+
+#+begin_src bash
+ssh root@[local IP address]
+#+end_src
+
+Using the default Armbian password of *1234*. You should see the Armbian welcome message and will be asked to change the password, then create a new user account.
+
+#+attr_html: :width 80% :align center
+[[file:images/armbian_setup.jpg]]
+
+When the user account is created type *exit* to leave the ssh session then log back in with your new user account.
+
+#+begin_src bash
+ssh myusername@[local IP address]
+#+end_src
+
+Become the root user:
+
+#+begin_src bash
+sudo su
+#+end_src
+
+Update the system:
+
+#+begin_src bash
+apt update
+apt upgrade
+#+end_src
+
+Then clone the LibreServer repository and checkout the bullseye development branch.
+
+#+begin_src bash
+apt install -y git dialog build-essential
+git clone https://gitlab.com/bashrc2/libreserver
+cd libreserver
+git checkout bullseye
+#+end_src
+
+Install the LibreServer commands:
+
+#+begin_src bash
+make install
+#+end_src
+
+Create an admin user:
+
+#+begin_src bash
+adduser admin
+#+end_src
+
+Their name could just be "admin" and the other details are unimportant.
+
+And now you can begin installing the LibreServer system. There are two ways of doing this. If you already own a domain name which you want to use then run:
+
+#+begin_src bash
+libreserver menuconfig --noninteractive
+#+end_src
+
+Alternatively, if you don't own a domain name, don't have administrator access to your internet router or if you want to be able to access your sites only via onion addresses then run:
+
+#+begin_src bash
+libreserver menuconfig-onion --noninteractive
+#+end_src
+
+You will then be taken through a few questions and the system will install.
+
+Afterwards you'll be able to log into your system via the web interface at http://libreserver/admin or http://libreserver.local/admin. If your SBC isn't called "libreserver" on your local network then log into your internet router and see what name it has been assigned. If all else fails then navigate to *[server local IP]/admin*.
+
+See the [[./admin.html][admin guide]] for advice on how to use LibreServer once it's installed.

@@ -1,0 +1,1445 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Alters the security settings
+#
+# License
+# =======
+#
+# Copyright (C) 2015-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+PROJECT_NAME='libreserver'
+
+export TEXTDOMAIN=${PROJECT_NAME}-sec
+export TEXTDOMAINDIR="/usr/share/locale"
+
+CONFIGURATION_FILE=$HOME/${PROJECT_NAME}.cfg
+COMPLETION_FILE=$HOME/${PROJECT_NAME}-completed.txt
+
+UTILS_FILES="/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-*"
+for f in $UTILS_FILES
+do
+    source "$f"
+done
+
+SSL_PROTOCOLS=
+SSL_CIPHERS=
+SSH_CIPHERS=
+SSH_MACS=
+SSH_KEX=
+SSH_HOST_KEY_ALGORITHMS=
+SSH_PASSWORDS=
+XMPP_CIPHERS=
+XMPP_ECC_CURVE=
+
+WEBSITES_DIRECTORY='/etc/nginx/sites-available'
+DOVECOT_CIPHERS='/etc/dovecot/conf.d/10-ssl.conf'
+SSH_CONFIG='/etc/ssh/sshd_config'
+XMPP_CONFIG='/etc/prosody/conf.avail/xmpp.cfg.lua'
+
+MINIMUM_LENGTH=6
+
+IMPORT_FILE=
+EXPORT_FILE=
+
+CURRENT_DIR=$(pwd)
+
+DH_KEYLENGTH=2048
+LETSENCRYPT_SERVER='https://acme-v02.api.letsencrypt.org/directory'
+
+MY_USERNAME=
+
+function ping_enable_disable {
+    ping_str=$"\\nDo you want to enable other systems to ping this machine?\\n\\nPing may be useful for diagnostic purposes, but for added security you may not want to enable it."
+    enable_ping="no"
+    dialog --title $"Enable Ping / ICMP" \
+           --backtitle $"LibreServer Control Panel" \
+           --defaultno \
+           --yesno "$ping_str" 10 60
+    sel=$?
+    case $sel in
+        0) enable_ping="yes";;
+        255) return;;
+    esac
+
+    if [[ $enable_ping == "yes" ]]; then
+        /usr/sbin/nft add rule inet filter INPUT icmp type echo-request counter accept
+        /usr/sbin/nft add rule inet filter OUTPUT icmp type echo-reply counter accept
+        echo "0" >  /proc/sys/net/ipv4/icmp_echo_ignore_all
+    else
+	delete_firewall_port_via_handle "type echo-request"
+	delete_firewall_port_via_handle "type echo-reply"
+        echo "1" >  /proc/sys/net/ipv4/icmp_echo_ignore_all
+    fi
+}
+
+function any_key_verify {
+    echo ''
+    read -n1 -rsp $"Press any key to continue or C to check a hash..." key
+    if [[ "$key" != 'c' && "$key" != 'C' ]]; then
+        return
+    fi
+
+    data=$(mktemp 2>/dev/null)
+    dialog --title $"Check tripwire hash" \
+           --backtitle $"LibreServer Control Panel" \
+           --inputbox $"Paste your tripwire hash below and it will be checked against the current database" 12 60 2>"$data"
+    sel=$?
+    case $sel in
+        0)
+            GIVEN_HASH=$(<"$data")
+            if [ ${#GIVEN_HASH} -gt 8 ]; then
+                if [[ "$GIVEN_HASH" == *' '* ]]; then
+                    dialog --title $"Check tripwire" \
+                           --msgbox $"\\nThe hash should not contain any spaces" 10 40
+                else
+                    DBHASH=$(sha512sum "/var/lib/tripwire/${HOSTNAME}.twd" | awk -F ' ' '{print $1}')
+                    if [[ "$DBHASH" == "$GIVEN_HASH" ]]; then
+                        dialog --title $"Check tripwire" \
+                               --msgbox $"\\nSuccess\\n\\nThe hash you gave matches the current tripwire database" 10 40
+                    else
+                        dialog --title $"Check tripwire" \
+                               --msgbox $"\\nFailed\\n\\nThe hash you gave does not match the current tripwire database. This might be because you reset the tripwire, or there could have been an unauthorised modification of the system" 12 50
+                    fi
+                fi
+            fi
+            ;;
+    esac
+    rm -f "$data"
+}
+
+function show_tripwire_verification_code {
+    if [ ! -f "/var/lib/tripwire/${HOSTNAME}.twd" ]; then
+        return
+    fi
+    clear
+    echo ''
+    echo $'Tripwire Verification Code'
+    echo ''
+    DBHASH=$(sha512sum "/var/lib/tripwire/${HOSTNAME}.twd")
+    echo -n "$DBHASH" | qrencode -t UTF8
+    echo ''
+    echo "$DBHASH"
+    echo ''
+}
+
+function passwords_show_apps {
+    SELECTED_APP=
+    i=0
+    W=()
+    name=()
+    # shellcheck disable=SC2068
+    for a in ${APPS_AVAILABLE[@]}
+    do
+        if grep -q "change_password_" "/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-${a}"; then
+            i=$((i+1))
+            W+=("$i" "$a")
+            name+=("$a")
+        fi
+    done
+    i=$((i+1))
+    W+=("$i" "mariadb")
+    name+=("mariadb")
+
+    # shellcheck disable=SC2068
+    selected_app_index=$(dialog --backtitle $"LibreServer Control Panel" --title $"User $SELECTED_USERNAME: Select App" --menu $"Select one of the following:" 24 40 17 ${W[@]} 3>&2 2>&1 1>&3)
+
+    # shellcheck disable=SC2181
+    if [ $? -eq 0 ]; then
+        SELECTED_APP="${name[$((selected_app_index-1))]}"
+    fi
+}
+
+function view_or_change_passwords {
+    passwords_select_user
+    if [ ! "$SELECTED_USERNAME" ]; then
+        return
+    fi
+    detect_installed_apps
+    passwords_show_apps
+    if [ ! "$SELECTED_APP" ]; then
+        return
+    fi
+
+    CURR_PASSWORD=$("${PROJECT_NAME}-pass" -u "${SELECTED_USERNAME}" -a "${SELECTED_APP}")
+
+    icann_address=$(get_app_icann_address "${SELECTED_APP}")
+    onion_address=$(get_app_onion_address "${SELECTED_APP}")
+
+    titlestr=$"View or Change Password"
+    if [ ${#onion_address} -gt 0 ]; then
+        viewstr=$"${SELECTED_APP} password for ${SELECTED_USERNAME} on $icann_address or $onion_address\\n\\nCopy or change it if you wish."
+    else
+        viewstr=$"${SELECTED_APP} password for ${SELECTED_USERNAME} on $icann_address\\n\\nCopy or change it if you wish."
+    fi
+
+    if [ -f /root/.nostore ]; then
+        titlestr=$"Change Password"
+        if [ ${#onion_address} -gt 0 ]; then
+            viewstr=$"Change the ${SELECTED_APP} password for ${SELECTED_USERNAME} on $icann_address or $onion_address."
+        else
+            viewstr=$"Change the ${SELECTED_APP} password for ${SELECTED_USERNAME} on $icann_address."
+        fi
+    fi
+
+    if [[ "${SELECTED_APP}" == 'mariadb' ]]; then
+        CURR_PASSWORD=$("${PROJECT_NAME}-pass" -u root -a mariadb)
+        dialog --title $"MariaDB database password" \
+               --msgbox "\\n            ${CURR_PASSWORD}" 7 40
+        return
+    fi
+
+    data=$(mktemp 2>/dev/null)
+    dialog --title "$titlestr" \
+           --backtitle $"LibreServer Control Panel" \
+           --inputbox "$viewstr" 12 75 "$CURR_PASSWORD" 2>"$data"
+    sel=$?
+    case $sel in
+        0)
+            CURR_PASSWORD=$(<"$data")
+            if [ ${#CURR_PASSWORD} -gt 8 ]; then
+                "${PROJECT_NAME}-pass" -u "${SELECTED_USERNAME}" -a "${SELECTED_APP}" -p "${CURR_PASSWORD}"
+                "change_password_${SELECTED_APP}" "${SELECTED_USERNAME}" "${CURR_PASSWORD}"
+                dialog --title $"Change password" \
+                       --msgbox $"The password was changed" 6 40
+            else
+                dialog --title $"Change password" \
+                       --msgbox $"The password given must be at least 8 characters" 6 40
+            fi
+            ;;
+    esac
+    rm -f "$data"
+}
+
+function show_firewall {
+    W=()
+    while read -r line; do
+        firewall_name=$(echo "$line" | awk -F '=' '{print $1}')
+        firewall_port=$(echo "$line" | awk -F '=' '{print $2}')
+        W+=("${firewall_name}" "${firewall_port}")
+    done < "$FIREWALL_CONFIG"
+
+    # shellcheck disable=SC2068
+    dialog --backtitle $"LibreServer Administrator Control Panel" --title $"Firewall" --menu $"Press ESC to return to main menu" 28 50 28 "${W[@]}" 3>&2 2>&1 1>&3
+}
+
+function export_passwords {
+    USB_DRIVE=$(detect_connected_drives)
+    dialog --title $"Export passwords to USB drive $USB_DRIVE" \
+           --backtitle $"Security Settings" \
+           --defaultno \
+           --yesno $"\\nPlease confirm that you wish to export passwords to a LUKS formatted USB drive. The drive should be plugged in." 10 60
+    sel=$?
+    case $sel in
+        1) return;;
+        255) return;;
+    esac
+
+    dialog --title $"Export passwords to USB drive $USB_DRIVE" \
+           --backtitle $"Security Settings" \
+           --defaultno \
+           --yesno $"\\nDo you need to format the drive as LUKS encrypted?" 12 60
+    sel=$?
+    case $sel in
+        0) ${PROJECT_NAME}-format "$USB_DRIVE";;
+    esac
+
+    clear
+    backup_mount_drive "${USB_DRIVE}"
+    ${PROJECT_NAME}-pass --export "${USB_MOUNT}/${PROJECT_NAME}-passwords.xml"
+    backup_unmount_drive "${USB_DRIVE}"
+}
+
+function get_protocols_from_website {
+    if [ ! -f "$WEBSITES_DIRECTORY/$1" ]; then
+        return
+    fi
+    SSL_PROTOCOLS=$(grep 'ssl_protocols ' "$WEBSITES_DIRECTORY/$1" | awk -F "ssl_protocols " '{print $2}' | awk -F ';' '{print $1}')
+}
+
+function get_ciphers_from_website {
+    if [ ! -f "$WEBSITES_DIRECTORY/$1" ]; then
+        return
+    fi
+    SSL_CIPHERS=$(grep 'ssl_ciphers ' "$WEBSITES_DIRECTORY/$1" | awk -F "ssl_ciphers " '{print $2}' | awk -F "'" '{print $2}')
+}
+
+function get_imap_settings {
+    if [ ! -f $DOVECOT_CIPHERS ]; then
+        return
+    fi
+    # clear commented out cipher list
+    sed -i "s|#ssl_cipher_list.*||g" $DOVECOT_CIPHERS
+    if [ "$SSL_CIPHERS" ]; then
+        return
+    fi
+    if [ ${#SSL_CIPHERS} -gt $MINIMUM_LENGTH ]; then
+        return
+    fi
+    SSL_CIPHERS=$(grep 'ssl_cipher_list' "$DOVECOT_CIPHERS" | awk -F '=' '{print $2}' | awk -F "'" '{print $2}')
+}
+
+function get_xmpp_settings {
+    if [ ! -f $XMPP_CONFIG ]; then
+        return
+    fi
+    XMPP_CIPHERS=$(grep 'ciphers ' "$XMPP_CONFIG" | awk -F '=' '{print $2}' | awk -F '"' '{print $2}')
+    XMPP_ECC_CURVE=$(grep 'curve ' "$XMPP_CONFIG" | awk -F '=' '{print $2}' | awk -F '"' '{print $2}')
+}
+
+function get_ssh_settings {
+    if [ -f $SSH_CONFIG ]; then
+        SSH_PASSWORDS=$(grep 'PasswordAuthentication ' "$SSH_CONFIG" | awk -F 'PasswordAuthentication ' '{print $2}')
+    fi
+    if [ -f /etc/ssh/ssh_config ]; then
+        SSH_HOST_KEY_ALGORITHMS=$(grep 'HostKeyAlgorithms ' "/etc/ssh/ssh_config" | awk -F 'HostKeyAlgorithms ' '{print $2}')
+    fi
+}
+
+function change_website_settings {
+    if [ ! "$SSL_PROTOCOLS" ]; then
+        return
+    fi
+    if [ ! "$SSL_CIPHERS" ]; then
+        return
+    fi
+    if [ ${#SSL_PROTOCOLS} -lt $MINIMUM_LENGTH ]; then
+        return
+    fi
+    if [ ${#SSL_CIPHERS} -lt $MINIMUM_LENGTH ]; then
+        return
+    fi
+    if [ ! -d $WEBSITES_DIRECTORY ]; then
+        return
+    fi
+
+    cd $WEBSITES_DIRECTORY || exit 24
+    for file in $(dir -d "*") ; do
+        sed -i "s|ssl_protocols .*|ssl_protocols $SSL_PROTOCOLS;|g" "$WEBSITES_DIRECTORY/$file"
+        if ! grep -q "Mobile compatible ciphers" "$WEBSITES_DIRECTORY/$file"; then
+
+            sed -i "s|ssl_ciphers .*|ssl_ciphers '$SSL_CIPHERS';|g" "$WEBSITES_DIRECTORY/$file"
+        else
+            sed -i "s|ssl_ciphers .*|ssl_ciphers '$SSL_CIPHERS_MOBILE';|g" "$WEBSITES_DIRECTORY/$file"
+        fi
+    done
+    fuser -k 80/tcp
+    fuser -k 443/tcp
+    systemctl restart nginx
+    echo $'Web security settings changed'
+}
+
+function change_imap_settings {
+    if [ ! -f $DOVECOT_CIPHERS ]; then
+        return
+    fi
+    if [ ! "$SSL_CIPHERS" ]; then
+        return
+    fi
+    if [ ${#SSL_CIPHERS} -lt $MINIMUM_LENGTH ]; then
+        return
+    fi
+    sed -i "s|ssl_cipher_list.*|ssl_cipher_list = '$SSL_CIPHERS'|g" $DOVECOT_CIPHERS
+    sed -i "s|ssl_protocols.*|ssl_protocols = '$SSL_PROTOCOLS'|g" $DOVECOT_CIPHERS
+    systemctl restart dovecot
+    echo $'imap security settings changed'
+}
+
+function change_ssh_settings {
+    if [ -f /etc/ssh/ssh_config ]; then
+        if [ "$SSH_HOST_KEY_ALGORITHMS" ]; then
+            sed -i "s|HostKeyAlgorithms .*|HostKeyAlgorithms $SSH_HOST_KEY_ALGORITHMS|g" /etc/ssh/ssh_config
+            echo $'ssh client security settings changed'
+        fi
+    fi
+    if [ -f $SSH_CONFIG ]; then
+        if [ ! $SSH_CIPHERS ]; then
+            return
+        fi
+        if [ ! $SSH_MACS ]; then
+            return
+        fi
+        if [ ! $SSH_KEX ]; then
+            return
+        fi
+        if [ ! "$SSH_PASSWORDS" ]; then
+            SSH_PASSWORDS='yes'
+        fi
+
+        sed -i "s|Ciphers .*|Ciphers $SSH_CIPHERS|g" $SSH_CONFIG
+        sed -i "s|MACs .*|MACs $SSH_MACS|g" $SSH_CONFIG
+        sed -i "s|KexAlgorithms .*|KexAlgorithms $SSH_KEX|g" $SSH_CONFIG
+        sed -i "s|#PasswordAuthentication .*|PasswordAuthentication $SSH_PASSWORDS|g" $SSH_CONFIG
+        sed -i "s|PasswordAuthentication .*|PasswordAuthentication $SSH_PASSWORDS|g" $SSH_CONFIG
+        systemctl restart ssh
+        echo $'ssh server security settings changed'
+    fi
+}
+
+function change_xmpp_settings {
+    if [ ! -f $XMPP_CONFIG ]; then
+        return
+    fi
+    if [ ! "$XMPP_CIPHERS" ]; then
+        return
+    fi
+    if [ ! "$XMPP_ECC_CURVE" ]; then
+        return
+    fi
+    xmpp_reload_sec=
+    if ! grep -q "ciphers = \"$XMPP_CIPHERS\";" $XMPP_CONFIG; then
+        sed -i "s|ciphers =.*|ciphers = \"$XMPP_CIPHERS\";|g" $XMPP_CONFIG
+        xmpp_reload_sec=1
+    fi
+    if ! grep -q "curve = \"$XMPP_ECC_CURVE\";" $XMPP_CONFIG; then
+        sed -i "s|curve =.*|curve = \"$XMPP_ECC_CURVE\";|g" $XMPP_CONFIG
+        xmpp_reload_sec=1
+    fi
+    if [ $xmpp_reload_sec ]; then
+        systemctl restart prosody
+        echo $'xmpp security settings changed'
+    fi
+}
+
+function allow_ssh_passwords {
+    dialog --title $"SSH Passwords" \
+           --backtitle $"LibreServer Security Configuration" \
+           --yesno $"\\nAllow SSH login using passwords?" 7 60
+    sel=$?
+    case $sel in
+        0) SSH_PASSWORDS="yes";;
+        1) SSH_PASSWORDS="no";;
+        255) exit 0;;
+    esac
+}
+
+function interactive_setup {
+    if [ "$SSL_CIPHERS" ]; then
+        data=$(mktemp 2>/dev/null)
+        dialog --backtitle $"LibreServer Security Configuration" \
+               --form $"\\nWeb/IMAP Ciphers:" 10 95 2 \
+               $"Protocols:" 1 1 "$SSL_PROTOCOLS" 1 15 90 90 \
+               $"Ciphers:" 2 1 "$SSL_CIPHERS" 2 15 90 512 \
+               2> "$data"
+        sel=$?
+        case $sel in
+            1) SSL_PROTOCOLS=$(sed -n 1p < "$data")
+               SSL_CIPHERS=$(sed -n 2p < "$data")
+               ;;
+            255) rm -f "$data"
+                 exit 0;;
+        esac
+        rm -f "$data"
+    fi
+
+    data=$(mktemp 2>/dev/null)
+    if [ "$SSH_HOST_KEY_ALGORITHMS" ]; then
+        dialog --backtitle $"LibreServer Security Configuration" \
+               --form $"\\nSecure Shell Ciphers:" 13 95 4 \
+               $"Ciphers:" 1 1 "$SSH_CIPHERS" 1 15 90 512 \
+               $"MACs:" 2 1 "$SSH_MACS" 2 15 90 512 \
+               $"KEX:" 3 1 "$SSH_KEX" 3 15 90 512 \
+               $"Host key algorithms:" 4 1 "$SSH_HOST_KEY_ALGORITHMS" 4 15 90 512 \
+               2> "$data"
+        sel=$?
+        case $sel in
+            1) SSH_CIPHERS=$(sed -n 1p < "$data")
+               SSH_MACS=$(sed -n 2p < "$data")
+               SSH_KEX=$(sed -n 3p < "$data")
+               SSH_HOST_KEY_ALGORITHMS=$(sed -n 4p < "$data")
+               ;;
+            255) rm -f "$data"
+                 exit 0;;
+        esac
+    else
+        dialog --backtitle $"LibreServer Security Configuration" \
+               --form $"\\nSecure Shell Ciphers:" 11 95 3 \
+               $"Ciphers:" 1 1 "$SSH_CIPHERS" 1 15 90 512 \
+               $"MACs:" 2 1 "$SSH_MACS" 2 15 90 512 \
+               $"KEX:" 3 1 "$SSH_KEX" 3 15 90 512 \
+               2> "$data"
+        sel=$?
+        case $sel in
+            1) SSH_CIPHERS=$(sed -n 1p < "$data")
+               SSH_MACS=$(sed -n 2p < "$data")
+               SSH_KEX=$(sed -n 3p < "$data")
+               ;;
+            255) rm -f "$data"
+                 exit 0;;
+        esac
+    fi
+    rm -f "$data"
+
+    if [ "$XMPP_CIPHERS" ]; then
+        data=$(mktemp 2>/dev/null)
+        dialog --backtitle $"LibreServer Security Configuration" \
+               --form $"\\nXMPP Ciphers:" 10 95 2 \
+               $"Ciphers:" 1 1 "$XMPP_CIPHERS" 1 15 90 512 \
+               $"ECC Curve:" 2 1 "$XMPP_ECC_CURVE" 2 15 50 50 \
+               2> "$data"
+        sel=$?
+        case $sel in
+            1) XMPP_CIPHERS=$(sed -n 1p < "$data")
+               XMPP_ECC_CURVE=$(sed -n 2p < "$data")
+               ;;
+            255) rm -f "$data"
+                 exit 0;;
+        esac
+        rm -f "$data"
+    fi
+
+    dialog --title $"Final Confirmation" \
+           --backtitle $"LibreServer Security Configuration" \
+           --defaultno \
+           --yesno $"\\nPlease confirm that you wish your security settings to be changed?\\n\\nWARNING: any mistakes made in the security settings could compromise your system, so be extra careful when answering 'yes'." 12 60
+    sel=$?
+    case $sel in
+        1) clear
+           echo $'Exiting without changing security settings'
+           exit 0;;
+        255) clear
+             echo $'Exiting without changing security settings'
+             exit 0;;
+    esac
+
+    clear
+}
+
+function regenerate_ssh_host_keys {
+    rm -f /etc/ssh/ssh_host_*
+    dpkg-reconfigure openssh-server
+    echo $'ssh host keys regenerated'
+    # remove small moduli
+    awk '$5 > 2000' /etc/ssh/moduli > ~/moduli
+    mv ~/moduli /etc/ssh/moduli
+    echo $'ssh small moduli removed'
+    systemctl restart ssh
+}
+
+function regenerate_dh_keys {
+    if [ ! -d /etc/ssl/mycerts ]; then
+        echo $'No dhparam certificates were found'
+        return
+    fi
+
+    data=$(mktemp 2>/dev/null)
+    dialog --backtitle "LibreServer Security Configuration" \
+           --title "Diffie-Hellman key length" \
+           --radiolist "The smaller length is better suited to low power embedded systems:" 12 40 3 \
+           1 "2048 bits" off \
+           2 "3072 bits" on \
+           3 "4096 bits" off 2> "$data"
+    sel=$?
+    case $sel in
+        1) rm -f "$data"
+           exit 1;;
+        255) rm -f "$data"
+             exit 1;;
+    esac
+    case $(cat "$data") in
+        1) DH_KEYLENGTH=2048;;
+        2) DH_KEYLENGTH=3072;;
+        3) DH_KEYLENGTH=4096;;
+    esac
+    rm -f "$data"
+
+    ${PROJECT_NAME}-dhparam --recalc yes -l ${DH_KEYLENGTH}
+}
+
+function renew_startssl {
+    renew_domain=
+    data=$(mktemp 2>/dev/null)
+    dialog --title $"Renew a StartSSL certificate" \
+           --backtitle $"LibreServer Security Settings" \
+           --inputbox $"Enter the domain name" 8 60 2>"$data"
+    sel=$?
+    case $sel in
+        0)
+            renew_domain=$(<"$data")
+            ;;
+    esac
+    rm -f "$data"
+
+    if [ ! "$renew_domain" ]; then
+        return
+    fi
+
+    if [[ $renew_domain == "http"* ]]; then
+        dialog --title $"Renew a StartSSL certificate" \
+               --msgbox $"Don't include the https://" 6 40
+        return
+    fi
+
+    if [ ! -f "/etc/ssl/certs/${renew_domain}.dhparam" ]; then
+        dialog --title $"Renew a StartSSL certificate" \
+               --msgbox $"An existing certificate for $renew_domain was not found" 6 40
+        return
+    fi
+
+    if [[ $renew_domain != *"."* ]]; then
+        dialog --title $"Renew a StartSSL certificate" \
+               --msgbox $"Invalid domain name: $renew_domain" 6 40
+        return
+    fi
+
+    ${PROJECT_NAME}-renew-cert -h "$renew_domain" -p startssl
+
+    exit 0
+}
+
+function renew_letsencrypt {
+    renew_domain=
+    data=$(mktemp 2>/dev/null)
+    dialog --title $"Renew a Let's Encrypt certificate" \
+           --backtitle $"LibreServer Security Settings" \
+           --inputbox $"Enter the domain name" 8 60 2>"$data"
+    sel=$?
+    case $sel in
+        0)
+            renew_domain=$(<"$data")
+            ;;
+    esac
+    rm -f "$data"
+
+    if [ ! "$renew_domain" ]; then
+        return
+    fi
+
+    if [[ $renew_domain == "http"* ]]; then
+        dialog --title $"Renew a Let's Encrypt certificate" \
+               --msgbox $"Don't include the https://" 6 40
+        return
+    fi
+
+    if [ ! -f "/etc/ssl/certs/${renew_domain}.dhparam" ]; then
+        dialog --title $"Renew a Let's Encrypt certificate" \
+               --msgbox $"An existing certificate for $renew_domain was not found" 6 40
+        return
+    fi
+
+    if [[ $renew_domain != *"."* ]]; then
+        dialog --title $"Renew a Let's Encrypt certificate" \
+               --msgbox $"Invalid domain name: $renew_domain" 6 40
+        return
+    fi
+
+    ${PROJECT_NAME}-renew-cert -h "$renew_domain" -p 'letsencrypt'
+
+    echo ''
+    read -n1 -rsp $"Press any key to continue..." key
+
+    exit 0
+}
+
+function delete_letsencrypt {
+    delete_domain=
+    data=$(mktemp 2>/dev/null)
+    dialog --title $"Delete a Let's Encrypt certificate" \
+           --backtitle $"LibreServer Security Settings" \
+           --inputbox $"Enter the domain name" 8 60 2>"$data"
+    sel=$?
+    case $sel in
+        0)
+            delete_domain=$(<"$data")
+            ;;
+    esac
+    rm -f "$data"
+
+    if [ ! "$delete_domain" ]; then
+        return
+    fi
+
+    if [[ $delete_domain == "http"* ]]; then
+        dialog --title $"Delete a Let's Encrypt certificate" \
+               --msgbox $"Don't include the https://" 6 40
+        return
+    fi
+
+    if [ ! -f "/etc/ssl/certs/${delete_domain}.dhparam" ]; then
+        dialog --title $"Delete a Let's Encrypt certificate" \
+               --msgbox $"An existing certificate for $renew_domain was not found" 6 40
+        return
+    fi
+
+    if [[ $delete_domain != *"."* ]]; then
+        dialog --title $"Delete a Let's Encrypt certificate" \
+               --msgbox $"Invalid domain name: $delete_domain" 6 40
+        return
+    fi
+
+    dialog --title $"Delete a Let's Encrypt certificate" \
+           --backtitle $"LibreServer Security Settings" \
+           --defaultno \
+           --yesno $"\\nConfirm deletion of the TLS certificate for $delete_domain ?" 7 60
+    sel=$?
+    case $sel in
+        0) ${PROJECT_NAME}-addcert -r "$delete_domain";;
+        255) exit 0;;
+    esac
+
+    exit 0
+}
+
+function create_letsencrypt {
+    new_domain=
+    data=$(mktemp 2>/dev/null)
+    dialog --title $"Create a new Let's Encrypt certificate" \
+           --backtitle $"LibreServer Security Settings" \
+           --inputbox $"Enter the domain name" 8 60 2>"$data"
+    sel=$?
+    case $sel in
+        0)
+            new_domain=$(<"$data")
+            ;;
+    esac
+    rm -f "$data"
+
+    if [ ! "$new_domain" ]; then
+        return
+    fi
+
+    if [[ $new_domain == "http"* ]]; then
+        dialog --title $"Create a new Let's Encrypt certificate" \
+               --msgbox $"Don't include the https://" 6 40
+        return
+    fi
+
+    if [[ $new_domain != *"."* ]]; then
+        dialog --title $"Create a new Let's Encrypt certificate" \
+               --msgbox $"Invalid domain name: $new_domain" 6 40
+        return
+    fi
+
+    if [ ! -d "/var/www/${new_domain}" ]; then
+        domain_found=
+        if [ -f /etc/nginx/sites-available/radicale ]; then
+            if grep -q "${new_domain}" /etc/nginx/sites-available/radicale; then
+                domain_found=1
+            fi
+        fi
+        if [ -f "/etc/nginx/sites-available/${new_domain}" ]; then
+            domain_found=1
+        fi
+        if [[ "${new_domain}" == "jitsi"* || "${new_domain}" == "meet"* ]]; then
+            domain_found=1
+        fi
+        if [[ "${new_domain}" == "chat."* ]]; then
+            domain_found=1
+        fi
+        if [ ! $domain_found ]; then
+            dialog --title $"Create a new Let's Encrypt certificate" \
+                   --msgbox $'Domain not found within /var/www' 6 40
+            return
+        fi
+    fi
+
+    ${PROJECT_NAME}-addcert -e "$new_domain" -s "$LETSENCRYPT_SERVER" --dhkey "$DH_KEYLENGTH"
+
+    exit 0
+}
+
+function update_ciphersuite {
+    RECOMMENDED_SSL_CIPHERS="$SSL_CIPHERS"
+    if [ ${#RECOMMENDED_SSL_CIPHERS} -lt 5 ]; then
+        return
+    fi
+
+    RECOMMENDED_SSL_PROTOCOLS="$SSL_PROTOCOLS"
+    if [ ${#RECOMMENDED_SSL_PROTOCOLS} -lt 5 ]; then
+        return
+    fi
+
+    RECOMMENDED_SSH_CIPHERS="$SSH_CIPHERS"
+    if [ ${#RECOMMENDED_SSH_CIPHERS} -lt 5 ]; then
+        return
+    fi
+
+    RECOMMENDED_SSH_MACS="$SSH_MACS"
+    if [ ${#RECOMMENDED_SSH_MACS} -lt 5 ]; then
+        return
+    fi
+
+    RECOMMENDED_SSH_KEX="$SSH_KEX"
+    if [ ${#RECOMMENDED_SSH_KEX} -lt 5 ]; then
+        return
+    fi
+
+    cd $WEBSITES_DIRECTORY || exit 72
+    for file in $(dir -d "*") ; do
+        sed -i "s|ssl_protocols .*|ssl_protocols $RECOMMENDED_SSL_PROTOCOLS;|g" "$WEBSITES_DIRECTORY/$file"
+        if ! grep -q "Mobile compatible ciphers" "$WEBSITES_DIRECTORY/$file"; then
+            sed -i "s|ssl_ciphers .*|ssl_ciphers '$RECOMMENDED_SSL_CIPHERS';|g" "$WEBSITES_DIRECTORY/$file"
+        else
+            sed -i "s|ssl_ciphers .*|ssl_ciphers '$SSL_CIPHERS_MOBILE';|g" "$WEBSITES_DIRECTORY/$file"
+        fi
+    done
+    fuser -k 80/tcp
+    fuser -k 443/tcp
+    systemctl restart nginx
+    write_config_param "SSL_PROTOCOLS" "$RECOMMENDED_SSL_PROTOCOLS"
+    write_config_param "SSL_CIPHERS" "$RECOMMENDED_SSL_CIPHERS"
+
+    sed -i "s|Ciphers .*|Ciphers $RECOMMENDED_SSH_CIPHERS|g" $SSH_CONFIG
+    sed -i "s|MACs .*|MACs $RECOMMENDED_SSH_MACS|g" $SSH_CONFIG
+    sed -i "s|KexAlgorithms .*|KexAlgorithms $RECOMMENDED_SSH_KEX|g" $SSH_CONFIG
+    systemctl restart ssh
+
+    write_config_param "SSH_CIPHERS" "$RECOMMENDED_SSH_CIPHERS"
+    write_config_param "SSH_MACS" "$RECOMMENDED_SSH_MACS"
+    write_config_param "SSH_KEX" "$RECOMMENDED_SSH_KEX"
+
+    dialog --title $"Update ciphersuite" \
+           --msgbox $"The ciphersuite has been updated to recommended versions" 6 40
+    exit 0
+}
+
+function pin_all_tls_certs {
+    ${PROJECT_NAME}-pin-cert all
+}
+
+function remove_pinning {
+    data=$(mktemp 2>/dev/null)
+    dialog --title $"Remove pinning for a domain" \
+           --backtitle $"LibreServer Security Settings" \
+           --inputbox $"Enter the website domain name (without https://)" 8 60 2>"$data"
+    sel=$?
+    case $sel in
+        0)
+            domain=$(<"$data")
+            if ! ${PROJECT_NAME}-pin-cert "$domain" remove; then
+                dialog --title $"Removed pinning from $domain" \
+                       --msgbox "$?" 6 40
+            fi
+            ;;
+    esac
+    rm -f "$data"
+}
+
+function store_passwords {
+    dialog --title $"Store Passwords" \
+           --backtitle $"LibreServer Security Configuration" \
+           --yesno $"\\nDo you wish to store passwords on the system? Stored passwords are convenient but carry some additional security risk." 10 60
+    sel=$?
+    case $sel in
+        0)
+            if [ -f /root/.nostore ]; then
+                read_config_param "MY_USERNAME"
+                if [ ! -f /home/$MY_USERNAME/.ssh/authorized_keys ]; then
+                    dialog --title $"Store Passwords" \
+                           --msgbox $"\\nYou should first enable key based ssh login to improve security" 8 60
+                    return
+                fi
+                if [[ $SSH_PASSWORDS == 'yes' ]]; then
+                    dialog --title $"Store Passwords" \
+                           --msgbox $"\\nYou should disable ssh passwords to improve security" 8 60
+                    return
+                fi
+                ${PROJECT_NAME}-pass --enable yes
+                dialog --title $"Store Passwords" \
+                       --msgbox $"\\nUser passwords will now be stored on the system" 8 60
+            fi
+            return
+            ;;
+        1)
+            ${PROJECT_NAME}-pass --clear yes
+            dialog --title $"Passwords were removed and will not be stored" \
+                   --msgbox $"\\nFor the best security you should now manually change passwords via web interfaces so that there is no possibility of them being recovered from the disk" 9 60
+            return
+            ;;
+        255) return;;
+    esac
+}
+
+function show_tor_bridges {
+    clear
+    bridges_list=$(grep "Bridge " /etc/tor/torrc | grep -v '##')
+    if [ ${#bridges_list} -eq 0 ]; then
+        echo $'No Tor bridges have been added'
+        return
+    fi
+    echo "${bridges_list}"
+}
+
+function add_tor_bridge {
+    data=$(mktemp 2>/dev/null)
+    dialog --backtitle $"LibreServer Control Panel" \
+           --title $"Add obfs4 Tor bridge" \
+           --form "\\n" 9 60 4 \
+           $"IP address:   " 1 1 "   .   .   .   " 1 17 16 16 \
+           $"Port:         " 2 1 "" 2 17 8 8 \
+           $"Key/Nickname: " 3 1 "" 3 17 250 250 \
+           2> "$data"
+    sel=$?
+    case $sel in
+        1) rm -f "$data"
+           return;;
+        255) rm -f "$data"
+             return;;
+    esac
+    bridge_ip_address=$(sed -n 1p < "$data")
+    bridge_port=$(sed -n 2p < "$data")
+    bridge_key=$(sed -n 3p < "$data")
+    rm -f "$data"
+    if [[ "${bridge_ip_address}" == *" "* ]]; then
+        return
+    fi
+    if [[ "${bridge_ip_address}" != *"."* ]]; then
+        return
+    fi
+    if [ ${#bridge_port} -eq 0 ]; then
+        return
+    fi
+    if [ ${#bridge_key} -eq 0 ]; then
+        return
+    fi
+    tor_add_bridge "${bridge_ip_address}" "${bridge_port}" "${bridge_key}"
+    dialog --title $"Add obfs4 Tor bridge" \
+           --msgbox $"Bridge added" 6 40
+}
+
+function remove_tor_bridge {
+    bridge_removed=
+    data=$(mktemp 2>/dev/null)
+    dialog --title $"Remove obfs4 Tor bridge" \
+           --backtitle $"LibreServer Control Panel" \
+           --inputbox $"Enter the IP address, key or Nickname of the bridge" 8 65 2>"$data"
+    sel=$?
+    case $sel in
+        0)
+            response=$(<"$data")
+            if [ ${#response} -gt 2 ]; then
+                if [[ "${response}" != *" "* ]]; then
+                    if [[ "${response}" == *"."* ]]; then
+                        if grep -q "Bridge ${response}" /etc/tor/torrc; then
+                            tor_remove_bridge "${response}"
+                            bridge_removed=1
+                        fi
+                    else
+                        if grep -q " $response" /etc/tor/torrc; then
+                            tor_remove_bridge "${response}"
+                            bridge_removed=1
+                        fi
+                    fi
+                fi
+            fi
+            ;;
+    esac
+    rm -f "$data"
+    if [ $bridge_removed ]; then
+        dialog --title $"Remove obfs4 Tor bridge" \
+               --msgbox $"Bridge removed" 6 40
+    fi
+}
+
+function add_tor_bridge_relay {
+    read_config_param 'TOR_BRIDGE_NICKNAME'
+    read_config_param 'TOR_BRIDGE_PORT'
+
+    # remove any previous bridge port from the firewall
+    if [ ${#TOR_BRIDGE_PORT} -gt 0 ]; then
+        firewall_remove "$TOR_BRIDGE_PORT" tcp
+    fi
+
+    data=$(mktemp 2>/dev/null)
+    dialog --backtitle $"LibreServer Control Panel" \
+           --title $"Become an obfs4 Tor bridge relay" \
+           --form "\\n" 8 60 2 \
+           $"Bridge Nickname: " 1 1 "$TOR_BRIDGE_NICKNAME" 1 20 250 250 \
+           2> "$data"
+    sel=$?
+    case $sel in
+        1) rm -f "$data"
+           return;;
+        255) rm -f "$data"
+             return;;
+    esac
+    bridge_nickname=$(sed -n 1p < "$data")
+    rm -f "$data"
+    if [[ "${bridge_nickname}" == *" "* ]]; then
+        return
+    fi
+    if [ ${#bridge_nickname} -eq 0 ]; then
+        return
+    fi
+    TOR_BRIDGE_NICKNAME="$bridge_nickname"
+    TOR_BRIDGE_PORT=$((20000 + RANDOM % 40000))
+    write_config_param 'TOR_BRIDGE_NICKNAME' "$TOR_BRIDGE_NICKNAME"
+    write_config_param 'TOR_BRIDGE_PORT' "$TOR_BRIDGE_PORT"
+    tor_create_bridge_relay
+    dialog --title $"You are now an obfs4 Tor bridge relay" \
+           --msgbox $"\\nIP address: $(get_ipv4_address)\\n\\nPort: ${TOR_BRIDGE_PORT}\\n\\nNickname: ${TOR_BRIDGE_NICKNAME}" 10 65
+}
+
+function remove_tor_bridge_relay {
+    tor_remove_bridge_relay
+    dialog --title $"Remove Tor bridge relay" \
+           --msgbox $"Bridge relay removed" 10 60
+}
+
+function menu_tor_bridges {
+    W=(1 $"Show bridges"
+       2 $"Add a bridge"
+       3 $"Remove a bridge"
+       4 $"Make this system into a bridge"
+       5 $"Stop being a bridge")
+
+    # shellcheck disable=SC2068
+    selection=$(dialog --backtitle $"LibreServer Administrator Control Panel" --title $"Security Settings" --menu $"Choose an operation, or ESC to go back:" 14 50 6 "${W[@]}" 3>&2 2>&1 1>&3)
+
+    if [ ! "$selection" ]; then
+        exit 0
+    fi
+
+    case $selection in
+        1)
+            show_tor_bridges
+            exit 0
+            ;;
+        2)
+            add_tor_bridge
+            exit 0
+            ;;
+        3)
+            remove_tor_bridge
+            exit 0
+            ;;
+        4)
+            add_tor_bridge_relay
+            exit 0
+            ;;
+        5)
+            remove_tor_bridge_relay
+            exit 0
+            ;;
+    esac
+}
+
+function menu_security_settings {
+    cloudflare_is_blocked=
+    cloudflare_option=$'Block Cloudflare'
+    ruleset=$(/usr/sbin/nft list ruleset)
+    if [ "$ruleset" ]; then
+	cf_comment="MITM(cloudflare)"
+	# is cloudflare already configured?
+	if [[ "$ruleset" == *"$cf_comment"* ]]; then
+	    cloudflare_option=$'Unblock Cloudflare'
+	    cloudflare_is_blocked=1
+	fi
+    fi
+    
+    W=(1 $"Passwords"
+       2 $"Run STIG tests"
+       3 $"Fix STIG test failures"
+       4 $"Show tripwire verification code"
+       5 $"Reset tripwire"
+       6 $"Enable or disable ping"
+       7 $"Show ssh host public key"
+       8 $"Tor bridges"
+       9 $"Password storage"
+       10 $"Export passwords"
+       11 $"Regenerate ssh host keys"
+       12 $"Regenerate Diffie-Hellman keys"
+       13 $"Update cipersuite"
+       14 $"Create a new Let's Encrypt certificate"
+       15 $"Renew Let's Encrypt certificate"
+       16 $"Delete a Let's Encrypt certificate"
+       17 $"Allow ssh login with passwords"
+       18 $"Show firewall"
+       19 $"$cloudflare_option")
+
+    # shellcheck disable=SC2068
+    selection=$(dialog --backtitle $"LibreServer Administrator Control Panel" --title $"Security Settings" --menu $"Choose an operation, or ESC to exit:" 25 76 25 "${W[@]}" 3>&2 2>&1 1>&3)
+
+    if [ ! "$selection" ]; then
+        exit 0
+    fi
+
+    clear
+
+    read_config_param SSL_CIPHERS
+    read_config_param SSL_PROTOCOLS
+    read_config_param SSH_CIPHERS
+    read_config_param SSH_MACS
+    read_config_param SSH_KEX
+
+    get_imap_settings
+    get_ssh_settings
+    get_xmpp_settings
+    import_settings
+    export_settings
+
+    case $selection in
+        1)
+            view_or_change_passwords
+            exit 0;
+            ;;
+        2)
+            clear
+            echo $'Running STIG tests...'
+            echo ''
+            ${PROJECT_NAME}-tests --stig showall
+            exit 0
+            ;;
+        3)
+            clear
+            echo $'Fixing any STIG failures...'
+            echo ''
+            ${PROJECT_NAME}-tests --stig fix
+            echo $'Fixes applied. You will need to run the STIG tests again to be sure that they were all fixed.'
+            exit 0
+            ;;
+        4)
+            show_tripwire_verification_code
+            any_key_verify
+            exit 0
+            ;;
+        5)
+            reset_tripwire
+	    any_key
+            exit 0
+            ;;
+
+        6)
+            ping_enable_disable
+            exit 0
+            ;;
+        7)
+            dialog --title $"SSH host public keys" \
+                   --msgbox "\\n$(get_ssh_server_key)" 12 60
+            exit 0
+            ;;
+        8)
+            menu_tor_bridges
+            exit 0
+            ;;
+        9)
+            store_passwords
+            exit 0
+            ;;
+        10)
+            export_passwords
+            exit 0
+            ;;
+        11)
+            regenerate_ssh_host_keys
+            ;;
+        12)
+            regenerate_dh_keys
+            ;;
+        13)
+            interactive_setup
+            update_ciphersuite
+            ;;
+        14)
+            create_letsencrypt
+            ;;
+        15)
+            renew_letsencrypt
+            ;;
+        16)
+            delete_letsencrypt
+            ;;
+        17)
+            allow_ssh_passwords
+            change_ssh_settings
+            exit 0
+            ;;
+        18)
+            show_firewall
+            exit 0
+            ;;
+	19)
+	    clear
+	    if [ ! "$cloudflare_is_blocked" ]; then
+		echo $'Blocking Cloudflare'
+		echo ''
+		firewall_block_cloudflare
+	    else
+		echo $'Unblocking Cloudflare'
+		echo ''
+		firewall_unblock_cloudflare
+	    fi
+	    exit 0
+	    ;;
+    esac
+
+    change_website_settings
+    change_imap_settings
+    change_ssh_settings
+    change_xmpp_settings
+}
+
+function import_settings {
+    cd "$CURRENT_DIR" || exit 24
+
+    if [ ! $IMPORT_FILE ]; then
+        return
+    fi
+
+    if [ ! -f $IMPORT_FILE ]; then
+        echo $"Import file $IMPORT_FILE not found"
+        exit 63
+    fi
+
+    if grep -q "SSL_PROTOCOLS" $IMPORT_FILE; then
+        TEMP_VALUE=$(grep "SSL_PROTOCOLS" $IMPORT_FILE | awk -F '=' '{print $2}')
+        if [ ${#TEMP_VALUE} -gt $MINIMUM_LENGTH ]; then
+            SSL_PROTOCOLS=$TEMP_VALUE
+        fi
+    fi
+    if grep -q "SSL_CIPHERS" $IMPORT_FILE; then
+        TEMP_VALUE=$(grep "SSL_CIPHERS" $IMPORT_FILE | awk -F '=' '{print $2}')
+        if [ ${#TEMP_VALUE} -gt $MINIMUM_LENGTH ]; then
+            SSL_CIPHERS=$TEMP_VALUE
+        fi
+    fi
+    if grep -q "SSH_CIPHERS" $IMPORT_FILE; then
+        TEMP_VALUE=$(grep "SSH_CIPHERS" $IMPORT_FILE | awk -F '=' '{print $2}')
+        if [ ${#TEMP_VALUE} -gt $MINIMUM_LENGTH ]; then
+            SSH_CIPHERS=$TEMP_VALUE
+        fi
+    fi
+    if grep -q "SSH_MACS" $IMPORT_FILE; then
+        TEMP_VALUE=$(grep "SSH_MACS" $IMPORT_FILE | awk -F '=' '{print $2}')
+        if [ ${#TEMP_VALUE} -gt $MINIMUM_LENGTH ]; then
+            SSH_MACS=$TEMP_VALUE
+        fi
+    fi
+    if grep -q "SSH_KEX" $IMPORT_FILE; then
+        TEMP_VALUE=$(grep "SSH_KEX" $IMPORT_FILE | awk -F '=' '{print $2}')
+        if [ ${#TEMP_VALUE} -gt $MINIMUM_LENGTH ]; then
+            SSH_KEX=$TEMP_VALUE
+        fi
+    fi
+    if grep -q "SSH_HOST_KEY_ALGORITHMS" $IMPORT_FILE; then
+        TEMP_VALUE=$(grep "SSH_HOST_KEY_ALGORITHMS" $IMPORT_FILE | awk -F '=' '{print $2}')
+        if [ ${#TEMP_VALUE} -gt $MINIMUM_LENGTH ]; then
+            SSH_HOST_KEY_ALGORITHMS=$TEMP_VALUE
+        fi
+    fi
+    if grep -q "SSH_PASSWORDS" $IMPORT_FILE; then
+        TEMP_VALUE=$(grep "SSH_PASSWORDS" $IMPORT_FILE | awk -F '=' '{print $2}')
+        if [[ $TEMP_VALUE == "yes" || $TEMP_VALUE == "no" ]]; then
+            SSH_PASSWORDS=$TEMP_VALUE
+        fi
+    fi
+    if grep -q "XMPP_CIPHERS" $IMPORT_FILE; then
+        TEMP_VALUE=$(grep "XMPP_CIPHERS" $IMPORT_FILE | awk -F '=' '{print $2}')
+        if [ ${#TEMP_VALUE} -gt $MINIMUM_LENGTH ]; then
+            XMPP_CIPHERS=$TEMP_VALUE
+        fi
+    fi
+    if grep -q "XMPP_ECC_CURVE" $IMPORT_FILE; then
+        TEMP_VALUE=$(grep "XMPP_ECC_CURVE" $IMPORT_FILE | awk -F '=' '{print $2}')
+        if [ ${#TEMP_VALUE} -gt 3 ]; then
+            XMPP_ECC_CURVE=$TEMP_VALUE
+        fi
+    fi
+}
+
+function export_settings {
+    if [ ! $EXPORT_FILE ]; then
+        return
+    fi
+
+    cd "$CURRENT_DIR" || exit 92
+
+    if [ ! -f $EXPORT_FILE ]; then
+        if [ "$SSL_PROTOCOLS" ]; then
+            echo "SSL_PROTOCOLS=$SSL_PROTOCOLS" >> $EXPORT_FILE
+        fi
+        if [ "$SSL_CIPHERS" ]; then
+            echo "SSL_CIPHERS=$SSL_CIPHERS" >> $EXPORT_FILE
+        fi
+        if [ "$SSH_CIPHERS" ]; then
+            echo "SSH_CIPHERS=$SSH_CIPHERS" >> $EXPORT_FILE
+        fi
+        if [ "$SSH_MACS" ]; then
+            echo "SSH_MACS=$SSH_MACS" >> $EXPORT_FILE
+        fi
+        if [ "$SSH_KEX" ]; then
+            echo "SSH_KEX=$SSH_KEX" >> $EXPORT_FILE
+        fi
+        if [ "$SSH_HOST_KEY_ALGORITHMS" ]; then
+            echo "SSH_HOST_KEY_ALGORITHMS=$SSH_HOST_KEY_ALGORITHMS" >> $EXPORT_FILE
+        fi
+        if [ "$SSH_PASSWORDS" ]; then
+            echo "SSH_PASSWORDS=$SSH_PASSWORDS" >> $EXPORT_FILE
+        fi
+        if [ "$XMPP_CIPHERS" ]; then
+            echo "XMPP_CIPHERS=$XMPP_CIPHERS" >> $EXPORT_FILE
+        fi
+        if [ "$XMPP_ECC_CURVE" ]; then
+            echo "XMPP_ECC_CURVE=$XMPP_ECC_CURVE" >> $EXPORT_FILE
+        fi
+        echo "Security settings exported to $EXPORT_FILE"
+        exit 0
+    fi
+
+    if [ "$SSL_PROTOCOLS" ]; then
+        if grep -q "SSL_PROTOCOLS" $EXPORT_FILE; then
+            sed -i "s|SSL_PROTOCOLS=.*|SSL_PROTOCOLS=$SSL_PROTOCOLS|g" $EXPORT_FILE
+        else
+            echo "SSL_PROTOCOLS=$SSL_PROTOCOLS" >> $EXPORT_FILE
+        fi
+    fi
+    if [ "$SSL_CIPHERS" ]; then
+        if grep -q "SSL_CIPHERS" $EXPORT_FILE; then
+            sed -i "s|SSL_CIPHERS=.*|SSL_CIPHERS=$SSL_CIPHERS|g" $EXPORT_FILE
+        else
+            echo "SSL_CIPHERS=$SSL_CIPHERS" >> $EXPORT_FILE
+        fi
+    fi
+    if [ "$SSH_CIPHERS" ]; then
+        if grep -q "SSH_CIPHERS" $EXPORT_FILE; then
+            sed -i "s|SSH_CIPHERS=.*|SSH_CIPHERS=$SSH_CIPHERS|g" $EXPORT_FILE
+        else
+            echo "SSH_CIPHERS=$SSH_CIPHERS" >> $EXPORT_FILE
+        fi
+    fi
+    if [ "$SSH_MACS" ]; then
+        if grep -q "SSH_MACS" $EXPORT_FILE; then
+            sed -i "s|SSH_MACS=.*|SSH_MACS=$SSH_MACS|g" $EXPORT_FILE
+        else
+            echo "SSH_MACS=$SSH_MACS" >> $EXPORT_FILE
+        fi
+    fi
+    if [ "$SSH_KEX" ]; then
+        if grep -q "SSH_KEX" $EXPORT_FILE; then
+            sed -i "s|SSH_KEX=.*|SSH_KEX=$SSH_KEX|g" $EXPORT_FILE
+        else
+            echo "SSH_KEX=$SSH_KEX" >> $EXPORT_FILE
+        fi
+    fi
+    if [ "$SSH_HOST_KEY_ALGORITHMS" ]; then
+        if grep -q "SSH_HOST_KEY_ALGORITHMS" $EXPORT_FILE; then
+            sed -i "s|SSH_HOST_KEY_ALGORITHMS=.*|SSH_HOST_KEY_ALGORITHMS=$SSH_HOST_KEY_ALGORITHMS|g" $EXPORT_FILE
+        else
+            echo "SSH_HOST_KEY_ALGORITHMS=$SSH_HOST_KEY_ALGORITHMS" >> $EXPORT_FILE
+        fi
+    fi
+    if [ "$SSH_PASSWORDS" ]; then
+        if grep -q "SSH_PASSWORDS" $EXPORT_FILE; then
+            sed -i "s|SSH_PASSWORDS=.*|SSH_PASSWORDS=$SSH_PASSWORDS|g" $EXPORT_FILE
+        else
+            echo "SSH_PASSWORDS=$SSH_PASSWORDS" >> $EXPORT_FILE
+        fi
+    fi
+    if [ "$XMPP_CIPHERS" ]; then
+        if grep -q "XMPP_CIPHERS" $EXPORT_FILE; then
+            sed -i "s|XMPP_CIPHERS=.*|XMPP_CIPHERS=$XMPP_CIPHERS|g" $EXPORT_FILE
+        else
+            echo "XMPP_CIPHERS=$XMPP_CIPHERS" >> $EXPORT_FILE
+        fi
+    fi
+    if [ "$XMPP_ECC_CURVE" ]; then
+        if grep -q "XMPP_ECC_CURVE" $EXPORT_FILE; then
+            sed -i "s|XMPP_ECC_CURVE=.*|XMPP_ECC_CURVE=$XMPP_ECC_CURVE|g" $EXPORT_FILE
+        else
+            echo "XMPP_ECC_CURVE=$XMPP_ECC_CURVE" >> $EXPORT_FILE
+        fi
+    fi
+    echo $"Security settings exported to $EXPORT_FILE"
+    exit 0
+}
+
+function refresh_gpg_keys {
+    for d in /home/*/ ; do
+        USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+        if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+            su -c 'torsocks gpg --refresh-keys' - "$USERNAME"
+        fi
+    done
+    exit 0
+}
+
+function htmly_hash {
+    # produces a hash corresponding to a htmly password
+    pass="$1"
+    HTMLYHASH_FILENAME=/usr/bin/htmlyhash
+
+    { echo '<?php';
+      echo "parse_str(implode(\"&\", array_slice(\$argv, 1)), \$_GET);";
+      echo "\$password = \$_GET[\"password\"];";
+      echo "\$hash = password_hash(\$password, PASSWORD_BCRYPT);";
+      echo "if (password_verify(\$password, \$hash)) {";
+      echo "  echo \$hash;";
+      echo '}';
+      echo '?>'; } > "$HTMLYHASH_FILENAME"
+
+    php $HTMLYHASH_FILENAME password="$pass"
+}
+
+function show_help {
+    echo ''
+    echo "${PROJECT_NAME}-sec"
+    echo ''
+    echo $'Alters the security settings'
+    echo ''
+    echo ''
+    echo $'  -h --help                 Show help'
+    echo $'  -e --export               Export security settings to a file'
+    echo $'  -i --import               Import security settings from a file'
+    echo $'  -r --refresh              Refresh GPG keys for all users'
+    echo $'  -b --htmlyhash [password] Returns the hash of a password for a htmly blog'
+    echo ''
+    exit 0
+}
+
+
+# Get the commandline options
+while [ $# -gt 1 ]
+do
+    key="$1"
+
+    case $key in
+        -h|--help)
+            show_help
+            ;;
+        # Export settings
+        -e|--export)
+            shift
+            EXPORT_FILE="$1"
+            ;;
+        # Export settings
+        -i|--import)
+            shift
+            IMPORT_FILE="$1"
+            ;;
+        # Refresh GPG keys
+        -r|--refresh)
+            shift
+            refresh_gpg_keys
+            ;;
+        # get a hash of the given htmly password
+        -b|--htmlyhash)
+            shift
+            htmly_hash "$1"
+            exit 0
+            ;;
+        *)
+            # unknown option
+            ;;
+    esac
+    shift
+done
+
+menu_security_settings
+
+exit 0

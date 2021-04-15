@@ -1,0 +1,868 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# User control panel
+#
+# License
+# =======
+#
+# Copyright (C) 2018-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+PROJECT_NAME='libreserver'
+
+export TEXTDOMAIN=${PROJECT_NAME}-controlpanel-user
+export TEXTDOMAINDIR="/usr/share/locale"
+
+MY_EMAIL_ADDRESS=$USER@$HOSTNAME
+GPG_ID=$(gpg --list-keys "$MY_EMAIL_ADDRESS" | sed -n '2p' | sed 's/^[ \t]*//')
+GPG_BACKUP_ID=$(gpg --list-keys "(backup key)" | sed -n '2p' | sed 's/^[ \t]*//')
+
+# If the default key is specified within gpg.conf
+if [ -f ~/.gnupg/gpg.conf ]; then
+    if grep -q "default-key" ~/.gnupg/gpg.conf; then
+        default_gpg_key=$(grep "default-key" ~/.gnupg/gpg.conf)
+        if [[ "$default_gpg_key" != *'#'* ]]; then
+            default_gpg_key=$(grep "default-key" ~/.gnupg/gpg.conf | awk -F ' ' '{print $2}')
+            if [ ${#default_gpg_key} -gt 3 ]; then
+                GPG_ID=$(gpg --list-keys "$default_gpg_key" | sed -n '2p' | sed 's/^[ \t]*//')
+            fi
+        fi
+    fi
+fi
+
+# Start including files
+
+UTILS_FILES="/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-*"
+for f in $UTILS_FILES
+do
+  source "$f"
+done
+
+APP_FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
+for f in $APP_FILES
+do
+  source "$f"
+done
+
+# End including files
+
+function any_key {
+    echo ' '
+    # shellcheck disable=SC2034
+    read -n1 -r -p $"Press any key to continue..." key
+}
+
+function remove_user_from_mailing_list {
+    # shellcheck disable=SC1003
+    USER_MAILING_LISTS=$(grep '\[' "/home/$USER/.procmailrc" | grep '\]' | awk -F '\[' '{print $2}' | awk -F '\\' '{print $1}')
+
+    i=0
+    W=()
+    list_name=()
+    while read -r listname; do
+        i=$((i+1))
+        if [[ "$listname" != *']'* && "$listname" != *'['* ]]; then
+            W+=("$i" "$listname")
+            list_name+=("$listname")
+            echo "$listname"
+        fi
+    done <<< "$USER_MAILING_LISTS"
+
+    i=$((i+1))
+    W+=("$i" $"Exit back to filtering rules menu")
+
+    # shellcheck disable=SC2068
+    list_selected=$(dialog --default-item "$i" --backtitle $"LibreServer User Control Panel" --title $"Remove yourself from a mailing list" --menu $"Select one of the following:" 24 50 17 ${W[@]} 3>&2 2>&1 1>&3)
+
+    # shellcheck disable=SC2181
+    if [ $? -eq 0 ]; then # Exit with OK
+        if [ "${list_selected}" -ne "${i}" ]; then
+            remove_list_name="${list_name[$((list_selected-1))]}"
+
+            # find the line number where the list is defined
+            line_number=0
+            i=0
+            while read -r line
+            do
+                if [[ "$line" == *"\\[${remove_list_name}\\]"* ]]; then
+                    line_number=${i}
+                fi
+                i=$((i+1))
+            done < "/home/$USER/.procmailrc"
+
+            if [ ${line_number} -eq 0 ]; then
+                # no match was found
+                return
+            fi
+
+            # recreate the file
+            if [ -f "/home/${USER}/.procmailrc_new" ]; then
+                rm "/home/${USER}/.procmailrc_new"
+            fi
+            i=0
+            clip=0
+            while read -r line
+            do
+                i=$((i+1))
+                if [ ${i} -gt $((line_number-1)) ]; then
+                    if [ ${clip} -eq 0 ]; then
+                        clip=1
+                    fi
+                    if [ ${clip} -eq 1 ]; then
+                        if [ ${i} -lt $((line_number+2)) ]; then
+                            continue
+                        else
+                            if [ ${#line} -lt 1 ]; then
+                                clip=2
+                                continue
+                            fi
+                            if [[ "$line" == ":"* || "$line" == "#"* ]]; then
+                                clip=2
+                            else
+                                continue
+                            fi
+                        fi
+                    fi
+                fi
+
+                echo "$line" >> "/home/${USER}/.procmailrc_new"
+
+                if [[ "$line" == *"\\[${remove_list_name}\\]"* ]]; then
+                    line_number=${i}
+                fi
+            done < "/home/$USER/.procmailrc"
+            cp "/home/${USER}/.procmailrc_new" "/home/${USER}/.procmailrc"
+            rm "/home/${USER}/.procmailrc_new"
+            chown "${USER}":"${USER}" "/home/${USER}/.procmailrc"
+            dialog --title $"Remove yourself from mailing list" \
+                   --msgbox $"You have been removed from ${remove_list_name}" 6 50
+        fi
+    fi
+}
+
+function add_to_mailing_list {
+    data=$(mktemp 2>/dev/null)
+    dialog --backtitle $"LibreServer User Control Panel" \
+           --title $"Subscribe to a mailing list" \
+           --form $"You can either enter a subject or an email address\\n" 11 68 4 \
+           $"List folder name:" 1 1 "" 1 35 26 25 \
+           $"Name between [] on subject line:" 2 1 "" 2 35 26 25 \
+           $"List email address:" 3 1 "" 3 35 46 45 \
+           $"Public:" 4 1 $"yes" 4 35 4 25 \
+           2> "$data"
+    sel=$?
+    case $sel in
+        1) rm -f "$data"
+           return;;
+        255) rm -f "$data"
+             return;;
+    esac
+    LIST_NAME=$(sed -n 1p < "$data")
+    LIST_SUBJECT=$(sed -n 2p < "$data")
+    LIST_EMAIL=$(sed -n 3p < "$data")
+    LIST_PUBLIC=$(sed -n 4p < "$data")
+
+    if [ ${#LIST_PUBLIC} -lt 1 ]; then
+        LIST_PUBLIC='no'
+    fi
+    if [[ $LIST_PUBLIC == $'y' || $LIST_PUBLIC == $'Y' || $LIST_PUBLIC == $'true' || $LIST_PUBLIC == $'True' || $LIST_PUBLIC == $'yes' || $LIST_PUBLIC == $'Yes' || $LIST_PUBLIC == $'YES' ]]; then
+        LIST_PUBLIC='yes'
+    else
+        LIST_PUBLIC='no'
+    fi
+    if [ ${#LIST_NAME} -lt 2 ]; then
+        dialog --title $"Add mailing list" \
+               --msgbox $"No mailing list name was given" 6 40
+        rm -f "$data"
+        return
+    fi
+    if [ ${#LIST_SUBJECT} -lt 2 ]; then
+        if [ ${#LIST_EMAIL} -lt 2 ]; then
+            dialog --title $"Add mailing list" \
+                   --msgbox $"No mailing list subject or address was given" 6 40
+            rm -f "$data"
+            return
+        fi
+    fi
+    if [ ${#LIST_SUBJECT} -gt 1 ]; then
+        "${PROJECT_NAME}-addlist" -u "$USER" -l "$LIST_NAME" \
+                       -s "$LIST_SUBJECT" --public "$LIST_PUBLIC"
+    else
+        if [[ "$LIST_EMAIL" != *"@"* || "$LIST_EMAIL" != *"."* ]]; then
+            dialog --title $"Add mailing list" \
+                   --msgbox $"Unrecognised email address" 6 40
+            rm -f "$data"
+            return
+        else
+            "${PROJECT_NAME}-addlist" -u "$USER" -l "$LIST_NAME" \
+                           -e "$LIST_EMAIL" --public "$LIST_PUBLIC"
+        fi
+    fi
+
+    dialog --title $"Add mailing list" \
+           --msgbox $"$LIST_NAME list was added" 6 40
+    rm -f "$data"
+}
+
+function email_rule_address {
+    data=$(mktemp 2>/dev/null)
+    dialog --backtitle $"LibreServer User Control Panel" \
+           --title $"Create an email rule" \
+           --form "\\n" 9 65 4 \
+           $"When email arrives from address:" 1 1 "" 1 35 24 28 \
+           $"Move to folder:" 2 1 "" 2 35 24 28 \
+           $"Public:" 3 1 $"no" 3 35 4 25 \
+           2> "$data"
+    sel=$?
+    case $sel in
+        1) rm -f "$data"
+           return;;
+        255) rm -f "$data"
+             return;;
+    esac
+    RULE_EMAIL=$(sed -n 1p < "$data")
+    RULE_FOLDER=$(sed -n 2p < "$data")
+    RULE_PUBLIC=$(sed -n 3p < "$data")
+
+    if [ ${#RULE_PUBLIC} -lt 1 ]; then
+        RULE_PUBLIC='no'
+    fi
+    if [[ $RULE_PUBLIC == $'y' || $RULE_PUBLIC == $'Y' || $RULE_PUBLIC == $'true' || $RULE_PUBLIC == $'True' || $RULE_PUBLIC == $'yes' || $RULE_PUBLIC == $'Yes' || $RULE_PUBLIC == $'YES' ]]; then
+        RULE_PUBLIC='yes'
+    else
+        RULE_PUBLIC='no'
+    fi
+    if [ ${#RULE_EMAIL} -lt 2 ]; then
+        dialog --title $"Create an email rule" \
+               --msgbox $"No email address was given" 6 40
+        rm -f "$data"
+        return
+    fi
+    if [ ${#RULE_FOLDER} -lt 2 ]; then
+        dialog --title $"Create an email rule" \
+               --msgbox $"No folder name was given" 6 40
+        rm -f "$data"
+        return
+    fi
+    if [[ "$RULE_EMAIL" != *"@"* || "$RULE_EMAIL" != *"."* ]]; then
+        dialog --title $"Create an email rule" \
+               --msgbox $"Unrecognised email address" 6 40
+        rm -f "$data"
+        return
+    fi
+
+    "${PROJECT_NAME}-addemail" -u "$USER" -e "$RULE_EMAIL" \
+                   -g "$RULE_FOLDER" --public $RULE_PUBLIC
+    dialog --title $"Create an email rule" \
+           --msgbox $"Email rule for $RULE_EMAIL was added" 6 40
+    rm -f "$data"
+}
+
+function gpg_set_trust {
+    TRUST_ADDRESS=$1
+    fpr=$(gpg --with-colons --fingerprint "$TRUST_ADDRESS" | grep fpr | head -n 1 | awk -F ':' '{print $10}')
+    if [ ${#fpr} -gt 2 ]; then
+
+        W=(1 $"I don't know or won't say"
+           2 $"I do NOT trust"
+           3 $"I trust marginally"
+           4 $"I trust fully"
+           5 $"I trust ultimately")
+
+        # shellcheck disable=SC2068
+        TRUST_LEVEL=$(dialog --backtitle $"LibreServer User Control Panel" --title $"Trust a PGP/GPG key or website domain" --menu $"Set the trust level for $TRUST_ADDRESS:" 18 70 10 "${W[@]}" 3>&2 2>&1 1>&3)
+
+        if [ ! "$TRUST_LEVEL" ]; then
+            return;
+        fi
+
+        if echo -e "trust\\n${TRUST_LEVEL}\\ny\\nsave\\n" | gpg --command-fd 0 --edit-key "$fpr"; then
+            torsocks gpg --update-trustdb
+            dialog --title $"Trust a PGP/GPG key or website domain" \
+                   --backtitle $"LibreServer User Control Panel" \
+                   --msgbox $"$TRUST_ADDRESS was set to trust level ${TRUST_LEVEL}" 6 50
+        fi
+    fi
+}
+
+function email_rule_subject {
+    data=$(mktemp 2>/dev/null)
+    dialog --backtitle $"LibreServer User Control Panel" \
+           --title $"Create an email rule" \
+           --form "\\n" 9 75 4 \
+           $"When email arrives with subject containing:" 1 1 "" 1 45 24 28 \
+           $"Move to folder:" 2 1 "" 2 45 24 28 \
+           $"Public:" 3 1 $"no" 3 45 4 25 \
+           2> "$data"
+    sel=$?
+    case $sel in
+        1) rm -f "$data"
+           return;;
+        255) rm -f "$data"
+             return;;
+    esac
+    RULE_SUBJECT=$(sed -n 1p < "$data")
+    RULE_FOLDER=$(sed -n 2p < "$data")
+    RULE_PUBLIC=$(sed -n 3p < "$data")
+
+    if [ ${#RULE_PUBLIC} -lt 1 ]; then
+        RULE_PUBLIC='no'
+    fi
+    if [[ $RULE_PUBLIC == $'y' || $RULE_PUBLIC == $'Y' || $RULE_PUBLIC == $'true' || $RULE_PUBLIC == $'True' || $RULE_PUBLIC == $'yes' || $RULE_PUBLIC == $'Yes' || $RULE_PUBLIC == $'YES' ]]; then
+        RULE_PUBLIC='yes'
+    else
+        RULE_PUBLIC='no'
+    fi
+    if [ ${#RULE_SUBJECT} -lt 2 ]; then
+        dialog --title $"Create an email rule" \
+               --msgbox $"No subject text was given" 6 40
+        rm -f "$data"
+        return
+    fi
+    if [ ${#RULE_FOLDER} -lt 2 ]; then
+        dialog --title $"Create an email rule" \
+               --msgbox $"No folder name was given" 6 40
+        rm -f "$data"
+        return
+    fi
+
+    "${PROJECT_NAME}-addemail" -u "$USER" -s "$RULE_SUBJECT" \
+                   -g "$RULE_FOLDER" --public "$RULE_PUBLIC"
+    dialog --title $"Create an email rule" \
+           --msgbox $"Email rule for subject '$RULE_SUBJECT' was added" 6 40
+    rm -f "$data"
+}
+
+function block_unblock_email {
+    blockstr=$"Block or unblock emails from a given address"
+    data=$(mktemp 2>/dev/null)
+    dialog --backtitle $"LibreServer User Control Panel" \
+           --title "$blockstr" \
+           --form "\\n" 8 65 3 \
+           $"When email arrives from address:" 1 1 "" 1 35 24 100 \
+           $"Block it:" 2 1 "yes" 2 35 4 4 \
+           2> "$data"
+    sel=$?
+    case $sel in
+        1) rm -f "$data"
+           return;;
+        255) rm -f "$data"
+             return;;
+    esac
+    BLOCK_EMAIL=$(sed -n 1p < "$data")
+    BLOCK=$(sed -n 2p < "$data")
+    if [ ${#BLOCK_EMAIL} -lt 2 ]; then
+        dialog --title "$blockstr" \
+               --msgbox $"No email address was given" 6 40
+        return
+    fi
+    if [[ "$BLOCK_EMAIL" != *"@"* || "$BLOCK_EMAIL" != *"."* ]]; then
+        dialog --title "$blockstr" \
+               --msgbox $"Unrecognised email address" 6 40
+        rm -f "$data"
+        return
+    fi
+    if [[ $BLOCK == "y"* || $BLOCK == "Y"* ]]; then
+        "${PROJECT_NAME}-ignore" -u "$USER" -e "$BLOCK_EMAIL"
+        dialog --title $"Block an email" \
+               --msgbox "Email from $BLOCK_EMAIL is now blocked" 6 75
+    else
+        "${PROJECT_NAME}-unignore" -u "$USER" -e "$BLOCK_EMAIL"
+        dialog --title $"Unblock an email" \
+               --msgbox "Email from $BLOCK_EMAIL is now unblocked" 6 75
+    fi
+    rm -f "$data"
+}
+
+function block_unblock_subject {
+    blockstr=$"Block or unblock emails with text in the subject line"
+    data=$(mktemp 2>/dev/null)
+    dialog --backtitle $"LibreServer User Control Panel" \
+           --title "$blockstr" \
+           --form "\\n" 8 70 3 \
+           $"When email arrives with subject text:" 1 1 "" 1 40 24 28 \
+           $"Block it:" 2 1 "yes" 2 40 4 4 \
+           2> "$data"
+    sel=$?
+    case $sel in
+        1) rm -f "$data"
+           return;;
+        255) rm -f "$data"
+             return;;
+    esac
+    BLOCK_SUBJECT=$(sed -n 1p < "$data")
+    BLOCK=$(sed -n 2p < "$data")
+    if [ ${#BLOCK_SUBJECT} -lt 2 ]; then
+        dialog --title "$blockstr" \
+               --msgbox $"No subject was given" 6 40
+        rm -f "$data"
+        return
+    fi
+    if [[ $BLOCK == "y"* || $BLOCK == "Y"* ]]; then
+        "${PROJECT_NAME}-ignore" -u "$USER" -t "$BLOCK_SUBJECT"
+        dialog --title $"Block an email" \
+               --msgbox $"Email with subject $BLOCK_SUBJECT is now blocked" 6 40
+    else
+        "${PROJECT_NAME}-unignore" -u "$USER" -t "$BLOCK_SUBJECT"
+        dialog --title $"Unblock an email" \
+               --msgbox $"Email with subject $BLOCK_SUBJECT is now unblocked" 6 40
+    fi
+    rm -f "$data"
+}
+
+function show_gpg_key {
+    GPG_FINGERPRINT=$(gpg --fingerprint "$GPG_ID" | sed -n '2p' | sed 's/^[ \t]*//')
+    GPG_DATE=$(gpg --fingerprint "$GPG_ID" | grep -i "pub" | head -n 1 | awk -F ' ' '{print $3}')
+    dialog --title $"My PGP/GPG Key" \
+           --backtitle $"LibreServer User Control Panel" \
+           --msgbox $"Email Address: $MY_EMAIL_ADDRESS\\n\\nKey ID: $GPG_ID\\n\\nFingerprint: $GPG_FINGERPRINT\\n\\nCreated: $GPG_DATE" 12 70
+    clear
+    echo $"Your GPG/PGP public key:"
+    gpg --armor --export "$GPG_ID" | qrencode -t UTF8
+    any_key
+}
+
+function show_full_gpg_key {
+    clear
+    echo ''
+    echo ''
+    echo ''
+    gpg --armor --export "$GPG_ID"
+    echo ''
+    echo ''
+    echo ''
+    gpg --armor --export-secret-key "$GPG_ID"
+    any_key
+}
+
+function publish_gpg_key {
+    torsocks gpg --send-key "$GPG_ID"
+    if [ "$GPG_BACKUP_ID" ]; then
+        torsocks gpg --send-key "$GPG_BACKUP_ID"
+    fi
+    dialog --title $"Publish your PGP/GPG key" \
+           --msgbox $"Your key has now been published" 6 40
+}
+
+function refresh_gpg_keys {
+    torsocks gpg --refresh-keys
+    dialog --title $"Refresh PGP/GPG keys" \
+           --msgbox $"Your keys have been refreshed" 6 40
+}
+
+function add_gpg_key {
+    data=$(mktemp 2>/dev/null)
+    dialog --title $"Enter email address, Key ID or full key below" \
+           --backtitle $"LibreServer User Control Panel" \
+           --editbox "$data" 8 60
+    sel=$?
+    case $sel in
+        0)
+            ADD_EMAIL_ADDRESS=$(<"$data")
+            if [ ${#ADD_EMAIL_ADDRESS} -gt 2 ]; then
+
+                address_is_valid=
+
+                if [[ "$ADD_EMAIL_ADDRESS" == *"@"* && "$ADD_EMAIL_ADDRESS" == *"."* ]]; then
+                    address_is_valid=1
+                fi
+                if [[ "$ADD_EMAIL_ADDRESS" == "0x"* ]]; then
+                    address_is_valid=1
+                fi
+                publicstr=$"BEGIN PGP PUBLIC KEY BLOCK"
+                if [[ "$ADD_EMAIL_ADDRESS" == *"$publicstr"* ]]; then
+                    address_is_valid=1
+                fi
+
+                if [ $address_is_valid ]; then
+                    clear
+                    if [[ "$ADD_EMAIL_ADDRESS" == *"$publicstr"* ]]; then
+                        echo "$ADD_EMAIL_ADDRESS" | gpg --import
+                        dialog --title $"Add someone's PGP/GPG key" \
+                               --backtitle $"LibreServer User Control Panel" \
+                               --msgbox $"GPG public key was imported" 6 50
+                    else
+                        torsocks gpg --search-keys "$ADD_EMAIL_ADDRESS"
+                        gpg_set_trust "$ADD_EMAIL_ADDRESS"
+                    fi
+                else
+                    dialog --title $"Unrecognised email address" \
+                           --backtitle $"LibreServer User Control Panel" \
+                           --msgbox $"This doesn't look like an email address or key ID" 6 50
+                fi
+            fi
+            ;;
+    esac
+    rm "$data"
+}
+
+function remove_gpg_key {
+    data=$(mktemp 2>/dev/null)
+    dialog --title $"Remove someone's PGP/GPG key" \
+           --backtitle $"LibreServer User Control Panel" \
+           --inputbox $"Enter their email address or key ID below" 8 60 2>"$data"
+    sel=$?
+    case $sel in
+        0)
+            REMOVE_EMAIL_ADDRESS=$(<"$data")
+            if [ ${#REMOVE_EMAIL_ADDRESS} -gt 2 ]; then
+                if [[ $REMOVE_EMAIL_ADDRESS == *"@"* && $REMOVE_EMAIL_ADDRESS == *"."* ]]; then
+                    if [[ "$REMOVE_EMAIL_ADDRESS" != "$MY_EMAIL_ADDRESS" ]]; then
+                        clear
+                        gpg --delete-key "$REMOVE_EMAIL_ADDRESS"
+                    else
+                        dialog --title $"Remove someone's PGP/GPG key" \
+                               --backtitle $"LibreServer User Control Panel" \
+                               --msgbox $"It's not a good idea to remove your own encryption key" 6 65
+                    fi
+                else
+                    if [[ $REMOVE_EMAIL_ADDRESS == "0x"* ]]; then
+                        clear
+                        gpg --delete-key "$REMOVE_EMAIL_ADDRESS"
+                    else
+                        dialog --title $"Unrecognised email address" \
+                               --backtitle $"LibreServer User Control Panel" \
+                               --msgbox $"This doesn't look like an email address" 6 50
+                    fi
+                fi
+            fi
+            ;;
+    esac
+    rm -f "$data"
+}
+
+function add_ssh_key {
+    data=$(mktemp 2>/dev/null)
+    dialog --title $"Add an ssh key for logging in" \
+           --backtitle $"LibreServer User Control Panel" \
+           --inputbox $"This will allow you to log into ${PROJECT_NAME} if you have an ssh key on your system, and provides much stronger security than simply using a login password.\\n\\nWARNING: If you make any mistakes here then you may not be able to log in and will need to get the administrator to clear your ssh authorized_keys file." 15 60 2>"$data"
+    sel=$?
+    case $sel in
+        0)
+            SSH_PUBLIC_KEY=$(<"$data")
+            if [ ${#SSH_PUBLIC_KEY} -gt 20 ]; then
+                if [[ "$SSH_PUBLIC_KEY" == 'ssh-'* ]]; then
+                    if [ ! -d "/home/$USER/.ssh" ]; then
+                        mkdir "/home/$USER/.ssh"
+                    fi
+                    if [ ! -f "/home/$USER/.ssh/authorized_keys" ]; then
+                        touch "/home/$USER/.ssh/authorized_keys"
+                    fi
+                    if ! grep -q "$SSH_PUBLIC_KEY" "/home/$USER/.ssh/authorized_keys"; then
+                        echo "$SSH_PUBLIC_KEY" >> "/home/$USER/.ssh/authorized_keys"
+                        dialog --title $"New ssh key added" \
+                               --backtitle $"LibreServer User Control Panel" \
+                               --msgbox $"Your ssh key has now been added" 6 50
+                    else
+                        dialog --title $"ssh key already added" \
+                               --backtitle $"LibreServer User Control Panel" \
+                               --msgbox $"That ssh key has already been added" 6 50
+                    fi
+                else
+                    dialog --title $"Unrecognised ssh public key" \
+                           --backtitle $"LibreServer User Control Panel" \
+                           --msgbox $"This doesn't look like an ssh key" 6 50
+                fi
+            fi
+            ;;
+    esac
+    rm -f "$data"
+}
+
+function remove_ssh_key {
+    data=$(mktemp 2>/dev/null)
+    dialog --title $"Remove an ssh key for logging in" \
+           --backtitle $"LibreServer User Control Panel" \
+           --inputbox $"Enter the ssh public key which is to be removed. This can be just the address at the end.\\n\\nWARNING: If you make any mistakes here then you may not be able to log in and will need to get the administrator to clear your ssh authorized_keys file." 15 60 2>"$data"
+    sel=$?
+    case $sel in
+        0)
+            SSH_PUBLIC_KEY=$(<"$data")
+            if [ ${#SSH_PUBLIC_KEY} -gt 5 ]; then
+                if [ -f "/home/$USER/.ssh/authorized_keys" ]; then
+                    sed -i "s|.*${SSH_PUBLIC_KEY}.*||g" "/home/$USER/.ssh/authorized_keys"
+                    dialog --title $"Remove an ssh public key" \
+                           --backtitle $"LibreServer User Control Panel" \
+                           --msgbox $"The ssh key has been removed" 6 50
+                fi
+            fi
+            ;;
+    esac
+    rm -f "$data"
+}
+
+function sign_gpg_key {
+    data=$(mktemp 2>/dev/null)
+    dialog --title $"Sign a PGP/GPG key or website domain" \
+           --backtitle $"LibreServer User Control Panel" \
+           --inputbox $"Enter the Key ID, address or domain to be signed.\\n\\nIf you are signing a website domain then include the https:// at the beginning.\\n\\nIf you are signing an ssh key then include ssh:// before the domain name." 14 75 2>"$data"
+    sel=$?
+    case $sel in
+        0)
+            SIGN_ADDRESS=$(<"$data")
+            if [ ${#SIGN_ADDRESS} -gt 2 ]; then
+                clear
+                torsocks gpg --search "$SIGN_ADDRESS"
+                fpr=$(gpg --with-colons --fingerprint "$SIGN_ADDRESS" | grep fpr | head -n 1 | awk -F ':' '{print $10}')
+                if [ ${#fpr} -gt 2 ]; then
+                    if torsocks gpg --sign-key "$fpr"; then
+                        torsocks gpg --update-trustdb
+                        dialog --title $"Sign a PGP/GPG key" \
+                               --backtitle $"LibreServer User Control Panel" \
+                               --msgbox $"$SIGN_ADDRESS was signed" 6 50
+                    fi
+                fi
+            fi
+            ;;
+    esac
+    rm -f "$data"
+}
+
+function mutt_set_avatar {
+    data=$(mktemp 2>/dev/null)
+    dialog --title $"Set your email avatar image" \
+           --backtitle $"LibreServer User Control Panel" \
+           --inputbox $"Enter a filename or URL for an image which will be used by mutt as your avatar." 10 65 2>"$data"
+    sel=$?
+    case $sel in
+        0)
+            AVATAR_IMAGE=$(<"$data")
+	    clear
+	    if ! /usr/local/bin/${PROJECT_NAME}-email-avatar "$AVATAR_IMAGE"; then
+                dialog --title $"Set your email avatar image" \
+                       --backtitle $"LibreServer User Control Panel" \
+                       --msgbox $"\nEmail avatar could not be set" 7 50
+	    else
+                dialog --title $"Set your email avatar image" \
+                       --backtitle $"LibreServer User Control Panel" \
+                       --msgbox $"\nEmail avatar created" 7 50
+	    fi
+	    ;;
+    esac
+    rm -f "$data"
+}
+
+function gpg_key_trust {
+    data=$(mktemp 2>/dev/null)
+    dialog --title $"Trust a PGP/GPG key or website domain" \
+           --backtitle $"LibreServer User Control Panel" \
+           --inputbox $"Enter the Key ID, address or domain to be trusted.\\n\\nIf you are trusting a website domain then include the https:// at the beginning.\\n\\nIf you are trusting an ssh key then include ssh:// before the domain name." 14 75 2>"$data"
+    sel=$?
+    case $sel in
+        0)
+            TRUST_ADDRESS=$(<"$data")
+            if [ ${#TRUST_ADDRESS} -gt 2 ]; then
+                clear
+                torsocks gpg --search "$TRUST_ADDRESS"
+                gpg_set_trust "$TRUST_ADDRESS"
+            fi
+            ;;
+    esac
+    rm -f "$data"
+}
+
+function menu_encryption_keys {
+    while true
+    do
+        W=(1 $"Show your PGP/GPG key"
+           2 $"Show your full PGP/GPG key, including private key"
+           3 $"Publish your PGP/GPG key so that others can find it"
+           4 $"Add someone's PGP/GPG key"
+           5 $"Remove someone's PGP/GPG key"
+           6 $"Sign a PGP/GPG key or website domain"
+           7 $"Refresh your PGP/GPG keys"
+           8 $"Add an ssh key for logging in"
+           9 $"Remove an ssh key for logging in"
+           10 $"Set the trust level for a PGP/GPG key")
+
+        # shellcheck disable=SC2068
+        selection=$(dialog --backtitle $"LibreServer User Control Panel" --title $"My Encryption Keys" --menu $"Choose an operation, or ESC for main menu:" 19 70 11 "${W[@]}" 3>&2 2>&1 1>&3)
+
+        if [ ! "$selection" ]; then
+            break
+        fi
+
+        case $selection in
+            1) show_gpg_key;;
+            2) show_full_gpg_key;;
+            3) publish_gpg_key;;
+            4) add_gpg_key;;
+            5) remove_gpg_key;;
+            6) sign_gpg_key;;
+            7) refresh_gpg_keys;;
+            8) add_ssh_key;;
+            9) remove_ssh_key;;
+            10) gpg_key_trust;;
+        esac
+    done
+}
+
+function menu_email {
+    while true
+    do
+        W=(1 $"Add yourself to a mailing list"
+           2 $"Remove yourself from a mailing list"
+           3 $"Add an email rule for an address"
+           4 $"Add an email rule for a subject"
+           5 $"Block or unblock an email address"
+           6 $"Block or unblock email with subject text")
+
+        # shellcheck disable=SC2068
+        selection=$(dialog --backtitle $"LibreServer User Control Panel" --title $"Change Email Filtering Rules" --menu $"Choose an operation, or ESC for main menu:" 14 70 7 "${W[@]}" 3>&2 2>&1 1>&3)
+
+        if [ ! "$selection" ]; then
+            break
+        fi
+
+        case $selection in
+            1) add_to_mailing_list;;
+            2) remove_user_from_mailing_list;;
+            3) email_rule_address;;
+            4) email_rule_subject;;
+            5) block_unblock_email;;
+            6) block_unblock_subject;;
+        esac
+    done
+}
+
+function menu_admin {
+    if [ ! -f /etc/sudoers ]; then
+        clear
+        exit 0
+    fi
+    sudo /usr/local/bin/control
+}
+
+function menu_run_client_app {
+    detect_installable_apps
+
+    W=()
+    appnames=()
+    n=1
+    app_index=0
+    # shellcheck disable=SC2068
+    for a in ${APPS_AVAILABLE[@]}
+    do
+        if [[ ${APPS_INSTALLED[$app_index]} != "0" ]]; then
+            if [[ $(function_exists "run_client_${a}") == "1" ]]; then
+                W+=("$n" "$a")
+                n=$((n+1))
+                appnames+=("$a")
+            fi
+        fi
+        app_index=$((app_index+1))
+    done
+    if [ $n -le 1 ]; then
+        return
+    fi
+
+    # shellcheck disable=SC2086
+    selection=$(dialog --backtitle $"LibreServer" --title $"Run an App" --menu $"Choose an operation, or ESC for main menu:" 16 70 20 "${W[@]}" 3>&2 2>&1 1>&3)
+
+    if [ ! "$selection" ]; then
+        return
+    fi
+
+    app_index=$((selection-1))
+    chosen_app=${appnames[$app_index]}
+    "run_client_${chosen_app}"
+}
+
+function show_your_email_address {
+    GPG_FINGERPRINT=$(gpg --fingerprint "$GPG_ID" | sed -n '2p' | sed 's/^[ \t]*//')
+    GPG_DATE=$(gpg --fingerprint "$GPG_ID" | grep -i "pub" | head -n 1 | awk -F ' ' '{print $3}')
+    onion_domain=
+    if [ -f "$HOME/.email_onion_domain" ]; then
+        onion_domain=$(cat "$HOME/.email_onion_domain")
+    fi
+    dialog_height=14
+    onionemailstr=
+    if [[ "$HOSTNAME" != *'.onion' && "$onion_domain" ]]; then
+        onionemailstr="\\n\\nOnion Email: ${USER}@${onion_domain}"
+        dialog_height=$((dialog_height+3))
+    fi
+    msgstrbase=$"\\nYou can press SHIFT and then drag the mouse and right click to copy.\\n\\nEmail Address: ${MY_EMAIL_ADDRESS}${onionemailstr}\\n\\nKey ID: ${GPG_ID}\\n\\nFingerprint: ${GPG_FINGERPRINT}\\n\\nCreated: ${GPG_DATE}"
+
+    dialog --title $"Show your Email Address" \
+           --backtitle $"LibreServer User Control Panel" \
+           --msgbox "${msgstrbase}" $dialog_height 100
+
+    if [ "$onion_domain" ]; then
+        clear
+        echo ''
+        echo $'Your onion email address:'
+        echo ''
+        echo -n "${USER}@${onion_domain}" | qrencode -t UTF8
+        echo ''
+        any_key
+    fi
+}
+
+function menu_top_level {
+    while true
+    do
+        W=(1 $"Use Email"
+           2 $"Show your Email Address"
+           3 $"Change Email Filtering/Blocking Rules"
+	   4 $"Set Email avatar image"
+           5 $"Run an App"
+           6 $"Browse the Web"
+           7 $"My Encryption Keys"
+           8 $"Administrator controls"
+           9 $"Exit to the command line")
+
+        # shellcheck disable=SC2068
+        selection=$(dialog --backtitle $"LibreServer User Control Panel" --title $"User Control Panel" --menu $"Choose an operation, or ESC to log out:" 20 60 12 "${W[@]}" 3>&2 2>&1 1>&3)
+        if [ ! "$selection" ]; then
+            kill -HUP "$(pgrep -s 0 -o)"
+        fi
+
+        case $selection in
+            1) mutt;;
+            2) show_your_email_address;;
+            3) menu_email;;
+	    4) mutt_set_avatar;;
+            5) menu_run_client_app;;
+            6) torify elinks -no-home;;
+            7) menu_encryption_keys;;
+            8) menu_admin;;
+            9) break;;
+        esac
+    done
+}
+
+gpg_agent_enable "$USER"
+menu_top_level
+clear
+# shellcheck disable=SC1090
+. ~/.bashrc
+if [ -f ~/motd ]; then
+    cat ~/motd
+else
+    cat /etc/motd
+fi
+if [ -f ~/.feeds ]; then
+    if [ -f ~/.feeds_motd ]; then
+        cat ~/.feeds_motd
+        echo ''
+    fi
+fi
+echo -e $'Type "sudo su" for root access, or "control" to restart\nthe control panel.'
+echo ''
+exit 0

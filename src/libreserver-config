@@ -1,0 +1,742 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Interactively creates a configuration file for use with the main
+# libreserver command
+#
+# License
+# =======
+#
+# Copyright (C) 2015-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+NO_OF_ARGS=$#
+
+PROJECT_NAME='libreserver'
+
+# username created by default within a debian image
+GENERIC_IMAGE_USERNAME='libreserver'
+
+export TEXTDOMAIN=${PROJECT_NAME}-config
+export TEXTDOMAINDIR="/usr/share/locale"
+
+# Web site
+LIBRESERVER_WEBSITE="https://libreserver.org or http://yjxlc3imv7obva4grjae6u3qw527koaytrgjgdp364hmthrst3jodiid.onion"
+
+# Minimum number of characters in a password
+MINIMUM_PASSWORD_LENGTH=$(grep 'MINIMUM_PASSWORD_LENGTH=' "/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-passwords" | head -n 1 | awk -F '=' '{print $2}')
+
+# file containing new password
+IMAGE_PASSWORD_FILE=/root/login.txt
+
+MENUCONFIG_NONINTERACTIVE='no'
+MY_USERNAME=
+DEFAULT_DOMAIN_NAME=
+DEFAULT_DOMAIN_CODE=
+MY_EMAIL_ADDRESS=
+SYSTEM_TYPE='full'
+INSTALLING_ON_BBB="no"
+DDNS_PROVIDER=
+DDNS_USERNAME=
+DDNS_PASSWORD=
+MY_NAME=
+LOCAL_NETWORK_STATIC_IP_ADDRESS=
+ROUTER_IP_ADDRESS=
+ENABLE_BATMAN=
+DEBIAN_REPO=
+NAMESERVER1=
+NAMESERVER2=
+DOKUWIKI_TITLE=
+DOKUWIKI_DOMAIN_NAME=
+DOKUWIKI_CODE=
+HTMLY_TITLE=
+HTMLY_DOMAIN_NAME=
+HTMLY_CODE=
+HUBZILLA_DOMAIN_NAME=
+HUBZILLA_CODE=
+GOGS_DOMAIN_NAME=
+GOGS_CODE=
+USB_DRIVE=/dev/sdb1
+HWRNG_TYPE=
+ENABLE_SOCIAL_KEY_MANAGEMENT=
+WIFI_INTERFACE=wlan0
+WIFI_TYPE='wpa2-psk'
+WIFI_SSID=
+WIFI_PASSPHRASE=
+WIFI_HOTSPOT=
+WIFI_NETWORKS_FILE=~/${PROJECT_NAME}-wifi.cfg
+BATMAN_CELLID='any'
+WIFI_CHANNEL=
+CONFIGURATION_FILE=
+DH_KEYLENGTH=
+MINIMAL_INSTALL="yes"
+DEFAULT_LANGUAGE='en_GB.UTF-8'
+ONION_ONLY="no"
+SELECTED_USERNAME=
+
+VALID_CODE=
+
+PROJECT_INSTALL_DIR=/usr/local/bin
+if [ -f /usr/bin/${PROJECT_NAME} ]; then
+    PROJECT_INSTALL_DIR=/usr/bin
+fi
+
+function please_wait {
+        local str width height length
+
+        width=$(tput cols)
+        height=$(tput lines)
+        str=$"Please wait"
+        length=${#str}
+        clear
+        tput cup $((height / 2)) $(((width / 2) - (length / 2)))
+        echo "$str"
+        tput cup $((height * 3 / 5)) $(((width / 2)))
+        echo -n ''
+}
+
+source "$PROJECT_INSTALL_DIR/${PROJECT_NAME}-vars"
+
+UTILS_FILES="/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-*"
+for f in $UTILS_FILES
+do
+    source "$f"
+done
+
+APP_FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
+for f in $APP_FILES
+do
+    source "$f"
+done
+
+function show_help {
+    echo ''
+    echo $"${PROJECT_NAME}-config -f [config filename] -m [min password length]"
+    echo ''
+    echo $'Creates an inventory of remote backup locations'
+    echo ''
+    echo ''
+    echo $'  -h --help                         Show help'
+    echo $"  -f --filename                     Configuration file (usually ${PROJECT_NAME}.cfg)"
+    echo $'  -m --min                          Minimum password length (characters)'
+    echo $'  -w --www                          LibreServer web site'
+    echo $'  -o --onion [yes|no]               Whether to only create .onion sites'
+    echo $'     --minimal [yes|no]             For minimalistic "consumer grade" installs'
+    echo $'  -n --noninteractive [yes|no]      Noninteractive for CI builds'
+    echo $'  -d --domain [domain name]         Your domain name'
+    echo ''
+    exit 0
+}
+
+function install_dialog {
+    if [ ! -f /usr/bin/dialog ]; then
+        INSTALL_PACKAGES dialog
+    fi
+}
+
+function choose_email_address {
+    if [[ $ONION_ONLY != "no" ]]; then
+        EMAIL_ADDRESS=$MY_USERNAME@$DEFAULT_DOMAIN_NAME
+    else
+        EMAIL_ADDRESS=$(grep 'MY_EMAIL_ADDRESS' temp.cfg | awk -F '=' '{print $2}')
+        if [ ! "$EMAIL_ADDRESS" ]; then
+            EMAIL_ADDRESS=$MY_USERNAME@$DEFAULT_DOMAIN_NAME
+        fi
+        if [ ${#MY_EMAIL_ADDRESS} -lt 5 ]; then
+            EMAIL_ADDRESS=$MY_USERNAME@$DEFAULT_DOMAIN_NAME
+        fi
+        MY_EMAIL_ADDRESS=$EMAIL_ADDRESS
+    fi
+    save_configuration_values
+}
+
+function choose_default_domain_name {
+    if [[ $ONION_ONLY != "no" ]]; then
+        DEFAULT_DOMAIN_NAME="${LOCAL_NAME}.local"
+    else
+        if [[ "$MENUCONFIG_NONINTERACTIVE" != 'no' ]]; then
+            if [ ! "$DEFAULT_DOMAIN_NAME" ]; then
+                echo $'No domain name was given'
+                exit 87
+            fi
+            save_configuration_values
+            return
+        fi
+        DEFAULT_DOMAIN_DETAILS_COMPLETE=
+        while [ ! $DEFAULT_DOMAIN_DETAILS_COMPLETE ]
+        do
+            data=$(mktemp 2>/dev/null)
+
+            dialog --backtitle $"LibreServer Configuration" \
+                   --inputbox $"Which domain name should your email/XMPP/IRC/Mumble be associated with?" 10 45 \
+                   "$(grep 'DEFAULT_DOMAIN_NAME' temp.cfg | awk -F '=' '{print $2}')" 2> "$data"
+            sel=$?
+            case $sel in
+                0) DEFAULT_DOMAIN_NAME=$(cat "$data");;
+                1) rm -f "$data"
+                   exit 1;;
+                255) rm -f "$data"
+                     exit 1;;
+            esac
+
+            if [ "$DEFAULT_DOMAIN_NAME" ]; then
+                TEST_DOMAIN_NAME=$DEFAULT_DOMAIN_NAME
+                validate_domain_name
+                if [[ "$TEST_DOMAIN_NAME" != "$DEFAULT_DOMAIN_NAME" ]]; then
+                    DEFAULT_DOMAIN_NAME=
+                    dialog --title $"Domain name validation" --msgbox "$TEST_DOMAIN_NAME" 15 50
+                else
+                    DEFAULT_DOMAIN_DETAILS_COMPLETE="yes"
+                fi
+            fi
+        done
+    fi
+    save_configuration_values
+}
+
+function choose_debian_repo {
+    if [[ "$MINIMAL_INSTALL" == "no" && "$MENUCONFIG_NONINTERACTIVE" == 'no' ]]; then
+
+        W=(1 $"United Kingdom"
+           2 $"United States"
+           3 $"Australia"
+           4 $"Austria"
+           5 $"Belarus"
+           6 $"Belgium"
+           7 $"Bosnia and Herzegovina"
+           8 $"Brazil"
+           9 $"Bulgaria"
+           10 $"Canada"
+           11 $"Chile"
+           12 $"China"
+           13 $"Croatia"
+           14 $"Czech Republic"
+           15 $"Denmark"
+           16 $"El Salvador"
+           17 $"Estonia"
+           18 $"Finland"
+           19 $"France 1"
+           20 $"France 2"
+           21 $"Germany 1"
+           22 $"Germany 2"
+           23 $"Greece"
+           24 $"Hungary"
+           25 $"Iceland"
+           26 $"Iran"
+           27 $"Ireland"
+           28 $"Italy"
+           29 $"Japan"
+           30 $"Korea"
+           31 $"Lithuania"
+           32 $"Mexico"
+           33 $"Netherlands"
+           34 $"New Caledonia"
+           35 $"New Zealand"
+           36 $"Norway"
+           37 $"Poland"
+           38 $"Portugal"
+           39 $"Romania"
+           40 $"Russia"
+           41 $"Slovakia"
+           42 $"Slovenia"
+           43 $"Spain"
+           44 $"Sweden"
+           45 $"Switzerland"
+           46 $"Taiwan"
+           47 $"Thailand"
+           48 $"Turkey"
+           49 $"Ukraine")
+
+        # shellcheck disable=SC2068
+        selection=$(dialog --backtitle $"LibreServer Configuration" --title $"Debian Repo" --menu $"Where to download Debian packages from:" 24 60 49 "${W[@]}" 3>&2 2>&1 1>&3)
+
+        if [ ! "$selection" ]; then
+            selection='1'
+        fi
+
+        case $selection in
+            1) DEBIAN_REPO='ftp.uk.debian.org';;
+            2) DEBIAN_REPO='ftp.us.debian.org';;
+            3) DEBIAN_REPO='ftp.au.debian.org';;
+            4) DEBIAN_REPO='ftp.at.debian.org';;
+            5) DEBIAN_REPO='ftp.by.debian.org';;
+            6) DEBIAN_REPO='ftp.be.debian.org';;
+            7) DEBIAN_REPO='ftp.ba.debian.org';;
+            8) DEBIAN_REPO='ftp.br.debian.org';;
+            9) DEBIAN_REPO='ftp.bg.debian.org';;
+            10) DEBIAN_REPO='ftp.ca.debian.org';;
+            11) DEBIAN_REPO='ftp.cl.debian.org';;
+            12) DEBIAN_REPO='ftp.cn.debian.org';;
+            13) DEBIAN_REPO='ftp.hr.debian.org';;
+            14) DEBIAN_REPO='ftp.cz.debian.org';;
+            15) DEBIAN_REPO='ftp.dk.debian.org';;
+            16) DEBIAN_REPO='ftp.sv.debian.org';;
+            17) DEBIAN_REPO='ftp.ee.debian.org';;
+            18) DEBIAN_REPO='ftp.fi.debian.org';;
+            19) DEBIAN_REPO='ftp2.fr.debian.org';;
+            20) DEBIAN_REPO='ftp.fr.debian.org';;
+            21) DEBIAN_REPO='ftp2.de.debian.org';;
+            22) DEBIAN_REPO='ftp.de.debian.org';;
+            23) DEBIAN_REPO='ftp.gr.debian.org';;
+            24) DEBIAN_REPO='ftp.hu.debian.org';;
+            25) DEBIAN_REPO='ftp.is.debian.org';;
+            26) DEBIAN_REPO='ftp.ir.debian.org';;
+            27) DEBIAN_REPO='ftp.ie.debian.org';;
+            28) DEBIAN_REPO='ftp.it.debian.org';;
+            29) DEBIAN_REPO='ftp.jp.debian.org';;
+            30) DEBIAN_REPO='ftp.kr.debian.org';;
+            31) DEBIAN_REPO='ftp.lt.debian.org';;
+            32) DEBIAN_REPO='ftp.mx.debian.org';;
+            33) DEBIAN_REPO='ftp.nl.debian.org';;
+            34) DEBIAN_REPO='ftp.nc.debian.org';;
+            35) DEBIAN_REPO='ftp.nz.debian.org';;
+            36) DEBIAN_REPO='ftp.no.debian.org';;
+            37) DEBIAN_REPO='ftp.pl.debian.org';;
+            38) DEBIAN_REPO='ftp.pt.debian.org';;
+            39) DEBIAN_REPO='ftp.ro.debian.org';;
+            40) DEBIAN_REPO='ftp.ru.debian.org';;
+            41) DEBIAN_REPO='ftp.sk.debian.org';;
+            42) DEBIAN_REPO='ftp.si.debian.org';;
+            43) DEBIAN_REPO='ftp.es.debian.org';;
+            44) DEBIAN_REPO='ftp.se.debian.org';;
+            45) DEBIAN_REPO='ftp.ch.debian.org';;
+            46) DEBIAN_REPO='ftp.tw.debian.org';;
+            47) DEBIAN_REPO='ftp.th.debian.org';;
+            48) DEBIAN_REPO='ftp.tr.debian.org';;
+            49) DEBIAN_REPO='ftp.ua.debian.org';;
+        esac
+        save_configuration_values
+    else
+        # shellcheck disable=SC2034
+        DEBIAN_REPO='ftp.de.debian.org'
+    fi
+}
+
+function choose_rng {
+    if [[ $MINIMAL_INSTALL == "no" && "$MENUCONFIG_NONINTERACTIVE" == 'no' ]]; then
+        data=$(mktemp 2>/dev/null)
+        if [[ "$INSTALLING_ON_BBB" != "yes" ]]; then
+            dialog --backtitle $"LibreServer Configuration" \
+                   --radiolist $"Type of Random Number Generator:" 10 40 2 \
+                   1 Haveged on \
+                   2 OneRNG off 2> "$data"
+            sel=$?
+            case $sel in
+                1) rm -f "$data"
+                   exit 1;;
+                255) rm -f "$data"
+                     exit 1;;
+            esac
+            case $(cat "$data") in
+                2) HWRNG_TYPE="onerng"
+                   dialog --title $"OneRNG Device" \
+                          --msgbox $"Please ensure that the OneRNG device is disconnected. You can reconnect it later during the installation" 8 60
+                   ;;
+                255) rm -f "$data"
+                     exit 1;;
+            esac
+        else
+            # shellcheck disable=SC2034
+            HWRNG_TYPE="beaglebone"
+        fi
+        rm -f "$data"
+        save_configuration_values
+    fi
+}
+
+function choose_username {
+    MY_USERNAME='admin'
+    save_configuration_values
+}
+
+function choose_full_name {
+    MY_NAME='admin'
+    save_configuration_values
+}
+
+function validate_freedns_code {
+    freedns_code="$1"
+
+    if [[ "$MENUCONFIG_NONINTERACTIVE" != 'no' ]]; then
+        VALID_CODE='yes'
+        return
+    fi
+
+    FREEDNS_MESSAGE=$"Please enter the FreeDNS code for this domain.\\n\\nThe code can be found by going to https://freedns.afraid.org, selecting 'Dynamic DNS' and then opening 'Wget example'. The code will consist of letters and numbers and be between the ? and = characters."
+
+    if [[ "$freedns_code" == *"."* || "$freedns_code" == "http"* || "$freedns_code" == *"wget "* || "$freedns_code" == *" "* ]]; then
+        dialog --title $"Invalid FreeDNS Code" --msgbox "$FREEDNS_MESSAGE" 10 70
+        VALID_CODE=
+    fi
+    if [ ${#freedns_code} -lt 30 ]; then
+        dialog --title $"Invalid FreeDNS Code" --msgbox $'FreeDNS code is too short. Did you enter the entire code?' 6 70
+        VALID_CODE=
+    fi
+    VALID_CODE='yes'
+}
+
+# Get the commandline options
+while [ $# -gt 1 ]
+do
+    key="$1"
+
+    case $key in
+        -h|--help)
+            show_help
+            ;;
+        # Your domain name
+        -d|--domain)
+            shift
+            if [ "$1" ]; then
+                DEFAULT_DOMAIN_NAME="$1"
+            fi
+            ;;
+        # non-interactive for CI
+        -n|--noninteractive)
+            shift
+            MENUCONFIG_NONINTERACTIVE="$1"
+            ;;
+        # Configuration filename
+        -f|--filename)
+            shift
+            CONFIGURATION_FILE="$1"
+            ;;
+        # Minimum password length
+        -m|--min)
+            shift
+            MINIMUM_PASSWORD_LENGTH="$1"
+            ;;
+        # LibreServer website
+        -w|--www)
+            shift
+            LIBRESERVER_WEBSITE="$1"
+            ;;
+        --minimal)
+            shift
+            MINIMAL_INSTALL="$1"
+            ;;
+        -o|--onion)
+            shift
+            ONION_ONLY="$1"
+            ;;
+        *)
+            # unknown option
+            ;;
+    esac
+    shift
+done
+
+function interactive_select_language {
+    if [[ "$MENUCONFIG_NONINTERACTIVE" != 'no' ]]; then
+        DEFAULT_LANGUAGE='en_GB.UTF-8'
+        save_configuration_values
+        locale-gen "${DEFAULT_LANGUAGE}"
+        update-locale LANG=${DEFAULT_LANGUAGE}
+        update-locale LANGUAGE=${DEFAULT_LANGUAGE}
+        update-locale LC_MESSAGES=${DEFAULT_LANGUAGE}
+        update-locale LC_ALL=${DEFAULT_LANGUAGE}
+        update-locale LC_CTYPE=${DEFAULT_LANGUAGE}
+        return
+    fi
+
+    W=(1 $"English"
+       2 $"Afrikaans"
+       3 $"Albanian"
+       4 $"Arabic"
+       5 $"Basque"
+       6 $"Belarusian"
+       7 $"Bosnian"
+       8 $"Bulgarian"
+       9 $"Catalan"
+       10 $"Croatian"
+       11 $"Chinese (Simplified)"
+       12 $"Chinese (Traditional)"
+       13 $"Czech"
+       14 $"Danish"
+       15 $"Dutch"
+       16 $"English (US)"
+       17 $"Estonian"
+       18 $"Farsi"
+       19 $"Filipino"
+       20 $"Finnish"
+       21 $"French"
+       22 $"French (Canada)"
+       23 $"Gaelic"
+       24 $"Gallego"
+       25 $"Georgian"
+       26 $"German"
+       27 $"German (Personal)"
+       28 $"Greek"
+       29 $"Gujarati"
+       30 $"Hebrew"
+       31 $"Hindi"
+       32 $"Hungarian"
+       33 $"Icelandic"
+       34 $"Indonesian"
+       35 $"Italian"
+       36 $"Japanese"
+       37 $"Kannada"
+       38 $"Khmer"
+       39 $"Korean"
+       40 $"Lao"
+       41 $"Lithuanian"
+       42 $"Latvian"
+       43 $"Malayalam"
+       44 $"Malaysian"
+       45 $"Maori (Ngai Tahu)"
+       46 $"Maori (Waikoto Uni)"
+       47 $"Mongolian"
+       48 $"Norwegian"
+       49 $"Norwegian (Primary)"
+       50 $"Nynorsk"
+       51 $"Polish"
+       52 $"Portuguese"
+       53 $"Portuguese (Brazil)"
+       54 $"Romanian"
+       55 $"Russian"
+       56 $"Samoan"
+       57 $"Serbian"
+       58 $"Slovak"
+       59 $"Slovenian"
+       60 $"Somali"
+       61 $"Spanish (International)"
+       62 $"Swedish"
+       63 $"Tagalog"
+       64 $"Tamil"
+       65 $"Thai"
+       66 $"Turkish"
+       67 $"Ukrainian"
+       68 $"Vietnamese")
+
+    # shellcheck disable=SC2068
+    selection=$(dialog --backtitle $"LibreServer Configuration" --title $"Language" --menu $"Select your language:" 24 60 68 "${W[@]}" 3>&2 2>&1 1>&3)
+
+    if [ ! "$selection" ]; then
+        selection='1'
+    fi
+
+    case $selection in
+        1) DEFAULT_LANGUAGE='en_GB.UTF-8';;
+        2) DEFAULT_LANGUAGE='af_ZA.UTF-8';;
+        3) DEFAULT_LANGUAGE='sq_AL.UTF-8';;
+        4) DEFAULT_LANGUAGE='ar_SA.UTF-8';;
+        5) DEFAULT_LANGUAGE='eu_ES.UTF-8';;
+        6) DEFAULT_LANGUAGE='be_BY.UTF-8';;
+        7) DEFAULT_LANGUAGE='bs_BA.UTF-8';;
+        8) DEFAULT_LANGUAGE='bg_BG.UTF-8';;
+        9) DEFAULT_LANGUAGE='ca_ES.UTF-8';;
+        10) DEFAULT_LANGUAGE='hr_HR.UTF-8';;
+        11) DEFAULT_LANGUAGE='zh_CN.UTF-8';;
+        12) DEFAULT_LANGUAGE='zh_TW.UTF-8';;
+        13) DEFAULT_LANGUAGE='cs_CZ.UTF-8';;
+        14) DEFAULT_LANGUAGE='da_DK.UTF-8';;
+        15) DEFAULT_LANGUAGE='nl_NL.UTF-8';;
+        16) DEFAULT_LANGUAGE='en_US.UTF-8';;
+        17) DEFAULT_LANGUAGE='et_EE.UTF-8';;
+        18) DEFAULT_LANGUAGE='fa_IR.UTF-8';;
+        19) DEFAULT_LANGUAGE='ph_PH.UTF-8';;
+        20) DEFAULT_LANGUAGE='fi_FI.UTF-8';;
+        21) DEFAULT_LANGUAGE='fr_FR.UTF-8';;
+        22) DEFAULT_LANGUAGE='fr_CA.UTF-8';;
+        23) DEFAULT_LANGUAGE='ga.UTF-8';;
+        24) DEFAULT_LANGUAGE='l_ES.UTF-8';;
+        25) DEFAULT_LANGUAGE='ka_GE.UTF-8';;
+        26) DEFAULT_LANGUAGE='de_DE.UTF-8';;
+        27) DEFAULT_LANGUAGE='de_DE.UTF-8';;
+        28) DEFAULT_LANGUAGE='el_GR.UTF-8';;
+        29) DEFAULT_LANGUAGE='gu.UTF-8';;
+        30) DEFAULT_LANGUAGE='he_IL.utf8';;
+        31) DEFAULT_LANGUAGE='hi_IN.UTF-8';;
+        32) DEFAULT_LANGUAGE='hu.UTF-8';;
+        33) DEFAULT_LANGUAGE='is_IS.UTF-8';;
+        34) DEFAULT_LANGUAGE='id_ID.UTF-8';;
+        35) DEFAULT_LANGUAGE='it_IT.UTF-8';;
+        36) DEFAULT_LANGUAGE='ja_JP.UTF-8';;
+        37) DEFAULT_LANGUAGE='kn_IN.UTF-8';;
+        38) DEFAULT_LANGUAGE='km_KH.UTF-8';;
+        39) DEFAULT_LANGUAGE='ko_KR.UTF-8';;
+        40) DEFAULT_LANGUAGE='lo_LA.UTF-8';;
+        41) DEFAULT_LANGUAGE='lt_LT.UTF-8';;
+        42) DEFAULT_LANGUAGE='lat.UTF-8';;
+        43) DEFAULT_LANGUAGE='ml_IN.UTF-8';;
+        44) DEFAULT_LANGUAGE='ms_MY.UTF-8';;
+        45) DEFAULT_LANGUAGE='mi_NZ.UTF-8';;
+        46) DEFAULT_LANGUAGE='mi_NZ.UTF-8';;
+        47) DEFAULT_LANGUAGE='mn.UTF-8';;
+        48) DEFAULT_LANGUAGE='no_NO.UTF-8';;
+        49) DEFAULT_LANGUAGE='no_NO.UTF-8';;
+        50) DEFAULT_LANGUAGE='nn_NO.UTF-8';;
+        51) DEFAULT_LANGUAGE='pl.UTF-8';;
+        52) DEFAULT_LANGUAGE='pt_PT.UTF-8';;
+        53) DEFAULT_LANGUAGE='pt_BR.UTF-8';;
+        54) DEFAULT_LANGUAGE='ro_RO.UTF-8';;
+        55) DEFAULT_LANGUAGE='ru_RU.UTF-8';;
+        56) DEFAULT_LANGUAGE='mi_NZ.UTF-8';;
+        57) DEFAULT_LANGUAGE='sr_CS.UTF-8';;
+        58) DEFAULT_LANGUAGE='sk_SK.UTF-8';;
+        59) DEFAULT_LANGUAGE='sl_SI.UTF-8';;
+        60) DEFAULT_LANGUAGE='so_SO.UTF-8';;
+        61) DEFAULT_LANGUAGE='es_ES.UTF-8';;
+        62) DEFAULT_LANGUAGE='sv_SE.UTF-8';;
+        63) DEFAULT_LANGUAGE='tl.UTF-8';;
+        64) DEFAULT_LANGUAGE='ta_IN.UTF-8';;
+        65) DEFAULT_LANGUAGE='th_TH.UTF-8';;
+        66) DEFAULT_LANGUAGE='tr_TR.UTF-8';;
+        67) DEFAULT_LANGUAGE='uk_UA.UTF-8';;
+        68) DEFAULT_LANGUAGE='vi_VN.UTF-8';;
+    esac
+    save_configuration_values
+
+    please_wait
+    echo ''
+    echo 'Setting locale'
+
+    locale-gen "${DEFAULT_LANGUAGE}"
+    update-locale LANG=${DEFAULT_LANGUAGE}
+    update-locale LANGUAGE=${DEFAULT_LANGUAGE}
+    update-locale LC_MESSAGES=${DEFAULT_LANGUAGE}
+    update-locale LC_ALL=${DEFAULT_LANGUAGE}
+    update-locale LC_CTYPE=${DEFAULT_LANGUAGE}
+    please_wait
+    echo ''
+}
+
+function select_user {
+    SELECTED_USERNAME=
+
+    homedirs=$(ls /home)
+    # shellcheck disable=SC2206
+    users_array=($homedirs)
+
+    delete=(git)
+    # shellcheck disable=SC2068
+    for del in ${delete[@]}
+    do
+        # shellcheck disable=SC2206
+        users_array=(${users_array[@]/$del})
+    done
+
+    i=0
+    W=()
+    name=()
+    # shellcheck disable=SC2068
+    for u in ${users_array[@]}
+    do
+        if [[ $(is_valid_user "$u") == "1" ]]; then
+            i=$((i+1))
+            W+=("$i" "$u")
+            name+=("$u")
+        fi
+    done
+
+    if [ $i -eq 1 ]; then
+        SELECTED_USERNAME="${name[0]}"
+    else
+        # shellcheck disable=SC2068
+        user_index=$(dialog --backtitle $"LibreServer Configuration" --title $"Select User" --menu $"Select one of the following:" 24 40 17 ${W[@]} 3>&2 2>&1 1>&3)
+
+        # shellcheck disable=SC2181
+        if [ $? -eq 0 ]; then
+            SELECTED_USERNAME="${name[$((user_index-1))]}"
+        fi
+    fi
+}
+
+function interactive_config {
+    # create a temporary copy of the configuration file
+    # which can be used to pre-populate selections
+    if [ -f "$CONFIGURATION_FILE" ]; then
+        cp "$CONFIGURATION_FILE" temp.cfg
+    fi
+
+    interactive_select_language
+
+    if [[ "$ONION_ONLY" == "no" ]]; then
+        INITIAL_MESSAGE=$"Welcome to the LibreServer interactive installer. Communications freedom is only a short time away.\\n\\nEnsure that you have your domain and dynamic DNS settings ready and that any backup drives are unplugged.\\n\\nFor more information please visit $LIBRESERVER_WEBSITE."
+    else
+        INITIAL_MESSAGE=$"Welcome to the LibreServer interactive installer. Communications freedom is only a short time away.\\n\\nWeb sites created will only be viewable within a Tor browser.\\n\\nPlease ensure that any backup drives are unplugged.\\n\\nFor more information please visit $LIBRESERVER_WEBSITE."
+    fi
+
+    setup_create_groups
+    
+    if [[ "$MENUCONFIG_NONINTERACTIVE" == 'no' ]]; then
+        dialog --title $"LibreServer" --msgbox "$INITIAL_MESSAGE" 15 65
+
+	if [ ! -f "$IMAGE_PASSWORD_FILE" ]; then
+	    if [ ! -f /proc/sys/kernel/random/entropy_avail ]; then
+		echo $"Can't read the amount of entropy"
+		exit 8
+	    fi
+	    ENTROPY=$(cat /proc/sys/kernel/random/entropy_avail)
+	    if [ $ENTROPY -lt 500 ]; then
+		echo $'Not enough entropy'
+		exit 9
+	    fi
+	    clear
+	    INSTALL_PACKAGES diceware
+	    newpassword="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
+	    echo -n "${newpassword}" > "$IMAGE_PASSWORD_FILE"
+	else
+	    newpassword=$(cat "$IMAGE_PASSWORD_FILE")
+	fi
+	PASSWORD_MESSAGE=$"Your login password will be:\\n\\n${newpassword}\\n\\nWrite it down, or store it in a password manager."
+	# indicate that this is a manual install
+	# This prevents the password file from being overwritten later
+	if [ ! -f /root/.manualinstall ]; then
+	    touch /root/.manualinstall
+	fi
+	if [ -f /root/.doing_initial_upgrade.txt ]; then
+	    rm /root/.doing_initial_upgrade.txt
+	fi
+        dialog --title $"LibreServer" --msgbox "$PASSWORD_MESSAGE" 10 78
+	clear
+    fi
+    
+    choose_username
+    choose_full_name
+    choose_rng
+    choose_debian_repo
+    "${PROJECT_NAME}-wifi" --networksinteractive "$WIFI_NETWORKS_FILE"
+
+    "${PROJECT_NAME}-ddns"
+    read_config_param DDNS_PROVIDER
+    read_config_param DDNS_USERNAME
+    read_config_param DDNS_PASSWORD
+
+    choose_default_domain_name
+    choose_email_address
+    #interactive_key_recovery
+
+    # delete the temporary configuration file
+    if [ -f temp.cfg ]; then
+        rm temp.cfg
+    fi
+
+    # This file indicates that the configuration happened successfully
+    touch "$HOME/.${PROJECT_NAME}-interactive"
+}
+
+if [ ! "$CONFIGURATION_FILE" ]; then
+    CONFIGURATION_FILE=$HOME/${PROJECT_NAME}.cfg
+fi
+
+read_configuration_values
+install_dialog
+interactive_config
+
+exit 0

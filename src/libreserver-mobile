@@ -1,0 +1,129 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Quickly set up mobile devices
+#
+# License
+# =======
+#
+# Copyright (C) 2019-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+PROJECT_NAME='libreserver'
+
+export TEXTDOMAIN=${PROJECT_NAME}-mobile
+export TEXTDOMAINDIR="/usr/share/locale"
+
+function show_help {
+    echo ''
+    echo $"${PROJECT_NAME}-mobile -t [lineageos|android|replicant]"
+    echo ''
+    echo $'  -h --help             Show help'
+    echo $'  -t --target [os]      Target device operating system'
+    exit 0
+}
+
+DEVICE_OS=
+
+while [ $# -gt 1 ]
+do
+    key="$1"
+
+    case $key in
+        -h|--help)
+            show_help
+            ;;
+        -t|--target)
+            shift
+            DEVICE_OS="$1"
+            break
+            ;;
+        *)
+            # unknown option
+            ;;
+    esac
+done
+
+if [ ! "$DEVICE_OS" ]; then
+    echo $'No target device operating system specified. Use -t lineageos|android'
+    exit 0
+fi
+
+temp_hosts_file=~/.libreserver_mobile_hosts
+
+if [ -f $temp_hosts_file ]; then
+    rm $temp_hosts_file
+fi
+
+case "$DEVICE_OS" in
+    lineage|lineageos|replicant)
+        { echo '127.0.0.1       localhost';
+          echo '::1             ip6-localhost';
+          echo '127.0.0.1       facebook.com';
+          echo '127.0.0.1       fbcdn.net';
+          echo '127.0.0.1       fbcdn.com';
+          echo '127.0.0.1       google-analytics.com';
+          echo '127.0.0.1       services.mozilla.org';
+          echo '127.0.0.1       telemetry.mozilla.org';
+          echo '127.0.0.1       google.com';
+          echo '127.0.0.1       gstatic.com';
+          echo '127.0.0.1       googleapis.com'; } > $temp_hosts_file
+        ;;
+    android)
+        { echo '127.0.0.1       localhost';
+          echo '::1             ip6-localhost';
+          echo '127.0.0.1       facebook.com';
+          echo '127.0.0.1       fbcdn.net';
+          echo '127.0.0.1       fbcdn.com';
+          echo '127.0.0.1       google-analytics.com';
+          echo '127.0.0.1       services.mozilla.org';
+          echo '127.0.0.1       telemetry.mozilla.org'; } > $temp_hosts_file
+        ;;
+    *)
+        # unknown option
+        ;;
+esac
+
+if [ ! -f $temp_hosts_file ]; then
+    echo $"Unknown target: $DEVICE_OS"
+    exit 1
+fi
+
+keepass_database=$(find ~/ -name keepass.kdbx | head -n 1)
+
+if [ ! -f /usr/bin/adb ]; then
+    if [ -f /usr/bin/pacman ]; then
+        sudo pacman -S android-tools
+    else
+        sudo apt-get -y install android-tools-adb
+    fi
+fi
+
+if [[ "$keepass_database" == *'keepass.kdbx' ]]; then
+    if adb push "$keepass_database" /sdcard/; then
+        echo $'Pushed Keepass database to device'
+    fi
+fi
+
+adb root
+adb remount
+adb push $temp_hosts_file /system/etc/hosts
+
+rm $temp_hosts_file
+
+exit 0

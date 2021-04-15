@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+  <style>
+    * {
+        box-sizing: border-box;
+    }
+
+    a, u {
+        text-decoration: none;
+        color: #72a7cf;
+        font-weight: bold;
+    }
+
+    a:visited{
+        color: #72a7cf;
+        font-weight: bold;
+    }
+
+    #headerpic {
+        width: 60%;
+        height: auto;
+        margin-right : auto;
+        margin-left : auto;
+        min-width : 220px;
+    }
+
+    body {
+        margin: 0;
+        font-family: Arial;
+    }
+
+    .header {
+        text-align: center;
+        padding: 32px;
+    }
+
+    .headertext {
+        color: #72a7cf;
+        text-align: center;
+        font-size: 120%;
+        font-weight: bold;
+    }
+
+    .doctext {
+        text-align: center;
+        font-size: 100%;
+    }
+
+    .clitext {
+        text-align: center;
+        font-size: 100%;
+        font-family: monospace;
+    }
+
+    .row {
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+        padding: 0 4px;
+    }
+
+    .column {
+        -ms-flex: 25%;
+        flex: 25%;
+        max-width: 25%;
+        padding: 0 4px;
+    }
+    .columnempty {
+        -ms-flex: 25%;
+        flex: 25%;
+        max-width: 25%;
+        padding: 0 4px;
+    }
+
+    .column img {
+        margin-top: 8px;
+        vertical-align: middle;
+    }
+
+    @media screen and (max-width: 600px) {
+        .column {
+            -ms-flex: 50%;
+            flex: 25%;
+            max-width: 50%;
+        }
+        .columnempty {
+            -ms-flex: 0%;
+            flex: 0%;
+            max-width: 0%;
+        }
+    }
+
+    @media screen and (max-width: 200px) {
+        .column {
+            -ms-flex: 25%;
+            flex: 25%;
+            max-width: 25%;
+        }
+    }
+  </style>
+  <body>
+
+    <div class="header">
+      <a href="index.html"><img id="headerpic" class="img-responsive" src="images/logo.png"></a>
+
+      <p class="headertext">Install xz</p>
+
+      <p class="doctext">To extract downloaded image files you will need the <a href="https://en.wikipedia.org/wiki/Xz">xz utility</a>.</p>
+
+      <p class="doctext">On Debian</p>
+
+      <p class="clitext">
+        apt install xz-utils
+      </p>
+
+      <p class="doctext">On Arch/Parabola</p>
+
+      <p class="clitext">
+        sudo pacman -S xz
+      </p>
+
+    </div>
+
+  </body>
+</html>

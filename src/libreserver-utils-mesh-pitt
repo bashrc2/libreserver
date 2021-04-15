@@ -1,0 +1,90 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Functions for PittMesh DNS resolution
+#
+# License
+# =======
+#
+# Copyright © 2019-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+PITTMESH_NODES="https://raw.githubusercontent.com/pittmesh/pittmesh.net/master/src/node-data/nodes.json"
+
+function update_mesh_nodes_pitt {
+    if [ ! -d /etc/pittmesh ]; then
+        return
+    fi
+
+    if [ -f /etc/pittmesh/nodes.json ]; then
+        mv /etc/pittmesh/nodes.json /etc/pittmesh/nodes_prev.json
+    fi
+    wget "$PITTMESH_NODES" -O /etc/pittmesh/nodes.json
+    if [ ! -f /etc/pittmesh/nodes.json ]; then
+        if [ -f /etc/pittmesh/nodes_prev.json ]; then
+            mv /etc/pittmesh/nodes_prev.json /etc/pittmesh/nodes.json
+        else
+            return
+        fi
+    fi
+
+    marker_longitude=
+    marker_latitude=
+    installed_nodes_ctr=0
+    if [ -f network_map_markers.txt ]; then
+        rm network_map_markers.txt
+    fi
+    touch network_map_markers.txt
+    while read -r line; do
+        if [[ "$line" == *"\"name\":"* ]]; then
+            marker_name=$(echo "$line" | awk -F ':' '{print $2}' | sed 's| ||g' | sed 's|"||g' | sed 's|,||g')
+        fi
+        if [[ "$line" == *"\"lat\":"* ]]; then
+            marker_latitude=$(echo "$line" | awk -F ':' '{print $2}' | sed 's| ||g' | sed 's|,||g')
+        fi
+        if [[ "$line" == *"\"lon\":"* ]]; then
+            marker_longitude=$(echo "$line" | awk -F ':' '{print $2}' | sed 's| ||g' | sed 's|,||g')
+        fi
+        if [[ "$line" == *"\"status\":"* ]]; then
+            if [[ "$line" == *'live'* ]]; then
+                echo "$marker_name;$marker_longitude;$marker_latitude" >> network_map_markers.txt
+                installed_nodes_ctr=$((installed_nodes_ctr+1))
+            fi
+        fi
+    done </etc/pittmesh/nodes.json
+    create_kml_from_markers network_map_markers.txt network_map_markers.kml
+    chown www-data:www-data network_map_markers.kml
+    chown www-data:www-data network_map_markers.txt
+    echo $"$installed_nodes_ctr installed PittMesh nodes"
+}
+
+function setup_mesh_pitt {
+    if [ -d /etc/pittmesh ]; then
+        return
+    fi
+
+    mkdir /etc/pittmesh
+
+    set_map_location '-79.99593829999998' '40.4217654'
+}
+
+function remove_mesh_pitt {
+    rm -rf /etc/pittmesh
+}
+
+# NOTE: deliberately no exit 0

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <style>
+      @import url("libreserver.css");
+
+      #domainicon {
+          width: 20%;
+          height: auto;
+          margin-right : auto;
+          margin-left : auto;
+          min-width : 100px;
+      }
+
+      #iconpic {
+          width: 20%;
+          height: auto;
+          margin-right : auto;
+          margin-left : auto;
+          min-width : 120px;
+      }
+
+      .appurl {
+          font-size: 100%;
+      }
+
+      .welcomeheader {
+          font-size: 200%;
+          font-weight: bold;
+      }
+
+      .domaintext {
+          font-size: 90%;
+      }
+
+      button {
+          border: none;
+          outline: 0;
+          display: inline-block;
+          padding: 8px;
+          color: white;
+          background-color: #000;
+          text-align: center;
+          cursor: pointer;
+          width: 100%;
+          font-size: 18px;
+      }
+
+      button:hover, a:hover {
+          opacity: 0.7;
+      }
+
+      .chip {
+          display: inline-block;
+          padding: 0 25px;
+          height: 50px;
+          font-size: 70%;
+          line-height: 50px;
+          border-radius: 25px;
+          background-color: #f1f1f1;
+      }
+
+      .chip img {
+          float: left;
+          margin: 0 10px 0 -25px;
+          height: 50px;
+          width: 50px;
+          border-radius: 50%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="header">
+        <img id="headerpic" class="img-responsive" src="images/logo.png" alt="LibreServer"><br>
+        <br>
+
+        <p class="domaintext" translate="yes">In order to use this system you will need to obtain a domain name. There are many possible domain registrars and a domain name can often be obtained without much expense.</p>
+
+        <p class="domaintext" translate="yes">Your domain name will need to be one which you can obtain a TLS certificate for. This rules out many of the free subdomains available via some sites.</p>
+
+        <p class="domaintext" translate="yes">You will also need to have a dynamic DNS subscription set up. The most ideal way to do that is via configuring your internet router to handle it.</p>
+
+        <form action="setupdomain.php" method="post">
+          <input type="submit" name="setupdomainhelpcontinue" translate="yes" value="Continue">
+        </form>
+
+        <br><br>
+
+      </div>
+    </div>
+  </body>
+</html>

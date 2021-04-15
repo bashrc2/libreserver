@@ -1,0 +1,34 @@
+#+TITLE: LibreServer
+#+AUTHOR: Bob Mottram
+#+EMAIL: bob@libreserver.org
+#+KEYWORDS: libreserver, kanboard
+#+DESCRIPTION: How to use KanBoard
+#+OPTIONS: ^:nil toc:nil num:nil
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="libreserver.css" />
+
+#+attr_html: :width 80% :height 10% :align center
+[[file:images/logo.png]]
+
+* KanBoard
+
+Kanbans are one way of managing projects. They're traditionally used in businesses but can also be useful for personal TODO lists or within open source or DIY projects. If you have a list of things which need to be done and want to keep track of progress then this provides a way to do that.
+
+* Installation
+Log into your system with:
+
+#+begin_src bash
+ssh myusername@mydomain -p 2222
+#+end_src
+
+Using cursor keys and Enter key select *Administrator controls* and type in your password.
+
+Select *Add/Remove Apps* then *kanboard*. You will then be asked for a domain name and if you are using FreeDNS also the code for the domain which can be found under *Dynamic DNS* on the FreeDNS site (the random string from "/quick cron example/" which appears after /update.php?/ and before />>/). For more details on obtaining a domain and making it accessible via dynamic DNS see the [[./faq.html][FAQ]]. Typically the domain name you use will be a subdomain, such as /kanban.mydomainname.net/. It will need to be a domain which you have bought somewhere and own and not one of the FreeDNS subdomains, otherwise you won't be able to get a SSL/TLS certificate for it.
+
+After the install has completed go to *Security settings* and select *Create a new Let's Encrypt certificate* and enter the domain name that you are using for KanBoard. If you're using the "onion only" version of the system then you don't need to do this. If the certificate is obtained successfully then you will see a congratulations message.
+
+* Initial setup
+If you have just obtained a Lets Encrypt certificate as above then go to *About* on the administrator control panel and you should see your KanBoard domain listed there along with an onion address. You can then navigate to your site in a browser.
+
+The default login is username "admin" and password "admin". Obviously the first thing you'll need to do is log in and change the password, which can be done by going to "My Profile" on the drop down list on the right hand side.
+
+For more details of how to use KanBoard see the [[https://kanboard.net/documentation][documentation here]].

@@ -1,0 +1,670 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Htmly functions
+#
+# License
+# =======
+#
+# Copyright (C) 2014-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VARIANTS="full full-vim writer"
+
+APP_CATEGORY=publishing
+
+IN_DEFAULT_INSTALL=0
+SHOW_ON_ABOUT=1
+REQUIRES_APP=
+
+HTMLY_DOMAIN_NAME=
+HTMLY_CODE=
+HTMLY_ONION_PORT=8086
+HTMLY_REPO="https://github.com/danpros/htmly"
+HTMLY_COMMIT='bf5fe9486160be4da86d8987d3e5c977e1dc6d32'
+HTMLY_TITLE="My Blog"
+HTMLY_SUBTITLE="Another ${PROJECT_NAME} blog"
+
+HTMLY_SHORT_DESCRIPTION=$'Databaseless blogging'
+HTMLY_DESCRIPTION=$'Databaseless blogging'
+HTMLY_MOBILE_APP_URL=
+
+htmly_variables=(HTMLY_REPO
+                 HTMLY_DOMAIN_NAME
+                 HTMLY_CODE
+                 HTMLY_TITLE
+                 HTMLY_SUBTITLE
+                 ONION_ONLY
+                 DDNS_PROVIDER
+                 MY_USERNAME)
+
+function upgrade_distro_htmly {
+    target_distro="$1"
+
+    if [[ "$target_distro" == 'bullseye' ]]; then
+        echo -n ''
+    fi
+}
+
+function logging_on_htmly {
+    echo -n ''
+}
+
+function logging_off_htmly {
+    echo -n ''
+}
+
+function set_avatar_from_url {
+    AVATAR="$1"
+
+    read_config_param "HTMLY_DOMAIN_NAME"
+    BASE_DIR=/var/www/$HTMLY_DOMAIN_NAME/htdocs
+
+    if [ ! -d $BASE_DIR/customimages ]; then
+        mkdir $BASE_DIR/customimages
+    fi
+
+    # download the image
+    cd "$BASE_DIR/customimages" || exit 24
+    # convert to png
+    if [[ "$ONION_ONLY" == 'no' ]]; then        
+        wget "$AVATAR" -O avatar
+    else
+        torsocks wget "$AVATAR" -O avatar
+        if [ ! -f avatar ]; then
+            wget "$AVATAR" -O avatar
+        fi
+    fi
+    if [[ "$AVATAR" == *".gif" ]]; then
+        mv avatar avatar.gif
+        mogrify -format png avatar.gif
+    fi
+    if [[ "$AVATAR" == *".jpg" ]]; then
+        mv avatar avatar.jpg
+        mogrify -format png avatar.jpg
+    fi
+    if [[ "$AVATAR" == *".jpeg" ]]; then
+        mv avatar avatar.jpeg
+        mogrify -format png avatar.jpeg
+    fi
+    if [ -f avatar ]; then
+        mv avatar avatar.png
+    fi
+
+    # standard size
+    mogrify -resize 150x150 avatar.png
+    if [ ! -f $BASE_DIR/customimages/avatar.png ]; then
+        echo $'Avatar image could not be downloaded'
+        return
+    fi
+    chown -R www-data:www-data $BASE_DIR/customimages
+    AVATAR_SET=1
+}
+
+function remove_user_htmly {
+    remove_username="$1"
+
+    "${PROJECT_NAME}-pass" -u "$remove_username" --rmapp htmly
+
+    if [ -f "/var/www/${HTMLY_DOMAIN_NAME}/htdocs/config/users/${remove_username}.ini" ]; then
+        rm "/var/www/${HTMLY_DOMAIN_NAME}/htdocs/config/users/${remove_username}.ini"
+    fi
+}
+
+function add_user_htmly {
+    if [[ $(app_is_installed htmly) == "0" ]]; then
+        echo '0'
+        return
+    fi
+
+    new_username="$1"
+    new_user_password="$2"
+
+    "${PROJECT_NAME}-pass" -u "$new_username" -a htmly -p "$new_user_password"
+
+    if [ ! -d /var/www/$HTMLY_DOMAIN_NAME/htdocs/config/users ]; then
+        echo '2'
+        return
+    fi
+    NEW_USER_PASSWORD_HASH=$("${PROJECT_NAME}-sec" --htmlyhash "$new_user_password")
+    if [ ${#NEW_USER_PASSWORD_HASH} -lt 8 ]; then
+        echo '3'
+        return
+    fi
+    { echo ';Password';
+      echo "password = $NEW_USER_PASSWORD_HASH";
+      echo 'encryption = password_hash';
+      echo ';Role';
+      echo 'role = admin'; } > "/var/www/$HTMLY_DOMAIN_NAME/htdocs/config/users/$new_username.ini"
+    echo '0'
+}
+
+function configure_interactive_htmly {
+    data=$(mktemp 2>/dev/null)
+    dialog --title $"Change htmly avatar" \
+           --backtitle $"LibreServer Control Panel" \
+           --inputbox $"Enter a URL for an image. It should be approximately a square image." 8 75 2>"$data"
+    sel=$?
+    case $sel in
+        0)
+            IMAGE_URL=$(<"$data")
+            if [ ${#IMAGE_URL} -gt 5 ]; then
+                clear
+                AVATAR_SET=
+                set_avatar_from_url "$IMAGE_URL"
+                if [ $AVATAR_SET ]; then
+                    dialog --title $"Change htmly avatar" \
+                           --msgbox $"Your htmly avatar has been changed" 6 40
+                fi
+            fi
+            ;;
+    esac
+    rm -f "$data"
+}
+
+function install_interactive_htmly {
+    if [ ! "$ONION_ONLY" ]; then
+        ONION_ONLY='no'
+    fi
+
+    if [[ $ONION_ONLY != "no" ]]; then
+        HTMLY_TITLE='My Htmly Blog'
+        HTMLY_DOMAIN_NAME='htmly.local'
+        write_config_param "HTMLY_TITLE" "$HTMLY_TITLE"
+        write_config_param "HTMLY_DOMAIN_NAME" "$HTMLY_DOMAIN_NAME"
+    else
+        function_check interactive_site_details_with_title
+        interactive_site_details_with_title "htmly" "HTMLY_TITLE" "HTMLY_DOMAIN_NAME" "HTMLY_CODE"
+    fi
+    APP_INSTALLED=1
+}
+
+function change_password_htmly {
+    set_completion_param "htmly domain" "$HTMLY_DOMAIN_NAME"
+    HTMLY_DOMAIN_NAME=$(get_completion_param "htmly domain")
+
+    HTMLY_USERNAME="$1"
+    HTMLY_PASSWORD="$2"
+    if [ ${#HTMLY_PASSWORD} -lt 8 ]; then
+        echo $'Htmly password is too short'
+        return
+    fi
+    "${PROJECT_NAME}-pass" -u "$HTMLY_USERNAME" -a htmly -p "$HTMLY_PASSWORD"
+    HTMLY_PASSWORD_HASH=$("${PROJECT_NAME}-sec" --htmlyhash "$HTMLY_PASSWORD")
+    if [ ${#HTMLY_PASSWORD_HASH} -lt 8 ]; then
+        echo $'Htmly admin password could not be hashed'
+        exit 62
+    fi
+    sed -i "s|password =.*|password = $HTMLY_PASSWORD_HASH|g" "/var/www/$HTMLY_DOMAIN_NAME/htdocs/config/users/$HTMLY_USERNAME.ini"
+}
+
+function reconfigure_htmly {
+    echo -n ''
+}
+
+function upgrade_htmly {
+    CURR_HTMLY_COMMIT=$(get_completion_param "htmly commit")
+    if [[ "$CURR_HTMLY_COMMIT" == "$HTMLY_COMMIT" ]]; then
+        return
+    fi
+
+    read_config_param "HTMLY_DOMAIN_NAME"
+
+    function_check set_repo_commit
+    set_repo_commit "/var/www/$HTMLY_DOMAIN_NAME/htdocs" "htmly commit" "$HTMLY_COMMIT" $HTMLY_REPO
+}
+
+function backup_local_htmly {
+    HTMLY_DOMAIN_NAME='htmly.local'
+    if grep -q "htmly domain" "$COMPLETION_FILE"; then
+        HTMLY_DOMAIN_NAME=$(get_completion_param "htmly domain")
+    fi
+
+    source_directory="/var/www/${HTMLY_DOMAIN_NAME}/htdocs"
+    if [ -d "$source_directory" ]; then
+        dest_directory=htmly
+        function_check suspend_site
+        suspend_site "${HTMLY_DOMAIN_NAME}"
+
+        function_check backup_directory_to_usb
+        backup_directory_to_usb "$source_directory" "$dest_directory"
+
+        function_check restart_site
+        restart_site
+    fi
+}
+
+function restore_local_htmly {
+    HTMLY_DOMAIN_NAME='htmly.local'
+    if grep -q "htmly domain" "$COMPLETION_FILE"; then
+        HTMLY_DOMAIN_NAME=$(get_completion_param "htmly domain")
+    fi
+    if [ "$HTMLY_DOMAIN_NAME" ]; then
+        temp_restore_dir=/root/temphtmly
+        if [ -d "$USB_MOUNT/backup/htmly" ]; then
+            restore_directory_from_usb $temp_restore_dir htmly
+        else
+            restore_directory_from_usb $temp_restore_dir blog
+        fi
+        if [ -d "/var/www/${HTMLY_DOMAIN_NAME}/htdocs" ]; then
+            if [ -d "/var/www/${HTMLY_DOMAIN_NAME}/previous" ]; then
+                rm -rf "/var/www/${HTMLY_DOMAIN_NAME}/previous"
+            fi
+            # shellcheck disable=SC2086
+            mv /var/www/${HTMLY_DOMAIN_NAME}/htdocs /var/www/${HTMLY_DOMAIN_NAME}/previous
+        fi
+        if [ -d "${temp_restore_dir}/var/www/${HTMLY_DOMAIN_NAME}/htdocs" ]; then
+            temp_source_dir=$(find ${temp_restore_dir} -name htdocs)
+            cp -r "${temp_source_dir}" "/var/www/${HTMLY_DOMAIN_NAME}/"
+        else
+            if [ ! -d "/var/www/${HTMLY_DOMAIN_NAME}/htdocs" ]; then
+                mkdir "/var/www/${HTMLY_DOMAIN_NAME}/htdocs"
+            fi
+            cp -r "${temp_restore_dir}/"* "/var/www/${HTMLY_DOMAIN_NAME}/htdocs/"
+        fi
+        # shellcheck disable=SC2181
+        if [ ! "$?" = "0" ]; then
+            if [ -d "/var/www/${HTMLY_DOMAIN_NAME}/previous" ]; then
+                # shellcheck disable=SC2086
+                mv /var/www/${HTMLY_DOMAIN_NAME}/previous /var/www/${HTMLY_DOMAIN_NAME}/htdocs
+            fi
+            set_user_permissions
+            backup_unmount_drive
+            exit 54
+        fi
+        rm -rf ${temp_restore_dir}
+        if [ ! -d "/var/www/${HTMLY_DOMAIN_NAME}/htdocs/content" ]; then
+            echo $"No content directory found after restoring htmly"
+            set_user_permissions
+            backup_unmount_drive
+            exit 34
+        fi
+        chown -R www-data:www-data "/var/www/${HTMLY_DOMAIN_NAME}/htdocs"
+        # Ensure that the bundled SSL cert is being used
+        if [ -f "/etc/ssl/certs/${HTMLY_DOMAIN_NAME}.bundle.crt" ]; then
+            sed -i "s|${HTMLY_DOMAIN_NAME}.crt|${HTMLY_DOMAIN_NAME}.bundle.crt|g" "/etc/nginx/sites-available/${HTMLY_DOMAIN_NAME}"
+        fi
+        for d in /home/*/ ; do
+            USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+            if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+                if [ -d "/var/www/${HTMLY_DOMAIN_NAME}/htdocs/content/$USERNAME/htmly/uncategorized/post" ]; then
+                    # shellcheck disable=SC2086
+                    mv /var/www/${HTMLY_DOMAIN_NAME}/htdocs/content/$USERNAME/htmly/*.md /var/www/${HTMLY_DOMAIN_NAME}/htdocs/content/$USERNAME/htmly/uncategorized/post
+                fi
+            fi
+        done
+        if [ -d "/etc/letsencrypt/live/${HTMLY_DOMAIN_NAME}" ]; then
+            ln -s "/etc/letsencrypt/live/${HTMLY_DOMAIN_NAME}/privkey.pem" "/etc/ssl/private/${HTMLY_DOMAIN_NAME}.key"
+            ln -s "/etc/letsencrypt/live/${HTMLY_DOMAIN_NAME}/fullchain.pem" "/etc/ssl/certs/${HTMLY_DOMAIN_NAME}.pem"
+        fi
+    fi
+}
+
+function backup_remote_htmly {
+    echo -n ''
+}
+
+function restore_remote_htmly {
+    echo -n ''
+}
+
+function remove_htmly {
+    if [ ${#HTMLY_DOMAIN_NAME} -eq 0 ]; then
+        return
+    fi
+
+    read_config_param "HTMLY_DOMAIN_NAME"
+    nginx_dissite "$HTMLY_DOMAIN_NAME"
+    remove_certs "${HTMLY_DOMAIN_NAME}"
+    if [ -f "/etc/nginx/sites-available/$HTMLY_DOMAIN_NAME" ]; then
+        rm -f "/etc/nginx/sites-available/$HTMLY_DOMAIN_NAME"
+    fi
+    if [ -d "/var/www/$HTMLY_DOMAIN_NAME" ]; then
+        rm -rf "/var/www/$HTMLY_DOMAIN_NAME"
+    fi
+    remove_config_param HTMLY_DOMAIN_NAME
+    remove_config_param HTMLY_CODE
+    function_check remove_onion_service
+    remove_onion_service htmly ${HTMLY_ONION_PORT}
+    remove_completion_param "install_htmly"
+    sed -i '/Htmly/d' "$COMPLETION_FILE"
+    sed -i '/htmly/d' "$COMPLETION_FILE"
+
+    function_check remove_ddns_domain
+    remove_ddns_domain "$HTMLY_DOMAIN_NAME"
+}
+
+function install_htmly_social_networks {
+    # set social networks
+    if grep -q "social.hubzilla" "/var/www/$HTMLY_DOMAIN_NAME/htdocs/config/config.ini"; then
+        sed -i "s|;social.hubzilla|social.hubzilla|g" "/var/www/$HTMLY_DOMAIN_NAME/htdocs/config/config.ini"
+        sed -i "s|social.hubzilla.*|social.hubzilla = \"$HUBZILLA_DOMAIN_NAME\"|g" "/var/www/$HTMLY_DOMAIN_NAME/htdocs/config/config.ini"
+    fi
+
+    # clear proprietary social network strings
+    sed -i 's|social.facebook.*|social.facebook = ""|g' "/var/www/$HTMLY_DOMAIN_NAME/htdocs/config/config.ini"
+    sed -i 's|social.twitter.*|social.twitter = ""|g' "/var/www/$HTMLY_DOMAIN_NAME/htdocs/config/config.ini"
+    sed -i 's|social.google.*|social.google = ""|g' "/var/www/$HTMLY_DOMAIN_NAME/htdocs/config/config.ini"
+}
+
+function install_htmly_user {
+    # create a user password
+    if [ -f "$IMAGE_PASSWORD_FILE" ]; then
+        HTMLY_ADMIN_PASSWORD="$(printf "%s" "$(cat "$IMAGE_PASSWORD_FILE")")"
+    else
+        HTMLY_ADMIN_PASSWORD="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
+    fi
+
+    # create a user
+    HTMLY_ADMIN_PASSWORD_HASH=$("${PROJECT_NAME}-sec" --htmlyhash "$HTMLY_ADMIN_PASSWORD")
+    if [ ${#HTMLY_ADMIN_PASSWORD_HASH} -lt 8 ]; then
+        echo $'Htmly admin password could not be hashed'
+        exit 62
+    fi
+    { echo ';Password';
+      echo "password = $HTMLY_ADMIN_PASSWORD_HASH";
+      echo 'encryption = password_hash';
+      echo ';Role';
+      echo 'role = admin'; } > "/var/www/$HTMLY_DOMAIN_NAME/htdocs/config/users/$MY_USERNAME.ini"
+}
+
+function install_htmly_settings {
+    cp "/var/www/$HTMLY_DOMAIN_NAME/htdocs/config/config.ini.example" "/var/www/$HTMLY_DOMAIN_NAME/htdocs/config/config.ini"
+    sed -i "s|site.url.*|site.url = '/'|g" "/var/www/$HTMLY_DOMAIN_NAME/htdocs/config/config.ini"
+    sed -i "s|blog.title.*|blog.title = \"$HTMLY_TITLE\"|g" "/var/www/$HTMLY_DOMAIN_NAME/htdocs/config/config.ini"
+    sed -i "s|blog.tagline.*|blog.tagline = \"$HTMLY_SUBTITLE\"|g" "/var/www/$HTMLY_DOMAIN_NAME/htdocs/config/config.ini"
+    sed -i 's|timezone.*|timezone = "Europe/London"|g' "/var/www/$HTMLY_DOMAIN_NAME/htdocs/config/config.ini"
+    sed -i "s|Your name|$MY_NAME|g" "/var/www/$HTMLY_DOMAIN_NAME/htdocs/config/config.ini"
+}
+
+function install_htmly_website {
+    function_check nginx_http_redirect
+    nginx_http_redirect "$HTMLY_DOMAIN_NAME"
+    { echo 'server {';
+      echo '    listen 443 ssl;';
+      echo '    #listen [::]:443 ssl;';
+      echo "    root /var/www/$HTMLY_DOMAIN_NAME/htdocs;";
+      echo "    server_name $HTMLY_DOMAIN_NAME;";
+      echo '    access_log /dev/null;';
+      echo "    error_log /dev/null;";
+      echo '    index index.php;';
+      echo '    charset utf-8;';
+      echo '    proxy_read_timeout 86400s;'; } >> "/etc/nginx/sites-available/$HTMLY_DOMAIN_NAME"
+    function_check nginx_ssl
+    nginx_ssl "$HTMLY_DOMAIN_NAME"
+    function_check nginx_security_options
+    nginx_security_options "$HTMLY_DOMAIN_NAME"
+    { echo '    add_header Strict-Transport-Security "max-age=0;";';
+      echo "    add_header Onion-Location http://${HTMLY_ONION_HOSTNAME}\$request_uri;";
+      echo '';
+      echo '    # rewrite to front controller as default rule';
+      echo '    location / {'; } >> "/etc/nginx/sites-available/$HTMLY_DOMAIN_NAME"
+    function_check nginx_limits
+    nginx_limits "$HTMLY_DOMAIN_NAME"
+    { echo "        rewrite ^/(.*) /index.php?q=\$uri&\$args last;";
+      echo '    }';
+      echo '';
+      echo '    # statically serve these file types when possible';
+      echo '    # otherwise fall back to front controller';
+      echo '    # allow browser to cache them';
+      echo '    # added .htm for advanced source code editor library';
+      echo '    location ~* \.(jpg|jpeg|gif|png|ico|css|js|htm|html|ttf|woff|svg)$ {';
+      echo '        expires 30d;';
+      echo "        try_files \$uri /index.php?q=\$uri&\$args;";
+      echo '    }';
+      echo '';
+      echo '    # block these file types';
+      echo '    location ~* \.(tpl|md|tgz|log|out)$ {';
+      echo '        deny all;';
+      echo '    }';
+      echo '';
+      echo '    # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000';
+      echo '    # or a unix socket';
+      echo '    location ~* \.php$ {';
+      echo '        # Zero-day exploit defense.';
+      echo '        # http://forum.nginx.org/read.php?2,88845,page=3';
+      echo "        # Won't work properly (404 error) if the file is not stored on this";
+      echo "        # server, which is entirely possible with php-fpm/php-fcgi.";
+      echo "        # Comment the 'try_files' line out if you set up php-fpm/php-fcgi on";
+      echo "        # another machine. And then cross your fingers that you won't get hacked.";
+      echo "        try_files \$uri \$uri/ /index.php;";
+      echo '        # NOTE: You should have "cgi.fix_pathinfo = 0;" in php.ini';
+      echo '        fastcgi_split_path_info ^(.+\.php)(/.+)$;';
+      echo '        # With php-cgi alone:';
+      echo '        # fastcgi_pass 127.0.0.1:9000;';
+      echo '        # With php-fpm:';
+      echo "        fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
+      echo '        include fastcgi_params;';
+      echo '        fastcgi_read_timeout 30;';
+      echo '        fastcgi_index index.php;';
+      echo "        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;";
+      echo '    }';
+      echo '';
+      echo '    # deny access to all dot files';
+      echo '    location ~ /\. {';
+      echo '        deny all;';
+      echo '    }';
+      echo '';
+      echo '    #deny access to store';
+      echo '    location ~ /store {';
+      echo '        deny all;';
+      echo '    }';
+      echo '    location ~ /(data|conf|bin|inc)/ {';
+      echo '      deny all;';
+      echo '    }';
+      echo '    location ~ /\.ht {';
+      echo '      deny  all;';
+      echo '    }';
+      echo '}';
+      echo ''; } >> "/etc/nginx/sites-available/$HTMLY_DOMAIN_NAME"
+}
+
+function install_htmly_website_onion {
+    { echo 'server {';
+      echo "    listen 127.0.0.1:${HTMLY_ONION_PORT} default_server;";
+      echo '    port_in_redirect off;';
+      echo "    root /var/www/$HTMLY_DOMAIN_NAME/htdocs;"; } >> "/etc/nginx/sites-available/$HTMLY_DOMAIN_NAME"
+
+    if [[ "$ONION_ONLY" != 'yes' ]]; then
+        echo "    server_name $HTMLY_DOMAIN_NAME;" >> "/etc/nginx/sites-available/$HTMLY_DOMAIN_NAME"
+    else
+        echo "    server_name $HTMLY_ONION_HOSTNAME;" >> "/etc/nginx/sites-available/$HTMLY_DOMAIN_NAME"
+    fi
+
+    { echo '    access_log /dev/null;';
+      echo "    error_log /dev/null;";
+      echo '    index index.php;';
+      echo '    charset utf-8;';
+      echo '    proxy_read_timeout 86400s;'; } >> "/etc/nginx/sites-available/$HTMLY_DOMAIN_NAME"
+    function_check nginx_security_options
+    nginx_security_options "$HTMLY_DOMAIN_NAME"
+    { echo '    add_header Strict-Transport-Security "max-age=0;";';
+      echo '';
+      echo '    # rewrite to front controller as default rule';
+      echo '    location / {'; } >> "/etc/nginx/sites-available/$HTMLY_DOMAIN_NAME"
+    function_check nginx_limits
+    nginx_limits "$HTMLY_DOMAIN_NAME"
+    { echo "        rewrite ^/(.*) /index.php?q=\$uri&\$args last;";
+      echo '    }';
+      echo '';
+      echo '    # statically serve these file types when possible';
+      echo '    # otherwise fall back to front controller';
+      echo '    # allow browser to cache them';
+      echo '    # added .htm for advanced source code editor library';
+      echo '    location ~* \.(jpg|jpeg|gif|png|ico|css|js|htm|html|ttf|woff|svg)$ {';
+      echo '        expires 30d;';
+      echo "        try_files \$uri /index.php?q=\$uri&\$args;";
+      echo '    }';
+      echo '';
+      echo '    # block these file types';
+      echo '    location ~* \.(tpl|md|tgz|log|out)$ {';
+      echo '        deny all;';
+      echo '    }';
+      echo '';
+      echo '    # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000';
+      echo '    # or a unix socket';
+      echo '    location ~* \.php$ {'; } >> "/etc/nginx/sites-available/$HTMLY_DOMAIN_NAME"
+    function_check nginx_limits
+    nginx_limits "$HTMLY_DOMAIN_NAME"
+    { echo '        # Zero-day exploit defense.';
+      echo '        # http://forum.nginx.org/read.php?2,88845,page=3';
+      echo "        # Won't work properly (404 error) if the file is not stored on this";
+      echo "        # server, which is entirely possible with php-fpm/php-fcgi.";
+      echo "        # Comment the 'try_files' line out if you set up php-fpm/php-fcgi on";
+      echo "        # another machine. And then cross your fingers that you won't get hacked.";
+      echo "        try_files \$uri \$uri/ /index.php;";
+      echo '        # NOTE: You should have "cgi.fix_pathinfo = 0;" in php.ini';
+      echo '        fastcgi_split_path_info ^(.+\.php)(/.+)$;';
+      echo '        # With php-cgi alone:';
+      echo '        # fastcgi_pass 127.0.0.1:9000;';
+      echo '        # With php-fpm:';
+      echo "        fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
+      echo '        include fastcgi_params;';
+      echo '        fastcgi_read_timeout 30;';
+      echo '        fastcgi_index index.php;';
+      echo "        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;";
+      echo '    }';
+      echo '';
+      echo '    # deny access to all dot files';
+      echo '    location ~ /\. {';
+      echo '        deny all;';
+      echo '    }';
+      echo '';
+      echo '    #deny access to store';
+      echo '    location ~ /store {';
+      echo '        deny all;';
+      echo '    }';
+      echo '    location ~ /(data|conf|bin|inc)/ {';
+      echo '      deny all;';
+      echo '    }';
+      echo '    location ~ /\.ht {';
+      echo '      deny  all;';
+      echo '    }';
+      echo '}'; } >> "/etc/nginx/sites-available/$HTMLY_DOMAIN_NAME"
+}
+
+function install_htmly_from_repo {
+    if [ ! -d "/var/www/$HTMLY_DOMAIN_NAME" ]; then
+        mkdir "/var/www/$HTMLY_DOMAIN_NAME"
+    fi
+
+    cd "/var/www/$HTMLY_DOMAIN_NAME" || exit 34
+
+    if [ -d /repos/htmly ]; then
+        mkdir htdocs
+        cp -r -p /repos/htmly/. htdocs
+        cd htdocs || exit 34
+        git pull
+    else
+        git_clone $HTMLY_REPO htdocs
+    fi
+
+    cd "/var/www/$HTMLY_DOMAIN_NAME/htdocs" || exit 34
+    git checkout $HTMLY_COMMIT -b $HTMLY_COMMIT
+    set_completion_param "htmly commit" "$HTMLY_COMMIT"
+}
+
+function install_htmly {
+    if [ ! "$ONION_ONLY" ]; then
+        ONION_ONLY='no'
+    fi
+
+    if [ ! "$HTMLY_DOMAIN_NAME" ]; then
+        echo $'The htmly domain name was not specified'
+        exit 50
+    fi
+
+    increment_app_install_progress
+
+    # for the avatar changing command
+    INSTALL_PACKAGES imagemagick libfcgi0ldbl
+
+    increment_app_install_progress
+
+    function_check install_htmly_from_repo
+    install_htmly_from_repo
+
+    increment_app_install_progress
+
+    HTMLY_ONION_HOSTNAME=$(add_onion_service htmly 80 ${HTMLY_ONION_PORT})
+
+    increment_app_install_progress
+
+    if [[ $ONION_ONLY == "no" ]]; then
+        function_check install_htmly_website
+        install_htmly_website
+    else
+        echo -n '' > "/etc/nginx/sites-available/$HTMLY_DOMAIN_NAME"
+    fi
+
+    increment_app_install_progress
+
+    function_check install_htmly_website_onion
+    install_htmly_website_onion
+
+    increment_app_install_progress
+
+    function_check create_site_certificate
+    create_site_certificate "$HTMLY_DOMAIN_NAME" 'yes'
+
+    increment_app_install_progress
+
+    function_check configure_php
+    configure_php
+
+    increment_app_install_progress
+
+    function_check install_htmly_settings
+    install_htmly_settings
+
+    increment_app_install_progress
+
+    function_check install_htmly_social_networks
+    install_htmly_social_networks
+
+    increment_app_install_progress
+
+    function_check install_htmly_user
+    install_htmly_user
+
+    increment_app_install_progress
+
+    chown -R www-data:www-data "/var/www/$HTMLY_DOMAIN_NAME/htdocs"
+
+    function_check nginx_ensite
+    nginx_ensite "$HTMLY_DOMAIN_NAME"
+
+    # shellcheck disable=SC2086
+    systemctl restart php${PHP_VERSION}-fpm
+
+    increment_app_install_progress
+
+    systemctl restart nginx
+
+    increment_app_install_progress
+
+    "${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a htmly -p "$HTMLY_ADMIN_PASSWORD"
+
+    function_check add_ddns_domain
+    add_ddns_domain "$HTMLY_DOMAIN_NAME"
+
+    set_completion_param "htmly domain" "$HTMLY_DOMAIN_NAME"
+    APP_INSTALLED=1
+}
+
+# NOTE: deliberately no exit 0

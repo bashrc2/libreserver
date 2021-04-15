@@ -1,0 +1,252 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Minetest game
+#
+# License
+# =======
+#
+# Copyright (C) 2019-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VARIANTS='full full-vim games'
+
+APP_CATEGORY=games
+
+IN_DEFAULT_INSTALL=0
+SHOW_ON_ABOUT=1
+NOT_ON_HOMEPAGE=1
+REQUIRES_APP=
+
+MINETEST_DOMAIN_NAME=
+MINETEST_CODE=
+
+MINETEST_REPO="https://github.com/minetest/minetest.git"
+MINETEST_COMMIT='72feab081c336d2d71d300131d30e71694b485f3'
+
+#MINETEST_GAMES_REPO="https://github.com/minetest/minetest_game.git"
+#MINETEST_GAMES_COMMIT=''
+
+MINETEST_PORT=5100
+
+MINETEST_DIR=/usr/share/games/minetest
+
+MINETEST_SHORT_DESCRIPTION=$'Near infinite world block sandbox game'
+MINETEST_DESCRIPTION=$'Near infinite world block sandbox game'
+MINETEST_MOBILE_APP_URL="https://f-droid.org/en/packages/net.minetest.minetest"
+
+minetest_variables=(SYSTEM_TYPE
+                    MY_USERNAME)
+
+function upgrade_distro_minetest {
+    target_distro="$1"
+
+    if [[ "$target_distro" == 'bullseye' ]]; then
+        echo -n ''
+    fi
+}
+
+function logging_on_minetest {
+    echo -n ''
+}
+
+function logging_off_minetest {
+    echo -n ''
+}
+
+function install_interactive_minetest {
+    echo -n ''
+    APP_INSTALLED=1
+}
+
+function reconfigure_minetest {
+    echo -n ''
+}
+
+function upgrade_minetest {
+    echo -n ''
+}
+
+function backup_local_minetest {
+    source_directory=$MINETEST_DIR
+    if [ -d $source_directory ]; then
+        dest_directory=minetest
+        function_check backup_directory_to_usb
+        backup_directory_to_usb $source_directory $dest_directory
+    fi
+}
+
+function restore_local_minetest {
+    if [ -d $MINETEST_DIR ]; then
+        if [ -d "$USB_MOUNT_MINETEST/backup/minetest" ]; then
+            echo $"Restoring MINETEST"
+            temp_restore_dir=/root/tempminetest
+            function_check restore_directory_from_usb
+            restore_directory_from_usb $temp_restore_dir minetest
+            if [ -d $temp_restore_dir$MINETEST_DIR ]; then
+                cp -r $temp_restore_dir$MINETEST_DIR/* $MINETEST_DIR/
+            else
+                cp -r $temp_restore_dir/* $MINETEST_DIR/
+            fi
+            # shellcheck disable=SC2181
+            if [ ! "$?" = "0" ]; then
+                rm -rf $temp_restore_dir
+                function_check set_user_permissions
+                set_user_permissions
+                function_check backup_unmount_drive
+                backup_unmount_drive
+                exit 99
+            fi
+            rm -rf $temp_restore_dir
+        fi
+    fi
+}
+
+function backup_remote_minetest {
+    echo -n ''
+}
+
+function restore_remote_minetest {
+    echo -n ''
+}
+
+function remove_minetest {
+    firewall_remove ${MINETEST_PORT} udp
+
+    $REMOVE_PACKAGES_PURGE minetest*
+
+    remove_app minetest
+    remove_completion_param install_minetest
+    sed -i '/minetest/d' "$COMPLETION_FILE"
+
+    if [ -d /var/www/minetest ]; then
+        rm -rf /var/www/minetest
+    fi
+    if [ -d $MINETEST_DIR ]; then
+        rm -rf $MINETEST_DIR
+    fi
+    if [ -d /usr/share/doc/minetest ]; then
+        rm -rf /usr/share/doc/minetest
+    fi
+    if [ -d /usr/lib/minetest ]; then
+        rm -rf /usr/lib/minetest
+    fi
+    if [ -d /etc/minetest ]; then
+        rm -rf /etc/minetest
+    fi
+}
+
+function minetest_build_from_source {
+    INSTALL_PACKAGES libirrlicht-dev libgettextpo0 libfreetype6-dev cmake libbz2-dev libpng-dev libjpeg-dev libxxf86vm-dev libgl1-mesa-dev libsqlite3-dev libogg-dev libvorbis-dev libopenal-dev libcurl4-openssl-dev libluajit-5.1-dev liblua5.4-0-dev libleveldb-dev
+
+    increment_app_install_progress
+
+    if [ ! -d "$INSTALL_DIR" ]; then
+        mkdir -p "$INSTALL_DIR"
+    fi
+
+    increment_app_install_progress
+
+    git_clone "$MINETEST_REPO" "$INSTALL_DIR/minetest"
+    if [ ! -d "$INSTALL_DIR/minetest" ]; then
+        echo $'Unable to clone minetest repo'
+        exit 77
+    fi
+
+    increment_app_install_progress
+
+    cd "$INSTALL_DIR/minetest" || exit 73
+    git checkout $MINETEST_COMMIT -b $MINETEST_COMMIT
+
+    #cd "$INSTALL_DIR/minetest/games" || exit 73
+    #git_clone "$MINETEST_GAMES_REPO"
+    #git checkout $MINETEST_GAMES_COMMIT -b $MINETEST_GAMES_COMMIT
+    #cd "$INSTALL_DIR/minetest" || exit 73
+
+    increment_app_install_progress
+
+    if ! cmake . -DRUN_IN_PLACE=1 -DENABLE_GETTEXT=1 -DENABLE_FREETYPE=1 -DENABLE_LEVELDB=0 -DBUILD_SERVER=TRUE -DBUILD_CLIENT=FALSE -DCMAKE_BUILD_TYPE=Release; then
+        echo $'Unable to run cmake'
+        exit 82
+    fi
+
+    increment_app_install_progress
+
+    if ! make; then
+        echo $'Unable to make minetest'
+        exit 52
+    fi
+
+    increment_app_install_progress
+
+    $PACKAGE_HOLD minetest-server
+
+    increment_app_install_progress
+
+    cp TODO /usr/lib/minetest/minetestserver
+    chown Debian-minetest: /usr/lib/minetest/minetestserver
+}
+
+function install_minetest {
+    if [ -f /etc/minetest/minetest.conf ]; then
+        remove_minetest
+    fi
+
+    increment_app_install_progress
+
+    if [ -d /var/www/minetest ]; then
+        rm -rf /var/www/minetest
+    fi
+    mkdir -p /var/www/minetest/htdocs
+
+    increment_app_install_progress
+
+    chown -R www-data:www-data /var/www/minetest/htdocs
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES minetest-server
+
+    if [ ! -d $MINETEST_DIR ]; then
+        echo $'Unable to install minetest-server'
+        exit 32
+    fi
+
+    increment_app_install_progress
+
+    minetest_config_filename=/etc/minetest/minetest.conf
+    if [ ! -f $minetest_config_filename ]; then
+        echo $'Minetest configuration file not found'
+        exit 84
+    fi
+    sed -i "s|port = .*|port = $MINETEST_PORT|g" $minetest_config_filename
+    sed -i "s|server_name = .*|server_name = LibreServer Minetest Server|g" $minetest_config_filename
+    sed -i "s|server_description = .*|server_description = Minetest server powered by LibreServer|g" $minetest_config_filename
+
+    increment_app_install_progress
+
+    firewall_add minetest ${MINETEST_PORT} udp
+
+    increment_app_install_progress
+
+    systemctl restart minetest-server
+
+    APP_INSTALLED=1
+}
+
+# NOTE: deliberately no exit 0

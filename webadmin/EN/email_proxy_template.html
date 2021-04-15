@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <style>
+      @import url("libreserver.css");
+
+      .appurl {
+          font-size: 100%;
+      }
+
+      .welcomeheader {
+          font-size: 200%;
+          font-weight: bold;
+      }
+
+      .descriptiontext {
+          font-size: 90%;
+      }
+
+      .logintext {
+          font-size: 120%;
+          font-weight: bold;
+          color: #981737;
+      }
+
+      button {
+          border: none;
+          outline: 0;
+          display: inline-block;
+          padding: 8px;
+          color: white;
+          background-color: #000;
+          text-align: center;
+          cursor: pointer;
+          width: 100%;
+          font-size: 18px;
+      }
+
+      button:hover, a:hover {
+          opacity: 0.7;
+      }
+
+      .chip {
+          display: inline-block;
+          padding: 0 25px;
+          height: 50px;
+          font-size: 70%;
+          line-height: 50px;
+          border-radius: 25px;
+          background-color: #f1f1f1;
+      }
+
+      .chip img {
+          float: left;
+          margin: 0 10px 0 -25px;
+          height: 50px;
+          width: 50px;
+          border-radius: 50%;
+      }
+
+      .ddnslist {
+          font-size: 100%;
+          font-weight: bold;
+          color: black;
+          background-color: lightblue;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="header">
+        <a href="index.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a><br>
+
+        <p class="headertext" translate="yes">Send email through a proxy</p>
+
+        <p class="descriptiontext" translate="yes">If you find that you can't send out email and that you get 'failed delivery' messages returned instead then you may be able to proxy sent emails through another server. Sometimes ISPs or companies provide an SMTP server which can do this.</p>
+
+        <form action="emailproxy.php" method="post">
+          <label translate="yes">SMTP domain</label>: <input type="text" name="isp_smtp_domain" value="EMAIL_PROXY_DOMAIN">
+          <br><br>
+          <label translate="yes">Port</label>: <input type="number" name="isp_smtp_port" value="EMAIL_PROXY_PORT">
+          <br><br>
+          <label translate="yes">Username</label>: <input type="text" name="isp_smtp_username" value="EMAIL_PROXY_USERNAME">
+          <br><br>
+          <label translate="yes">Password</label>: <input type="password" name="isp_smtp_password" value=""><br>
+          <br><br>
+          <input type="submit" name="submitemailproxycancel" translate="yes" value="Cancel">
+          <input type="submit" name="submitDMARC" translate="no" value="DMARC">
+          <input type="submit" name="submitemailproxyclear" translate="yes" value="Clear">
+          <input type="submit" name="submitemailproxy" translate="yes" value="Update">
+          <input type="submit" name="submitemailhelp" translate="yes" value="Help">
+        </form>
+
+        <br>
+      </div>
+    </div>
+  </body>
+</html>

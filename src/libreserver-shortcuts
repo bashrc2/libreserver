@@ -1,0 +1,98 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# shortcuts for commands
+#
+# License
+# =======
+#
+# Copyright (C) 2018-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+CONFDEF_OPTION='-o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confnew'
+
+function INSTALL_PACKAGES {
+    for arg; do
+        install_tries=0
+        install_max_tries=3
+        while [ $install_tries -lt $install_max_tries ]; do
+            echo "Installing package $arg"
+            apt-get -yq ${CONFDEF_OPTION} install $arg
+            if dpkg-query -W --showformat='${Status}\n' $arg 2> /dev/null; then
+                break
+            fi
+            install_tries=$((install_tries + 1))
+        done
+        if [ $install_tries -ge $install_max_tries ]; then
+            echo "Failed to install package $arg"
+	    if [ -f /tmp/.upgrading ]; then
+		# exiting during an upgrade could leave the
+		# webadmin in a half updated state
+		return
+	    else
+		exit 7
+	    fi
+        fi
+    done;
+}
+
+function INSTALL_PACKAGES_BACKPORTS {
+    for arg; do
+        install_tries=0
+        install_max_tries=3
+        while [ $install_tries -lt $install_max_tries ]; do
+            echo "Installing backports package $arg"
+            apt-get -yq ${CONFDEF_OPTION} install --reinstall $arg
+            if dpkg-query -W --showformat='${Status}\n' $arg 2> /dev/null; then
+                break
+            fi
+            install_tries=$((install_tries + 1))
+        done
+        if [ $install_tries -ge $install_max_tries ]; then
+            echo "Failed to install backports package $arg"
+	    if [ -f /tmp/.upgrading ]; then
+		# exiting during an upgrade could leave the
+		# webadmin in a half updated state
+		return
+	    else
+		exit 7
+	    fi
+        fi
+    done;
+}
+
+PYTHON_VERSION='3.9'
+
+REINSTALL_PACKAGES="apt-get -yq ${CONFDEF_OPTION} install --reinstall"
+REINSTALL_PACKAGES_BACKPORTS="apt-get -yq -t bullseye-backports ${CONFDEF_OPTION} install --reinstall"
+
+REMOVE_PACKAGES='apt-get -yq remove'
+REMOVE_PACKAGES_PURGE='apt-get -yq remove --purge'
+REMOVE_PURGE='apt-get -yq purge'
+
+UPDATE_PACKAGES='apt-get -yq update'
+UPGRADE_PACKAGES="apt-get -yq ${CONFDEF_OPTION} upgrade"
+UPGRADE_PACKAGES_DIST="apt-get -yq ${CONFDEF_OPTION} dist-upgrade"
+
+PACKAGE_HOLD='apt-mark -q hold'
+PACKAGE_UNHOLD='apt-mark -q unhold'
+
+CLEAN_PACKAGES='apt-get clean'
+REMOVE_UNUSED_PACKAGES='apt-get -yq autoremove'
+
+# NOTE: deliberately there is no "exit 0"

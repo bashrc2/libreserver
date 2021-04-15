@@ -1,0 +1,473 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# IRC server application
+#
+# License
+# =======
+#
+# Copyright (C) 2014-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VARIANTS='full full-vim chat'
+
+APP_CATEGORY=chat
+
+IN_DEFAULT_INSTALL=0
+SHOW_ON_ABOUT=1
+SHOW_DOMAIN_ONLY=1
+NOT_ON_HOMEPAGE=1
+REQUIRES_APP=
+
+IRC_PORT=6697
+
+IRC_REPO="https://github.com/jrosdahl/miniircd"
+IRC_COMMIT='c6473c51c989cfe23c99d12ad16ecb1abe585ac6'
+
+# An optional password to log into IRC. This applies to all users
+IRC_PASSWORD=
+
+# Number of entries for the bouncer to buffer
+IRC_BUFFER_LENGTH=300
+
+IRC_SHORT_DESCRIPTION=$'Classic chat system'
+IRC_DESCRIPTION=$'The classic low bandwidth chat system'
+IRC_MOBILE_APP_URL='https://f-droid.org/packages/org.yaaic'
+
+IRC_FIREWALL_PORTS="${IRC_PORT}"
+
+irc_variables=(MY_USERNAME
+               MY_NAME
+               DEFAULT_DOMAIN_NAME
+               ONION_ONLY)
+
+function upgrade_distro_irc {
+    target_distro="$1"
+
+    if [[ "$target_distro" == 'bullseye' ]]; then
+        echo -n ''
+    fi
+}
+
+function change_default_domain_name_irc {
+    new_default_domain_name="$1"
+}
+
+function logging_on_irc {
+    echo -n ''
+}
+
+function logging_off_irc {
+    echo -n ''
+}
+
+function irc_get_global_password {
+    if [ -f /etc/miniirc/password ]; then
+        cat /etc/miniirc/password
+    else
+        echo -n ''
+    fi
+}
+
+function create_irssi_config {
+    new_username="$1"
+
+    read_config_param IRC_PORT
+    IRC_PASSWORD=$(irc_get_global_password)
+
+    new_name="$2"
+    if [ ${#new_name} -eq 0 ]; then
+        new_name="$new_username"
+    fi
+
+    { echo 'servers = (';
+      echo '  {';
+      echo '    address = "chat.freenode.net";';
+      echo '    chatnet = "Freenode";';
+      echo '    port = "6667";';
+      echo '    autoconnect = "no";';
+      echo '  },';
+      echo '  {';
+      echo '    address = "irc.oftc.net";';
+      echo '    chatnet = "OFTC";';
+      echo '    port = "6667";';
+      echo '    autoconnect = "no";';
+      echo '  },';
+      echo '  {';
+      echo "    address = \"127.0.0.1\";";
+      echo '    ssl_verify = "no";';
+      echo '    use_ssl = "yes";';
+      echo "    port = \"${IRC_PORT}\";"; } > "/home/${new_username}/.irssi/config"
+    if [[ ${ONION_ONLY} != 'no' ]]; then
+        IRC_ONION_HOSTNAME=$(grep "irc onion domain" "${COMPLETION_FILE}" | head -n 1 | awk -F ':' '{print $2}')
+    fi
+    echo '    chatnet = "LibreServer";' >> "/home/${new_username}/.irssi/config"
+    echo '    autoconnect = "yes";' >> "/home/${new_username}/.irssi/config"
+    if [ "${IRC_PASSWORD}" ]; then
+        echo "    password = \"${IRC_PASSWORD}\";" >> "/home/${new_username}/.irssi/config"
+    fi
+    { echo '  }';
+      echo ');';
+      echo '';
+      echo 'chatnets = {';
+      echo '  LibreServer = {';
+      echo '    type = "IRC";';
+      echo '    max_kicks = "1";';
+      echo '    max_msgs = "4";';
+      echo '    max_whois = "1";';
+      echo '  };';
+      echo '  Freenode = {';
+      echo '    type = "IRC";';
+      echo '    max_kicks = "1";';
+      echo '    max_msgs = "4";';
+      echo '    max_whois = "1";';
+      echo '  };';
+      echo '  OFTC = {';
+      echo '    type = "IRC";';
+      echo '    max_kicks = "1";';
+      echo '    max_msgs = "1";';
+      echo '    max_whois = "1";';
+      echo '  };';
+      echo '};';
+      echo '';
+      echo 'channels = (';
+      echo '  { name = "#libreserver"; chatnet = "LibreServer"; autojoin = "Yes"; },';
+      echo ');';
+      echo '';
+      echo 'settings = {';
+      echo "  core = { real_name = \"$new_name\"; user_name = \"$new_username\"; nick = \"$new_username\"; };";
+      echo '  "fe-text" = { actlist_sort = "refnum"; };';
+      echo '};';
+      echo 'ignores = ( { level = "CTCPS"; } );'; } >> "/home/${new_username}/.irssi/config"
+
+    chown -R "${new_username}":"${new_username}" "/home/${new_username}/.irssi"
+}
+
+function remove_user_irc_bouncer {
+    remove_username="$1"
+}
+
+function remove_user_irc {
+    remove_username="$1"
+
+    "${PROJECT_NAME}-pass" -u "$remove_username" --rmapp irc
+
+    remove_user_irc_bouncer "${remove_username}"
+    if [ -d "/home/${remove_username}/.irssi" ]; then
+        rm -rf "/home/${remove_username}/.irssi"
+    fi
+    if [ -d "/home/${remove_username}/irclogs" ]; then
+        rm -rf "/home/${remove_username}/irclogs"
+    fi
+}
+
+function irc_set_global_password_base {
+    NEW_IRC_PASSWORD="$1"
+    echo -n "${NEW_IRC_PASSWORD}" > /etc/miniirc/password
+    if ! grep -q "password" /etc/systemd/system/irc.service; then
+        sed -i 's|/usr/local/bin/miniircd|/usr/local/bin/miniircd --password-file /etc/miniirc/password|g' /etc/systemd/system/irc.service
+        systemctl daemon-reload
+        systemctl restart irc
+    fi
+}
+
+function change_password_irc {
+    new_global_password="$2"
+
+    set_password_for_all_users irc "$new_global_password"
+    irc_set_global_password_base "$new_global_password"
+}
+
+function add_user_irc {
+    new_username="$1"
+    new_user_password="$2"
+
+    IRC_PASSWORD=$(irc_get_global_password)
+    if [ ${#IRC_PASSWORD} -lt 2 ]; then
+        IRC_PASSWORD=
+    fi
+
+    if [ ! -d "/home/${new_username}/.irssi" ]; then
+        mkdir "/home/${new_username}/.irssi"
+    fi
+
+    create_irssi_config "${new_username}"
+    echo '0'
+}
+
+function run_client_irc {
+    irssi
+}
+
+function irc_show_password {
+    IRC_PASSWORD=$(irc_get_global_password)
+    dialog --title $"IRC Password" \
+           --msgbox "$IRC_PASSWORD" 6 40
+}
+
+function irc_set_global_password {
+    EXISTING_IRC_PASSWORD=$(irc_get_global_password)
+    data=$(mktemp 2>/dev/null)
+    dialog --title $"IRC Password" \
+           --clear \
+           --backtitle $"LibreServer Control Panel" \
+           --passwordbox $"Password for all IRC users, or press Enter for no password" 10 60 "$EXISTING_IRC_PASSWORD" 2> "$data"
+    sel=$?
+    case $sel in
+        0)
+            NEW_IRC_PASSWORD=$(<"$data")
+            irc_set_global_password_base "$NEW_IRC_PASSWORD"
+            dialog --title $"IRC Password" \
+                   --msgbox $"The IRC password was changed" 6 40
+            ;;
+    esac
+    rm -f "$data"
+}
+
+function configure_interactive_irc {
+    if [ ! -d /etc/miniirc ]; then
+        dialog --title $"IRC Menu" \
+               --msgbox $"No IRC server is installed" 6 70
+        return
+    fi
+
+    W=(1 $"Set a password for all IRC users"
+       2 $"Show current IRC login password")
+
+    while true
+    do
+        # shellcheck disable=SC2068
+        selection=$(dialog --backtitle $"LibreServer Administrator Control Panel" --title $"IRC" --menu $"Choose an operation, or ESC to exit:" 10 60 2 "${W[@]}" 3>&2 2>&1 1>&3)
+
+        if [ ! "$selection" ]; then
+            break
+        fi
+
+        case $selection in
+            1) irc_set_global_password;;
+            2) irc_show_password;;
+        esac
+    done
+}
+
+function install_interactive_irc {
+    echo -n ''
+    APP_INSTALLED=1
+}
+
+function reconfigure_irc {
+    echo -n ''
+}
+
+function irc_fix_password {
+    sed -i 's|if arguments\[0] == server.password:|if arguments\[0].decode("utf-8") == server.password:|g' /usr/local/bin/miniircd
+}
+
+function upgrade_irc {
+    if [[ "$ONION_ONLY" == 'no' ]]; then
+        cat "/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/fullchain.pem" "/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/privkey.pem" > /var/jail/miniircd/miniircd.pem
+    fi
+
+    CURR_IRC_COMMIT=$(get_completion_param "irc commit")
+    if [[ "$CURR_IRC_COMMIT" == "$IRC_COMMIT" ]]; then
+        return
+    fi
+
+    function_check set_repo_commit
+    set_repo_commit /etc/miniirc "irc commit" "$IRC_COMMIT" "$IRC_REPO"
+
+    cp /etc/miniirc/miniircd /usr/local/bin/miniircd
+    irc_fix_password
+}
+
+function backup_local_irc {
+    echo -n ''
+}
+
+function restore_local_irc {
+    echo -n ''
+}
+
+function backup_remote_irc {
+    echo -n ''
+}
+
+function restore_remote_irc {
+    echo -n ''
+}
+
+function remove_irc {
+    systemctl stop irc
+    systemctl disable irc
+    rm /etc/systemd/system/irc.service
+    $REMOVE_PACKAGES_PURGE irssi
+
+    function_check save_firewall_settings
+    save_firewall_settings
+    firewall_remove ${IRC_PORT} tcp
+
+    if [ -d /var/jail/miniircd ]; then
+        rm -rf /var/jail/miniircd
+    fi
+    if [ -d /etc/miniirc ]; then
+        rm -rf /etc/miniirc
+    fi
+
+    function_check remove_onion_service
+    remove_onion_service irc ${IRC_PORT}
+    remove_completion_param install_irc
+    remove_completion_param configure_firewall_for_irc
+    sed -i '/IRC /d' "${COMPLETION_FILE}"
+    userdel -r miniirc
+}
+
+function configure_firewall_for_irc {
+    if [ ! -d /etc/miniirc ]; then
+        return
+    fi
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+    if [[ ${INSTALLED_WITHIN_DOCKER} == "yes" ]]; then
+        # docker does its own firewalling
+        return
+    fi
+    if [[ ${ONION_ONLY} != "no" ]]; then
+        return
+    fi
+    /usr/sbin/nft add rule inet filter INPUT tcp dport 1024-65535 sport ${IRC_PORT} accept
+    function_check save_firewall_settings
+    save_firewall_settings
+
+    firewall_add IRC ${IRC_PORT} tcp
+    echo 'configure_firewall_for_irc' >> "${COMPLETION_FILE}"
+}
+
+function install_irc_server {
+    if [[ $(app_is_installed irc_server) == "1" ]]; then
+        return
+    fi
+
+    if [ -d /etc/miniirc ]; then
+        rm -rf /etc/miniirc
+    fi
+    if [ -d /var/jail/miniircd ]; then
+        rm -rf /var/jail/miniircd
+    fi
+
+    function_check git_clone
+    git_clone "$IRC_REPO" /etc/miniirc
+
+    cd /etc/miniirc || exit 76
+
+    git checkout "$IRC_COMMIT" -b "$IRC_COMMIT"
+    set_completion_param "irc commit" "$IRC_COMMIT"
+
+    cp /etc/miniirc/miniircd /usr/local/bin/miniircd
+    irc_fix_password
+    make jail
+
+    if [ ! -d /var/jail/miniircd ]; then
+        mkdir -p /var/jail/miniircd
+    fi
+
+    # shellcheck disable=SC2034
+    IRC_ONION_HOSTNAME=$(add_onion_service irc "${IRC_PORT}" "${IRC_PORT}")
+
+    IRC_SSL_OPTION=
+    if [[ "$ONION_ONLY" == 'no' ]]; then
+        cat "/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/fullchain.pem" "/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/privkey.pem" > /var/jail/miniircd/miniircd.pem
+    else
+        "${PROJECT_NAME}-addcert" -h "${IRC_ONION_HOSTNAME}" --dhkey "${DH_KEYLENGTH}"
+        if [ ! -f "/etc/ssl/certs/${IRC_ONION_HOSTNAME}.crt" ]; then
+            echo "irc TLS cert not found /etc/ssl/certs/${IRC_ONION_HOSTNAME}.crt"
+            exit 46
+        fi
+        if [ ! -f "/etc/ssl/private/${IRC_ONION_HOSTNAME}.key" ]; then
+            echo "irc TLS cert not found /etc/ssl/private/${IRC_ONION_HOSTNAME}.key"
+            exit 71
+        fi
+        cat "/etc/ssl/certs/${IRC_ONION_HOSTNAME}.crt" "/etc/ssl/private/${IRC_ONION_HOSTNAME}.key" > /var/jail/miniircd/miniircd.pem
+    fi
+    IRC_SSL_OPTION='--ssl-pem-file=/miniircd.pem'
+
+    adduser --system --home="/etc/miniirc" --group miniirc
+
+    { echo '[Unit]';
+      echo 'Description=miniircd server';
+      echo 'After=syslog.target';
+      echo 'After=network.target';
+      echo '';
+      echo '[Service]';
+      echo 'User=root';
+      echo 'Group=root';
+      echo "WorkingDirectory=/etc/miniirc";
+      echo "ExecStart=/usr/local/bin/miniircd --state-dir=/ --setuid=miniirc ${IRC_SSL_OPTION} --chroot=/var/jail/miniircd";
+      echo 'Environment=PATH=/usr/bin:/usr/local/bin';
+      echo 'Restart=on-failure';
+      echo 'PrivateTmp=true';
+      echo 'PrivateDevices=false';
+      echo 'CapabilityBoundingSet=~CAP_SYS_ADMIN';
+      echo 'ProtectSystem=yes';
+      echo 'ProtectHome=yes';
+      echo 'ProtectClock=yes';
+      echo 'ProtectHostname=yes';
+      echo 'ProtectKernelModules=yes';
+      echo 'ProtectKernelTunables=yes';
+      echo 'NoNewPrivileges=true';
+      echo '';
+      echo '[Install]';
+      echo 'WantedBy=multi-user.target'; } > "$rootdir/etc/systemd/system/irc.service"
+    chroot "$rootdir" systemctl enable irc.service
+    chown -R miniirc:miniirc /var/jail
+    chroot "$rootdir" systemctl restart irc.service
+
+    function_check configure_firewall_for_irc
+    configure_firewall_for_irc
+    install_completed irc_server
+}
+
+function install_irc_client {
+    if [[ $(app_is_installed irc_client) == "1" ]]; then
+        return
+    fi
+    INSTALL_PACKAGES irssi
+
+    if [ ! -d "/home/${MY_USERNAME}/.irssi" ]; then
+        mkdir "/home/${MY_USERNAME}/.irssi"
+    fi
+
+    create_irssi_config "${MY_USERNAME}" "$MY_NAME"
+    install_completed irc_client
+}
+
+function install_irc {
+    increment_app_install_progress
+
+    install_irc_server
+
+    increment_app_install_progress
+
+    install_irc_client
+
+    systemctl restart irc
+
+    APP_INSTALLED=1
+}
+
+# NOTE: deliberately no exit 0

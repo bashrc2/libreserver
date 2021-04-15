@@ -1,0 +1,109 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Add or remove apps
+#
+# This is a wrapper which catches the exit state from the base script
+# and alters the webadmin index screen if needed
+#
+# License
+# =======
+#
+# Copyright (C) 2015-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+arg1="$1"
+arg2="$2"
+
+adding_app_file=/root/.addremove_app_command
+if [ -f "$adding_app_file" ]; then
+    rm "$adding_app_file"
+fi
+
+if [[ "$arg1" == 'add' ]]; then
+    if [ "$arg2" ]; then
+        touch "$adding_app_file"
+    fi
+fi
+
+/usr/local/bin/libreserver-addremove-base "$arg1" "$arg2" || \
+    (
+        echo $'addremove fail state'
+
+        if [ -f "$adding_app_file" ]; then
+            echo $'Failed to add app'
+            rm "$adding_app_file"
+
+            local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+            webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+            pending_installs="$webadmin_install_dir/pending_installs.txt"
+
+            # remove from pending installs
+            if [ -f "$pending_installs" ]; then
+                sed -i "/install_$arg2/d" "$pending_installs"
+            fi
+
+            cancel_install_file="$webadmin_install_dir/.cancel_install.txt"
+            if [ ! -f "$cancel_install_file" ]; then
+                # show the failed screen
+                cp "$webadmin_install_dir/app_installing_failed.html" "$webadmin_install_dir/index.html"
+                #rm "$webadmin_install_dir/app_installing_failed.html"
+                chown www-data:www-data "$webadmin_install_dir/index.html"
+                cp "$webadmin_install_dir/app_installing_failed.html" "$webadmin_install_dir/installing_progress.html"
+                chown www-data:www-data "$webadmin_install_dir/installing_progress.html"
+            else
+                cp "$webadmin_install_dir/index_app_installing.html" "$webadmin_install_dir/index.html"
+                #rm "$webadmin_install_dir/index_app_installing.html"
+                chown www-data:www-data "$webadmin_install_dir/index.html"
+                cp "$webadmin_install_dir/index_app_installing.html" "$webadmin_install_dir/installing_progress.html"
+                chown www-data:www-data "$webadmin_install_dir/installing_progress.html"
+                echo "Restored index screen" >> "$webadmin_install_dir/applog.txt";
+            fi
+
+            currently_installing_app_domain=/root/.libreserver_currently_installing_app_domain
+            if [ -f "$currently_installing_app_domain" ]; then
+                app_domain=$(cat "$currently_installing_app_domain")
+
+                # if an nginx config was added for the app then remove it
+                # and restart the web server
+                if [ -f "/etc/nginx/sites-available/${app_domain}" ]; then
+                    echo "Removing /etc/nginx/sites-available/${app_domain}" >> "$webadmin_install_dir/applog.txt"
+                    nginx_dissite "${app_domain}"
+                    mv "/etc/nginx/sites-available/${app_domain}" /root/.nginx_config
+                    cat /root/.nginx_config >> "$webadmin_install_dir/applog.txt"
+                    echo "Restarting nginx" >> "$webadmin_install_dir/applog.txt"
+                    systemctl restart nginx
+                fi
+                rm "$currently_installing_app_domain"
+            fi
+
+            exit 1
+        else
+            exit 0
+        fi
+    )
+
+if [ -f /root/.nginx_config ]; then
+    rm /root/.nginx_config
+fi
+
+if [ -f "$adding_app_file" ]; then
+    rm "$adding_app_file"
+fi
+
+exit 0

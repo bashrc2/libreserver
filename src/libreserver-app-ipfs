@@ -1,0 +1,403 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# ipfs functions
+#
+# License
+# =======
+#
+# Copyright (C) 2014-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VARIANTS=''
+
+IN_DEFAULT_INSTALL=0
+SHOW_ON_ABOUT=0
+NOT_ON_HOMEPAGE=1
+REQUIRES_APP=
+
+IPFS_GO_REPO_BASE="github.com/ipfs/go-ipfs"
+IPFS_GO_REPO="https://$IPFS_GO_REPO_BASE"
+IPFS_COMMIT='6fdfaaf6e4783ae1be7b348e7a6bc0640982c7df'
+IPFS_PORT=4001
+IPFS_NODE_VERSION='6.2.2'
+IPFS_N_VERSION='2.1.4'
+IPFS_KEY_LENGTH=2048
+IPFS_GO_VERSION=0.4.13
+
+IPFS_FIREWALL_PORTS="$IPFS_PORT"
+
+ipfs_variables=(IPFS_GO_VERSION
+                IPFS_KEY_LENGTH
+                IPFS_PORT)
+
+function upgrade_distro_ipfs {
+    target_distro="$1"
+
+    if [[ "$target_distro" == 'bullseye' ]]; then
+        firewall_add IPFS $IPFS_PORT tcp
+        echo -n ''
+    fi
+}
+
+function logging_on_ipfs {
+    echo -n ''
+}
+
+function logging_off_ipfs {
+    echo -n ''
+}
+
+function install_interactive_ipfs {
+    echo -n ''
+    APP_INSTALLED=1
+}
+
+function reconfigure_ipfs {
+    echo -n ''
+}
+
+function upgrade_ipfs_go {
+    CURR_IPFS_COMMIT=$(get_completion_param "ipfs commit")
+    if [[ "$CURR_IPFS_COMMIT" == "$IPFS_COMMIT" ]]; then
+        return
+    fi
+
+    if [[ $(app_is_installed ipfs_go) == "0" ]]; then
+        return
+    fi
+
+    function_check set_repo_commit
+    set_repo_commit "$GOPATH/src/github.com/ipfs/go-ipfs" "ipfs commit" "$IPFS_COMMIT" "$IPFS_REPO"
+}
+
+function upgrade_ipfs {
+    upgrade_ipfs_go
+}
+
+function backup_local_ipfs {
+    if ! grep -q "Admin user" "$COMPLETION_FILE"; then
+        return
+    fi
+    ADMIN_USERNAME=$(get_completion_param "Admin user")
+    source_directory="/home/$ADMIN_USERNAME/.ipfs"
+    if [ -d "$source_directory" ]; then
+        dest_directory=ipfs
+        function_check backup_directory_to_usb
+        backup_directory_to_usb "$source_directory" "$dest_directory"
+    fi
+}
+
+function restore_local_ipfs {
+    if ! grep -q "Admin user" "$COMPLETION_FILE"; then
+        return
+    fi
+    if [ -d "$USB_MOUNT/backup/ipfs" ]; then
+        echo $"Restoring IPFS"
+        temp_restore_dir=/root/tempipfs
+        function_check restore_directory_from_usb
+        restore_directory_from_usb $temp_restore_dir ipfs
+        ADMIN_USERNAME=$(get_completion_param "Admin user")
+        if [ -d "$temp_restore_dir/home/$ADMIN_USERNAME/.ipfs" ]; then
+            cp -rf "$temp_restore_dir/home/$ADMIN_USERNAME/.ipfs/"* "/home/$ADMIN_USERNAME/.ipfs"
+        else
+            cp -rf "$temp_restore_dir/"* "/home/$ADMIN_USERNAME/.ipfs"
+        fi
+        # shellcheck disable=SC2181
+        if [ ! "$?" = "0" ]; then
+            rm -rf $temp_restore_dir
+            function_check set_user_permissions
+            set_user_permissions
+            function_check backup_unmount_drive
+            backup_unmount_drive
+            exit 27
+        fi
+        rm -rf $temp_restore_dir
+        echo $"Restore of IPFS complete"
+    fi
+}
+
+function backup_remote_ipfs {
+    echo -n ''
+}
+
+function restore_remote_ipfs {
+    echo -n ''
+}
+
+function remove_ipfs_go {
+    systemctl stop ipfs
+    systemctl disable ipfs
+    systemctl daemon-reload
+    rm /etc/systemd/system/ipfs.service
+    systemctl daemon-reload
+    rm -rf "$GOPATH/src/github.com/ipfs"
+    firewall_remove $IPFS_PORT tcp
+    remove_completion_param install_ipfs
+    remove_completion_param configure_firewall_for_ipfs
+    sed -i '/ipfs/d' "$COMPLETION_FILE"
+}
+
+function remove_ipfs {
+    remove_ipfs_go
+}
+
+function configure_firewall_for_ipfs {
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+    if [[ $ONION_ONLY != "no" ]]; then
+        return
+    fi
+
+    firewall_add IPFS $IPFS_PORT tcp
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function mesh_install_ipfs_go {
+    # shellcheck disable=SC2086,SC2154
+    chroot "${rootdir}" INSTALL_PACKAGES libpam0g-dev fuse wget
+
+    mesh_upgrade_golang
+
+    IPFS_ARCH=
+    IPFS_PATH=/usr/bin
+
+    if [ ! -d "$rootdir$INSTALL_DIR/ipfs" ]; then
+        mkdir -p "$rootdir$INSTALL_DIR/ipfs"
+    fi
+    cd "$rootdir$INSTALL_DIR/ipfs" || exit 23
+
+    if [[ $ARCHITECTURE == *"386" || $ARCHITECTURE == *"686" ]]; then
+        IPFS_ARCH=386
+    fi
+    if [[ $ARCHITECTURE == *"amd64" || $ARCHITECTURE == "x86_64" ]]; then
+        IPFS_ARCH=amd64
+    fi
+    if [[ $ARCHITECTURE == *"arm"* || $ARCHITECTURE == *"aarch"* ]]; then
+        IPFS_ARCH=arm
+    fi
+    if [ ! $IPFS_ARCH ]; then
+        echo $'No architecture specified'
+        ARCHITECTURE=$(uname -m)
+        if [[ $ARCHITECTURE == "arm"* || $ARCHITECTURE == *"aarch"* ]]; then
+            IPFS_ARCH=arm
+            echo $"Using $IPFS_ARCH"
+        fi
+        if [[ $ARCHITECTURE == "amd"* || $ARCHITECTURE == "x86_64" ]]; then
+            IPFS_ARCH=amd64
+            echo $"Using $IPFS_ARCH"
+        fi
+        if [[ $ARCHITECTURE == *"386" || $ARCHITECTURE == *"686" ]]; then
+            IPFS_ARCH=386
+            echo $"Using $IPFS_ARCH"
+        fi
+    fi
+    if [ ! $IPFS_ARCH ]; then
+        echo $'Architecture not detected for IPFS install'
+        exit 73
+    fi
+
+    IPFS_FILE=go-ipfs_v${IPFS_GO_VERSION}_linux-${IPFS_ARCH}.tar.gz
+    if [[ "$ONION_ONLY" == 'no' ]]; then        
+        wget https://ipfs.io/ipns/dist.ipfs.io/go-ipfs/v${IPFS_GO_VERSION}/${IPFS_FILE}
+    else
+        torsocks wget https://ipfs.io/ipns/dist.ipfs.io/go-ipfs/v${IPFS_GO_VERSION}/${IPFS_FILE}
+        if [ ! -f "$rootdir$INSTALL_DIR/ipfs/${IPFS_FILE}" ]; then
+            wget https://ipfs.io/ipns/dist.ipfs.io/go-ipfs/v${IPFS_GO_VERSION}/${IPFS_FILE}
+        fi
+    fi
+    if [ ! -f "$rootdir$INSTALL_DIR/ipfs/${IPFS_FILE}" ]; then
+        echo $'IPFS package could not be downloaded'
+        exit 63
+    fi
+    tar -xzvf ${IPFS_FILE}
+    if [ ! -f "$rootdir$INSTALL_DIR/ipfs/go-ipfs/ipfs" ]; then
+        echo $"ipfs was not found in downloaded package"
+        exit 63
+    fi
+    chroot "$rootdir" /bin/cp "$INSTALL_DIR/ipfs/go-ipfs/ipfs" $IPFS_PATH
+    if [ ! -f "$rootdir$IPFS_PATH/ipfs" ]; then
+        echo $'IPFS was not installed'
+        exit 63
+    fi
+
+    IPFS_USER_DAEMON=${rootdir}/home/${MY_USERNAME}/.config/systemd/user/ipfs.service
+    mkdir -p "${rootdir}/home/${MY_USERNAME}/.config/systemd/user"
+
+    { echo '[Unit]';
+      echo 'Description=IPFS go daemon';
+      echo 'After=syslog.target';
+      echo 'After=network.target';
+      echo '';
+      echo '[Service]';
+      echo 'Type=simple';
+      echo "ExecStart=$IPFS_PATH/ipfs daemon";
+      echo 'Restart=on-failure';
+      echo 'RestartSec=60';
+      echo '';
+      echo '[Install]';
+      echo 'WantedBy=default.target'; } > "$IPFS_USER_DAEMON"
+    chroot "${rootdir}" /bin/chown -R "$MY_USERNAME":"$MY_USERNAME" "/home/${MY_USERNAME}/.config"
+}
+
+function install_ipfs_go {
+    if [ "$INSTALLING_MESH" ]; then
+        mesh_install_ipfs_go
+        return
+    fi
+    if [[ $(app_is_installed ipfs_go) == "1" ]]; then
+        return
+    fi
+
+    INSTALL_PACKAGES golang libpam0g-dev fuse
+
+    if [ ! -d /home/git ]; then
+        # add a gogs user account
+        adduser --disabled-login --gecos 'Gogs' git
+        if [ ! -d /home/git ]; then
+            echo $"/home/git directory not created"
+            exit 73
+        fi
+
+        # install Go
+        if ! grep -q "export GOPATH=" ~/.bashrc; then
+            echo "export GOPATH=$GOPATH" >> ~/.bashrc
+        else
+            sed -i "s|export GOPATH=.*|export GOPATH=$GOPATH|g" ~/.bashrc
+        fi
+        systemctl set-environment GOPATH="$GOPATH"
+        if ! grep -q "systemctl set-environment GOPATH=" ~/.bashrc; then
+            echo "systemctl set-environment GOPATH=$GOPATH" >> ~/.bashrc
+        else
+            sed -i "s|systemctl set-environment GOPATH=.*|systemctl set-environment GOPATH=$GOPATH|g" ~/.bashrc
+        fi
+        if [ ! -d "$GOPATH" ]; then
+            mkdir -p "$GOPATH"
+        fi
+    fi
+
+    IPFS_PATH=$GOPATH/bin
+    export PATH="$GOPATH/bin:$PATH:"
+    if ! grep -q 'GOPATH/bin' ~/.bashrc; then
+        echo "export PATH=\"\$GOPATH/bin:\$PATH:\";" >> ~/.bashrc
+    else
+        sed -i "s|systemctl set-environment GOPATH=.*|systemctl set-environment GOPATH=$GOPATH|g" ~/.bashrc
+    fi
+
+    # set gopath for the user
+    if ! grep -q "GOPATH=" "/home/$MY_USERNAME/.bashrc"; then
+        echo "export GOPATH=$GOPATH" >> "/home/$MY_USERNAME/.bashrc"
+        echo "export PATH=\"\$GOPATH/bin:\$PATH:\";" >> "/home/$MY_USERNAME/.bashrc"
+    else
+        sed -i "s|export GOPATH=.*|export GOPATH=$GOPATH|g" "/home/$MY_USERNAME/.bashrc"
+    fi
+    chown "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME/.bashrc"
+
+    if ! go get -u ${IPFS_GO_REPO_BASE}/cmd/ipfs; then
+        exit 82
+    fi
+
+    if [ ! -d "$GOPATH/src/$IPFS_GO_REPO_BASE" ]; then
+        echo $'go get failed to get ipfs'
+        exit 63
+    fi
+
+    cd "$GOPATH/src/$IPFS_GO_REPO_BASE" || exit 34
+    if ! git checkout $IPFS_COMMIT -b $IPFS_COMMIT; then
+        exit 73
+    fi
+
+    set_completion_param "ipfs commit" "$IPFS_COMMIT"
+
+    if ! make install; then
+        exit 54
+    fi
+
+    # initialise
+    chmod 755 "$IPFS_PATH/ipfs"
+    su -c "$IPFS_PATH/ipfs init -b 2048" - "$MY_USERNAME"
+    if [ ! -d "/home/$MY_USERNAME/.ipfs" ]; then
+        echo "IPFS could not be initialised for user $MY_USERNAME"
+        exit 73
+    fi
+
+    # directories to mount to
+    if [ ! -d /ipfs ]; then
+        mkdir /ipfs
+        mkdir /ipns
+        chown "$MY_USERNAME":"$MY_USERNAME" /ipfs
+        chown "$MY_USERNAME":"$MY_USERNAME" /ipns
+    fi
+
+    if [ -f /etc/fuse.conf ]; then
+        chown "$MY_USERNAME":"$MY_USERNAME" /etc/fuse.conf
+    fi
+    if [ -f /dev/fuse ]; then
+        chown "$MY_USERNAME":"$MY_USERNAME" /dev/fuse
+    fi
+
+    { echo '[Unit]';
+      echo 'Description=IPFS go daemon';
+      echo 'After=syslog.target';
+      echo 'After=network.target';
+      echo '';
+      echo '[Service]';
+      echo 'Type=simple';
+      echo "User=$MY_USERNAME";
+      echo "Group=$MY_USERNAME";
+      echo "WorkingDirectory=/home/$MY_USERNAME";
+      echo "ExecStart=$IPFS_PATH/ipfs daemon --mount";
+      echo 'Restart=on-failure';
+      echo "Environment=\"USER=$MY_USERNAME\" \"HOME=/home/$MY_USERNAME\" \"GOPATH=$GOPATH\" \"GVM_ROOT=$GVM_HOME\"";
+      echo '';
+      echo '[Install]';
+      echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/ipfs.service
+
+    systemctl enable ipfs
+    systemctl daemon-reload
+    systemctl restart ipfs
+
+    if [ -d /etc/avahi ]; then
+        su -c "echo $("$IPFS_PATH/ipfs" id | grep '\"ID\":' | awk -F '\"' '{print $4}') > /tmp/ipfsid" - "$MY_USERNAME"
+        if [ ! -f /tmp/ipfsid ]; then
+            echo 'No IPFS identity was created'
+            exit 37
+        fi
+        IPFS_PEER_ID=$(cat /tmp/ipfsid)
+        if [ ${#IPFS_PEER_ID} -lt 10 ]; then
+            echo 'Invalid IPFS peer ID'
+            echo "$IPFS_PEER_ID"
+            exit 74
+        fi
+        # Add an avahi service
+        function_check create_avahi_service
+        create_avahi_service 'ipfs_id' 'ipfs' 'udp' "$IPFS_PORT" "$IPFS_PEER_ID:none"
+        rm /tmp/ipfsid
+    fi
+
+    function_check configure_firewall_for_ipfs
+    configure_firewall_for_ipfs
+
+    install_completed ipfs_go
+}
+
+function install_ipfs {
+    install_ipfs_go
+    APP_INSTALLED=1
+}

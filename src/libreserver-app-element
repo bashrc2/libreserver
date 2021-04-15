@@ -1,0 +1,538 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Element Web user interface for Matrix
+#
+# License
+# =======
+#
+# Copyright (C) 2017-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VARIANTS='full full-vim chat'
+
+APP_CATEGORY=chat
+
+IN_DEFAULT_INSTALL=0
+SHOW_ON_ABOUT=1
+REQUIRES_APP=matrix
+ELEMENT_MINIMUM_RAM_MB=900
+
+ELEMENT_VERSION='1.7.21'
+ELEMENT_FILENAME="element-v${ELEMENT_VERSION}"
+ELEMENT_DOWNLOAD_URL="https://github.com/vector-im/element-web/releases/download/v${ELEMENT_VERSION}"
+ELEMENT_ONION_PORT=8118
+ELEMENT_ONION_HOSTNAME=
+ELEMENT_DOMAIN_NAME=
+ELEMENT_CODE=
+
+ELEMENT_SHORT_DESCRIPTION=$'Web based client for Matrix'
+ELEMENT_DESCRIPTION=$'Web based client for Matrix'
+ELEMENT_MOBILE_APP_URL='https://f-droid.org/packages/im.vector.alpha'
+
+ELEMENT_DEFAULT_JITSI="jitsi.riot.im"
+
+element_variables=(MY_USERNAME
+                   ELEMENT_DOMAIN_NAME
+                   MATRIX_DOMAIN_NAME
+                   SYSTEM_TYPE
+                   ONION_ONLY
+                   DDNS_PROVIDER)
+
+function element_setting_jitsi {
+    # sets the jitsi server
+    jitsiServer="$1"
+
+    if [ ! "$jitsiServer" ]; then
+        return
+    fi
+
+    if grep -q "ELEMENT_DOMAIN_NAME=" "$CONFIGURATION_FILE"; then
+        ELEMENT_DOMAIN_NAME=$(grep "ELEMENT_DOMAIN_NAME" "$CONFIGURATION_FILE" | awk -F '=' '{print $2}')
+        if [ "$ELEMENT_DOMAIN_NAME" ]; then
+            element_config_file="/var/www/${ELEMENT_DOMAIN_NAME}/htdocs/config.json"
+            if [ -f "$element_config_file" ]; then
+                sed -i "s|\"preferredDomain\":.*|\"preferredDomain\": \"$jitsiServer\"|g" "$element_config_file"
+            fi
+        fi
+    fi
+
+    local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+    webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+    if [ -f "${webadmin_install_dir}/settings_element.html" ]; then
+        sed -i "s|name=\"jitsi\".*|name=\"jitsi\" value=\"${jitsiServer}\">|g" "${webadmin_install_dir}/settings_element.html"
+    fi
+}
+
+function upgrade_distro_element {
+    target_distro="$1"
+
+    if [[ "$target_distro" == 'bullseye' ]]; then
+        echo -n ''
+    fi
+}
+
+function element_set_default_homeserver {
+    if [ ! "$ELEMENT_DOMAIN_NAME" ]; then
+        read_config_param ELEMENT_DOMAIN_NAME
+    fi
+
+    if [[ "$ONION_ONLY" == 'no' ]]; then
+        if [ ! "$MATRIX_DOMAIN_NAME" ]; then
+            read_config_param MATRIX_DOMAIN_NAME
+        fi
+
+        if [ -f "/var/www/$ELEMENT_DOMAIN_NAME/htdocs/config.json" ]; then
+            sed -i "s|\"m.homeserver\":.*|\"m.homeserver\": {\"base_url\": \"https://${MATRIX_DOMAIN_NAME}\",|g" "/var/www/$ELEMENT_DOMAIN_NAME/htdocs/config.json"
+            sed -i "s|\"m.identity_server\":.*|\"m.identity_server\": {\"base_url\": \"https://${MATRIX_DOMAIN_NAME}\"}|g" "/var/www/$ELEMENT_DOMAIN_NAME/htdocs/config.json"
+        fi
+
+        sed -i "s|https://matrix.org|https://$MATRIX_DOMAIN_NAME|g" /var/www/${ELEMENT_DOMAIN_NAME}/htdocs/bundles/*/*.js
+        sed -i "s|https://vector.im|https://$MATRIX_DOMAIN_NAME|g" /var/www/${ELEMENT_DOMAIN_NAME}/htdocs/bundles/*/*.js
+    else
+        MATRIX_ONION_HOSTNAME=$(cat /var/lib/tor/hidden_service_matrix/hostname)
+        if [ -f "/var/www/$ELEMENT_DOMAIN_NAME/htdocs/config.json" ]; then
+            sed -i "s|\"m.homeserver\":.*|\"m.homeserver\": {\"base_url\": \"http://${MATRIX_ONION_HOSTNAME}\",|g" "/var/www/$ELEMENT_DOMAIN_NAME/htdocs/config.json"
+            sed -i "s|\"m.identity_server\":.*|\"m.identity_server\": {\"base_url\": \"http://${MATRIX_ONION_HOSTNAME}\"}|g" "/var/www/$ELEMENT_DOMAIN_NAME/htdocs/config.json"
+        fi
+
+        if [ -f /var/lib/tor/hidden_service_matrix/hostname ]; then
+            sed -i "s|http://matrix.org|http://$MATRIX_ONION_HOSTNAME|g" /var/www/${ELEMENT_DOMAIN_NAME}/htdocs/bundles/*/*.js
+            sed -i "s|http://vector.im|http://$MATRIX_ONION_HOSTNAME|g" /var/www/${ELEMENT_DOMAIN_NAME}/htdocs/bundles/*/*.js
+        fi
+    fi
+}
+
+function logging_on_element {
+    echo -n ''
+}
+
+function logging_off_element {
+    echo -n ''
+}
+
+function remove_user_element {
+    echo -n ''
+}
+
+function add_user_element {
+    echo '0'
+}
+
+function element_remove_bad_links {
+    sed -i '/riot.im/d' "/var/www/${ELEMENT_DOMAIN_NAME}/htdocs/welcome.html"
+    sed -i '/element.im/d' "/var/www/${ELEMENT_DOMAIN_NAME}/htdocs/welcome.html"
+}
+
+function install_interactive_element {
+    if [[ "$ONION_ONLY" != "no" ]]; then
+        ELEMENT_DOMAIN_NAME='element.local'
+    else
+        ELEMENT_DETAILS_COMPLETE=
+        while [ ! $ELEMENT_DETAILS_COMPLETE ]
+        do
+            data=$(mktemp 2>/dev/null)
+            dialog --backtitle $"LibreServer Configuration" \
+                   --title $"Element Web user interface for Matrix" \
+                   --form $"\\nPlease enter your details. The background image URL can be left blank.\\n\\nIMPORTANT: This should be a domain name which is supported by Let's Encrypt:" 13 65 2 \
+                   $"Domain:" 1 1 "$(grep 'ELEMENT_DOMAIN_NAME' temp.cfg | awk -F '=' '{print $2}')" 1 15 40 40 \
+                   2> "$data"
+            sel=$?
+            case $sel in
+                1) rm -f "$data"
+                   exit 1;;
+                255) rm -f "$data"
+                     exit 1;;
+            esac
+            ELEMENT_DOMAIN_NAME=$(sed -n 1p < "$data")
+            if [ "$ELEMENT_DOMAIN_NAME" ]; then
+                TEST_DOMAIN_NAME=$ELEMENT_DOMAIN_NAME
+                validate_domain_name
+                if [[ "$TEST_DOMAIN_NAME" != "$ELEMENT_DOMAIN_NAME" ]]; then
+                    ELEMENT_DOMAIN_NAME=
+                    dialog --title $"Domain name validation" --msgbox "$TEST_DOMAIN_NAME" 15 50
+                fi
+            fi
+            if [ $ELEMENT_DOMAIN_NAME ]; then
+                ELEMENT_DETAILS_COMPLETE="yes"
+            fi
+            rm -f "$data"
+        done
+    fi
+    write_config_param "ELEMENT_DOMAIN_NAME" "$ELEMENT_DOMAIN_NAME"
+    APP_INSTALLED=1
+}
+
+function reconfigure_element {
+    echo -n ''
+}
+
+function element_download {
+    # download
+    if [ ! -f "$INSTALL_DIR/${ELEMENT_FILENAME}.tar.gz" ]; then
+        if [[ "$ONION_ONLY" == 'no' ]]; then
+            wget "${ELEMENT_DOWNLOAD_URL}/${ELEMENT_FILENAME}.tar.gz" -O "$INSTALL_DIR/${ELEMENT_FILENAME}.tar.gz"
+        else
+            torsocks wget "${ELEMENT_DOWNLOAD_URL}/${ELEMENT_FILENAME}.tar.gz" -O "$INSTALL_DIR/${ELEMENT_FILENAME}.tar.gz"
+            if [ ! -f "$INSTALL_DIR/${ELEMENT_FILENAME}.tar.gz" ]; then
+                wget "${ELEMENT_DOWNLOAD_URL}/${ELEMENT_FILENAME}.tar.gz" -O "$INSTALL_DIR/${ELEMENT_FILENAME}.tar.gz"
+            fi
+        fi
+    fi
+    if [ ! -f "$INSTALL_DIR/${ELEMENT_FILENAME}.tar.gz" ]; then
+        echo $'Unable to download Element Web from releases'
+        exit 62
+    fi
+    cd "$INSTALL_DIR" || exit 24
+
+    # check the hash
+    #curr_hash=$(sha256sum ${ELEMENT_FILENAME}.tar.gz | awk -F ' ' '{print $1}')
+    #if [[ "$curr_hash" != "$ELEMENT_HASH" ]]; then
+    #    echo $'Element download hash does not match'
+    #    exit 78
+    #fi
+
+    tar -xzvf ${ELEMENT_FILENAME}.tar.gz
+    if [ ! -d "$INSTALL_DIR/${ELEMENT_FILENAME}" ]; then
+        echo $'Unable to extract Element Web tarball'
+        exit 54
+    fi
+    cp -r "$INSTALL_DIR/${ELEMENT_FILENAME}/"* "/var/www/${ELEMENT_DOMAIN_NAME}/htdocs"
+
+    chown -R www-data:www-data "/var/www/${ELEMENT_DOMAIN_NAME}/htdocs"
+}
+
+function upgrade_element {
+    element_add_jitsi
+
+    if ! grep -q 'element version:' "$COMPLETION_FILE"; then
+        return
+    fi
+
+    # update connection rate limits
+    read_config_param ELEMENT_DOMAIN_NAME
+    element_nginx_site=/etc/nginx/sites-available/${ELEMENT_DOMAIN_NAME}
+    if ! grep -q 'req_limit_per_ip burst=50 ' "$element_nginx_site"; then
+        sed -i 's|limit_req zone.*|limit_req zone=req_limit_per_ip burst=50 nodelay;|g' "$element_nginx_site"
+    fi
+
+    CURR_ELEMENT_VERSION=$(get_completion_param "element version")
+    echo "element current version: ${CURR_ELEMENT_VERSION}"
+    echo "element app version: ${ELEMENT_VERSION}"
+    if [[ "${CURR_ELEMENT_VERSION}" == "${ELEMENT_VERSION}" ]]; then
+        return
+    fi
+
+    element_download
+    sed -i "s|element version.*|element version:$ELEMENT_VERSION|g" "${COMPLETION_FILE}"
+    element_remove_bad_links
+
+    read_config_param ONION_ONLY
+    element_set_default_homeserver
+
+    read_config_param MATRIX_DOMAIN_NAME
+    element_config_file="/var/www/${ELEMENT_DOMAIN_NAME}/htdocs/config.json"
+    element_domain="${MATRIX_DOMAIN_NAME}"
+    http_prefix='https'
+    if [[ "$ONION_ONLY" != 'no' ]]; then
+        http_prefix='http'
+        element_domain=$(cat /var/lib/tor/hidden_service_matrix/hostname)
+    fi
+
+    sed -i "s|\"m.homeserver\":.*|\"m.homeserver\": {\"base_url\": \"${http_prefix}://${element_domain}\",|g" "$element_config_file"
+    sed -i "s|\"m.identity_server\":.*|\"m.identity_server\": {\"base_url\": \"${http_prefix}://${element_domain}\"}|g" "$element_config_file"
+    systemctl restart nginx
+}
+
+function backup_local_element {
+    echo -n ''
+}
+
+function restore_local_element {
+    echo -n ''
+}
+
+function backup_remote_element {
+    echo -n ''
+}
+
+function restore_remote_element {
+    echo -n ''
+}
+
+function remove_element {
+    function_check remove_onion_service
+    remove_onion_service element ${ELEMENT_ONION_PORT}
+
+    nginx_dissite ${ELEMENT_DOMAIN_NAME}
+    if [ -f /etc/nginx/sites-available/${ELEMENT_DOMAIN_NAME} ]; then
+        rm /etc/nginx/sites-available/${ELEMENT_DOMAIN_NAME}
+    fi
+
+    if [ -d /var/www/${ELEMENT_DOMAIN_NAME} ]; then
+        rm -rf /var/www/${ELEMENT_DOMAIN_NAME}
+    fi
+
+    remove_completion_param install_element
+    sed -i '/element /d' "$COMPLETION_FILE"
+}
+
+function element_add_jitsi {
+    if [[ "$ONION_ONLY" != "no" ]]; then
+        return
+    fi
+    element_config_file="/var/www/${ELEMENT_DOMAIN_NAME}/htdocs/config.json"
+    if [ ! -f "$element_config_file" ]; then
+        return
+    fi
+    if ! grep -q '"jitsi"' "$element_config_file"; then
+        sed -i '/showLabsSettings/a },' "$element_config_file"
+        sed -i "/showLabsSettings/a \"preferredDomain\": \"$ELEMENT_DEFAULT_JITSI\"" "$element_config_file"
+        sed -i '/showLabsSettings/a "jitsi": {' "$element_config_file"
+    fi
+}
+
+function install_element {
+    increment_app_install_progress
+
+    # shellcheck disable=SC2086
+    check_ram_availability $MATRIX_MINIMUM_RAM_MB
+
+    # check that matrix has been installed
+    if [ ! "$MATRIX_DOMAIN_NAME" ]; then
+        exit 68
+    fi
+    if [[ "$MATRIX_DOMAIN_NAME" != *'.'* ]]; then
+        exit 25
+    fi
+    if [ ! -d /var/lib/matrix ]; then
+        exit 82
+    fi
+
+    increment_app_install_progress
+
+    function_check get_completion_param
+    MATRIX_ONION_DOMAIN_NAME=$(get_completion_param "matrix onion domain")
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES wget
+
+    if [ ! -d /var/www/${ELEMENT_DOMAIN_NAME}/htdocs ]; then
+        mkdir -p /var/www/${ELEMENT_DOMAIN_NAME}/htdocs
+    fi
+
+    if [ ! -d "$INSTALL_DIR" ]; then
+        mkdir "$INSTALL_DIR"
+    fi
+
+    increment_app_install_progress
+
+    element_download
+
+    increment_app_install_progress
+
+    cd "/var/www/${ELEMENT_DOMAIN_NAME}/htdocs" || exit 46
+
+    ELEMENT_ONION_HOSTNAME=$(add_onion_service element 80 ${ELEMENT_ONION_PORT})
+    MATRIX_ONION_DOMAIN_NAME=$(cat /var/lib/tor/hidden_service_matrix/hostname)
+
+    increment_app_install_progress
+
+    if [[ "$ONION_ONLY" == "no" ]]; then
+        element_config_file="config.json"
+        { echo '{';
+          echo "    \"default_server_config\": {";
+          echo "        \"m.homeserver\": {\"base_url\": \"https://${MATRIX_DOMAIN_NAME}\",";
+          echo "            \"server_name\": \"${PROJECT_NAME}\"";
+          echo '        },';
+          echo "        \"m.identity_server\": {\"base_url\": \"https://${MATRIX_DOMAIN_NAME}\"}";
+          echo '    },';
+          echo "    \"disable_custom_urls\": false,";
+          echo "    \"disable_guests\": true,";
+	  echo '    "disable_login_language_selector": false,';
+	  echo '    "disable_3pid_login": true,';
+	  echo "    \"defaultCountryCode\": \"GB\",";
+	  echo '    "default_federate": true,';
+	  echo "    \"default_theme\": \"dark\",";
+          echo '    "brand": "Element",';
+          echo '    "integrations_ui_url": "",';
+          echo '    "integrations_rest_url": "",';
+          echo '    "integrations_jitsi_widget_url": "",';
+          echo "    \"bug_report_endpoint_url\": \"\",";
+          echo '    "showLabsSettings": false,';
+          echo '    "jitsi": {';
+          echo "        \"preferredDomain\": \"$ELEMENT_DEFAULT_JITSI\"";
+          echo '    },';
+	  echo '    "settingDefaults": {';
+	  echo '        "breadcrumbs": true';
+	  echo '    },';	  
+	  echo '    "enable_presence_by_hs_url": {';
+	  echo "        \"https://${MATRIX_DOMAIN_NAME}\": false";
+	  echo '    },';
+          echo '    "roomDirectory": {';
+          echo '        "servers": [';
+          echo "            \"${MATRIX_DOMAIN_NAME}\",";
+          echo '            "matrix.org"';
+          echo '        ]';
+          echo '    }';
+          echo '}'; } > "$element_config_file"
+    else
+        # NOTE: Don't bother with jitsi on onion. Since it's
+        # webrtc it won't work in a Tor browser
+        element_config_file="config.json"
+        { echo '{';
+          echo "    \"default_server_config\": {";
+          echo "        \"m.homeserver\": {\"base_url\": \"http://${MATRIX_ONION_DOMAIN_NAME}\",";
+          echo "            \"server_name\": \"${PROJECT_NAME}\"";
+          echo '        },';
+          echo "        \"m.identity_server\": {\"base_url\": \"http://${MATRIX_ONION_DOMAIN_NAME}\"}";
+          echo '    },';
+          echo "    \"disable_custom_urls\": false,";
+          echo "    \"disable_guests\": true,";
+	  echo '    "disable_login_language_selector": false,';
+	  echo '    "disable_3pid_login": true,';
+	  echo "    \"defaultCountryCode\": \"GB\",";
+	  echo '    "default_federate": true,';
+	  echo "    \"default_theme\": \"dark\",";
+          echo '    "brand": "Element",';
+          echo '    "integrations_ui_url": "",';
+          echo '    "integrations_rest_url": "",';
+          echo "    \"bug_report_endpoint_url\": \"\",";
+          echo '    "showLabsSettings": false,';
+	  echo '    "settingDefaults": {';
+	  echo '        "breadcrumbs": true';
+	  echo '    },';
+	  echo '    "enable_presence_by_hs_url": {';
+	  echo "        \"http://${MATRIX_ONION_DOMAIN_NAME}\": false";
+	  echo '    },';
+          echo '    "roomDirectory": {';
+          echo '        "servers": [';
+          echo "            \"${MATRIX_ONION_DOMAIN_NAME}\"";
+          echo '        ]';
+          echo '    }';
+          echo '}'; } > "$element_config_file"
+    fi
+
+    increment_app_install_progress
+
+    element_nginx_site="/etc/nginx/sites-available/${ELEMENT_DOMAIN_NAME}"
+    if [[ "$ONION_ONLY" == "no" ]]; then
+        function_check nginx_http_redirect
+        nginx_http_redirect "${ELEMENT_DOMAIN_NAME}"
+        { echo 'server {';
+          echo '  listen 443 ssl;';
+          echo '  #listen [::]:443 ssl;';
+          echo "  server_name ${ELEMENT_DOMAIN_NAME};";
+          echo '';
+          echo '  # Security'; } >> $element_nginx_site
+        function_check nginx_ssl
+        nginx_ssl "${ELEMENT_DOMAIN_NAME}"
+
+        function_check nginx_security_options
+        nginx_security_options "${ELEMENT_DOMAIN_NAME}"
+        nginx_robots "${ELEMENT_DOMAIN_NAME}"
+
+        { echo '  add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
+          echo "  add_header Onion-Location http://${ELEMENT_ONION_HOSTNAME}\$request_uri;";
+          echo '';
+          echo '  # Logs';
+          echo '  access_log /dev/null;';
+          echo '  error_log /dev/null;';
+          echo '';
+          echo '  # Root';
+          echo "  root /var/www/${ELEMENT_DOMAIN_NAME}/htdocs;";
+          echo '';
+          echo '  index index.html;';
+          echo '';
+          echo '  location / {'; } >> $element_nginx_site
+        function_check nginx_limits
+        nginx_limits "${ELEMENT_DOMAIN_NAME}" '15m'
+        { echo '  }';
+          echo '}';
+          echo ''; } >> $element_nginx_site
+    else
+        echo -n '' > $element_nginx_site
+    fi
+    { echo 'server {';
+      echo "    listen 127.0.0.1:$ELEMENT_ONION_PORT default_server;";
+      echo '    port_in_redirect off;';
+      echo "    server_name $ELEMENT_ONION_HOSTNAME;";
+      echo ''; } >> $element_nginx_site
+    function_check nginx_security_options
+    nginx_security_options "${ELEMENT_DOMAIN_NAME}"
+    { echo '';
+      echo '  # Logs';
+      echo '  access_log /dev/null;';
+      echo '  error_log /dev/null;';
+      echo '';
+      echo '  # Root';
+      echo "  root /var/www/${ELEMENT_DOMAIN_NAME}/htdocs;";
+      echo '';
+      echo '  index index.html;';
+      echo '';
+      echo '  location / {'; } >> $element_nginx_site
+    function_check nginx_limits
+    nginx_limits "${ELEMENT_DOMAIN_NAME}" '15m'
+    echo '  }' >> "$element_nginx_site"
+    echo '}' >> "$element_nginx_site"
+
+    sed '/Content-Security-Policy/d' "$element_nginx_site"
+    sed -i 's| DENY;| SAMEORIGIN;|g' "$element_nginx_site"
+    sed -i 's|limit_conn conn_limit_per_ip.*|limit_conn conn_limit_per_ip 50;|g' "$element_nginx_site"
+    sed -i 's|limit_req zone.*|limit_req zone=req_limit_per_ip burst=50 nodelay;|g' "$element_nginx_site"
+
+    increment_app_install_progress
+
+    function_check create_site_certificate
+    if [ ! -f "/etc/ssl/certs/${ELEMENT_DOMAIN_NAME}.pem" ]; then
+        create_site_certificate "${ELEMENT_DOMAIN_NAME}" 'yes'
+    fi
+
+    increment_app_install_progress
+
+    function_check nginx_ensite
+    nginx_ensite "${ELEMENT_DOMAIN_NAME}"
+
+    function_check add_ddns_domain
+    add_ddns_domain "${ELEMENT_DOMAIN_NAME}"
+
+    increment_app_install_progress
+
+    element_remove_bad_links
+    chown -R www-data:www-data "/var/www/${ELEMENT_DOMAIN_NAME}/htdocs"
+
+    increment_app_install_progress
+
+    systemctl restart nginx
+
+    increment_app_install_progress
+
+    set_completion_param "element domain" "${ELEMENT_DOMAIN_NAME}"
+    if ! grep -q "element version:" "${COMPLETION_FILE}"; then
+        echo "element version:${ELEMENT_VERSION}" >> "${COMPLETION_FILE}"
+    else
+        sed -i "s|element version.*|element version:${ELEMENT_VERSION}|g" "${COMPLETION_FILE}"
+    fi
+
+    element_set_default_homeserver
+
+    APP_INSTALLED=1
+}
+
+# NOTE: deliberately no exit 0

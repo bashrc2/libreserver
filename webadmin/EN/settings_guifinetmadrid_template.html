@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Refresh" content="5" charset="utf-8">
+    <style>
+      @import url("libreserver.css");
+
+      .card input[type=text] {
+          width: 25%;
+          clear: both;
+          margin: 2%;
+          text-align: left;
+          color: black;
+          background-color: lightblue;
+      }
+
+      .appurl {
+          font-size: 100%;
+      }
+
+      .welcomeheader {
+          font-size: 200%;
+          font-weight: bold;
+      }
+
+      .descriptiontext {
+          font-size: 90%;
+      }
+
+      .logintext {
+          font-size: 120%;
+          font-weight: bold;
+          color: #981737;
+      }
+
+      button {
+          border: none;
+          outline: 0;
+          display: inline-block;
+          padding: 8px;
+          color: white;
+          background-color: #000;
+          text-align: center;
+          cursor: pointer;
+          width: 100%;
+          font-size: 18px;
+      }
+
+      a.button {
+          -webkit-appearance: button;
+          -moz-appearance: button;
+          appearance: button;
+
+          text-decoration: none;
+          color: black;
+      }
+
+      button:hover, a:hover {
+          opacity: 0.7;
+      }
+
+      .chip {
+          display: inline-block;
+          padding: 0 25px;
+          height: 50px;
+          font-size: 70%;
+          line-height: 50px;
+          border-radius: 25px;
+          background-color: #f1f1f1;
+      }
+
+      .chip img {
+          float: left;
+          margin: 0 10px 0 -25px;
+          height: 50px;
+          width: 50px;
+          border-radius: 50%;
+      }
+
+      textarea {
+          width: 90%;
+          color: black;
+          font-weight: bold;
+          background: lightblue;
+          font-size: 120%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="header">
+        <a href="settings.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a><br>
+
+        <form action="settings_guifinet.php" method="post">
+          <p class="descriptiontext" translate="yes">Set your coordinates on the map</p>
+
+          <p translate="yes">Longitude:<input type="text" name="longitude" value="YOURLONGITUDE" autofocus>Latitude:<input type="text" name="latitude" value="YOURLATITUDE"></p>
+
+          <input type="hidden" name="network" value="madrid">
+          <input type="hidden" name="zone_number" value="">
+          <input type="submit" name="submitnetworkmapcancel" translate="yes" value="Go Back">
+          <input type="button" onclick="window.location.href='https://guifi.net/en/user/register'" translate="yes" value="Join">
+          <input type="button" onclick="window.location.href='https://guifi.net/en/CoMadrid'" translate="yes" value="Docs">
+          <a href="network_map_markers.kml" translate="yes" class="button">Export</a>
+          <a href="communitynetwork_protocol.html" translate="yes" class="button">Protocol</a>
+          <a href="https://guifi.net/en/FONNC" translate="yes" class="button">License</a>
+          <br><br>
+          <input type="submit" name="submitnetworkmap" translate="yes" value="Update">
+          <input type="submit" name="submitzoomin" translate="no" value="+">
+          <input type="submit" name="submitzoomout" translate="no" value="-">
+          <br><br>
+
+          <center>
+            <a href="network_map.png"><img src="network_map.png" width="90%"/></a>
+	    <br>
+	    <a href="https://osm.org/copyright">© OpenStreetMap contributors</a>
+          </center>
+        </form>
+
+        <br>
+      </div>
+    </div>
+  </body>
+</html>

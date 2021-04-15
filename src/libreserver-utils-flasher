@@ -1,0 +1,121 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Functions for flashing to emmc
+#
+# License
+# =======
+#
+# Copyright (C) 2018-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+EMMC_DIR=/opt/scripts/tools/eMMC
+
+function beaglebone_flasher {
+    beaglebone_variant="$1"
+
+    device_eeprom=
+    check_eeprom=
+    if [ "${beaglebone_variant}" = "beagleboneblack" ]; then
+        device_eeprom='bbb-eeprom'
+        check_eeprom='check_eeprom'
+    fi
+    if [ "${beaglebone_variant}" = "beaglebonegreen" ]; then
+        device_eeprom='bbg-eeprom'
+        check_eeprom='check_eeprom'
+    fi
+    if [ "${beaglebone_variant}" = "beaglex15" ]; then
+        device_eeprom='x15/X15_B1-eeprom'
+        check_eeprom='check_am57xx_eeprom'
+    fi
+    if [ "${beaglebone_variant}" = "beagleboneai" ]; then
+	# TODO this might be wrong
+        device_eeprom='x15/X15_B1-eeprom'
+        check_eeprom='check_am57xx_eeprom'
+    fi
+
+    if [ ! $device_eeprom ]; then
+        return
+    fi
+
+    if [ ! -d "$rootdir$EMMC_DIR" ]; then
+        mkdir -p "$rootdir$EMMC_DIR"
+    fi
+
+    # shellcheck disable=SC2086
+    if [ -f $rootdir/root/${PROJECT_NAME}/image_build/emmc_functions.sh ]; then
+        # shellcheck disable=SC2086
+        cp $rootdir/root/${PROJECT_NAME}/image_build/emmc_functions.sh "$rootdir$EMMC_DIR/functions.sh"
+    else
+        if [ "$rootdir" ]; then
+            # shellcheck disable=SC2086
+            chroot "$rootdir" INSTALL_PACKAGES wget rsync
+            chroot "$rootdir" wget "https://gitlab.com/bashrc2/${PROJECT_NAME}/raw/master/image_build/emmc_functions.sh" -O "$EMMC_DIR/functions.sh"
+        else
+            INSTALL_PACKAGES wget rsync
+            wget "https://gitlab.com/bashrc2/${PROJECT_NAME}/raw/master/image_build/emmc_functions.sh" -O "$rootdir$EMMC_DIR/functions.sh"
+        fi
+    fi
+    if [ ! -f "$rootdir$EMMC_DIR/functions.sh" ]; then
+        exit 62
+    fi
+    chmod +x "$rootdir$EMMC_DIR/functions.sh"
+
+    cat >> "$rootdir$EMMC_DIR/init-eMMC-flasher-v3.sh" <<EOF
+#!/bin/bash -e
+source \$(dirname "\$0")/functions.sh
+mkfs_options=""
+device_eeprom="$device_eeprom"
+check_if_run_as_root
+startup_message
+prepare_environment
+countdown 5
+$check_eeprom
+check_running_system
+activate_cylon_leds
+prepare_drive
+EOF
+
+    chmod +x "$rootdir$EMMC_DIR/init-eMMC-flasher-v3.sh"
+    #echo "cmdline=init=$EMMC_DIR/init-eMMC-flasher-v3.sh" > "$rootdir/boot/uEnv.txt.flasher"
+
+    { echo '#!/bin/bash';
+      echo "cd $EMMC_DIR || exit 0";
+      echo "#$EMMC_DIR/init-eMMC-flasher-v3.sh > /var/log/emmc.log"; } > "$rootdir/usr/bin/emmc-flasher"
+    chmod +x "$rootdir/usr/bin/emmc-flasher"
+
+    { echo '[Unit]';
+      echo 'Description=EMMC Flasher';
+      echo 'After=syslog.target';
+      echo 'After=network.target';
+      echo '';
+      echo '[Service]';
+      echo 'Type=simple';
+      echo 'User=root';
+      echo 'Group=root';
+      echo "WorkingDirectory=$EMMC_DIR";
+      echo 'ExecStart=/usr/bin/emmc-flasher';
+      echo '';
+      echo 'TimeoutSec=99999';
+      echo '';
+      echo '[Install]';
+      echo 'WantedBy=multi-user.target'; } >> "$rootdir/etc/systemd/system/emmc.service"
+    chroot "$rootdir" systemctl enable emmc
+}
+
+# NOTE: deliberately there is no "exit 0"

@@ -1,0 +1,104 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Cron functions
+#
+# License
+# =======
+#
+# Copyright (C) 2014-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+function cron_add_mins {
+    if ! grep -q "${2}" /etc/crontab; then
+        job_user='root'
+        if [ "$3" ]; then
+            job_user=$3
+        fi
+        echo "*/${1}            * *   *   *   ${job_user} ${2}" >> /etc/crontab
+        systemctl restart cron
+    fi
+}
+
+function randomize_cron {
+    # The predictable default timing of Debian cron jobs might
+    # be exploitable knowledge. Avoid too much predictability
+    # by randomizing the times when cron jobs run
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+
+    # randomize the day on which the weekly cron job runs
+    randdow=$((RANDOM%6+1))
+    sed -i "s|\\* \\* 7|* * $randdow|g" /etc/crontab
+
+    # randomize the time when the weekly cron job runs
+    randmin=$((RANDOM%60))
+    randhr=$((RANDOM%3+1))
+    sed -i "s|47 6|$randmin $randhr|g" /etc/crontab
+
+    # randomize the time when the daily cron job runs
+    randmin=$((RANDOM%60))
+    randhr=$((RANDOM%3+4))
+    sed -i "s|25 6\\t\\* \\* \\*|$randmin $randhr\\t* * *|g" /etc/crontab
+
+    # randomize the time when the hourly cron job runs
+    randmin=$((RANDOM%60))
+    sed -i "s|17 \\*\\t|$randmin *\\t|g" /etc/crontab
+
+    # randomize monthly cron job time and day
+    randmin=$((RANDOM%60))
+    randhr=$((RANDOM%22+1))
+    randdom=$((RANDOM%27+1))
+    sed -i "s|52 6\\t|$randmin $randhr\\t|g" /etc/crontab
+    sed -i "s|\\t1 \\* \\*|\\t$randdom * *|g" /etc/crontab
+
+    systemctl restart cron
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function schedule_stig_tests {
+    stig_tests_script=/tmp/stig_tests_script
+    { echo '#!/bin/bash';
+      echo "ADMIN_EMAIL_ADDRESS=${MY_USERNAME}@\${HOSTNAME}";
+      echo "pkill ${PROJECT_NAME}-tests";
+      echo 'rm -rf /tmp/*';
+      echo "${PROJECT_NAME}-tests --stig yes > /tmp/daily-stig-tests";
+      echo 'if [ ! "$?" = "0" ]; then';
+      echo "    /bin/bash /usr/local/bin/${PROJECT_NAME}-notification -m \"\$(cat /tmp/daily-stig-tests)\" -s \"${PROJECT_NAME} STIG test failures\"";
+      echo "    ${PROJECT_NAME}-tests --stig fix"
+      echo 'fi';
+      echo 'if [ -f /tmp/daily-stig-tests ]; then';
+      echo '  rm /tmp/daily-stig-tests';
+      echo 'fi'; } > $stig_tests_script
+    chmod +x $stig_tests_script
+
+    if [ ! -f /etc/cron.daily/stig_tests ]; then
+        cp $stig_tests_script /etc/cron.daily/stig_tests
+    else
+        HASH1=$(sha256sum $stig_tests_script | awk -F ' ' '{print $1}')
+        HASH2=$(sha256sum /etc/cron.daily/stig_tests | awk -F ' ' '{print $1}')
+        if [[ "$HASH1" != "$HASH2" ]]; then
+            cp $stig_tests_script /etc/cron.daily/stig_tests
+        fi
+    fi
+    rm $stig_tests_script
+}
+
+# NOTE: deliberately there is no "exit 0"

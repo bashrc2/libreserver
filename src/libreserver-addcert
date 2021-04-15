@@ -1,0 +1,384 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Create self-signed or Let's Encrypt certificates on Debian
+
+# License
+# =======
+#
+# Copyright (C) 2015-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+PROJECT_NAME='libreserver'
+
+export TEXTDOMAIN=${PROJECT_NAME}-addcert
+export TEXTDOMAINDIR="/usr/share/locale"
+
+CONFIGURATION_FILE=$HOME/${PROJECT_NAME}.cfg
+COMPLETION_FILE=$HOME/${PROJECT_NAME}-completed.txt
+
+source /usr/local/bin/${PROJECT_NAME}-shortcuts
+
+UTILS_FILES="/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-*"
+for f in $UTILS_FILES
+do
+    source "$f"
+done
+
+# Don't pin certs by default
+PIN_CERTS=
+
+HOSTNAME=
+remove_cert=
+LETSENCRYPT_HOSTNAME=
+COUNTRY_CODE="US"
+AREA="The Internet"
+LOCATION="Anywhere"
+ORGANISATION="LibreServer"
+UNIT="LibreServer"
+EXTENSIONS=""
+NODH=
+DH_KEYLENGTH=2048
+INSTALL_DIR=/root/build
+LETSENCRYPT_SERVER='https://acme-v02.api.letsencrypt.org/directory'
+MY_EMAIL_ADDRESS=
+
+function show_help {
+    echo ''
+    echo $"${PROJECT_NAME}-addcert -h [hostname] -c [country code] -a [area] -l [location]"
+    echo $'                    -o [organisation] -u [unit] --ca "" --nodh ""'
+    echo ''
+    echo $'Creates a self-signed certificate for the given hostname'
+    echo ''
+    echo $'     --help                     Show help'
+    echo $'  -h --hostname [name]          Hostname'
+    echo $'  -e --letsencrypt [hostname]   Hostname to use with Lets Encrypt'
+    echo $'  -r --rmletsencrypt [hostname] Remove a Lets Encrypt certificate'
+    echo $'  -s --server [url]             Lets Encrypt server URL'
+    echo $'  -c --country [code]           Optional country code (eg. US, GB, etc)'
+    echo $'  -a --area [description]       Optional area description'
+    echo $'  -l --location [locn]          Optional location name'
+    echo $'  -o --organisation [name]      Optional organisation name'
+    echo $'  -u --unit [name]              Optional unit name'
+    echo $'     --email [address]          Email address for letsencrypt'
+    echo $'     --dhkey [bits]             DH key length in bits'
+    echo $'     --nodh ""                  Do not calculate DH params'
+    echo $'     --ca ""                    Certificate authority cert'
+    echo ''
+    exit 0
+}
+
+while [ $# -gt 1 ]
+do
+    key="$1"
+
+    case $key in
+        --help)
+            show_help
+            ;;
+        -h|--hostname)
+            shift
+            HOSTNAME="$1"
+            ;;
+        -e|--letsencrypt)
+            shift
+            LETSENCRYPT_HOSTNAME="$1"
+            ;;
+        -r|--rmletsencrypt)
+            shift
+            LETSENCRYPT_HOSTNAME="$1"
+            remove_cert=1
+            ;;
+        --email)
+            shift
+            MY_EMAIL_ADDRESS="$1"
+            ;;
+        -s|--server)
+            shift
+            LETSENCRYPT_SERVER="$1"
+            ;;
+        -c|--country)
+            shift
+            COUNTRY_CODE="$1"
+            ;;
+        -a|--area)
+            shift
+            AREA="$1"
+            ;;
+        -l|--location)
+            shift
+            LOCATION="$1"
+            ;;
+        -o|--organisation)
+            shift
+            ORGANISATION="$1"
+            ;;
+        -u|--unit)
+            shift
+            UNIT="$1"
+            ;;
+        --ca)
+            shift
+            EXTENSIONS="-extensions v3_ca"
+            ORGANISATION="LibreServer-CA"
+            ;;
+        --nodh)
+            shift
+            NODH="true"
+            ;;
+        --dhkey)
+            shift
+            DH_KEYLENGTH="${1}"
+            ;;
+        --pin)
+            shift
+            PIN_CERTS="${1}"
+            ;;
+        *)
+            # unknown option
+            ;;
+    esac
+    shift
+done
+
+if [ ! "$HOSTNAME" ]; then
+    if [ ! "$LETSENCRYPT_HOSTNAME" ]; then
+        echo $'No hostname specified'
+        exit 57
+    fi
+fi
+
+if ! which openssl > /dev/null ;then
+    echo $"$0: openssl is not installed, exiting" 1>&2
+    exit 56
+fi
+
+CERTFILE=$HOSTNAME
+
+function remove_cert_letsencrypt {
+    CERTFILE=$LETSENCRYPT_HOSTNAME
+
+    # disable the site if needed
+    if [ -f "/etc/nginx/sites-available/${LETSENCRYPT_HOSTNAME}" ]; then
+        if grep -q "443" "/etc/nginx/sites-available/${LETSENCRYPT_HOSTNAME}"; then
+            nginx_dissite "${LETSENCRYPT_HOSTNAME}"
+        fi
+    fi
+
+    # remove the cert
+    rm -rf "/etc/letsencrypt/live/${LETSENCRYPT_HOSTNAME}"
+    rm -rf "/etc/letsencrypt/archive/${LETSENCRYPT_HOSTNAME}"
+    rm "/etc/letsencrypt/renewal/${LETSENCRYPT_HOSTNAME}.conf"
+
+    # restart the web server
+    fuser -k 80/tcp
+    fuser -k 443/tcp
+    systemctl restart nginx
+}
+
+function add_cert_letsencrypt {
+    CERTFILE=$LETSENCRYPT_HOSTNAME
+
+    # obtain the email address for the admin user
+    if [ ! "$MY_EMAIL_ADDRESS" ]; then
+        if [ -f "$CONFIGURATION_FILE" ]; then
+            read_config_param MY_EMAIL_ADDRESS
+        fi
+    fi
+    if [ ! "$MY_EMAIL_ADDRESS" ]; then
+        if [ -f "$COMPLETION_FILE" ]; then
+            if grep -q "Admin user:" "$COMPLETION_FILE"; then
+                function_check get_completion_param
+                ADMIN_USER=$(get_completion_param "Admin user")
+                if [ ${#ADMIN_USER} -eq 0 ]; then
+                    exit 46
+                fi
+                MY_EMAIL_ADDRESS=$ADMIN_USER@$HOSTNAME
+            fi
+        fi
+    fi
+
+    if [ ! -f /usr/bin/certbot ]; then
+	REINSTALL_PACKAGES python3-pkg-resources python3-setuptools python3-openssl python3-cryptography
+        INSTALL_PACKAGES certbot
+	if ! grep -q "ssl-cert:" /etc/group; then
+            groupadd ssl-cert
+	fi
+        if [ ! -f /usr/bin/certbot ]; then
+            echo $'LetsEncrypt certbot failed to install'
+            exit 76
+        fi
+    fi
+
+    # stop the web server
+    echo "Stopping nginx"
+    systemctl stop nginx
+
+    chgrp -R root /etc/letsencrypt
+    chmod -R 777 /etc/letsencrypt
+
+    if [ -f /var/log/letsencrypt_setup.log ]; then
+	rm /var/log/letsencrypt_setup.log
+    fi
+    REINSTALL_PACKAGES python3-pkg-resources python3-setuptools python3-openssl python3-cryptography
+    echo "certbot certonly -n --server \"$LETSENCRYPT_SERVER\" --standalone -d \"$LETSENCRYPT_HOSTNAME\" --renew-by-default --agree-tos --email \"$MY_EMAIL_ADDRESS\""
+    if ! certbot certonly -n --server "$LETSENCRYPT_SERVER" --standalone -d "$LETSENCRYPT_HOSTNAME" --renew-by-default --agree-tos --email "$MY_EMAIL_ADDRESS" > /var/log/letsencrypt_setup.log; then
+        echo $"Failed to install letsencrypt for domain $LETSENCRYPT_HOSTNAME"
+	if [ -f /var/log/letsencrypt_setup.log ]; then
+	    cat /var/log/letsencrypt_setup.log
+	fi
+        echo $'Also see https://letsencrypt.status.io to check for any service outages'
+        chgrp -R ssl-cert /etc/letsencrypt
+        chmod -R 600 /etc/letsencrypt
+        chmod -R g=rX /etc/letsencrypt
+        chown -R root:ssl-cert /etc/letsencrypt
+	echo "Restarting nginx"
+        systemctl start nginx
+        exit 63
+    fi
+
+    # replace some legacy filenames
+    if [ -f "/etc/ssl/certs/${LETSENCRYPT_HOSTNAME}.bundle.crt" ]; then
+        # shellcheck disable=SC2086
+        mv /etc/ssl/certs/${LETSENCRYPT_HOSTNAME}.bundle.crt /etc/ssl/certs/${LETSENCRYPT_HOSTNAME}.pem
+    fi
+    if [ -f "/etc/ssl/certs/${LETSENCRYPT_HOSTNAME}.crt" ]; then
+        # shellcheck disable=SC2086
+        mv /etc/ssl/certs/${LETSENCRYPT_HOSTNAME}.crt /etc/ssl/certs/${LETSENCRYPT_HOSTNAME}.pem
+    fi
+    sed -i "s|ssl_certificate /etc/ssl/certs/${LETSENCRYPT_HOSTNAME}.bundle.crt|ssl_certificate /etc/ssl/certs/${LETSENCRYPT_HOSTNAME}.pem|g" "/etc/nginx/sites-available/$LETSENCRYPT_HOSTNAME"
+    sed -i "s|ssl_certificate /etc/ssl/certs/${LETSENCRYPT_HOSTNAME}.crt|ssl_certificate /etc/ssl/certs/${LETSENCRYPT_HOSTNAME}.pem|g" "/etc/nginx/sites-available/$LETSENCRYPT_HOSTNAME"
+
+    # link the private key
+    if [ -f "/etc/ssl/private/${LETSENCRYPT_HOSTNAME}.key" ]; then
+        if [ ! -f "/etc/ssl/private/${LETSENCRYPT_HOSTNAME}.key.old" ]; then
+            # shellcheck disable=SC2086
+            mv /etc/ssl/private/${LETSENCRYPT_HOSTNAME}.key /etc/ssl/private/${LETSENCRYPT_HOSTNAME}.key.old
+        else
+            rm -f "/etc/ssl/private/${LETSENCRYPT_HOSTNAME}.key"
+        fi
+    fi
+    if [ -L "/etc/ssl/private/${LETSENCRYPT_HOSTNAME}.key" ]; then
+        rm "/etc/ssl/private/${LETSENCRYPT_HOSTNAME}.key"
+    fi
+    ln -s "/etc/letsencrypt/live/${LETSENCRYPT_HOSTNAME}/privkey.pem" "/etc/ssl/private/${LETSENCRYPT_HOSTNAME}.key"
+
+    # link the public key
+    if [ -f "/etc/ssl/certs/${LETSENCRYPT_HOSTNAME}.pem" ]; then
+        if [ ! -f "/etc/ssl/certs/${LETSENCRYPT_HOSTNAME}.pem.old" ]; then
+            # shellcheck disable=SC2086
+            mv /etc/ssl/certs/${LETSENCRYPT_HOSTNAME}.pem /etc/ssl/certs/${LETSENCRYPT_HOSTNAME}.pem.old
+        else
+            rm -f "/etc/ssl/certs/${LETSENCRYPT_HOSTNAME}.pem"
+        fi
+    fi
+    if [ -L "/etc/ssl/certs/${LETSENCRYPT_HOSTNAME}.pem" ]; then
+        rm "/etc/ssl/certs/${LETSENCRYPT_HOSTNAME}.pem"
+    fi
+    ln -s "/etc/letsencrypt/live/${LETSENCRYPT_HOSTNAME}/fullchain.pem" "/etc/ssl/certs/${LETSENCRYPT_HOSTNAME}.pem"
+
+    cp "/etc/letsencrypt/live/${LETSENCRYPT_HOSTNAME}/fullchain.pem" "/etc/ssl/mycerts/${LETSENCRYPT_HOSTNAME}.pem"
+
+    update_default_domain
+
+    # this group can be used to assign read permissions for
+    # application user accounts
+    chgrp -R ssl-cert /etc/letsencrypt
+    chmod -R 600 /etc/letsencrypt
+    chmod -R g=rX /etc/letsencrypt
+    chown -R root:ssl-cert /etc/letsencrypt
+    addgroup Debian-exim ssl-cert
+
+    nginx_ensite "${LETSENCRYPT_HOSTNAME}"
+    echo "Restarting nginx"
+    systemctl start nginx
+
+    if [ "$PIN_CERTS" ]; then
+        if ! "${PROJECT_NAME}-pin-cert" "$LETSENCRYPT_HOSTNAME"; then
+            echo $"Certificate for $LETSENCRYPT_HOSTNAME could not be pinned"
+            exit 62
+        fi
+    fi
+}
+
+function add_cert_selfsigned {
+    if [[ "$ORGANISATION" == "LibreServer-CA" ]]; then
+        CERTFILE="ca-$HOSTNAME"
+    fi
+
+    # shellcheck disable=SC2086
+    openssl req -x509 ${EXTENSIONS} -nodes -days 3650 -sha256 \
+            -subj "/O=$ORGANISATION/OU=$UNIT/C=$COUNTRY_CODE/ST=$AREA/L=$LOCATION/CN=$HOSTNAME" \
+            -newkey rsa:2048 -keyout "/etc/ssl/private/${CERTFILE}.key" \
+            -out "/etc/ssl/certs/${CERTFILE}.crt"
+    chmod 400 "/etc/ssl/private/${CERTFILE}.key"
+    chmod 640 "/etc/ssl/certs/${CERTFILE}.crt"
+
+    if [ "$PIN_CERTS" ]; then
+        if ! "${PROJECT_NAME}-pin-cert" "$CERTFILE"; then
+            echo $"Certificate for $CERTFILE could not be pinned"
+            exit 62
+        fi
+    fi
+}
+
+function generate_dh_params {
+    if [ ! "$NODH" ]; then
+        if [ ! -f "/etc/ssl/certs/${CERTFILE}.dhparam" ]; then
+            "${PROJECT_NAME}-dhparam" -h "${CERTFILE}" --fast yes
+        fi
+    fi
+}
+
+function restart_web_server {
+    if [ -f /etc/init.d/nginx ]; then
+        /etc/init.d/nginx reload
+    fi
+}
+
+function restart_xmpp_server {
+    if [ -d /etc/prosody ]; then
+        systemctl restart prosody
+    fi
+}
+
+function create_cert {
+    if [ "$remove_cert" ]; then
+        remove_cert_letsencrypt
+        return
+    fi
+
+    read_config_param ONION_ONLY
+
+    if [ "$LETSENCRYPT_HOSTNAME" ]; then
+        if [ "$ONION_ONLY" == 'no' ]; then
+            add_cert_letsencrypt
+        else
+            add_cert_selfsigned
+        fi
+    else
+        add_cert_selfsigned
+    fi
+}
+
+create_cert
+generate_dh_params
+restart_web_server
+restart_xmpp_server
+
+exit 0

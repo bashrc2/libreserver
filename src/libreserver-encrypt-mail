@@ -1,0 +1,98 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# GPG Encrypt a Maildir using gpgit.pl
+#
+# License
+# =======
+#
+# Copyright (C) 2014-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+USERNAME=$1
+
+PROJECT_NAME='libreserver'
+COMPLETION_FILE="$HOME/${PROJECT_NAME}-completed.txt"
+
+UTILS_FILES="/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-*"
+for f in $UTILS_FILES
+do
+  source "$f"
+done
+
+ADMIN_USER=$(get_completion_param "Admin user")
+
+if [ ! "$USERNAME" ]; then
+    USERNAME=$ADMIN_USER
+fi
+
+MAIL_DIR=/home/$USERNAME/Maildir
+EMAIL_ADDRESS=$USERNAME@$HOSTNAME
+
+# Does this key exist?
+if ! gpg --list-keys "$EMAIL_ADDRESS" > /dev/null 2>&1; then
+    echo $"A GPG key for $EMAIL_ADDRESS could not be found!"
+    exit 0
+fi
+
+# Find all files in the Maildir specified.
+echo $"Calling find"
+find "$MAIL_DIR" -type f -regex '.*/\(cur\|new\)/.*' "$4"|while read -r line; do
+    gpgit.pl --encrypt-mode prefer-inline "$EMAIL_ADDRESS"  "/tmp/msg_$USERNAME"
+
+    # Check to see if there are differences between the existing
+    # Maildir file and what was created by gpgit.pl
+    diff -qa "$line" "/tmp/msg_$USERNAME" > /dev/null 2>&1;
+    # shellcheck disable=SC2181
+    if [ $? -gt 0 ]; then
+        # Preserve timestamps, set ownership.
+        chown "$USERNAME":"$USERNAME" "/tmp/msg_$USERNAME"
+        chmod 600   "/tmp/msg_$USERNAME"
+        touch   "/tmp/msg_$USERNAME" --reference="$line"
+
+        # Unlink the original Maildir message
+        unlink "$line"
+
+        # Strip message sizes, retain experimental flags
+        # and status flags, and copy the file over.
+        STRIPSIZES=$(/bin/echo "$line"|/bin/sed -e "s/W=[[:digit:]]*//" -e "s/S=[[:digit:]]*//" -e "s/,,//" -e "s/,:2/:2/")
+        cp -av "/tmp/msg_$USERNAME" "$STRIPSIZES"
+
+        #Indexes must be rebuilt, weve modified Maildir.
+        touch "/tmp/rebuild_index_$USERNAME"
+    else
+        echo $"Not copying, no differences between /tmp/msg_$USERNAME and $line"
+    fi
+
+    # Remove the temporary file
+    unlink "/tmp/msg_$USERNAME"
+done
+
+# Remove Dovecot index and uids for regeneration.
+if [ -f "/tmp/rebuild_index_$USERNAME" ]; then
+    echo $"Removing Dovecot indexes and uids"
+    find "$MAIL_DIR" -type f -regex '.*\(dovecot-\|dovecot\.\|\.uidvalidity\).*' -delete
+
+    # Remove the temporary file
+    unlink "/tmp/rebuild_index_$USERNAME"
+else
+    echo -n $"No messages found needing GPG encryption, not"
+    echo $"removing Dovecot indexes and UIDs."
+fi
+
+exit 0

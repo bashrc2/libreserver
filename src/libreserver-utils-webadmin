@@ -1,0 +1,2836 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Web based administration user interface
+# typically available on http://libreserver.local
+#
+# A background daemon running the libreserver-installer
+# command is used to add and remove apps and handle
+# initial setup of the box
+#
+# License
+# =======
+#
+# Copyright © 2014-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+WEBADMIN_LOGIN_TEXT=$"Welcome to ${PROJECT_NAME}"
+
+MAXIMUM_USERS=10
+
+WEBADMIN_ONION_PORT=5783
+WEBADMIN_SECONDARY_ONION_PORT=5785
+
+function web_admin_set_icon_color {
+    if ! grep -q "WEBADMIN_ICON_COLOR=" "/root/${PROJECT_NAME}.cfg"; then
+        return
+    fi
+    icon_color=$(grep "WEBADMIN_ICON_COLOR=" "/root/${PROJECT_NAME}.cfg" | awk -F '=' '{print $2}')
+    if [[ "$icon_color" != *','* ]]; then
+        return
+    fi
+    icon_color_red=$(echo "$icon_color" | awk -F ',' '{print $1}')
+    icon_color_green=$(echo "$icon_color" | awk -F ',' '{print $2}')
+    icon_color_blue=$(echo "$icon_color" | awk -F ',' '{print $3}')
+
+    if [ ! "$icon_color_red" ]; then
+        return
+    fi
+    if [ ! "$icon_color_green" ]; then
+        return
+    fi
+    if [ ! "$icon_color_blue" ]; then
+        return
+    fi
+
+    # check if the icon color has changed
+    icon_color_file=/root/.icon_color
+    if [ -f "$icon_color_file" ]; then
+        existing_icon_color=$(cat "$icon_color_file")
+        if [[ "$existing_icon_color" == "$icon_color" ]]; then
+            return
+        fi
+    else
+        if [ "$icon_color_red" -eq 113 ]; then
+            if [ "$icon_color_green" -eq 167 ]; then
+                if [ "$icon_color_blue" -eq 207 ]; then
+                    return
+                fi
+            fi
+        fi
+    fi
+
+    for icon_file in "/var/www/${local_hostname}/htdocs/admin"/*.png
+    do
+        convert "$icon_file" +level-colors "rgb(${icon_color_red},${icon_color_green},${icon_color_blue})" "$icon_file"
+    done
+
+    echo "$icon_color" > "$icon_color_file"
+}
+
+function web_admin_background_color {
+    # colors of the border around app categories
+    apps_border_light=cfdde7
+    apps_border_dark=1f5177
+
+    search_background_light=5499ca
+    search_background_dark=f9f3f3
+    search_background_light2=fdfdfd
+    search_background_dark2=144163
+    link_light=20a2cf
+    link_dark=10a0cf
+    visited_light=10a0cf
+    visited_dark=20a2cf
+    text_entry_foreground_light='black'
+    text_entry_background_light='lightblue'
+    text_entry_foreground_dark='black'
+    text_entry_background_dark='lightblue'
+
+    if ! grep -q 'WEBADMIN_BACKGROUND_COLOR=' "/root/${PROJECT_NAME}.cfg"; then
+        echo 'WEBADMIN_BACKGROUND_COLOR=white' >> "/root/${PROJECT_NAME}.cfg"
+    fi
+    if ! grep -q 'WEBADMIN_FOREGROUND_COLOR=' "/root/${PROJECT_NAME}.cfg"; then
+        echo 'WEBADMIN_FOREGROUND_COLOR=#72a7cf' >> "/root/${PROJECT_NAME}.cfg"
+    fi
+    bg_color=$(grep "WEBADMIN_BACKGROUND_COLOR=" "/root/${PROJECT_NAME}.cfg" | awk -F '=' '{print $2}')
+    fg_color=$(grep "WEBADMIN_FOREGROUND_COLOR=" "/root/${PROJECT_NAME}.cfg" | awk -F '=' '{print $2}')
+
+    if ! grep -q 'WEBADMIN_APPS_BORDER_COLOR=' "/root/${PROJECT_NAME}.cfg"; then
+        if [[ "$bg_color" == 'white' ]]; then
+            echo "WEBADMIN_APPS_BORDER_COLOR=${apps_border_light}" >> "/root/${PROJECT_NAME}.cfg"
+        else
+            echo "WEBADMIN_APPS_BORDER_COLOR=${apps_border_dark}" >> "/root/${PROJECT_NAME}.cfg"
+        fi
+    fi
+    if ! grep -q 'WEBADMIN_SEARCH_BACKGROUND_COLOR=' "/root/${PROJECT_NAME}.cfg"; then
+        if [[ "$bg_color" == 'white' ]]; then
+            echo "WEBADMIN_SEARCH_BACKGROUND_COLOR=${search_background_light}" >> "/root/${PROJECT_NAME}.cfg"
+        else
+            echo "WEBADMIN_SEARCH_BACKGROUND_COLOR=${search_background_dark}" >> "/root/${PROJECT_NAME}.cfg"
+        fi
+    fi
+    if ! grep -q 'WEBADMIN_SEARCH_BACKGROUND_COLOR_2=' "/root/${PROJECT_NAME}.cfg"; then
+        if [[ "$bg_color" == 'white' ]]; then
+            echo "WEBADMIN_SEARCH_BACKGROUND_COLOR_2=${search_background_light2}" >> "/root/${PROJECT_NAME}.cfg"
+        else
+            echo "WEBADMIN_SEARCH_BACKGROUND_COLOR_2=${search_background_dark2}" >> "/root/${PROJECT_NAME}.cfg"
+        fi
+    fi
+    if ! grep -q 'WEBADMIN_LINK_COLOR=' "/root/${PROJECT_NAME}.cfg"; then
+        if [[ "$bg_color" == 'white' ]]; then
+            echo "WEBADMIN_LINK_COLOR=${link_light}" >> "/root/${PROJECT_NAME}.cfg"
+        else
+            echo "WEBADMIN_LINK_COLOR=${link_dark}" >> "/root/${PROJECT_NAME}.cfg"
+        fi
+    fi
+    if ! grep -q 'WEBADMIN_VISITED_COLOR=' "/root/${PROJECT_NAME}.cfg"; then
+        if [[ "$bg_color" == 'white' ]]; then
+            echo "WEBADMIN_VISITED_COLOR=${visited_light}" >> "/root/${PROJECT_NAME}.cfg"
+        else
+            echo "WEBADMIN_VISITED_COLOR=${visited_dark}" >> "/root/${PROJECT_NAME}.cfg"
+        fi
+    fi
+    apps_border=$(grep "WEBADMIN_APPS_BORDER_COLOR=" "/root/${PROJECT_NAME}.cfg" | awk -F '=' '{print $2}')
+    search_background_a=$(grep "WEBADMIN_SEARCH_BACKGROUND_COLOR=" "/root/${PROJECT_NAME}.cfg" | awk -F '=' '{print $2}')
+    search_background_b=$(grep "WEBADMIN_SEARCH_BACKGROUND_COLOR_2=" "/root/${PROJECT_NAME}.cfg" | awk -F '=' '{print $2}')
+    link_color=$(grep "WEBADMIN_LINK_COLOR=" "/root/${PROJECT_NAME}.cfg" | awk -F '=' '{print $2}')
+    visited_color=$(grep "WEBADMIN_VISITED_COLOR=" "/root/${PROJECT_NAME}.cfg" | awk -F '=' '{print $2}')
+    text_entry_foreground_color=$(grep "WEBADMIN_TEXT_ENTRY_FOREGROUND_COLOR=" "/root/${PROJECT_NAME}.cfg" | awk -F '=' '{print $2}')
+    text_entry_background_color=$(grep "WEBADMIN_TEXT_ENTRY_BACKGROUND_COLOR=" "/root/${PROJECT_NAME}.cfg" | awk -F '=' '{print $2}')
+    local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+
+    if [ -f "/var/www/${local_hostname}/htdocs/admin/${PROJECT_NAME}.css" ]; then
+        sed -i "s|main-fg-color:.*|main-fg-color: ${fg_color};|g" "/var/www/${local_hostname}/htdocs/admin/${PROJECT_NAME}.css"
+        sed -i "s|main-bg-color:.*|main-bg-color: ${bg_color};|g" "/var/www/${local_hostname}/htdocs/admin/${PROJECT_NAME}.css"
+        sed -i "s|apps-border:.*|apps-border: ${apps_border};|g" "/var/www/${local_hostname}/htdocs/admin/${PROJECT_NAME}.css"
+        sed -i "s|search-background:.*|search-background: ${search_background_a};|g" "/var/www/${local_hostname}/htdocs/admin/${PROJECT_NAME}.css"
+        sed -i "s|search-background2:.*|search-background2: ${search_background_b};|g" "/var/www/${local_hostname}/htdocs/admin/${PROJECT_NAME}.css"
+        sed -i "s|text-entry-foreground:.*|text-entry-foreground: ${text_entry_foreground_color};|g" "/var/www/${local_hostname}/htdocs/admin/${PROJECT_NAME}.css"
+        sed -i "s|text-entry-background:.*|text-entry-background: ${text_entry_background_color};|g" "/var/www/${local_hostname}/htdocs/admin/${PROJECT_NAME}.css"
+        sed -i "s|main-link-color:.*|main-link-color: ${link_color};|g" "/var/www/${local_hostname}/htdocs/home/${PROJECT_NAME}.css"
+        sed -i "s|main-visited-color:.*|main-visited-color: ${visited_color};|g" "/var/www/${local_hostname}/htdocs/home/${PROJECT_NAME}.css"
+    fi
+    if [ -f "/var/www/${local_hostname}/htdocs/home/${PROJECT_NAME}.css" ]; then
+        sed -i "s|main-fg-color:.*|main-fg-color: ${fg_color};|g" "/var/www/${local_hostname}/htdocs/home/${PROJECT_NAME}.css"
+        sed -i "s|main-bg-color:.*|main-bg-color: ${bg_color};|g" "/var/www/${local_hostname}/htdocs/home/${PROJECT_NAME}.css"
+        sed -i "s|apps-border:.*|apps-border: ${apps_border};|g" "/var/www/${local_hostname}/htdocs/home/${PROJECT_NAME}.css"
+        sed -i "s|search-background:.*|search-background: ${search_background_a};|g" "/var/www/${local_hostname}/htdocs/home/${PROJECT_NAME}.css"
+        sed -i "s|search-background2:.*|search-background2: ${search_background_b};|g" "/var/www/${local_hostname}/htdocs/home/${PROJECT_NAME}.css"
+        sed -i "s|text-entry-foreground:.*|text-entry-foreground: ${text_entry_foreground_color};|g" "/var/www/${local_hostname}/htdocs/admin/${PROJECT_NAME}.css"
+        sed -i "s|text-entry-background:.*|text-entry-background: ${text_entry_background_color};|g" "/var/www/${local_hostname}/htdocs/admin/${PROJECT_NAME}.css"
+        sed -i "s|main-link-color:.*|main-link-color: ${link_color};|g" "/var/www/${local_hostname}/htdocs/home/${PROJECT_NAME}.css"
+        sed -i "s|main-visited-color:.*|main-visited-color: ${visited_color};|g" "/var/www/${local_hostname}/htdocs/home/${PROJECT_NAME}.css"
+    fi
+    if [ -f "/var/www/${local_hostname}/htdocs/admin/feeds.css" ]; then
+        sed -i "s|main-fg-color:.*|main-fg-color: ${fg_color};|g" "/var/www/${local_hostname}/htdocs/admin/feeds.css"
+        sed -i "s|main-bg-color:.*|main-bg-color: ${bg_color};|g" "/var/www/${local_hostname}/htdocs/admin/feeds.css"
+        sed -i "s|main-link-color:.*|main-link-color: ${link_color};|g" "/var/www/${local_hostname}/htdocs/admin/feeds.css"
+        sed -i "s|main-visited-color:.*|main-visited-color: ${visited_color};|g" "/var/www/${local_hostname}/htdocs/admin/feeds.css"
+        sed -i "s|addremove-foreground:.*|addremove-foreground: ${search_background_a};|g" "/var/www/${local_hostname}/htdocs/admin/feeds.css"
+        sed -i "s|addremove-background:.*|addremove-background: ${search_background_b};|g" "/var/www/${local_hostname}/htdocs/admin/feeds.css"
+        sed -i "s|text-entry-foreground:.*|text-entry-foreground: ${text_entry_foreground_color};|g" "/var/www/${local_hostname}/htdocs/admin/feeds.css"
+        sed -i "s|text-entry-background:.*|text-entry-background: ${text_entry_background_color};|g" "/var/www/${local_hostname}/htdocs/admin/feeds.css"
+    fi
+    if [ -f "/var/www/${local_hostname}/htdocs/home/feeds.css" ]; then
+        sed -i "s|main-fg-color:.*|main-fg-color: ${fg_color};|g" "/var/www/${local_hostname}/htdocs/home/feeds.css"
+        sed -i "s|main-bg-color:.*|main-bg-color: ${bg_color};|g" "/var/www/${local_hostname}/htdocs/home/feeds.css"
+        sed -i "s|main-link-color:.*|main-link-color: ${link_color};|g" "/var/www/${local_hostname}/htdocs/home/feeds.css"
+        sed -i "s|main-visited-color:.*|main-visited-color: ${visited_color};|g" "/var/www/${local_hostname}/htdocs/home/feeds.css"
+        sed -i "s|addremove-foreground:.*|addremove-foreground: ${search_background_a};|g" "/var/www/${local_hostname}/htdocs/home/feeds.css"
+        sed -i "s|addremove-background:.*|addremove-background: ${search_background_b};|g" "/var/www/${local_hostname}/htdocs/home/feeds.css"
+        sed -i "s|text-entry-foreground:.*|text-entry-foreground: ${text_entry_foreground_color};|g" "/var/www/${local_hostname}/htdocs/admin/feeds.css"
+        sed -i "s|text-entry-background:.*|text-entry-background: ${text_entry_background_color};|g" "/var/www/${local_hostname}/htdocs/admin/feeds.css"
+    fi
+
+    # change webmail theme
+    if [ -f "/var/www/${local_hostname}/htdocs/mail/config/config.php" ]; then
+        if [[ "$bg_color" == 'white' ]]; then
+            sed -i 's|theme_default.*|theme_default = 54;|g' "/var/www/${local_hostname}/htdocs/mail/config/config.php"
+        else
+            sed -i 's|theme_default.*|theme_default = 55;|g' "/var/www/${local_hostname}/htdocs/mail/config/config.php"
+        fi
+
+        # remove the chosen theme parameter
+        for filename in /var/local/squirrelmail/data/*.pref; do
+            if grep -q 'chosen_theme' "$filename"; then
+                sed -i '/chosen_theme/d' "$filename"
+            fi
+        done
+    fi
+
+    web_admin_set_icon_color
+}
+
+function web_admin_translate_text {
+    text="$1"
+    DEFAULT_LANGUAGE=$(grep "DEFAULT_LANGUAGE=" "/root/${PROJECT_NAME}.cfg" | awk -F '=' '{print $2}')
+    if [[ "$DEFAULT_LANGUAGE" == "en_GB"* ]]; then
+        echo "$text"
+        return
+    fi
+    local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+    translations_file="/var/www/${local_hostname}/htdocs/admin/translations/${DEFAULT_LANGUAGE}.txt"
+
+    if [ -f "$translations_file" ]; then
+        if grep -q "${text}|" "$translations_file"; then
+            grep "${text}|" "$translations_file" | head -n 1 | awk -F '|' '{print $2}'
+            return
+        fi
+    fi
+    echo "$text"
+}
+
+function web_admin_translations_from_upstream {
+    # copy over any existing upstream translations
+    if [ -d "/root/${PROJECT_NAME}/webadmin/translations" ]; then
+        local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+        if [ ! -f "/var/www/${local_hostname}/htdocs/admin/.keep_translations.txt" ]; then
+            # shellcheck disable=SC2086
+            cp -r /root/${PROJECT_NAME}/webadmin/translations /var/www/${local_hostname}/htdocs/admin/
+            chown -R www-data:www-data "/var/www/${local_hostname}/htdocs/admin/translations"
+        fi
+    fi
+}
+
+function web_admin_translate {
+    if ! grep -q 'DEFAULT_LANGUAGE=' "$CONFIGURATION_FILE"; then
+        return
+    fi
+    language=$(grep 'DEFAULT_LANGUAGE=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+    if [ ! "$language" ]; then
+        return
+    fi
+
+    local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+    webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+
+    echo "Starting translations"
+
+    cd "$webadmin_install_dir" || return
+    cp EN/*.html .
+    cp "EN/${PROJECT_NAME}.css" .
+    if [[ "$ONION_ONLY" != 'no' ]]; then
+        cp EN/settings_onion.html settings.html
+    fi
+
+    # remove any unused screens which just slows translations down
+    if [ -f "$webadmin_install_dir/theme_waiting.html" ]; then
+        rm "$webadmin_install_dir/theme_waiting.html"
+    fi
+
+    # shellcheck disable=SC2086
+    python3 /usr/local/bin/${PROJECT_NAME}-translate "${language}"
+
+    webadmin_home_dir="/var/www/${local_hostname}/htdocs/home"
+    cd "$webadmin_home_dir" || return
+    # shellcheck disable=SC2086
+    python3 /usr/local/bin/${PROJECT_NAME}-translate "${language}"
+
+    echo "Translations complete"
+    echo "Changing lang headers"
+    langstr="${language:0:2}"
+    for filename in "$webadmin_install_dir"/*.html; do
+        sed -i 's|"yes" lang="en">||g' "$filename"
+    done
+    for filename in "$webadmin_install_dir"/*.html; do
+        sed -i "s|<html>|<html lang=\"$langstr\">|g" "$filename"
+        sed -i "s|<html lang=\"en\">|<html lang=\"$langstr\">|g" "$filename"
+    done
+
+    chown www-data:www-data "$webadmin_install_dir"/*.html
+    chown www-data:www-data "$webadmin_install_dir/${PROJECT_NAME}.css"
+
+    # set the language used for web searches
+    webadmin_home_dir="/var/www/${local_hostname}/htdocs/home"
+    language_short="${language:0:2}"
+    sed -i "s|\"search_language\".*|\"search_language\" value=\"${language_short}\">|g" "$webadmin_install_dir/index.html"
+    chown www-data:www-data "$webadmin_install_dir/index.html"
+    sed -i "s|\"search_language\".*|\"search_language\" value=\"${language_short}\">|g" "$webadmin_home_dir/index.html"
+    chown www-data:www-data "$webadmin_home_dir/index.html"
+
+    echo "Translations complete"
+}
+
+function web_admin_get_hostname {
+    # shellcheck disable=SC2154
+    if [ ! "$rootdir" ]; then
+        # get the local name (usually libreserver.local) from avahi config
+        local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+    else
+        local_hostname=${PROJECT_NAME}.local
+    fi
+
+    # where the web admin files are
+    webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+    webadmin_home_dir="/var/www/${local_hostname}/htdocs/home"
+}
+
+function web_admin_translation_strings {
+    # returns all of the strings which can be translated
+    web_admin_get_hostname
+    grep -h 'translate="yes"' "$webadmin_install_dir/EN"/*.html | sed -e 's/<[^>]*>//g' | sed -e 's/^[[:space:]]*//' | sed 's/^[0-9]\+. //' | sed '/^$/d' | sort -uf
+}
+
+function web_admin_configure_installer_daemon {
+    if [ -f /etc/systemd/system/webadmin.service ]; then
+        return
+    fi
+
+    { echo '[Unit]';
+      echo 'Description=Installer daemon for web admin';
+      echo 'After=network.target';
+      echo '';
+      echo '[Service]';
+      echo 'User=root';
+      echo "ExecStart=/usr/local/bin/${PROJECT_NAME}-installer";
+      echo 'KillMode=process';
+      echo 'Restart=always';
+      echo 'RestartSec=2';
+      echo '';
+      echo '[Install]';
+      echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/webadmin.service
+
+    # suppress mac address changes during installation
+    if [ ! -f /root/.installing_webadmin ]; then
+        touch /root/.installing_webadmin
+    fi
+    systemctl enable webadmin
+    systemctl daemon-reload
+    systemctl start webadmin
+}
+
+function web_admin_avahi {
+    if [ -f /etc/avahi/services/webadmin.service ]; then
+        return
+    fi
+
+    { echo '<?xml version="1.0" standalone="no"?><!--*-nxml-*-->';
+      echo '<!DOCTYPE service-group SYSTEM "avahi-service.dtd">';
+      echo '<service-group>';
+      echo '  <name replace-wildcards="yes">%h http</name>';
+      echo '  <service>';
+      echo '    <type>_http._tcp</type>';
+      echo '    <port>80</port>';
+      echo '  </service>';
+      echo '  <service>';
+      echo '    <type>_https._tcp</type>';
+      echo '    <port>443</port>';
+      echo '  </service>';
+      echo '</service-group>'; } > /etc/avahi/services/webadmin.service
+    systemctl restart avahi-daemon
+}
+
+function web_admin_create_users {
+    web_admin_get_hostname
+
+    users_file="$webadmin_install_dir/users.html"
+
+    if [ -f "$webadmin_install_dir/.setupscreenactive" ]; then
+        if [ ! -f "$webadmin_install_dir/.running_install_command" ]; then
+            if [ -f "$users_file" ]; then
+                rm "$users_file"
+            fi
+            if [ ! -d "$INSTALL_DIR/tempwebadmin" ]; then
+                mkdir -p "$INSTALL_DIR/tempwebadmin"
+            fi
+            mv "$webadmin_install_dir/userprofile_"*.html "$INSTALL_DIR/tempwebadmin"
+            return
+        fi
+    fi
+
+    ADMIN_USER=$(get_completion_param "Admin user")
+    cp "$webadmin_install_dir"/users_template.html "$users_file"
+    sed -i '/users list/,/end of users/d' "$users_file"
+    sed -i '/<\/body>/d' "$users_file"
+    sed -i '/<\/html>/d' "$users_file"
+
+    echo "    <div class=\"row\">" >> "$users_file"
+    echo "      <div class=\"column\">" >> "$users_file"
+
+    rm "$webadmin_install_dir/userprofile_"*
+
+    no_of_users=0
+
+    # what notification methods are available?
+    can_notify_by_xmpp=
+    if [ -d /etc/prosody ]; then
+        can_notify_by_xmpp=1
+    fi
+    can_notify_by_matrix=
+    if [ -d /etc/matrix ]; then
+        can_notify_by_matrix=1
+    fi
+    notifications_user='admin'
+    if grep -q 'Notifications user:' "$COMPLETION_FILE"; then
+        # shellcheck disable=SC2002
+        notifications_user=$(cat "$COMPLETION_FILE" | grep 'Notifications user:' | awk -F ':' '{print $2}')
+    fi
+
+    for d in /home/*/ ; do
+        USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+        if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+            userfile="$webadmin_install_dir/userprofile_${USERNAME}.html"
+            useremail=${USERNAME}@${HOSTNAME}
+            GPG_ID=$(su -c "gpg --list-keys '$useremail'" - "$USERNAME" | sed -n '2p' | sed 's/^[ \t]*//')
+            if [ -f "/home/$USERNAME/.gnupg/gpg.conf" ]; then
+                if grep -q "default-key" "/home/$USERNAME/.gnupg/gpg.conf"; then
+                    default_gpg_key=$(grep "default-key" "/home/$USERNAME/.gnupg/gpg.conf")
+                    if [[ "$default_gpg_key" != *'#'* ]]; then
+                        default_gpg_key=$(grep "default-key" "/home/$USERNAME/.gnupg/gpg.conf" | awk -F ' ' '{print $2}')
+                        if [ ${#default_gpg_key} -gt 3 ]; then
+                            GPG_ID=$(su -c "gpg --list-keys '$default_gpg_key'" - "$USERNAME" | sed -n '2p' | sed 's/^[ \t]*//')
+                        fi
+                    fi
+                fi
+            fi
+            xmpp_qrcode="$webadmin_install_dir/images/userprofile_${USERNAME}_xmpp.png"
+            if [ ! -f /usr/local/bin/myqr ]; then
+                echo -n "${useremail}" | qrencode -t PNG -o "$xmpp_qrcode"
+            else
+                myqr "${useremail}" -p /root/libreserver/img/android-app/xmpp.png -c -v 8 -n "$xmpp_qrcode"
+            fi
+
+            #pubkey_qrcode="$webadmin_install_dir/images/userprofile_${USERNAME}.png"
+            #su -c "gpg --armor --export \"$GPG_ID\"" - "$USERNAME" | qrencode -t PNG -o "$pubkey_qrcode"
+
+            user_image='user.png'
+            if [[ "$USERNAME" == "$ADMIN_USER" ]]; then
+                user_image='user_admin.png'
+            fi
+
+            { echo '        <div class="chip">';
+              echo "          <a href=\"userprofile_${USERNAME}.html\" title=\"${USERNAME}\">";
+              echo "            <img src=\"images/${user_image}\" alt=\"Person\" width=\"96\" height=\"96\">";
+              echo "            $USERNAME";
+              echo '          </a>';
+              echo '        </div>'; } >> "$users_file"
+
+            no_of_users=$((no_of_users+1))
+
+            cp "$webadmin_install_dir"/userprofile.html "$userfile"
+            sed -i "s|USERNAME|${USERNAME}|g" "$userfile"
+            if [[ "$USERNAME" == "$ADMIN_USER" ]]; then
+                sed -i "s|USERTYPE|Admin|g" "$userfile"
+                sed -i '/remove user button/,/end of remove/d' "$userfile"
+            else
+                sed -i "s|USERTYPE|User|g" "$userfile"
+            fi
+
+            if [[ "$useremail" != *'.onion' ]]; then
+                useronionemail=${USERNAME}@$(cat /var/lib/tor/hidden_service_email/hostname)
+                sed -i "s|USEREMAIL|${useremail}<br><br>${useronionemail}|g" "$userfile"
+            else
+                sed -i "s|USEREMAIL|${useremail}|g" "$userfile"
+            fi
+
+            sed -i "s|USERGPG|${GPG_ID}|g" "$userfile"
+
+            # File containing preferred notification methods
+            notification_method_filename="/home/${USERNAME}/.notify"
+            notification_selected=
+            if [ $can_notify_by_matrix ]; then
+                sed -i '/option value="email"/a <option value="matrix">Matrix</option>' "$userfile"
+                if [ -f "$notification_method_filename" ]; then
+                    if grep -q 'matrix' "$notification_method_filename"; then
+                        sed -i 's|value="matrix">|value="matrix" selected>|g' "$userfile"
+                        notification_selected=1
+                    fi
+                fi
+            fi
+            if [ $can_notify_by_xmpp ]; then
+                sed -i '/option value="email"/a <option value="xmpp">XMPP</option>' "$userfile"
+                if [ -f "$notification_method_filename" ]; then
+                    if grep -q 'xmpp' "$notification_method_filename"; then
+                        sed -i 's|value="xmpp">|value="xmpp" selected>|g' "$userfile"
+                        notification_selected=1
+                    fi
+                fi
+            fi
+            if [ ! $notification_selected ]; then
+                sed -i 's|value="email">|value="email" selected>|g' "$userfile"
+            fi
+
+            # check the notifications user
+            if [[ "$USERNAME" == "$notifications_user" ]]; then
+                sed -i 's|name="admin_notify">|name="admin_notify" checked>|g' "$userfile"
+            fi
+
+            chown www-data:www-data "$userfile"
+            #chown www-data:www-data "$pubkey_qrcode"
+        fi
+    done
+
+    translated_add_user=$(web_admin_translate_text "Add a new member")
+
+    # shellcheck disable=SC2086
+    if [ $no_of_users -lt $MAXIMUM_USERS ]; then
+        { echo '        <div class="chip">';
+          echo "          <a href=\"new_user.html\" title=\"${translated_add_user}\">";
+          echo '            <img src="images/user.png" alt="Person" width="96" height="96">';
+          echo '            <div class="adduser">+</div>';
+          echo '          </a>';
+          echo '        </div>'; } >> "$users_file"
+    fi
+
+    { echo '      </div>';
+      echo '    </div>';
+      echo '  </body>';
+      echo '</html>'; } >> "$users_file"
+
+    chown www-data:www-data "$users_file"
+}
+
+function get_app_categories {
+    APP_CATEGORY=()
+    APP_CATEGORY+=("chat")
+    APP_CATEGORY+=("games")
+    APP_CATEGORY+=("media")
+    APP_CATEGORY+=("organization")
+    APP_CATEGORY+=("social")
+    APP_CATEGORY+=("sync")
+    APP_CATEGORY+=("publishing")
+    APP_CATEGORY+=("other")
+}
+
+function web_admin_create_add_apps_category {
+    # number of apps added
+    add_apps_ctr=0
+
+    # This counter is used to enforce 4 icon rows
+    available_apps_ctr=0
+
+    # Index within the array of all apps
+    app_index=0
+
+    # shellcheck disable=SC2086
+    category_str="$(tr '[:lower:]' '[:upper:]' <<< ${category:0:1})${category:1}"
+    translated_category=$(web_admin_translate_text "$category_str")
+
+    apps_header_str="<fieldset class=\"field_set\"><legend translate=\"yes\" class=\"category\">$translated_category</legend>"
+    echo "    $apps_header_str" >> "$appslist_add_filename"
+
+    FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
+    for add_app_filename in $FILES
+    do
+        if [[ "$files_checked" != *"|$add_app_filename|"* ]]; then
+            add_app_name=$(echo "${add_app_filename}" | awk -F '-app-' '{print $2}')
+            if grep -q "APP_CATEGORY=$category" "$add_app_filename"; then
+                if ! grep -q "VARIANTS=''" "$add_app_filename"; then
+                    if [[ $(enough_ram_for_app "$add_app_name") == "0" ]]; then
+                        if [[ $(app_not_on_onion_only "$add_app_name") != "0" ]]; then
+                            if [[ $(app_not_on_arm "$add_app_name") != "0" ]]; then
+                                if [[ $(app_not_in_webadmin "$add_app_name") != "0" ]]; then
+                                    # is this app already installed?
+                                    app_index=0
+                                    app_is_installed=
+                                    # shellcheck disable=SC2068
+                                    for a in ${APPS_INSTALLED[@]}
+                                    do
+                                        installed_app_name=${APPS_INSTALLED_NAMES[$app_index]}
+                                        if [[ "$installed_app_name" == "$add_app_name" ]]; then
+                                            app_is_installed=1
+                                            break
+                                        fi
+
+                                        app_index=$((app_index+1))
+                                    done
+
+                                    # check if the app is pending installation
+                                    app_pending_install=
+                                    if [ -f "$pending_installs" ]; then
+                                        if grep -q "install_${add_app_name}" "$pending_installs"; then
+                                            app_is_installed=1
+                                            app_pending_install=1
+                                        fi
+                                    fi
+
+                                    if [ ! $app_is_installed ]; then
+
+                                        # does this app have a category?
+                                        if ! grep -q 'APP_CATEGORY=' "$add_app_filename"; then
+                                            if [[ "$category" != 'other' ]]; then
+                                                app_index=$((app_index+1))
+                                                continue
+                                            fi
+                                        fi
+
+                                        # Does this app belong in the current category?
+                                        if ! grep -q "APP_CATEGORY=$category" "$add_app_filename"; then
+                                            app_index=$((app_index+1))
+                                            continue
+                                        fi
+
+                                        if grep -q "VARIANTS=''" "$add_app_filename"; then
+                                            continue
+                                        fi
+                                        if grep -q 'VARIANTS=""' "$add_app_filename"; then
+                                            continue
+                                        fi
+
+                                        # get the icon for the app
+                                        icon_filename="/usr/share/${PROJECT_NAME}/android-app/${add_app_name}.png"
+                                        if [ -f "$icon_filename" ]; then
+                                            cp "$icon_filename" "$webadmin_install_dir/icons/${add_app_name}.png"
+                                        else
+                                            icon_filename=
+                                            continue
+                                        fi
+
+                                        # remove any qrcode images
+                                        if [ -f "$webadmin_install_dir/app_qrcode_${add_app_name}.png" ]; then
+                                            rm "$webadmin_install_dir/app_qrcode_${add_app_name}.png"
+                                        fi
+                                        if [ -f "$webadmin_install_dir/${add_app_name}_qrcode.png" ]; then
+                                            rm "$webadmin_install_dir/${add_app_name}_qrcode.png"
+                                        fi
+
+                                        app_name_upper=$(echo "$add_app_name" | awk '{print toupper($0)}')
+                                        SHORT_DESCRIPTION=
+                                        DESCRIPTION=
+
+                                        if ! grep -q "${app_name_upper}_SHORT_DESCRIPTION=" "$add_app_filename"; then
+                                            continue
+                                        fi
+                                        if grep -q "#${app_name_upper}_SHORT_DESCRIPTION=" "$add_app_filename"; then
+                                            continue
+                                        fi
+                                        SHORT_DESCRIPTION="$(grep "${app_name_upper}_SHORT_DESCRIPTION=" "$add_app_filename" | head -n 1 | sed 's|\$||g' | sed "s|'||g" | sed 's|\"||g' | awk -F '=' '{print $2}')"
+                                        translated_short_description=$(web_admin_translate_text "$SHORT_DESCRIPTION")
+                                        SHORT_DESCRIPTION="$translated_short_description"
+                                        app_title="${SHORT_DESCRIPTION}"
+
+                                        if grep -q "${app_name_upper}_DESCRIPTION=" "$add_app_filename"; then
+                                            DESCRIPTION="$(grep "${app_name_upper}_DESCRIPTION=" "$add_app_filename" | head -n 1 | sed 's|\$||g' | sed "s|'||g" | sed 's|\"||g' | awk -F '=' '{print $2}')"
+                                            translated_description=$(web_admin_translate_text "$DESCRIPTION")
+                                            DESCRIPTION="$translated_description"
+                                            app_title="${DESCRIPTION}"
+                                        fi
+
+                                        if [ $available_apps_ctr -eq 0 ]; then
+                                            echo '    <div class="row">' >> "$appslist_add_filename"
+                                        fi
+
+                                        filename_app="$webadmin_install_dir/app_${add_app_name}.html"
+                                        if [ -f "$filename_app" ]; then
+                                            rm "$filename_app"
+                                        fi
+
+                                        filename_app="$webadmin_install_dir/app_add_${add_app_name}.html"
+
+                                        if [ ! $app_pending_install ]; then
+                                            { echo '      <div class="column">';
+                                              echo '        <div>';
+                                              echo "          <a href=\"app_add_${add_app_name}.html\" title=\"${app_title}\">";
+                                              echo "            <img src=\"icons/${add_app_name}.png\" style=\"width:40%\" loading=\"lazy\">";
+                                              echo "            <center>${add_app_name}</center>";
+                                              echo '          </a>';
+                                              echo '        </div>';
+                                              echo '      </div>'; } >> "$appslist_add_filename"
+                                        else
+                                            { echo '      <div class="column">';
+                                              echo '        <div>';
+                                              echo "        <img src=\"icons/${add_app_name}.png\" style=\"width:40%\" loading=\"lazy\">";
+                                              echo "        <center class=\"installing\">${add_app_name}</center>";
+                                              echo '        </div>';
+                                              echo '      </div>'; } >> "$appslist_add_filename"
+                                        fi
+
+                                        cp "$app_add_template_filename" "$filename_app"
+
+                                        # Replace app variables
+                                        sed -i "s|HOSTNAME|$(hostname)|g" "$filename_app"
+                                        sed -i "s|APPNAME|${add_app_name}|g" "$filename_app"
+                                        sed -i "s|APPDESCRIPTION|${DESCRIPTION}|g" "$filename_app"
+
+                                        # special case for xmpp and gemini where it is the same as the default domain
+                                        if [[ "${add_app_name}" == 'xmpp' || "${add_app_name}" == 'gemini' ]]; then
+                                            if [[ "$ONION_ONLY" == 'no' ]]; then
+                                                sed -i "s|<p><label translate=\"yes\">Domain:.*|<input type=\"hidden\" name=\"install_domain\" value=\"$(hostname)\">|g" "$filename_app"
+                                            fi
+                                        fi
+
+                                        app_add_remove_domain=
+                                        if [[ "$ONION_ONLY" != 'no' ]]; then
+                                            app_add_remove_domain=1
+                                        fi
+                                        webadmin_remove_domain=
+                                        if grep -q 'SHOW_DOMAIN_IN_WEBADMIN=0' "$add_app_filename"; then
+                                            webadmin_remove_domain=1
+                                        fi
+                                        if grep -q 'SHOW_DOMAIN_IN_ADD_WEBADMIN=0' "$add_app_filename"; then
+                                            webadmin_remove_domain=1
+                                        fi
+                                        if [ $webadmin_remove_domain ]; then
+                                            app_add_remove_domain=1
+                                            sed -i '/freedns_code/d' "$filename_app"
+                                            sed -i 's|"no_domain".*|"no_domain" value="1">|g' "$filename_app"
+                                        fi
+
+                                        # remove domain if necessary
+                                        if [ $app_add_remove_domain ]; then
+                                            if grep -q 'install_domain' "$filename_app"; then
+                                                sed -i '/install_domain/d' "$filename_app"
+                                            fi
+                                            sed -i "/installappconfirm.php/a <input type=\"hidden\" name=\"install_domain\" value=\"${add_app_name}.$(hostname)\">" "$filename_app"
+                                        fi
+
+                                        # remove freedns if necessary
+                                        #if [[ "$DDNS_PROVIDER" != *"freedns"* ]]; then
+                                        #    if grep -q 'freedns_code' "$filename_app"; then
+                                        sed -i '/freedns_code/d' "$filename_app"
+                                        #    fi
+                                        #fi
+
+                                        available_apps_ctr=$((available_apps_ctr+1))
+                                        add_apps_ctr=$((add_apps_ctr+1))
+
+                                        # four columns per row
+                                        if [ $available_apps_ctr -eq 4 ]; then
+                                            echo '    </div>' >> "$appslist_add_filename"
+                                            available_apps_ctr=0
+                                        fi
+                                        files_checked="${files_checked}|${add_app_filename}|"
+                                    fi
+                                fi
+                            fi
+                        fi
+                    fi
+                fi
+            fi
+        fi
+    done
+
+    if [ ${available_apps_ctr} -gt 0 ]; then
+        # Complete the rest of the four column row
+        # shellcheck disable=SC2034
+        for i in $(seq ${available_apps_ctr} 3)
+        do
+            { echo '      <div class="column">';
+              echo '        <div>';
+              echo '        </div>';
+              echo '      </div>'; } >> "$appslist_add_filename"
+        done
+        echo '    </div>' >> "$appslist_add_filename"
+    fi
+
+    if [ ${add_apps_ctr} -gt 0 ]; then
+        echo '    </fieldset>' >> "$appslist_add_filename"
+    else
+        # remove the header for this category
+        sed -i "/>$translated_category</d" "$appslist_add_filename"
+    fi
+}
+
+function web_admin_create_add_apps {
+    web_admin_get_hostname
+
+    appslist_add_filename="$webadmin_install_dir/apps_add.html"
+    if [ -f "$webadmin_install_dir/.setupscreenactive" ]; then
+        if [ ! -f "$webadmin_install_dir/.running_install_command" ]; then
+            if [ -f "$appslist_add_filename" ]; then
+                rm "$appslist_add_filename"
+            fi
+            if [ ! -d "$INSTALL_DIR/tempwebadmin" ]; then
+                mkdir -p "$INSTALL_DIR/tempwebadmin"
+            fi
+            mv "$webadmin_install_dir/app_add_"*.html "$INSTALL_DIR/tempwebadmin"
+            return
+        fi
+    fi
+
+    read_config_param DDNS_PROVIDER
+    read_config_param ONION_ONLY
+    apps_add_template_filename="$webadmin_install_dir/apps_add_template.html"
+    pending_installs="$webadmin_install_dir/pending_installs.txt"
+    icons_dir="$webadmin_install_dir/icons"
+    app_add_template_filename="$webadmin_install_dir/app_add_template.html"
+    FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
+
+    if [ ! -d "$icons_dir" ]; then
+        mkdir -p "$icons_dir"
+    fi
+
+    if [ ! -f "$apps_add_template_filename" ]; then
+        return
+    fi
+    cp "$apps_add_template_filename" "$appslist_add_filename"
+    sed -i '/<\/div>/d' "$appslist_add_filename"
+    sed -i '/<\/body>/d' "$appslist_add_filename"
+    sed -i '/<\/html>/d' "$appslist_add_filename"
+
+    get_app_categories
+
+    files_checked=
+    # shellcheck disable=SC2068,SC2034
+    for category in ${APP_CATEGORY[@]}
+    do
+        web_admin_create_add_apps_category
+    done
+
+    { echo '    </div>';
+      echo '    <br><br>';
+      echo '  </body>';
+      echo '</html>'; } >> "$appslist_add_filename"
+
+    chown -R www-data:www-data "$webadmin_install_dir"
+}
+
+function web_admin_create_installed_apps_category {
+    # number of apps in the category
+    apps_in_category_ctr=0
+
+    # This counter is used to enforce 4 icon rows
+    installed_apps_ctr=0
+
+    # Index within the array of all apps
+    app_index=0
+
+    # shellcheck disable=SC2086
+    category_str="$(tr '[:lower:]' '[:upper:]' <<< ${category:0:1})${category:1}"
+    translated_category=$(web_admin_translate_text "$category_str")
+
+    apps_header_str="<fieldset class=\"field_set\"><legend translate=\"yes\" class=\"category\">$translated_category</legend>"
+    echo "    $apps_header_str" >> "$appslist_filename"
+
+    # shellcheck disable=SC2068,SC2034
+    for a in ${APPS_INSTALLED[@]}
+    do
+        app_name=${APPS_INSTALLED_NAMES[$app_index]}
+        if [ "$app_name" ]; then
+            app_filename="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-${app_name}"
+            if [[ "$files_checked" != *"|$app_filename|"* ]]; then
+                if [ -f "$app_filename" ]; then
+
+                    # check if the app is being removed
+                    app_being_removed=
+                    if [ -f "$pending_removes" ]; then
+                        if grep -q "remove_${app_name}" "$pending_removes"; then
+                            app_being_removed=1
+                        fi
+                    fi
+
+                    if [ ! $app_being_removed ]; then
+                        # get the icon for the app
+                        icon_filename="/usr/share/${PROJECT_NAME}/android-app/${app_name}.png"
+                        if [ -f "$icon_filename" ]; then
+                            cp "$icon_filename" "$webadmin_install_dir/icons/${app_name}.png"
+                        else
+                            icon_filename=
+                        fi
+
+                        app_name_upper=$(echo "$app_name" | awk '{print toupper($0)}')
+                        SHORT_DESCRIPTION=
+                        DESCRIPTION=
+
+                        # does this app have a category?
+                        if ! grep -q 'APP_CATEGORY=' "$app_filename"; then
+                            if [[ "$category" != 'other' ]]; then
+                                app_index=$((app_index+1))
+                                continue
+                            fi
+                        fi
+
+                        # Does this app belong in the current category?
+                        if ! grep -q "APP_CATEGORY=$category" "$app_filename"; then
+                            app_index=$((app_index+1))
+                            continue
+                        fi
+
+                        # Do we have a short description?
+                        if ! grep -q "${app_name_upper}_SHORT_DESCRIPTION=" "$app_filename"; then
+                            app_index=$((app_index+1))
+                            continue
+                        fi
+
+                        # is the short description commented out?
+                        if grep -q "#${app_name_upper}_SHORT_DESCRIPTION=" "$app_filename"; then
+                            app_index=$((app_index+1))
+                            continue
+                        fi
+
+                        SHORT_DESCRIPTION="$(grep "${app_name_upper}_SHORT_DESCRIPTION=" "$app_filename" | head -n 1 | sed 's|\$||g' | sed "s|'||g" | sed 's|\"||g' | awk -F '=' '{print $2}')"
+
+                        translated_short_description=$(web_admin_translate_text "$SHORT_DESCRIPTION")
+                        SHORT_DESCRIPTION="$translated_short_description"
+                        app_title="${SHORT_DESCRIPTION}"
+
+                        if grep -q "${app_name_upper}_DESCRIPTION=" "$app_filename"; then
+                            DESCRIPTION="$(grep "${app_name_upper}_DESCRIPTION=" "$app_filename" | head -n 1 | sed 's|\$||g' | sed "s|'||g" | sed 's|\"||g' | awk -F '=' '{print $2}')"
+                            translated_description=$(web_admin_translate_text "$DESCRIPTION")
+                            DESCRIPTION="$translated_description"
+                            app_title="${DESCRIPTION}"
+                        fi
+
+                        MOBILE_APP_URL="$(grep "${app_name_upper}_MOBILE_APP_URL==" "$app_filename" | head -n 1)"
+
+                        read_config_param "${app_name_upper}_DOMAIN_NAME"
+                        read_config_param ONION_ONLY
+                        onion_app_name=${app_name}
+                        if [[ "$onion_app_name" == 'xmpp' || "$onion_app_name" == 'gemini' ]]; then
+                            onion_app_name='email'
+                        fi
+                        if [[ "$ONION_ONLY" == 'no' ]]; then
+                            if grep -q "INSTALLED_ON_DEFAULT_DOMAIN=1" "$app_filename"; then
+                                read_config_param DEFAULT_DOMAIN_NAME
+                                domain_name=$DEFAULT_DOMAIN_NAME
+                            else
+                                test_domain_name="${app_name_upper}_DOMAIN_NAME"
+                                domain_name=${!test_domain_name}
+                            fi
+                        else
+                            domain_name=$(cat "/var/lib/tor/hidden_service_${onion_app_name}/hostname")
+                        fi
+                        if [[ "$app_name" == 'scuttlebot' ]]; then
+                            read_config_param SCUTTLEBOT_INVITE
+                            if [ "$SCUTTLEBOT_INVITE" ]; then
+                                domain_name="$SCUTTLEBOT_INVITE"
+                                recreate_scuttlebot_qrcode=
+                                if [ ! -f /etc/scuttlebot/.current_invite.txt ]; then
+                                    recreate_scuttlebot_qrcode=1
+                                else
+                                    if [[ "$(cat /etc/scuttlebot/.current_invite.txt)" != "$SCUTTLEBOT_INVITE" ]]; then
+                                        recreate_scuttlebot_qrcode=1
+                                    fi
+                                fi
+                                if [ ! -f "$webadmin_install_dir/app_qrcode_${app_name}.png" ]; then
+                                    recreate_scuttlebot_qrcode=1
+                                fi
+
+                                if [ $recreate_scuttlebot_qrcode ]; then
+                                    if [ ! -f /usr/local/bin/myqr ]; then
+                                        echo -n "$SCUTTLEBOT_INVITE" | qrencode -t PNG -o "$webadmin_install_dir/app_qrcode_${app_name}.png"
+                                    else
+                                        myqr "$SCUTTLEBOT_INVITE" -p /root/libreserver/img/android-app/scuttlebot.png -c -n "$webadmin_install_dir/app_qrcode_${app_name}.png"
+                                    fi
+                                    echo -n "$SCUTTLEBOT_INVITE" > /etc/scuttlebot/.current_invite.txt
+                                fi
+                            else
+                                domain_name=
+                            fi
+                        fi
+                        onion_domain_name=
+                        if [ -f "/var/lib/tor/hidden_service_${onion_app_name}/hostname" ]; then
+                            onion_domain_name=$(cat "/var/lib/tor/hidden_service_${onion_app_name}/hostname")
+                        fi
+
+                        if [ "$domain_name" ]; then
+                            if [[ "$domain_name" != *'.onion' ]]; then
+                                if ! grep -q 'SHOW_DOMAIN_ONLY=1' "$app_filename"; then
+                                    domain_name="https://${domain_name}"
+                                fi
+                            else
+                                if ! grep -q 'SHOW_DOMAIN_ONLY=1' "$app_filename"; then
+                                    domain_name="http://${onion_domain_name}"
+                                else
+                                    domain_name="${onion_domain_name}"
+                                fi
+                            fi
+                        fi
+
+                        if grep -q "SHOW_URL_PORT=" "$app_filename"; then
+                            domain_port_number=$(grep "SHOW_URL_PORT=" "$app_filename" | head -n 1 | awk -F '=' '{print $2}')
+                            if [ "$domain_port_number" ]; then
+                                if ! grep -q 'SHOW_DOMAIN_ONLY=1' "$app_filename"; then
+                                    domain_name="http://${local_hostname}:${domain_port_number}"
+                                    onion_domain_name="http://${onion_domain_name}:${domain_port_number}"
+                                else
+                                    domain_name="${local_hostname}:${domain_port_number}"
+                                    onion_domain_name="${onion_domain_name}:${domain_port_number}"
+                                fi
+                            fi
+                        fi
+
+                        if grep -q "SHOW_APP_PORT=" "$app_filename"; then
+                            domain_port_number=$(grep "SHOW_APP_PORT=" "$app_filename" | head -n 1 | awk -F '=' '{print $2}')
+                            if [ "$domain_port_number" ]; then
+                                translated_port=$(web_admin_translate_text "port")
+                                if ! grep -q 'SHOW_DOMAIN_ONLY=1' "$app_filename"; then
+                                    domain_name="http://${domain_name} ${translated_port} ${domain_port_number}"
+                                    onion_domain_name="http://${onion_domain_name} ${translated_port} ${domain_port_number}"
+                                else
+                                    domain_name="${domain_name} ${translated_port} ${domain_port_number}"
+                                    onion_domain_name="${onion_domain_name} ${translated_port} ${domain_port_number}"
+                                fi
+                            fi
+                        fi
+
+                        # special case for rsync
+                        if [[ "$app_name" == 'rsync' ]]; then
+                            RSYNC_HOSTNAME_ONION=$(cat /var/lib/tor/hidden_service_rsync/hostname)
+                            read_config_param DEFAULT_DOMAIN_NAME
+
+                            if grep -q 'read only = true' /etc/rsync/rsyncd.conf; then
+                                domain_name="torsocks rsync -avmr --delete $RSYNC_HOSTNAME_ONION::files ~/your_directory/<br><br>rsync -avmr --delete ${PROJECT_NAME}::files ~/your_directory/"
+                                if [[ "$DEFAULT_DOMAIN_NAME" != *'.local' ]]; then
+                                    domain_name="${domain_name}<br><br>rsync -avmr --delete $DEFAULT_DOMAIN_NAME::files ~/your_directory/"
+                                fi
+                            else
+                                domain_name="torsocks rsync -avmr --delete $RSYNC_HOSTNAME_ONION::files ~/your_directory/ \&\& torsocks rsync -avmr --delete ~/your_directory/ $RSYNC_HOSTNAME_ONION::files<br><br>rsync -avmr --delete ${PROJECT_NAME}::files ~/your_directory/ \&\& rsync -avmr --delete ~/your_directory/ ${PROJECT_NAME}::files"
+                                if [[ "$DEFAULT_DOMAIN_NAME" != *'.local' ]]; then
+                                    domain_name="${domain_name}<br><br>rsync -avmr --delete $DEFAULT_DOMAIN_NAME::files ~/your_directory/ \&\& rsync -avmr --delete ~/your_directory/ $DEFAULT_DOMAIN_NAME::files"
+                                fi
+                            fi
+                        fi
+
+                        if [ $installed_apps_ctr -eq 0 ]; then
+                            echo '    <div class="row">' >> "$appslist_filename"
+                        fi
+
+                        filename="$webadmin_install_dir/app_add_${app_name}.html"
+                        if [ -f "$filename" ]; then
+                            rm "$filename"
+                        fi
+
+                        filename="$webadmin_install_dir/app_${app_name}.html"
+
+                        { echo '      <div class="column">';
+                          echo '        <div>';
+                          echo "          <a href=\"app_${app_name}.html\" title=\"${app_title}\">";
+                          echo "            <img src=\"icons/${app_name}.png\" style=\"width:40%\" loading=\"lazy\">";
+                          echo "            <center>${app_name}</center>";
+                          echo '          </a>';
+                          echo '        </div>';
+                          echo '      </div>'; } >> "$appslist_filename"
+
+                        cp "$app_template_filename" "$filename"
+
+                        # avoid showing the rsync command twice in APPURL and ONIONURL
+                        if [[ "$app_name" == 'rsync' ]]; then
+                            sed -i '/APPURL/d' "$filename"
+                        fi
+
+                        # single icon, no qrcode
+                        if [[ "$app_name" == 'pihole' || "$app_name" == 'dlna' ]]; then
+                            cp "$app2_template_filename" "$filename"
+                        fi
+
+                        if [[ "$app_name" == 'scuttlebot' ]]; then
+                            # add a refresh header so that new invites appear automatically once created by the daemon
+                            if ! grep -q '"Refresh"' "$filename"; then
+                                sed -i '/<head>/a <meta http-equiv="Refresh" content="30" charset="utf-8">' "$filename"
+                            fi
+                        fi
+
+                        if ! grep -q 'SHOW_DOMAIN_IN_WEBADMIN=0' "$app_filename"; then
+                            if [ ! -f "$webadmin_install_dir/app_qrcode_${app_name}.png" ]; then
+                                if [[ "$app_name" != 'rsync' ]]; then
+                                    if [ ! -f /usr/local/bin/myqr ]; then
+                                        if ! grep -q 'SHOW_DOMAIN_ONLY=1' "$app_filename"; then
+                                            echo -n "http://${onion_domain_name}" | qrencode -t PNG -o "$webadmin_install_dir/app_qrcode_${app_name}.png"
+                                        else
+                                            echo -n "${onion_domain_name}" | qrencode -t PNG -o "$webadmin_install_dir/app_qrcode_${app_name}.png"
+                                        fi
+                                    else
+                                        if ! grep -q 'SHOW_DOMAIN_ONLY=1' "$app_filename"; then
+                                            myqr "http://${onion_domain_name}" -p /root/libreserver/img/onion.png -c -n "$webadmin_install_dir/app_qrcode_${app_name}.png"
+                                        else
+                                            myqr "${onion_domain_name}" -p /root/libreserver/img/onion.png -c -n "$webadmin_install_dir/app_qrcode_${app_name}.png"
+                                        fi
+                                    fi
+                                else
+                                    # do something different for rsync: show the commands to sync
+                                    RSYNC_HOSTNAME_ONION=$(cat /var/lib/tor/hidden_service_rsync/hostname)
+                                    if grep -q 'read only = true' /etc/rsync/rsyncd.conf; then
+                                        if [ ! -f /usr/local/bin/myqr ]; then
+                                            echo -n "torsocks rsync -avmr --delete $RSYNC_HOSTNAME_ONION::files ~/your_directory/" | qrencode -t PNG -o "$webadmin_install_dir/app_qrcode_${app_name}.png"
+                                        else
+                                            myqr "torsocks rsync -avmr $RSYNC_HOSTNAME_ONION::files ~/your_directory/" -p /root/libreserver/img/onion.png -c -n "$webadmin_install_dir/app_qrcode_${app_name}.png"
+                                        fi
+                                    else
+                                        if [ ! -f /usr/local/bin/myqr ]; then
+                                            echo -n "torsocks rsync -avmr --delete $RSYNC_HOSTNAME_ONION::files ~/your_directory/ && torsocks rsync -avmr --delete ~/your_directory/ $RSYNC_HOSTNAME_ONION::files" | qrencode -t PNG -o "$webadmin_install_dir/app_qrcode_${app_name}.png"
+                                        else
+                                            myqr "torsocks rsync -avmr $RSYNC_HOSTNAME_ONION::files ~/your_directory/ && torsocks rsync -avmr ~/your_directory/ $RSYNC_HOSTNAME_ONION::files" -p /root/libreserver/img/onion.png -c -n "$webadmin_install_dir/app_qrcode_${app_name}.png"
+                                        fi
+                                    fi
+                                fi
+                            fi
+                        fi
+
+                        # remove settings button if there are no settings for this app
+                        app_settings_screen="$webadmin_install_dir/settings_${app_name}.html"
+                        if [ ! -f "$app_settings_screen" ]; then
+                            app_settings_screen_template="$webadmin_install_dir/settings_${app_name}_template.html"
+                            if [ ! -f "$app_settings_screen_template" ]; then
+                                sed -i '/submitappsettings/d' "$filename"
+                            else
+                                cp "$app_settings_screen_template" "$app_settings_screen"
+                                # shellcheck disable=SC2086
+                                ${app_name}_update_settings_template
+                            fi
+                        fi
+
+                        app_help_screen="$webadmin_install_dir/help_${app_name}.html"
+
+                        if [[ "$ONION_ONLY" != 'no' ]]; then
+                            # special version of help screen for onion version
+                            app_onion_help_screen="$webadmin_install_dir/help_${app_name}_onion.html"
+                            if [ -f "$app_onion_help_screen" ]; then
+                                cp "$app_onion_help_screen" "$app_help_screen"
+                            fi
+                        fi
+
+                        if [ ! -f "$app_help_screen" ]; then
+                            # remove help button if there are no help screen for this app
+                            sed -i '/submithelp/d' "$filename"
+                        else
+                            # On onion only we don't need to forward ports, so
+                            # that text can be removed from the help screen
+                            if [[ "$ONION_ONLY" != 'no' ]]; then
+                                sed -i '/"portstext"/d' "$app_help_screen"
+                                sed -i '/"subheaderports"/d' "$app_help_screen"
+                            fi
+                        fi
+
+                        # Replace app variables
+                        if [ ! "$MOBILE_APP_URL" ]; then
+                            sed -i '/MOBILEAPPURL/d' "$filename"
+                        else
+                            sed -i "s|MOBILEAPPURL|$MOBILE_APP_URL|g" "$filename"
+                        fi
+                        if grep -q 'SHOW_DOMAIN_IN_WEBADMIN=0' "$app_filename"; then
+                            sed -i '/ONIONURL/d' "$filename"
+                            # Show DNS IP address for pi-hole
+                            if [[ "$app_name" == 'pihole' ]]; then
+                                sed -i "s|\"APPURL\"|\"\"|g" "$filename"
+                                sed -i '/.appurl/,/font-size:/s/font-size:.*/font-size: 150%;/' "$filename"
+                                sed -i "s|APPURL|DNS $(get_ipv4_address)|g" "$filename"
+                            fi
+                            if [[ "$app_name" == 'dlna' ]]; then
+                                sed -i "s|\"APPURL\"|\"\"|g" "$filename"
+                            fi
+                            if [[ "$app_name" != 'scuttlebot' ]]; then
+                                sed -i '/app_qrcode_/d' "$filename"
+                                sed -i '/APPURL/d' "$filename"
+                            else
+                                sed -i "s|APPURL|$domain_name|g" "$filename"
+                            fi
+                        fi
+                        sed -i "s|HOSTNAME|$(hostname)|g" "$filename"
+                        sed -i "s|APPNAME|${app_name}|g" "$filename"
+                        if [[ "${onion_domain_name}" == *'.'* ]]; then
+                            if [[ "$app_name" != 'rsync' ]]; then
+                                if ! grep -q 'SHOW_DOMAIN_ONLY=1' "$app_filename"; then
+                                    sed -i "s|ONIONURL|http://${onion_domain_name}|g" "$filename"
+                                else
+                                    if ! grep -q 'SHOW_TELNET_PORT=' "$app_filename"; then
+                                        sed -i "s|ONIONURL|${onion_domain_name}|g" "$filename"
+                                    else
+                                        telnet_port=$(grep 'SHOW_TELNET_PORT=' "$app_filename" | awk -F '=' '{$print 2}')
+                                        sed -i "s|ONIONURL|telnet ${onion_domain_name} ${telnet_port}|g" "$filename"
+                                    fi
+                                fi
+                            else
+                                sed -i "s|ONIONURL|${domain_name}|g" "$filename"
+                            fi
+                        else
+                            if [[ "$app_name" == 'syncthing' ]]; then
+                                # syncthing is treated as a special case
+                                # instead of showing a url or onion address we show the
+                                # syncthing ID
+                                sed -i "s|app_qrcode_${app_name}.png|${app_name}_qrcode.png|g" "$filename"
+                                read_config_param MY_USERNAME
+                                if [ -f "/home/$MY_USERNAME/.syncthing-server-id" ]; then
+                                    syncthing_id=$(cat "/home/$MY_USERNAME/.syncthing-server-id")
+                                    if [ ! -f "$webadmin_install_dir/${app_name}_qrcode.png" ]; then
+                                        if [ ! -f /usr/local/bin/myqr ]; then
+                                            echo -n "$syncthing_id" | qrencode -t PNG -o "$webadmin_install_dir/${app_name}_qrcode.png"
+                                        else
+                                            myqr "$syncthing_id" -p /root/libreserver/img/android-app/syncthing.png -c -v 8 -n "$webadmin_install_dir/${app_name}_qrcode.png"
+                                        fi
+                                    fi
+                                    sed -i "s|ONIONURL|${syncthing_id}|g" "$filename"
+                                else
+                                    sed -i '/ONIONURL/d' "$filename"
+                                fi
+                            else
+                                sed -i '/ONIONURL/d' "$filename"
+                            fi
+                        fi
+
+                        if [[ "$ONION_ONLY" != 'no' ]]; then
+                            sed -i '/APPURL/d' "$filename"
+                        else
+                            if [[ "${domain_name}" != *'.local' ]]; then
+                                sed -i "s|APPURL|${domain_name}|g" "$filename"
+                            else
+                                sed -i '/APPURL/d' "$filename"
+                            fi
+                        fi
+                        sed -i "s|APPDESCRIPTION|${DESCRIPTION}|g" "$filename"
+
+                        installed_apps_ctr=$((installed_apps_ctr+1))
+                        total_apps_ctr=$((total_apps_ctr+1))
+                        apps_in_category_ctr=$((apps_in_category_ctr+1))
+
+                        # four columns per row
+                        if [ $installed_apps_ctr -eq 4 ]; then
+                            echo '    </div>' >> "$appslist_filename"
+                            installed_apps_ctr=0
+                        fi
+                        files_checked="${files_checked}|${app_filename}|"
+                    fi
+                fi
+            fi
+        fi
+        app_index=$((app_index+1))
+    done
+
+    if [ ${installed_apps_ctr} -gt 0 ]; then
+        # Complete the rest of the four column row
+        # shellcheck disable=SC2034
+        for i in $(seq ${installed_apps_ctr} 3)
+        do
+            { echo '      <div class="column">';
+              echo '        <div>';
+              echo '        </div>';
+              echo '      </div>'; } >> "$appslist_filename"
+        done
+        echo '    </div>' >> "$appslist_filename"
+    fi
+
+    if [ ${apps_in_category_ctr} -gt 0 ]; then
+        echo '    </fieldset>' >> "$appslist_filename"
+    else
+        # remove the header for this category
+        sed -i "/>$translated_category</d" "$appslist_filename"
+    fi
+}
+
+function web_admin_create_installed_apps {
+    web_admin_get_hostname
+
+    appslist_filename="$webadmin_install_dir/apps.html"
+    if [ -f "$webadmin_install_dir/.setupscreenactive" ]; then
+        if [ ! -f "$webadmin_install_dir/.running_install_command" ]; then
+            if [ -f "$appslist_filename" ]; then
+                rm "$appslist_filename"
+            fi
+            if [ ! -d "$INSTALL_DIR/tempwebadmin" ]; then
+                mkdir -p "$INSTALL_DIR/tempwebadmin"
+            fi
+            mv "$webadmin_install_dir/app_"*.html "$INSTALL_DIR/tempwebadmin"
+            return
+        fi
+    fi
+
+    appslist_template_filename="$webadmin_install_dir/apps_template.html"
+    app_template_filename="$webadmin_install_dir/app_template.html"
+    app2_template_filename="$webadmin_install_dir/app2_template.html"
+    icons_dir="$webadmin_install_dir/icons"
+    pending_removes="$webadmin_install_dir/pending_removes.txt"
+
+    if [ ! -d "$icons_dir" ]; then
+        mkdir -p "$icons_dir"
+    fi
+
+    if [ ! -f "$appslist_template_filename" ]; then
+        return
+    fi
+    cp "$appslist_template_filename" "$appslist_filename"
+
+    # remove some lines from the template
+    sed -i '/<\/div> <!-- header -->/d' "$appslist_filename"
+    sed -i '/<\/body>/d' "$appslist_filename"
+    sed -i '/<\/html>/d' "$appslist_filename"
+
+    get_app_categories
+
+    # keep a count of the total number of apps installed
+    total_apps_ctr=0
+
+    files_checked=
+    # shellcheck disable=SC2068,SC2034
+    for category in ${APP_CATEGORY[@]}
+    do
+        web_admin_create_installed_apps_category
+    done
+
+    # remove the 'no apps are installed' message
+    if [ $total_apps_ctr -gt 0 ]; then
+        sed -i "/\"appstext\"/d" "$appslist_filename"
+    fi
+
+    { echo '    </div>';
+      echo '    <br><br>';
+      echo '  </body>';
+      echo '</html>'; } >> "$appslist_filename"
+
+    chown -R www-data:www-data "$webadmin_install_dir"
+}
+
+function web_admin_onion_only {
+    # In onion only mode domain names or ddns codes
+    # don't need to be provided
+    web_admin_get_hostname
+
+    # shellcheck disable=SC2154
+    sed -i '/freedns_code/d' "$rootdir$webadmin_install_dir/app_add_template.html"
+    # shellcheck disable=SC2154
+    sed -i '/freedns_code/d' "$rootdir$webadmin_install_dir/add_app_confirm_template.html"
+
+    sed -i '/install_domain/d' "$rootdir$webadmin_install_dir/app_add_template.html"
+    sed -i '/install_domain/d' "$rootdir$webadmin_install_dir/add_app_confirm_template.html"
+
+    sed -i 's|onion_only=false;|onion_only=true;|g' "$rootdir$webadmin_install_dir/installapp.php"
+    sed -i 's|onion_only=false;|onion_only=true;|g' "$rootdir$webadmin_install_dir/installappconfirm.php"
+
+    sed -i 's|setup_domain.html|setup_installing.html|g' "$rootdir$webadmin_install_dir/setupconfirm.php"
+}
+
+function web_admin_reset {
+    web_admin_get_hostname
+
+    # reset the box back to the setup screen
+    if [ -f /etc/nginx/.webadminpasswd ]; then
+        rm /etc/nginx/.webadminpasswd
+    fi
+
+    if [ -d "$webadmin_install_dir" ]; then
+        touch "$webadmin_install_dir/.setupscreenactive"
+    fi
+
+    install_web_admin
+
+    systemctl restart nginx
+}
+
+function web_admin_setup_login {
+    if [ ! -f /usr/bin/htpasswd ]; then
+        INSTALL_PACKAGES apache2-utils
+    fi
+
+    # if an nginx password file has not been created for web admin
+    if [ -f /etc/nginx/.webadminpasswd ]; then
+        return
+    fi
+    if [ -f /root/.manualinstall ]; then
+        return
+    fi
+
+    web_admin_get_hostname
+
+    # this file indicates that the setup screen is active
+    # and gets removed by libreserver-installer
+    if [ ! -f "$webadmin_install_dir/.setupscreenactive" ]; then
+        touch "$webadmin_install_dir/.setupscreenactive"
+    fi
+
+    webadmin_password="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
+
+    # create a password for users
+    if [ ! -f /etc/nginx/.webadminpasswd ]; then
+        touch /etc/nginx/.webadminpasswd
+    fi
+
+    # create a password file used by nginx
+    echo -n "$webadmin_password" | htpasswd -i -s -c /etc/nginx/.webadminpasswd "admin"
+    if ! grep -q 'admin:' /etc/nginx/.webadminpasswd; then
+        echo $'/etc/nginx/.webadminpasswd password not created for admin'
+        if [ -f /etc/nginx/.webadminpasswd ]; then
+            rm /etc/nginx/.webadminpasswd
+        fi
+        exit 24
+    fi
+
+    # create a setup page with the initial password inserted
+    # and copy it to the index
+    cp "$webadmin_install_dir"/setup.html "$webadmin_install_dir"/setup.prev
+    cp "$webadmin_install_dir"/setup_confirm_template.html "$webadmin_install_dir"/setup_confirm.html
+    sed -i "s|WEBADMINPASSWORD|${webadmin_password}|g" "$webadmin_install_dir/setup.prev"
+    sed -i "s|WEBADMINPASSWORD|${webadmin_password}|g" "$webadmin_install_dir/setup_confirm.html"
+    cp "$webadmin_install_dir"/setup.prev "$webadmin_install_dir"/index.html
+
+    # if initial setup has not yet happened then create
+    # a password file
+    if ! grep -q 'install_final' "$COMPLETION_FILE"; then
+        echo -n "$webadmin_password" > /root/login.txt
+    fi
+}
+
+function image_install_web_admin {
+    if [ "$INSTALLING_MESH" ]; then
+        return
+    fi
+    web_admin_get_hostname
+    # shellcheck disable=SC2154
+    mkdir -p "$rootdir$webadmin_install_dir"
+    cp -r "$rootdir/usr/share/${PROJECT_NAME}/webadmin"/* "$rootdir$webadmin_install_dir"
+    cp "$rootdir/usr/share/${PROJECT_NAME}/webadmin/EN"/*.html "$rootdir$webadmin_install_dir"
+    cp "$rootdir/usr/share/${PROJECT_NAME}/webadmin/EN/${PROJECT_NAME}.css" "$rootdir$webadmin_install_dir"
+    cp "$rootdir/usr/share/${PROJECT_NAME}/webadmin/EN"/*.txt "$rootdir$webadmin_install_dir"
+    cp "$rootdir$webadmin_install_dir/EN/index.html" "$rootdir$webadmin_install_dir"/index.prev
+
+    # include onion only status in the config file
+    # because add/remove app screens alter depending upon this
+    if ! grep -q 'ONION_ONLY=' "$rootdir$CONFIGURATION_FILE"; then
+        echo "ONION_ONLY=$ONION_ONLY" >> "$rootdir$CONFIGURATION_FILE"
+    else
+        sed -i "s|ONION_ONLY=.*|ONION_ONLY=$ONION_ONLY|g" "$rootdir$CONFIGURATION_FILE"
+    fi
+
+    if [[ "$ONION_ONLY" != 'no' ]]; then
+        web_admin_onion_only
+    fi
+    touch "$rootdir$webadmin_install_dir/.setupscreenactive"
+
+    nginx_file=${rootdir}/etc/nginx/sites-available/${local_hostname}
+    { echo 'server {';
+      echo '  listen 80 default_server;';
+      echo '  #listen [::]:80;';
+      echo "  server_name ${local_hostname};";
+      echo "  root /var/www/${local_hostname}/htdocs;";
+      echo '  index index.html;';
+      echo '';
+      echo '  allow 192.168.0.0/16;';
+      echo '  allow 10.0.0.0/16;';
+      echo '  deny all;';
+      echo '';
+      echo '  access_log /dev/null;';
+      echo '  error_log /dev/null;';
+      echo '';
+      echo '  location ^~ /admin {';
+      echo '    proxy_read_timeout 1800;';
+      echo '    proxy_connect_timeout 1800;';
+      echo '    proxy_send_timeout 1800;';
+      echo '    send_timeout 1800;';
+      echo "    add_header 'Cache-Control' 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0';";
+      echo '    expires off;';
+      echo "    #auth_basic \"${WEBADMIN_LOGIN_TEXT}\";";
+      echo "    #auth_basic_user_file /etc/nginx/.webadminpasswd;";
+      echo "    root /var/www/${local_hostname}/htdocs;";
+      echo '    index index.html;';
+      echo "    error_page 405 = \$uri;";
+      echo '    location ~ \.php {';
+      echo '      include snippets/fastcgi-php.conf;';
+      echo "      fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
+      echo '      fastcgi_read_timeout 30;';
+      echo '    }';
+      echo '  }';
+      echo '';
+      echo '  location ^~ /mail {';
+      echo "    add_header 'Cache-Control' 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0';";
+      echo '    expires off;';
+      echo '    client_max_body_size 200m;';
+      echo "    root /var/www/${local_hostname}/htdocs;";
+      echo '    index index.php;';
+      echo "    error_page 405 = \$uri;";
+      echo '    location ~ \.php {';
+      echo '      include snippets/fastcgi-php.conf;';
+      echo "      fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
+      echo '      fastcgi_read_timeout 30;';
+      echo '    }';
+      echo '  }';
+      echo '';
+      echo '  location /icons {';
+      echo '    autoindex on;';
+      echo '    break;';
+      echo '  }';
+      echo '';
+      echo '  rewrite ^/plinth/(.*)$ /api.json last;';
+      echo '';
+      echo '  location / {';
+      echo "    root /var/www/${local_hostname}/htdocs/plinth;";
+      echo '    index api.json /api.json;';
+      echo "    error_page 405 = \$uri;";
+      echo '  }';
+      echo '}'; } > "$nginx_file"
+
+    # enable the webadmin site
+    chroot "$rootdir" ln -s "/etc/nginx/sites-available/${local_hostname}" /etc/nginx/sites-enabled/
+    chroot "$rootdir" chown -R www-data:www-data "/var/www/${local_hostname}/htdocs"
+    chroot "$rootdir" chmod g+w "/var/www/${local_hostname}/htdocs"
+    chroot "$rootdir" chmod a+w "$webadmin_install_dir"
+
+    { echo '[Unit]';
+      echo 'Description=Installer daemon for web admin';
+      echo 'After=network.target';
+      echo '';
+      echo '[Service]';
+      echo 'User=root';
+      echo "ExecStart=/usr/local/bin/${PROJECT_NAME}-installer";
+      echo 'KillMode=process';
+      echo 'Restart=always';
+      echo '';
+      echo '[Install]';
+      echo 'WantedBy=multi-user.target'; } > "$rootdir/etc/systemd/system/webadmin.service"
+
+    chroot "$rootdir" systemctl enable webadmin
+}
+
+function regenerate_bridges {
+    if [ ! -f "/root/.webadmin_torbridges" ]; then
+        touch "/root/.webadmin_torbridges"
+    fi
+    local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+    webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+
+    # onion version of the webadmin settings screen
+    read_config_param ONION_ONLY
+    if [[ "$ONION_ONLY" != 'no' ]]; then
+        cp "$webadmin_install_dir/settings_onion.html" "$webadmin_install_dir/settings.html"
+    fi
+
+    if [ -f "$webadmin_install_dir/bridges_template.html" ]; then
+        cp "$webadmin_install_dir/bridges_template.html" "$webadmin_install_dir/bridges.html"
+        bridgeslist=$(sed 's@[/\&]@\\&@g;s/$/\\/' /root/.webadmin_torbridges; echo .)
+        bridgeslist=${bridgeslist%.}
+        sed -i "s|TORBRIDGES|$bridgeslist|g" "$webadmin_install_dir/bridges.html"
+        chown www-data:www-data "$webadmin_install_dir/bridges.html"
+    fi
+}
+
+function regenerate_webadmin_dns_over_tls {
+    read_config_param DNS_OVER_TLS
+
+    if [ ! "$DNS_OVER_TLS" ]; then
+        DNS_OVER_TLS="$LIBREDNS"
+    fi
+
+    local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+    webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+    if [ -f "$webadmin_install_dir/dns_over_tls_template.html" ]; then
+        cp "$webadmin_install_dir/dns_over_tls_template.html" "$webadmin_install_dir/dns_over_tls.html"
+        sed -i "s|DNS_OVER_TLS|$DNS_OVER_TLS|g" "$webadmin_install_dir/dns_over_tls.html"
+        chown www-data:www-data "$webadmin_install_dir/dns_over_tls.html"
+    fi
+}
+
+function regenerate_webadmin_dynamic_dns {
+    read_config_param DDNS_PROVIDER
+    read_config_param DDNS_USERNAME
+    read_config_param DDNS_PASSWORD
+    read_config_param DEFAULT_DOMAIN_CODE
+
+    local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+    webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+    if [ -f "$webadmin_install_dir/dynamicdns_template.html" ]; then
+        cp "$webadmin_install_dir/dynamicdns_template.html" "$webadmin_install_dir/dynamicdns.html"
+        ddns="$DDNS_PROVIDER"
+        if [[ "$ddns" == 'default@freedns.afraid.org' ]]; then
+            ddns='freedns'
+        fi
+        if [[ "$ddns" == 'dyn.com' ]]; then
+            ddns='dyn'
+        fi
+        sed -i "s|\"$ddns\"|\"$ddns\" selected|g" "$webadmin_install_dir/dynamicdns.html"
+        sed -i "s|DDNS_USERNAME|$DDNS_USERNAME|g" "$webadmin_install_dir/dynamicdns.html"
+        sed -i "s|DDNS_CODE|$DEFAULT_DOMAIN_CODE|g" "$webadmin_install_dir/dynamicdns.html"
+        sed -i "s|CURRENT_IP_ADDRESS|$(get_external_ipv4_address)|g" "$webadmin_install_dir/dynamicdns.html"
+        # Note: For security don't populate the password
+        #sed -i "s|DDNS_PASSWORD|$DDNS_PASSWORD|g" "$webadmin_install_dir/dynamicdns.html"
+        chown www-data:www-data "$webadmin_install_dir/dynamicdns.html"
+    fi
+}
+
+function webadmin_update_system_monitor {
+    drives_list=$(df -h | grep "/dev/")
+    test_drive=/dev/sda2
+    io_test_drive=
+
+    # if this is raspbian running from usb drive
+    if grep -q 'raspbian' /etc/apt/sources.list; then
+        # no microSD connected
+        if [ ! -f /dev/mmcblk0p1 ]; then
+            test_drive=/dev/root
+            io_test_drive=/dev/sda1
+            backup_drive=/dev/sdb1
+            if grep -q "USB_DRIVE=" "${CONFIGURATION_FILE}"; then
+                if ! grep -q "USB_DRIVE=${backup_drive}" "${CONFIGURATION_FILE}"; then
+                    sed -i "s|USB_DRIVE=.*|USB_DRIVE=${backup_drive}|g" "${CONFIGURATION_FILE}"
+                fi
+            else
+                echo "USB_DRIVE=${backup_drive}" >> "${CONFIGURATION_FILE}"
+            fi
+        fi
+    fi
+
+    if [[ "$drives_list" != *"$test_drive"* ]]; then
+        test_drive=/dev/sda1
+        if [[ "$drives_list" != *"$test_drive"* ]]; then
+            test_drive=/dev/mmcblk0p2
+            if [[ "$drives_list" != *"$test_drive"* ]]; then
+                test_drive=/dev/mmcblk0p1
+                if [[ "$drives_list" != *"$test_drive"* ]]; then
+                    test_drive=/dev/sdb2
+                    if [[ "$drives_list" != *"$test_drive"* ]]; then
+                        test_drive=/dev/sdb1
+                    fi
+                fi
+            fi
+        fi
+    fi
+    if [ ! "$io_test_drive" ]; then
+        io_test_drive=$test_drive
+    fi
+
+    cpu_usage=$(grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage "%"}' | awk -F '.' '{print $1}')
+
+    disk_use=$(df -h | grep $test_drive)
+    disk_use_percent='0%'
+    disk_use_gb='0'
+    disk_size_gb='0'
+    if [[ "$disk_use" == *"$test_drive"* ]]; then
+        disk_use_percent=$(df -h | grep $test_drive | tail -n 1 | awk -F ' ' '{print $5}')
+        disk_use_gb=$(df -h | grep $test_drive | tail -n 1 | awk -F ' ' '{print $3}' | sed 's|G||g' | sed 's|M||g')
+        disk_size_gb=$(df -h | grep $test_drive | tail -n 1 | awk -F ' ' '{print $2}' | sed 's|G||g' | sed 's|M||g')
+    fi
+
+    backup_disk_use_percent=
+    backup_disk_use_gb=
+    if [ -f "$DRIVES_BASELINE_FILE" ]; then
+        backup_device=$(detect_connected_drives)
+        if [ "$backup_device" ]; then
+            backup_mount_drive "$backup_device"
+            if [ -d "$USB_MOUNT" ]; then
+                backup_disk_use=$(df -h | grep "$backup_device")
+                backup_disk_use_percent='0%'
+                backup_disk_use_gb='0'
+                backup_disk_size_gb='0'
+                if [[ "$backup_disk_use" == *"$backup_device"* ]]; then
+                    backup_disk_use_percent=$(df -h | grep "$backup_device" | tail -n 1 | awk -F ' ' '{print $5}')
+                    backup_disk_use_gb=$(df -h | grep "$backup_device" | tail -n 1 | awk -F ' ' '{print $3}' | sed 's|G||g' | sed 's|M||g')
+                    backup_disk_size_gb=$(df -h | grep "$backup_device" | tail -n 1 | awk -F ' ' '{print $2}' | sed 's|G||g' | sed 's|M||g')
+                fi
+            fi
+            backup_unmount_drive
+        fi
+    fi
+
+    total_memory=$(free -m | grep "Mem:" | awk -F ' ' '{print $2}')
+    total_memory_gb_integer=$((total_memory/100))
+    total_memory_gb='0'
+    if [ ${#total_memory_gb_integer} -gt 1 ]; then
+        #shellcheck disable=SC2001
+        total_memory_gb=$(echo "$total_memory_gb_integer" | sed 's/.$/.&/')
+    else
+        #shellcheck disable=SC2001
+        total_memory_gb=0$(echo "$total_memory_gb_integer" | sed 's/.$/.&/')
+    fi
+
+    used_memory=$(free -m | grep "Mem:" | awk -F ' ' '{print $3}')
+    used_memory_percent=$((used_memory * 100 / total_memory))
+    used_memory_gb_integer=$((used_memory/100))
+    used_memory_gb='0'
+    if [ ${#used_memory_gb_integer} -gt 1 ]; then
+        #shellcheck disable=SC2001
+        used_memory_gb=$(echo "$used_memory_gb_integer" | sed 's/.$/.&/')
+    else
+        #shellcheck disable=SC2001
+        used_memory_gb=0$(echo "$used_memory_gb_integer" | sed 's/.$/.&/')
+    fi
+
+    cpu_temperature=0
+    if [ -f /sys/class/thermal/thermal_zone0/temp ]; then
+        cpu_temp=$(cat /sys/class/thermal/thermal_zone*/temp | head -n 1)
+        if [ "$cpu_temp" ]; then
+            cpu_temperature=$((cpu_temp / 1000))
+        fi
+    fi
+
+    disk_io_speed=20
+    disk_io_speed_percent=10
+    if [ "$test_drive" ]; then
+        disk_io_speed=$(hdparm -t $io_test_drive | awk -F '= ' '{print $2}' | awk -F ' ' '{print $1}' | tail -n 1 | awk -F '.' '{print $1}')
+        if [ "$disk_io_speed" ]; then
+            disk_io_speed_percent=$((disk_io_speed * 100 / 500))
+            if [ $disk_io_speed_percent -gt 100 ]; then
+                disk_io_speed_percent=100
+            fi
+        fi
+    fi
+
+    local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+    webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+
+    #spectre-meltdown-checker --no-color > "$webadmin_install_dir/spectre.txt"
+    #if [ -f "$webadmin_install_dir/spectre.txt" ]; then
+    #    spectre_vulnerabilities=$(grep "VULNERABLE" "$webadmin_install_dir/spectre.txt" | grep -vc "NOT ")
+    #else
+    spectre_vulnerabilities=0
+    #fi
+
+    if [ -f "$webadmin_install_dir/system_monitor_template.html" ]; then
+        cp "$webadmin_install_dir/system_monitor_template.html" "$webadmin_install_dir/system_monitor.html"
+
+        # remove spectre warning
+        # shellcheck disable=SC2086
+        if [ $spectre_vulnerabilities -eq 0 ]; then
+            sed -i 's|images/spectre.png||g' "$webadmin_install_dir/system_monitor.html"
+            if [ -f "$webadmin_install_dir/spectre.txt" ]; then
+                rm "$webadmin_install_dir/spectre.txt"
+            fi
+        fi
+
+        if [ "$cpu_usage" ]; then
+            sed -i "s|<div name=\"cpuusage\" class=\"w3-container.*|<div name=\"cpuusage\" class=\"w3-container w3-blue w3-round-xlarge\" style=\"width:${cpu_usage}%\">${cpu_usage}%</div>|g" "$webadmin_install_dir/system_monitor.html"
+        fi
+
+        if [[ "$disk_use_percent" == *'%'* ]]; then
+            sed -i "s|<div name=\"diskspace\" class=\"w3-container.*|<div name=\"diskspace\" class=\"w3-container w3-blue w3-round-xlarge\" style=\"width:$disk_use_percent\">${disk_use_gb} / ${disk_size_gb}GB</div>|g" "$webadmin_install_dir/system_monitor.html"
+        fi
+
+        if [ "$backup_disk_use_gb" ]; then
+            sed -i "s|<div name=\"backupspace\" class=\"w3-container.*|<div name=\"backupspace\" class=\"w3-container w3-blue w3-round-xlarge\" style=\"width:$backup_disk_use_percent\">${backup_disk_use_gb} / ${backup_disk_size_gb}GB</div>|g" "$webadmin_install_dir/system_monitor.html"
+        else
+            sed -i "/\"backupspace\"/d" "$webadmin_install_dir/system_monitor.html"
+            sed -i '/titletextbackupspace/d' "$webadmin_install_dir/system_monitor.html"
+        fi
+
+        sed -i "s|<div name=\"memory\" class=\"w3-container.*|<div name=\"memory\" class=\"w3-container w3-blue w3-round-xlarge\" style=\"width:${used_memory_percent}%\">${used_memory_gb} / ${total_memory_gb}GB</div>|g" "$webadmin_install_dir/system_monitor.html"
+
+        if [ $cpu_temperature -gt 0 ]; then
+            sed -i "s|<div name=\"cputemp\" class=\"w3-container.*|<div name=\"cputemp\" class=\"w3-container w3-blue w3-round-xlarge\" style=\"width:${cpu_temperature}%\">${cpu_temperature}C</div>|g" "$webadmin_install_dir/system_monitor.html"
+        else
+            sed -i "/\"cputemp\"/d" "$webadmin_install_dir/system_monitor.html"
+            sed -i '/titletextcputemp/d' "$webadmin_install_dir/system_monitor.html"
+        fi
+
+        sed -i "s|<div name=\"diskio\" class=\"w3-container.*|<div name=\"diskio\" class=\"w3-container w3-blue w3-round-xlarge\" style=\"width:${disk_io_speed_percent}%\">${disk_io_speed} MB/s</div>|g" "$webadmin_install_dir/system_monitor.html"
+
+        chown www-data:www-data "$webadmin_install_dir/system_monitor.html"
+    fi
+}
+
+function webadmin_change_language {
+    read_config_param DEFAULT_LANGUAGE
+    language="$DEFAULT_LANGUAGE"
+
+    local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+    webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+    if [ -f "$webadmin_install_dir/language_template.html" ]; then
+        if grep -q "\"$language\"" "$webadmin_install_dir/language_template.html"; then
+            cp "$webadmin_install_dir/language_template.html" "$webadmin_install_dir/language.html"
+            sed -i "s|\"$language\"|\"$language\" selected|g" "$webadmin_install_dir/language.html"
+            chown www-data:www-data "$webadmin_install_dir/language.html"
+        fi
+    fi
+}
+
+function webadmin_change_network {
+    network_name="$1"
+    local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+    webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+
+    if ! grep -q 'COMMUNITY_NETWORK=' "$CONFIGURATION_FILE"; then
+        cp "$webadmin_install_dir/network_template.html" "$webadmin_install_dir/network.html"
+        chown www-data:www-data "$webadmin_install_dir/network.html"
+        return
+    fi
+
+    if [ -f "$webadmin_install_dir/network_template.html" ]; then
+        if grep -q "\"$network_name\"" "$webadmin_install_dir/network_template.html"; then
+            cp "$webadmin_install_dir/network_template.html" "$webadmin_install_dir/network.html"
+            sed -i "s|\"$network_name\"|\"$network_name\" selected|g" "$webadmin_install_dir/network.html"
+            chown www-data:www-data "$webadmin_install_dir/network.html"
+        fi
+    fi
+}
+
+function webadmin_update_version {
+    local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+    webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+    if [ -f "$webadmin_install_dir/about.html" ]; then
+        VERSION=$(grep "VERSION=" "/usr/local/bin/${PROJECT_NAME}-vars" | grep -v DEBIAN | awk -F '"' '{print $2}')
+        versionstr=$"Version $VERSION"
+        sed -i "s|\"versiontext\".*|\"versiontext\">$versionstr</p>|g" "$webadmin_install_dir/about.html"
+    fi
+}
+
+function webadmin_remove_settings {
+    app_name="$1"
+
+    web_admin_get_hostname
+
+    template_file="$webadmin_install_dir/settings_${app_name}_template.html"
+    if [ ! -f "$template_file" ]; then
+        return
+    fi
+
+    settings_file="$webadmin_install_dir/settings_${app_name}.html"
+    if [ -f "$settings_file" ]; then
+        rm "$settings_file"
+    fi
+}
+
+function web_admin_create_app_descriptions {
+    # this obtains the descriptions from each app and puts
+    # them into a file which can then be used for translations
+    FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
+
+    app_descriptions_file="$webadmin_install_dir/app_descriptions.txt"
+    if [ -f "$app_descriptions_file" ]; then
+        rm "$app_descriptions_file"
+    fi
+    touch "$app_descriptions_file"
+
+    for filename in $FILES
+    do
+        app_name=$(echo "${filename}" | awk -F '-app-' '{print $2}')
+        app_name_upper=$(echo "$app_name" | awk '{print toupper($0)}')
+
+        if grep -q "${app_name_upper}_SHORT_DESCRIPTION=" "${filename}"; then
+            app_short_description=$(grep "${app_name_upper}_SHORT_DESCRIPTION=" "${filename}" | head -n 1 | awk -F '=' '{print $2}' | sed 's/\$//g' | sed 's/"//g' | sed "s/'//g")
+            if [ "$app_short_description" ]; then
+                if ! grep -Fxq "$app_short_description" "$app_descriptions_file"; then
+                    echo "$app_short_description" >> "$app_descriptions_file"
+                fi
+            fi
+        fi
+
+        if grep -q "${app_name_upper}_DESCRIPTION=" "${filename}"; then
+            app_description=$(grep "${app_name_upper}_DESCRIPTION=" "${filename}" | head -n 1 | awk -F '=' '{print $2}' | sed 's/\$//g' | sed 's/"//g' | sed "s/'//g")
+            if [ "$app_description" ]; then
+                if ! grep -Fxq "$app_description" "$app_descriptions_file"; then
+                    echo "$app_description" >> "$app_descriptions_file"
+                fi
+            fi
+        fi
+    done
+
+    if [ -f "$app_descriptions_file" ]; then
+        chown www-data:www-data "$app_descriptions_file"
+    fi
+}
+
+function install_web_admin_webmail_translations {
+    if [ ! -f "/root/${PROJECT_NAME}/image_build/squirrelmail-translations.tar.gz" ]; then
+        return
+    fi
+    if [ -d "/var/www/${local_hostname}/htdocs/mail/locale/it_IT" ]; then
+        return
+    fi
+    cp "/root/${PROJECT_NAME}/image_build/squirrelmail-translations.tar.gz" "$INSTALL_DIR"
+    cd "$INSTALL_DIR" || return
+    tar -xzvf squirrelmail-translations.tar.gz
+    if [ -d "$INSTALL_DIR/squirrelmail.locales" ]; then
+        cp -r "$INSTALL_DIR/squirrelmail.locales"/* "/var/www/${local_hostname}/htdocs/mail/"
+        rm -rf "$INSTALL_DIR/squirrelmail.locales"
+        rm "$INSTALL_DIR/squirrelmail-translations.tar.gz"
+    fi
+}
+
+function web_admin_create_email_proxy_screen {
+    cp "/var/www/${local_hostname}/htdocs/admin/email_proxy_template.html" "/var/www/${local_hostname}/htdocs/admin/email_proxy.html"
+
+    isp_smtp_domain=''
+    isp_smtp_port=465
+    isp_smtp_username=''
+
+    # get the remote SMTP domain and username
+    if [ -f /etc/exim4/passwd.client ]; then
+        line_str=$(tail -n 1 /etc/exim4/passwd.client)
+        if [[ "$line_str" != '#'* ]]; then
+            isp_smtp_domain=$(tail -n 1 /etc/exim4/passwd.client | awk -F ':' '{print $1}')
+            isp_smtp_username=$(tail -n 1 /etc/exim4/passwd.client | awk -F ':' '{print $2}')
+        fi
+    fi
+
+    # get the remote SMTP port number
+    if [ -f /etc/exim4/update-exim4.conf.conf ]; then
+        smarthost_str=$(grep 'dc_smarthost=' /etc/exim4/update-exim4.conf.conf)
+        if [[ "$smarthost_str" == *'::'* ]]; then
+            isp_smtp_port=$(echo "$smarthost_str" | awk -F '::' '{print $2}' | sed "s|'||g")
+        fi
+    fi
+
+    sed -i "s|EMAIL_PROXY_DOMAIN|$isp_smtp_domain|g" "/var/www/${local_hostname}/htdocs/admin/email_proxy.html"
+    sed -i "s|EMAIL_PROXY_PORT|$isp_smtp_port|g" "/var/www/${local_hostname}/htdocs/admin/email_proxy.html"
+    sed -i "s|EMAIL_PROXY_USERNAME|$isp_smtp_username|g" "/var/www/${local_hostname}/htdocs/admin/email_proxy.html"
+
+    chown www-data:www-data "/var/www/${local_hostname}/htdocs/admin/email_proxy.html"
+}
+
+function web_admin_php_settings {
+    php_upload_dir=/var/www/uploads
+    php_max_upload='20M'
+
+    if [ ! -d $php_upload_dir ]; then
+        mkdir -p $php_upload_dir
+    fi
+    chown -R www-data:www-data $php_upload_dir
+
+    if [ ! -d /var/local/squirrelmail/attach ]; then
+        mkdir -p /var/local/squirrelmail/attach
+        chown www-data:www-data /var/local/squirrelmail/attach
+    fi
+
+    sed -i "s|;upload_tmp_dir =|upload_tmp_dir =|g" "/etc/php/${PHP_VERSION}/fpm/php.ini"
+    sed -i "s|;upload_tmp_dir =|upload_tmp_dir =|g" "/etc/php/${PHP_VERSION}/cli/php.ini"
+
+    sed -i "s|upload_tmp_dir =.*|upload_tmp_dir = $php_upload_dir|g" "/etc/php/${PHP_VERSION}/fpm/php.ini"
+    sed -i "s|upload_tmp_dir =.*|upload_tmp_dir = $php_upload_dir|g" "/etc/php/${PHP_VERSION}/cli/php.ini"
+    sed -i "s|upload_max_filesize =.*|upload_max_filesize = $php_max_upload|g" "/etc/php/${PHP_VERSION}/fpm/php.ini"
+    sed -i "s|upload_max_filesize =.*|upload_max_filesize = $php_max_upload|g" "/etc/php/${PHP_VERSION}/cli/php.ini"
+}
+
+function install_web_admin_webmail {
+    if [ ! -f "/root/${PROJECT_NAME}/image_build/squirrelmail.tar.gz" ]; then
+        return
+    fi
+    if [ ! -d "$INSTALL_DIR" ]; then
+        mkdir -p "$INSTALL_DIR"
+    fi
+    if [ ! -d "/var/www/${local_hostname}/htdocs/mail" ]; then
+        cp "/root/${PROJECT_NAME}/image_build/squirrelmail.tar.gz" "$INSTALL_DIR"
+        cd "$INSTALL_DIR" || return
+        tar -xzvf squirrelmail.tar.gz
+        if [ -d "$INSTALL_DIR/squirrelmail.stable/squirrelmail" ]; then
+            mv "$INSTALL_DIR/squirrelmail.stable/squirrelmail" "/var/www/${local_hostname}/htdocs/mail"
+        fi
+    fi
+    if [ ! -d "/var/www/${local_hostname}/htdocs/mail" ]; then
+        return
+    fi
+    if [ ! -d /var/local/squirrelmail/data ]; then
+        mkdir -p /var/local/squirrelmail/data
+    fi
+    if [ ! -d /var/local/squirrelmail/temp ]; then
+        mkdir -p /var/local/squirrelmail/temp
+    fi
+    cd /var/local/squirrelmail || return
+    chgrp www-data data temp
+    chmod 0730 data temp
+
+    read_config_param DEFAULT_LANGUAGE
+    read_config_param ONION_ONLY
+
+    if [[ "$ONION_ONLY" == 'no' ]]; then
+        read_config_param DEFAULT_DOMAIN_NAME
+        email_domain=$DEFAULT_DOMAIN_NAME
+    else
+        email_domain=$(cat /var/lib/tor/hidden_service_email/hostname)
+    fi
+
+    # select light or dark theme
+    webmail_theme=54
+    if grep -q "WEBADMIN_BACKGROUND_COLOR=" "/root/${PROJECT_NAME}.cfg"; then
+        bg_color=$(grep "WEBADMIN_BACKGROUND_COLOR=" "/root/${PROJECT_NAME}.cfg" | head -n 1 | awk -F '=' '{print $2}')
+        if [[ "$bg_color" != 'white' ]]; then
+            webmail_theme=55
+        fi
+    fi
+
+    { echo '<?php';
+      echo '';
+      echo '/**';
+      echo ' * Date:         September 29, 2018';
+      echo " * Theme Name:   'Freedom Dark'";
+      echo ' *';
+      echo ' * @author Bob Mottram';
+      echo ' * @copyright 2018-2021 Bob Mottram';
+      echo ' * @license http://opensource.org/licenses/gpl-license.php GNU Public License';
+      echo " * @version \$Id: freedom_dark.php 14749 2018-01-16 23:36:07Z pdontthink \$";
+      echo ' * @package squirrelmail';
+      echo ' * @subpackage themes';
+      echo ' */';
+      echo '';
+      echo "global \$color;";
+      echo "\$color[0]   = '#103b5c'; // (dark blue)         TitleBar";
+      echo "\$color[1]   = '#a0a0a0'; // (gray)              Quoted Replies in Emails";
+      echo "\$color[2]   = '#800000'; // (red)               Warning/Error Messages";
+      echo "\$color[3]   = '#103b5c'; // (dark blue)         Left Bar Background";
+      echo "\$color[4]   = '#103b5c'; // (dark blue)         Normal Background";
+      echo "\$color[5]   = '#103b5c'; // (dark blue)         Table Headers";
+      echo "\$color[6]   = '#ffffff'; // (light blue)        Text on left bar";
+      echo "\$color[7]   = '#71a7cf'; // (light blue)        Links";
+      echo "\$color[8]   = '#ffffff'; // (white)             Normal text";
+      echo "\$color[9]   = '#103b5c'; // (dark blue)         Darker version of #0";
+      echo "\$color[10]  = '#103b5c'; // (dark blue)         Darker version of #9";
+      echo "\$color[11]  = '#71a7cf'; // (light blue)        Special Folders color";
+      echo "\$color[12]  = '#103b5c'; // (dark blue)         Alternate rows";
+      echo "\$color[13]  = '#b2ffff'; // Color for single-quoted text ('> text')";
+      echo "\$color[14]  = '#b1ffff'; // Color for text with more than one quote ('>> text')";
+      echo "\$color[15]  = '#c0c060'; // (dull yellow)       Unselectable folders"; } > "/var/www/${local_hostname}/htdocs/mail/themes/freedom_dark.php"
+
+    { echo '<?php';
+      echo '';
+      echo '/**';
+      echo ' * Date:         September 29, 2018';
+      echo " * Theme Name:   'Freedom Light'";
+      echo ' *';
+      echo ' * @author Bob Mottram';
+      echo ' * @copyright 2018-2021 Bob Mottram';
+      echo ' * @license http://opensource.org/licenses/gpl-license.php GNU Public License';
+      echo " * @version \$Id: freedom_light.php 14749 2018-01-16 23:36:07Z pdontthink \$";
+      echo ' * @package squirrelmail';
+      echo ' * @subpackage themes';
+      echo ' */';
+      echo '';
+      echo "global \$color;";
+      echo "\$color[0]   = '#71a7cf'; // Title bar at the top of the page header";
+      echo "\$color[1]   = '#800000'; // Not currently used";
+      echo "\$color[2]   = '#cc0000'; // Warning/error messages";
+      echo "\$color[3]   = '#71a7cf'; // Left folder list background color";
+      echo "\$color[4]   = '#f9faff'; // Normal background color";
+      echo "\$color[5]   = '#c7D3ea'; // Header of the message index (From, Date, Subject)";
+      echo "\$color[6]   = '#000000'; // Normal text on the left folder list";
+      echo "\$color[7]   = '#3354aa'; // Links in the right frame";
+      echo "\$color[8]   = '#000000'; // Normal text";
+      echo "\$color[9]   = '#71a7cf'; // Darker version of #0";
+      echo "\$color[10]  = '#71a7cf'; // Darker version of #9";
+      echo "\$color[11]  = '#000000'; // Special folders color (Inbox, Trash, Sent)";
+      echo "\$color[12]  = '#f2f3ff'; // Alternate color for message list (alters between #4 and this one)";
+      echo "\$color[13]  = '#333333'; // Color for single-quoted text ('> text')";
+      echo "\$color[14]  = '#666666'; // Color for text with more than one quote ('>> text')";
+      echo "\$color[15]  = '#f5f9ff'; // Non-selectable folders in the left frame (defaults to #6)"; } > "/var/www/${local_hostname}/htdocs/mail/themes/freedom_light.php"
+
+    webmail_language='en_GB'
+    if [ "$DEFAULT_LANGUAGE" ]; then
+        webmail_language=$(echo "$DEFAULT_LANGUAGE" | awk -F '.' '{print $1}')
+    fi
+
+    { echo '<?php';
+      echo '';
+      echo '/**';
+      echo ' * SquirrelMail Configuration File';
+      echo ' * Created using the configure script, conf.pl';
+      echo ' */';
+      echo '';
+      echo "global \$version;";
+      echo "\$config_version = '1.4.0';";
+      echo "\$config_use_color = 2;";
+      echo '';
+      echo "\$org_name      = \"${PROJECT_NAME}\";";
+      echo "\$org_logo      = SM_PATH . 'images/sm_logo.png';";
+      echo "\$org_logo_width  = '308';";
+      echo "\$org_logo_height = '111';";
+      echo "\$org_title     = \"\";";
+      echo "\$signout_page  = '';";
+      echo "\$frame_top     = '_top';";
+      echo '';
+      echo "\$provider_uri     = '/admin';";
+      echo '';
+      echo "\$provider_name     = '${PROJECT_NAME}';";
+      echo '';
+      echo "\$motd = \"\";";
+      echo '';
+      echo "\$squirrelmail_default_language = '${webmail_language}';";
+      echo "\$default_charset       = 'iso-8859-1';";
+      echo "\$lossy_encoding        = false;";
+      echo '';
+      echo "\$domain                 = '$email_domain';";
+      echo "\$imapServerAddress      = 'localhost';";
+      echo "\$imapPort               = 143;";
+      echo "\$useSendmail            = false;";
+      echo "\$smtpServerAddress      = 'localhost';";
+      echo "\$smtpPort               = 25;";
+      echo "\$sendmail_path          = '/usr/sbin/sendmail';";
+      echo "\$sendmail_args          = '-i -t';";
+      echo "\$pop_before_smtp        = false;";
+      echo "\$pop_before_smtp_host   = '';";
+      echo "\$imap_server_type       = 'other';";
+      echo "\$invert_time            = false;";
+      echo "\$optional_delimiter     = 'detect';";
+      echo "\$encode_header_key      = '';";
+      echo '';
+      echo "\$default_folder_prefix          = '';";
+      echo "\$trash_folder                   = 'Trash';";
+      echo "\$sent_folder                    = 'Sent';";
+      echo "\$draft_folder                   = 'Drafts';";
+      echo "\$default_move_to_trash          = true;";
+      echo "\$default_move_to_sent           = true;";
+      echo "\$default_save_as_draft          = true;";
+      echo "\$show_prefix_option             = false;";
+      echo "\$list_special_folders_first     = true;";
+      echo "\$use_special_folder_color       = true;";
+      echo "\$auto_expunge                   = true;";
+      echo "\$default_sub_of_inbox           = true;";
+      echo "\$show_contain_subfolders_option = false;";
+      echo "\$default_unseen_notify          = 2;";
+      echo "\$default_unseen_type            = 1;";
+      echo "\$auto_create_special            = true;";
+      echo "\$delete_folder                  = false;";
+      echo "\$noselect_fix_enable            = false;";
+      echo '';
+      echo "\$data_dir                 = '/var/local/squirrelmail/data/';";
+      echo "\$attachment_dir           = '/var/local/squirrelmail/attach/';";
+      echo "\$dir_hash_level           = 0;";
+      echo "\$default_left_size        = '150';";
+      echo "\$force_username_lowercase = false;";
+      echo "\$default_use_priority     = true;";
+      echo "\$hide_sm_attributions     = false;";
+      echo "\$default_use_mdn          = true;";
+      echo "\$edit_identity            = true;";
+      echo "\$edit_name                = true;";
+      echo "\$edit_reply_to            = true;";
+      echo "\$hide_auth_header         = false;";
+      echo "\$allow_thread_sort        = false;";
+      echo "\$allow_server_sort        = false;";
+      echo "\$allow_charset_search     = true;";
+      echo "\$uid_support              = true;";
+      echo '';
+      echo "\$theme_css = '';";
+      echo "\$theme_default = $webmail_theme;";
+      echo "\$theme[0]['PATH'] = SM_PATH . 'themes/default_theme.php';";
+      echo "\$theme[0]['NAME'] = 'Default';";
+      echo "\$theme[1]['PATH'] = SM_PATH . 'themes/plain_blue_theme.php';";
+      echo "\$theme[1]['NAME'] = 'Plain Blue';";
+      echo "\$theme[2]['PATH'] = SM_PATH . 'themes/sandstorm_theme.php';";
+      echo "\$theme[2]['NAME'] = 'Sand Storm';";
+      echo "\$theme[3]['PATH'] = SM_PATH . 'themes/deepocean_theme.php';";
+      echo "\$theme[3]['NAME'] = 'Deep Ocean';";
+      echo "\$theme[4]['PATH'] = SM_PATH . 'themes/slashdot_theme.php';";
+      echo "\$theme[4]['NAME'] = 'Slashdot';";
+      echo "\$theme[5]['PATH'] = SM_PATH . 'themes/purple_theme.php';";
+      echo "\$theme[5]['NAME'] = 'Purple';";
+      echo "\$theme[6]['PATH'] = SM_PATH . 'themes/forest_theme.php';";
+      echo "\$theme[6]['NAME'] = 'Forest';";
+      echo "\$theme[7]['PATH'] = SM_PATH . 'themes/ice_theme.php';";
+      echo "\$theme[7]['NAME'] = 'Ice';";
+      echo "\$theme[8]['PATH'] = SM_PATH . 'themes/seaspray_theme.php';";
+      echo "\$theme[8]['NAME'] = 'Sea Spray';";
+      echo "\$theme[9]['PATH'] = SM_PATH . 'themes/bluesteel_theme.php';";
+      echo "\$theme[9]['NAME'] = 'Blue Steel';";
+      echo "\$theme[10]['PATH'] = SM_PATH . 'themes/dark_grey_theme.php';";
+      echo "\$theme[10]['NAME'] = 'Dark Grey';";
+      echo "\$theme[11]['PATH'] = SM_PATH . 'themes/high_contrast_theme.php';";
+      echo "\$theme[11]['NAME'] = 'High Contrast';";
+      echo "\$theme[12]['PATH'] = SM_PATH . 'themes/black_bean_burrito_theme.php';";
+      echo "\$theme[12]['NAME'] = 'Black Bean Burrito';";
+      echo "\$theme[13]['PATH'] = SM_PATH . 'themes/servery_theme.php';";
+      echo "\$theme[13]['NAME'] = 'Servery';";
+      echo "\$theme[14]['PATH'] = SM_PATH . 'themes/maize_theme.php';";
+      echo "\$theme[14]['NAME'] = 'Maize';";
+      echo "\$theme[15]['PATH'] = SM_PATH . 'themes/bluesnews_theme.php';";
+      echo "\$theme[15]['NAME'] = 'BluesNews';";
+      echo "\$theme[16]['PATH'] = SM_PATH . 'themes/deepocean2_theme.php';";
+      echo "\$theme[16]['NAME'] = 'Deep Ocean 2';";
+      echo "\$theme[17]['PATH'] = SM_PATH . 'themes/blue_grey_theme.php';";
+      echo "\$theme[17]['NAME'] = 'Blue Grey';";
+      echo "\$theme[18]['PATH'] = SM_PATH . 'themes/dompie_theme.php';";
+      echo "\$theme[18]['NAME'] = 'Dompie';";
+      echo "\$theme[19]['PATH'] = SM_PATH . 'themes/methodical_theme.php';";
+      echo "\$theme[19]['NAME'] = 'Methodical';";
+      echo "\$theme[20]['PATH'] = SM_PATH . 'themes/greenhouse_effect.php';";
+      echo "\$theme[20]['NAME'] = 'Greenhouse Effect (Changes)';";
+      echo "\$theme[21]['PATH'] = SM_PATH . 'themes/in_the_pink.php';";
+      echo "\$theme[21]['NAME'] = 'In The Pink (Changes)';";
+      echo "\$theme[22]['PATH'] = SM_PATH . 'themes/kind_of_blue.php';";
+      echo "\$theme[22]['NAME'] = 'Kind of Blue (Changes)';";
+      echo "\$theme[23]['PATH'] = SM_PATH . 'themes/monostochastic.php';";
+      echo "\$theme[23]['NAME'] = 'Monostochastic (Changes)';";
+      echo "\$theme[24]['PATH'] = SM_PATH . 'themes/shades_of_grey.php';";
+      echo "\$theme[24]['NAME'] = 'Shades of Grey (Changes)';";
+      echo "\$theme[25]['PATH'] = SM_PATH . 'themes/spice_of_life.php';";
+      echo "\$theme[25]['NAME'] = 'Spice of Life (Changes)';";
+      echo "\$theme[26]['PATH'] = SM_PATH . 'themes/spice_of_life_lite.php';";
+      echo "\$theme[26]['NAME'] = 'Spice of Life - Lite (Changes)';";
+      echo "\$theme[27]['PATH'] = SM_PATH . 'themes/spice_of_life_dark.php';";
+      echo "\$theme[27]['NAME'] = 'Spice of Life - Dark (Changes)';";
+      echo "\$theme[28]['PATH'] = SM_PATH . 'themes/christmas.php';";
+      echo "\$theme[28]['NAME'] = 'Holiday - Christmas';";
+      echo "\$theme[29]['PATH'] = SM_PATH . 'themes/darkness.php';";
+      echo "\$theme[29]['NAME'] = 'Darkness (Changes)';";
+      echo "\$theme[30]['PATH'] = SM_PATH . 'themes/random.php';";
+      echo "\$theme[30]['NAME'] = 'Random (Changes every login)';";
+      echo "\$theme[31]['PATH'] = SM_PATH . 'themes/midnight.php';";
+      echo "\$theme[31]['NAME'] = 'Midnight';";
+      echo "\$theme[32]['PATH'] = SM_PATH . 'themes/alien_glow.php';";
+      echo "\$theme[32]['NAME'] = 'Alien Glow';";
+      echo "\$theme[33]['PATH'] = SM_PATH . 'themes/dark_green.php';";
+      echo "\$theme[33]['NAME'] = 'Dark Green';";
+      echo "\$theme[34]['PATH'] = SM_PATH . 'themes/penguin.php';";
+      echo "\$theme[34]['NAME'] = 'Penguin';";
+      echo "\$theme[35]['PATH'] = SM_PATH . 'themes/minimal_bw.php';";
+      echo "\$theme[35]['NAME'] = 'Minimal BW';";
+      echo "\$theme[36]['PATH'] = SM_PATH . 'themes/redmond.php';";
+      echo "\$theme[36]['NAME'] = 'Redmond';";
+      echo "\$theme[37]['PATH'] = SM_PATH . 'themes/netstyle_theme.php';";
+      echo "\$theme[37]['NAME'] = 'Net Style';";
+      echo "\$theme[38]['PATH'] = SM_PATH . 'themes/silver_steel_theme.php';";
+      echo "\$theme[38]['NAME'] = 'Silver Steel';";
+      echo "\$theme[39]['PATH'] = SM_PATH . 'themes/simple_green_theme.php';";
+      echo "\$theme[39]['NAME'] = 'Simple Green';";
+      echo "\$theme[40]['PATH'] = SM_PATH . 'themes/wood_theme.php';";
+      echo "\$theme[40]['NAME'] = 'Wood';";
+      echo "\$theme[41]['PATH'] = SM_PATH . 'themes/bluesome.php';";
+      echo "\$theme[41]['NAME'] = 'Bluesome';";
+      echo "\$theme[42]['PATH'] = SM_PATH . 'themes/simple_green2.php';";
+      echo "\$theme[42]['NAME'] = 'Simple Green 2';";
+      echo "\$theme[43]['PATH'] = SM_PATH . 'themes/simple_purple.php';";
+      echo "\$theme[43]['NAME'] = 'Simple Purple';";
+      echo "\$theme[44]['PATH'] = SM_PATH . 'themes/autumn.php';";
+      echo "\$theme[44]['NAME'] = 'Autumn';";
+      echo "\$theme[45]['PATH'] = SM_PATH . 'themes/autumn2.php';";
+      echo "\$theme[45]['NAME'] = 'Autumn 2';";
+      echo "\$theme[46]['PATH'] = SM_PATH . 'themes/blue_on_blue.php';";
+      echo "\$theme[46]['NAME'] = 'Blue on Blue';";
+      echo "\$theme[47]['PATH'] = SM_PATH . 'themes/classic_blue.php';";
+      echo "\$theme[47]['NAME'] = 'Classic Blue';";
+      echo "\$theme[48]['PATH'] = SM_PATH . 'themes/classic_blue2.php';";
+      echo "\$theme[48]['NAME'] = 'Classic Blue 2';";
+      echo "\$theme[49]['PATH'] = SM_PATH . 'themes/powder_blue.php';";
+      echo "\$theme[49]['NAME'] = 'Powder Blue';";
+      echo "\$theme[50]['PATH'] = SM_PATH . 'themes/techno_blue.php';";
+      echo "\$theme[50]['NAME'] = 'Techno Blue';";
+      echo "\$theme[51]['PATH'] = SM_PATH . 'themes/turquoise.php';";
+      echo "\$theme[51]['NAME'] = 'Turquoise';";
+      echo "\$theme[52]['PATH'] = SM_PATH . 'themes/solarized_light.php';";
+      echo "\$theme[52]['NAME'] = 'Solarized Light';";
+      echo "\$theme[53]['PATH'] = SM_PATH . 'themes/solarized_dark.php';";
+      echo "\$theme[53]['NAME'] = 'Solarized Dark';";
+      echo "\$theme[54]['PATH'] = SM_PATH . 'themes/freedom_light.php';";
+      echo "\$theme[54]['NAME'] = 'Freedom Light';";
+      echo "\$theme[55]['PATH'] = SM_PATH . 'themes/freedom_dark.php';";
+      echo "\$theme[55]['NAME'] = 'Freedom Dark';";
+      echo '';
+      echo "\$default_use_javascript_addr_book = false;";
+      echo "\$abook_global_file = '';";
+      echo "\$abook_global_file_writeable = false;";
+      echo "\$abook_global_file_listing = true;";
+      echo "\$abook_file_line_length = 2048;";
+      echo '';
+      echo "\$addrbook_dsn = '';";
+      echo "\$addrbook_table = 'address';";
+      echo '';
+      echo "\$prefs_dsn = '';";
+      echo "\$prefs_table = 'userprefs';";
+      echo "\$prefs_user_field = 'user';";
+      echo "\$prefs_key_field = 'prefkey';";
+      echo "\$prefs_val_field = 'prefval';";
+      echo "\$addrbook_global_dsn = '';";
+      echo "\$addrbook_global_table = 'global_abook';";
+      echo "\$addrbook_global_writeable = false;";
+      echo "\$addrbook_global_listing = false;";
+      echo '';
+      echo "\$no_list_for_subscribe = false;";
+      echo "\$smtp_auth_mech = 'none';";
+      echo "\$imap_auth_mech = 'login';";
+      echo "\$smtp_sitewide_user = '';";
+      echo "\$smtp_sitewide_pass = '';";
+      echo "\$use_imap_tls = 0;";
+      echo "\$use_smtp_tls = 0;";
+      echo "\$display_imap_login_error = false;";
+      echo "\$session_name = 'SQMSESSID';";
+      echo "\$only_secure_cookies     = false;";
+      echo "\$disable_security_tokens = false;";
+      echo "\$check_referrer          = '';";
+      echo "\$browser_rendering_mode  = 'quirks';";
+      echo "\$use_transparent_security_image = true;";
+      echo "\$check_mail_mechanism  = 'meta';";
+      echo '';
+      echo "\$config_location_base    = '';";
+      echo '';
+      echo "@include SM_PATH . 'mail/config/config_local.php';"; } > "/var/www/${local_hostname}/htdocs/mail/config/config.php"
+
+    cp "/root/${PROJECT_NAME}/webadmin/images/logo_webmail.png" "/var/www/${local_hostname}/htdocs/mail/images/sm_logo.png"
+
+    replace_str='SquirrelMail version %s'
+    replace_str_new="http://$(cat /var/lib/tor/hidden_service_webadmin/hostname)/mail"
+
+    sed -i "s|'<small>' . sprintf (_(\"http://.*|'<small>' . sprintf (_(\"$replace_str\"), \$version) . '<br />'.|g" "/var/www/${local_hostname}/htdocs/mail/functions/display_messages.php"
+    sed -i "s|$replace_str|$replace_str_new|g" "/var/www/${local_hostname}/htdocs/mail/functions/display_messages.php"
+    sed -i "s|$replace_str|$replace_str_new|g" "/var/www/${local_hostname}/htdocs/mail/src/login.php"
+
+    sed -i "s|'<small>' . sprintf (_(\"http://.*|'<small>' . sprintf (_(\"http:///mail\"), \$version) . '<br />' .\"\\\n\".|g" "/var/www/${local_hostname}/htdocs/mail/src/login.php"
+    sed -i "s|\"http:///mail\"|\"${replace_str_new}\"|g" "/var/www/${local_hostname}/htdocs/mail/src/login.php"
+
+    if grep -q ".onion/mail" "/var/www/${local_hostname}/htdocs/mail/po/squirrelmail.pot"; then
+        replace_line=$(grep ".onion/mail" "/var/www/${local_hostname}/htdocs/mail/po/squirrelmail.pot")
+        email_onion_domain=$(cat /var/lib/tor/hidden_service_email/hostname)
+        sed -i "s|${replace_line}|msgid \"${email_onion_domain}\"|g" "/var/www/${local_hostname}/htdocs/mail/po/squirrelmail.pot"
+    fi
+    sed -i "s|$replace_str|$replace_str_new|g" "/var/www/${local_hostname}/htdocs/mail/po/squirrelmail.pot"
+
+    replace_str='By the SquirrelMail Project Team'
+    replace_str_new=''
+    sed -i "s|$replace_str|$replace_str_new|g" "/var/www/${local_hostname}/htdocs/mail/functions/display_messages.php"
+    sed -i "s|$replace_str|$replace_str_new|g" "/var/www/${local_hostname}/htdocs/mail/po/squirrelmail.pot"
+    sed -i "s|. _(\"$replace_str\") |$replace_str_new|g" "/var/www/${local_hostname}/htdocs/mail/src/login.php"
+    sed -i "s|$replace_str|$replace_str_new|g" "/var/www/${local_hostname}/htdocs/mail/src/login.php"
+
+    sed -i 's|". _("")||g' "/var/www/${local_hostname}/htdocs/mail/src/login.php"
+    sed -i "s|. sprintf (_(\"\"), \$org_name)||g" "/var/www/${local_hostname}/htdocs/mail/src/login.php"
+
+    web_admin_create_email_proxy_screen
+
+    if [[ "$ONION_ONLY" == 'no' ]]; then
+        # clearnet version goes to email proxy settings
+        proxy_settings_str=$(web_admin_translate_text "Send email through a proxy")
+        proxy_str="<a href=\"../../admin/email_proxy.html\" title=\"${proxy_settings_str}\">"
+        if grep -q '<a href="../../admin">' "/var/www/${local_hostname}/htdocs/mail/src/login.php"; then
+            # upgrade previous link to email proxy settings
+            sed -i "s|<a href=\"../../admin\">|${proxy_str}|g" "/var/www/${local_hostname}/htdocs/mail/src/login.php"
+        fi
+
+        if ! grep -q "${proxy_str}" "/var/www/${local_hostname}/htdocs/mail/src/login.php"; then
+            # link to email proxy settings
+            sed -i "s|<img src=|${proxy_str}<img src=|g" "/var/www/${local_hostname}/htdocs/mail/src/login.php"
+        fi
+    else
+        # onion only version goes back to index
+        link_title_str=$(web_admin_translate_text "Go Back")
+        link_str="<a href=\"../../admin\" title=\"${link_title_str}\">"
+        if grep -q '<a href="../../admin/email_proxy.html">' "/var/www/${local_hostname}/htdocs/mail/src/login.php"; then
+            # upgrade previous link to email proxy settings
+            sed -i "s|<a href=\"../../admin/email_proxy.html\">|${link_str}|g" "/var/www/${local_hostname}/htdocs/mail/src/login.php"
+        fi
+
+        if ! grep -q "${link_str}" "/var/www/${local_hostname}/htdocs/mail/src/login.php"; then
+            # link to email proxy settings
+            sed -i "s|<img src=|${link_str}<img src=|g" "/var/www/${local_hostname}/htdocs/mail/src/login.php"
+        fi
+    fi
+    if grep -q ' /><br />' "/var/www/${local_hostname}/htdocs/mail/src/login.php"; then
+        sed -i 's| /><br />| /></a><br />|g' "/var/www/${local_hostname}/htdocs/mail/src/login.php"
+    fi
+
+    install_web_admin_webmail_translations
+
+    replace_str='%s Login'
+    replace_str_new=''
+    sed -i "s|$replace_str|$replace_str_new|g" "/var/www/${local_hostname}/htdocs/mail/src/login.php"
+}
+
+function check_community_network {
+    if [ ! "$webadmin_install_dir" ]; then
+        local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+        webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+    fi
+    if [ -d "$webadmin_install_dir" ]; then
+        if [ ! -f "$webadmin_install_dir/network.html" ]; then
+            cp "$webadmin_install_dir/network_template.html" "$webadmin_install_dir/network.html"
+            chown www-data:www-data "$webadmin_install_dir/network.html"
+        fi
+    fi
+}
+
+function web_admin_onion_config {
+    nginx_file="$1"
+    onion_port="$2"
+    onion_hostname="$3"
+    { echo '';
+      echo 'server {';
+      echo "  listen 127.0.0.1:${onion_port} default_server;";
+      echo '  port_in_redirect off;';
+      echo "  server_name ${onion_hostname};";
+      echo "  root /var/www/${local_hostname}/htdocs;";
+      echo '  index index.html;';
+      echo '  charset UTF-8;';
+      echo '';
+      echo '  access_log /dev/null;';
+      echo '  error_log /dev/null;';
+      echo '';
+      echo '  add_header X-Content-Type-Options nosniff;';
+      echo '  add_header X-XSS-Protection "1; mode=block";';
+      echo '';
+      echo '  location ^~ /mail {';
+      echo "    add_header 'Cache-Control' 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0';";
+      echo '    expires off;';
+      echo '    client_max_body_size 200m;';
+      echo "    root /var/www/${local_hostname}/htdocs;";
+      echo '    index index.php;';
+      echo "    error_page 405 = \$uri;";
+      echo '    location ~ \.php {';
+      echo '      include snippets/fastcgi-php.conf;';
+      echo "      fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
+      echo '      fastcgi_read_timeout 30;';
+      echo '    }';
+      echo '  }';
+      echo '';
+      echo '  location ^~ /admin {';
+      echo '    proxy_read_timeout 1800;';
+      echo '    proxy_connect_timeout 1800;';
+      echo '    proxy_send_timeout 1800;';
+      echo '    send_timeout 1800;';
+      echo "    add_header 'Cache-Control' 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0';";
+      echo '    expires off;';
+      echo '    client_max_body_size 200m;';
+      echo "    ${basic_auth_str} \"${WEBADMIN_LOGIN_TEXT}\";";
+      echo "    ${basic_auth_str}_user_file /etc/nginx/.webadminpasswd;";
+      echo "    root /var/www/${local_hostname}/htdocs;";
+      echo '    index index.html;';
+      echo "    error_page 405 = \$uri;";
+      echo '    location ~ \.php {';
+      echo '      include snippets/fastcgi-php.conf;';
+      echo "      fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
+      echo '      fastcgi_read_timeout 30;';
+      echo '    }';
+      echo '  }';
+      echo '  location ^~ /home {';
+      echo "    add_header 'Cache-Control' 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0';";
+      echo '    expires off;';
+      echo '    client_max_body_size 200m;';
+      echo "    root /var/www/${local_hostname}/htdocs;";
+      echo '    index index.html;';
+      echo "    error_page 405 = \$uri;";
+      echo '    location ~ \.php {';
+      echo '      include snippets/fastcgi-php.conf;';
+      echo "      fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
+      echo '      fastcgi_read_timeout 30;';
+      echo '    }';
+      echo '  }';
+      echo '';
+      echo '  rewrite ^/plinth/(.*)$ /api.json last;';
+      echo '';
+      echo '  location / {';
+      echo "    root /var/www/${local_hostname}/htdocs/plinth;";
+      echo '    index api.json /api.json;';
+      echo "    error_page 405 = \$uri;";
+      echo '  }';
+      echo '}'; } >> "$nginx_file"
+}
+
+function install_web_admin {
+    echo $'install_web_admin'
+    # This is intended as an admin web user interface
+    # similar to Plinth or the yunohost ui
+
+    SECONDS=0
+    web_admin_get_hostname
+
+    # whether or not to add authentication to libreserver.local
+    basic_auth_str='#auth_basic'
+    if grep -q 'install_final' "$COMPLETION_FILE"; then
+        # initial installation has completed
+        if [ -f /etc/nginx/.webadminpasswd ]; then
+            if [ ! -f "$webadmin_install_dir/.setupscreenactive" ]; then
+                # a password was created
+                basic_auth_str='auth_basic'
+            fi
+        fi
+    fi
+
+    if [ ! -d "$webadmin_install_dir" ]; then
+        mkdir -p "$webadmin_install_dir"
+    fi
+
+    web_admin_installed=
+    if [ -d "/usr/share/${PROJECT_NAME}/webadmin" ]; then
+        if [ -d "/usr/share/${PROJECT_NAME}/webadmin/EN" ]; then
+            cp -r "/usr/share/${PROJECT_NAME}/webadmin"/* "$webadmin_install_dir"
+            cp "/usr/share/${PROJECT_NAME}/webadmin/EN"/*.html "$webadmin_install_dir"
+            cp "/usr/share/${PROJECT_NAME}/webadmin/EN/${PROJECT_NAME}.css" "$webadmin_install_dir"
+            cp "/usr/share/${PROJECT_NAME}/webadmin/EN"/*.txt "$webadmin_install_dir"
+
+            cp "$webadmin_install_dir/EN/index.html" "$webadmin_install_dir"/index.prev
+
+            if [ -f "$webadmin_install_dir/.setupscreenactive" ]; then
+                if [ -f "$webadmin_install_dir/setup.prev" ]; then
+                    # We are still waiting for initial setup to happen
+                    cp "$webadmin_install_dir"/setup.prev "$webadmin_install_dir"/index.html
+                fi
+            fi
+
+            # if this is an onion only install then modify some php scripts
+            read_config_param ONION_ONLY
+            if [[ "$ONION_ONLY" != 'no' ]]; then
+                web_admin_onion_only
+            fi
+
+            web_admin_installed=1
+        fi
+    else
+        echo $"Directory not found /usr/share/${PROJECT_NAME}/webadmin"
+    fi
+
+    echo "Copying web interface files took $SECONDS seconds"
+    SECONDS=0
+
+    if [ ! $web_admin_installed ]; then
+        placeholderstr=$"This is a placeholder for the web admin panel on ${local_hostname}"
+        { echo '<html>';
+          echo '  <body>';
+          echo "  ${placeholderstr}";
+          echo '  </body>';
+          echo '</html>'; } > "$webadmin_install_dir/index.html"
+    fi
+
+    WEBADMIN_ONION_HOSTNAME=$(add_onion_service webadmin 80 ${WEBADMIN_ONION_PORT})
+
+    # secondary webadmin interface for easier setup
+    if ! grep -q "80 127.0.0.1:${WEBADMIN_SECONDARY_ONION_PORT}" "/etc/torrc.d/${PROJECT_NAME}"; then
+        sed -i "/465 127.0.0.1:465/a HiddenServicePort 80 127.0.0.1:${WEBADMIN_SECONDARY_ONION_PORT}" "/etc/torrc.d/${PROJECT_NAME}"
+        restart_tor_daemon
+    fi
+    WEBADMIN_SECONDARY_ONION_HOSTNAME=
+    if [ -f /var/lib/tor/hidden_service_ssh/hostname ]; then
+        WEBADMIN_SECONDARY_ONION_HOSTNAME=$(cat /var/lib/tor/hidden_service_email/hostname)
+    fi
+
+    nginx_file=/etc/nginx/sites-available/$local_hostname
+    { echo 'server {';
+      echo '  listen 80 default_server;';
+      echo '  #listen [::]:80;';
+      echo "  server_name ${local_hostname};";
+      echo "  root /var/www/${local_hostname}/htdocs;";
+      echo '  index index.html;';
+      echo '  charset UTF-8;';
+      echo '';
+      echo '  allow 192.168.0.0/16;';
+      echo '  allow 10.0.0.0/16;';
+      echo '  deny all;';
+      echo '';
+      echo '  access_log /dev/null;';
+      echo '  error_log /dev/null;';
+      echo '';
+      echo '  add_header X-Content-Type-Options nosniff;';
+      echo '  add_header X-XSS-Protection "1; mode=block";';
+      echo '';
+      echo '  location ^~ /admin {';
+      echo '    proxy_read_timeout 1800;';
+      echo '    proxy_connect_timeout 1800;';
+      echo '    proxy_send_timeout 1800;';
+      echo '    send_timeout 1800;';
+      echo "    add_header 'Cache-Control' 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0';";
+      echo '    expires off;';
+      echo '    client_max_body_size 200m;';
+      echo "    ${basic_auth_str} \"${WEBADMIN_LOGIN_TEXT}\";";
+      echo "    ${basic_auth_str}_user_file /etc/nginx/.webadminpasswd;";
+      echo "    root /var/www/${local_hostname}/htdocs;";
+      echo '    index index.html;';
+      echo "    error_page 405 = \$uri;";
+      echo '    location ~ \.php {';
+      echo '      include snippets/fastcgi-php.conf;';
+      echo "      fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
+      echo '      fastcgi_read_timeout 30;';
+      echo '    }';
+      echo '  }';
+      echo '';
+      echo '  location ^~ /home {';
+      echo "    add_header 'Cache-Control' 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0';";
+      echo '    expires off;';
+      echo '    client_max_body_size 200m;';
+      echo "    root /var/www/${local_hostname}/htdocs;";
+      echo '    index index.html;';
+      echo "    error_page 405 = \$uri;";
+      echo '    location ~ \.php {';
+      echo '      include snippets/fastcgi-php.conf;';
+      echo "      fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
+      echo '      fastcgi_read_timeout 30;';
+      echo '    }';
+      echo '  }';
+      echo '';
+      echo '  location ^~ /mail {';
+      echo "    add_header 'Cache-Control' 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0';";
+      echo '    expires off;';
+      echo '    client_max_body_size 200m;';
+      echo "    root /var/www/${local_hostname}/htdocs;";
+      echo '    index index.php;';
+      echo "    error_page 405 = \$uri;";
+      echo '    location ~ \.php {';
+      echo '      include snippets/fastcgi-php.conf;';
+      echo "      fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
+      echo '      fastcgi_read_timeout 30;';
+      echo '    }';
+      echo '  }';
+      echo '';
+      echo '  location /icons {';
+      echo '    autoindex on;';
+      echo '    break;';
+      echo '  }';
+      echo '';
+      echo '  rewrite ^/plinth/(.*)$ /api.json last;';
+      echo '';
+      echo '  location / {';
+      echo "    root /var/www/${local_hostname}/htdocs/plinth;";
+      echo '    index api.json /api.json;';
+      echo "    error_page 405 = \$uri;";
+      echo '  }';
+      echo '}';
+      echo '';
+      echo 'server {';
+      echo '  listen 443 default_server ssl;';
+      echo '  #listen [::]:443 ssl;';
+      echo "  server_name ${local_hostname};";
+      echo "  root /var/www/${local_hostname}/htdocs;";
+      echo '  index index.html;';
+      echo '  charset UTF-8;';
+      echo '';
+      echo '  allow 192.168.0.0/16;';
+      echo '  allow 10.0.0.0/16;';
+      echo '  deny all;';
+      echo '';
+      echo '  access_log /dev/null;';
+      echo '  error_log /dev/null;';
+      echo ''; } > "$nginx_file"
+
+    nginx_ssl "${local_hostname}"
+    nginx_security_options "${local_hostname}"
+
+    { echo '  add_header Strict-Transport-Security max-age=0;';
+      echo '  add_header X-Content-Type-Options nosniff;';
+      echo '  add_header X-XSS-Protection "1; mode=block";';
+      echo '';
+      echo '  location ^~ /admin {';
+      echo '    proxy_read_timeout 1800;';
+      echo '    proxy_connect_timeout 1800;';
+      echo '    proxy_send_timeout 1800;';
+      echo '    send_timeout 1800;';
+      echo "    add_header 'Cache-Control' 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0';";
+      echo '    expires off;';
+      echo '    client_max_body_size 200m;';
+      echo "    ${basic_auth_str} \"${WEBADMIN_LOGIN_TEXT}\";";
+      echo "    ${basic_auth_str}_user_file /etc/nginx/.webadminpasswd;";
+      echo "    root /var/www/${local_hostname}/htdocs;";
+      echo '    index index.html;';
+      echo "    error_page 405 = \$uri;";
+      echo '    location ~ \.php {';
+      echo '      include snippets/fastcgi-php.conf;';
+      echo "      fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
+      echo '      fastcgi_read_timeout 30;';
+      echo '    }';
+      echo '  }';
+      echo '';
+      echo '  location ^~ /home {';
+      echo "    add_header 'Cache-Control' 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0';";
+      echo '    expires off;';
+      echo '    client_max_body_size 200m;';
+      echo "    root /var/www/${local_hostname}/htdocs;";
+      echo '    index index.html;';
+      echo "    error_page 405 = \$uri;";
+      echo '    location ~ \.php {';
+      echo '      include snippets/fastcgi-php.conf;';
+      echo "      fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
+      echo '      fastcgi_read_timeout 30;';
+      echo '    }';
+      echo '  }';
+      echo '';
+      echo '  location ^~ /mail {';
+      echo "    add_header 'Cache-Control' 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0';";
+      echo '    expires off;';
+      echo '    client_max_body_size 200m;';
+      echo "    root /var/www/${local_hostname}/htdocs;";
+      echo '    index index.php;';
+      echo "    error_page 405 = \$uri;";
+      echo '    location ~ \.php {';
+      echo '      include snippets/fastcgi-php.conf;';
+      echo "      fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
+      echo '      fastcgi_read_timeout 30;';
+      echo '    }';
+      echo '  }';
+      echo '';
+      echo '  location /icons {';
+      echo '    autoindex on;';
+      echo '    break;';
+      echo '  }';
+      echo '';
+      echo '  rewrite ^/plinth/(.*)$ /api.json last;';
+      echo '';
+      echo '  location / {';
+      echo "    root /var/www/${local_hostname}/htdocs/plinth;";
+      echo '    index api.json /api.json;';
+      echo "    error_page 405 = \$uri;";
+      echo '  }';
+      echo '}'; } >> "$nginx_file"
+
+    web_admin_onion_config "${nginx_file}" "${WEBADMIN_ONION_PORT}" "${WEBADMIN_ONION_HOSTNAME}"
+    web_admin_onion_config "${nginx_file}" "${WEBADMIN_SECONDARY_ONION_PORT}" "${WEBADMIN_SECONDARY_ONION_HOSTNAME}"
+
+    if [ ! -f "/etc/ssl/certs/${local_hostname}.crt" ]; then
+        "${PROJECT_NAME}-addcert" -h "${local_hostname}" --dhkey "${DH_KEYLENGTH}"
+    fi
+
+    sed -i "s|ssl_certificate .*|ssl_certificate /etc/ssl/certs/${local_hostname}.crt;|g" "$nginx_file"
+    sed -i "s|ssl_certificate_key .*|ssl_certificate_key /etc/ssl/private/${local_hostname}.key;|g" "$nginx_file"
+
+    nginx_ensite "${local_hostname}"
+
+    # Compatibility with FreedomBox android app
+    # The installed apps get published to a json file called api.json
+    # in this directory
+    if [ ! -d "/var/www/${local_hostname}/htdocs/plinth" ]; then
+        mkdir -p "/var/www/${local_hostname}/htdocs/plinth"
+    fi
+
+    echo "Setup of web interface web configuration took $SECONDS seconds"
+    SECONDS=0
+
+    web_admin_create_users
+
+    echo "Web interface members screen creation took $SECONDS seconds"
+    SECONDS=0
+
+    # make list of apps which can be added
+    web_admin_create_add_apps
+
+    echo "Web interface creation of installable apps screen took $SECONDS seconds"
+    SECONDS=0
+
+    # make the list of apps
+    web_admin_create_installed_apps
+
+    echo "Web interface creation of installed apps screen took $SECONDS seconds"
+    SECONDS=0
+
+    web_admin_setup_login
+
+    echo "Web interface creation of login screen took $SECONDS seconds"
+
+    chown -R www-data:www-data "/var/www/${local_hostname}/htdocs"
+    chmod g+w "/var/www/${local_hostname}/htdocs"
+    chmod a+w "$webadmin_install_dir"
+
+    web_admin_avahi
+
+    SECONDS=0
+    web_admin_configure_installer_daemon
+
+    echo "Creation of installer daemon took $SECONDS seconds"
+    SECONDS=0
+
+    regenerate_webadmin_blocklist
+
+    echo "Web interface creation of blocklist screen took $SECONDS seconds"
+    SECONDS=0
+
+    regenerate_webadmin_vpn
+
+    echo "Web interface creation of VPN screen took $SECONDS seconds"
+    SECONDS=0
+
+    regenerate_webadmin_blocklist_muted_words
+
+    echo "Web interface creation of muted words screen took $SECONDS seconds"
+    SECONDS=0
+
+    regenerate_webadmin_dynamic_dns
+
+    echo "Web interface creation of dynamic DNS screen took $SECONDS seconds"
+    SECONDS=0
+
+    regenerate_webadmin_dns_over_tls
+
+    echo "Web interface creation of DNS over TLS screen took $SECONDS seconds"
+    SECONDS=0
+
+    regenerate_bridges
+
+    echo "Web interface creation of Tor bridges screen took $SECONDS seconds"
+    SECONDS=0
+
+    webadmin_update_system_monitor
+
+    echo "Web interface creation of system monitor screen took $SECONDS seconds"
+    SECONDS=0
+
+    webadmin_change_language
+
+    echo "Web interface change of selected language took $SECONDS seconds"
+    SECONDS=0
+
+    if grep -q 'COMMUNITY_NETWORK=' "$CONFIGURATION_FILE"; then
+        read_config_param COMMUNITY_NETWORK
+        webadmin_change_network "$COMMUNITY_NETWORK"
+        echo "Web interface community network update took $SECONDS seconds"
+        SECONDS=0
+    fi
+
+    webadmin_update_version
+
+    echo "Web interface version number update took $SECONDS seconds"
+    SECONDS=0
+
+    webadmin_qrcode="$webadmin_install_dir/images/webadmin_qrcode.png"
+    if [ ! -f /usr/local/bin/myqr ]; then
+        echo -n "http://${WEBADMIN_ONION_HOSTNAME}/admin" | qrencode -t PNG -o "$webadmin_qrcode"
+    else
+        myqr "http://${WEBADMIN_ONION_HOSTNAME}/admin" -p "/root/${PROJECT_NAME}/img/onion.png" -c -v 8 -n "$webadmin_qrcode"
+    fi
+    echo "Web interface QR code generation took $SECONDS seconds"
+    SECONDS=0
+
+    web_admin_create_app_descriptions
+
+    echo "Web interface update of app descriptions took $SECONDS seconds"
+    SECONDS=0
+
+    install_web_admin_webmail
+
+    echo "Web interface update of webmail took $SECONDS seconds"
+    SECONDS=0
+
+    web_admin_php_settings
+
+    echo "Web interface update of php settings took $SECONDS seconds"
+    SECONDS=0
+
+    rootdir=
+
+    # copy some extra images
+    cp "/root/${PROJECT_NAME}/img/turtl.jpg" "$webadmin_install_dir/images/"
+
+    web_create_homepage
+
+    echo "Web interface update of home page took $SECONDS seconds"
+
+    check_community_network
+
+    SECONDS=0
+
+    web_admin_translations_from_upstream
+
+    echo "Web interface update of translations files took $SECONDS seconds"
+    SECONDS=0
+
+    web_admin_translate
+
+    echo "Web interface update of language took $SECONDS seconds"
+
+    web_admin_background_color
+
+    echo "Web interface update of theme took $SECONDS seconds"
+    SECONDS=0
+
+    chmod 755 "$webadmin_install_dir"
+
+    sed -i "s|WEBADMINONIONADDRESS|$WEBADMIN_ONION_HOSTNAME|g" "$webadmin_install_dir/about.html"
+}
+
+# NOTE: deliberately no exit 0

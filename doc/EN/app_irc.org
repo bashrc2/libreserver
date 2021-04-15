@@ -1,0 +1,97 @@
+#+TITLE: LibreServer
+#+AUTHOR: Bob Mottram
+#+EMAIL: bob@libreserver.org
+#+KEYWORDS: freedombome, irc
+#+DESCRIPTION: How to use IRC
+#+OPTIONS: ^:nil toc:nil num:nil
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="libreserver.css" />
+
+#+attr_html: :width 80% :height 10% :align center
+[[file:images/logo.png]]
+
+* IRC
+
+IRC is useful for multi-user chat. The classic use case is for software development where many engineers might need to coordinate their activities, but it's also useful for meetings, parties and general socialising.
+
+* Irssi
+The easiest way to use irssi is to connect to your system, like this:
+
+#+BEGIN_SRC bash
+ssh myusername@mydomain -p 2222
+#+END_SRC
+
+Then select *IRC* from the menu. However, other than via this method using ssh, irssi isn't a very good IRC client because it doesn't have the capability to onion route messages, and therefore leaks metadata. For the best security when using your IRC server, use HexChat, Emacs ERC or another client which supports socks5 proxying.
+
+* HexChat
+HexChat (formerly XChat) is compatible with proxying via Tor and so provides the best security when connecting to your IRC server. It will allow you to connect to your IRC server's onion address.
+
+First install HexChat and set up its configuration file. This can be done on your local machine with:
+
+#+BEGIN_SRC bash
+libreserver-client --setup hexchat
+#+END_SRC
+
+Now look up the onion address for your IRC server
+
+#+BEGIN_SRC bash
+ssh username@mydomainname -p 2222
+#+END_SRC
+
+Select Administrator options, then *About this system* and make a note of the onion address for IRC. Also select the *IRC Menu* and take a note of the login password.
+
+Run HexChat.
+
+Within the network list click, *Add* and enter your domain name then click *Edit*.
+
+Select the entry within the servers box, then enter *ircaddress.onion/6697* or *mydomainname/6697* and press *Enter*.
+
+Uncheck *use global user information*.
+
+Enter first and second nicknames and check *connect to this network on startup*.
+
+If you are using the ordinary domain name (clearnet/ICANN) then make sure that *Use SSL* is checked.
+
+#+attr_html: :width 80% :align center
+[[file:images/hexchat_setup_clearnet.jpg]]
+
+If you are using the onion address then *use SSL* should be unchecked and the transport encryption will be handled via the onion address itself.
+
+#+attr_html: :width 80% :align center
+[[file:images/hexchat_setup.jpg]]
+
+Within the *Password* field enter the password which can be found from the IRC menu of the *control panel*.
+
+Select the *Autojoin channels* tab, click *Add* and enter *#libreserver* as the channel name.
+
+Click *close* and then *connect*.
+
+* Emacs
+If you are an Emacs user then you can also connect to your IRC server via Emacs.
+
+Ensure that tor is installed onto your local system:
+
+#+BEGIN_SRC bash
+sudo apt-get install tor
+#+END_SRC
+
+Add the following to your Emacs configuration file:
+
+#+BEGIN_SRC elisp
+(setq socks-noproxy '("localhost"))
+(require 'socks)
+(require 'tls)
+(setq socks-server (list "Tor socks" "localhost" 9050 5))
+(setq erc-server-connect-function 'socks-open-network-stream)
+(setq erc-autojoin-channels-alist
+    '(("myircaddress.onion" "#libreserver")))
+(erc :server "myircaddress.onion" :port 6697 :nick "yourusername" :password "your IRC password")
+#+END_SRC
+
+* Changing or removing the IRC password
+By default the IRC server is set up to require a password for users to log in. The password is the same for all users. If you want to change or remove the password:
+
+#+BEGIN_SRC bash
+ssh myusername@mydomain -p 2222
+#+END_SRC
+
+Select /Administrator controls/ then *IRC Menu* and then change the password. An empty password will allow anyone to log in, so you can have a globally accessible IRC system if you wish, although you might want to carefully consider whether that's wise.

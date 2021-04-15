@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <style>
+      @import url("libreserver.css");
+
+      .ipaddress {
+          color: var(--main-fg-color);
+          text-align: center;
+          font-size: 160%;
+          font-weight: bold;
+      }
+
+      .appurl {
+          font-size: 100%;
+      }
+
+      .welcomeheader {
+          font-size: 200%;
+          font-weight: bold;
+      }
+
+      .descriptiontext {
+          font-size: 90%;
+      }
+
+      .logintext {
+          font-size: 120%;
+          font-weight: bold;
+          color: #981737;
+      }
+
+      button {
+          border: none;
+          outline: 0;
+          display: inline-block;
+          padding: 8px;
+          color: white;
+          background-color: #000;
+          text-align: center;
+          cursor: pointer;
+          width: 100%;
+          font-size: 18px;
+      }
+
+      button:hover, a:hover {
+          opacity: 0.7;
+      }
+
+      .chip {
+          display: inline-block;
+          padding: 0 25px;
+          height: 50px;
+          font-size: 70%;
+          line-height: 50px;
+          border-radius: 25px;
+          background-color: #f1f1f1;
+      }
+
+      .chip img {
+          float: left;
+          margin: 0 10px 0 -25px;
+          height: 50px;
+          width: 50px;
+          border-radius: 50%;
+      }
+
+      .ddnslist {
+          font-size: 100%;
+          font-weight: bold;
+          color: black;
+          background-color: lightblue;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="header">
+        <a href="settings.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a><br>
+
+        <p class="headertext" translate="yes">Dynamic DNS</p>
+
+        <p class="ipaddress" translate="no">CURRENT_IP_ADDRESS</p>
+
+        <form action="dynamicdns.php" method="post">
+          <select class="ddnslist" name="dynamicdns" size="5">
+            <option value="none" translate="yes">none</option>
+            <option value="freedns" translate="no">freedns.afraid.org</option>
+            <option value="dyn" translate="no">dyn.com</option>
+            <option value="zoneedit.com" translate="no">zoneedit.com</option>
+            <option value="no-ip.com" translate="no">no-ip.com</option>
+            <option value="easydns.com" translate="no">easydns.com</option>
+            <option value="dnsomatic.com" translate="no">dnsomatic.com</option>
+            <option value="dns.he.net" translate="no">dns.he.net</option>
+            <option value="tunnelbroker.net" translate="no">tunnelbroker.net</option>
+            <option value="sitelutions.com" translate="no">sitelutions.com</option>
+            <option value="dnsexit.com" translate="no">dnsexit.com</option>
+            <option value="changeip.com" translate="no">changeip.com</option>
+            <option value="zerigo.com" translate="no">zerigo.com</option>
+            <option value="dhis.org" translate="no">dhis.org</option>
+            <option value="nsupdate.info" translate="no">nsupdate.info</option>
+            <option value="loopia.com" translate="no">loopia.com</option>
+            <option value="namecheap.com" translate="no">namecheap.com</option>
+            <option value="ovh.com" translate="no">ovh.com</option>
+            <option value="dtdns.com" translate="no">dtdns.com</option>
+            <option value="giradns.com" translate="no">giradns.com</option>
+            <option value="duiadns.net" translate="no">duiadns.net</option>
+            <option value="ddnss.de" translate="no">ddnss.de</option>
+            <option value="dynv6.com" translate="no">dynv6.com</option>
+            <option value="ipv4.dynv6.com" translate="no">ipv4.dynv6.com</option>
+            <option value="spdyn.de" translate="no">spdyn.de</option>
+            <option value="freemyip.com" translate="no">freemyip.com</option>
+            <option value="cloudxns.net" translate="no">cloudxns.net</option>
+          </select>
+          <br><br>
+          <label translate="yes">Username</label>: <input type="text" name="ddns_username" value="DDNS_USERNAME"><br><br>
+          <label translate="yes">Password</label>: <input type="password" name="ddns_password" value=""><br><br>
+          <label translate="yes">Authentication Token</label>: <input type="text" name="ddnscode" value="DDNS_CODE"><br><br>
+          <br>
+          <input type="submit" name="submitddnscancel" translate="yes" value="Cancel">
+          <input type="submit" name="submitdnsovertls" translate="yes" value="DNS over TLS">
+          <input type="submit" name="submitddnsdomain" translate="yes" value="Domain">
+          <input type="submit" name="submitddnshelp" translate="yes" value="Help">
+          <input type="submit" name="submitddns" translate="yes" value="Continue">
+        </form>
+
+        <br>
+      </div>
+    </div>
+  </body>
+</html>

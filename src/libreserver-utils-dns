@@ -1,0 +1,509 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# DNS functions
+#
+# License
+# =======
+#
+# Copyright (C) 2014-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+LIBREDNS='116.202.176.26'
+
+# DNS
+NAMESERVER1='91.239.100.100'
+NAMESERVER2='89.233.43.71'
+NAMESERVER3='87.118.100.175'
+NAMESERVER4='94.75.228.29'
+NAMESERVER5='85.25.251.254'
+NAMESERVER6='2.141.58.13'
+
+# parameters used when adding a new domain
+DDNS_PROVIDER="freedns"
+DDNS_USERNAME=
+DDNS_PASSWORD=
+
+INADYN_REPO="https://github.com/troglobit/inadyn"
+INADYN_COMMIT='165d89634f35536fc9dd4701755104c96606f65a'
+INADYN_CONFIG_FILE=/etc/inadyn.conf
+
+# web site used to obtain the external IP address of the system
+GET_IP_ADDRESS_URL="checkip.two-dns.de"
+
+# other possible services to obtain the external IP address
+EXTERNAL_IP_SERVICES=( \
+        'https://check.torproject.org/' \
+        'https://www.whatsmydns.net/whats-my-ip-address.html' \
+        'https://www.privateinternetaccess.com/pages/whats-my-ip/' \
+        'http://checkip.two-dns.de' \
+        'http://ip.dnsexit.com' \
+        'http://ifconfig.me/ip' \
+        'http://ipecho.net/plain' \
+        'http://checkip.dyndns.org/plain' \
+        'http://ipogre.com/linux.php' \
+        'http://whatismyipaddress.com/' \
+        'http://ip.my-proxy.com/' \
+        'http://websiteipaddress.com/WhatIsMyIp' \
+        'http://getmyipaddress.org/' \
+        'http://www.my-ip-address.net/' \
+        'http://myexternalip.com/raw' \
+        'http://www.canyouseeme.org/' \
+        'http://www.trackip.net/' \
+        'http://icanhazip.com/' \
+        'http://www.iplocation.net/' \
+        'http://www.howtofindmyipaddress.com/' \
+        'http://www.ipchicken.com/' \
+        'http://whatsmyip.net/' \
+        'http://www.ip-adress.com/' \
+        'http://checkmyip.com/' \
+        'http://www.tracemyip.org/' \
+        'http://checkmyip.net/' \
+        'http://www.lawrencegoetz.com/programs/ipinfo/' \
+        'http://www.findmyip.co/' \
+        'http://ip-lookup.net/' \
+        'http://www.dslreports.com/whois' \
+        'http://www.mon-ip.com/en/my-ip/' \
+        'http://www.myip.ru' \
+        'http://ipgoat.com/' \
+        'http://www.myipnumber.com/my-ip-address.asp' \
+        'http://www.whatsmyipaddress.net/' \
+        'http://formyip.com/' \
+        'http://www.displaymyip.com/' \
+        'http://www.bobborst.com/tools/whatsmyip/' \
+        'http://www.geoiptool.com/' \
+        'http://checkip.dyndns.com/' \
+        'http://myexternalip.com/' \
+        'http://www.ip-adress.eu/' \
+        'http://www.infosniper.net/' \
+        'http://wtfismyip.com/' \
+        'http://ipinfo.io/' \
+        'http://httpbin.org/ip')
+
+function change_system_local_name {
+    NEW_SYSTEM_NAME="$1"
+    NEW_SYSTEM_NAME_INTERACTIVE="$2"
+
+    if [ "$NEW_SYSTEM_NAME" ]; then
+        if [ ${#NEW_SYSTEM_NAME} -gt 1 ]; then
+            sed -i "s|host-name=.*|host-name=$NEW_SYSTEM_NAME|g" /etc/avahi/avahi-daemon.conf
+            systemctl restart avahi-daemon
+            if grep -q "host-name=$NEW_SYSTEM_NAME" /etc/avahi/avahi-daemon.conf; then
+                install_web_admin
+
+                systemctl restart webadmin
+
+                if [ "$NEW_SYSTEM_NAME_INTERACTIVE" ]; then
+                    dialog --title $"New local network name" \
+                           --msgbox $"The name of this system on your local network was changed successfully" 6 70
+                fi
+            fi
+        fi
+    fi
+}
+
+function enable_mdns {
+    # files gw_name myhostname mdns4_minimal [NOTFOUND=return] dns
+    sed -i "s|hosts:.*|hosts:          files mdns4_minimal mdns4 mdns dns|g" /etc/nsswitch.conf
+}
+
+function freedns_update_cron {
+    if grep -q "${PROJECT_NAME}-freedns" /etc/crontab; then
+        sed -i "/${PROJECT_NAME}-freedns/d" /etc/crontab
+    fi
+    if ! grep -q "freedns" /etc/crontab; then
+        if grep -q "DEFAULT_DOMAIN_CODE=" "$CONFIGURATION_FILE"; then
+            ddns_code=$(grep 'DEFAULT_DOMAIN_CODE=' "$CONFIGURATION_FILE" | awk -F '=' '{print $2}')
+            if [ "$ddns_code" ]; then
+                if [ ${#ddns_code} -gt 10 ]; then
+                    dns_update1=$(shuf -i 1-7 -n 1)
+                    dns_update2=$(shuf -i 8-12 -n 1)
+                    dns_update3=$(shuf -i 13-17 -n 1)
+                    dns_update4=$(shuf -i 18-22 -n 1)
+                    dns_update5=$(shuf -i 23-27 -n 1)
+                    dns_update6=$(shuf -i 28-32 -n 1)
+                    dns_update7=$(shuf -i 33-37 -n 1)
+                    dns_update8=$(shuf -i 38-42 -n 1)
+                    dns_update9=$(shuf -i 43-47 -n 1)
+                    dns_update10=$(shuf -i 48-52 -n 1)
+                    dns_update11=$(shuf -i 53-56 -n 1)
+                    dns_update12=$(shuf -i 57-59 -n 1)
+                    echo "${dns_update1},${dns_update2},${dns_update3},${dns_update4},${dns_update5},${dns_update6},${dns_update7},${dns_update8},${dns_update9},${dns_update10},${dns_update11},${dns_update12} * * * * root sleep 46 ; wget --no-check-certificate -O - https://freedns.afraid.org/dynamic/update.php?${ddns_code}= >> /var/log/freedns_@_update.log 2>&1 &" >> /etc/crontab
+                fi
+            fi
+        fi
+    else
+        ddns_code=$(grep 'DEFAULT_DOMAIN_CODE=' "$CONFIGURATION_FILE" | awk -F '=' '{print $2}')
+        if [ "$ddns_code" ]; then
+            if [ ${#ddns_code} -gt 10 ]; then
+                sed -i "s|dynamic/update.php.*|dynamic/update.php?${ddns_code}= >> /var/log/freedns_@_update.log 2>&1 &|g" /etc/crontab
+            fi
+        fi
+    fi
+}
+
+function update_inadyn_config {
+    if [[ "$DDNS_PROVIDER" == *'freedns'* ]]; then
+        freedns_update_cron
+        return
+    fi
+
+    # remove any freedns entries from crontab
+    if grep -q 'freedns' /etc/crontab; then
+        sed -i '/freedns/d' /etc/crontab
+    fi
+
+    if [ ! -f "${INADYN_CONFIG_FILE}" ]; then
+        return
+    fi
+
+    if ! grep -q "$DDNS_PROVIDER" "${INADYN_CONFIG_FILE}"; then
+        if grep -q "{" "${INADYN_CONFIG_FILE}"; then
+            sed -i "s|provider .*|provider $DDNS_PROVIDER {|g" "${INADYN_CONFIG_FILE}"
+            sed -i "s|username .*|username       = $DDNS_USERNAME|g" "${INADYN_CONFIG_FILE}"
+            sed -i "s|password .*|password       = $DDNS_PASSWORD|g" "${INADYN_CONFIG_FILE}"
+            sed -i "s|checkip-server .*|checkip-server = $GET_IP_ADDRESS_URL|g" "${INADYN_CONFIG_FILE}"
+        else
+            # Old inadyn config file format
+            # store any previous aliases
+            grep 'alias ' "${INADYN_CONFIG_FILE}" > /tmp/inadyn_aliases
+
+            # remove entry for any previous ddns
+            sed -i '/system /,$d' "${INADYN_CONFIG_FILE}"
+
+            # add the new provider
+            { echo '';
+              echo "system $DDNS_PROVIDER";
+              echo '  ssl';
+              echo "  checkip-url $GET_IP_ADDRESS_URL /"; } >> "${INADYN_CONFIG_FILE}"
+            if [ "$DDNS_USERNAME" ]; then
+                echo "  username $DDNS_USERNAME" >> "${INADYN_CONFIG_FILE}"
+            fi
+            if [ "$DDNS_PASSWORD" ]; then
+                echo "  password $DDNS_PASSWORD" >> "${INADYN_CONFIG_FILE}"
+            fi
+
+            if [ -f /tmp/inadyn_aliases ]; then
+                cat /tmp/inadyn_aliases >> "${INADYN_CONFIG_FILE}"
+                rm /tmp/inadyn_aliases
+            fi
+        fi
+    else
+        if grep -q "{" "${INADYN_CONFIG_FILE}"; then
+            sed -i "s|username .*|username       = $DDNS_USERNAME|g" "${INADYN_CONFIG_FILE}"
+            sed -i "s|password .*|password       = $DDNS_PASSWORD|g" "${INADYN_CONFIG_FILE}"
+            sed -i "s|checkip-server .*|checkip-server = $GET_IP_ADDRESS_URL|g" "${INADYN_CONFIG_FILE}"
+        else
+            # Old inadyn config file format
+            # change username/password for an existing provider
+            if [ "$DDNS_USERNAME" ]; then
+                if grep -q "  username " "${INADYN_CONFIG_FILE}"; then
+                    sed -i "s|  username .*|  username $DDNS_USERNAME|g" "${INADYN_CONFIG_FILE}"
+                else
+                    echo "  username $DDNS_USERNAME" >> "${INADYN_CONFIG_FILE}"
+                fi
+            fi
+            if [ "$DDNS_PASSWORD" ]; then
+                if grep -q "  password " "${INADYN_CONFIG_FILE}"; then
+                    sed -i "s|  password .*|  password $DDNS_PASSWORD|g" "${INADYN_CONFIG_FILE}"
+                else
+                    echo "  password $DDNS_PASSWORD" >> "${INADYN_CONFIG_FILE}"
+                fi
+            fi
+        fi
+    fi
+
+    systemctl enable inadyn
+    systemctl restart inadyn
+}
+
+function create_freedns_updater {
+    if [[ $ONION_ONLY != "no" ]]; then
+        return
+    fi
+
+    # currently inadyn doesn't work as expected with freeDNS, so this is a workaround
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+    if [[ $DDNS_PROVIDER != *"freedns"* ]]; then
+        return
+    fi
+    if [[ $SYSTEM_TYPE == "mesh"* ]]; then
+        return
+    fi
+
+    # remove any legacy command
+    if [ -f /usr/bin/dynamicdns ]; then
+        rm /usr/bin/dynamicdns
+    fi
+    if grep -q "dynamicdns" /etc/crontab; then
+        sed -i '/dynamicdns/d' /etc/crontab
+    fi
+
+    # add the update command to cron
+    freedns_update_cron
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function add_ddns_domain {
+    if [ ! "$1" ]; then
+        echo $'ddns domain not specified'
+        exit 56
+    fi
+    CURRENT_DDNS_DOMAIN="$1"
+    if [[ $ONION_ONLY != "no" ]]; then
+        return
+    fi
+    if [ ! "$DDNS_PROVIDER" ]; then
+        return
+    fi
+    if [[ "$DDNS_PROVIDER" == 'none' ]]; then
+        return
+    fi
+    if [ ! -f "${INADYN_CONFIG_FILE}" ]; then
+        echo $'Unable to find inadyn configuration file "${INADYN_CONFIG_FILE}"'
+        exit 57
+    fi
+    if ! grep -q "$DDNS_PROVIDER" "${INADYN_CONFIG_FILE}"; then
+        read_config_param DEFAULT_DOMAIN_NAME
+        { echo 'period          = 300';
+          echo '';
+          echo "provider $DDNS_PROVIDER {";
+          echo "    ssl            = true";
+          echo "    username       = $DDNS_USERNAME";
+          echo "    password       = $DDNS_PASSWORD";
+          echo "    hostname       = $DEFAULT_DOMAIN_NAME";
+          echo '}'; } > "${INADYN_CONFIG_FILE}"
+    fi
+
+    sed -i "s|hostname .*|hostname       = $DEFAULT_DOMAIN_NAME|g" "${INADYN_CONFIG_FILE}"
+    chmod 600 "${INADYN_CONFIG_FILE}"
+
+    systemctl daemon-reload
+    systemctl restart inadyn
+}
+
+function remove_ddns_domain {
+    if [ ! "$1" ]; then
+        echo $'ddns domain not specified'
+        exit 56
+    fi
+    CURRENT_DDNS_DOMAIN="$1"
+    if [[ $ONION_ONLY != "no" ]]; then
+        return
+    fi
+    if [[ "$DDNS_PROVIDER" == 'none' ]]; then
+        return
+    fi
+    if [ ! -f "${INADYN_CONFIG_FILE}" ]; then
+        echo $'Unable to find inadyn configuration file "${INADYN_CONFIG_FILE}"'
+        exit 57
+    fi
+    #if grep -q "$CURRENT_DDNS_DOMAIN" "${INADYN_CONFIG_FILE}"; then
+    #    systemctl stop inadyn
+    #    sed -i "s|, ${CURRENT_DDNS_DOMAIN}||g" "${INADYN_CONFIG_FILE}"
+    #    if grep -q "$CURRENT_DDNS_DOMAIN" "${INADYN_CONFIG_FILE}"; then
+    #        sed -i "s|${CURRENT_DDNS_DOMAIN}||g" "${INADYN_CONFIG_FILE}"
+    #    fi
+    #    systemctl daemon-reload
+    #    systemctl start inadyn
+    #fi
+}
+
+function configure_dns {
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+
+    # Installing this causes the setup to fail
+    # INSTALL_PACKAGES resolvconf knot
+
+    if [ -f /etc/network/if-up.d/000resolvconf ]; then
+        rm /etc/network/if-up.d/000resolvconf
+        echo '000resolvconf removed. Re-establish networking'
+        systemctl restart networking
+    fi
+
+    if [[ "$ARCHITECTURE" != *"arm64"* ]]; then
+        INSTALL_PACKAGES knot-resolver
+    fi
+
+    if [ ! -d /var/lib/knot/zones ]; then
+        mkdir /var/lib/knot/zones
+        chown -R knot:knot /var/lib/knot/zones
+    fi
+
+    # ensure there are copies of previous configuration files
+    if [ -f /etc/knot-resolver/kresd.conf ]; then
+        if [ ! -f /etc/knot-resolver/kresd_prev.conf ]; then
+            cp /etc/knot-resolver/kresd.conf /etc/knot-resolver/kresd_prev.conf
+        fi
+    fi
+    if [ -f /etc/knot/knot.conf ]; then
+        if [ ! -f /etc/knot/knot_prev.conf ]; then
+            cp /etc/knot/knot.conf /etc/knot/knot_prev.conf
+        fi
+    fi
+
+    resolvconf=/etc/resolvconf/resolv.conf.d/head
+
+    # allow changes to resolv.conf
+    chattr -i $resolvconf
+
+    { echo 'domain localdomain';
+      echo 'search localdomain';
+      echo "nameserver $NAMESERVER1";
+      echo "nameserver $NAMESERVER2";
+      echo "nameserver $NAMESERVER3";
+      echo "nameserver $NAMESERVER4";
+      echo "nameserver $NAMESERVER5";
+      echo "nameserver $NAMESERVER6"; } > $resolvconf
+
+    # prevent resolv.conf from changing
+    resolvconf -u
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function hostname_check {
+    # shellcheck disable=SC2154
+    if [ -f "$rootdir/etc/cron.hourly/hostname_check" ]; then
+        return
+    fi
+
+    { echo '#!/bin/bash';
+      echo "curr_hostname=\$(echo \$HOSTNAME)";
+      echo "if [[ \"\$curr_hostname\" != *'.onion' ]]; then";
+      echo "    expected_hostname=\$(grep 'DEFAULT_DOMAIN_NAME=' $CONFIGURATION_FILE | awk -F '=' '{print \$2}')";
+      echo "    if [[ \"\$expected_hostname\" != *'.'* ]]; then";
+      echo '        exit 0';
+      echo '    fi';
+      echo 'else';
+      echo "    expected_hostname=\$(cat /var/lib/tor/hidden_service_email/hostname)";
+      echo "    if [[ \"\$expected_hostname\" != *'.onion' ]]; then";
+      echo '        exit 0';
+      echo '    fi';
+      echo 'fi';
+      echo '';
+      echo "if [[ \"\$curr_hostname\" != \"\$expected_hostname\" ]]; then";
+      echo "    export HOSTNAME=\"\$expected_hostname\"";
+      echo "    hostname \$expected_hostname";
+      echo "    echo \"\$expected_hostname\" > /etc/hostname";
+      echo "    systemctl restart exim4";
+      echo 'fi'; } > "$rootdir/etc/cron.hourly/hostname_check"
+    chmod +x "$rootdir/etc/cron.hourly/hostname_check"
+}
+
+function set_hostname {
+    DEFAULT_DOMAIN_NAME="$1"
+
+    echo "$DEFAULT_DOMAIN_NAME" > /etc/hostname
+    hostname "$DEFAULT_DOMAIN_NAME"
+    echo "$DEFAULT_DOMAIN_NAME" > /etc/mailname
+
+    if grep -q "127.0.1.1" /etc/hosts; then
+        sed -i "s/127.0.1.1.*/127.0.1.1       $DEFAULT_DOMAIN_NAME/g" /etc/hosts
+    else
+        echo "127.0.1.1  $DEFAULT_DOMAIN_NAME" >> /etc/hosts
+    fi
+}
+
+function set_your_domain_name {
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+
+    function_check set_hostname
+    set_hostname "$DEFAULT_DOMAIN_NAME"
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function configure_firewall_for_dns {
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+    if [[ $INSTALLED_WITHIN_DOCKER == "yes" ]]; then
+        # docker does its own firewalling
+        return
+    fi
+    /usr/sbin/nft add rule inet filter INPUT udp dport 1024-65535 accept
+    /usr/sbin/nft add rule inet filter INPUT tcp sport 53 accept
+    function_check save_firewall_settings
+    save_firewall_settings
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function change_default_domain_name {
+    NEW_DEFAULT_DOMAIN_NAME=
+    read_config_param NEW_DEFAULT_DOMAIN_NAME
+    if [ ! "$NEW_DEFAULT_DOMAIN_NAME" ]; then
+        return
+    fi
+
+    read_config_param DEFAULT_DOMAIN_NAME
+    read_config_param ONION_ONLY
+
+    if [ ! "$DEFAULT_DOMAIN_NAME" ]; then
+        return
+    fi
+
+    if [[ "$ONION_ONLY" != 'no' ]]; then
+        return
+    fi
+
+    if [[ "$NEW_DEFAULT_DOMAIN_NAME" != *'.'* ]]; then
+        return
+    fi
+
+    if [[ "$DEFAULT_DOMAIN_NAME" == "$NEW_DEFAULT_DOMAIN_NAME" ]]; then
+        return
+    fi
+
+    # obtain a cert for the default domain
+    if [[ "$(cert_exists "${NEW_DEFAULT_DOMAIN_NAME}" pem)" == "0" ]]; then
+        echo $'Obtaining certificate for the main domain'
+        create_site_certificate "${NEW_DEFAULT_DOMAIN_NAME}" 'yes'
+    fi
+
+    email_change_default_domain_name "$NEW_DEFAULT_DOMAIN_NAME"
+
+    # change within each app
+    FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
+    for filename in $FILES
+    do
+        app_name=$(echo "${filename}" | awk -F '-app-' '{print $2}')
+        if [[ "$(app_is_installed "$app_name")" == "1" ]]; then
+            if grep -q "change_default_domain_name_${app_name}" "${filename}"; then
+                # shellcheck disable=SC2086
+                change_default_domain_name_${app_name} "$NEW_DEFAULT_DOMAIN_NAME"
+            fi
+        fi
+    done
+
+    sed -i "s|${DEFAULT_DOMAIN_NAME}|${NEW_DEFAULT_DOMAIN_NAME}|g" /etc/hosts
+
+    sed -i "/${NEW_DEFAULT_DOMAIN_NAME}/d" "$CONFIGURATION_FILE"
+    write_config_param DEFAULT_DOMAIN_NAME "${NEW_DEFAULT_DOMAIN_NAME}"
+    set_hostname "${NEW_DEFAULT_DOMAIN_NAME}"
+    DEFAULT_DOMAIN_NAME=${NEW_DEFAULT_DOMAIN_NAME}
+}
+
+# NOTE: deliberately no exit 0

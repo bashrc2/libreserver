@@ -1,0 +1,153 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Select the mesh routing protocol
+#
+# License
+# =======
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+PROJECT_NAME='libreserver'
+
+export TEXTDOMAIN=${PROJECT_NAME}-mesh-routing
+export TEXTDOMAINDIR="/usr/share/locale"
+
+source "/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-firewall"
+source "/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-wifi"
+source "/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-mesh"
+
+function mesh_stop_daemon {
+    daemon_name=$1
+
+    clear
+    echo ''
+    echo $"Stopping ${daemon_name}..."
+    sudo systemctl stop "${daemon_name}"
+    echo $"Disabling ${daemon_name}..."
+    sudo systemctl disable "${daemon_name}"
+}
+
+clear
+echo ''
+echo $'Scanning for BMX6 protocol...'
+bmx6_peers=$(avahi-browse -at | grep routing | grep -c bmx6)
+
+clear
+echo ''
+echo $'Scanning for BMX7 protocol...'
+bmx7_peers=$(avahi-browse -at | grep routing | grep -c bmx7)
+
+clear
+echo ''
+echo $'Scanning for OLSR2 protocol...'
+olsr2_peers=$(avahi-browse -at | grep routing | grep -c olsr2)
+
+clear
+echo ''
+echo $'Scanning for Babel protocol...'
+babel_peers=$(avahi-browse -at | grep routing | grep -c babel)
+
+clear
+
+data=$(zenity --list 1 $"BMX6 ($bmx6_peers)" 2 $"BMX7 Experimental ($bmx7_peers)" 3 $"OLSR2 ($olsr2_peers)" 4 $"Babel ($babel_peers)" $"Select Mesh Protocol" --column="id" --title $"Mesh Protocol" --column=$"Choose the mesh protocol:" --hide-column=1 --print-column=1 --height=220)
+
+sel=$?
+case $sel in
+    1) exit 1;;
+    255) exit 1;;
+esac
+
+temp_script=$HOME/.change_routing
+{ echo '#!/bin/bash';
+  echo "echo \"\$1\" > $MESH_DEFAULT_PROTOCOL";
+  echo "echo \"\$1\" > $MESH_CURRENT_PROTOCOL";
+  echo "sed -i \"s|<type>.*|<type>_\${1}._tcp</type>|g\" /etc/avahi/services/routing.service";
+  echo 'systemctl restart avahi-daemon';
+  echo "IFACE=\$(cat /etc/systemd/system/\${1}.service | grep ExecStart | awk -F ' ' '{print \$2}')";
+  echo 'network=fd66:66:66';
+  echo "search_ipv6=\$(ifconfig \$1 | grep \$network)";
+  echo "if [ \$search_ipv6 ]; then";
+  echo "    result=\$(ifconfig \$1 | grep \$network | awk -F ' ' '{print \$2}')";
+  echo "    ip -6 addr add \${result}/128 dev \$1";
+  echo 'else';
+  echo '    ipv6_array=( 1 2 3 4 5 6 7 8 9 0 a b c d e f )';
+  echo "    a=\${ipv6_array[\$RANDOM%16]}\${ipv6_array[\$RANDOM%16]}\${ipv6_array[\$RANDOM%16]}\${ipv6_array[\$RANDOM%16]}";
+  echo "    b=\${ipv6_array[\$RANDOM%16]}\${ipv6_array[\$RANDOM%16]}\${ipv6_array[\$RANDOM%16]}\${ipv6_array[\$RANDOM%16]}";
+  echo "    c=\${ipv6_array[\$RANDOM%16]}\${ipv6_array[\$RANDOM%16]}\${ipv6_array[\$RANDOM%16]}\${ipv6_array[\$RANDOM%16]}";
+  echo "    d=\${ipv6_array[\$RANDOM%16]}\${ipv6_array[\$RANDOM%16]}\${ipv6_array[\$RANDOM%16]}\${ipv6_array[\$RANDOM%16]}";
+  echo "    e=\${ipv6_array[\$RANDOM%16]}\${ipv6_array[\$RANDOM%16]}\${ipv6_array[\$RANDOM%16]}\${ipv6_array[\$RANDOM%16]}";
+  echo "    result=\$network:\$a:\$b:\$c:\$d:\$e";
+  echo "    ip -6 addr add \${result}/128 dev \$1";
+  echo 'fi'; } > "$temp_script"
+chmod +x "$temp_script"
+
+clear
+echo ''
+echo $'Authentication to change mesh protocol'
+echo ''
+
+case $data in
+    1)  sudo "$temp_script" 'bmx6'
+        mesh_stop_daemon 'bmx7'
+        mesh_stop_daemon 'olsr2'
+        mesh_stop_daemon 'babel'
+        clear
+        echo ''
+        echo $'Enabling BMX6...'
+        sudo systemctl enable bmx6
+        echo $'Starting BMX6...'
+        sudo systemctl start bmx6
+        ;;
+    2)  sudo "$temp_script" 'bmx7'
+        mesh_stop_daemon 'bmx6'
+        mesh_stop_daemon 'olsr2'
+        mesh_stop_daemon 'babel'
+        clear
+        echo ''
+        echo $'Enabling BMX7...'
+        sudo systemctl enable bmx7
+        echo $'Starting BMX7...'
+        sudo systemctl start bmx7
+        ;;
+    3)  sudo "$temp_script" 'olsr2'
+        mesh_stop_daemon 'bmx6'
+        mesh_stop_daemon 'bmx7'
+        mesh_stop_daemon 'babel'
+        clear
+        echo ''
+        echo $'Enabling OLSR2...'
+        sudo systemctl enable olsr2
+        echo $'Starting OLSR2...'
+        sudo systemctl start olsr2
+        ;;
+    4)  sudo "$temp_script" 'babel'
+        mesh_stop_daemon 'bmx6'
+        mesh_stop_daemon 'bmx7'
+        mesh_stop_daemon 'olsr2'
+        clear
+        echo ''
+        echo $'Enabling Babel...'
+        sudo systemctl enable babel
+        echo $'Starting Babel...'
+        sudo systemctl start babel
+        ;;
+esac
+
+rm "$temp_script"
+
+exit 0

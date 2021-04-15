@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <style>
+      @import url("libreserver.css");
+
+      .appurl {
+          font-size: 100%;
+      }
+
+      .welcomeheader {
+          font-size: 200%;
+          font-weight: bold;
+      }
+
+      .descriptiontext {
+          font-size: 90%;
+      }
+
+      .logintext {
+          font-size: 120%;
+          font-weight: bold;
+          color: #981737;
+      }
+
+      button {
+          border: none;
+          outline: 0;
+          display: inline-block;
+          padding: 8px;
+          color: white;
+          background-color: #000;
+          text-align: center;
+          cursor: pointer;
+          width: 100%;
+          font-size: 18px;
+      }
+
+      button:hover, a:hover {
+          opacity: 0.7;
+      }
+
+      .chip {
+          display: inline-block;
+          padding: 0 25px;
+          height: 50px;
+          font-size: 70%;
+          line-height: 50px;
+          border-radius: 25px;
+          background-color: #f1f1f1;
+      }
+
+      .chip img {
+          float: left;
+          margin: 0 10px 0 -25px;
+          height: 50px;
+          width: 50px;
+          border-radius: 50%;
+      }
+
+      textarea {
+          width: 90%;
+          color: black;
+          font-weight: bold;
+          background: lightblue;
+          font-size: 120%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="header">
+        <a href="settings_communitynetwork.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a><br>
+
+        <form action="communitynetwork_add.php" method="post">
+          <p class="descriptiontext" translate="yes">Add a new community network node</p>
+
+          <p translate="yes">Node name:<input type="text" name="node_name" value="" style="text-align:center;width:90%" autofocus><br>Longitude:<input type="text" name="longitude" value="">Latitude:<input type="text" name="latitude" value=""><br>IP address (optional):<input type="text" name="ip_address" value="" style="text-align:center;width:90%"></p>
+          <input type="submit" name="submitaddremovecancel" translate="yes" value="Go Back">
+          <input type="submit" name="submitadd" translate="yes" value="Continue">
+          <br><br>
+
+        </form>
+
+        <br>
+      </div>
+    </div>
+  </body>
+</html>

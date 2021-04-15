@@ -1,0 +1,50 @@
+#+TITLE: LibreServer
+#+AUTHOR: Bob Mottram
+#+EMAIL: bob@libreserver.org
+#+KEYWORDS: libreserver, mumble
+#+DESCRIPTION: How to use Mumble
+#+OPTIONS: ^:nil toc:nil num:nil
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="libreserver.css" />
+
+#+attr_html: :width 80% :height 10% :align center
+[[file:images/logo.png]]
+
+* Mumble
+
+Mumble is a well known VoIP system originally used for gaming, but which works just as well for any general conference calls or meetings.
+
+* Text chat
+In addition to voice it is also possible to do text chat via mumble. The security of this is pretty good provided that you do it via Mumla and Orbot on mobile, but compared to other options such as XMPP/Conversations or Tox the security is not as good, since the mumble server currently doesn't support forward secrecy.
+
+* Using with Ubuntu
+First ensure that tor is installed. Within a terminal:
+
+#+begin_src bash
+sudo apt-get install tor
+#+end_src
+
+Within the software center search for "mumble" and install the client then run it. Skip through the audio setup wizard. Cancel the initial connection window.
+
+From the menu select *Configure* then *Settings*. Select the *Advanced* checkbox then select *Network*. Select *Force TCP mode* and proxy type *Socks5*. Hostname should be set to *localhost* and port should be *9050*.
+
+#+attr_html: :width 80% :align center
+[[file:images/mumble_config.jpg]]
+
+Select *Apply* and *Ok*, then on the menu *Server* and *Connect*.
+
+Click on "add new" to add a new server and enter the *default domain name* for the LibreServer (currently the onion address isn't supported, but might be in future), your username (which can be anything) and the VoIP server password which can be found in the *Passwords* section of the *Administrator control panel*. Accept the self-signed SSL certificate if you don't have a Let's Encrypt certificate set up for your default domain. You are now ready to chat.
+
+* Using with Android
+Install [[https://f-droid.org/][F-Droid]]
+
+If you don't have Orbot installed then enable The Guardian Project repository from the drop down menu and install it.
+
+Search for and install Mumla.
+
+Press the plus button to add a Mumble server.
+
+Enter a label (which can be any name you choose for the server), the default domain name of the LibreServer or preferably the mumble onion address as shown on the *About* screen of the *Administrator control panel*, your username (which can also be anything) and the mumble password which can be found in the *Passwords* section of the *Administrator control panel*. Leave the port number unchanged.
+
+Open the settings. Select *General*, then *Connect via Tor*. This will provide better protection, making it more difficult for adversaries to know who is talking to who. If connecting through Tor is unreliable and causes crashes then unselect *Connect via Tor* on the *General settings* and then just use your ordinary domain name.
+
+Selecting the server by pressing on it then connects you to the server so that you can chat with other connected users.

@@ -1,0 +1,547 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2021-04-15 Thu 15:41 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LibreServer</title>
+<meta name="generator" content="Org mode" />
+<meta name="author" content="Bob Mottram" />
+<meta name="description" content="Administrator guide for the LibreServer internet appliance"
+ />
+<meta name="keywords" content="libreserver, admin guide" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  /* Languages per Org manual */
+  pre.src-asymptote:before { content: 'Asymptote'; }
+  pre.src-awk:before { content: 'Awk'; }
+  pre.src-C:before { content: 'C'; }
+  /* pre.src-C++ doesn't work in CSS */
+  pre.src-clojure:before { content: 'Clojure'; }
+  pre.src-css:before { content: 'CSS'; }
+  pre.src-D:before { content: 'D'; }
+  pre.src-ditaa:before { content: 'ditaa'; }
+  pre.src-dot:before { content: 'Graphviz'; }
+  pre.src-calc:before { content: 'Emacs Calc'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-fortran:before { content: 'Fortran'; }
+  pre.src-gnuplot:before { content: 'gnuplot'; }
+  pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-hledger:before { content: 'hledger'; }
+  pre.src-java:before { content: 'Java'; }
+  pre.src-js:before { content: 'Javascript'; }
+  pre.src-latex:before { content: 'LaTeX'; }
+  pre.src-ledger:before { content: 'Ledger'; }
+  pre.src-lisp:before { content: 'Lisp'; }
+  pre.src-lilypond:before { content: 'Lilypond'; }
+  pre.src-lua:before { content: 'Lua'; }
+  pre.src-matlab:before { content: 'MATLAB'; }
+  pre.src-mscgen:before { content: 'Mscgen'; }
+  pre.src-ocaml:before { content: 'Objective Caml'; }
+  pre.src-octave:before { content: 'Octave'; }
+  pre.src-org:before { content: 'Org mode'; }
+  pre.src-oz:before { content: 'OZ'; }
+  pre.src-plantuml:before { content: 'Plantuml'; }
+  pre.src-processing:before { content: 'Processing.js'; }
+  pre.src-python:before { content: 'Python'; }
+  pre.src-R:before { content: 'R'; }
+  pre.src-ruby:before { content: 'Ruby'; }
+  pre.src-sass:before { content: 'Sass'; }
+  pre.src-scheme:before { content: 'Scheme'; }
+  pre.src-screen:before { content: 'Gnu Screen'; }
+  pre.src-sed:before { content: 'Sed'; }
+  pre.src-sh:before { content: 'shell'; }
+  pre.src-sql:before { content: 'SQL'; }
+  pre.src-sqlite:before { content: 'SQLite'; }
+  /* additional languages in org.el's org-babel-load-languages alist */
+  pre.src-forth:before { content: 'Forth'; }
+  pre.src-io:before { content: 'IO'; }
+  pre.src-J:before { content: 'J'; }
+  pre.src-makefile:before { content: 'Makefile'; }
+  pre.src-maxima:before { content: 'Maxima'; }
+  pre.src-perl:before { content: 'Perl'; }
+  pre.src-picolisp:before { content: 'Pico Lisp'; }
+  pre.src-scala:before { content: 'Scala'; }
+  pre.src-shell:before { content: 'Shell Script'; }
+  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
+  /* additional language identifiers per "defun org-babel-execute"
+       in ob-*.el */
+  pre.src-cpp:before  { content: 'C++'; }
+  pre.src-abc:before  { content: 'ABC'; }
+  pre.src-coq:before  { content: 'Coq'; }
+  pre.src-groovy:before  { content: 'Groovy'; }
+  /* additional language identifiers from org-babel-shell-names in
+     ob-shell.el: ob-shell is the only babel language using a lambda to put
+     the execution function name together. */
+  pre.src-bash:before  { content: 'bash'; }
+  pre.src-csh:before  { content: 'csh'; }
+  pre.src-ash:before  { content: 'ash'; }
+  pre.src-dash:before  { content: 'dash'; }
+  pre.src-ksh:before  { content: 'ksh'; }
+  pre.src-mksh:before  { content: 'mksh'; }
+  pre.src-posh:before  { content: 'posh'; }
+  /* Additional Emacs modes also supported by the LaTeX listings package */
+  pre.src-ada:before { content: 'Ada'; }
+  pre.src-asm:before { content: 'Assembler'; }
+  pre.src-caml:before { content: 'Caml'; }
+  pre.src-delphi:before { content: 'Delphi'; }
+  pre.src-html:before { content: 'HTML'; }
+  pre.src-idl:before { content: 'IDL'; }
+  pre.src-mercury:before { content: 'Mercury'; }
+  pre.src-metapost:before { content: 'MetaPost'; }
+  pre.src-modula-2:before { content: 'Modula-2'; }
+  pre.src-pascal:before { content: 'Pascal'; }
+  pre.src-ps:before { content: 'PostScript'; }
+  pre.src-prolog:before { content: 'Prolog'; }
+  pre.src-simula:before { content: 'Simula'; }
+  pre.src-tcl:before { content: 'tcl'; }
+  pre.src-tex:before { content: 'TeX'; }
+  pre.src-plain-tex:before { content: 'Plain TeX'; }
+  pre.src-verilog:before { content: 'Verilog'; }
+  pre.src-vhdl:before { content: 'VHDL'; }
+  pre.src-xml:before { content: 'XML'; }
+  pre.src-nxml:before { content: 'XML'; }
+  /* add a generic configuration mode; LaTeX export needs an additional
+     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
+  pre.src-conf:before { content: 'Configuration File'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .equation-container {
+    display: table;
+    text-align: center;
+    width: 100%;
+  }
+  .equation {
+    vertical-align: middle;
+  }
+  .equation-label {
+    display: table-cell;
+    text-align: right;
+    vertical-align: middle;
+  }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  .org-svg { width: 90%; }
+  /*]]>*/-->
+</style>
+<link rel="stylesheet" type="text/css" href="libreserver.css" />
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2019 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">LibreServer</h1>
+
+<div class="figure">
+<p><img src="images/logo.png" alt="logo.png" width="80%" height="10%" align="center" />
+</p>
+</div>
+
+<div class="HTML">
+<p>
+&lt;center&gt;
+&lt;h1&gt;Admin Guide&lt;/h1&gt;
+&lt;/center&gt;
+</p>
+
+</div>
+
+
+<div class="org-center">
+<table border="-1" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left"><a href="#orgf33a5f7">Unboxing</a></td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#org99c5856">Internet Router Setup</a></td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#orge33912a">Box Setup</a></td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#orga6e09e9">Admin Menu</a></td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#org9e1d45b">International</a></td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#orgcf710f7">Your homepage</a></td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#org69c0566">Setting up Tor Browsers</a></td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#orgff2086f">Backups</a></td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#org4002f5b">Enjoy</a></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+
+<p>
+You are now the owner of a LibreServer home internet appliance. Your mission, if you choose to accept it, is to become a citizen of the internet rather than a helpless consumer existing at the whim of companies who simply don't care what happens to you or your information.
+</p>
+<div id="outline-container-orgf33a5f7" class="outline-2">
+<h2 id="orgf33a5f7">Unboxing</h2>
+<div class="outline-text-2" id="text-orgf33a5f7">
+<p>
+Your shipment should include:
+</p>
+<ul class="org-ul">
+<li>The server box itself</li>
+<li>Optional USB drive for making backups</li>
+<li>cat6 ethernet patch lead</li>
+<li>Mains power supply</li>
+</ul>
+
+
+<div class="figure">
+<p><img src="images/libreserver_boxed.jpg" alt="libreserver_boxed.jpg" width="70%" align="center" />
+</p>
+</div>
+
+<p>
+To set the system up you'll need either a smartphone or a laptop/desktop machine.
+</p>
+
+<p>
+Connect the server box to one of the sockets on your internet router using the ethernet lead.
+</p>
+
+<p>
+Plug in the power supply and power on.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org99c5856" class="outline-2">
+<h2 id="org99c5856">Internet Router Setup</h2>
+<div class="outline-text-2" id="text-org99c5856">
+<p>
+Most internet routers come with <a href="https://en.wikipedia.org/wiki/Zero-configuration_networking">zeroconf/mDNS</a> enabled so that you can plug in network printers or other gadgets. If this isn't enabled then access your router's settings page and turn that on. Usually internet routers are accessed via a local IP address, such as 192.168.1.1 or 192.168.1.254.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orge33912a" class="outline-2">
+<h2 id="orge33912a">Box Setup</h2>
+<div class="outline-text-2" id="text-orge33912a">
+<p>
+Using a smartphone or laptop/desktop open a browser and navigate to <a href="http://libreserver/admin">http://libreserver/admin</a>  or <a href="http://libreserver.local/admin">http://libreserver.local/admin</a>. If neither of those work then log in to your internet router and lookup what IP address the box has been assigned, then  try <b>[server local IP]/admin</b>. Don't use a Tor browser for this, because you're accessing only the home network. The default browser should be good enough.
+</p>
+
+<p>
+You'll see an initial screen like this:
+</p>
+
+
+<div class="figure">
+<p><img src="images/libreserver_initial_screen.png" alt="libreserver_initial_screen.png" width="40%" align="center" />
+</p>
+</div>
+
+<p>
+Write down the login credentials, or store them in a password manager such as <a href="https://keepassxc.org">KeepassXC</a>. You'll need them to log back in later.
+</p>
+
+<p>
+After a confirmation screen the box setup process will start. You may be asked to enter a domain name for the box. If you don't have one then just select continue.
+</p>
+
+<p>
+This might take 10-20 minutes, depending upon the hardware specifications of your box. What it's doing during this time is mainly generating encryption keys and applying any operating system updates.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orga6e09e9" class="outline-2">
+<h2 id="orga6e09e9">Admin Menu</h2>
+<div class="outline-text-2" id="text-orga6e09e9">
+<p>
+Open a browser and navigate to <a href="http://libreserver/admin">http://libreserver/admin</a>, then log in. You should see the main menu, like this:
+</p>
+
+
+<div class="figure">
+<p><img src="images/libreserver_webui_mobile.jpg" alt="libreserver_webui_mobile.jpg" width="90%" align="center" />
+</p>
+</div>
+
+<p>
+You can navigate through the menus by clicking or pressing the icons, and you can use either the browser <i>back button</i> or select the LibreServer logo at the top to go back to the previous screen.
+</p>
+
+<p>
+Select the apps icon and you can then add new internet apps to the box by pressing the + button.
+</p>
+
+
+<div class="figure">
+<p><img src="images/libreserver_apps.jpg" alt="libreserver_apps.jpg" width="90%" align="center" />
+</p>
+</div>
+
+<p>
+Some apps can take a while to install, so keep checking the apps screen and don't expect it to happen immediately.
+</p>
+
+<p>
+If you are using the standard server version then you may need to forward ports from your internet router to your server. If this needs to be done the relevant ports will be shown on the help screen for the app.
+</p>
+
+
+<div class="figure">
+<p><img src="images/libreserver_help_button.jpg" alt="libreserver_help_button.jpg" width="60%" align="center" />
+</p>
+</div>
+
+<p>
+Up to a maximum of ten people may be added via the members screen. It's advisable to add the apps you want and then people later if you're going to have multiple members of your household using this system.
+</p>
+
+
+<div class="figure">
+<p><img src="images/libreserver_users.png" alt="libreserver_users.png" width="40%" align="center" />
+</p>
+</div>
+
+<p>
+If you're familiar with using a GNU/Linux terminal then you might want to enable secure shell logins from the settings screen. You'll need to supply an ssh public key if you do.
+</p>
+
+
+<div class="figure">
+<p><img src="images/libreserver_dark2.jpg" alt="libreserver_dark2.jpg" width="70%" align="center" />
+</p>
+</div>
+
+<p>
+The admin menu is primarily meant only to be accessed from within your home network, but it can also be accessed remotely with a <a href="https://www.torproject.org/">Tor browser</a> via an onion address which can be found by selecting the LibreServer logo on the initial menu screen.
+</p>
+
+
+<div class="figure">
+<p><img src="images/libreserver_email.jpg" alt="libreserver_email.jpg" width="90%" align="center" />
+</p>
+</div>
+
+<p>
+This system also has its own email server, which can be used with onion email addresses. Your email address can be looked up within the members section. You can log into your email account using the same credentials which you used with the web interface. This webmail interface is also available to any other members that you have added via the onion address shown on its login screen.
+</p>
+
+<p>
+By default the interface has a light color theme, but if you prefer a dark theme you can switch to that from within the settings.
+</p>
+</div>
+</div>
+<div id="outline-container-org9e1d45b" class="outline-2">
+<h2 id="org9e1d45b">International</h2>
+<div class="outline-text-2" id="text-org9e1d45b">
+<p>
+LibreServer supports many languages. From the settings screen you can change the current language if you need to. Please be aware that the change may take some time to apply, depending upon the speed of your hardware. Wait a few minutes and it should be done.
+</p>
+
+<p>
+If you find any translation mistakes or translations which can be improved or want a new language to be added then <a href="./support.html">contact support</a>.
+</p>
+</div>
+</div>
+<div id="outline-container-orgcf710f7" class="outline-2">
+<h2 id="orgcf710f7">Your homepage</h2>
+<div class="outline-text-2" id="text-orgcf710f7">
+<p>
+The homepage provides quick access to search and your installed apps. You can set it as your browser homepage.
+</p>
+
+
+<div class="figure">
+<p><img src="images/libreserver_homepage.jpg" alt="libreserver_homepage.jpg" width="90%" align="center" />
+</p>
+</div>
+
+<p>
+On your local network from a non-Tor browser the homepage can be accessed from <a href="http://libreserver/home">http://libreserver/home</a> or <a href="http://server_local_ip/home">http://server_local_ip/home</a>. If you select the logo at the top you'll be able to get the equivalent onion address so that you can also use this in a Tor browser.
+</p>
+</div>
+</div>
+<div id="outline-container-org69c0566" class="outline-2">
+<h2 id="org69c0566">Setting up Tor Browsers</h2>
+<div class="outline-text-2" id="text-org69c0566">
+<p>
+On a smartphone first install <a href="https://f-droid.org">F-droid</a>. Open F-droid, go to <i>settings</i> then <i>repositories</i> and enable <i>Guardian Project Official Releases</i>. When that's done update the repositories by swiping down, search for <i>Orbot</i> and install it. Also search for <i>Tor Browser for Android</i> and install that. That will enable you to access onion sites.
+</p>
+
+<p>
+On a laptop or desktop machine navigate to the <a href="https://www.torproject.org">Tor project site</a> and download the browser suitable for your operating system. Follow the install instructions on the site.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgff2086f" class="outline-2">
+<h2 id="orgff2086f">Backups</h2>
+<div class="outline-text-2" id="text-orgff2086f">
+<p>
+Once you're running your own internet software then keeping backups of your data becomes important. You can do this via the backup icon on the admin menu. You'll need to give a password which will be used to encrypt the backup, so that if you lose the USB drive it will still be hard for someone to read your files.
+</p>
+
+
+<div class="figure">
+<p><img src="images/libreserver_backup.png" alt="libreserver_backup.png" width="40%" align="center" />
+</p>
+</div>
+
+<p>
+If you leave the backup USB drive plugged into the box then it will backup automatically once per day. You might want to have a few USB drives and rotate them occasionally so that you have more than one backup to return to if one of the drives fails.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org4002f5b" class="outline-2">
+<h2 id="org4002f5b">Enjoy</h2>
+<div class="outline-text-2" id="text-org4002f5b">
+<p>
+The internet was designed as a decentralized system with no clear distinction between clients or servers. LibreServer is about taking it back to where it belongs, working <i>for</i> people and not <i>against</i> them.
+</p>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: Bob Mottram</p>
+<p class="date">Created: 2021-04-15 Thu 15:41</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

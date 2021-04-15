@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+  <meta charset="utf-8">
+  <style>
+    @import url("libreserver.css");
+
+    * {
+        box-sizing: border-box;
+    }
+
+    .subheadertext {
+        margin-left : 10%;
+        text-align: left;
+        font-size: 110%;
+        font-weight: bold;
+    }
+
+    .subheaderports {
+        margin-left : 10%;
+        text-align: left;
+        font-size: 110%;
+        font-weight: bold;
+    }
+
+    .helptext {
+        width: 80%;
+        text-align: left;
+        font-size: 100%;
+        margin-left : 10%;
+    }
+
+    .portstext {
+        width: 80%;
+        text-align: left;
+        font-size: 100%;
+        margin-left : 10%;
+    }
+
+    .row {
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+        padding: 0 4px;
+    }
+
+    .column {
+        -ms-flex: 25%;
+        flex: 15%;
+        max-width: 25%;
+        padding: 0 4px;
+    }
+
+    .column img {
+        margin-top: 8px;
+        vertical-align: middle;
+    }
+
+    @media screen and (max-width: 800px) {
+        .column {
+            -ms-flex: 50%;
+            flex: 50%;
+            max-width: 50%;
+        }
+    }
+
+    @media screen and (max-width: 200px) {
+        .column {
+            -ms-flex: 100%;
+            flex: 100%;
+            max-width: 100%;
+        }
+    }
+  </style>
+  <body>
+
+    <div class="header">
+      <a href="translations.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
+    </div>
+
+    <p class="headertext" translate="yes">Translations</p>
+
+    <p class="subheadertext" translate="yes">How to do translations</p>
+
+    <p class="helptext"><b>1.</b> <span translate="yes">From the initial screen select 'settings' then 'language'.</span></p>
+    <p class="helptext"><b>2.</b> <span translate="yes">Choose the language that you wish to translate from the list.</span></p>
+    <p class="helptext"><b>3.</b> <span translate="yes">Select the 'translate' button. You will see a new screen with English text on the left and translated text on the right.</span></p>
+    <p class="helptext"><b>4.</b> <span translate="yes">You can edit the translated text on the right side of the screen.</span></p>
+    <p class="helptext"><b>5.</b> <span translate="yes">When you've added your translations select the 'update' button. This will update the translations file for the selected language. Note that this does not change the current language within the user interface. If you want to do that go back to the language screen, select a language and then the 'select' button.</span></p>
+
+    <p class="subheadertext" translate="yes">Using your preferred editor</p>
+
+    <p class="helptext"><span translate="yes">Maybe instead of editing within this user interface you prefer to use your own editor. That can be done as follows:</span></p>
+    <p class="helptext"><b>1.</b> <span translate="yes">Once you are on the translations screen (see the first three steps in the first section above) select the language code shown at the top of the screen (usually it ends with UTF-8). You can then see the raw translations file.</span></p>
+    <p class="helptext"><b>2.</b> <span translate="yes">Copy and paste the translations file into your favorite editor.</span></p>
+    <p class="helptext"><b>3.</b> <span translate="yes">Edit your translations. The structure of this file is very simple. On the left is English text and on the right is translated text, with the vertical line character as a separator.</span></p>
+    <p class="helptext"><b>4.</b> <span translate="yes">When you are done with translating select the 'import' button on the translations screen.</span></p>
+    <p class="helptext"><b>5.</b> <span translate="yes">Copy and paste the translations file and select 'update'.</span></p>
+
+    <p class="subheadertext" translate="yes">Submitting your translations to the LibreServer project</p>
+
+    <p class="helptext"><b>1.</b> <span translate="yes">Once you are on the translations screen (see the first three steps in the first section above) select the 'submit' button.</span></p>
+    <p class="helptext"><b>2.</b> <span translate="yes">You will see the translations file with some instructions at the top.</span></p>
+    <p class="helptext"><b>3.</b> <span translate="yes">Copy and paste this into an email or other messaging app and send it to the LibreServer project.</span></p>
+    <p class="helptext"><b>4.</b> <span translate="yes">If your translations are accepted they will later appear in the upstream project and be usable by anyone.</span></p>
+
+  </body>
+</html>

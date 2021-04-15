@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <style>
+      @import url("libreserver.css");
+
+      * {
+          box-sizing: border-box;
+      }
+
+      .settingtext {
+          text-align: center;
+          font-size: 100%;
+      }
+
+      .row {
+          display: -ms-flexbox;
+          display: flex;
+          -ms-flex-wrap: wrap;
+          flex-wrap: wrap;
+          padding: 0 4px;
+      }
+
+      .column {
+          -ms-flex: 25%;
+          flex: 15%;
+          max-width: 25%;
+          padding: 0 4px;
+      }
+
+      .column img {
+          margin-top: 8px;
+          vertical-align: middle;
+      }
+
+    </style>
+  </head>
+  <body>
+
+    <div class="card">
+      <div class="header">
+        <a href="settings_icecast.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
+
+        <p class="headertext" translate="yes">Icecast</p>
+
+        <p class="settingtext" translate="yes">To make a playlist insert a USB drive containing audio files in a directory called playlist, add a description below and then select Update</p>
+
+        <br>
+
+        <form action="settings_icecast.php" method="post">
+          <input type="hidden" name="icecast_name" value="TestStream">
+          <input type="hidden" name="icecast_genre" value="TestGenre">
+          <p translate="yes">Stream Description</p>
+          <input type="text" name="icecast_description" value="">
+          <br><br><br><br>
+          <input type="submit" name="submiticecastcancel" translate="yes" value="Cancel" />
+          <input type="submit" name="submiticecast" translate="yes" value="Update" />
+        </form>
+
+      </div>
+    </div>
+
+  </body>
+</html>

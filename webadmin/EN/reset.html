@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <style>
+      @import url("libreserver.css");
+
+      #qrcodepic {
+          width: 15%;
+          height: auto;
+          margin-right : auto;
+          margin-left : auto;
+      }
+
+      button {
+          border: none;
+          outline: 0;
+          display: inline-block;
+          padding: 8px;
+          color: white;
+          background-color: #000;
+          text-align: center;
+          cursor: pointer;
+          width: 100%;
+          font-size: 18px;
+      }
+
+      button:hover, a:hover {
+          opacity: 0.7;
+      }
+    </style>
+  </head>
+  <body>
+
+    <div class="card">
+      <div class="header">
+        <a href="settings.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back" /></a>
+
+        <br><br><br>
+
+        <form action="reset.php" method="post">
+          <input type="submit" name="submitshutdown" translate="yes" value="Shutdown" /><br><br><br>
+          <input type="submit" name="submitreset" translate="yes" value="Restart" /><br><br><br>
+          <input type="submit" name="submitupgradeoperatingsystem" translate="yes" value="Upgrade Operating System" /><br><br><br>
+          <input type="submit" name="submitfactoryreset" translate="yes" value="Reset to factory" /><br><br><br>
+          <input type="submit" name="submitresetcancel" translate="yes" value="Cancel" />
+        </form>
+
+        <br><br>
+      </div>
+
+    </div>
+
+  </body>
+</html>

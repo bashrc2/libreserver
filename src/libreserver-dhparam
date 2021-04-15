@@ -1,0 +1,238 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Creates or re-calculates Diffie-Hellman parameters
+#
+# License
+# =======
+#
+# Copyright (C) 2015-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+PROJECT_NAME='libreserver'
+
+export TEXTDOMAIN=${PROJECT_NAME}-dhparam
+export TEXTDOMAINDIR="/usr/share/locale"
+
+HOSTNAME=
+KEYLENGTH=2048
+RECALCULATE="no"
+FAST=''
+
+# From BetterCrypto:
+#
+#   "Where configurable, we recommend using the Diffie Hellman groups
+#    defined for IKE, specifically groups 14-18 (20488192bit MODP).
+#    These groups have been checked by many eyes and can be assumed
+#    to be secure."
+
+BETTERCRYPTO_GROUP14='-----BEGIN DH PARAMETERS-----
+MIIBCAKCAQEA///////////JD9qiIWjCNMTGYouA3BzRKQJOCIpnzHQCC76mOxOb
+IlFKCHmONATd75UZs806QxswKwpt8l8UN0/hNW1tUcJF5IW1dmJefsb0TELppjft
+awv/XLb0Brft7jhr+1qJn6WunyQRfEsf5kkoZlHs5Fs9wgB8uKFjvwWY2kg2HFXT
+mmkWP6j9JM9fg2VdI9yjrZYcYvNWIIVSu57VKQdwlpZtZww1Tkq8mATxdGwIyhgh
+fDKQXkYuNs474553LBgOhgObJ4Oi7Aeij7XFXfBvTFLJ3ivL9pVYFxg5lUl86pVq
+5RXSJhiY+gUQFXKOWoqsqmj//////////wIBAg==
+-----END DH PARAMETERS-----
+'
+
+BETTERCRYPTO_GROUP15='-----BEGIN DH PARAMETERS-----
+MIIBiAKCAYEA///////////JD9qiIWjCNMTGYouA3BzRKQJOCIpnzHQCC76mOxOb
+IlFKCHmONATd75UZs806QxswKwpt8l8UN0/hNW1tUcJF5IW1dmJefsb0TELppjft
+awv/XLb0Brft7jhr+1qJn6WunyQRfEsf5kkoZlHs5Fs9wgB8uKFjvwWY2kg2HFXT
+mmkWP6j9JM9fg2VdI9yjrZYcYvNWIIVSu57VKQdwlpZtZww1Tkq8mATxdGwIyhgh
+fDKQXkYuNs474553LBgOhgObJ4Oi7Aeij7XFXfBvTFLJ3ivL9pVYFxg5lUl86pVq
+5RXSJhiY+gUQFXKOWoqqxC2tMxcNBFB6M6hVIavfHLpk7PuFBFjb7wqK6nFXXQYM
+fbOXD4Wm4eTHq/WujNsJM9cejJTgSiVhnc7j0iYa0u5r8S/6BtmKCGTYdgJzPshq
+ZFIfKxgXeyAMu+EXV3phXWx3CYjAutlG4gjiT6B05asxQ9tb/OD9EI5LgtEgqTrS
+yv//////////AgEC
+-----END DH PARAMETERS-----
+'
+
+BETTERCRYPTO_GROUP16='-----BEGIN DH PARAMETERS-----
+MIICCAKCAgEA///////////JD9qiIWjCNMTGYouA3BzRKQJOCIpnzHQCC76mOxOb
+IlFKCHmONATd75UZs806QxswKwpt8l8UN0/hNW1tUcJF5IW1dmJefsb0TELppjft
+awv/XLb0Brft7jhr+1qJn6WunyQRfEsf5kkoZlHs5Fs9wgB8uKFjvwWY2kg2HFXT
+mmkWP6j9JM9fg2VdI9yjrZYcYvNWIIVSu57VKQdwlpZtZww1Tkq8mATxdGwIyhgh
+fDKQXkYuNs474553LBgOhgObJ4Oi7Aeij7XFXfBvTFLJ3ivL9pVYFxg5lUl86pVq
+5RXSJhiY+gUQFXKOWoqqxC2tMxcNBFB6M6hVIavfHLpk7PuFBFjb7wqK6nFXXQYM
+fbOXD4Wm4eTHq/WujNsJM9cejJTgSiVhnc7j0iYa0u5r8S/6BtmKCGTYdgJzPshq
+ZFIfKxgXeyAMu+EXV3phXWx3CYjAutlG4gjiT6B05asxQ9tb/OD9EI5LgtEgqSEI
+ARpyPBKnh+bXiHGaEL26WyaZwycYavTiPBqUaDS2FQvaJYPpyirUTOjbu8LbBN6O
++S6O/BQfvsqmKHxZR05rwF2ZspZPoJDDoiM7oYZRW+ftH2EpcM7i16+4G912IXBI
+HNAGkSfVsFqpk7TqmI2P3cGG/7fckKbAj030Nck0BjGZ//////////8CAQI=
+-----END DH PARAMETERS-----
+'
+
+BETTERCRYPTO_GROUP17='-----BEGIN DH PARAMETERS-----
+MIIDCAKCAwEA///////////JD9qiIWjCNMTGYouA3BzRKQJOCIpnzHQCC76mOxOb
+IlFKCHmONATd75UZs806QxswKwpt8l8UN0/hNW1tUcJF5IW1dmJefsb0TELppjft
+awv/XLb0Brft7jhr+1qJn6WunyQRfEsf5kkoZlHs5Fs9wgB8uKFjvwWY2kg2HFXT
+mmkWP6j9JM9fg2VdI9yjrZYcYvNWIIVSu57VKQdwlpZtZww1Tkq8mATxdGwIyhgh
+fDKQXkYuNs474553LBgOhgObJ4Oi7Aeij7XFXfBvTFLJ3ivL9pVYFxg5lUl86pVq
+5RXSJhiY+gUQFXKOWoqqxC2tMxcNBFB6M6hVIavfHLpk7PuFBFjb7wqK6nFXXQYM
+fbOXD4Wm4eTHq/WujNsJM9cejJTgSiVhnc7j0iYa0u5r8S/6BtmKCGTYdgJzPshq
+ZFIfKxgXeyAMu+EXV3phXWx3CYjAutlG4gjiT6B05asxQ9tb/OD9EI5LgtEgqSEI
+ARpyPBKnh+bXiHGaEL26WyaZwycYavTiPBqUaDS2FQvaJYPpyirUTOjbu8LbBN6O
++S6O/BQfvsqmKHxZR05rwF2ZspZPoJDDoiM7oYZRW+ftH2EpcM7i16+4G912IXBI
+HNAGkSfVsFqpk7TqmI2P3cGG/7fckKbAj030Nck0AoSSNsP6tNJ8cCbB1NyyYCZG
+3sl1HnY9uje9+P+UBq2eUw7l2zgvQTABrrBqU+2QJ9gxF5cnsIZaiRjaPtvrz5sU
+7UTObLrO1Lsb238UR+bMJUszIFFRK9evQm+49AE3jNK/WYPKAcZLkuzwMuoV0XId
+A/SC185udP721V5wL0aYDIK1qEAxkAscnlnnyX++x+jzI6l6fjbMiL4PHUW3/1ha
+xUvUB7IrQVSqzI9tfr9I4dgUzF7SD4A34KeXFe7ym+MoBqHVi7fF2nb1UKo9ih+/
+8OsZzLGjE9Vc2lbJ7C7yljI4f+jXbjwEaAQ+j2Y/SGDuEr8tWwt0dNbmlPkebcxA
+JP//////////AgEC
+-----END DH PARAMETERS-----
+'
+
+BETTERCRYPTO_GROUP18='-----BEGIN DH PARAMETERS-----
+MIIECAKCBAEA///////////JD9qiIWjCNMTGYouA3BzRKQJOCIpnzHQCC76mOxOb
+IlFKCHmONATd75UZs806QxswKwpt8l8UN0/hNW1tUcJF5IW1dmJefsb0TELppjft
+awv/XLb0Brft7jhr+1qJn6WunyQRfEsf5kkoZlHs5Fs9wgB8uKFjvwWY2kg2HFXT
+mmkWP6j9JM9fg2VdI9yjrZYcYvNWIIVSu57VKQdwlpZtZww1Tkq8mATxdGwIyhgh
+fDKQXkYuNs474553LBgOhgObJ4Oi7Aeij7XFXfBvTFLJ3ivL9pVYFxg5lUl86pVq
+5RXSJhiY+gUQFXKOWoqqxC2tMxcNBFB6M6hVIavfHLpk7PuFBFjb7wqK6nFXXQYM
+fbOXD4Wm4eTHq/WujNsJM9cejJTgSiVhnc7j0iYa0u5r8S/6BtmKCGTYdgJzPshq
+ZFIfKxgXeyAMu+EXV3phXWx3CYjAutlG4gjiT6B05asxQ9tb/OD9EI5LgtEgqSEI
+ARpyPBKnh+bXiHGaEL26WyaZwycYavTiPBqUaDS2FQvaJYPpyirUTOjbu8LbBN6O
++S6O/BQfvsqmKHxZR05rwF2ZspZPoJDDoiM7oYZRW+ftH2EpcM7i16+4G912IXBI
+HNAGkSfVsFqpk7TqmI2P3cGG/7fckKbAj030Nck0AoSSNsP6tNJ8cCbB1NyyYCZG
+3sl1HnY9uje9+P+UBq2eUw7l2zgvQTABrrBqU+2QJ9gxF5cnsIZaiRjaPtvrz5sU
+7UTObLrO1Lsb238UR+bMJUszIFFRK9evQm+49AE3jNK/WYPKAcZLkuzwMuoV0XId
+A/SC185udP721V5wL0aYDIK1qEAxkAscnlnnyX++x+jzI6l6fjbMiL4PHUW3/1ha
+xUvUB7IrQVSqzI9tfr9I4dgUzF7SD4A34KeXFe7ym+MoBqHVi7fF2nb1UKo9ih+/
+8OsZzLGjE9Vc2lbJ7C7yljI4f+jXbjwEaAQ+j2Y/SGDuEr8tWwt0dNbmlPkebb4R
+WXSjkm8S/uXkOHd8tqky34zYvsTQc7kxujvIMraNndMAdB+nv4r8R+0ldvaTa6Qk
+ZjqrY5xa5PVoNCO0dCvxyXgjjxbL451lLeP9uL78hIrZIiIuBKQDfAcT61eoGiPw
+xzRz/GRs6jBrS8vIhi+Dhd36nUt/osCH6HloMwPtW906Bis89bOieKZtKhP4P0T4
+Ld8xDuB0q2o2RZfomaAlXcFk8xzFCEaFHfmrSBld7X6hsdUQvX7nTXP682vDHs+i
+aDWQRvTrh5+SQAlDi0gcbNeImgAu1e44K8kZDab8Am5HlVjkR1Z36aqeMFDidlaU
+38gfVuiAuW5xYMmA3Zjt09///////////wIBAg==
+-----END DH PARAMETERS-----
+'
+
+function show_help {
+    echo ''
+    echo $"${PROJECT_NAME}-dhparam -h [hostname] -l [length in bits] --recalc [yes|no] --fast [yes|no]"
+    echo ''
+    exit 0
+}
+
+function calc_dh {
+    if [[ $FAST == 'yes' ]]; then
+        DHGROUP=$(( ( RANDOM % 4 )  + 14 ))
+        if [[ ${DHGROUP} == 14 ]]; then
+            echo "$BETTERCRYPTO_GROUP14" > "${1}"
+        else
+            if [[ ${DHGROUP} == 15 ]]; then
+                echo "$BETTERCRYPTO_GROUP15" > "${1}"
+            else
+                if [[ ${DHGROUP} == 16 ]]; then
+                    echo "$BETTERCRYPTO_GROUP16" > "${1}"
+                else
+                    if [[ ${DHGROUP} == 17 ]]; then
+                        echo "$BETTERCRYPTO_GROUP17" > "${1}"
+                    else
+                        echo "$BETTERCRYPTO_GROUP18" > "${1}"
+                    fi
+                fi
+            fi
+        fi
+    else
+        if ! openssl dhparam -check -text $KEYLENGTH -out "${1}"; then
+            exit 36
+        fi
+    fi
+    chmod 640 "${1}"
+}
+
+function regenerate_dh_keys {
+    for file in /etc/ssl/mycerts/*
+    do
+        if [[ -f $file ]]; then
+            filename=/etc/ssl/certs/$(echo "$file" | awk -F '/etc/ssl/mycerts/' '{print $2}' | awk -F '.crt' '{print $1}').dhparam
+            if [ -f "$filename" ]; then
+                calc_dh "$filename"
+                echo $"Recalculated DH params for $filename"
+            fi
+        fi
+    done
+}
+
+while [ $# -gt 1 ]
+do
+    key="$1"
+
+    case $key in
+        --help)
+            show_help
+            ;;
+        -h|--hostname)
+            shift
+            HOSTNAME="$1"
+            ;;
+        -l|--dhkey)
+            shift
+            KEYLENGTH=${1}
+            ;;
+        --recalc)
+            shift
+            RECALCULATE=${1}
+            ;;
+        -o|--output)
+            shift
+            FAST='yes'
+            calc_dh "${1}"
+            exit 0
+            ;;
+        --fast)
+            shift
+            if [[ ${1} == $"yes" || ${1} == $"y" ]]; then
+                FAST='yes'
+            fi
+            ;;
+        *)
+            # unknown option
+            ;;
+    esac
+    shift
+done
+
+if [[ $RECALCULATE == "yes" || $RECALCULATE == "y" ]]; then
+    regenerate_dh_keys
+    exit 0
+fi
+
+if [ ! "$HOSTNAME" ]; then
+    echo $'No hostname specified'
+    exit 57
+fi
+
+if ! which openssl > /dev/null ;then
+    echo $"$0: openssl is not installed, exiting" 1>&2
+    exit 56
+fi
+
+if [ ! -d /etc/ssl/mycerts ]; then
+    mkdir -p /etc/ssl/mycerts
+fi
+
+calc_dh "/etc/ssl/certs/$HOSTNAME.dhparam"
+
+systemctl reload nginx
+exit 0

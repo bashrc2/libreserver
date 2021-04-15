@@ -1,0 +1,228 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Final stage of install
+#
+# License
+# =======
+#
+# Copyright (C) 2014-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+function install_final {
+    INSTALL_STATE_RUNNING_COMMAND=2
+    INSTALL_STATE_COMMAND_SUCCESS=4
+    install_state_file=/root/.install_state.txt
+
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        install_state=$INSTALL_STATE_COMMAND_SUCCESS
+        echo -n "$INSTALL_STATE_COMMAND_SUCCESS" > "$install_state_file"
+        return
+    fi
+    # unmount any attached usb drive
+    if [ -d "$USB_MOUNT" ]; then
+        umount "$USB_MOUNT"
+        rm -rf "$USB_MOUNT"
+    fi
+    function_check split_gpg_key_into_fragments
+    split_gpg_key_into_fragments
+    lockdown_permissions
+
+    store_drives_baseline
+
+    if [ -f /etc/nginx/sites-enabled/default ]; then
+	rm /etc/nginx/sites-enabled/default
+	systemctl restart nginx
+    fi
+
+    # remove initial install instructions
+    if grep -q '# start firstboot' /home/admin/.bashrc; then
+	if grep -q '# end firstboot' /home/admin/.bashrc; then
+	    sed -i '/# start firstboot/,/# end firstboot/d' /home/admin/.bashrc
+	fi
+    fi
+
+    mark_completed "${FUNCNAME[0]}"
+    clear
+    echo ''
+
+    if [[ $ONION_ONLY == 'no' ]]; then
+        echo $"
+If you wish to verify the server ssh public key at next login it is:
+$(get_ssh_server_key)
+
+Ensure that ports are forwarded from your internet router.
+You can find the list of ports within the firewall section of
+the administrator control panel.
+"
+    else
+        echo $"
+If you wish to verify the server ssh public key at next login it is:
+$(get_ssh_server_key)
+"
+    fi
+    echo ''
+
+    # add user menu on ssh login
+    if ! grep -q 'controluser' "/home/$MY_USERNAME/.bashrc"; then
+        echo 'export PS1="\W \$"' >> "/home/$MY_USERNAME/.bashrc"
+        echo 'controluser' >> "/home/$MY_USERNAME/.bashrc"
+    fi
+    if [ ! -f "$IMAGE_PASSWORD_FILE" ]; then
+        if [ -f "/root/${PROJECT_NAME}-wifi.cfg" ]; then
+            create_wifi_startup_script
+            echo ''
+            echo $'Shutting down the system. Detatch the ethernet cable, attach wifi dongle, then power on again.'
+            echo ''
+            "${PROJECT_NAME}-logging" off --restart
+            systemctl poweroff
+            return
+        fi
+        echo $'Turning off logging'
+        "${PROJECT_NAME}-logging" off --restart
+
+        install_state=$INSTALL_STATE_RUNNING_COMMAND
+        if [ -f "$install_state_file" ]; then
+            install_state=$(cat "$install_state_file")
+            # shellcheck disable=SC2086
+            if [ $install_state -eq $INSTALL_STATE_RUNNING_COMMAND ]; then
+                install_state=$INSTALL_STATE_COMMAND_SUCCESS
+                echo -n "$INSTALL_STATE_COMMAND_SUCCESS" > "$install_state_file"
+            fi
+        fi
+
+        if [ $install_state -ne $INSTALL_STATE_COMMAND_SUCCESS ]; then
+            echo $'Rebooting the system'
+            systemctl reboot -i
+            reboot
+        fi
+    fi
+    echo $'Turning off logging'
+    "${PROJECT_NAME}-logging" off --restart
+}
+
+function update_installed_apps_list {
+    # Why does this secondary file exist, apart from COMPLETION_FILE ?
+    # It's so that it is visible to unprivileged users from the user control panel
+    grep "install_" "$COMPLETION_FILE" > "/usr/share/${PROJECT_NAME}/installed.txt"
+}
+
+function create_default_user_removal_daemon {
+    # This daemon runs on first boot and removes the default libreserver user
+
+    first_start_daemon_filename=/etc/systemd/system/firststart.service
+    first_start_script=/usr/local/bin/firststart
+    { echo '#!/bin/bash';
+      echo 'if [ -d /home/libreserver]; then';
+      echo '    userdel -r libreserver';
+      echo '    if [ -d /home/libreserver]; then';
+      echo '        rm -rf /home/libreserver';
+      echo '    fi';
+      echo 'fi';
+      echo 'systemctl disable firststart';
+      echo "rm $first_start_daemon_filename"; } > $first_start_script
+    chmod +x $first_start_script
+
+    { echo '[Unit]';
+      echo 'Description=Daemon run on first boot';
+      echo 'After=syslog.target';
+      echo 'After=network.target';
+      echo '';
+      echo '[Service]';
+      echo 'User=root';
+      echo 'Group=root';
+      echo "ExecStart=$first_start_script";
+      echo 'StandardOutput=syslog';
+      echo '';
+      echo '[Install]';
+      echo 'WantedBy=multi-user.target'; } > $first_start_daemon_filename
+    systemctl enable firststart
+}
+
+function final_set_onion_hostname {
+    if [[ "$ONION_ONLY" == 'no' ]]; then
+        return
+    fi
+
+    if [ ! -f /var/lib/tor/hidden_service_email/hostname ]; then
+        echo $'No onion domain for email was found'
+        exit 36
+    fi
+    onion_domain=$(cat /var/lib/tor/hidden_service_email/hostname)
+
+    echo "$onion_domain" > /etc/hostname
+    hostname "$onion_domain"
+
+    if ! grep -q "127.0.1.1" /etc/hosts; then
+        echo "127.0.1.1  $onion_domain" >> /etc/hosts
+    else
+        sed -i "s|127.0.1.1.*|127.0.1.1  $onion_domain|g" /etc/hosts
+    fi
+
+    echo "$onion_domain" > /etc/mailname
+}
+
+function clear_network_interfaces {
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+
+    if [ -f /etc/network/if-pre-up.d/hostapd ]; then
+        rm /etc/network/if-pre-up.d/hostapd
+    fi
+    if [ -f /etc/network/if-pre-up.d/wireless-tools ]; then
+        rm /etc/network/if-pre-up.d/wireless-tools
+    fi
+    if [ -f /etc/network/if-pre-up.d/wpasupplicant ]; then
+        rm /etc/network/if-pre-up.d/wpasupplicant
+    fi
+    if [ -f /etc/network/if-up.d/wpasupplicant ]; then
+        rm /etc/network/if-up.d/wpasupplicant
+    fi
+
+    systemctl restart networking
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function setup_final {
+    function_check check_community_network
+    check_community_network
+
+    function_check update_installed_apps_list
+    update_installed_apps_list
+
+    function_check create_default_user_removal_daemon
+    create_default_user_removal_daemon
+
+    function_check final_set_onion_hostname
+    final_set_onion_hostname
+
+    function_check install_tripwire
+    install_tripwire
+
+    function_check clear_network_interfaces
+    clear_network_interfaces
+
+    function_check install_final
+    install_final
+
+    export DEBIAN_FRONTEND=
+}
+
+# NOTE: deliberately no exit 0

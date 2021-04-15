@@ -1,0 +1,53 @@
+#+TITLE: LibreServer
+#+AUTHOR: Bob Mottram
+#+EMAIL: bob@libreserver.org
+#+KEYWORDS: libreserver, debian, install
+#+DESCRIPTION: How to install LibreServer onto an existing Debian system
+#+OPTIONS: ^:nil toc:nil num:nil
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="libreserver.css" />
+
+#+attr_html: :width 80% :height 10% :align center
+[[file:images/logo.png]]
+
+* How to install on an existing Debian system
+
+#+BEGIN_QUOTE
+"/The antagonism of surveillance is not privacy but the making of communities in struggle/"
+
+-- Arun Kundnani
+#+END_QUOTE
+
+Although the image builder supports a variety of architectures there may still be some which aren't supported. These especially include systems which have a proprietary boot blob, such as the Raspberry Pi boards.
+
+It's still possible to install the system onto these unsupported devices if you need to. First you'll need to ensure that you have *Debian Buster* installed and can get ssh access to the system. Then either via ssh, or directly on the target device in the case of an old laptop or netbook:
+
+#+BEGIN_SRC bash
+su
+apt-get update
+apt-get -qy install build-essential git dialog
+git clone https://gitlab.com/bashrc2/libreserver
+cd libreserver
+git checkout bullseye
+make install
+libreserver menuconfig (or libreserver menuconfig-onion)
+#+END_SRC
+
+If you need to install non-interactively as part of a continuous integration system then you can also use:
+
+#+begin_src bash
+libreserver menuconfig --noninteractive [domain name]
+#+end_src
+
+or
+
+#+begin_src bash
+libreserver menuconfig-onion --noninteractive
+#+end_src
+
+The installation process will then begin. Depending upon the hardware you're installing onto and your internet connection speed it may take quite a while to install.
+
+Once installed you can then log in from another system with:
+
+#+BEGIN_SRC bash
+ssh yourusername@libreserver.local -p 2222
+#+END_SRC

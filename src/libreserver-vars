@@ -1,0 +1,108 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Common variables and functions
+#
+# License
+# =======
+#
+# Copyright (C) 2014-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+DEFAULT_LANGUAGE=$LANG
+
+if [ ! "$PROJECT_NAME" ]; then
+    PROJECT_NAME='libreserver'
+fi
+
+PROJECT_INSTALL_DIR=/usr/local/bin
+if [ -f /usr/bin/${PROJECT_NAME} ]; then
+    PROJECT_INSTALL_DIR=/usr/bin
+fi
+
+# username created by default within a debian image
+GENERIC_IMAGE_USERNAME='libreserver'
+
+# Web site
+PROJECT_WEBSITE="https://${PROJECT_NAME}.net"
+
+# Repo
+PROJECT_REPO="https://gitlab.com/bashrc2/${PROJECT_NAME}"
+
+# Are we installing on a Beaglebone Black (BBB) or some other system?
+INSTALLING_ON_BBB="no"
+
+# Version number of this script
+VERSION="4.0"
+
+# if yes then this minimises the number of descisions presented during install
+MINIMAL_INSTALL="yes"
+
+# Whether web sites will be .onion addresses only
+ONION_ONLY="no"
+
+# whether the system is being installed from a pre-created configuration file
+INSTALLING_FROM_CONFIGURATION_FILE="no"
+
+# number of CPU cores
+CPU_CORES=1
+
+# whether to route outgoing traffic through Tor
+ROUTE_THROUGH_TOR="no"
+
+# Whether this system is being installed within a docker container
+INSTALLED_WITHIN_DOCKER="no"
+
+DEBIAN_VERSION="bullseye"
+
+# social key management
+ENABLE_SOCIAL_KEY_MANAGEMENT="no"
+
+# include utils
+UTILS_FILES="/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-*"
+for f in $UTILS_FILES
+do
+    source "$f"
+done
+
+# include base system apps
+BASE_SYSTEM_FILES="/usr/share/${PROJECT_NAME}/base/${PROJECT_NAME}-base-*"
+for f in $BASE_SYSTEM_FILES
+do
+    source "$f"
+done
+
+#include apps
+APP_FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
+for f in $APP_FILES
+do
+    source "$f"
+done
+
+source /usr/local/bin/${PROJECT_NAME}-shortcuts
+
+# optionally specify your name to appear on the blog
+MY_NAME=$DEFAULT_DOMAIN_NAME
+
+# used to select mesh install functions when creating a mesh image
+INSTALLING_MESH=
+
+# The .local avahi name
+LOCAL_NAME=${PROJECT_NAME}
+
+# NOTE: deliberately there is no "exit 0"

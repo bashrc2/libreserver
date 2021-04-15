@@ -1,0 +1,592 @@
+About|Acerca de
+Accept|Aceptar
+Accounts software can often be quite complex, and so you'll probably want to refer to the official documentation (https://akaunting.com/docs) for details.|El software de cuentas a menudo puede ser bastante complejo, por lo que probablemente desee consultar la documentación oficial (https://akaunting.com/docs) para obtener más información.
+Add|Añadir
+New Member|Agregar un nuevo usuario
+Add custom emoji|Añadir emojis personalizados
+Add mp3 or ogg files to a USB drive|Agregue archivos mp3 o ogg a una unidad USB
+Add the following to your Emacs configuration file:|Agregue lo siguiente a su archivo de configuración de Emacs:
+Add the Syncthing IDs for your other systems and devices here|Agregue los ID de sincronización para sus otros sistemas y dispositivos aquí
+Add your dat links below|Agregue sus enlaces de dat a continuación
+Add your RSS feeds here. Each line should be [title],[feed URL]|Agregue sus feeds RSS aquí. Cada línea debe ser [title], [feed URL]
+Adding music|Agregar música
+Afrikaans|africaans
+Akaunting|Akaunting
+Albanian|albanés
+Allow new registrations|Permitir nuevos registros
+An upgrade is scheduled|Una actualización está programada
+App is being removed|La aplicación está siendo eliminada
+App is scheduled to be installed|La aplicación está programada para ser instalada
+Apps|Aplicaciones
+Arabic|Arábica
+Backup|Apoyo
+Backup / Restore|Copia de seguridad de restauracion
+Backup drive space used|Espacio de unidad de copia de seguridad utilizado
+Backup has failed|La copia de seguridad falló
+Backup in progress|Respaldo en proceso
+Backup is complete|La copia de seguridad está completa
+Backup of keys failed|La copia de seguridad de las llaves falló
+Backup of keys is complete|La copia de seguridad de las teclas está completa
+Backup your keys now?|Copia de seguridad de sus llaves ahora?
+Basque|vasco
+Beginning app install|Inicio de la instalación de la aplicación
+Beginning removal of app|Inicio de la eliminación de la aplicación
+Belarusian|Bielorruso
+Bosnian|bosnio
+Bulgarian|búlgaro
+Cancel|Cancelar
+Catalan|catalán
+Chat system|Sistema de chat
+Chinese (Simplified)|Chino simplificado)
+Chinese (Traditional)|Chino tradicional)
+Choose the language that you wish to translate from the list.|Elija el idioma que desea traducir de la lista.
+Choose your language|Elige tu idioma
+Classic chat system|Sistema de chat clásico
+Click close and then connect.|Haga clic en Cerrar y luego conectarse.
+Click on "add new" to add a new server and enter the domain name or onion address for the LibreServer, your username (which can be anything) and the VoIP server password which is the same as the password you set up the box with. Accept the self-signed SSL certificate if you don't have a Let's Encrypt certificate set up for your default domain. You are now ready to chat.|Haga clic en "agregar nuevo" para agregar un nuevo servidor e ingrese el nombre de dominio o la dirección de la cebolla para LibreServer, su nombre de usuario (que puede ser cualquier cosa) y la contraseña del servidor VoIP que es igual a la contraseña con la que configuró la caja. Acepte el certificado SSL autofirmado si no tiene configurado un certificado Let's Encrypt para su dominio predeterminado. Ahora estás listo para chatear.
+Click on the lock icon at the bottom of the screen and enter the password. It should then appear unlocked. If you don't unlock then any edits you make won't be saved.|Haga clic en el icono de candado en la parte inferior de la pantalla e ingrese la contraseña. Entonces debería aparecer desbloqueado. Si no lo desbloqueas, las ediciones que hagas no se guardarán.
+Collaborative document editor|Editor de documentos colaborativos
+Confirm backup password|Confirmar contraseña de respaldo
+Continue|Continuar
+Copy and paste the translations file and select 'update'.|Copie y pegue el archivo de traducciones y seleccione 'actualizar'.
+Copy and paste the translations file into your favorite editor.|Copie y pegue el archivo de traducciones en su editor favorito.
+Copy and paste this into an email or other messaging app and send it to the LibreServer project.|Copie y pegue esto en un correo electrónico u otra aplicación de mensajería y envíela al proyecto de LibreServer.
+CPU temperature|Temperatura de la CPU
+CPU usage|uso de CPU
+Croatian|croata
+Czech|checo
+Danish|danés
+DAT Server|Servidor DAT
+Databaseless blogging|Blog sin base de datos
+Databaseless wiki|Wiki sin base de datos
+diagnostics|diagnóstico
+diagnostics log|registro de diagnóstico
+Different versions of the same page on different servers are represented by boxes at the bottom right of the screen. You can double click on them to see the different versions, and use the flag icon to fork if you prefer that version|Las diferentes versiones de la misma página en diferentes servidores están representadas por cuadros en la parte inferior derecha de la pantalla. Puede hacer doble clic en ellos para ver las diferentes versiones, y usar el icono de la bandera para tenedor si prefiere esa versión
+Disk I/O Speed|Velocidad de E / S del disco
+Disk space used|Espacio en disco utilizado
+DNS setup|Configuración de DNS
+Domain/User Blocking|Dominio / Bloqueo del usuario
+Domain:|Dominio:
+Domain|Dominio
+Dutch|holandés
+Dynamic DNS|DNS Dinámico
+Edit your translations. The structure of this file is very simple. On the left is English text and on the right is translated text, with the vertical line character as a separator.|Edita tus traducciones La estructura de este archivo es muy simple. A la izquierda está el texto en inglés y a la derecha está el texto traducido, con el carácter de línea vertical como separador.
+Edit, add or remove blocked domains or users. This applies to Email and XMPP addresses|Edite, agregue o elimine dominios o usuarios bloqueados. Esto se aplica a direcciones de correo electrónico y XMPP
+Edith enable login|Edith permite iniciar sesión
+Email system|Sistema de correo electrónico
+Email/XMPP: USEREMAIL|Correo electrónico / XMPP: USEREMAIL
+Enable access via secure shell?|¿Habilitar el acceso a través de shell seguro?
+Enable Updates|Habilitar actualizaciones
+English|Inglés
+English (US)|Inglés (EE. UU.)
+Ensure that dat files are always available|Asegúrese de que los archivos dat estén siempre disponibles
+Ensure that tor is installed onto your local system:|Asegúrese de que tor esté instalado en su sistema local:
+Enter a label (which can be any name you choose for the server), the default domain name of the LibreServer or preferably the mumble onion address, your username (which can also be anything) and the mumble password which is the same as the one you originally set up the box with. Leave the port number unchanged.|Ingrese una etiqueta (que puede ser cualquier nombre que elija para el servidor), el nombre de dominio predeterminado de LibreServer o preferiblemente la dirección de murmullo de la cebolla, su nombre de usuario (que también puede ser cualquier cosa) y la contraseña incorrecta que es la misma originalmente configuró la caja con. Deje el número de puerto sin cambios.
+Enter a password which will be used to protect the backup|Ingrese una contraseña que se usará para proteger la copia de seguridad
+Enter first and second nicknames and check connect to this network on startup.|Ingrese los primeros y segundos apodos y verifique conectarse a esta red al inicio.
+Estonian|Estonio
+Everything installed will be lost|Todo lo que se haya instalado se perderá
+Extremely simple note taking|Toma de notas extremadamente simple
+Factory reset is in progress|El restablecimiento de fábrica está en progreso
+Farsi|Farsi
+Favicon|Favicon
+Federated image sharing|Compartir imágenes federadas
+Federated microblogging|Microblogging federado
+Federated social network|Red social federada
+Federated wiki|Wiki federado
+Fedwiki Favicon|Favicon Fedwiki
+Fedwiki Password|Contraseña Fedwiki
+Fedwiki Settings|Configuración de Fedwiki
+File storage and sync|Almacenamiento y sincronización de archivos
+File synchronization|Sincronización de archivos
+Filipino|Filipino
+Finnish|finlandés
+First ensure that tor is installed. Within a terminal:|Primero asegúrate de que tor esté instalado. Dentro de una terminal:
+For details see the diagnostics|Para más detalles ver los diagnósticos
+For details see:|Para detalles, ver:
+For further information see the website at https://libreserver.org|Para más información, visite el sitio web en https://libreserver.org
+For the initial login use username: admin password admin|Para el inicio de sesión inicial usa el nombre de usuario: admin password admin
+For the Jabber ID enter the email address from your LibreServer user settings|Para la ID de Jabber ingrese la dirección de correo electrónico de la configuración de usuario de LibreServer
+For the password use the password which you initially wrote down or stored during the setup of the LibreServer system|Para la contraseña, use la contraseña que inicialmente anotó o almacenó durante la configuración del sistema LibreServer
+Forward port 80 and 443 from your internet router|Reenviar los puertos 80 y 443 desde su enrutador de internet
+Forward the following ports from your internet router:|Reenvíe los siguientes puertos desde su enrutador de internet:
+Forward the port 64738 from your internet router|Desviar el puerto 64738 desde su enrutador de internet
+Forward the port 6697 from your internet router|Desplace el puerto 6697 desde su enrutador de internet
+Forward the port 8448 from your internet router|Reenviar el puerto 8448 desde su enrutador de internet
+FreeDNS code:|Código de FreeDNS:
+LibreServer started in 2013. It was initially based on the Beaglebone Black hardware and inspired by the FreedomBox idea of an inexpensive and simple to manage internet server for the home.|LibreServer comenzó en 2013. Inicialmente se basó en el hardware de Beaglebone Black e inspiró en la idea de FreedomBox de un servidor de Internet económico y fácil de administrar para el hogar.
+French|francés
+French (Canada)|Francés (Canadá)
+From the initial screen select 'settings' then 'language'.|Desde la pantalla inicial seleccione 'configuración' luego 'idioma'.
+From the menu select 'Configure' then 'Settings'. Select the 'Advanced' checkbox then select 'Network'. Select 'Force TCP mode' and proxy type 'Socks5'. Hostname should be set to 'localhost' and port should be 9050.|Desde el menú, seleccione 'Configurar' y luego 'Configuración'. Seleccione la casilla de verificación 'Avanzado' y luego seleccione 'Red'. Seleccione 'Forzar modo TCP' y el tipo de proxy 'Socks5'. El nombre de host debe establecerse en 'localhost' y el puerto debe ser 9050.
+Gaelic|gaélico
+Gallego|Gallego
+Georgian|georgiano
+German|alemán
+German (Personal)|Alemán (Personal)
+Git repo management|Git Repo Management
+Go Back|Regresa
+Go back to the F-droid initial screen and update the repositories by swiping downwards. You'll see it say "updating repositories". This might take a few minutes.|Regrese a la pantalla inicial de F-droides y actualice los repositorios deslizando hacia abajo. Lo verá decir "actualizar repositorios". Esto puede tardar unos minutos.
+Go back to the initial screen of the Conversations app, select the menu again, then 'Manage accounts'. Add an account by selecting the person icon with the plus next to it.|Regrese a la pantalla inicial de la aplicación Conversaciones, seleccione el menú nuevamente y luego "Administrar cuentas". Agregue una cuenta seleccionando el ícono de persona con el signo más al lado.
+Gogs allow new registrations|Gogs permite nuevos registros
+Greek|griego
+Gujarati|Gujarati
+Have you written down or saved the login credentials and removed any backup drives from the system?|¿Ha anotado o guardado las credenciales de inicio de sesión y eliminado las unidades de respaldo del sistema?
+Hebrew|hebreo
+Help|Ayuda
+Helps caregivers track sleep, feedings, diaper changes, and tummy time|Ayuda a los cuidadores a controlar el sueño, la alimentación, los cambios de pañales y el tiempo boca abajo
+Helps caregivers track sleep, feedings, diaper changes, and tummy time to learn about and predict babys needs without as much guess work.|Ayuda a los cuidadores a seguir el sueño, la alimentación, los cambios de pañales y el tiempo boca abajo para conocer y predecir las necesidades de los bebés sin mucho trabajo.
+here|aquí
+HexChat (formerly XChat) is compatible with proxying via Tor and so provides the best security when connecting to your IRC server. It will allow you to connect to your IRC server's onion address.|HexChat (anteriormente XChat) es compatible con el proxy a través de Tor y proporciona la mejor seguridad cuando se conecta a su servidor IRC. Le permitirá conectarse a la dirección de cebolla de su servidor IRC.
+Hindi|hindi
+How to do translations|Cómo hacer traducciones
+Hungarian|húngaro
+Icecast|Icecast
+Icecast is quite CPU intensive. For example on an A20 based system it takes about 70% of the CPU resource. This is something to be aware of if you're running multiple apps|Icecast consume bastante CPU. Por ejemplo, en un sistema basado en A20, toma alrededor del 70% del recurso de la CPU. Esto es algo a tener en cuenta si está ejecutando varias aplicaciones
+Icecast is updating|Icecast está actualizando
+Icelandic|islandés
+Icons on the website and user interfaces are by Rashid Mhar.|Los iconos en el sitio web y las interfaces de usuario son de Rashid Mhar.
+If you are an Emacs user then you can also connect to your IRC server via Emacs.|Si usted es un usuario de Emacs, entonces también puede conectarse a su servidor IRC a través de Emacs.
+If you are using the onion address then use SSL should be unchecked and the transport encryption will be handled via the onion address itself.|Si está usando la dirección de cebolla, entonces use SSL. Debe ser desmarcado y el cifrado de transporte será manejado a través de la dirección de cebolla.
+If you are using the ordinary domain name (clearnet/ICANN) then make sure that Use SSL is checked.|Si usa el nombre de dominio ordinario (clearnet / ICANN), asegúrese de que Use SSL esté marcado.
+If you don't have a domain then just select Continue|Si no tiene un dominio, simplemente seleccione Continuar
+If you don't have Orbot installed then enable The Guardian Project repository from the drop down menu and install it.|Si no tiene instalado Orbot, habilite el repositorio The Guardian Project desde el menú desplegable e instálelo.
+If you don't need a password then just leave this blank and select Update|Si no necesita una contraseña, simplemente deje esto en blanco y seleccione Actualizar
+If you have a USB plugged in leave it inserted until you can confirm that the stream is working|Si tiene un USB conectado, déjelo insertado hasta que pueda confirmar que la transmisión está funcionando
+If you have trouble accessing onion addresses paste some Tor bridges below. See https://bridges.torproject.org/bridges|Si tiene problemas para acceder a direcciones de cebolla, pegue algunos puentes de Tor a continuación. Ver https://bridges.torproject.org/bridges
+If you're using the Element mobile app to access your Matrix homeserver then you can significantly improve battery performance by going to the settings and changing 'Sync request timeout' to 30 seconds and 'Delay between two sync requests' to 600 seconds. Also turning off 'msgs in group chats' will help, since it will avoid getting a notification whenever a group chat event happens, which then wakes up the screen|Si está utilizando la aplicación móvil Element para acceder a su servidor de Matrix, puede mejorar significativamente el rendimiento de la batería accediendo a la configuración y cambiando el tiempo de espera de solicitud de sincronización a 30 segundos y el retraso de entre dos solicitudes de sincronización a 600 segundos. Igualmente, la desactivación de 'mensajes en chats grupales' ayudará, ya que evitará recibir notificaciones cada vez que ocurra un evento de chat en grupo, lo que luego activará la pantalla.
+If your translations are accepted they will later appear in the upstream project and be usable by anyone.|Si sus traducciones son aceptadas, aparecerán más adelante en el proyecto original y podrán ser utilizadas por cualquier persona.
+Import|Importar
+In a Tor browser navigate to the onion address for Icecast and you can then play the stream|En un navegador Tor navega a la dirección de cebolla para Icecast y luego puedes reproducir la transmisión
+Indonesian|indonesio
+Initial login|Inicio de sesión inicial
+Initial Setup|Configuración inicial
+Install|Instalar
+Install APPNAME now?|Instalar APPNAME ahora?
+Install F-Droid|Instalar F-Droid
+Install HexChat and set up its configuration file. Assuming that you're running on a Debian or Arch based distro, this can be done on your local machine with:|Instale HexChat y configure su archivo de configuración. Asumiendo que está ejecutando una distribución basada en Debian o Arch, esto se puede hacer en su máquina local con:
+Installation|Instalación
+Installing in Emacs|Instalando en Emacs
+Installing on Desktop|Instalando en escritorio
+Invalid Password|Contraseña invalida
+IRC|IRC
+IRC is useful for multi-user chat. The classic use case is for software development where many engineers might need to coordinate their activities, but it's also useful for meetings, parties and general socialising.|IRC es útil para el chat multiusuario. El caso de uso clásico es para el desarrollo de software donde muchos ingenieros pueden necesitar coordinar sus actividades, pero también es útil para reuniones, fiestas y socialización general.
+It can be shown using the command:|Se puede mostrar usando el comando:
+It's possible to add jingles which will be played between tracks at random intervals. If some of the audio files on your USB drive are named jingle_something.mp3 then they will be used as jingles|Es posible agregar jingles que se reproducirán entre pistas a intervalos aleatorios. Si algunos de los archivos de audio en su unidad USB se llaman jingle_something.mp3, entonces se usarán como jingles
+It's recommended that you add an SRV record for Matrix to your DNS setup. How you do this will depend upon your dynamic DNS provider and their web interface. On FreeDNS on the subdomains settings in addition to the subdomain which you are using for the matrix server create an extra entry as follows:|Se recomienda agregar un registro SRV para Matrix a su configuración de DNS. Cómo lo hará dependerá de su proveedor de DNS dinámico y su interfaz web. En FreeDNS en la configuración de subdominios, además del subdominio que está utilizando para el servidor de matriz, cree una entrada adicional de la siguiente manera:
+Italian|italiano
+Japanese|japonés
+Jingles|Jingles
+Kannada|Kannada
+Keep changes|Mantener cambios
+Khmer|Khmer
+Korean|coreano
+Language|Idioma
+Lao|Lao
+Latvian|letón
+Lithuanian|lituano
+Malayalam|Malayalam
+Malaysian|malasio
+Manually upgrade now ?|Actualiza manualmente ahora?
+Maori (Ngai Tahu)|Maori (Ngai Tahu)
+Maori (Waikoto Uni)|Maori (Waikoto Uni)
+Markdown blogging|Blogging de rebajas
+Matrix|Matriz
+Maybe instead of editing within this user interface you prefer to use your own editor. That can be done as follows:|Tal vez en lugar de editar dentro de esta interfaz de usuario, prefiera usar su propio editor. Eso se puede hacer de la siguiente manera:
+Media broadcast|Transmisión de medios
+Media storage and broadcast|Almacenamiento y transmisión de medios
+Mongolian|mongol
+Mumble|Mascullar
+Music player|Reproductor de música
+No|No
+No SSH public key was provided|No se proporcionó clave pública SSH
+none|ninguna
+Norwegian|noruego
+Norwegian (Primary)|Noruego (Primaria)
+Not Connected|No conectado
+Note taking|Tomar nota
+Nynorsk|Nynorsk
+Once you are on the translations screen (see the first three steps in the first section above) select the 'submit' button.|Una vez que esté en la pantalla de traducciones (vea los primeros tres pasos en la primera sección anterior), seleccione el botón 'enviar'.
+Once you are on the translations screen (see the first three steps in the first section above) select the language code shown at the top of the screen (usually it ends with UTF-8). You can then see the raw translations file.|Una vez que esté en la pantalla de traducciones (consulte los primeros tres pasos en la primera sección anterior), seleccione el código de idioma que se muestra en la parte superior de la pantalla (generalmente termina con UTF-8). A continuación, puede ver el archivo de traducciones sin formato.
+Open the F-droid app and select 'Settings' then 'Repositories'. Make sure that 'Guardian Project Official Releases' is enabled|Abra la aplicación F-droid y seleccione 'Configuración' y luego 'Repositorios'. Asegúrate de que 'Lanzamientos oficiales del proyecto Guardian' esté habilitado
+Open the settings. Select 'General', then 'Connect via Tor'. This will provide better protection, making it more difficult for adversaries to know who is talking to who. If connecting through Tor is unreliable and causes crashes then unselect 'Connect via Tor' on the 'General settings' and then just use your ordinary domain name.|Abra la configuración. Seleccione 'General', luego 'Conectar vía Tor'. Esto proporcionará una mejor protección, haciendo que sea más difícil para los adversarios saber quién está hablando con quién. Si la conexión a través de Tor no es confiable y causa bloqueos, deseleccione 'Conectar mediante Tor' en 'Configuración general' y luego simplemente use su nombre de dominio común.
+Open up the Conversations app and select the menu (three dots), scroll down and select 'Expert Settings' then select 'Connect to Tor'|Abra la aplicación Conversaciones y seleccione el menú (tres puntos), desplácese hacia abajo y seleccione 'Configuración experta' luego seleccione 'Conectarse a Tor'
+or|o
+Paragraphs can be dragged up and down to change their order, or moved between pages|Los párrafos se pueden arrastrar hacia arriba y hacia abajo para cambiar su orden, o moverse entre páginas
+Password|Contraseña
+Password: |Contraseña:
+Paste your ssh public key here|Pegue su clave pública ssh aquí
+Paste your translations file below|Pegue su archivo de traducciones a continuación
+Peertube allow new registrations|Peertube permite nuevos registros
+Personal accounting|Contabilidad personal
+Personal or small business accounting|Contabilidad personal o de pequeñas empresas
+Photo album|album de fotos
+Please enter their username. This should be lower case only and with no spaces.|Por favor ingrese su nombre de usuario. Esto debería ser solo minúsculas y sin espacios.
+Please insert a USB drive|Por favor inserte una unidad USB
+Please insert the USB drive to restore from now|Por favor, inserte la unidad USB para restaurar a partir de ahora
+Please insert your backup USB drive now|Por favor inserte su unidad USB de respaldo ahora
+Please specify stream name, description and genre|Por favor, especifique el nombre de la transmisión, la descripción y el género
+Please wait while your appliance is configuring|Espere mientras su dispositivo se está configurando
+Please write down or save these credentials|Por favor escriba o guarde estas credenciales
+Pleroma|Pleroma
+Pleroma allow new registrations|Pleroma permite nuevos registros
+Pleroma Custom Emoji|Pleroma Custom Emoji
+Pleroma Settings|Configuraciones de Pleroma
+Plug the USB drive into your server, then go to the Icecast app settings, add some details about your playlist, and select 'Update'|Conecte la unidad USB a su servidor, luego vaya a la configuración de la aplicación Icecast, agregue algunos detalles sobre su lista de reproducción y seleccione 'Actualizar'
+Polish|polaco
+Ports|Puertos
+Portuguese|portugués
+Portuguese (Brazil)|Portugués (Brasil)
+Power|Poder
+Press the plus button to add a Mumble server.|Presione el botón más para agregar un servidor Mumble.
+Proceed with backup?|Proceder con la copia de seguridad?
+Proceed with drive format?|Proceda con el formato de unidad?
+Proceed with reset?|Proceder con el reinicio?
+Proceed with restore?|Proceda con la restauración?
+RAM used|RAM utilizada
+Remote access|Acceso remoto
+Remove|retirar
+Remove any backup drives now|Eliminar cualquier unidad de copia de seguridad ahora
+Remove APPNAME now?|¿Eliminar APPNAME ahora?
+Remove user USERNAME?|¿Eliminar usuario USERNAME?
+Removing user account|Eliminar cuenta de usuario
+Reset is in progress|Restablecimiento está en progreso
+Reset to factory|Restablecer a fábrica
+RESET TO FACTORY DEFAULTS|RESTABLECER A LOS VALORES PREDETERMINADOS DE FÁBRICA
+Restart|Reiniciar
+Restore|Restaurar
+Restore has failed|La restauración ha fallado
+Restore in progress|Restauración en progreso
+Restore is complete|La restauración está completa
+Restore of keys failed|La restauración de las llaves falló
+Restore of keys is complete|La restauración de claves está completa
+Restore password|Restaurar contraseña
+Restore your keys now?|Restaure sus llaves ahora?
+Restoring backup keys|Restauración de claves de respaldo
+Romanian|rumano
+RSS Reader|Lector de RSS
+Run HexChat.|Ejecute HexChat.
+Running backup of keys|Ejecutando copia de seguridad de llaves
+Russian|ruso
+Samoan|Samoano
+Search again for 'Conversations' (not the legacy version), then select 'install'|Busque nuevamente "Conversaciones" (no la versión heredada), luego seleccione "instalar"
+Search for and install Plumble.|Busque e instale Plumble.
+Secure realtime collaboration|Colaboración segura en tiempo real
+Secure realtime collaboration with docs, presentations, drawing and voting. Documents are ephemeral and unless you save them will be deleted when you close the browser.|Asegure la colaboración en tiempo real con documentos, presentaciones, sorteo y votación. Los documentos son efímeros y, a menos que los guarde, se eliminarán cuando cierre el navegador.
+Secure Shell|Cubierta segura
+Select|Seleccionar
+Select 'Apply' and 'Ok', then on the menu 'Server' and 'Connect'.|Seleccione 'Aplicar' y 'Aceptar', luego en el menú 'Servidor' y 'Conectar'.
+Select 'Next' to create the account. If eveything is working after a couple of minutes you should see the account status change to 'online' in green|Seleccione 'Siguiente' para crear la cuenta. Si todo está funcionando después de un par de minutos, debería ver el estado de la cuenta cambiar a 'en línea' en verde
+Select search (magnifying glass icon) and search for 'Orbot' (not the legacy version), then select 'install'|Seleccione la búsqueda (icono de lupa) y busque 'Orbot' (no la versión heredada), luego seleccione 'instalar'
+Select the 'translate' button. You will see a new screen with English text on the left and translated text on the right.|Seleccione el botón 'traducir'. Verá una nueva pantalla con texto en inglés a la izquierda y texto traducido a la derecha.
+Select the Autojoin channels tab, click Add and enter #libreserver as the channel name.|Seleccione la pestaña de unirse automáticamente, haga clic en Agregar e ingrese #libreserver como el nombre del canal.
+Select the entry within the servers box, then enter ircaddress.onion/6697 or mydomainname/6697 and press Enter.|Seleccione la entrada dentro del cuadro de servidores, luego ingrese ircaddress.onion/6697 o mydomainname/6697 y presione Enter.
+Select the wiki button at the bottom of the screen, next to pages, to enable or disable editing.|Seleccione el botón wiki en la parte inferior de la pantalla, al lado de las páginas, para habilitar o deshabilitar la edición.
+Selecting the server by pressing on it then connects you to the server so that you can chat with other connected users|Al seleccionar el servidor, al presionarlo se conecta al servidor para que pueda chatear con otros usuarios conectados
+Serbian|serbio
+Setting up on a laptop|Configuración en una computadora portátil
+Setting up on Android|Configuración en Android
+Setting up with an Android phone|Configuración con un teléfono Android
+Settings|Configuraciones
+Setup on Android|Configuración en Android
+Shortcode|Código corto
+Shutdown|Apagar
+Shutting down|Apagando
+Simple kanban|Kanban simple
+Simple Markdown blogging|Simple Markdown blogging
+Simple notes|Notas simples
+Slovak|eslovaco
+Slovenian|esloveno
+Somali|somalí
+Spanish (International)|Español (Internacional)
+SSH access is disabled|El acceso SSH está deshabilitado
+SSH access is enabled|El acceso SSH está habilitado
+Stream Description|Descripción de la corriente
+Streaming media|Medios de transmisión
+Submit|Enviar
+Submitting your translations to the LibreServer project|Envío de sus traducciones al proyecto LibreServer
+Swedish|sueco
+System Monitor|Monitor del sistema
+Systems may be temporarily unavailable in the next few minutes|Los sistemas pueden estar temporalmente no disponibles en los próximos minutos
+Tagalog|Tagalo
+Tamil|Tamil
+Thai|tailandés
+Thankyou for choosing the LibreServer home internet appliance|Gracias por elegir el aparato de Internet hogareño LibreServer
+The account will now be removed. This may take a minute or two. For details see:|La cuenta ahora será eliminada. Esto puede tomar uno o dos minutos. Para detalles, ver:
+The classic low bandwidth chat system|El clásico sistema de chat de bajo ancho de banda
+The LibreServer system isn't primarily aimed at companies or institutions, but if you're a one person company or freelancer then having the ability to run your own accounting system and keep the data private and also backed up is useful. Akaunting provides a nice web based system for small business accounts, and is also quite usable within a mobile web browser.|El sistema LibreServer no está dirigido principalmente a empresas o instituciones, pero si usted es una empresa de una sola persona o un profesional independiente, entonces es útil tener la capacidad de ejecutar su propio sistema de contabilidad y mantener la privacidad de los datos y la copia de seguridad. Akaunting ofrece un buen sistema basado en la web para cuentas de pequeñas empresas, y también es bastante útil dentro de un navegador web móvil.
+A new member is being added. This may take a minute or two.|El nuevo usuario se está agregando. Escriba o guarde su contraseña.
+The passwords do not match|las contraseñas no coinciden
+There are a few things to know about using the federated wiki.|Hay algunas cosas que debe saber sobre el uso de la wiki federada.
+There are no apps installed. Select the plus button above to install new apps.|No hay aplicaciones instaladas. Seleccione el botón más arriba para instalar nuevas aplicaciones.
+This app may be useful if you have a new child or babysitting duties. It helps caregivers track sleep, feedings, diaper changes, and tummy time to learn about and predict baby's needs without as much guess work.|Esta aplicación puede ser útil si tienes un nuevo hijo o tareas de cuidado de niños. Ayuda a los cuidadores a seguir el sueño, la alimentación, los cambios de pañal y el tiempo boca abajo para conocer y predecir las necesidades del bebé sin mucho trabajo.
+This is a server system which enables you to run internet apps such as a blog or federated social network.|Este es un sistema de servidor que le permite ejecutar aplicaciones de Internet, como un blog o una red social federada.
+This is certainly the type of data which you might want to keep private and away from companies who might otherwise use surveillance of parenting app data to try to guilt you into buying all sorts of junk that you don't really need or can't afford.|Este es ciertamente el tipo de datos que puede desear mantener en privado y alejado de compañías que de otra manera podrían usar la vigilancia de los datos de la aplicación de crianza para intentar culparte de comprar todo tipo de basura que realmente no necesitas o no puedes pagar. .
+This is your new password|Esta es su nueva contraseña
+This may take a few minutes.|Esto puede tomar unos pocos minutos.
+This may take a minute or two. For details see:|Esto puede tomar uno o dos minutos. Para detalles, ver:
+This system isn't intended to broadcast to large audiences and the upper limit of listeners is set at ten. So a family and friends type group.|Este sistema no está destinado a transmitir a grandes audiencias y el límite superior de oyentes se establece en diez. Entonces un grupo de tipo familiar y de amigos.
+This will make a backup of the keys which encrypt your backups, protecting them against accidental loss or exposure. You should keep this drive in a safe place, separate from other backups.|Esto hará una copia de seguridad de las claves que encriptan sus copias de seguridad, protegiéndolas contra la pérdida o exposición accidental. Debe mantener esta unidad en un lugar seguro, separado de otras copias de seguridad.
+This will restore the keys used to encrypt backups.|Esto restaurará las claves utilizadas para cifrar copias de seguridad.
+To add a new paragraph use the + button|Para agregar un nuevo párrafo use el botón +
+To claim/fork a page from another server click on the flag icon|Para reclamar / bifurcar una página de otro servidor, haga clic en el icono de la bandera
+To edit a paragraph double click on it|Para editar un párrafo, haga doble clic en él
+To remove a paragraph just delete all of its text|Para eliminar un párrafo, simplemente elimine todo su texto
+To upload music files install Syncthing then copy album directories into ~/Sync/music_upload, then within Koel go to settings and scan the directory /music|Para cargar archivos de música instale Syncthing y luego copie los directorios de álbumes en ~ / Sync / music_upload, luego dentro de Koel vaya a la configuración y escanee el directorio / música
+Tor Bridges|Tor Bridges
+Translate|Traducir
+Translations|Traducciones
+Turkish|turco
+Type: SRV|Tipo: SRV
+Ukrainian|ucranio
+Uncheck use global user information.|Desmarque usar información global del usuario.
+Uninstall|Desinstalar
+Update|Actualizar
+Updates settings changed|La configuración de las actualizaciones ha cambiado
+Upgrade|Mejorar
+Upgrades happen automatically. You don't need to start them manually like this, except in rare circumstances|Las actualizaciones ocurren automáticamente. No es necesario que los inicies manualmente así, excepto en circunstancias excepcionales
+Upload|Subir
+URL to upload from|URL para cargar desde
+USB drive format has failed|El formato de la unidad USB ha fallado
+USB drive format in progress|Formato de unidad USB en progreso
+USB drive format is complete|El formato de la unidad USB está completo
+Username: |Nombre de usuario:
+Username: admin|Nombre de usuario: admin
+Members|Usuarios
+Using your preferred editor|Usando su editor preferido
+Video broadcast|Transmisión de video
+Vietnamese|vietnamita
+Voice chat|Chat de voz
+WARNING: THIS WILL ERASE ALL CONTENT OF THE USB DRIVE|ADVERTENCIA: ESTO borrará TODO EL CONTENIDO DE LA UNIDAD USB
+We're sorry, but the username you gave is not suitable. Check that it does not contain spaces, is lower case and at least 3 characters in length.|Lo sentimos, pero el nombre de usuario que nos diste no es adecuado. Verifique que no contenga espacios, que esté en minúscula y tenga al menos 3 caracteres de longitud.
+Web publishing system|Sistema de publicación web
+When done editing click on the wiki button again|Cuando termine de editar, haga clic en el botón wiki nuevamente
+When it's done it will appear on the apps screen|Cuando termine, aparecerá en la pantalla de aplicaciones
+When removal is finished it will disappear from apps|Cuando finalice la eliminación, desaparecerá de las aplicaciones
+When you are done with translating select the 'import' button on the translations screen.|Cuando haya terminado con la traducción, seleccione el botón 'importar' en la pantalla de traducciones.
+When you've added your translations select the 'update' button. This will update the translations file for the selected language. Note that this does not change the current language within the user interface. If you want to do that go back to the language screen, select a language and then the 'select' button.|Cuando haya agregado sus traducciones, seleccione el botón 'actualizar'. Esto actualizará el archivo de traducciones para el idioma seleccionado. Tenga en cuenta que esto no cambia el idioma actual dentro de la interfaz de usuario. Si desea hacerlo, regrese a la pantalla de idioma, seleccione un idioma y luego el botón 'seleccionar'.
+Whichever screen you are currently on, you can get back to the previous screen by clicking or pressing on the LibreServer logo at the top.|Independientemente de la pantalla en la que se encuentre actualmente, puede volver a la pantalla anterior haciendo clic o presionando sobre el logotipo de LibreServer en la parte superior.
+With Icecast you can run your own internet radio stream from an onion address. As always, be careful about copyright issues and preferably stick to Creative Commons music or music files that you own.|Con Icecast puede ejecutar su propia transmisión de radio por Internet desde una dirección de cebolla. Como siempre, tenga cuidado con los problemas de derechos de autor y preferiblemente se adhiera a la música de Creative Commons o archivos de música que posee.
+Within the network list click, Add and enter your domain name then click Edit.|Dentro de la lista de redes, haga clic en Agregar e ingrese su nombre de dominio luego haga clic en Editar.
+Within the Password field enter the password which you originally set up the box with.|Dentro del campo Contraseña, ingrese la contraseña con la que configuró originalmente la casilla.
+Within the software center search for "mumble" and install the client then run it. Skip through the audio setup wizard. Cancel the initial connection window.|Dentro del centro de software busque "murmurar" e instale el cliente, luego ejecútelo. Omita el asistente de configuración de audio. Cancele la ventana de conexión inicial.
+Write it down or save it|Escríbelo o guárdalo
+XMPP|XMPP
+xmpp based chat system|sistema de chat basado en xmpp
+Yes|Sí
+You can edit the translated text on the right side of the screen.|Puede editar el texto traducido en el lado derecho de la pantalla.
+You can get to this system remotely via:|Puede acceder a este sistema de forma remota a través de:
+You can now go back to the initial Conversations app screen and start using it. You'll probably want to add contacts using the icon at the bottom right. For more information see the Conversations website (conversations.im) or subscribe to the chat group conversations@conference.siacs.eu|Ahora puede volver a la pantalla inicial de la aplicación Conversaciones y comenzar a usarla. Probablemente quiera agregar contactos utilizando el icono en la parte inferior derecha. Para obtener más información, consulte el sitio web de Conversations (conversations.im) o suscríbase al grupo de chat conversations@conference.siacs.eu
+You can now log in with:|Ahora puede iniciar sesión con:
+You can see upgrade progress|Puedes ver el progreso de actualización
+You can use left and right cursor keys to move through pages|Puede usar las teclas de cursor izquierda y derecha para moverse por las páginas
+You may also want to make another entry with the same settings but replacing tcp with udp.|También puede querer hacer otra entrada con la misma configuración pero reemplazando tcp con udp.
+You may now remove the USB drive|Ahora puede quitar la unidad USB
+You might have mistyped one of them|Es posible que haya escrito mal uno de ellos
+You will see the translations file with some instructions at the top.|Verá el archivo de traducciones con algunas instrucciones en la parte superior.
+Your password must be at least 8 characters in length and only use the characters a-z A-Z and 0-9|Su contraseña debe tener al menos 8 caracteres de longitud y solo debe usar los caracteres a-z A-Z y 0-9.
+Zero knowledge pastebin|Cero conocimiento pastebin
+Theme|Tema
+Light|Ligero
+Dark|Oscuro
+Mail|Correo
+Clear|Claro
+If you find that you can't send out email and that you get 'failed delivery' messages returned instead then you may be able to proxy sent emails through another server. Sometimes ISPs or companies provide an SMTP server which can do this.|Hvis du finner ut at du ikke kan sende ut e-post og at du får mislykkede leveringsmeldinger, kan du sende proxy via e-post via en annen server. A veces, los proveedores de servicios de Internet se apalancan en un servidor SMTP en su servidor.
+Send email through a proxy|Enviar correo electrónico a través de un proxy
+Failed to install. For details see admin/applog.txt|Fallo en la instalación. Para más detalles ver admin/applog.txt
+Installed successfully|Instalado correctamente
+pihole|agujero de ojo
+Unlike browser based ad blockers, pihole works at the domain name resolution level to block domains known to privide the ads appearing in web pages.|A diferencia de los bloqueadores de anuncios basados ​​en el navegador, pihole funciona en el nivel de resolución de nombres de dominio para bloquear los dominios que se sabe que privilegian los anuncios que aparecen en las páginas web.
+Set your DNS IP address to the one shown and many ads will get blocked even before they're delivered to your laptop or mobile device. This can save a lot of bandwidth and generally speed up the loading of websites.| Configure su dirección IP de DNS como la que se muestra y muchos anuncios se bloquearán incluso antes de que se entreguen en su computadora portátil o dispositivo móvil. Esto puede ahorrar una gran cantidad de ancho de banda y, en general, acelerar la carga de sitios web.
+Change DNS on your internet router| Cambiar DNS en su enrutador de internet
+If your internet router allows you to change the DNS IP address then this is the best way to use pihole because it will then provide coverage for all of the devices and computers in your home.|Si su enrutador de Internet le permite cambiar la dirección IP del DNS, esta es la mejor manera de usar poros porque proporcionará cobertura para todos los dispositivos y computadoras en su hogar.
+Change DNS on individual devices|Cambiar DNS en dispositivos individuales
+If you can't change your internet router's DNS then you can do that on individual GNU/Linux systems as follows:| Si no puede cambiar el DNS de su enrutador de Internet, puede hacerlo en sistemas GNU/Linux individuales de la siguiente manera:
+Remove or comment out any existing nameservers and add one with the IP address shown for the pihole app. Something like:|Elimine o comente los servidores de nombres existentes y agregue uno con la dirección IP que se muestra para la aplicación pihole. Algo como:
+Then save and exit and prevent the file from being automatically changed with:| Luego guarde, salga y evite que el archivo se cambie automáticamente con:
+If you're running the standard version of LibreServer (not the onion version) then you may need to modify your hosts file to access your own domain.|Si está ejecutando la versión estándar de LibreServer (no la versión de cebolla), es posible que deba modificar su archivo de hosts para acceder a su propio dominio.
+Then add something like:|A continuación, agregue algo como:
+This only works when you're within your home network, so if you're outside of your home then undo the changes made above.|Esto solo funciona cuando está dentro de su red doméstica, así que si está fuera de su hogar, deshaga los cambios realizados anteriormente.
+The Pi-hole is a DNS sinkhole that protects your devices from unwanted content, without installing any client-side software.|Pi-hole es un sumidero DNS que protege sus dispositivos de contenido no deseado, sin instalar ningún software del lado del cliente.
+Search|Buscar
+removed|Eliminado
+To get email working you will need to forward some ports. Email using your onion address will work anyway, so long as you are contacting other onion based email addresses.|Para que el correo electrónico funcione, deberá reenviar algunos puertos. El correo electrónico con su dirección de cebolla funcionará de todos modos, siempre y cuando se ponga en contacto con otras direcciones de correo electrónico basadas en cebolla.
+Forward ports 25, 587 and 465 from your internet router|Reenvíe los puertos 25, 587 y 465 desde su enrutador de internet
+To access cryptpad you'll need to use a Tor browser. Navigate to the URL and enable javascript for the site under the NoScript icon. The screen will be blank for a few seconds while it's downloading the application into your browser.|Para acceder a Cryptpad, deberá usar un navegador Tor. Navegue hasta la URL y habilite javascript para el sitio bajo el ícono de NoScript. La pantalla estará en blanco durante unos segundos mientras se descarga la aplicación en su navegador.
+Cryptpad is an almost peer-to-peer application. No data is stored on the server, which only does minimal orchestration between the clients. If an adversary subsequently obtains the server they still learn nothing.|Cryptpad es una aplicación casi peer-to-peer. No se almacenan datos en el servidor, lo que hace solo una orquestación mínima entre los clientes. Si un adversario obtiene posteriormente el servidor, todavía no aprenden nada.
+Authentication Token|Token de Autentificación
+This is only needed if you're using FreeDNS. Otherwise you can leave it blank.|Esto solo es necesario si está utilizando FreeDNS. De lo contrario, puede dejarlo en blanco.
+On the site where you obtained your domain name set up some custom nameservers as follows:|En el sitio donde obtuvo su nombre de dominio, configure algunos servidores de nombres personalizados de la siguiente manera:
+On the FreeDNS site go to the "Dynamic DNS" section and make sure that "link updates of the same IP together" is set to ON.|En el sitio de FreeDNS, vaya a la sección "DNS dinámico" y asegúrese de que las "actualizaciones de enlaces de la misma IP" estén activadas.
+For your main domain name select "quick cron example" and then your authentication token is the random string on the last line between the ? and = characters.|Para su nombre de dominio principal, seleccione "ejemplo de cron rápido" y luego su token de autenticación es la cadena aleatoria en la última línea entre los caracteres? Y =.
+Your current IP address is shown at the top of the Dynamic DNS screen of the LibreServer user interface. You can use the "Mass Mod" feature at the top of the "Subdomains" part of the FreeDNS site to set all of your subdomains to that IP address.|Puede usar la función "Modificación masiva" en la parte superior de la parte de "Subdominios" del sitio FreeDNS para configurar todos sus subdominios para eso Direccion IP
+Select the MX entry for your main domain and change the destination to 10:mydomainname rather than 10:mail.mydomainname.|Seleccione la entrada MX para su dominio principal y cambie el destino a 10:mydomainname en lugar de 10:mail.mydomainname.
+Enter your FreeDNS login details and the authentication token on the Dynamic DNS screen of the LibreServer user interface.|Ingrese los detalles de inicio de sesión de FreeDNS y el token de autenticación en la pantalla DNS dinámico de la interfaz de usuario de LibreServer.
+To make a playlist insert a USB drive containing audio files in a directory called playlist, add a description below and then select Update|Para hacer una lista de reproducción, inserte una unidad USB que contenga archivos de audio en un directorio llamado lista de reproducción, agregue una descripción a continuación y luego seleccione Actualizar
+To add music copy it to a directory called Music on a USB drive then plug it into your server and select Update|Para agregar música, cópielo en un directorio llamado Música en una unidad USB y luego conéctelo a su servidor y seleccione Actualizar
+This is a wiki which stores its content in text files. Having no database makes maintaining it simpler, and it's not tied to any particular domain name so you can easily copy the files to a different domain if you need to.|Este es un wiki que almacena su contenido en archivos de texto. No tener una base de datos hace que sea más sencillo mantenerlo, y no está vinculado a ningún nombre de dominio en particular, por lo que puede copiar fácilmente los archivos a un dominio diferente si lo necesita.
+Provides an easy and private way to sync calendar and contacts between devices.|Proporciona una forma fácil y privada de sincronizar el calendario y los contactos entre dispositivos.
+Using on mobile|Usando en el móvil
+The user interface is a little misleading. Make sure that you log in with your username, not your email addres.|La interfaz de usuario es un poco engañosa. Asegúrese de iniciar sesión con su nombre de usuario, no con su dirección de correo electrónico.
+Also choose the advanced option and enter the subdomain that you installed etesync on.|También elija la opción avanzada e ingrese el subdominio en el que instaló etesync.
+This is a well known system for real time collaborative editing of documents. Just log in, choose a document title and then edit. Different users will appear in different colours, and can also chat in the sidebar. This is installed as a private system in which only users on your LibreServer server will be able to create and edit documents, so it's not open to any random users on the internet.|Este es un sistema bien conocido para la edición colaborativa en tiempo real de documentos. Simplemente inicie sesión, elija un título de documento y luego edite. Los diferentes usuarios aparecerán en diferentes colores, y también pueden chatear en la barra lateral. Esto se instala como un sistema privado en el que solo los usuarios de su servidor LibreServer podrán crear y editar documentos, por lo que no está abierto a usuarios aleatorios en Internet.
+This is a federated social networking system. It can federate with other popular fediverse systems.|Este es un sistema de redes sociales federadas. Puede federarse con otros sistemas federales populares.
+This is a blogging system which has no database and only uses text files for storage.|Este es un sistema de blogs que no tiene base de datos y solo usa archivos de texto para el almacenamiento.
+This is a git hosting system. It's very similar to Github in appearance and use, is lightweight and so is well suited for use on low power ARM servers.|Este es un sistema de alojamiento git. Es muy similar a Github en apariencia y uso, es liviano y, por lo tanto, es adecuado para su uso en servidores ARM de bajo consumo.
+This is a web publishing and social network system which includes wiki, web pages, photo albums and file storage. It also has nomadic identity allowing you to easily move your account between different servers and privacy controls which allow you to define who can see what content.|Este es un sistema de red social y publicación web que incluye wiki, páginas web, álbumes de fotos y almacenamiento de archivos. También tiene una identidad nómada que le permite mover fácilmente su cuenta entre diferentes servidores y controles de privacidad que le permiten definir quién puede ver qué contenido.
+Kanbans are one way of managing projects. They're traditionally used in businesses but can also be useful for personal TODO lists or within open source or DIY projects. If you have a list of things which need to be done and want to keep track of progress then this provides a way to do that.|Los kanbans son una forma de gestionar proyectos. Se utilizan tradicionalmente en empresas, pero también pueden ser útiles para listas de TODO personales o en proyectos de código abierto o de bricolaje. Si tiene una lista de cosas que deben hacerse y desea realizar un seguimiento del progreso, esto proporciona una manera de hacerlo.
+The default login is username "admin" and the login password which you usually use for the web interface.|El inicio de sesión predeterminado es el nombre de usuario "admin" y la contraseña de inicio de sesión que usualmente utiliza para la interfaz web.
+If you're using a Tor browser then you may need to allow javascript for the site by selecting the NoScript icon.|Si está utilizando un navegador Tor, es posible que deba permitir javascript para el sitio seleccionando el ícono NoScript.
+Extra users can be added from the drop down menu at the top right of the screen, under "Users management".|Se pueden agregar usuarios adicionales desde el menú desplegable en la parte superior derecha de la pantalla, en "Administración de usuarios".
+This enables you to store your music on the LibreServer server and then access it from any internet connected device.|Esto le permite almacenar su música en el servidor LibreServer y luego acceder a ella desde cualquier dispositivo conectado a Internet.
+This is a simple and lightweight photo album for the web. Whether you're an amateur or professional photographer, or want to publish random holiday pics or cat pictures. Lychee just does what it says it does without any fuss.|Este es un álbum de fotos simple y ligero para la web. Tanto si eres un fotógrafo aficionado o profesional, como si quieres publicar fotos de vacaciones o imágenes de gatos al azar. Lychee simplemente hace lo que dice que hace sin ningún problema.
+This provides an webmail interface suitable for use on desktop or mobile clients and with built in support for encryption.|Esto proporciona una interfaz de correo web adecuada para su uso en clientes de escritorio o móviles y con soporte incorporado para el cifrado.
+This is a system for file synchronisation and also has many other plugins for calendar, videoconferencing, collaborative document editing and federated file sharing.|Este es un sistema para la sincronización de archivos y también tiene muchos otros complementos para el calendario, las videoconferencias, la edición colaborativa de documentos y el intercambio de archivos federados.
+This is a video hosting system which uses webtorrent to help distribute the files to or between clients.|Este es un sistema de alojamiento de videos que utiliza webtorrent para ayudar a distribuir los archivos entre los clientes o entre ellos.
+Use the username 'root' and your usual password to log in as the administrator. You can then change settings as needed.|Utilice el nombre de usuario 'root' y su contraseña habitual para iniciar sesión como administrador. A continuación, puede cambiar la configuración según sea necesario.
+This is an OStatus and ActivityPub compatible social networking server which federates with other fediverse systems. It is high-performance and so is especially well suited for running on low power single board computers without much RAM.|Este es un servidor de redes sociales compatible con OStatus y ActivityPub que se federan con otros sistemas federales. Es de alto rendimiento y, por lo tanto, es especialmente adecuado para funcionar en computadoras de una sola placa de baja potencia sin mucha RAM.
+Since Pleroma supports the same protocols, any Mastodon client for Android should work with it.|Dado que Pleroma es compatible con los mismos protocolos, cualquier cliente Mastodon para Android debería funcionar con él.
+This is a fork of GNU Social which includes some extra fixes and optimisations to improve performance. It federates with other fediverse servers, such as Pleroma or Mastodon.|Esta es una bifurcación de GNU Social que incluye algunas correcciones adicionales y optimizaciones para mejorar el rendimiento. Se federan con otros servidores federales, como Pleroma o Mastodon.
+This is an encrypted pastebin, such that the server has zero knowledge of the content. It's intended for small amounts of text less than 32K in length. It's not intended for transfering large files, or for storing pastes for more than a day.|Este es un pastebin encriptado, de manera que el servidor no tiene conocimiento del contenido. Está diseñado para pequeñas cantidades de texto de menos de 32K de longitud. No está diseñado para transferir archivos grandes, o para almacenar pastas por más de un día.
+This is a web based user interface to the Matrix federated chat system. You will need to have already installed the Matrix app for this to work.|Esta es una interfaz de usuario basada en web para el sistema de chat federado de Matrix. Necesitará haber instalado ya la aplicación Matrix para que esto funcione.
+This is yet another chat system, but the server part of it isn't federated and so it's suitable for small private groups rather than for general public discussions.|Este es otro sistema de chat, pero la parte del servidor no está federada y, por lo tanto, es adecuada para pequeños grupos privados en lugar de para debates públicos generales.
+Provides a similar capability to proprietary systems such as Dropbox, and also is well suited for use with low power single board computers. You can have one or more directories which are synchronized across your various laptops/desktops/devices, and this makes it hard for you to ever lose important files. Of course, you don't necessarily need to be running a server in order to use Syncthing, but if you do have a server which is always running then there's always at least one place to synchronize your files to or from.|Proporciona una capacidad similar a los sistemas propietarios, como Dropbox, y también es adecuado para su uso con computadoras de una sola placa de baja potencia. Puede tener uno o más directorios que se sincronizan en sus diferentes computadoras portátiles / computadoras de escritorio / dispositivos, y esto hace que sea más difícil para usted perder archivos importantes. Por supuesto, no necesariamente tiene que estar ejecutando un servidor para usar Syncthing, pero si tiene un servidor que siempre está ejecutándose, siempre hay al menos un lugar para sincronizar sus archivos desde o hacia.
+On a Debian based system:|En un sistema basado en Debian:
+Or on Android search for the Syncthing app.|O en la búsqueda de Android de la aplicación Syncthing.
+Using the settings button within the LibreServer web interface for the Syncthing app you can then paste in any IDs for other devices. They will then sync with your server.|Al usar el botón de configuración dentro de la interfaz web de LibreServer para la aplicación Syncthing, puede pegar cualquier ID para otros dispositivos. Luego se sincronizarán con su servidor.
+A system for privately creating and sharing notes and images, similar to Evernote. It can be set up so that a small number of users on the server can share their notes in a convenient way. It doesn't have any web user interface, and you need to install native clients on mobile or laptop/desktop machines.|Un sistema para crear y compartir de forma privada notas e imágenes, similar a Evernote. Puede configurarse para que una pequeña cantidad de usuarios en el servidor puedan compartir sus notas de una manera conveniente. No tiene ninguna interfaz de usuario web, y necesita instalar clientes nativos en máquinas móviles o portátiles / de escritorio.
+Since the data at rest is stored in PGP encrypted format this is a good system to use in cases where security really is a critical factor.|Dado que los datos en reposo se almacenan en formato encriptado PGP, este es un buen sistema para usar en casos donde la seguridad realmente es un factor crítico.
+Go to https://turtlapp.com/download and you'll then be able to download the appropriate app for your laptop or phone.|Vaya a https://turtlapp.com/download y luego podrá descargar la aplicación adecuada para su computadora portátil o teléfono.
+Run the downloaded native app then at the bottom of the screen select "advanced settings" and enter your turl domain name, then register a new account. The password can be anything you choose, but since the client side encryption depends upon having a good password make it a long random string generated by a password manager such as KeepassX.|Ejecute la aplicación nativa descargada y luego en la parte inferior de la pantalla seleccione "configuración avanzada" e ingrese su nombre de dominio turl, luego registre una nueva cuenta. La contraseña puede ser cualquier cosa que usted elija, pero dado que el cifrado del lado del cliente depende de tener una buena contraseña, se convierte en una larga cadena aleatoria generada por un administrador de contraseñas como KeepassX.
+You should then be able to log in and start using the app. You might also want to invite any other users of your LibreServer system to also sign up using the turtl domain name which you specified during installation.|Entonces deberías poder iniciar sesión y comenzar a usar la aplicación. También es posible que desee invitar a otros usuarios de su sistema LibreServer a que también se registren con el nombre de dominio turtl que especificó durante la instalación.
+Disabling new registrations|Deshabilitando nuevos registros
+Once you have set up the server with however many users are needed you can then disable any new registrations by selecting Turtl on the LibreServer web interface and going to the settings screen.|Una vez que haya configurado el servidor, independientemente de la cantidad de usuarios necesarios, puede deshabilitar cualquier registro nuevo seleccionando Turtl en la interfaz web de LibreServer y accediendo a la pantalla de configuración.
+This is similar to Hubzilla but with a reduced range of features concentrating exclusively upon social networking with the latest version of the Zot protocol. Nomadic identity is supported, so to can export your channels and import them on other servers if necessary, without losing followers.|Esto es similar a Hubzilla pero con una gama reducida de funciones que se concentran exclusivamente en las redes sociales con la última versión del protocolo Zot. La identidad nómada es compatible, por lo que puede exportar sus canales e importarlos a otros servidores si es necesario, sin perder seguidores.
+Zap also has sophisticated privacy controls which enable you to decide exactly how you wish to interact with other users and what information of yours they can view.|Zap también tiene controles de privacidad sofisticados que te permiten decidir exactamente cómo deseas interactuar con otros usuarios y qué información tuya pueden ver.
+The first account you register will be the administrator user, and from there you can go to the admin settings and disable new registrations if needed.|La primera cuenta que registre será el usuario administrador, y desde allí puede ir a la configuración de administración y deshabilitar nuevos registros si es necesario.
+To find other users to follow select "directory" from the drop down menu at the top right of the screen and set "this site only" to "no".|Para encontrar a otros usuarios a seguir, seleccione "directorio" en el menú desplegable en la parte superior derecha de la pantalla y configure "solo este sitio" a "no".
+There is an Android app available called Nomad.|Hay una aplicación de Android disponible llamada Nomad.
+End-to-end encrypted sync of calendar and contacts between devices|Sincronización cifrada de extremo a extremo del calendario y contactos entre dispositivos
+Secure, end-to-end encrypted and journaled personal information cloud synchronization for Android and the desktop, supporting contacts and calendars|Sincronización segura, de extremo a extremo, de la nube de información personal registrada en diario para Android y el escritorio, que admite contactos y calendarios.
+Nomadic social network server|Servidor de red social nómada.
+Zap is a full featured social network application running under the Zot6 protocol. It provides enhanced privacy modes and identity/content mirroring across multiple servers ("nomadic identity").|Zap es una aplicación de red social con todas las funciones que se ejecuta bajo el protocolo Zot6. Proporciona modos de privacidad mejorados y duplicación de identidad / contenido en múltiples servidores ("identidad nómada").
+Change background|Cambiar el fondo
+Diagnostics|Diagnósticos
+Please wait while your app is installing|Por favor, espere mientras se instala su aplicación
+The app could not be installed|La aplicación no pudo ser instalada
+Add a new member|Añadir un nuevo miembro
+Kanban focussed on simplicity and minimalism|Kanban enfocado en la simplicidad y el minimalismo.
+Emails, chat or social network posts will be blocked if they contain the following words or phrases|Los correos electrónicos, mensajes de chat o de redes sociales se bloquearán si contienen las siguientes palabras o frases
+Muted words|Palabras silenciadas
+Disk space is getting too low. Installation stopped.|El espacio en disco está disminuyendo. Instalación detenida.
+Password changed|contraseña cambiada
+Play media from any UPNP/DLNA device on your local network|Reproduzca medios desde cualquier dispositivo UPNP / DLNA en su red local
+This allows you to play media on any DLNA supporting device within your local network.|Esto le permite reproducir medios en cualquier dispositivo compatible con DLNA dentro de su red local.
+No Access Control|Sin control de acceso
+DLNA doesn't have any access controls, so keep in mind that anyone with a mobile device or laptop within your local network is potentially able to play any media on the server. Hence this may not be suitable for situations where you want parental control over what media can be accessed.|DLNA no tiene ningún control de acceso, así que tenga en cuenta que cualquier persona con un dispositivo móvil o portátil dentro de su red local puede reproducir cualquier medio en el servidor. Por lo tanto, esto puede no ser adecuado para situaciones en las que desee el control de los padres sobre a qué medios se puede acceder.
+Adding Media|Añadiendo medios
+You can add media by selecting the settings button from the DLNA app.|Puede agregar medios seleccionando el botón de configuración de la aplicación DLNA.
+Your homepage can also be accessed with a Tor browser on:|También se puede acceder a su página de inicio con un navegador Tor en:
+Chat|Chatear
+Media|Media
+Social|Social
+Sync|Sincronizar
+Publishing|Publicacion
+Other|Otros
+Recommended Firefox Add-ons:|Complementos de Firefox recomendados:
+Change your default domain name|Cambia tu nombre de dominio predeterminado
+Do you want to change your default domain name to:|¿Desea cambiar su nombre de dominio predeterminado a:
+rsync failed|rsync falló
+For most purposes Syncthing is an easier file synchronization system, but rsync is still a reliable solution if you prefer to do things the more traditional way or if you just want to create a mirror from an existing rsync server.|Para la mayoría de los propósitos, Syncthing es un sistema de sincronización de archivos más sencillo, pero rsync sigue siendo una solución confiable si prefiere hacer las cosas de la manera más tradicional o si solo desea crear un espejo desde un servidor rsync existente.
+Rsync is unencrypted but can be used via an onion address for transport security. If you are using it via your domain name then third parties will be able to see the content, but this may not matter if you are synchronizing already public files, such as GNU/Linux distro downloads.|Rsync no está encriptado, pero se puede usar a través de una dirección de cebolla para la seguridad del transporte. Si lo está utilizando a través de su nombre de dominio, entonces terceros podrán ver el contenido, pero esto no importa si está sincronizando archivos ya públicos, como las descargas de la distribución de GNU / Linux.
+Avoid using this for private data, unless you are exclusively using rsync via the onion address.|Evite usar esto para datos privados, a menos que esté utilizando exclusivamente rsync a través de la dirección de cebolla.
+Creating a Mirror|Creando un espejo
+Select the Settings button then enter the domain and module name for the mirror. From then on synchronization will happen once per day.|Seleccione el botón Configuración y luego ingrese el dominio y el nombre del módulo para el espejo. A partir de entonces la sincronización se realizará una vez al día.
+Local Sync|Sincronización local
+If you created a mirror to your server you can then sync those files to other machines or devices on your local network as follows:|Si creó un espejo en su servidor, puede sincronizar esos archivos con otras máquinas o dispositivos en su red local de la siguiente manera:
+If "libreserver" doesn't work then you can substitute the local IP address of your server.|Si "libreserver" no funciona, puede sustituir la dirección IP local de su servidor.
+Create a mirror of public files|Crea un espejo de archivos públicos.
+The domain name could not be changed|El nombre de dominio no pudo ser cambiado
+This might be because you do not have ports 80 and 443 forwarded to the server.|Esto puede deberse a que no tiene los puertos 80 y 443 reenviados al servidor.
+Check the port forwarding settings on your internet router.|Compruebe la configuración de reenvío de puerto en su enrutador de internet.
+Please specify a domain name which will be used for your email or XMPP address.|Especifique un nombre de dominio que se utilizará para su correo electrónico o dirección XMPP.
+Please forward the following ports from your internet router:|Reenvíe los siguientes puertos desde su enrutador de internet:
+Search for 'Barcode Scanner', then select 'install'|Busque 'Barcode Scanner', luego seleccione 'instalar'
+Download the DarkMessenger apk file via the link below, preferably using a Tor based browser, then install it|Descargue el archivo apk DarkMessenger a través del siguiente enlace, preferiblemente con un navegador basado en Tor, luego instálelo
+Run DarkMessenger and the initial account setup will be shown. DarkMessenger only allows onion addresses to be used to create accounts|Ejecute DarkMessenger y se mostrará la configuración inicial de la cuenta. DarkMessenger solo permite usar direcciones de cebolla para crear cuentas
+You can obtain your onion XMPP address from the Members section within the web interface, usually at http://libreserver/admin or http://libreserver.local/admin. If you can't easily copy and paste it into the account setup within DarkMessenger then you can use the barcode scanner on the QRcode displayed|Puede obtener su dirección XMPP de cebolla en la sección Miembros dentro de la interfaz web, generalmente en http: // libreserver / admin o http: //libreserver.local/admin. Si no puede copiarlo y pegarlo fácilmente en la configuración de la cuenta dentro de DarkMessenger, puede usar el escáner de código de barras en el código QR que se muestra
+Enter the password which you stored during initial setup of the system and also the onion domain|Introduzca la contraseña que almacenó durante la configuración inicial del sistema y también el dominio de cebolla
+You should now be able to connect to your onion XMPP account and set an avatar image if necessary|Ahora debería poder conectarse a su cuenta de XMPP de cebolla y configurar una imagen de avatar si es necesario
+When sending or receiving pictures or other attachments for the first time you will need to accept the self-signed certificates. Select 'always' twice. This should only happen once per contact|Cuando envíe o reciba imágenes u otros archivos adjuntos por primera vez, deberá aceptar los certificados autofirmados. Seleccione 'siempre' dos veces. Esto solo debería ocurrir una vez por contacto.
+Under Settings/Expert you may want to change the automatic message deletion period. By default this is one day|En Configuración / Experto puede cambiar el período de eliminación automática de mensajes. Por defecto esto es un día.
+When setting up a group chat first ensure that you have separately confirmed two way messaging with each of the participants individually|Al configurar un chat grupal, primero asegúrese de haber confirmado por separado los mensajes bidireccionales con cada uno de los participantes individualmente
+Enable strict TLS authentication between XMPP servers?|¿Habilitar la autenticación TLS estricta entre servidores XMPP?
+If you or other people are having difficulty joining multi-user chat then enabling this might help|Si usted u otras personas tienen dificultades para unirse al chat multiusuario, habilitar esto podría ayudar
+Music can be uploaded using NextCloud. Install the app and then create a directory called 'Music'.|La música se puede cargar usando NextCloud. Instala la aplicación y luego crea un directorio llamado 'Música'.
+Drag your files into the Music directory and they will then become available to mpd.|Arrastre sus archivos al directorio de Música y luego estarán disponibles para mpd.
+Select search (magnifying glass icon) and search for 'MALP', then select 'install'|Seleccione buscar (icono de lupa) y busque 'MALP', luego seleccione 'instalar'
+Open MALP and from the settings select Profiles|Abre MALP y desde la configuración selecciona Perfiles.
+Enter the following settings:|Ingrese los siguientes ajustes:
+Save the settings by selecting the disk icon at the top right of the screen|Guarde la configuración seleccionando el icono del disco en la parte superior derecha de la pantalla
+You should now be able to connect to mpd on your server and select and play albums.|Ahora debería poder conectarse a mpd en su servidor y seleccionar y reproducir álbumes.
+In a non-Tor browser navigate to http://libreserver:8250 or http://[server local IP address]:8250 and you should be able to play the selected album.|En un navegador que no sea Tor, navegue a http: // libreserver: 8250 o http: // [dirección IP local del servidor]: 8250 y debería poder reproducir el álbum seleccionado.
+Setting up on the desktop|Configuración en el escritorio
+Install Sonata|Instalar sonata
+Run Sonata and enter the following settings:|Ejecute Sonata e ingrese los siguientes ajustes:
+You should now be able to see your albums listed and be able to add them to the currently playing list.|Ahora debería poder ver sus álbumes en la lista y poder agregarlos a la lista de reproducción actual.
+In a non-Tor browser navigate to http://libreserver:8250 or http://[server local IP address]:8250 and you should be able to play the selected album.|En un navegador que no sea Tor, navegue a http: // libreserver: 8250 o http: // [dirección IP local del servidor]: 8250 y debería poder reproducir el álbum seleccionado.
+Select your music file format:|Seleccione su formato de archivo de música:
+pixelfed allow new registrations|pixelfed permite nuevos registros
+Groceries and household management|Comestibles y gestión del hogar.
+Organization|Organización
+VPN domain or IP address:|Dominio VPN o dirección IP:
+VPN public key:|Clave pública VPN:
+Public key for this server:|Clave pública para este servidor:
+Public keys for the laptops or devices that you wish to be able to use this server to connect to the internet.|Claves públicas para las computadoras portátiles o dispositivos que desea que puedan usar este servidor para conectarse a Internet.
+Network|Red
+Set your coordinates on the map|Establece tus coordenadas en el mapa
+Longitude:|Longitud:
+Latitude:|Latitud:
+Join|Unirse
+Docs|Docs
+Community network map is being generated|Se está generando un mapa de la red comunitaria.
+Please wait|por favor espera
+IP address (optional):|Dirección IP (opcional):
+Export|Exportar
+Add a new community network node|Agregar un nuevo nodo de red comunitaria
+Remove a community network node|Eliminar un nodo de red comunitaria
+WARNING: Only change this if you know what you are doing. Selecting the wrong mesh protocol may make your server disappear from the network, and be difficult to recover|ADVERTENCIA: Cambie esto solo si sabe lo que está haciendo. Seleccionar el protocolo de malla incorrecto puede hacer que su servidor desaparezca de la red y sea difícil recuperarlo
+WARNING: Only change this if you know what you are doing. Setting an incorrect IP address or gateway may cause your server to become inaccessible, and may be difficult to recover|ADVERTENCIA: Cambie esto solo si sabe lo que está haciendo. Establecer una dirección IP o puerta de enlace incorrecta puede hacer que su servidor se vuelva inaccesible y puede ser difícil recuperar
+Choose your network:|Elige tu red:
+Language is being changed|El idioma esta siendo cambiado
+Community Network|Red comunitaria
+Theme is being changed|El tema esta siendo cambiado
+Install a new app|Instala una nueva aplicación
+Restore APPNAME from backup?|¿Restaurar APPNAME desde la copia de seguridad?
+Add or remove feeds|Añadir o eliminar feeds
+Enter an RSS feed URL to add or remove. The domain name is enough for removals.|Introduzca una URL de fuente RSS para agregar o eliminar. El nombre de dominio es suficiente para eliminaciones.
+Show onion address|Mostrar dirección de cebolla
+Multi User Dungeon from the era of Welsh mainframe computing|Multi User Dungeon de la era de la computación de mainframe galés
+Forward the UDP port 5100 from your internet router|Reenvíe el puerto UDP 5100 de su enrutador de internet
+Since this app only uses the UDP protocol it won't work via an onion address. If you are running the onion only version of LibreServer then use its local IP address (usually 192.168.1.x) to connect to the game on the above port.|Como esta aplicación solo usa el protocolo UDP, no funcionará a través de una dirección de cebolla. Si está ejecutando la versión exclusiva de LibreServer en cebolla, use su dirección IP local (generalmente 192.168.1.x) para conectarse al juego en el puerto anterior.
+Near infinite world block sandbox game|Juego de caja de arena de bloque de mundo casi infinito
+Federation List|Lista de federaciones
+Add or remove the domain names for instances with whom you wish to federate. Don't include your own domain names.|Agregue o elimine los nombres de dominio para las instancias con las que desea federarse. No incluya sus propios nombres de dominio.
+Notify via|Notificar a través de
+Receive admin notifications|Recibe notificaciones de administrador
+New calendar event|Nuevo evento de calendario
+New direct message|Nuevo mensaje directo
+New reply|Nueva respuesta
+New shared item|Nuevo elemento compartido
+New follow request|Nueva solicitud de seguimiento
+Number of connections on HTTP port is high|El número de conexiones en el puerto HTTP es alto
+Number of connections on HTTPS port is high|El número de conexiones en el puerto HTTPS es alto
+Cryptpad allow new signups|Cryptpad permite nuevos registros
+Name of the Dungeon Master|Nombre del maestro de mazmorra
+Message Of The Day|Mensaje del día
+port|puerto de red
+Server Password|Contraseña del servidor
+DNS over TLS|DNS sobre TLS
+IP Address|Dirección IP
+New git patch|Nuevo parche git
+liked your post|me gustó tu publicación

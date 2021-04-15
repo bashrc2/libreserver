@@ -1,0 +1,592 @@
+About|hakkında
+Accept|Kabul etmek
+Accounts software can often be quite complex, and so you'll probably want to refer to the official documentation (https://akaunting.com/docs) for details.|Hesaplar yazılımı genellikle oldukça karmaşık olabilir ve bu nedenle ayrıntılar için muhtemelen resmi belgelere (https://akaunting.com/docs) başvurmak isteyeceksiniz.
+Add|Eklemek
+New Member|Yeni kullanıcı ekle
+Add custom emoji|Özel emoji ekle
+Add mp3 or ogg files to a USB drive|USB sürücüsüne mp3 veya ogg dosyaları ekle
+Add the following to your Emacs configuration file:|Emacs yapılandırma dosyanıza aşağıdakileri ekleyin:
+Add the Syncthing IDs for your other systems and devices here|Diğer sistemleriniz ve cihazlarınız için Senkronizasyon kimliklerini buraya ekleyin
+Add your dat links below|Aşağıda dat bağlantılarınızı ekleyin
+Add your RSS feeds here. Each line should be [title],[feed URL]|RSS akışlarınızı buraya ekleyin. Her satır [başlık], [feed URL] olmalıdır
+Adding music|Müzik ekleme
+Afrikaans|Afrikaans
+Akaunting|Akaunting
+Albanian|Arnavut
+Allow new registrations|Yeni kayıtlara izin ver
+An upgrade is scheduled|Bir yükseltme planlandı
+App is being removed|Uygulama kaldırılıyor
+App is scheduled to be installed|Uygulama yüklenecek şekilde planlandı
+Apps|Uygulamalar
+Arabic|Arapça
+Backup|yedek
+Backup / Restore|Yedekleme / Geri Yükleme
+Backup drive space used|Yedek sürücü alanı kullanıldı
+Backup has failed|Yedekleme başarısız oldu
+Backup in progress|Yedekleme devam ediyor
+Backup is complete|Yedekleme tamamlandı
+Backup of keys failed|Anahtarların yedeklenmesi başarısız oldu
+Backup of keys is complete|Anahtarların yedeklenmesi tamamlandı
+Backup your keys now?|Anahtarlarınızı şimdi mi yedekleyin?
+Basque|Bask
+Beginning app install|Uygulama yükleme başlangıç
+Beginning removal of app|Uygulamanın kaldırılmasının başlaması
+Belarusian|Beyaz Rusça
+Bosnian|Boşnakça
+Bulgarian|Bulgar
+Cancel|İptal etmek
+Catalan|Katalan
+Chat system|Sohbet sistemi
+Chinese (Simplified)|Basitleştirilmiş Çince)
+Chinese (Traditional)|Çin geleneği)
+Choose the language that you wish to translate from the list.|Listeden çevirmek istediğiniz dili seçin.
+Choose your language|Dilinizi seçin
+Classic chat system|Klasik sohbet sistemi
+Click close and then connect.|Kapat'a tıklayın ve sonra bağlanın.
+Click on "add new" to add a new server and enter the domain name or onion address for the LibreServer, your username (which can be anything) and the VoIP server password which is the same as the password you set up the box with. Accept the self-signed SSL certificate if you don't have a Let's Encrypt certificate set up for your default domain. You are now ready to chat.|Yeni bir sunucu eklemek için "yeni ekle" ye tıklayın ve LibreServer için alan adı veya soğan adresini, kullanıcı adınızı (herhangi bir şey olabilir) ve kutuyu oluşturduğunuz parola ile aynı olan VoIP sunucu parolasını girin. Varsayılan etki alanınız için ayarlanmış bir Let's Encrypt sertifikanız yoksa, kendinden imzalı SSL sertifikasını kabul edin. Artık sohbet etmeye hazırsınız.
+Click on the lock icon at the bottom of the screen and enter the password. It should then appear unlocked. If you don't unlock then any edits you make won't be saved.|Ekranın altındaki kilit simgesine tıklayın ve şifreyi girin. Daha sonra kilidi açılmalıdır. Kilidini açmazsanız yaptığınız düzenlemeler kaydedilmez.
+Collaborative document editor|İşbirliği belge editörü
+Confirm backup password|Yedekleme şifresini onayla
+Continue|Devam et
+Copy and paste the translations file and select 'update'.|Çeviri dosyasını kopyalayıp yapıştırın ve 'güncelle' seçeneğini seçin.
+Copy and paste the translations file into your favorite editor.|Çeviri dosyasını en sevdiğiniz editöre kopyalayıp yapıştırın.
+Copy and paste this into an email or other messaging app and send it to the LibreServer project.|Bunu bir e-postaya veya başka bir mesajlaşma uygulamasına kopyalayıp yapıştırın ve LibreServer projesine gönderin.
+CPU temperature|CPU sıcaklığı
+CPU usage|CPU kullanımı
+Croatian|Hırvat
+Czech|Çek
+Danish|Danimarkalı
+DAT Server|DAT Sunucusu
+Databaseless blogging|Veritabanında bloglama
+Databaseless wiki|Databaseless wiki
+diagnostics|tanılama
+diagnostics log|tanılama günlüğü
+Different versions of the same page on different servers are represented by boxes at the bottom right of the screen. You can double click on them to see the different versions, and use the flag icon to fork if you prefer that version|Aynı sayfanın farklı sunuculardaki farklı sürümleri, ekranın sağ alt köşesindeki kutular ile temsil edilir. Farklı sürümleri görmek için bunlara çift tıklayabilir ve bu sürümü tercih ederseniz bayrak simgesini kullanabilirsiniz.
+Disk I/O Speed|Disk G / Ç Hızı
+Disk space used|Kullanılan disk alanı
+DNS setup|DNS kurulumu
+Domain/User Blocking|Alan / Kullanıcı Engelleme
+Domain:|Alan:
+Domain|Alan
+Dutch|Flemenkçe
+Dynamic DNS|Dinamik DNS
+Edit your translations. The structure of this file is very simple. On the left is English text and on the right is translated text, with the vertical line character as a separator.|Çevirilerinizi düzenleyin. Bu dosyanın yapısı çok basit. Solda ingilizce metin ve sağda metin, bir ayırıcı olarak dikey çizgi karakteri ile çevrilmiştir.
+Edit, add or remove blocked domains or users. This applies to Email and XMPP addresses|Engellenen etki alanlarını veya kullanıcıları düzenleyin, ekleyin veya kaldırın. Bu E-posta ve XMPP adresleri için geçerlidir.
+Edith enable login|Edith giriş yapabilmek
+Email system|E-posta sistemi
+Email/XMPP: USEREMAIL|E-posta / XMPP: USEREMAIL
+Enable access via secure shell?|Güvenli kabuk yoluyla erişimi etkinleştirin mi?
+Enable Updates|Güncellemeleri Etkinleştir
+English|ingilizce
+English (US)|Amerikan ingilizcesi)
+Ensure that dat files are always available|Dat dosyalarının her zaman mevcut olduğundan emin olun
+Ensure that tor is installed onto your local system:|Tor sisteminin yerel sisteminize kurulduğundan emin olun:
+Enter a label (which can be any name you choose for the server), the default domain name of the LibreServer or preferably the mumble onion address, your username (which can also be anything) and the mumble password which is the same as the one you originally set up the box with. Leave the port number unchanged.|Bir etiket girin (sunucu için seçtiğiniz herhangi bir isim olabilir), LibreServer'un varsayılan alan adı veya tercihen mumble soğan adresi, kullanıcı adınız (herhangi bir şey de olabilir) ve aynı olan mumble şifresi kutuyu orijinal olarak ayarladınız. Bağlantı noktası numarasını değiştirmeden bırakın.
+Enter a password which will be used to protect the backup|Yedeklemeyi korumak için kullanılacak bir şifre girin
+Enter first and second nicknames and check connect to this network on startup.|İlk ve ikinci takma adları girin ve başlangıçta bu ağa bağlanmayı kontrol edin.
+Estonian|Estonyalı
+Everything installed will be lost|Yüklenen her şey kaybolacak
+Extremely simple note taking|Son derece basit not alma
+Factory reset is in progress|Fabrika ayarlarına sıfırlama işlemi devam ediyor
+Farsi|Farsi
+Favicon|favicon
+Federated image sharing|Birleşik görüntü paylaşımı
+Federated microblogging|Federal mikroblog
+Federated social network|Birleşik sosyal ağ
+Federated wiki|Federasyon wiki
+Fedwiki Favicon|Fedwiki Favicon
+Fedwiki Password|Fedwiki Şifresi
+Fedwiki Settings|Fedwiki Ayarları
+File storage and sync|Dosya depolama ve senkronizasyon
+File synchronization|Dosya senkronizasyonu
+Filipino|Filipinli
+Finnish|Fince
+First ensure that tor is installed. Within a terminal:|Önce torun takılı olduğundan emin olun. Bir terminal içinde:
+For details see the diagnostics|Ayrıntılar için teşhislere bakın
+For details see:|Ayrıntılar için bakınız:
+For further information see the website at https://libreserver.org|Daha fazla bilgi için https://libreserver.org adresindeki web sitesine bakınız.
+For the initial login use username: admin password admin|İlk giriş için kullanıcı adı: admin password admin
+For the Jabber ID enter the email address from your LibreServer user settings|Jabber ID için LibreServer kullanıcı ayarlarınızdan e-posta adresini girin.
+For the password use the password which you initially wrote down or stored during the setup of the LibreServer system|Parola için LibreServer sisteminin kurulumu sırasında yazdığınız veya sakladığınız parolayı kullanın.
+Forward port 80 and 443 from your internet router|İnternet yönlendiricinizden ileri 80 ve 443 numaralı bağlantı noktası
+Forward the following ports from your internet router:|İnternet yönlendiricinizden aşağıdaki portları yönlendirin:
+Forward the port 64738 from your internet router|İnternet yönlendiricinizden 64738 numaralı bağlantı noktasını yönlendirin
+Forward the port 6697 from your internet router|İnternet yönlendiricinizden 6697 numaralı bağlantı noktasını yönlendirin
+Forward the port 8448 from your internet router|İnternet yönlendiricinizden 8448 numaralı bağlantı noktasını yönlendirin
+FreeDNS code:|FreeDNS kodu:
+LibreServer started in 2013. It was initially based on the Beaglebone Black hardware and inspired by the FreedomBox idea of an inexpensive and simple to manage internet server for the home.|LibreServer 2013 yılında başladı. Başlangıçta Beaglebone Black donanımına dayanıyordu ve ev için internet sunucusunu yönetmek için ucuz ve basit bir FreedomBox fikrinden esinlenilmişti.
+French|Fransızca
+French (Canada)|Fransızca (Kanada)
+From the initial screen select 'settings' then 'language'.|İlk ekrandan 'ayarlar' ve ardından 'dil' seçimini yapın.
+From the menu select 'Configure' then 'Settings'. Select the 'Advanced' checkbox then select 'Network'. Select 'Force TCP mode' and proxy type 'Socks5'. Hostname should be set to 'localhost' and port should be 9050.|Menüden 'Yapılandır'ı ve ardından' Ayarlar'ı seçin. 'Gelişmiş' onay kutusunu seçin ve ardından 'Ağ' seçeneğini seçin. 'TCP modunu zorla' ve 'Socks5' proxy türünü seçin. Ana bilgisayar adı 'localhost' olarak ayarlanmalı ve port 9050 olmalıdır.
+Gaelic|Kelt
+Gallego|Gallego
+Georgian|Gürcü
+German|Almanca
+German (Personal)|Almanca (Kişisel)
+Git repo management|Git repo yönetimi
+Go Back|Geri dön
+Go back to the F-droid initial screen and update the repositories by swiping downwards. You'll see it say "updating repositories". This might take a few minutes.|F-droid başlangıç ​​ekranına geri dönün ve depoları aşağı doğru kaydırarak güncelleyin. "Depoları güncelleyerek" yazdığını göreceksiniz. Bu, birkaç dakika sürebilir.
+Go back to the initial screen of the Conversations app, select the menu again, then 'Manage accounts'. Add an account by selecting the person icon with the plus next to it.|Konuşmalar uygulamasının başlangıç ​​ekranına geri dönün, menüyü tekrar seçin, ardından 'Hesapları yönetin'. Yanındaki artı ile birlikte kişi simgesini seçerek bir hesap ekleyin.
+Gogs allow new registrations|Gogs yeni kayıtlara izin veriyor
+Greek|Yunan
+Gujarati|Gujarati
+Have you written down or saved the login credentials and removed any backup drives from the system?|Giriş bilgilerini yazdınız veya kaydettiniz ve herhangi bir yedek sürücüyü sistemden sildin mi?
+Hebrew|İbranice
+Help|yardım et
+Helps caregivers track sleep, feedings, diaper changes, and tummy time|Bakım verenlerin uykuyu, beslemeleri, bebek bezini değiştirmelerini ve karın sürelerini takip etmelerine yardımcı olur
+Helps caregivers track sleep, feedings, diaper changes, and tummy time to learn about and predict babys needs without as much guess work.|Bakım görevlilerinin bebeklerin ihtiyaçlarını tahmin etmek ve tahmin etmek için uyku, beslenme, bebek bezi değişiklikleri ve karın sürelerini tahmin etmelerine yardımcı olur.
+here|İşte
+HexChat (formerly XChat) is compatible with proxying via Tor and so provides the best security when connecting to your IRC server. It will allow you to connect to your IRC server's onion address.|HexChat (eski XChat), Tor üzerinden proxy ile uyumludur ve böylece IRC sunucunuza bağlanırken en iyi güvenliği sağlar. IRC sunucunuzun soğan adresinize bağlanmanızı sağlar.
+Hindi|Hintçe
+How to do translations|Çeviri nasıl yapılır?
+Hungarian|Macarca
+Icecast|Icecast
+Icecast is quite CPU intensive. For example on an A20 based system it takes about 70% of the CPU resource. This is something to be aware of if you're running multiple apps|Icecast oldukça yoğun bir işlemci. Örneğin A20 tabanlı bir sistemde, CPU kaynağının yaklaşık% 70'i alınır. Bu, birden çok uygulama çalıştırıyor olmanızın farkında olmanız gereken bir şeydir.
+Icecast is updating|Icecast güncelleniyor
+Icelandic|İzlandaca
+Icons on the website and user interfaces are by Rashid Mhar.|Web sitesi ve kullanıcı arayüzlerindeki simgeler Rashid Mhar.
+If you are an Emacs user then you can also connect to your IRC server via Emacs.|Emacs kullanıcısıysanız, Emacs üzerinden IRC sunucunuza da bağlanabilirsiniz.
+If you are using the onion address then use SSL should be unchecked and the transport encryption will be handled via the onion address itself.|Soğan adresini kullanıyorsanız, SSL kullanıp işaretlememelisiniz ve taşıma şifrelemesi soğan adresi üzerinden ele alınacaktır.
+If you are using the ordinary domain name (clearnet/ICANN) then make sure that Use SSL is checked.|Normal alan adını (clearnet / ICANN) kullanıyorsanız, SSL kullan'ın işaretli olduğundan emin olun.
+If you don't have a domain then just select Continue|Bir alan adınız yoksa, sadece Devam'ı seçin.
+If you don't have Orbot installed then enable The Guardian Project repository from the drop down menu and install it.|Orbot yüklü değilse, açılır menüden Guardian Project deposunu etkinleştirin ve kurun.
+If you don't need a password then just leave this blank and select Update|Eğer bir şifreye ihtiyacınız yoksa, sadece bu boş bırakın ve Güncelle'yi seçin.
+If you have a USB plugged in leave it inserted until you can confirm that the stream is working|Eğer bir USB takılıysa, akışın çalıştığını doğrulayana kadar
+If you have trouble accessing onion addresses paste some Tor bridges below. See https://bridges.torproject.org/bridges|Soğan adreslerine erişme konusunda sorun yaşıyorsanız, aşağıda bazı Tor köprülerini yapıştırın. Https://bridges.torproject.org/bridges adresine bakın.
+If you're using the Element mobile app to access your Matrix homeserver then you can significantly improve battery performance by going to the settings and changing 'Sync request timeout' to 30 seconds and 'Delay between two sync requests' to 600 seconds. Also turning off 'msgs in group chats' will help, since it will avoid getting a notification whenever a group chat event happens, which then wakes up the screen|Eğer Element mobil uygulamanızı Matrix ev sunucunuza erişmek için kullanıyorsanız, o zaman ayarlara gidip 'Senkronizasyon isteği zaman aşımını' 30 saniye ve 'İki eşitleme isteği arasındaki gecikme' 600 saniyeye kadar değiştirerek pil performansını önemli ölçüde artırabilirsiniz. Ayrıca, grup sohbeti gerçekleştiğinde bir bildirim almayı engelleyeceğinden, daha sonra ekranı uyandırdığı için, 'grup sohbetlerindeki msj'ler' kapatılır.
+If your translations are accepted they will later appear in the upstream project and be usable by anyone.|Çevirileriniz kabul edilirse, daha sonra proje akışında görünecek ve herkes tarafından kullanılabilir olacak.
+Import|İthalat
+In a Tor browser navigate to the onion address for Icecast and you can then play the stream|Bir Tor tarayıcısında Icecast için soğan adresine gidin ve akışı izleyebilirsiniz
+Indonesian|Endonezya
+Initial login|İlk giriş
+Initial Setup|İlk kurulum
+Install|kurmak
+Install APPNAME now?|APPNAME şimdi yüklensin mi?
+Install F-Droid|F-Droid'i Kurun
+Install HexChat and set up its configuration file. Assuming that you're running on a Debian or Arch based distro, this can be done on your local machine with:|HexChat'i kurun ve yapılandırma dosyasını ayarlayın. Bir Debian veya Arch tabanlı dağıtımda çalıştığınızı varsayarsak, bu sizin yerel makinenizde şu şekilde yapılabilir:
+Installation|Kurulum
+Installing in Emacs|Emacs'te yükleme
+Installing on Desktop|Masaüstüne Yükleme
+Invalid Password|geçersiz şifre
+IRC|IRC
+IRC is useful for multi-user chat. The classic use case is for software development where many engineers might need to coordinate their activities, but it's also useful for meetings, parties and general socialising.|IRC, çok kullanıcılı sohbet için kullanışlıdır. Klasik kullanım durumu, birçok mühendisin faaliyetlerini koordine etmesi gereken yazılım geliştirme içindir, ancak toplantılar, partiler ve genel sosyalleşme için de yararlıdır.
+It can be shown using the command:|Komut kullanılarak gösterilebilir:
+It's possible to add jingles which will be played between tracks at random intervals. If some of the audio files on your USB drive are named jingle_something.mp3 then they will be used as jingles|Rastgele aralıklarla parçalar arasında oynanacak jingle'lar eklemek mümkündür. USB sürücünüzdeki ses dosyalarından bazıları jingle_something.mp3 olarak adlandırılmışsa, bunlar jingle olarak kullanılacaktır.
+It's recommended that you add an SRV record for Matrix to your DNS setup. How you do this will depend upon your dynamic DNS provider and their web interface. On FreeDNS on the subdomains settings in addition to the subdomain which you are using for the matrix server create an extra entry as follows:|DNS kurulumunuza Matrix için bir SRV kaydı eklemeniz önerilir. Bunu nasıl yapacağınız, dinamik DNS sağlayıcınıza ve web arayüzüne bağlı olacaktır. Alt etki alanları üzerindeki FreeDNS'de, matris sunucusu için kullandığınız alt etki alanına ek olarak aşağıdaki gibi ek bir giriş oluşturulur:
+Italian|İtalyan
+Japanese|Japonca
+Jingles|Jingles
+Kannada|Kannada
+Keep changes|Değişiklikleri Koru
+Khmer|Kmer
+Korean|Koreli
+Language|Dil
+Lao|Lao
+Latvian|Letonyalı
+Lithuanian|Litvanyalı
+Malayalam|Malayalam
+Malaysian|Malezyalı
+Manually upgrade now ?|Şimdi yeni sürüme mi geçmelisiniz?
+Maori (Ngai Tahu)|Maori (Ngai Tahu)
+Maori (Waikoto Uni)|Maori (Waikoto Uni)
+Markdown blogging|Markdown blog
+Matrix|Matris
+Maybe instead of editing within this user interface you prefer to use your own editor. That can be done as follows:|Belki bu kullanıcı arayüzünde düzenleme yapmak yerine kendi editörünüzü kullanmayı tercih edersiniz. Bu aşağıdaki gibi yapılabilir:
+Media broadcast|Medya yayını
+Media storage and broadcast|Medya depolama ve yayın
+Mongolian|Moğolca
+Mumble|Mırıltı
+Music player|Müzik çalar
+No|Yok hayır
+No SSH public key was provided|SSH genel anahtarı verilmedi
+none|Yok
+Norwegian|Norveççe
+Norwegian (Primary)|Norveççe (Birincil)
+Not Connected|Bağlı değil
+Note taking|Not alma
+Nynorsk|Nynorsk
+Once you are on the translations screen (see the first three steps in the first section above) select the 'submit' button.|Çeviriler ekranındayken (yukarıdaki bölümdeki ilk üç adımı inceleyin) 'Gönder' düğmesini seçin.
+Once you are on the translations screen (see the first three steps in the first section above) select the language code shown at the top of the screen (usually it ends with UTF-8). You can then see the raw translations file.|Çeviriler ekranındayken (yukarıdaki bölümdeki ilk üç adımı izleyin) ekranın üst kısmında gösterilen dil kodunu seçin (genellikle UTF-8 ile biter). Daha sonra ham çeviriler dosyasını görebilirsiniz.
+Open the F-droid app and select 'Settings' then 'Repositories'. Make sure that 'Guardian Project Official Releases' is enabled|F-droid uygulamasını açın ve 'Ayarlar' ardından 'Depolar' seçeneğini seçin. 'Guardian Project Official Releases' uygulamasının etkinleştirildiğinden emin olun.
+Open the settings. Select 'General', then 'Connect via Tor'. This will provide better protection, making it more difficult for adversaries to know who is talking to who. If connecting through Tor is unreliable and causes crashes then unselect 'Connect via Tor' on the 'General settings' and then just use your ordinary domain name.|Ayarları aç. 'Genel' seçeneğini, ardından 'Tor ile bağlan'ı seçin. Bu, daha iyi koruma sağlayacak ve düşmanların kiminle kimin konuştuğunu bilmesini zorlaştırır. Tor üzerinden bağlantı güvenilir değilse ve çökmelere neden oluyorsa, 'Genel ayarlar' kısmında 'Tor ile bağlan' seçimini kaldırın ve sonra sadece normal alan adınızı kullanın.
+Open up the Conversations app and select the menu (three dots), scroll down and select 'Expert Settings' then select 'Connect to Tor'|Konuşmalar uygulamasını açın ve menüyü (üç nokta) seçin, aşağı kaydırın ve 'Uzman Ayarları'nı seçin ve ardından' Bağlanmaya Bağlan'ı seçin.
+or|veya
+Paragraphs can be dragged up and down to change their order, or moved between pages|Paragraflar, sırasını değiştirmek veya sayfalar arasında taşınmak için yukarı ve aşağı sürüklenebilir.
+Password|Parola
+Password: |Parola:
+Paste your ssh public key here|Ssh genel anahtarınızı buraya yapıştırın
+Paste your translations file below|Çeviri dosyanızı aşağıya yapıştırın
+Peertube allow new registrations|Peertube yeni kayıtlara izin veriyor
+Personal accounting|Kişisel muhasebe
+Personal or small business accounting|Kişisel veya küçük işletme muhasebesi
+Photo album|fotoğraf albümü
+Please enter their username. This should be lower case only and with no spaces.|Lütfen kullanıcı adlarını giriniz. Bu sadece küçük harf ve boşluk içermemelidir.
+Please insert a USB drive|Lütfen bir USB sürücü takın
+Please insert the USB drive to restore from now|Lütfen şimdi geri yüklemek için USB sürücüsünü takın
+Please insert your backup USB drive now|Lütfen şimdi yedek USB sürücünüzü takın
+Please specify stream name, description and genre|Lütfen akış adını, açıklamasını ve türünü belirtin
+Please wait while your appliance is configuring|Cihazınız yapılandırırken lütfen bekleyin
+Please write down or save these credentials|Lütfen bu bilgileri yazın veya kaydedin
+Pleroma|Pleroma
+Pleroma allow new registrations|Pleroma yeni kayıtlara izin verir
+Pleroma Custom Emoji|Pleroma Özel Emoji
+Pleroma Settings|Pleroma Ayarları
+Plug the USB drive into your server, then go to the Icecast app settings, add some details about your playlist, and select 'Update'|USB sürücüsünü sunucunuza takın, sonra Icecast uygulama ayarlarına gidin, çalma listeniz hakkında bazı ayrıntılar ekleyin ve 'Güncelle' seçeneğini belirleyin.
+Polish|Polonya
+Ports|Limanlar
+Portuguese|Portekizce
+Portuguese (Brazil)|Portekizce (Brezilya)
+Power|Güç
+Press the plus button to add a Mumble server.|Bir Mumble sunucusu eklemek için artı düğmesine basın.
+Proceed with backup?|Yedekleme ile devam edilsin mi?
+Proceed with drive format?|Sürücü formatı ile devam edilsin mi?
+Proceed with reset?|Sıfırlama ile devam edilsin mi?
+Proceed with restore?|Geri yükleme ile devam edilsin mi?
+RAM used|RAM kullanıldı
+Remote access|Uzaktan erişim
+Remove|Kaldır
+Remove any backup drives now|Şimdi herhangi bir yedek sürücüyü kaldırın
+Remove APPNAME now?|APPNAME şimdi kaldırılsın mı?
+Remove user USERNAME?|USERNAME kullanıcısını kaldır
+Removing user account|Kullanıcı hesabı kaldırılıyor
+Reset is in progress|Sıfırlama devam ediyor
+Reset to factory|Fabrika ayarlarına dön
+RESET TO FACTORY DEFAULTS|FABRİKA VARSAYILANLARINA SIFIRLAYIN
+Restart|Tekrar başlat
+Restore|Restore
+Restore has failed|Geri yükleme başarısız oldu
+Restore in progress|Geri yükleme işlemi devam ediyor
+Restore is complete|Geri yükleme tamamlandı
+Restore of keys failed|Anahtarların geri yüklenmesi başarısız oldu
+Restore of keys is complete|Anahtarların geri yüklenmesi tamamlandı
+Restore password|Şifreyi geri yükle
+Restore your keys now?|Anahtarlarınızı şimdi mi geri yükleyin?
+Restoring backup keys|Yedekleme anahtarlarını geri yükleme
+Romanian|Romen
+RSS Reader|RSS Okuyucu
+Run HexChat.|HexChat'i çalıştırın.
+Running backup of keys|Anahtarların yedeklenmesi
+Russian|Rusça
+Samoan|Samoa
+Search again for 'Conversations' (not the legacy version), then select 'install'|'Sohbetler' için tekrar arama yapın (eski sürüm değil), ardından 'yükle'yi seçin.
+Search for and install Plumble.|Plumble'ı arayın ve yükleyin.
+Secure realtime collaboration|Güvenli gerçek zamanlı işbirliği
+Secure realtime collaboration with docs, presentations, drawing and voting. Documents are ephemeral and unless you save them will be deleted when you close the browser.|Dokümanlar, sunumlar, çizim ve oylama ile gerçek zamanlı işbirliği yapın. Belgeler, geçici ve tarayıcıyı kapattığınızda bunları kaydetmediğiniz sürece silinir.
+Secure Shell|Güvenli Kabuk
+Select|seçmek
+Select 'Apply' and 'Ok', then on the menu 'Server' and 'Connect'.|'Uygula' ve 'Tamam'ı, ardından' Sunucu 've' Bağlan 'menüsünde seçin.
+Select 'Next' to create the account. If eveything is working after a couple of minutes you should see the account status change to 'online' in green|Hesabı oluşturmak için 'İleri'yi seçin. Eğer birkaç dakika sonra her şey çalışıyorsa, hesap durumu değişikliğini yeşil renkte 'çevrimiçi' olarak görmelisiniz.
+Select search (magnifying glass icon) and search for 'Orbot' (not the legacy version), then select 'install'|Arama öğesini (büyüteç simgesi) seçin ve 'Orbot' (eski sürüm değil) 'i arayın ve ardından' yükle'yi seçin.
+Select the 'translate' button. You will see a new screen with English text on the left and translated text on the right.|'Çevir' düğmesini seçin. Solda İngilizce metin ve sağda çevrilmiş metin ile yeni bir ekran göreceksiniz.
+Select the Autojoin channels tab, click Add and enter #libreserver as the channel name.|Kanalları otomatikleştir sekmesini seçin, Ekle'yi tıklayın ve kanal adı olarak #libreserver girin.
+Select the entry within the servers box, then enter ircaddress.onion/6697 or mydomainname/6697 and press Enter.|Sunucu kutusundaki girişi seçin, sonra ircaddress.onion/6697 veya mydomainname/6697 girin ve Enter tuşuna basın.
+Select the wiki button at the bottom of the screen, next to pages, to enable or disable editing.|Düzenlemeyi etkinleştirmek veya devre dışı bırakmak için ekranın altındaki wiki düğmesini, sayfaların yanında seçin.
+Selecting the server by pressing on it then connects you to the server so that you can chat with other connected users|Üzerine basarak sunucuyu seçmek, diğer bağlı kullanıcılar ile sohbet edebilmeniz için sizi sunucuya bağlar.
+Serbian|Sırpça
+Setting up on a laptop|Bir dizüstü bilgisayarda kurma
+Setting up on Android|Android'de kurma
+Setting up with an Android phone|Android telefon ile kurma
+Settings|Ayarlar
+Setup on Android|Android'de kurulum
+Shortcode|Kısa kod
+Shutdown|Kapat
+Shutting down|Kapatmak
+Simple kanban|Basit kanban
+Simple Markdown blogging|Basit Markdown bloglama
+Simple notes|Basit notlar
+Slovak|Slovak
+Slovenian|Sloven
+Somali|Somalili
+Spanish (International)|İspanyolca (Uluslararası)
+SSH access is disabled|SSH erişimi devre dışı
+SSH access is enabled|SSH erişimi etkinleştirildi
+Stream Description|Akış Açıklaması
+Streaming media|Akış medya
+Submit|Gönder
+Submitting your translations to the LibreServer project|Çevirilerinizi LibreServer projesine göndermek
+Swedish|İsveççe
+System Monitor|Sistem Monitörü
+Systems may be temporarily unavailable in the next few minutes|Sistemler önümüzdeki birkaç dakika içinde geçici olarak kullanılamayabilir
+Tagalog|Tagalog
+Tamil|Tamilce
+Thai|Tayland
+Thankyou for choosing the LibreServer home internet appliance|LibreServer ev internet cihazını tercih ettiğiniz için teşekkür ederiz
+The account will now be removed. This may take a minute or two. For details see:|Hesap şimdi kaldırılacak. Bu bir iki dakika sürebilir. Ayrıntılar için bakınız:
+The classic low bandwidth chat system|Klasik düşük bant genişliği sohbet sistemi
+The LibreServer system isn't primarily aimed at companies or institutions, but if you're a one person company or freelancer then having the ability to run your own accounting system and keep the data private and also backed up is useful. Akaunting provides a nice web based system for small business accounts, and is also quite usable within a mobile web browser.|LibreServer sistemi öncelikli olarak şirketlere veya kurumlara yönelik değildir, ancak eğer bir tek kişi şirket ya da serbest meslek sahibi iseniz, o zaman kendi muhasebe sisteminizi yönetme ve verileri özel tutma ve yedekleme de yararlıdır. Akaunting, küçük işletme hesapları için güzel bir web tabanlı sistem sağlar ve aynı zamanda bir mobil web tarayıcısında da kullanılabilir.
+A new member is being added. This may take a minute or two.|Yeni kullanıcı ekleniyor. Yazmak veya şifresini kaydetmek.
+The passwords do not match|Şifreler eşleşmiyor
+There are a few things to know about using the federated wiki.|Federal wiki'yi kullanmayla ilgili bilmeniz gereken birkaç şey var.
+There are no apps installed. Select the plus button above to install new apps.|Yüklü uygulama yok. Yeni uygulamalar yüklemek için yukarıdaki artı düğmesini seçin.
+This app may be useful if you have a new child or babysitting duties. It helps caregivers track sleep, feedings, diaper changes, and tummy time to learn about and predict baby's needs without as much guess work.|Yeni bir çocuk veya bebek bakıcılığı göreviniz varsa bu uygulama yararlı olabilir. Bakım görevlilerinin bebeğin ihtiyaçlarını tahmin etmek ve tahmin etmek için uyku, beslenme, bebek bezi değişiklikleri ve karın zamanlarını tahmin etmelerine yardımcı olur.
+This is a server system which enables you to run internet apps such as a blog or federated social network.|Bu, blog veya federe sosyal ağ gibi internet uygulamalarını çalıştırmanızı sağlayan bir sunucu sistemidir.
+This is certainly the type of data which you might want to keep private and away from companies who might otherwise use surveillance of parenting app data to try to guilt you into buying all sorts of junk that you don't really need or can't afford.|Bu, özel olarak saklamak isteyebileceğiniz ve gerçekte ihtiyacınız olmayan ya da karşılayamayacağınız her türlü çöpü satın almak için sizi suçlamak için ebeveynlik uygulama verilerinin gözetimini kullanabilecek şirketlerden uzakta olabilecek verilerin türüdür. .
+This is your new password|Bu yeni şifreniz
+This may take a few minutes.|Bu bir kaç dakika alabilir.
+This may take a minute or two. For details see:|Bu bir iki dakika sürebilir. Ayrıntılar için bakınız:
+This system isn't intended to broadcast to large audiences and the upper limit of listeners is set at ten. So a family and friends type group.|Bu sistem geniş kitlelere yayın yapmak için tasarlanmamıştır ve dinleyicilerin üst limiti on olarak belirlenmiştir. Yani bir aile ve arkadaş grubu yazın.
+This will make a backup of the keys which encrypt your backups, protecting them against accidental loss or exposure. You should keep this drive in a safe place, separate from other backups.|Bu, yedeklerinizi şifreleyen anahtarların bir yedeğini oluşturarak kazayla kayıplara veya pozlamaya karşı koruyacaktır. Bu sürücüyü diğer yedeklerden ayrı olarak güvenli bir yerde saklamalısınız.
+This will restore the keys used to encrypt backups.|Bu, yedekleri şifrelemek için kullanılan anahtarları geri yükler.
+To add a new paragraph use the + button|Yeni bir paragraf eklemek için + düğmesini kullanın
+To claim/fork a page from another server click on the flag icon|Başka bir sunucudan bir sayfayı istemek / çatallandırmak için bayrak simgesine tıklayın
+To edit a paragraph double click on it|Bir paragrafı düzenlemek için üzerine çift tıklayın
+To remove a paragraph just delete all of its text|Bir paragrafı kaldırmak için tüm metnini silin
+To upload music files install Syncthing then copy album directories into ~/Sync/music_upload, then within Koel go to settings and scan the directory /music|Müzik dosyalarını yüklemek için Syncthing uygulamasını kurun ve ardından albüm dizinlerini ~ / Sync / music_upload dosyasına kopyalayın, ardından Koel içinde ayarlara gidin ve dizini / müziği tarayın
+Tor Bridges|Tor Köprüler
+Translate|Çevirmek
+Translations|Çeviriler
+Turkish|Türk
+Type: SRV|Türü: SRV
+Ukrainian|Ukrayna
+Uncheck use global user information.|Global kullanıcı bilgilerini kullan onay kutusunun işaretini kaldırın.
+Uninstall|Kaldırma
+Update|Güncelleştirme
+Updates settings changed|Güncelleme ayarları değişti
+Upgrade|Yükselt
+Upgrades happen automatically. You don't need to start them manually like this, except in rare circumstances|Yükseltmeler otomatik olarak gerçekleşir. Nadir durumlar dışında bunları manuel olarak başlatmanız gerekmez.
+Upload|Yükleme
+URL to upload from|Tarafından yüklenecek URL
+USB drive format has failed|USB sürücü formatı başarısız oldu
+USB drive format in progress|USB sürücü formatı devam ediyor
+USB drive format is complete|USB sürücü formatı tamamlandı
+Username: |Kullanıcı adı:
+Username: admin|Kullanıcı adı: admin
+Members|Kullanıcılar
+Using your preferred editor|Tercih editörünüzü kullanma
+Video broadcast|Video yayını
+Vietnamese|Vietnam
+Voice chat|Sesli sohbet
+WARNING: THIS WILL ERASE ALL CONTENT OF THE USB DRIVE|UYARI: BU USB SÜRÜCÜNÜN TÜM İÇERİĞİ SİLECEKTİR
+We're sorry, but the username you gave is not suitable. Check that it does not contain spaces, is lower case and at least 3 characters in length.|Üzgünüz, ama verdiğiniz kullanıcı adı uygun değil. Boşluk içermediğinden, küçük harf olduğundan ve en az 3 karakter uzunluğunda olduğundan emin olun.
+Web publishing system|Web yayın sistemi
+When done editing click on the wiki button again|Düzenleme bittiğinde tekrar wiki düğmesine tıklayın
+When it's done it will appear on the apps screen|Tamamlandığında uygulamalar ekranında görünecek
+When removal is finished it will disappear from apps|Kaldırma işlemi bittiğinde, uygulamalardan kaybolacak
+When you are done with translating select the 'import' button on the translations screen.|Çeviri ile işiniz bittiğinde, çeviriler ekranında 'içe aktar' düğmesini seçin.
+When you've added your translations select the 'update' button. This will update the translations file for the selected language. Note that this does not change the current language within the user interface. If you want to do that go back to the language screen, select a language and then the 'select' button.|Çevirilerinizi eklediğinizde 'güncelleme' düğmesini seçin. Bu, seçilen dilin çeviriler dosyasını güncelleyecektir. Bunun, kullanıcı arayüzündeki mevcut dili değiştirmediğine dikkat edin. Bunu yapmak isterseniz, dil ekranına geri dönün, bir dil ve ardından 'seçin' düğmesini seçin.
+Whichever screen you are currently on, you can get back to the previous screen by clicking or pressing on the LibreServer logo at the top.|Şu anda hangi ekran üzerindeyseniz, üstteki LibreServer logosuna tıklayarak veya üzerine basarak önceki ekrana dönebilirsiniz.
+With Icecast you can run your own internet radio stream from an onion address. As always, be careful about copyright issues and preferably stick to Creative Commons music or music files that you own.|Icecast ile kendi internet radyo akışınızı bir soğan adresinden çalıştırabilirsiniz. Her zaman olduğu gibi, telif hakkı sorunlarına dikkat edin ve tercihen sahip olduğunuz Creative Commons müzik veya müzik dosyalarına yapıştırın.
+Within the network list click, Add and enter your domain name then click Edit.|Ağ listesi içinde, Ekle ve alan adınızı girin, ardından Düzenle'yi tıklayın.
+Within the Password field enter the password which you originally set up the box with.|Şifre alanında, kutuyu orijinal olarak ayarladığınız şifreyi girin.
+Within the software center search for "mumble" and install the client then run it. Skip through the audio setup wizard. Cancel the initial connection window.|Yazılım merkezinde "mumble" kelimesini arayın ve müşteriyi kurun, ardından çalıştırın. Ses kurulum sihirbazını atlayın. İlk bağlantı penceresini iptal edin.
+Write it down or save it|Yaz ya da kaydet
+XMPP|XMPP
+xmpp based chat system|xmpp tabanlı sohbet sistemi
+Yes|Evet
+You can edit the translated text on the right side of the screen.|Çevrilen metni ekranın sağ tarafında düzenleyebilirsiniz.
+You can get to this system remotely via:|Bu sisteme uzaktan aşağıdaki yollarla ulaşabilirsiniz:
+You can now go back to the initial Conversations app screen and start using it. You'll probably want to add contacts using the icon at the bottom right. For more information see the Conversations website (conversations.im) or subscribe to the chat group conversations@conference.siacs.eu|Artık ilk Konuşmalar uygulaması ekranına geri dönüp kullanmaya başlayabilirsiniz. Sağ alttaki simgeyi kullanarak muhtemelen kişi eklemek isteyeceksiniz. Daha fazla bilgi için Konuşmalar web sitesine bakın (conversations.im) veya sohbet grubuna abone olun conversations@conference.siacs.eu
+You can now log in with:|Şimdi giriş yapabilirsiniz:
+You can see upgrade progress|Yükseltme ilerlemesini görebilirsiniz
+You can use left and right cursor keys to move through pages|Sayfalarda ilerlemek için sol ve sağ imleç tuşlarını kullanabilirsiniz.
+You may also want to make another entry with the same settings but replacing tcp with udp.|Aynı ayarlarla başka bir giriş yapmak isteyebilirsiniz, ancak tcp'yi udp ile değiştirebilirsiniz.
+You may now remove the USB drive|Şimdi USB sürücüsünü kaldırabilirsiniz
+You might have mistyped one of them|Bunlardan birini yanlış yazmış olabilirsiniz
+You will see the translations file with some instructions at the top.|En üstteki bazı talimatları içeren çeviriler dosyasını göreceksiniz.
+Your password must be at least 8 characters in length and only use the characters a-z A-Z and 0-9|Şifreniz en az 8 karakter uzunluğunda olmalı ve sadece a-z A-Z ve 0-9 karakterlerini kullanın.
+Zero knowledge pastebin|Sıfır bilgi pastebin
+Light|ışık
+Dark|karanlık
+Theme|Tema
+Clear|Açık
+Send email through a proxy|Bir proxy üzerinden e-posta gönder
+If you find that you can't send out email and that you get 'failed delivery' messages returned instead then you may be able to proxy sent emails through another server. Sometimes ISPs or companies provide an SMTP server which can do this.|Hvis du finner ut du rü tü rü nü vü vüü vüü vüü vüü vüü vüü vüüü vüü vüü vüüü vüüüüüüüükanlar, e-posta yolu ile e-posta yoluyla en annen sunucusu üzerinden. Bazen bedrijven leveren een SMTP sunucusu ISP'leri ölür.
+Mail|Posta
+Failed to install. For details see admin/applog.txt|Yükleme başarısız. Ayrıntılar için bkz. Admin / applog.txt
+Installed successfully|Başarıyla yüklendi
+pihole|pihole
+Unlike browser based ad blockers, pihole works at the domain name resolution level to block domains known to privide the ads appearing in web pages.|Tarayıcı tabanlı reklam engelleyicilerin tersine, pihole, web sayfalarında görünen reklamları gizlediği bilinen alanları engellemek için alan adı çözünürlük seviyesinde çalışır.
+Set your DNS IP address to the one shown and many ads will get blocked even before they're delivered to your laptop or mobile device. This can save a lot of bandwidth and generally speed up the loading of websites.| DNS IP adresinizi gösterilene ayarlayın ve dizüstü veya mobil cihazınıza teslim edilmeden önce birçok reklam engellenecektir. Bu, çok fazla bant genişliği kaydedebilir ve genellikle web sitelerinin yüklenmesini hızlandırabilir.
+Change DNS on your internet router| İnternet yönlendiricinizde DNS'i değiştir
+If your internet router allows you to change the DNS IP address then this is the best way to use pihole because it will then provide coverage for all of the devices and computers in your home.|İnternet yönlendiriciniz DNS IP adresini değiştirmenize izin veriyorsa, o zaman bu, pihole'u kullanmanın en iyi yoludur, çünkü daha sonra evinizdeki tüm cihazlar ve bilgisayarlar için kapsama alanı sağlayacaktır.
+Change DNS on individual devices|Tek tek cihazlarda DNS'yi değiştir
+If you can't change your internet router's DNS then you can do that on individual GNU/Linux systems as follows:| İnternet yönlendiricinizin DNS'sini değiştiremezseniz, bunu aşağıdaki gibi tek tek GNU/Linux sistemlerinde yapabilirsiniz:
+Remove or comment out any existing nameservers and add one with the IP address shown for the pihole app. Something like:|Varolan ad görevlilerini kaldırın veya yorumlayın ve korsanlık uygulaması için gösterilen IP adresiyle bir tane ekleyin. Bir şey gibi:
+Then save and exit and prevent the file from being automatically changed with:| Sonra kaydedin ve çıkın ve aşağıdaki gibi otomatik olarak değiştirilmesini önleyin:
+If you're running the standard version of LibreServer (not the onion version) then you may need to modify your hosts file to access your own domain.|LibreServer'un standart sürümünü (soğan sürümü değil) çalıştırıyorsanız, kendi etki alanınıza erişmek için hosts dosyanızı değiştirmeniz gerekebilir.
+Then add something like:|Sonra bir şey ekleyin:
+This only works when you're within your home network, so if you're outside of your home then undo the changes made above.|Bu yalnızca ev ağınız içinde olduğunuzda çalışır, bu nedenle evinizin dışındaysanız, yukarıdaki değişiklikleri geri alın.
+The Pi-hole is a DNS sinkhole that protects your devices from unwanted content, without installing any client-side software.|Pi-deliği, herhangi bir istemci tarafı yazılımı yüklemeden cihazlarınızı istenmeyen içerikten koruyan bir DNS deliğidir.
+Search|Arama
+removed|çıkarıldı
+To get email working you will need to forward some ports. Email using your onion address will work anyway, so long as you are contacting other onion based email addresses.|E-posta almak için bazı bağlantı noktalarını yönlendirmeniz gerekir. Soğan adresinizi kullanarak e-posta, başka soğan tabanlı e-posta adresleriyle iletişim kurduğunuz sürece yine de işe yarayacaktır.
+Forward ports 25, 587 and 465 from your internet router|İnternet yönlendiricinizden 25, 587 ve 465 numaralı ileri bağlantı noktaları
+To access cryptpad you'll need to use a Tor browser. Navigate to the URL and enable javascript for the site under the NoScript icon. The screen will be blank for a few seconds while it's downloading the application into your browser.|Cryptpad'e erişmek için bir Tor tarayıcısı kullanmanız gerekecek, URL'ye gidin ve NoScript simgesi altındaki site için javascript'i etkinleştirin.Uygulamayı tarayıcınıza indirirken birkaç saniye boyunca ekran boş olacaktır.
+Cryptpad is an almost peer-to-peer application. No data is stored on the server, which only does minimal orchestration between the clients. If an adversary subsequently obtains the server they still learn nothing.|Cryptpad hemen hemen eşler arası bir uygulamadır.Tüm sunucu üzerinde saklanan, sadece istemciler arasında minimum düzenleme yapan bir veri yok.Sunucu bir sunucuya ulaşırsa, hala bir şey öğrenmezler.
+Authentication Token|Kimlik Doğrulama Jetonu
+This is only needed if you're using FreeDNS. Otherwise you can leave it blank.|Bu sadece FreeDNS kullanıyorsanız gereklidir, aksi takdirde boş bırakabilirsiniz.
+On the site where you obtained your domain name set up some custom nameservers as follows:|Alan adınızı aldığınız sitede, bazı özel ad alıcılar şöyle ayarlanır:
+On the FreeDNS site go to the "Dynamic DNS" section and make sure that "link updates of the same IP together" is set to ON.|FreeDNS sitesinde "Dinamik DNS" bölümüne gidin ve "aynı IP'nin birlikte güncellemelerini güncellemenin" AÇIK olarak ayarlandığından emin olun.
+For your main domain name select "quick cron example" and then your authentication token is the random string on the last line between the ? and = characters.|Ana alan adınız için "hızlı cron örneği" yi seçin ve ardından kimlik doğrulama jetonu,? Ve = karakterleri arasındaki son satırdaki rastgele dizgidir.
+Your current IP address is shown at the top of the Dynamic DNS screen of the LibreServer user interface. You can use the "Mass Mod" feature at the top of the "Subdomains" part of the FreeDNS site to set all of your subdomains to that IP address.|Tüm alt etki alanlarınızı ayarlamak için FreeDNS sitesinin "Subdomain" bölümünün üstündeki "Mass Mod" özelliğini kullanabilirsiniz. IP adresi
+Select the MX entry for your main domain and change the destination to 10:mydomainname rather than 10:mail.mydomainname.|Ana alan adınız için MX girişini seçin ve hedefi 10:mail.mydomainname yerine 10:mydomainname olarak değiştirin.
+Enter your FreeDNS login details and the authentication token on the Dynamic DNS screen of the LibreServer user interface.|LibreServer kullanıcı arayüzünün Dinamik DNS ekranında FreeDNS giriş ayrıntılarınızı ve kimlik doğrulama jetonunuzu girin.
+To make a playlist insert a USB drive containing audio files in a directory called playlist, add a description below and then select Update|Bir çalma listesi oluşturmak için çalma listesi adı verilen bir dizinde ses dosyaları içeren bir USB sürücü takın, aşağıya bir açıklama ekleyin ve ardından Güncelle'yi seçin.
+To add music copy it to a directory called Music on a USB drive then plug it into your server and select Update|Müzik eklemek için bir USB sürücüdeki Müzik adlı bir dizine kopyalayın ve ardından sunucunuza bağlayın ve Güncelle'yi seçin.
+This is a wiki which stores its content in text files. Having no database makes maintaining it simpler, and it's not tied to any particular domain name so you can easily copy the files to a different domain if you need to.|Bu, içeriğini metin dosyalarında saklayan bir wiki'dir. Veritabanına sahip olmak, daha basit kalmasını sağlar ve herhangi bir etki alanı adına bağlı değildir, böylece dosyaları gerektiğinde kolayca farklı bir etki alanına kopyalayabilirsiniz.
+Provides an easy and private way to sync calendar and contacts between devices.|Cihazlar arasında takvim ve kişileri senkronize etmenin kolay ve özel bir yolunu sunar.
+Using on mobile|Mobilde kullanma
+The user interface is a little misleading. Make sure that you log in with your username, not your email addres.|Kullanıcı arayüzü biraz yanıltıcıdır. E-posta adreslerinizi değil, kullanıcı adınızla giriş yaptığınızdan emin olun.
+Also choose the advanced option and enter the subdomain that you installed etesync on.|Ayrıca gelişmiş seçeneği seçin ve etesync'i kurduğunuz alt alanı girin.
+This is a well known system for real time collaborative editing of documents. Just log in, choose a document title and then edit. Different users will appear in different colours, and can also chat in the sidebar. This is installed as a private system in which only users on your LibreServer server will be able to create and edit documents, so it's not open to any random users on the internet.|Bu, belgelerin gerçek zamanlı işbirlikli düzenlenmesi için iyi bilinen bir sistemdir. Sadece giriş yapın, bir belge başlığı seçin ve sonra düzenleyin. Farklı kullanıcılar farklı renklerde görünecek ve ayrıca kenar çubuğunda sohbet edebilecek. Bu, yalnızca LibreServer sunucunuzdaki kullanıcıların belgeleri oluşturabilmeleri ve düzenleyebildikleri özel bir sistem olarak kurulmaktadır, bu nedenle internetteki herhangi bir rastgele kullanıcıya açık değildir.
+This is a federated social networking system. It can federate with other popular fediverse systems.|Bu birleşik bir sosyal ağ sistemi. Diğer popüler fedense sistemleriyle birleşebilir.
+This is a blogging system which has no database and only uses text files for storage.|Bu, veritabanına sahip olmayan ve yalnızca depolama için metin dosyalarını kullanan bir bloglama sistemidir.
+This is a git hosting system. It's very similar to Github in appearance and use, is lightweight and so is well suited for use on low power ARM servers.|Bu bir git barındırma sistemi. Görünüşte ve kullanımda Github'a çok benzer, hafiftir ve bu nedenle düşük güçlü ARM sunucularında kullanım için uygundur.
+This is a web publishing and social network system which includes wiki, web pages, photo albums and file storage. It also has nomadic identity allowing you to easily move your account between different servers and privacy controls which allow you to define who can see what content.|Bu wiki, web sayfaları, fotoğraf albümleri ve dosya depolama içeren bir web yayıncılığı ve sosyal ağ sistemidir. Ayrıca, hesabınızı farklı sunucular ve gizlilik denetimleri arasında kolayca taşıyabilmenizi sağlayan, hangi içeriğin kimin görebileceğini tanımlamanıza olanak veren göçebe kimliği de vardır.
+Kanbans are one way of managing projects. They're traditionally used in businesses but can also be useful for personal TODO lists or within open source or DIY projects. If you have a list of things which need to be done and want to keep track of progress then this provides a way to do that.|Kanbans, projeleri yönetmenin bir yoludur. Geleneksel olarak işletmelerde kullanılırlar, ancak kişisel TODO listeleri veya açık kaynak veya DIY projeleri için de yararlı olabilirler. Eğer yapılması gereken ve ilerlemeyi takip etmek isteyen şeylerin bir listesi varsa, bunu yapmak için bir yol sağlar.
+The default login is username "admin" and the login password which you usually use for the web interface.|Varsayılan giriş, "admin" kullanıcı adı ve genellikle web arayüzü için kullandığınız giriş şifresidir.
+If you're using a Tor browser then you may need to allow javascript for the site by selecting the NoScript icon.|Bir Tor tarayıcısı kullanıyorsanız, site için javascript'i NoScript simgesini seçerek izin vermeniz gerekebilir.
+Extra users can be added from the drop down menu at the top right of the screen, under "Users management".|Ekstra kullanıcılar, "Kullanıcılar yönetimi" altında, ekranın sağ üstündeki açılır menüden eklenebilir.
+This enables you to store your music on the LibreServer server and then access it from any internet connected device.|Bu, müziğinizi LibreServer sunucusunda saklamanızı ve daha sonra internet bağlantılı herhangi bir cihazdan erişmenizi sağlar.
+This is a simple and lightweight photo album for the web. Whether you're an amateur or professional photographer, or want to publish random holiday pics or cat pictures. Lychee just does what it says it does without any fuss.|Bu, web için basit ve hafif bir fotoğraf albümü. İster amatör veya profesyonel bir fotoğrafçı olun, ister rasgele tatil fotoğraflarını veya kedi resimlerini yayınlayın. Lychee, herhangi bir karışıklık olmadan yaptığı şeyi yapar.
+This provides an webmail interface suitable for use on desktop or mobile clients and with built in support for encryption.|Bu, masaüstü veya mobil istemcilerde kullanım için uygun ve şifreleme için destekli bir web posta arabirimi sağlar.
+This is a system for file synchronisation and also has many other plugins for calendar, videoconferencing, collaborative document editing and federated file sharing.|Bu, dosya senkronizasyonu için bir sistemdir ve ayrıca takvim, video konferans, ortak belge düzenleme ve federe dosya paylaşımı için birçok eklentiye sahiptir.
+This is a video hosting system which uses webtorrent to help distribute the files to or between clients.|Bu, istemcilere veya istemciler arasında dosya dağıtmak için webtorrent kullanan bir video barındırma sistemidir.
+Use the username 'root' and your usual password to log in as the administrator. You can then change settings as needed.|Yönetici olarak giriş yapmak için kullanıcı adı 'root' ve normal şifrenizi kullanın. Daha sonra ayarları gerektiği gibi değiştirebilirsiniz.
+This is an OStatus and ActivityPub compatible social networking server which federates with other fediverse systems. It is high-performance and so is especially well suited for running on low power single board computers without much RAM.|Bu, diğer fedense sistemleriyle birleştiren bir OStatus ve ActivityPub uyumlu bir sosyal ağ sunucusudur. Yüksek performanslıdır ve bu nedenle çok fazla RAM olmadan düşük güçte tek kartlı bilgisayarlarda çalışmak için özellikle uygundur.
+Since Pleroma supports the same protocols, any Mastodon client for Android should work with it.|Pleroma aynı protokolleri desteklediğinden, Android için herhangi bir Mastodon istemcisi onunla çalışmalıdır.
+This is a fork of GNU Social which includes some extra fixes and optimisations to improve performance. It federates with other fediverse servers, such as Pleroma or Mastodon.|Bu, performansı iyileştirmek için bazı ekstra düzeltmeler ve iyileştirmeler içeren bir GNU Social'ın çatalıdır. Pleroma veya Mastodon gibi diğer fedense sunucuları ile birleştirir.
+This is an encrypted pastebin, such that the server has zero knowledge of the content. It's intended for small amounts of text less than 32K in length. It's not intended for transfering large files, or for storing pastes for more than a day.|Bu, şifrelenmiş bir macun macudur, öyle ki sunucu içeriğin sıfır bilgisine sahiptir. Uzunluğunda 32 K'den daha az metin miktarları için tasarlanmıştır. Büyük dosyaları aktarmak veya bir günden fazla bir süre boyunca pastaları depolamak için tasarlanmamıştır.
+This is a web based user interface to the Matrix federated chat system. You will need to have already installed the Matrix app for this to work.|Bu, Matrix federasyonlu sohbet sistemine web tabanlı bir kullanıcı arabirimidir. Bunun çalışması için Matrix uygulamasını zaten yüklemiş olmanız gerekir.
+This is yet another chat system, but the server part of it isn't federated and so it's suitable for small private groups rather than for general public discussions.|Bu başka bir sohbet sistemidir, ancak sunucunun bir kısmı federasyon değildir ve genel kamuoyu tartışmalarından ziyade küçük özel gruplar için uygundur.
+Provides a similar capability to proprietary systems such as Dropbox, and also is well suited for use with low power single board computers. You can have one or more directories which are synchronized across your various laptops/desktops/devices, and this makes it hard for you to ever lose important files. Of course, you don't necessarily need to be running a server in order to use Syncthing, but if you do have a server which is always running then there's always at least one place to synchronize your files to or from.|Dropbox gibi tescilli sistemlere benzer bir özellik sunar ve ayrıca düşük güçlü tek kartlı bilgisayarlarla kullanım için çok uygundur. Çeşitli dizüstü / masaüstü bilgisayarlarınız / cihazlarınızda senkronize edilen bir veya daha fazla dizine sahip olabilirsiniz ve bu da önemli dosyaları kaybetmenizi zorlaştırır. Elbette, Syncthing'i kullanmak için bir sunucu çalıştırmanız gerekmiyor, ancak her zaman çalışan bir sunucunuz varsa, dosyalarınızı her zaman en az bir kez senkronize etmek için bir yer var.
+On a Debian based system:|Debian tabanlı bir sistemde:
+Or on Android search for the Syncthing app.|Ya da Syncthing uygulaması için Android aramada.
+Using the settings button within the LibreServer web interface for the Syncthing app you can then paste in any IDs for other devices. They will then sync with your server.|Syncthing uygulaması için LibreServer web arayüzündeki ayarlar düğmesini kullanarak, diğer cihazlar için herhangi bir ID'ye yapıştırabilirsiniz. Daha sonra sunucunuzla senkronize olacaklar.
+A system for privately creating and sharing notes and images, similar to Evernote. It can be set up so that a small number of users on the server can share their notes in a convenient way. It doesn't have any web user interface, and you need to install native clients on mobile or laptop/desktop machines.|Evernote'a benzer şekilde, notları ve görüntüleri özel olarak oluşturmak ve paylaşmak için bir sistem. Sunucudaki az sayıda kullanıcının notlarını uygun bir şekilde paylaşabilmesi için ayarlanabilir. Herhangi bir web kullanıcı arayüzüne sahip değildir ve mobil veya dizüstü / masaüstü makinelerde yerel istemciler yüklemeniz gerekir.
+Since the data at rest is stored in PGP encrypted format this is a good system to use in cases where security really is a critical factor.|Geri kalan veriler PGP şifrelenmiş formatta depolandığından, bu güvenlik gerçekten kritik bir faktör olduğu durumlarda kullanmak için iyi bir sistemdir.
+Go to https://turtlapp.com/download and you'll then be able to download the appropriate app for your laptop or phone.|Https://turtlapp.com/download adresine gidin ve daha sonra dizüstü veya telefonunuz için uygun uygulamayı indirebileceksiniz.
+Run the downloaded native app then at the bottom of the screen select "advanced settings" and enter your turl domain name, then register a new account. The password can be anything you choose, but since the client side encryption depends upon having a good password make it a long random string generated by a password manager such as KeepassX.|İndirilen yerel uygulamayı çalıştırın, daha sonra ekranın alt kısmında "gelişmiş ayarlar" ı seçin ve tür alan adınızı girin, ardından yeni bir hesap kaydedin. Parola, seçtiğiniz herhangi bir şey olabilir, ancak istemci tarafı şifrelemesi, iyi bir parolaya sahip olduğundan, onu KeepassX gibi bir parola yöneticisi tarafından oluşturulan uzun bir rasgele dizge haline getirir.
+You should then be able to log in and start using the app. You might also want to invite any other users of your LibreServer system to also sign up using the turtl domain name which you specified during installation.|Ardından, giriş yapıp uygulamayı kullanmaya başlayabilirsiniz. Ayrıca LibreServer sisteminizin diğer kullanıcılarını kurulum sırasında belirttiğiniz turtl alan adını kullanarak da kaydettirmek isteyebilirsiniz.
+Disabling new registrations|Yeni kayıtların devre dışı bırakılması
+Once you have set up the server with however many users are needed you can then disable any new registrations by selecting Turtl on the LibreServer web interface and going to the settings screen.|Ancak, çok sayıda kullanıcıya ihtiyaç duyduğunuzda sunucuyu kurduktan sonra, LibreServer web arayüzünde Turtl'i seçip ayarlar ekranına giderek yeni kayıtlarınızı devre dışı bırakabilirsiniz.
+This is similar to Hubzilla but with a reduced range of features concentrating exclusively upon social networking with the latest version of the Zot protocol. Nomadic identity is supported, so to can export your channels and import them on other servers if necessary, without losing followers.|Bu, Hubzilla'ya benzer, ancak Zot protokolünün en son sürümüyle yalnızca sosyal ağ üzerinde yoğunlaşan özelliklerin kısıtlı olmasıyla. Göçmen kimliği desteklenir, böylece kanallarınızı dışa aktarabilmek ve gerektiğinde izleyicileri kaybetmeden bunları diğer sunuculara aktarabilirsiniz.
+Zap also has sophisticated privacy controls which enable you to decide exactly how you wish to interact with other users and what information of yours they can view.|Zap ayrıca, diğer kullanıcılarla nasıl etkileşim kurmak istediğinize ve hangi bilgileri görüntüleyebileceğine karar vermenize olanak tanıyan gelişmiş gizlilik kontrollerine sahiptir.
+The first account you register will be the administrator user, and from there you can go to the admin settings and disable new registrations if needed.|Kaydettiğiniz ilk hesap yönetici kullanıcı olacak ve oradan yönetici ayarlarına gidebilir ve gerekirse yeni kayıtları devre dışı bırakabilirsiniz.
+To find other users to follow select "directory" from the drop down menu at the top right of the screen and set "this site only" to "no".|Diğer kullanıcıları bulmak için, ekranın sağ üstündeki açılır menüden "dizin" i seçin ve "sadece bu siteyi" "no" olarak ayarlayın.
+There is an Android app available called Nomad.|Nomad adı verilen bir Android uygulaması var.
+End-to-end encrypted sync of calendar and contacts between devices|Cihazların uçtan uca şifrelenmiş senkronizasyonu ve cihazlar arasındaki iletişim
+Secure, end-to-end encrypted and journaled personal information cloud synchronization for Android and the desktop, supporting contacts and calendars|Android ve masaüstü için güvenli, uçtan uca şifrelenmiş ve günlük kişisel bilgi bulut senkronizasyonu, rehber ve kişileri destekleme
+Nomadic social network server|Göçebe sosyal ağ sunucusu
+Zap is a full featured social network application running under the Zot6 protocol. It provides enhanced privacy modes and identity/content mirroring across multiple servers ("nomadic identity").|Zap, Zot6 protokolü altında çalışan tam donanımlı bir sosyal ağ uygulamasıdır. Birden çok sunucuda ("göçebe kimlik") gelişmiş gizlilik modları ve kimlik / içerik yansıtma sağlar.
+Change background|Arka planı değiştir
+Diagnostics|Teşhis
+Please wait while your app is installing|Uygulamanız yüklenirken lütfen bekleyin
+The app could not be installed|Uygulama yüklenemedi
+Add a new member|Yeni üye ekle
+Kanban focussed on simplicity and minimalism|Kanban sadelik ve minimalizme odaklandı
+Emails, chat or social network posts will be blocked if they contain the following words or phrases|Aşağıdaki kelimeleri veya cümleleri içeren e-postalar, sohbet veya sosyal ağ yayınları engellenir
+Muted words|Sessiz kelimeler
+Disk space is getting too low. Installation stopped.|Disk alanı çok düşük oluyor. Yükleme durduruldu.
+Password changed|şifre değişti
+Play media from any UPNP/DLNA device on your local network|Yerel ağınızdaki herhangi bir UPNP / DLNA cihazından medya oynatın
+This allows you to play media on any DLNA supporting device within your local network.|Bu, yerel ağınızdaki herhangi bir DLNA destekleyen cihazda medya oynatmanıza izin verir.
+No Access Control|Erişim Kontrolü Yok
+DLNA doesn't have any access controls, so keep in mind that anyone with a mobile device or laptop within your local network is potentially able to play any media on the server. Hence this may not be suitable for situations where you want parental control over what media can be accessed.|DLNA'nın herhangi bir erişim kontrolü yoktur, bu nedenle yerel ağınızdaki bir mobil cihaz veya dizüstü bilgisayar kullanan herhangi birinin, sunucudaki herhangi bir ortamı potansiyel olarak oynayabileceğini unutmayın. Bu, hangi medyanın erişilebileceği konusunda ebeveyn kontrolü istediğiniz durumlar için uygun olmayabilir.
+Adding Media|Medya Ekleme
+You can add media by selecting the settings button from the DLNA app.|DLNA uygulamasından ayarlar düğmesini seçerek medya ekleyebilirsiniz.
+Your homepage can also be accessed with a Tor browser on:|Ana sayfanıza ayrıca bir Tor tarayıcısıyla da erişilebilir:
+Chat|Sohbet
+Media|Medya
+Social|Sosyal
+Sync|Senkronizasyon
+Publishing|Yayıncılık
+Other|Diğer
+Recommended Firefox Add-ons:|Önerilen Firefox Eklentileri:
+Change your default domain name|Varsayılan etki alanı adınızı değiştirin
+Do you want to change your default domain name to:|Varsayılan alan adınızı şu şekilde değiştirmek istiyor musunuz:
+rsync failed|rsync başarısız oldu
+For most purposes Syncthing is an easier file synchronization system, but rsync is still a reliable solution if you prefer to do things the more traditional way or if you just want to create a mirror from an existing rsync server.|Çoğu amaç için Senkronizasyon daha kolay bir dosya senkronizasyon sistemidir, ancak daha geleneksel bir şekilde yapmayı tercih ediyorsanız veya mevcut bir rsync sunucusundan bir ayna oluşturmak istiyorsanız, rsync hala güvenilir bir çözümdür.
+Rsync is unencrypted but can be used via an onion address for transport security. If you are using it via your domain name then third parties will be able to see the content, but this may not matter if you are synchronizing already public files, such as GNU/Linux distro downloads.|Rsync şifrelenmemiş ancak taşıma güvenliği için bir soğan adresi aracılığıyla kullanılabilir. Etki alanı adınız üzerinden kullanıyorsanız, üçüncü taraflar içeriği görebilecek, ancak GNU / Linux dağıtım indirmeleri gibi zaten ortak dosyaları senkronize ediyor olmanız önemli olmayabilir.
+Avoid using this for private data, unless you are exclusively using rsync via the onion address.|Soğan adresi aracılığıyla sadece rsync kullanmıyorsanız, bunu özel veriler için kullanmaktan kaçının.
+Creating a Mirror|Ayna Oluşturmak
+Select the Settings button then enter the domain and module name for the mirror. From then on synchronization will happen once per day.|Ayarlar düğmesini seçin, ardından aynanın alan adını ve modül adını girin. O andan itibaren senkronizasyon günde bir kez olacak.
+Local Sync|Yerel Senkronizasyon
+If you created a mirror to your server you can then sync those files to other machines or devices on your local network as follows:|Sunucunuz için bir yansıtma oluşturduysanız, bu dosyaları yerel ağınızdaki diğer makinelere veya cihazlara aşağıdaki gibi senkronize edebilirsiniz:
+If "libreserver" doesn't work then you can substitute the local IP address of your server.|"LibreServer" işe yaramazsa, sunucunuzun yerel IP adresini değiştirebilirsiniz.
+Create a mirror of public files|Genel dosyalar yansıtması oluşturma
+The domain name could not be changed|Etki alanı adı değiştirilemedi
+This might be because you do not have ports 80 and 443 forwarded to the server.|Bunun nedeni, sunucuya iletilen 80 ve 443 numaralı bağlantı noktalarının olmamasıdır.
+Check the port forwarding settings on your internet router.|İnternet yönlendiricinizdeki bağlantı noktası yönlendirme ayarlarını kontrol edin.
+Please specify a domain name which will be used for your email or XMPP address.|Lütfen e-posta adresiniz veya XMPP adresiniz için kullanılacak bir etki alanı adı belirtin.
+Please forward the following ports from your internet router:|Lütfen aşağıdaki bağlantı noktalarını internet yönlendiricinizden iletin:
+Search for 'Barcode Scanner', then select 'install'|'Barkod Okuyucu' için arama yapın, ardından 'install' seçeneğini seçin
+Download the DarkMessenger apk file via the link below, preferably using a Tor based browser, then install it|DarkMessenger apk dosyasını aşağıdaki bağlantıyı kullanarak, tercihen Tor tabanlı bir tarayıcı kullanarak indirin, sonra kurun
+Run DarkMessenger and the initial account setup will be shown. DarkMessenger only allows onion addresses to be used to create accounts|DarkMessenger'ı çalıştırın; ilk hesap ayarları gösterilecektir. DarkMessenger, sadece soğan adreslerinin hesap oluşturmak için kullanılmasına izin veriyor.
+You can obtain your onion XMPP address from the Members section within the web interface, usually at http://libreserver/admin or http://libreserver.local/admin. If you can't easily copy and paste it into the account setup within DarkMessenger then you can use the barcode scanner on the QRcode displayed|Soğan XMPP adresinizi web arayüzündeki Üyeler bölümünden, genellikle http: // libreserver / admin veya http: //libreserver.local/admin adresinde bulabilirsiniz. Kolayca kopyalayıp DarkMessenger içindeki hesap kurulumuna yapıştıramazsanız, görüntülenen QRcode üzerindeki barkod tarayıcıyı kullanabilirsiniz.
+Enter the password which you stored during initial setup of the system and also the onion domain|Sistemin ilk kurulumunda kaydettiğiniz şifreyi ve ayrıca soğan alanını girin
+You should now be able to connect to your onion XMPP account and set an avatar image if necessary|Artık soğan XMPP hesabınıza bağlanabilmeli ve gerekirse bir avatar resmi oluşturabilmelisiniz
+When sending or receiving pictures or other attachments for the first time you will need to accept the self-signed certificates. Select 'always' twice. This should only happen once per contact|İlk defa resim veya diğer ekleri gönderirken veya alırken, kendinden imzalı sertifikaları kabul etmeniz gerekir. İki kere 'her zaman' seçeneğini seçin. Bu, temas başına yalnızca bir kez yapılmalıdır
+Under Settings/Expert you may want to change the automatic message deletion period. By default this is one day|Ayarlar / Uzman altında otomatik mesaj silme periyodunu değiştirmek isteyebilirsiniz. Varsayılan olarak bu bir gün
+When setting up a group chat first ensure that you have separately confirmed two way messaging with each of the participants individually|Bir grup sohbeti kurarken, öncelikle katılımcıların her biriyle ayrı ayrı iki yönlü mesajlaşmayı ayrı ayrı onayladığınızdan emin olun.
+Enable strict TLS authentication between XMPP servers?|XMPP sunucuları arasında katı TLS kimlik doğrulaması etkinleştirilsin mi?
+If you or other people are having difficulty joining multi-user chat then enabling this might help|Siz veya diğer kişiler çok kullanıcılı sohbete katılmakta zorluk çekiyorsanız, bunu etkinleştirmek yardımcı olabilir
+Music can be uploaded using NextCloud. Install the app and then create a directory called 'Music'.|Müzik NextCloud kullanılarak yüklenebilir. Uygulamayı yükleyin ve ardından 'Müzik' adlı bir dizin oluşturun.
+Drag your files into the Music directory and they will then become available to mpd.|Dosyalarınızı Müzik dizinine sürükleyin, sonra mpd için uygun olacaktır.
+Select search (magnifying glass icon) and search for 'MALP', then select 'install'|Ara'yı (büyüteç simgesini) seçin ve 'MALP'i arayın, ardından' install 'seçeneğini seçin
+Open MALP and from the settings select Profiles|MALP’i açın ve ayarlardan Profiller’i seçin.
+Enter the following settings:|Aşağıdaki ayarları girin:
+Save the settings by selecting the disk icon at the top right of the screen|Ekranın sağ üst köşesindeki disk simgesini seçerek ayarları kaydedin
+You should now be able to connect to mpd on your server and select and play albums.|Artık sunucunuzdaki mpd'ye bağlanabilmeli ve albümleri seçip oynatabiliyor olmalısınız.
+In a non-Tor browser navigate to http://libreserver:8250 or http://[server local IP address]:8250 and you should be able to play the selected album.|Tor olmayan bir tarayıcıda http: // libreserver: 8250 veya http: // [sunucu yerel IP adresi]: 8250'ye gidin ve seçilen albümü çalabilmeniz gerekir.
+Setting up on the desktop|Masaüstünde ayarlama
+Install Sonata|Sonata'yı yükleyin
+Run Sonata and enter the following settings:|Sonata'yı çalıştırın ve aşağıdaki ayarları girin:
+You should now be able to see your albums listed and be able to add them to the currently playing list.|Artık albümlerinizi listede görebilmeli ve bunları geçerli çalma listesine ekleyebilmelisiniz.
+In a non-Tor browser navigate to http://libreserver:8250 or http://[server local IP address]:8250 and you should be able to play the selected album.|Tor olmayan bir tarayıcıda http: // libreserver: 8250 veya http: // [sunucu yerel IP adresi]: 8250'ye gidin ve seçilen albümü çalabilmeniz gerekir.
+Select your music file format:|Müzik dosya biçiminizi seçin:
+pixelfed allow new registrations|pixelfed yeni kayıtlara izin veriyor
+Groceries and household management|Bakkaliye ve ev yönetimi
+Organization|organizasyon
+VPN domain or IP address:|VPN etki alanı veya IP adresi:
+VPN public key:|VPN ortak anahtarı:
+Public key for this server:|Bu sunucu için genel anahtar:
+Public keys for the laptops or devices that you wish to be able to use this server to connect to the internet.|İnternete bağlanmak için bu sunucuyu kullanabilmek istediğiniz dizüstü bilgisayarlar veya cihazlar için genel anahtarlar.
+Network|Ağ
+Set your coordinates on the map|Koordinatlarınızı haritaya yerleştirin
+Longitude:|Boylam:
+Latitude:|Enlem:
+Join|Katılmak
+Docs|Dokümanlar
+Community network map is being generated|Topluluk ağ haritası oluşturuluyor
+Please wait|Lütfen bekle
+IP address (optional):|IP adresi (isteğe bağlı):
+Export|ihracat
+Add a new community network node|Yeni bir topluluk ağı düğümü ekle
+Remove a community network node|Topluluk ağı düğümünü kaldır
+WARNING: Only change this if you know what you are doing. Selecting the wrong mesh protocol may make your server disappear from the network, and be difficult to recover|UYARI: Bunu sadece ne yaptığınızı biliyorsanız değiştirin. Yanlış ağ protokolünü seçmek, sunucunuzun ağdan kaybolmasına neden olabilir ve kurtarılması zor olabilir.
+WARNING: Only change this if you know what you are doing. Setting an incorrect IP address or gateway may cause your server to become inaccessible, and may be difficult to recover|UYARI: Bunu sadece ne yaptığınızı biliyorsanız değiştirin. Yanlış bir IP adresi veya ağ geçidi belirlemek, sunucunuzun erişilememesine neden olabilir ve kurtarılması zor olabilir
+Choose your network:|Ağınızı seçin:
+Language is being changed|Dil değişiyor
+Community Network|Topluluk Ağı
+Theme is being changed|Tema değişiyor
+Install a new app|Yeni bir uygulama yükle
+Restore APPNAME from backup?|APPNAME yedeklemeden geri yüklensin mi?
+Add or remove feeds|Yayın ekle veya kaldır
+Enter an RSS feed URL to add or remove. The domain name is enough for removals.|Eklemek veya kaldırmak için bir RSS besleme URL'si girin. Etki alanı adı, kaldırma işlemleri için yeterli.
+Show onion address|Soğan adresini göster
+Multi User Dungeon from the era of Welsh mainframe computing|Welsh anabilgisayar bilgisayar çağında Çoklu Kullanıcı Dungeon
+Forward the UDP port 5100 from your internet router|UDP bağlantı noktasını 5100 İnternet yönlendiricinizden yönlendirin
+Since this app only uses the UDP protocol it won't work via an onion address. If you are running the onion only version of LibreServer then use its local IP address (usually 192.168.1.x) to connect to the game on the above port.|Bu uygulama sadece UDP protokolünü kullandığından, bir soğan adresi aracılığıyla çalışmaz. Soğanı LibreServer'un sadece bir sürümünü kullanıyorsanız, yukarıdaki porttaki oyuna bağlanmak için yerel IP adresini (genellikle 192.168.1.x) kullanın.
+Near infinite world block sandbox game|Yakın sonsuz dünya bloğu sandbox oyunu
+Federation List|Federasyon Listesi
+Add or remove the domain names for instances with whom you wish to federate. Don't include your own domain names.|Federasyon yapmak istediğiniz örnekler için alan adları ekleyin veya kaldırın. Kendi etki alanı adlarınızı eklemeyin.
+Notify via|Üzerinden bildir
+Receive admin notifications|Yönetici bildirimleri alın
+New calendar event|Yeni takvim etkinliği
+New direct message|Yeni doğrudan mesaj
+New reply|Yeni cevap
+New shared item|Yeni paylaşılan öğe
+New follow request|Yeni takip isteği
+Number of connections on HTTP port is high|HTTP bağlantı noktasındaki bağlantı sayısı yüksek
+Number of connections on HTTPS port is high|HTTPS bağlantı noktasındaki bağlantı sayısı yüksek
+Cryptpad allow new signups|Cryptpad yeni kayıtlara izin veriyor
+Name of the Dungeon Master|Zindan Efendisinin Adı
+Message Of The Day|Günün mesajı
+port|ağ bağlantı noktası
+Server Password|Sunucu şifresi
+DNS over TLS|TLS üzerinden DNS
+IP Address|IP adresi
+New git patch|Yeni git yaması
+liked your post|gönderinizi beğendim

@@ -1,0 +1,934 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# nextcloud application
+#
+# License
+# =======
+#
+# Copyright (C) 2017-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VARIANTS='full full-vim cloud'
+
+APP_CATEGORY=sync
+
+IN_DEFAULT_INSTALL=0
+SHOW_ON_ABOUT=1
+REQUIRES_APP=
+
+NEXTCLOUD_VERSION="21.0.0"
+NEXTCLOUD_DOWNLOAD_FILE="nextcloud-${NEXTCLOUD_VERSION}.zip"
+NEXTCLOUD_DOWNLOAD_URL="https://download.nextcloud.com/server/releases/${NEXTCLOUD_DOWNLOAD_FILE}"
+
+NEXTCLOUD_DOMAIN_NAME=
+NEXTCLOUD_CODE=
+NEXTCLOUD_ONION_PORT=8112
+NEXTCLOUD_ADMIN_PASSWORD=
+NEXTCLOUD_SERVER_SIDE_ENCRYPTION=1
+
+NEXTCLOUD_SHORT_DESCRIPTION=$'File storage and sync'
+NEXTCLOUD_DESCRIPTION=$'File storage and sync'
+NEXTCLOUD_MOBILE_APP_URL='https://f-droid.org/packages/com.nextcloud.client'
+
+NEXTCLOUD_TURN_PORT=5349
+
+NEXTCLOUD_COMMAND='sudo -u www-data ./occ'
+NEXTCLOUD_COMMAND_ROOT='sudo -u root ./occ'
+
+nextcloud_variables=(ONION_ONLY
+                     DEFAULT_DOMAIN_NAME
+                     NEXTCLOUD_DOMAIN_NAME
+                     NEXTCLOUD_CODE
+                     DDNS_PROVIDER
+                     MY_USERNAME)
+
+function upgrade_distro_nextcloud {
+    target_distro="$1"
+
+    if [[ "$target_distro" == 'bullseye' ]]; then
+        echo -n ''
+    fi
+}
+
+function nextcloud_update_files {
+    read_config_param NEXTCLOUD_DOMAIN_NAME
+    nextcloud_dir="/var/www/$NEXTCLOUD_DOMAIN_NAME/htdocs"
+    if [ ! -d "$nextcloud_dir" ]; then
+        return
+    fi
+    cd "$nextcloud_dir" || return
+    chmod +x "${NEXTCLOUD_WWW}/occ"
+    $NEXTCLOUD_COMMAND files:scan --all
+}
+
+function change_default_domain_name_nextcloud {
+    new_default_domain_name="$1"
+
+    read_config_param NEXTCLOUD_DOMAIN_NAME
+    STUN_SERVERS_STRING="[\"$new_default_domain_name:$TURN_PORT\"]"
+    TURN_SERVERS_STRING="[{\"server\":\"$new_default_domain_name:$TURN_PORT\",\"secret\":\"$turnkey\",\"protocols\":\"udp,tcp\"}]"
+    cd "/var/www/$NEXTCLOUD_DOMAIN_NAME/htdocs" || exit 36
+    chmod +x "${NEXTCLOUD_WWW}/occ"
+    ${NEXTCLOUD_COMMAND} config:app:set spreed stun_servers --value="$STUN_SERVERS_STRING" --output json
+    ${NEXTCLOUD_COMMAND} config:app:set spreed turn_servers --value="$TURN_SERVERS_STRING" --output json
+}
+
+function nextcloud_check_php_init {
+    php_ini_file="$1"
+
+    if [ ! -f "$php_ini_file" ]; then
+        return
+    fi
+
+    sed -i "s/memory_limit =.*/memory_limit = ${MAX_PHP_MEMORY}M/g" "$php_ini_file"
+
+    sed -i 's|;opcache.enable=|opcache.enable=|g' "$php_ini_file"
+    sed -i 's|opcache.enable=.*|opcache.enable=1|g' "$php_ini_file"
+
+    sed -i 's|;opcache.enable_cli=|opcache.enable_cli=|g' "$php_ini_file"
+    sed -i 's|opcache.enable_cli=.*|opcache.enable_cli=1|g' "$php_ini_file"
+
+    sed -i 's|;opcache.interned_strings_buffer=|opcache.interned_strings_buffer=|g' "$php_ini_file"
+    sed -i 's|opcache.interned_strings_buffer=.*|opcache.interned_strings_buffer=8|g' "$php_ini_file"
+
+    sed -i 's|;opcache.max_accelerated_files=|opcache.max_accelerated_files=|g' "$php_ini_file"
+    sed -i 's|opcache.max_accelerated_files=.*|opcache.max_accelerated_files=10000|g' "$php_ini_file"
+
+    sed -i 's|;opcache.memory_consumption=|opcache.memory_consumption=|g' "$php_ini_file"
+    sed -i 's|opcache.memory_consumption=.*|opcache.memory_consumption=128|g' "$php_ini_file"
+
+    sed -i 's|;opcache.save_comments=|opcache.save_comments=|g' "$php_ini_file"
+    sed -i 's|opcache.save_comments=.*|opcache.save_comments=1|g' "$php_ini_file"
+
+    sed -i 's|;opcache.revalidate_freq=|opcache.revalidate_freq=|g' "$php_ini_file"
+    sed -i 's|opcache.revalidate_freq=.*|opcache.revalidate_freq=1|g' "$php_ini_file"
+}
+
+function setup_nextcloud_turn {
+    if [ ! -f /var/lib/turn/turnserver.conf ]; then
+        echo $'There is no turn server installed'
+        return
+    fi
+    turnkey=$(grep 'static-auth-secret' /var/lib/turn/turnserver.conf | awk -F '=' '{print $2}')
+    if [ ! "$turnkey" ]; then
+        echo $'No TURN secret found in /var/lib/turn/turnserver.conf'
+        exit 35
+    fi
+
+    STUN_SERVERS_STRING="[\"$DEFAULT_DOMAIN_NAME:$TURN_PORT\"]"
+    TURN_SERVERS_STRING="[{\"server\":\"$DEFAULT_DOMAIN_NAME:$TURN_PORT\",\"secret\":\"$turnkey\",\"protocols\":\"udp,tcp\"}]"
+    cd "/var/www/$NEXTCLOUD_DOMAIN_NAME/htdocs" || exit 36
+    chmod +x "/var/www/$NEXTCLOUD_DOMAIN_NAME/htdocs/occ"
+    ${NEXTCLOUD_COMMAND} config:app:set spreed stun_servers --value="$STUN_SERVERS_STRING" --output json
+    ${NEXTCLOUD_COMMAND} config:app:set spreed turn_servers --value="$TURN_SERVERS_STRING" --output json
+}
+
+function logging_on_nextcloud {
+    echo -n ''
+}
+
+function logging_off_nextcloud {
+    echo -n ''
+}
+
+function remove_user_nextcloud {
+    remove_username="$1"
+
+    read_config_param NEXTCLOUD_DOMAIN_NAME
+    cd "/var/www/$NEXTCLOUD_DOMAIN_NAME/htdocs" || exit 36
+    chmod +x "/var/www/$NEXTCLOUD_DOMAIN_NAME/htdocs/occ"
+    ${NEXTCLOUD_COMMAND} user:delete "${remove_username}"
+    "${PROJECT_NAME}-pass" -u "$remove_username" --rmapp nextcloud
+}
+
+function add_user_nextcloud {
+    new_username="$1"
+
+    read_config_param NEXTCLOUD_DOMAIN_NAME
+    cd "/var/www/$NEXTCLOUD_DOMAIN_NAME/htdocs" || exit 36
+    chmod +x "/var/www/$NEXTCLOUD_DOMAIN_NAME/htdocs/occ"
+    sudo -u www-data OC_PASS="${2}" ./occ user:add --password-from-env --display-name="${new_username}" "${new_username}"
+
+    "${PROJECT_NAME}-pass" -u "$new_username" -a nextcloud -p "$new_user_password"
+    echo '0'
+}
+
+function change_password_nextcloud {
+    curr_username="$1"
+
+    export OC_PASS="$2"
+    read_config_param NEXTCLOUD_DOMAIN_NAME
+    cd "/var/www/$NEXTCLOUD_DOMAIN_NAME/htdocs" || exit 36
+    chmod +x "/var/www/$NEXTCLOUD_DOMAIN_NAME/htdocs/occ"
+    ${NEXTCLOUD_COMMAND} user:resetpassword --password-from-env "${curr_username}"
+    export OC_PASS=""
+    "${PROJECT_NAME}-pass" -u "$curr_username" -a nextcloud -p "$OC_PASS"
+}
+
+function install_interactive_nextcloud {
+    if [ ! "$ONION_ONLY" ]; then
+        ONION_ONLY='no'
+    fi
+
+    dialog --title $"Enable NextCloud server side encryption" \
+           --backtitle $"LibreServer Configuration" \
+           --yesno $"\\nDo you want to enable server side encryption. On ARM or older x86 systems, especially without HRNG, this may make performance excessively slow?" 10 60
+    sel=$?
+    case $sel in
+        1) NEXTCLOUD_SERVER_SIDE_ENCRYPTION=
+           ;;
+        255) return;;
+    esac
+
+    if [[ $ONION_ONLY != "no" ]]; then
+        NEXTCLOUD_DOMAIN_NAME='nextcloud.local'
+    else
+        NEXTCLOUD_DETAILS_COMPLETE=
+        # shellcheck disable=SC2086
+        while [ ! $NEXTCLOUD_DETAILS_COMPLETE ]
+        do
+            data=$(mktemp 2>/dev/null)
+            dialog --backtitle $"LibreServer Configuration" \
+                   --title $"NextCloud Configuration" \
+                   --form $"\\nPlease enter your NextCloud details.\\n\\nIMPORTANT: This should be a domain name which is supported by Let's Encrypt:" 13 65 2 \
+                   $"Domain:" 1 1 "$(grep 'NEXTCLOUD_DOMAIN_NAME' temp.cfg | awk -F '=' '{print $2}')" 1 15 40 40 \
+                   2> "$data"
+            sel=$?
+            case $sel in
+                1) rm -f "$data"
+                   exit 1;;
+                255) rm -f "$data"
+                     exit 1;;
+            esac
+            NEXTCLOUD_DOMAIN_NAME=$(sed -n 1p < "$data")
+            if [ "$NEXTCLOUD_DOMAIN_NAME" ]; then
+                TEST_DOMAIN_NAME=$NEXTCLOUD_DOMAIN_NAME
+                validate_domain_name
+                if [[ "$TEST_DOMAIN_NAME" != "$NEXTCLOUD_DOMAIN_NAME" ]]; then
+                    NEXTCLOUD_DOMAIN_NAME=
+                    dialog --title $"Domain name validation" --msgbox "$TEST_DOMAIN_NAME" 15 50
+                fi
+            fi
+            if [ $NEXTCLOUD_DOMAIN_NAME ]; then
+                NEXTCLOUD_DETAILS_COMPLETE="yes"
+            fi
+            rm -f "$data"
+        done
+
+        # remove any invalid characters
+        if [ ${#NEXTCLOUD_TITLE} -gt 0 ]; then
+            new_title=${NEXTCLOUD_TITLE//\'/}
+            NEXTCLOUD_TITLE="$new_title"
+        fi
+    fi
+    write_config_param "NEXTCLOUD_DOMAIN_NAME" "$NEXTCLOUD_DOMAIN_NAME"
+    APP_INSTALLED=1
+}
+
+function change_password_nextcloud {
+    curr_username="$1"
+    new_user_password="$2"
+
+    read_config_param "${NEXTCLOUD_DOMAIN_NAME}"
+
+    "${PROJECT_NAME}-pass" -u "$curr_username" -a nextcloud -p "$new_user_password"
+}
+
+function nextcloud_create_database {
+    if [ -f "$IMAGE_PASSWORD_FILE" ]; then
+        NEXTCLOUD_ADMIN_PASSWORD="$(printf "%s" "$(cat "$IMAGE_PASSWORD_FILE")")"
+    else
+        if [ ! "$NEXTCLOUD_ADMIN_PASSWORD" ]; then
+            NEXTCLOUD_ADMIN_PASSWORD="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
+        fi
+    fi
+    if [ ! "$NEXTCLOUD_ADMIN_PASSWORD" ]; then
+        return
+    fi
+
+    function_check create_database
+    create_database nextcloud "$NEXTCLOUD_ADMIN_PASSWORD" "$MY_USERNAME"
+}
+
+function reconfigure_nextcloud {
+    echo -n ''
+}
+
+function upgrade_nextcloud_base {
+    NEXTCLOUD_WWW="/var/www/$NEXTCLOUD_DOMAIN_NAME/htdocs"
+    nextcloud_check_php_init "/etc/php/${PHP_VERSION}/cli/php.ini"
+    nextcloud_check_php_init "/etc/php/${PHP_VERSION}/fpm/php.ini"
+
+    # shellcheck disable=SC2086
+    systemctl restart php${PHP_VERSION}-fpm
+
+    chown -R www-data:www-data "${NEXTCLOUD_WWW}"
+    chown -R www-data:www-data "/var/www/$NEXTCLOUD_DOMAIN_NAME/data"
+    cd "${NEXTCLOUD_WWW}" || exit 23
+    chmod +x "${NEXTCLOUD_WWW}/occ"
+    ${NEXTCLOUD_COMMAND} maintenance:repair
+    ${NEXTCLOUD_COMMAND} upgrade
+
+    cd "${NEXTCLOUD_WWW}" || exit 23
+    ${NEXTCLOUD_COMMAND} maintenance:mode --off
+    ${NEXTCLOUD_COMMAND} db:add-missing-indices
+    ${NEXTCLOUD_COMMAND} -n db:convert-filecache-bigint
+    mpd_nextcloud_integration
+}
+
+function upgrade_nextcloud {
+    if grep -q "nextcloud domain" "$COMPLETION_FILE"; then
+        NEXTCLOUD_DOMAIN_NAME=$(get_completion_param "nextcloud domain")
+    fi
+
+    NEXTCLOUD_WWW="/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs"
+    if [ ! -f /etc/turnserver.conf ]; then
+        install_turn
+    fi
+
+    CURR_NEXTCLOUD_VERSION=
+    if grep -q "nextcloud version" "${COMPLETION_FILE}"; then
+        CURR_NEXTCLOUD_VERSION=$(get_completion_param "nextcloud version")
+    fi
+    if [[ "${CURR_NEXTCLOUD_VERSION}" == "${NEXTCLOUD_VERSION}" ]]; then
+        return
+    fi
+
+    cd "/var/www/${NEXTCLOUD_DOMAIN_NAME}" || return
+
+    if [ -f "/var/www/${NEXTCLOUD_DOMAIN_NAME}/${NEXTCLOUD_DOWNLOAD_FILE}" ]; then
+        rm "/var/www/${NEXTCLOUD_DOMAIN_NAME}/${NEXTCLOUD_DOWNLOAD_FILE}"
+    fi
+
+    if [[ "$ONION_ONLY" == 'no' ]]; then
+        wget ${NEXTCLOUD_DOWNLOAD_URL}
+    else
+        torsocks wget ${NEXTCLOUD_DOWNLOAD_URL}
+        if [ ! -f "/var/www/${NEXTCLOUD_DOMAIN_NAME}/${NEXTCLOUD_DOWNLOAD_FILE}" ]; then
+            wget ${NEXTCLOUD_DOWNLOAD_URL}
+        fi
+    fi
+
+    if [ ! -f "/var/www/${NEXTCLOUD_DOMAIN_NAME}/${NEXTCLOUD_DOWNLOAD_FILE}" ]; then
+        echo $"Upgrade Couldn't download nextcloud file ${NEXTCLOUD_DOWNLOAD_URL}"
+        exit 72
+    fi
+
+    unzip ${NEXTCLOUD_DOWNLOAD_FILE}
+
+    if [ ! -d "/var/www/${NEXTCLOUD_DOMAIN_NAME}/nextcloud" ]; then
+        echo $"nextcloud directory not found after unzip from upgrade"
+        exit 63
+    fi
+
+    if [ -d "/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs" ]; then
+        if [ -f "/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs/config/config.php" ]; then
+            cp "/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs/config/config.php" "/var/www/${NEXTCLOUD_DOMAIN_NAME}/config.php"
+        fi
+        if [ -f "/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs_prev" ]; then
+            rm -rf "/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs_prev"
+        fi
+        mv "/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs" "/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs_prev"
+    fi
+    mv "/var/www/${NEXTCLOUD_DOMAIN_NAME}/nextcloud" "/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs"
+    cp "/var/www/${NEXTCLOUD_DOMAIN_NAME}/config.php" "/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs/config/config.php"
+
+    # set the version number, otherwise upgrades can be prevented
+    sed -i "s|'version' =>.*|'version' => '${NEXTCLOUD_VERSION}',|g" "${NEXTCLOUD_WWW}/config/config.php"
+
+    upgrade_nextcloud_base
+    ${NEXTCLOUD_COMMAND} upgrade
+    ${NEXTCLOUD_COMMAND} maintenance:mode --off
+
+    # remove anything related to the appstore from the config
+    sed -i '/appstore/d' "${NEXTCLOUD_WWW}/config/config.php"
+    chown -R www-data:www-data "${NEXTCLOUD_WWW}"
+    chown -R www-data:www-data "/var/www/${NEXTCLOUD_DOMAIN_NAME}/data"
+
+    set_completion_param "nextcloud version" "${NEXTCLOUD_VERSION}"
+}
+
+
+function backup_local_nextcloud {
+    NEXTCLOUD_DOMAIN_NAME='nextcloud'
+    if grep -q "nextcloud domain" "$COMPLETION_FILE"; then
+        NEXTCLOUD_DOMAIN_NAME=$(get_completion_param "nextcloud domain")
+    fi
+
+    source_directory=/var/www/${NEXTCLOUD_DOMAIN_NAME}/data
+    if [ -d "$source_directory" ]; then
+        function_check suspend_site
+        suspend_site "${NEXTCLOUD_DOMAIN_NAME}"
+
+        dest_directory=nextcloudfiles
+        function_check backup_directory_to_usb
+        backup_directory_to_usb "$source_directory" "$dest_directory"
+
+        source_directory=/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs/config
+        dest_directory=nextcloudconfig
+        backup_directory_to_usb "$source_directory" "$dest_directory"
+
+        function_check backup_database_to_usb
+        backup_database_to_usb nextcloud
+
+        function_check restart_site
+        restart_site
+    fi
+}
+
+function restore_local_nextcloud {
+    if ! grep -q "nextcloud domain" "$COMPLETION_FILE"; then
+        return
+    fi
+    NEXTCLOUD_DOMAIN_NAME=$(get_completion_param "nextcloud domain")
+    NEXTCLOUD_WWW="/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs"
+    if [ "$NEXTCLOUD_DOMAIN_NAME" ]; then
+        suspend_site "${NEXTCLOUD_DOMAIN_NAME}"
+
+        temp_restore_dir=/root/tempnextcloud
+        function_check nextcloud_create_database
+        nextcloud_create_database
+        restore_database nextcloud "${NEXTCLOUD_DOMAIN_NAME}"
+
+        temp_restore_dir=/root/tempnextcloudfiles
+        restore_directory_from_usb $temp_restore_dir nextcloudfiles
+
+        if [ -d "$temp_restore_dir/var/www/${NEXTCLOUD_DOMAIN_NAME}/data" ]; then
+            cp -r "$temp_restore_dir/var/www/${NEXTCLOUD_DOMAIN_NAME}/data" "/var/www/${NEXTCLOUD_DOMAIN_NAME}/"
+        else
+            cp -r $temp_restore_dir/* "/var/www/${NEXTCLOUD_DOMAIN_NAME}/"
+        fi
+        # shellcheck disable=SC2181
+        if [ ! "$?" = "0" ]; then
+            restart_site
+            set_user_permissions
+            backup_unmount_drive
+            exit 34
+        fi
+        rm -rf ${temp_restore_dir}
+
+        temp_restore_dir=/root/tempnextcloudconfig
+        restore_directory_from_usb $temp_restore_dir nextcloudconfig
+
+        if [ -d "$temp_restore_dir${NEXTCLOUD_WWW}/config" ]; then
+            cp -r "$temp_restore_dir${NEXTCLOUD_WWW}/config" "${NEXTCLOUD_WWW}"
+        else
+            cp -r $temp_restore_dir/* "${NEXTCLOUD_WWW}/config/"
+        fi
+
+        # shellcheck disable=SC2181
+        if [ ! "$?" = "0" ]; then
+            restart_site
+            set_user_permissions
+            backup_unmount_drive
+            exit 34
+        fi
+        rm -rf ${temp_restore_dir}
+
+        chown -R www-data:www-data "${NEXTCLOUD_WWW}"
+        chown -R www-data:www-data "/var/www/${NEXTCLOUD_DOMAIN_NAME}/data"
+        cd "${NEXTCLOUD_WWW}" || exit 14
+        chmod +x "${NEXTCLOUD_WWW}/occ"
+        ${NEXTCLOUD_COMMAND} maintenance:repair
+        restart_site
+    fi
+}
+
+function backup_remote_nextcloud {
+    echo -n ''
+}
+
+function restore_remote_nextcloud {
+    echo -n ''
+}
+
+function remove_nextcloud {
+    if [ ${#NEXTCLOUD_DOMAIN_NAME} -eq 0 ]; then
+        return
+    fi
+    function_check remove_nodejs
+    remove_nodejs nextcloud
+
+    sed -i 's|env[PATH]|;env[PATH]|g' "/etc/php/${PHP_VERSION}/fpm/pool.d/www.conf"
+
+    read_config_param "NEXTCLOUD_DOMAIN_NAME"
+    read_config_param "MY_USERNAME"
+    echo "Removing $NEXTCLOUD_DOMAIN_NAME"
+    nginx_dissite "$NEXTCLOUD_DOMAIN_NAME"
+    remove_certs "$NEXTCLOUD_DOMAIN_NAME"
+    if [ -d "/var/www/$NEXTCLOUD_DOMAIN_NAME" ]; then
+        rm -rf "/var/www/$NEXTCLOUD_DOMAIN_NAME"
+    fi
+    if [ -f "/etc/nginx/sites-available/$NEXTCLOUD_DOMAIN_NAME" ]; then
+        rm "/etc/nginx/sites-available/$NEXTCLOUD_DOMAIN_NAME"
+    fi
+    mpd_nextcloud_integration
+    function_check drop_database
+    drop_database nextcloud
+    function_check remove_onion_service
+    remove_onion_service nextcloud ${NEXTCLOUD_ONION_PORT}
+    remove_app nextcloud
+    remove_completion_param install_nextcloud
+    sed -i '/nextcloud/d' "$COMPLETION_FILE"
+    remove_backup_database_local nextcloud
+
+    function_check remove_ddns_domain
+    remove_ddns_domain "$NEXTCLOUD_DOMAIN_NAME"
+    systemctl restart nginx
+    # shellcheck disable=SC2086
+    systemctl restart php${PHP_VERSION}-fpm
+}
+
+function install_nextcloud_base {
+    if [ ! "${NEXTCLOUD_DOMAIN_NAME}" ]; then
+        echo $'No domain name was given for nextcloud'
+        exit 73
+    fi
+
+    if [[ $(app_is_installed nextcloud_main) == "1" ]]; then
+        return
+    fi
+
+    if [ -d "/var/www/${NEXTCLOUD_DOMAIN_NAME}" ]; then
+        remove_nextcloud
+    fi
+
+    increment_app_install_progress
+
+    function_check install_turn
+    if [ ! -f /etc/turnserver.conf ]; then
+        install_turn
+    fi
+
+    increment_app_install_progress
+
+    function_check install_mariadb
+    install_mariadb
+
+    increment_app_install_progress
+
+    function_check get_mariadb_password
+    get_mariadb_password
+
+    increment_app_install_progress
+
+    function_check repair_databases_script
+    repair_databases_script
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES php-php-gettext php-curl php-gd php-mysql git curl
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES php-intl memcached php-memcached libfcgi0ldbl
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES php-cli php-common php-json php-mbstring
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES php-fpm php-intl php-xml php-cgi
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES php-zip unzip
+
+    increment_app_install_progress
+
+    # Ensure PATH is available to php
+    if [ ! -f "/etc/php/${PHP_VERSION}/fpm/pool.d/www.conf" ]; then
+        echo $'No php www configuration file found'
+        exit 62
+    fi
+    sed -i 's|;env[PATH]|env[PATH]|g' "/etc/php/${PHP_VERSION}/fpm/pool.d/www.conf"
+
+    mkdir "/var/www/${NEXTCLOUD_DOMAIN_NAME}"
+    mkdir "/var/www/${NEXTCLOUD_DOMAIN_NAME}/data"
+
+    cd "/var/www/${NEXTCLOUD_DOMAIN_NAME}" || exit 26
+
+    if [[ "$ONION_ONLY" == 'no' ]]; then
+        wget ${NEXTCLOUD_DOWNLOAD_URL}
+    else
+        torsocks wget ${NEXTCLOUD_DOWNLOAD_URL}
+        if [ ! -f "/var/www/${NEXTCLOUD_DOMAIN_NAME}/${NEXTCLOUD_DOWNLOAD_FILE}" ]; then
+            wget ${NEXTCLOUD_DOWNLOAD_URL}
+        fi
+    fi
+
+    if [ ! -f "/var/www/${NEXTCLOUD_DOMAIN_NAME}/${NEXTCLOUD_DOWNLOAD_FILE}" ]; then
+        echo $"Couldn't download nextcloud file ${NEXTCLOUD_DOWNLOAD_URL}"
+        exit 72
+    fi
+
+    unzip ${NEXTCLOUD_DOWNLOAD_FILE}
+
+    if [ ! -d "/var/www/${NEXTCLOUD_DOMAIN_NAME}/nextcloud" ]; then
+        echo $"nextcloud directory not found after unzip"
+        exit 63
+    fi
+
+    mv nextcloud htdocs
+
+    if [ ! -d "/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs" ]; then
+        echo $'Unable to move nextcloud directory to htdocs'
+        exit 62
+    fi
+
+    NEXTCLOUD_WWW="/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs"
+    # create the database
+    increment_app_install_progress
+    function_check nextcloud_create_database
+    nextcloud_create_database
+    increment_app_install_progress
+
+    chmod g+w "/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs"
+    chown -R www-data:www-data "/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs"
+
+    if [ ! -f "/etc/aliases" ]; then
+        touch /etc/aliases
+    fi
+    if ! grep -q "www-data: root" /etc/aliases; then
+        echo 'www-data: root' >> /etc/aliases
+    fi
+
+    function_check add_ddns_domain
+    add_ddns_domain "$NEXTCLOUD_DOMAIN_NAME"
+
+    increment_app_install_progress
+
+    NEXTCLOUD_ONION_HOSTNAME=$(add_onion_service nextcloud 80 ${NEXTCLOUD_ONION_PORT})
+
+    increment_app_install_progress
+
+    nextcloud_nginx_site=/etc/nginx/sites-available/${NEXTCLOUD_DOMAIN_NAME}
+    if [[ $ONION_ONLY == "no" ]]; then
+        function_check nginx_http_redirect
+        nginx_http_redirect "${NEXTCLOUD_DOMAIN_NAME}"
+        { echo 'server {';
+          echo '  listen 443 ssl;';
+          echo '  #listen [::]:443 ssl;';
+          echo "  server_name ${NEXTCLOUD_DOMAIN_NAME};";
+          echo '';
+          echo '  # Security'; } >> "${nextcloud_nginx_site}"
+        function_check nginx_ssl
+        nginx_ssl "${NEXTCLOUD_DOMAIN_NAME}" mobile
+
+        function_check nginx_security_options
+        nginx_security_options "${NEXTCLOUD_DOMAIN_NAME}"
+        nginx_robots "${NEXTCLOUD_DOMAIN_NAME}"
+
+        { echo '  add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
+          echo "  add_header Onion-Location http://${NEXTCLOUD_ONION_HOSTNAME}\$request_uri;";
+          echo '';
+          echo '  # Logs';
+          echo '  access_log /dev/null;';
+          echo '  error_log /dev/null;';
+          echo '';
+          echo '  # Root';
+          echo "  root ${NEXTCLOUD_WWW};";
+          echo '';
+          echo '  # Index';
+          echo '  index index.php;';
+          echo '';
+
+          # By default nextcloud advertises highly specific version information
+          # on status.php, which can obviously be used by adversaries.
+          # Blocking status.php prevents this information leak
+          echo '  #location = /status.php {';
+          echo '  #  return 404;';
+          echo '  #}';
+          echo '';
+
+          echo '  # PHP';
+          echo '  location ~ \.php {';
+          echo '    client_max_body_size 1G;';
+          echo '    client_body_buffer_size 128k;';
+          echo '    include snippets/fastcgi-php.conf;';
+          echo "    fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
+          echo '    fastcgi_read_timeout 60;';
+          echo '  }';
+          echo '';
+          echo '  # Location';
+          echo '  location / {'; } >> "$nextcloud_nginx_site"
+        function_check nginx_limits
+        nginx_limits "$NEXTCLOUD_DOMAIN_NAME" '1G'
+        { echo "    try_files \$uri \$uri/ @nextcloud;";
+          echo '  }';
+          echo '';
+          echo '  # Fancy URLs';
+          echo '  location @nextcloud {';
+          echo "    rewrite ^(.*)\$ /index.php?p=\$1 last;";
+          echo '  }';
+          echo '';
+          echo '  # Restrict access that is unnecessary anyway';
+          echo '  location ~ /\.(ht|git) {';
+          echo '    deny all;';
+          echo '  }';
+          echo '';
+          echo '  location = /.well-known/carddav {';
+          echo "    return 301 \$scheme://\$host/remote.php/dav;";
+          echo '  }';
+          echo '  location = /.well-known/caldav {';
+          echo "    return 301 \$scheme://\$host/remote.php/dav;";
+          echo '  }';
+          echo '';
+          echo '  location /.well-known/acme-challenge { }';
+          echo '}'; } >> "${nextcloud_nginx_site}"
+    else
+        echo -n '' > "${nextcloud_nginx_site}"
+    fi
+    { echo 'server {';
+      echo "    listen 127.0.0.1:${NEXTCLOUD_ONION_PORT} default_server;";
+      echo '    port_in_redirect off;';
+      echo "    server_name ${NEXTCLOUD_DOMAIN_NAME};";
+      echo ''; } >> "${nextcloud_nginx_site}"
+    function_check nginx_security_options
+    nginx_security_options "${NEXTCLOUD_DOMAIN_NAME}"
+    { echo '';
+      echo '  # Logs';
+      echo '  access_log /dev/null;';
+      echo '  error_log /dev/null;';
+      echo '';
+      echo '  # Root';
+      echo "  root ${NEXTCLOUD_WWW};";
+      echo '';
+      echo '  # Index';
+      echo '  index index.php;';
+      echo '';
+
+      # By default nextcloud advertises highly specific version information
+      # on status.php, which can obviously be used by adversaries.
+      # Blocking status.php prevents this information leak
+      echo '  #location = /status.php {';
+      echo '  #  return 404;';
+      echo '  #}';
+      echo '';
+
+      echo '  # PHP';
+      echo '  location ~ \.php {';
+      echo '    client_max_body_size 1G;';
+      echo '    client_body_buffer_size 128k;';
+      echo '    include snippets/fastcgi-php.conf;';
+      echo "    fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
+      echo '    fastcgi_read_timeout 60;';
+      echo '  }';
+      echo '';
+      echo '  # Location';
+      echo '  location / {'; } >> "${nextcloud_nginx_site}"
+    function_check nginx_limits
+    nginx_limits "${NEXTCLOUD_DOMAIN_NAME}" '1G'
+    { echo "    try_files \$uri \$uri/ @nextcloud;";
+      echo '  }';
+      echo '';
+      echo '  # Fancy URLs';
+      echo '  location @nextcloud {';
+      echo "    rewrite ^(.*)\$ /index.php?p=\$1 last;";
+      echo '  }';
+      echo '';
+      echo '  # Restrict access that is unnecessary anyway';
+      echo '  location ~ /\.(ht|git) {';
+      echo '    deny all;';
+      echo '  }';
+      echo '';
+      echo '  location = /.well-known/carddav {';
+      echo "    return 301 \$scheme://\$host/remote.php/dav;";
+      echo '  }';
+      echo '  location = /.well-known/caldav {';
+      echo "    return 301 \$scheme://\$host/remote.php/dav;";
+      echo '  }';
+      echo '';
+      echo '  location /.well-known/acme-challenge { }';
+      echo '}'; } >> "${nextcloud_nginx_site}"
+
+    sed -i 's| DENY;| SAMEORIGIN;|g' "${nextcloud_nginx_site}"
+    sed -i 's|limit_conn conn_limit_per_ip.*|limit_conn conn_limit_per_ip 100;|g' "${nextcloud_nginx_site}"
+    sed -i 's|limit_req zone=.*|limit_req zone=req_limit_per_ip burst=100 nodelay;|g' "${nextcloud_nginx_site}"
+
+    # NextCloud doesn't like content-security-policy at all
+    sed -i '/Content-Security-Policy/d' "${nextcloud_nginx_site}"
+
+    increment_app_install_progress
+
+    function_check configure_php
+    configure_php
+
+    increment_app_install_progress
+
+    function_check create_site_certificate
+    create_site_certificate "${NEXTCLOUD_DOMAIN_NAME}" 'yes'
+
+    increment_app_install_progress
+
+    if [[ "$ONION_ONLY" == "no" ]]; then
+        if [ ! -f "/etc/ssl/certs/${NEXTCLOUD_DOMAIN_NAME}.pem" ]; then
+            echo $'Certificate not generated for nextcloud'
+            exit 72
+        fi
+    fi
+
+    # Ensure that the database gets backed up locally, if remote
+    # backups are not being used
+    function_check backup_databases_script_header
+    backup_databases_script_header
+
+    increment_app_install_progress
+
+    function_check backup_database_local
+    backup_database_local nextcloud
+
+    increment_app_install_progress
+
+    function_check nginx_ensite
+    nginx_ensite "${NEXTCLOUD_DOMAIN_NAME}"
+
+    increment_app_install_progress
+
+    # shellcheck disable=SC2086
+    systemctl restart php${PHP_VERSION}-fpm
+
+    increment_app_install_progress
+
+    systemctl restart nginx
+
+    "${PROJECT_NAME}-addemail" -u "${MY_USERNAME}" -e "noreply@${NEXTCLOUD_DOMAIN_NAME}" -g nextcloud --public no
+
+    increment_app_install_progress
+
+    "${PROJECT_NAME}-pass" -u "${MY_USERNAME}" -a nextcloud -p "${NEXTCLOUD_ADMIN_PASSWORD}"
+
+    increment_app_install_progress
+
+    cd "${NEXTCLOUD_WWW}" || exit 24
+    if [ -d config ]; then
+        chown -R www-data:www-data config
+    fi
+    if [ -d data ]; then
+        chown -R www-data:www-data data
+    fi
+
+    increment_app_install_progress
+
+    echo "Checking /etc/php/${PHP_VERSION}/cli/php.ini"
+    nextcloud_check_php_init "/etc/php/${PHP_VERSION}/cli/php.ini"
+
+    increment_app_install_progress
+
+    echo "Checking /etc/php/${PHP_VERSION}/fpm/php.ini"
+    nextcloud_check_php_init "/etc/php/${PHP_VERSION}/fpm/php.ini"
+    chmod +x "${NEXTCLOUD_WWW}/occ"
+
+    increment_app_install_progress
+
+    echo $'Running nextcloud installer'
+    chown -R root:root "${NEXTCLOUD_WWW}/config"
+    ${NEXTCLOUD_COMMAND_ROOT} maintenance:install --database-name nextcloud --admin-user "${MY_USERNAME}" --admin-pass "${NEXTCLOUD_ADMIN_PASSWORD}" --database mysql --database-user root --database-pass "${MARIADB_PASSWORD}"
+    if [ ! -d data ]; then
+        echo $'Nextcloud data directory was not found. This probably means that the installation failed.'
+        echo ''
+        echo $'Install command was:'
+        echo "${NEXTCLOUD_COMMAND} maintenance:install --database-name nextcloud --admin-user ${MY_USERNAME} --admin-pass \"Your password\" --database mysql --database-user root --database-pass \"MariaDB password\""
+        exit 83
+    fi
+
+    increment_app_install_progress
+
+    chown -R www-data:www-data "${NEXTCLOUD_WWW}/config"
+    chown -R www-data:www-data "${NEXTCLOUD_WWW}/data"
+    chmod +x "${NEXTCLOUD_WWW}/occ"
+    echo $'Checking'
+    ${NEXTCLOUD_COMMAND} check
+    increment_app_install_progress
+    echo $'Status'
+    ${NEXTCLOUD_COMMAND} status
+    increment_app_install_progress
+    echo $'app:list'
+    ${NEXTCLOUD_COMMAND} app:list
+    # shellcheck disable=SC2086
+    if [ $NEXTCLOUD_SERVER_SIDE_ENCRYPTION ]; then
+        echo $'Enabling encryption'
+        ${NEXTCLOUD_COMMAND} app:enable encryption
+        if ! ${NEXTCLOUD_COMMAND} encryption:enable; then
+            echo $'Encryption not enabled'
+            exit 73
+        fi
+        ${NEXTCLOUD_COMMAND} encryption:status
+    fi
+    chmod g+w "${NEXTCLOUD_WWW}/config/config.php"
+    chown -R www-data:www-data "${NEXTCLOUD_WWW}"
+    chmod 0644 .htaccess
+    chmod 0750 data
+    chown -R www-data:www-data "/var/www/${NEXTCLOUD_DOMAIN_NAME}/data"
+    increment_app_install_progress
+    echo $'Setting trusted domains'
+    ${NEXTCLOUD_COMMAND} config:system:set trusted_domains 1 --value="$NEXTCLOUD_DOMAIN_NAME"
+    increment_app_install_progress
+    ${NEXTCLOUD_COMMAND} config:system:set trusted_domains 2 --value="$NEXTCLOUD_ONION_HOSTNAME"
+    increment_app_install_progress
+    ${NEXTCLOUD_COMMAND} maintenance:repair
+    #echo $'Turning off maintenance mode'
+    #${NEXTCLOUD_COMMAND} maintenance:mode --off
+
+    increment_app_install_progress
+    echo $'Restarting mariadb'
+    systemctl restart mariadb
+
+    increment_app_install_progress
+
+    echo $'Moving data directory'
+    # move the data directory
+    # shellcheck disable=SC2086
+    mv ${NEXTCLOUD_WWW}/data /var/www/${NEXTCLOUD_DOMAIN_NAME}/
+    sed -i "s|'datadirectory'.*|'datadirectory' => '/var/www/${NEXTCLOUD_DOMAIN_NAME}/data',|g" "${NEXTCLOUD_WWW}/config/config.php"
+
+    echo $'Setting up turn server'
+    setup_nextcloud_turn
+
+    increment_app_install_progress
+
+    cp "/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs/config/config.php" "/var/www/${NEXTCLOUD_DOMAIN_NAME}/config.php"
+
+    increment_app_install_progress
+
+    set_completion_param "nextcloud domain" "${NEXTCLOUD_DOMAIN_NAME}"
+    set_completion_param "nextcloud version" "${NEXTCLOUD_VERSION}"
+
+    echo $'Main part of the nextcloud install is complete'
+    install_completed nextcloud_main
+}
+
+function install_nextcloud {
+    if [ ! "$ONION_ONLY" ]; then
+        ONION_ONLY='no'
+    fi
+
+    install_nextcloud_base
+
+    increment_app_install_progress
+
+    mpd_nextcloud_integration
+
+    sed -i '/appstore/d' "/var/www/$NEXTCLOUD_DOMAIN_NAME/htdocs/config/config.php"
+
+    APP_INSTALLED=1
+}
+
+# NOTE: deliberately there is no "exit 0"

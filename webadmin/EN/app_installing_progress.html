@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Refresh" content="10" charset="utf-8">
+    <style>
+      @import url("w3.css");
+      @import url("libreserver.css");
+
+      #iconpic {
+          width: 20%;
+          height: auto;
+          margin-right : auto;
+          margin-left : auto;
+          min-width : 120px;
+      }
+
+      .appurl {
+          font-size: 100%;
+      }
+
+      .appdesc {
+          font-size: 65%;
+      }
+
+      button {
+          border: none;
+          outline: 0;
+          display: inline-block;
+          padding: 8px;
+          color: white;
+          background-color: #000;
+          text-align: center;
+          cursor: pointer;
+          width: 100%;
+          font-size: 18px;
+      }
+
+      button:hover, a:hover {
+          opacity: 0.7;
+      }
+
+      .w3-light-grey,.w3-hover-light-grey:hover,.w3-light-gray,.w3-hover-light-gray:hover{
+          color:#000!important;
+          background-color:#f1f1f1!important
+      }
+
+      .row {
+          display: -ms-flexbox;
+          display: flex;
+          -ms-flex-wrap: wrap;
+          flex-wrap: wrap;
+          padding: 0 4px;
+      }
+
+      .column {
+          -ms-flex: 33%;
+          flex: 33%;
+          padding: 0 4px;
+      }
+
+      .column img {
+          margin-top: 8px;
+          vertical-align: middle;
+          min-width: 150px;
+      }
+
+      @media screen and (max-width: 800px) {
+          .column {
+              -ms-flex: 33%;
+              flex: 33%;
+          }
+      }
+
+      @media screen and (max-width: 200px) {
+          .column {
+              -ms-flex: 100%;
+              flex: 100%;
+          }
+      }
+
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <img id="headerpic" class="img-responsive" src="images/logo.png" alt="LibreServer">
+
+      <br><br>
+
+      <div class="row">
+        <div class="column">
+          <div>
+            <img src="images/installing_app.png" style="width:20%" alt="App installing">
+          </div>
+        </div>
+      </div>
+
+      <h5 translate="yes">Please wait while your app is installing</h5>
+
+      <br>
+
+      <div class="w3-light-grey w3-round-xlarge">
+        <div class="w3-container w3-blue w3-round-xlarge" style="width:0%">0%</div>
+      </div>
+
+      <br><br>
+
+      <form action="installappcancel.php" method="post">
+        <input type="submit" name="installcancelsubmit" translate="yes" value="Cancel" />
+      </form>
+
+    </div>
+  </body>
+</html>

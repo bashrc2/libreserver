@@ -1,0 +1,69 @@
+#!/usr/bin/python3
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Translate html files to the given language.
+# This gets called from libreserver-language
+#
+# License
+# =======
+#
+# Copyright (C) 2019-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import os.path
+import sys
+import csv
+import re
+import glob
+
+def load_translations(language):
+    filename="translations/" + language + ".txt"
+    if not os.path.exists('translations'):
+        filename="../admin/translations/" + language + ".txt"
+    if os.path.isfile(filename):
+        with open(filename, mode='r') as infile:
+            original = csv.reader(infile, delimiter='|')
+            reader=[]
+            for row in original:
+                if row[1] and row[0]:
+                    reader.append(row)
+            #translations_dict = {'>'+rows[0]+'<':'>'+rows[1]+'<' for rows in reader}
+            #translations_dict = {'"'+rows[0]+'"':'"'+rows[1]+'"' for rows in reader}
+            translations_dict = {rows[0]:rows[1] for rows in reader}
+            return dict(sorted(translations_dict.items(), key = lambda item : len(item[1]), reverse = True))
+    return {}
+
+def translate_file(filename, translations_dict):
+    if translations_dict:
+        if os.path.isfile(filename):
+            translated_str = ''
+            with open(filename, 'r') as infile:
+                data=infile.read()
+                pattern = re.compile(r'\b(' + '|'.join(re.escape(key) for key in translations_dict.keys()) + r')')
+                translated_str = pattern.sub(lambda x: translations_dict[x.group()], data)
+            if translated_str != '':
+                text_file = open(filename, "w")
+                text_file.write(translated_str)
+                text_file.close()
+
+if __name__ == "__main__":
+    if len(sys.argv) == 2:
+        language=sys.argv[1]
+        translations_dict = load_translations(language)
+        for filename in glob.glob('*.html'):
+            translate_file(filename, translations_dict)

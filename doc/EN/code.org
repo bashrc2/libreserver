@@ -1,0 +1,18 @@
+#+TITLE: LibreServer
+#+AUTHOR: Bob Mottram
+#+EMAIL: bob@libreserver.org
+#+KEYWORDS: libreserver, code
+#+DESCRIPTION: LibreServer codebase
+#+OPTIONS: ^:nil toc:nil num:nil
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="libreserver.css" />
+
+#+attr_html: :width 80% :height 10% :align center
+[[file:images/logo.png]]
+
+* Code
+
+LibreServer is really just a couple of [[https://www.gnu.org/software/bash][bash]] scripts which install and configure software on a Debian GNU/Linux system. If you're a system administrator, software engineer or Linux hobbyist you'll probably be familiar with command line scripting and be able to make your own modifications or custom variants to suit your needs. LibreServer is licensed under the [[https://www.gnu.org/licenses/agpl.html][GNU Affero General Public License version 3]] (or later).
+
+You can find the source code for this project on [[https://code.libreserver.org/bashrc/libreserver][code.libreserver.net]] and there are mirrors on [[https://gitlab.com/bashrc2/libreserver][Gitlab]] and [[https://codeberg.org/bashrc/libreserver][Codeberg]].
+
+Bugs or feature requests should be [[https://gitlab.com/bashrc2/libreserver/issues][entered here]].

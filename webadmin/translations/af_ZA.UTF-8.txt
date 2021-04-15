@@ -1,0 +1,592 @@
+About|oor
+Accept|aanvaar
+Accounts software can often be quite complex, and so you'll probably want to refer to the official documentation (https://akaunting.com/docs) for details.|Rekeninge sagteware kan dikwels baie ingewikkeld wees, en jy sal waarskynlik wil verwys na die amptelike dokumentasie (https://akaunting.com/docs) vir besonderhede.
+Add|Voeg
+New Member|Voeg 'n nuwe gebruiker by
+Add custom emoji|Voeg pasgemaakte emoji by
+Add mp3 or ogg files to a USB drive|Voeg mp3 of ogg lêers by 'n USB-stasie
+Add the following to your Emacs configuration file:|Voeg die volgende by jou Emacs-konfigurasielêer:
+Add the Syncthing IDs for your other systems and devices here|Voeg die Syncthing IDs vir jou ander stelsels en toestelle hier
+Add your dat links below|Voeg jou data skakels hieronder by
+Add your RSS feeds here. Each line should be [title],[feed URL]|Voeg jou RSS feeds hier by. Elke reël moet [titel], [feed URL]
+Adding music|Musiek byvoeg
+Afrikaans|Afrikaans
+Akaunting|Akaunting
+Albanian|albanian
+Allow new registrations|Laat nuwe registrasies toe
+An upgrade is scheduled|'N Opgradering is geskeduleer
+App is being removed|Die program word verwyder
+App is scheduled to be installed|Program is geskeduleer om geïnstalleer te word
+Apps|programme
+Arabic|Arabies
+Backup|Ondersteuning
+Backup / Restore|Rugsteun / herstel
+Backup drive space used|Rugsteun dryfruimte gebruik
+Backup has failed|Rugsteun het misluk
+Backup in progress|Rugsteun aan die gang
+Backup is complete|Rugsteun is voltooi
+Backup of keys failed|Rugsteun van sleutels misluk
+Backup of keys is complete|Rugsteun van sleutels is voltooi
+Backup your keys now?|Rugsteun nou jou sleutels?
+Basque|Baskies
+Beginning app install|Begin app installeer
+Beginning removal of app|Begin die verwydering van die program
+Belarusian|Wit
+Bosnian|Bosniese
+Bulgarian|Bulgaars
+Cancel|kanselleer
+Catalan|Katalaans
+Chat system|Kletsstelsel
+Chinese (Simplified)|Sjinees (vereenvoudig)
+Chinese (Traditional)|Sjinees (tradisioneel)
+Choose the language that you wish to translate from the list.|Kies die taal wat u uit die lys wil vertaal.
+Choose your language|Kies jou taal
+Classic chat system|Klassieke kletsstelsel
+Click close and then connect.|Klik naby en maak dan aan.
+Click on "add new" to add a new server and enter the domain name or onion address for the LibreServer, your username (which can be anything) and the VoIP server password which is the same as the password you set up the box with. Accept the self-signed SSL certificate if you don't have a Let's Encrypt certificate set up for your default domain. You are now ready to chat.|Kliek op 'Voeg nuwe' by om 'n nuwe bediener by te voeg en voer die domeinnaam of ui-adres in vir die LibreServer, jou gebruikersnaam (wat enigiets kan wees) en die VoIP-bediener wagwoord wat dieselfde is as die wagwoord waarmee jy die boks opgestel het. Aanvaar die self-ondertekende SSL-sertifikaat as u nie 'n Let's Encrypt-sertifikaat het wat vir u verstek domein ingestel is nie. Jy is nou gereed om te klets.
+Click on the lock icon at the bottom of the screen and enter the password. It should then appear unlocked. If you don't unlock then any edits you make won't be saved.|Klik op die sluitikoon onderaan die skerm en voer die wagwoord in. Dit moet dan oopgesluit word. As u nie ontsluit nie, sal enige veranderinge wat u maak nie gestoor word nie.
+Collaborative document editor|Samewerkende dokumentredakteur
+Confirm backup password|Bevestig rugsteunwagwoord
+Continue|Aanhou
+Copy and paste the translations file and select 'update'.|Kopieer en plak die vertalingslêer en kies 'update'.
+Copy and paste the translations file into your favorite editor.|Kopieer en plak die vertalingslêer in jou gunsteling-redakteur.
+Copy and paste this into an email or other messaging app and send it to the LibreServer project.|Kopieer en plak dit in 'n e-pos of ander boodskapprogram en stuur dit na die LibreServer-projek.
+CPU temperature|CPU temperatuur
+CPU usage|CPU gebruik
+Croatian|Kroaties
+Czech|Tsjeggiese
+Danish|Deense
+DAT Server|DAT Server
+Databaseless blogging|Databaseless blogging
+Databaseless wiki|Databaseless wiki
+diagnostics|diagnose
+diagnostics log|diagnostiese logboek
+Different versions of the same page on different servers are represented by boxes at the bottom right of the screen. You can double click on them to see the different versions, and use the flag icon to fork if you prefer that version|Verskillende weergawes van dieselfde bladsy op verskillende bedieners word voorgestel deur bokse onder in die regterkant van die skerm. Jy kan dubbelkliek op hulle om die verskillende weergawes te sien en gebruik die vlagpictogram om vurk te maak as jy die weergawe verkies
+Disk I/O Speed|Skyf I / O Spoed
+Disk space used|Skyfspasie gebruik
+DNS setup|DNS-opstelling
+Domain/User Blocking|Domein / gebruiker blokkeer
+Domain:|Domein:
+Domain|Domein
+Dutch|Nederlands
+Dynamic DNS|Dinamiese DNS
+Edit your translations. The structure of this file is very simple. On the left is English text and on the right is translated text, with the vertical line character as a separator.|Wysig jou vertalings. Die struktuur van hierdie lêer is baie eenvoudig. Aan die linkerkant is Engelse teks en regs is vertaalde teks, met die vertikale lynkarakter as skeiding.
+Edit, add or remove blocked domains or users. This applies to Email and XMPP addresses|Wysig, voeg of verwyder geblokkeerde domeine of gebruikers. Dit geld vir e-pos- en XMPP-
+Edith enable login|Edith aktiveer inskrywing
+Email system|E-pos stelsel
+Email/XMPP: USEREMAIL|E-pos / XMPP: USEREMAIL
+Enable access via secure shell?|Aktiveer toegang via veilige dop?
+Enable Updates|Aktiveer opdaterings
+English|Engels
+English (US)|Engels (VSA)
+Ensure that dat files are always available|Maak seker dat dat lêers altyd beskikbaar is
+Ensure that tor is installed onto your local system:|Maak seker dat Tor op u plaaslike stelsel geïnstalleer is:
+Enter a label (which can be any name you choose for the server), the default domain name of the LibreServer or preferably the mumble onion address, your username (which can also be anything) and the mumble password which is the same as the one you originally set up the box with. Leave the port number unchanged.|Voer 'n etiket in (wat enige naam kan wees wat u vir die bediener kies), die standaard domeinnaam van die LibreServer of verkieslik die Mumble Onion-adres, u gebruikersnaam (wat ook enigiets kan wees) en die mompel wagwoord wat dieselfde is as die een jy het die boks oorspronklik opgestel. Laat die poortnommer onveranderd.
+Enter a password which will be used to protect the backup|Voer 'n wagwoord in wat gebruik sal word om die rugsteun te beskerm
+Enter first and second nicknames and check connect to this network on startup.|Voer eerste en tweede byname in en maak 'n verbinding met hierdie netwerk wanneer jy begin.
+Estonian|Estnies
+Everything installed will be lost|Alles geïnstalleer sal verlore gaan
+Extremely simple note taking|Uiters eenvoudige aantekeninge
+Factory reset is in progress|Fabrieksterugstelling is aan die gang
+Farsi|Farsi
+Favicon|favicon
+Federated image sharing|Federated image sharing
+Federated microblogging|Federated microblogging
+Federated social network|Federated social network
+Federated wiki|Federale wiki
+Fedwiki Favicon|Fedwiki Favicon
+Fedwiki Password|Fedwiki Wagwoord
+Fedwiki Settings|Fedwiki-instellings
+File storage and sync|Lêergeskiedenis en sinkronisering
+File synchronization|Lêer sinchronisasie
+Filipino|filipino
+Finnish|Finse
+First ensure that tor is installed. Within a terminal:|Maak eers seker dat Tor geïnstalleer is. Binne 'n terminaal:
+For details see the diagnostics|Vir besonderhede, sien die diagnostiek
+For details see:|Vir besonderhede sien:
+For further information see the website at https://libreserver.org|Vir verdere inligting, besoek die webwerf by https://libreserver.org
+For the initial login use username: admin password admin|Vir die aanvanklike login gebruik gebruikersnaam: admin wagwoord admin
+For the Jabber ID enter the email address from your LibreServer user settings|Vir die Jabber-ID, voer die e-posadres in van u LibreServer-gebruikersinstellings
+For the password use the password which you initially wrote down or stored during the setup of the LibreServer system|Vir die wagwoord gebruik die wagwoord wat u aanvanklik neergeskryf of gestoor het tydens die opstelling van die LibreServer-stelsel
+Forward port 80 and 443 from your internet router|Stuur hawe 80 en 443 van u internet router
+Forward the following ports from your internet router:|Stuur die volgende poorte van jou internet router:
+Forward the port 64738 from your internet router|Stuur die poort 64738 vanaf u internet router
+Forward the port 6697 from your internet router|Stuur die poort 6697 vanaf u internet router
+Forward the port 8448 from your internet router|Stuur die poort 8448 vanaf u internet router
+FreeDNS code:|FreeDNS kode:
+LibreServer started in 2013. It was initially based on the Beaglebone Black hardware and inspired by the FreedomBox idea of an inexpensive and simple to manage internet server for the home.|LibreServer het in 2013 begin. Dit was aanvanklik gebaseer op die Beaglebone Black-hardeware en geïnspireer deur die FreedomBox-idee van 'n goedkoop en maklike internetbediener vir die huis.
+French|Frans
+French (Canada)|Frans (Kanada)
+From the initial screen select 'settings' then 'language'.|Kies vanaf die aanvanklike skerm 'instellings' en dan 'taal'.
+From the menu select 'Configure' then 'Settings'. Select the 'Advanced' checkbox then select 'Network'. Select 'Force TCP mode' and proxy type 'Socks5'. Hostname should be set to 'localhost' and port should be 9050.|Kies 'Configure' en 'Settings' in die menu. Kies die 'Gevorderde' boks en kies 'Netwerk'. Kies 'Force TCP-modus' en proxy-tipe 'Socks5'. Hostnaam moet ingestel word op 'localhost' en die poort moet 9050 wees.
+Gaelic|Gaelic
+Gallego|Gallego
+Georgian|georgian
+German|Duitse
+German (Personal)|Duits (Persoonlik)
+Git repo management|Git repo bestuur
+Go Back|Gaan terug
+Go back to the F-droid initial screen and update the repositories by swiping downwards. You'll see it say "updating repositories". This might take a few minutes.|Gaan terug na die F-droid aanvanklike skerm en werk die repositories op deur afwaarts te swaai. Jy sal sien dit sê "opdatering van bewaarplekke". Dit kan 'n paar minute neem.
+Go back to the initial screen of the Conversations app, select the menu again, then 'Manage accounts'. Add an account by selecting the person icon with the plus next to it.|Gaan terug na die aanvanklike skerm van die Gesprekke-program, kies die kieslys weer en dan 'Bestuur rekeninge'. Voeg 'n rekening by deur die persoon se ikoon met die plus langs dit te kies.
+Gogs allow new registrations|Gogs laat nuwe registrasies toe
+Greek|Griekse
+Gujarati|gujarati
+Have you written down or saved the login credentials and removed any backup drives from the system?|Het u die inskrywingskennisgewings geskryf of gered en enige rugsteundrywe uit die stelsel verwyder?
+Hebrew|Hebreeus
+Help|help
+Helps caregivers track sleep, feedings, diaper changes, and tummy time|Hulp versorgers volg slaap, voedings, luier veranderinge, en maag tyd
+Helps caregivers track sleep, feedings, diaper changes, and tummy time to learn about and predict babys needs without as much guess work.|Hulp versorgers volg slaap, voedings, luier veranderinge, en maag tyd om te leer oor en voorspel babys behoeftes sonder soveel raai werk.
+here|hier
+HexChat (formerly XChat) is compatible with proxying via Tor and so provides the best security when connecting to your IRC server. It will allow you to connect to your IRC server's onion address.|HexChat (voorheen XChat) is verenigbaar met proxying via Tor en bied dus die beste sekuriteit wanneer u aan u IRC-bediener koppel. Dit sal u toelaat om aan u IRC-bediener se ui-adres te koppel.
+Hindi|hindi
+How to do translations|Hoe om vertalings te doen
+Hungarian|hungarian
+Icecast|Icecast
+Icecast is quite CPU intensive. For example on an A20 based system it takes about 70% of the CPU resource. This is something to be aware of if you're running multiple apps|Icecast is baie CPU intensief. Byvoorbeeld, op 'n A20-gebaseerde stelsel, neem dit ongeveer 70% van die SVE-hulpbron. Dit is iets om bewus te wees van of jy meer programme uitvoer
+Icecast is updating|Icecast is opgedateer
+Icelandic|Yslands
+Icons on the website and user interfaces are by Rashid Mhar.|Ikone op die webwerf en gebruikerskoppelvlakke is deur Rashid Mhar.
+If you are an Emacs user then you can also connect to your IRC server via Emacs.|As jy 'n Emacs-gebruiker is, kan jy ook via jou Emacs verbinding maak met jou IRC-bediener.
+If you are using the onion address then use SSL should be unchecked and the transport encryption will be handled via the onion address itself.|As u die ui-adres gebruik, moet SSL gebruik word, en die vervoer enkripsie sal via die ui-adres self hanteer word.
+If you are using the ordinary domain name (clearnet/ICANN) then make sure that Use SSL is checked.|As jy die gewone domeinnaam (clearnet / ICANN) gebruik, maak seker dat Gebruik SSL gekontroleer is.
+If you don't have a domain then just select Continue|As jy nie 'n domein het nie, kies dan net voort
+If you don't have Orbot installed then enable The Guardian Project repository from the drop down menu and install it.|As jy nie Orbot geïnstalleer het nie, aktiveer dan die Guardian Project repository in die drop down menu en installeer dit.
+If you don't need a password then just leave this blank and select Update|As jy nie 'n wagwoord benodig nie, moet jy dit leeg laat en kies Update
+If you have a USB plugged in leave it inserted until you can confirm that the stream is working|As jy 'n USB-aansluiting het, laat dit toe totdat jy kan bevestig dat die stroom werk
+If you have trouble accessing onion addresses paste some Tor bridges below. See https://bridges.torproject.org/bridges|As jy probleme ondervind met die toegang tot uie adresse, plak 'n paar Tor brûe hieronder. Sien https://bridges.torproject.org/bridges
+If you're using the Element mobile app to access your Matrix homeserver then you can significantly improve battery performance by going to the settings and changing 'Sync request timeout' to 30 seconds and 'Delay between two sync requests' to 600 seconds. Also turning off 'msgs in group chats' will help, since it will avoid getting a notification whenever a group chat event happens, which then wakes up the screen|As jy die Mobiele Mobiele App-program gebruik om toegang tot jou Matrix-huisbediener te verkry, kan jy die prestasie van die battery aansienlik verbeter deur na die instellings te gaan en die tydsduur van 'Sync-versoeke te verander' na 30 sekondes en 'Vertraag tussen twee sinkronisasieversoeke' na 600 sekondes. Dit sal ook help om 'boodskappe in groepskletse' uit te skakel, aangesien dit sal voorkom dat 'n kennisgewing ontvang word wanneer 'n groepklets gebeurtenis plaasvind, wat dan die skerm wakker word.
+If your translations are accepted they will later appear in the upstream project and be usable by anyone.|As u vertalings aanvaar word, sal dit later in die opwaartse projek verskyn en deur enigiemand gebruik kan word.
+Import|invoer
+In a Tor browser navigate to the onion address for Icecast and you can then play the stream|In 'n Tor-blaaier navigeer na die ui-adres vir Icecast en dan kan jy die stroom speel
+Indonesian|Indonesiese
+Initial login|Aanvanklike inskrywing
+Initial Setup|Aanvanklike instellings
+Install|installeer
+Install APPNAME now?|Installeer APPNAME nou?
+Install F-Droid|Installeer F-Droid
+Install HexChat and set up its configuration file. Assuming that you're running on a Debian or Arch based distro, this can be done on your local machine with:|Installeer HexChat en stel sy konfigurasielêer op. As jy aanvaar dat jy op 'n Debian- of Arch-gebaseerde distro gebruik, kan dit op jou plaaslike masjien gedoen word met:
+Installation|installasie
+Installing in Emacs|Installeer in Emacs
+Installing on Desktop|Installeer op die lessenaar
+Invalid Password|Ongeldige Wagwoord
+IRC|IRC
+IRC is useful for multi-user chat. The classic use case is for software development where many engineers might need to coordinate their activities, but it's also useful for meetings, parties and general socialising.|IRC is nuttig vir multi-gebruiker chat. Die klassieke gebruiksgeval is vir sagteware-ontwikkeling waar baie ingenieurs moontlik hul aktiwiteite moet koördineer, maar dit is ook nuttig vir vergaderings, partye en algemene sosialisering.
+It can be shown using the command:|Dit kan met die opdrag gewys word:
+It's possible to add jingles which will be played between tracks at random intervals. If some of the audio files on your USB drive are named jingle_something.mp3 then they will be used as jingles|Dit is moontlik om jingles wat tussen liedjies met willekeurige tussenposes gespeel word, by te voeg. As sommige van die klanklêers op u USB-stasie jingle_something.mp3 genoem word, sal hulle as jingles gebruik word
+It's recommended that you add an SRV record for Matrix to your DNS setup. How you do this will depend upon your dynamic DNS provider and their web interface. On FreeDNS on the subdomains settings in addition to the subdomain which you are using for the matrix server create an extra entry as follows:|Dit word aanbeveel dat u 'n SRV-rekord vir Matrix by u DNS-opstelling byvoeg. Hoe jy dit doen, sal afhang van jou dinamiese DNS-verskaffer en hul webkoppelvlak. Op FreeDNS in die subdomein instellings benewens die subdomein wat u vir die matriksbediener gebruik, skep u 'n ekstra inskrywing soos volg:
+Italian|Italiaanse
+Japanese|japanese
+Jingles|jingles
+Kannada|kannada
+Keep changes|Hou veranderinge
+Khmer|Khmer
+Korean|Koreaanse
+Language|Taal
+Lao|Lao
+Latvian|Lets
+Lithuanian|lithuanian
+Malayalam|Malabaars
+Malaysian|Maleisiese
+Manually upgrade now ?|Handmatig opgradeer nou?
+Maori (Ngai Tahu)|Maori (Ngai Tahu)
+Maori (Waikoto Uni)|Maori (Waikoto Uni)
+Markdown blogging|Markdown blogging
+Matrix|Matrix
+Maybe instead of editing within this user interface you prefer to use your own editor. That can be done as follows:|Miskien in plaas van om binne hierdie gebruikerskoppelvlak te wysig, verkies jy om jou eie redakteur te gebruik. Dit kan soos volg gedoen word:
+Media broadcast|Media uitsending
+Media storage and broadcast|Media berging en uitsending
+Mongolian|Mongoolse
+Mumble|Mumble
+Music player|Musiek speler
+No|Geen
+No SSH public key was provided|Geen SSH-publieke sleutel is verskaf nie
+none|niemand
+Norwegian|Noorse
+Norwegian (Primary)|Noors (Primêr)
+Not Connected|Nie gekonnekteer nie
+Note taking|Neem van notas
+Nynorsk|Nynorsk
+Once you are on the translations screen (see the first three steps in the first section above) select the 'submit' button.|Sodra jy op die vertalings skerm is (sien die eerste drie stappe in die eerste afdeling hierbo) kies die 'Submit' knoppie.
+Once you are on the translations screen (see the first three steps in the first section above) select the language code shown at the top of the screen (usually it ends with UTF-8). You can then see the raw translations file.|Sodra jy op die vertalings skerm is (sien die eerste drie stappe in die eerste afdeling hierbo) kies die taalkode boaan die skerm (gewoonlik eindig dit met UTF-8). U kan dan die rou vertalings lêer sien.
+Open the F-droid app and select 'Settings' then 'Repositories'. Make sure that 'Guardian Project Official Releases' is enabled|Open die F-droid app en kies 'Settings' en 'Repositories'. Maak seker dat 'Guardian Project Official Releases' aangeskakel is
+Open the settings. Select 'General', then 'Connect via Tor'. This will provide better protection, making it more difficult for adversaries to know who is talking to who. If connecting through Tor is unreliable and causes crashes then unselect 'Connect via Tor' on the 'General settings' and then just use your ordinary domain name.|Maak die instellings oop. Kies 'Algemeen' en dan 'Koppel via Tor'. Dit sal beter beskerming bied, wat dit moeiliker maak vir teenstanders om te weet wie met wie praat. As koppeling deur Tor onbetroubaar is en oorsake veroorsaak, kies dan 'Connect via Tor' op die 'Algemene instellings' en gebruik dan net jou gewone domeinnaam.
+Open up the Conversations app and select the menu (three dots), scroll down and select 'Expert Settings' then select 'Connect to Tor'|Maak die Gesprekke-program oop en kies die kieslys (drie kolletjies), blaai af en kies 'Expert Settings' en kies 'Connect to Tor'
+or|of
+Paragraphs can be dragged up and down to change their order, or moved between pages|Paragrawe kan op en af ​​gesleep word om hul bestelling te verander, of tussen bladsye verskuif
+Password|wagwoord
+Password: |wagwoord:
+Paste your ssh public key here|Plak jou ssh publieke sleutel hier
+Paste your translations file below|Plak jou vertalings lêer hieronder
+Peertube allow new registrations|Peertube laat nuwe registrasies toe
+Personal accounting|Persoonlike rekeningkunde
+Personal or small business accounting|Persoonlike of klein besigheidsrekeningkunde
+Photo album|foto-album
+Please enter their username. This should be lower case only and with no spaces.|Voer asseblief hul gebruikersnaam in. Dit moet slegs kleinletters en sonder spasies wees.
+Please insert a USB drive|Plaas asseblief 'n USB-skyf
+Please insert the USB drive to restore from now|Plaas asseblief die USB-stasie om van nou af te herstel
+Please insert your backup USB drive now|Plaas asseblief u Friends USB Drive nou
+Please specify stream name, description and genre|Spesifiseer asseblief stroom naam, beskrywing en genre
+Please wait while your appliance is configuring|Wag asseblief terwyl u toestel konfigureer
+Please write down or save these credentials|Skryf asseblief hierdie kennisgewings neer of stoor dit
+Pleroma|Pleroma
+Pleroma allow new registrations|Pleroma laat nuwe registrasies toe
+Pleroma Custom Emoji|Pleroma Custom Emoji
+Pleroma Settings|Pleroma Instellings
+Plug the USB drive into your server, then go to the Icecast app settings, add some details about your playlist, and select 'Update'|Plaas die USB-stasie in jou bediener, gaan dan na die Icecast-programinstellings, voeg 'n paar besonderhede oor jou snitlys by en kies 'Update'
+Polish|Pools
+Ports|hawens
+Portuguese|Portugees
+Portuguese (Brazil)|Portugees (Brasilië)
+Power|krag
+Press the plus button to add a Mumble server.|Druk die plus-knoppie om 'n Mumble-bediener by te voeg.
+Proceed with backup?|Gaan voort met rugsteun?
+Proceed with drive format?|Gaan voort met die ryformaat?
+Proceed with reset?|Gaan voort met reset?
+Proceed with restore?|Gaan voort met herstel?
+RAM used|RAM gebruik
+Remote access|Afstand toegang
+Remove|verwyder
+Remove any backup drives now|Verwyder nou enige rugsteun dryf
+Remove APPNAME now?|Verwyder APPNAME nou?
+Remove user USERNAME?|Verwyder gebruiker USERNAME?
+Removing user account|Verwyder gebruiker rekening
+Reset is in progress|Herstelling is aan die gang
+Reset to factory|Herstel na fabriek
+RESET TO FACTORY DEFAULTS|RESET AAN FABRIEKWAARDES
+Restart|Begin oor
+Restore|herstel
+Restore has failed|Herstel het misluk
+Restore in progress|Herstel aan die gang
+Restore is complete|Herstel is voltooi
+Restore of keys failed|Herstel van sleutels misluk
+Restore of keys is complete|Herstel van sleutels is voltooi
+Restore password|Herstel wagwoord
+Restore your keys now?|Herstel nou jou sleutels?
+Restoring backup keys|Herstel rugsteun sleutels
+Romanian|Roemeens
+RSS Reader|RSS-leser
+Run HexChat.|Begin HexChat.
+Running backup of keys|Running rugsteun van sleutels
+Russian|Russiese
+Samoan|Samoa
+Search again for 'Conversations' (not the legacy version), then select 'install'|Soek weer vir 'Gesprekke' (nie die nalatenskapversie nie) en kies dan 'installeer'
+Search for and install Plumble.|Soek en installeer Plumble.
+Secure realtime collaboration|Veilige realtime samewerking
+Secure realtime collaboration with docs, presentations, drawing and voting. Documents are ephemeral and unless you save them will be deleted when you close the browser.|Veilige realtime samewerking met dokumente, aanbiedings, tekeninge en stemme. Dokumente is efemere en tensy jy dit stoor, sal dit uitgevee word wanneer jy die blaaier sluit.
+Secure Shell|Veilige Shell
+Select|Kies
+Select 'Apply' and 'Ok', then on the menu 'Server' and 'Connect'.|Kies 'Apply' en 'Ok', dan op die menu 'Server' en 'Connect'.
+Select 'Next' to create the account. If eveything is working after a couple of minutes you should see the account status change to 'online' in green|Kies 'Volgende' om die rekening te skep. As eveything na 'n paar minute werk, moet u die status van die rekeningstatus na 'aanlyn' in groen sien
+Select search (magnifying glass icon) and search for 'Orbot' (not the legacy version), then select 'install'|Kies soektog (vergrootglasikoon) en soek vir 'Orbot' (nie die nalatenskapversie nie), kies dan 'installeer'
+Select the 'translate' button. You will see a new screen with English text on the left and translated text on the right.|Kies die 'vertaal'-knoppie. U sal 'n nuwe skerm met Engelse teks aan die linkerkant sien en vertaal teks aan die regterkant.
+Select the Autojoin channels tab, click Add and enter #libreserver as the channel name.|Kies die oortjie Autojoin kanale, klik Voeg by en voer #libreserver as die kanaal naam in.
+Select the entry within the servers box, then enter ircaddress.onion/6697 or mydomainname/6697 and press Enter.|Kies die item in die bediener boks en tik dan ircaddress.onion/6697 of mydomainname/6697 in en druk Enter.
+Select the wiki button at the bottom of the screen, next to pages, to enable or disable editing.|Kies die wiki-knoppie onderaan die skerm, langs bladsye, om redigering te aktiveer of te deaktiveer.
+Selecting the server by pressing on it then connects you to the server so that you can chat with other connected users|As u die bediener kies deur dit te druk, verbind u die bediener sodat u met ander verbindende gebruikers kan gesels
+Serbian|serbian
+Setting up on a laptop|Opstel op 'n skootrekenaar
+Setting up on Android|Opstel op Android
+Setting up with an Android phone|Opstel met 'n Android-foon
+Settings|instellings
+Setup on Android|Opstel op Android
+Shortcode|kortkode
+Shutdown|afsluit
+Shutting down|Af skakel
+Simple kanban|Eenvoudige kanban
+Simple Markdown blogging|Eenvoudige Markdown blogging
+Simple notes|Eenvoudige aantekeninge
+Slovak|slovak
+Slovenian|slovenian
+Somali|Somaliese
+Spanish (International)|Spaans (Internasionaal)
+SSH access is disabled|SSH-toegang is gedeaktiveer
+SSH access is enabled|SSH-toegang is aangeskakel
+Stream Description|Stroom Beskrywing
+Streaming media|Streaming media
+Submit|Indien
+Submitting your translations to the LibreServer project|Stuur jou vertalings na die LibreServer-projek
+Swedish|Sweeds
+System Monitor|Stelsel Monitor
+Systems may be temporarily unavailable in the next few minutes|Stelsels kan tydelik onbeskikbaar wees oor die volgende paar minute
+Tagalog|Tagalog
+Tamil|tamil
+Thai|Thai
+Thankyou for choosing the LibreServer home internet appliance|Dankie vir die keuse van die LibreServer huis internet toestel
+The account will now be removed. This may take a minute or two. For details see:|Die rekening sal nou verwyder word. Dit kan 'n minuut of twee neem. Vir besonderhede sien:
+The classic low bandwidth chat system|Die klassieke lae bandbreedte-kletsstelsel
+The LibreServer system isn't primarily aimed at companies or institutions, but if you're a one person company or freelancer then having the ability to run your own accounting system and keep the data private and also backed up is useful. Akaunting provides a nice web based system for small business accounts, and is also quite usable within a mobile web browser.|Die LibreServer-stelsel is nie hoofsaaklik gemik op maatskappye of instansies nie, maar as jy 'n eenpersoonmaatskappy of freelancer is, dan kan jy jou eie rekeningkundige stelsel bestuur en die data privaat hou en ook gerugsteun word. Akaunting bied 'n goeie web-gebaseerde stelsel vir klein besigheidsrekeninge, en is ook redelik bruikbaar binne 'n mobiele webblaaier.
+A new member is being added. This may take a minute or two.|Die nuwe gebruiker word bygevoeg. Skryf hul wagwoord neer of stoor dit.
+The passwords do not match|Die wagwoorde stem nie ooreen nie
+There are a few things to know about using the federated wiki.|Daar is 'n paar dinge om te weet oor die gebruik van die federale wiki.
+There are no apps installed. Select the plus button above to install new apps.|Daar is geen programme geïnstalleer nie. Kies die plusknoppie hierbo om nuwe programme te installeer.
+This app may be useful if you have a new child or babysitting duties. It helps caregivers track sleep, feedings, diaper changes, and tummy time to learn about and predict baby's needs without as much guess work.|Hierdie inligting kan nuttig wees as jy 'n nuwe kind of babysit moet hê. Dit help versorgers om slaap, voedings, luier veranderinge en buik tyd te leer oor en voorspel baba se behoeftes sonder soveel raai werk.
+This is a server system which enables you to run internet apps such as a blog or federated social network.|Dit is 'n bedienerstelsel wat u in staat stel om internetprogramme soos 'n blog of federale sosiale netwerk uit te voer.
+This is certainly the type of data which you might want to keep private and away from companies who might otherwise use surveillance of parenting app data to try to guilt you into buying all sorts of junk that you don't really need or can't afford.|Dit is beslis die tipe data wat jy dalk wil privaat hou en weg van maatskappye wat andersins toesig kan maak op ouerskapprogramdata om jou te probeer skuldig maak in die aankoop van allerhande rommel wat jy nie regtig nodig het of kan bekostig nie. .
+This is your new password|Dit is jou nuwe wagwoord
+This may take a few minutes.|Dit kan 'n paar minute duur.
+This may take a minute or two. For details see:|Dit kan 'n minuut of twee neem. Vir besonderhede sien:
+This system isn't intended to broadcast to large audiences and the upper limit of listeners is set at ten. So a family and friends type group.|Hierdie stelsel is nie bedoel om na groot gehore te versprei nie en die boonste perk van luisteraars is op tien. So 'n familie en vriende tipe groep.
+This will make a backup of the keys which encrypt your backups, protecting them against accidental loss or exposure. You should keep this drive in a safe place, separate from other backups.|Dit sal 'n back-up maak van die sleutels wat u rugsteunkodes enkripteer en hulle beskerm teen toevallige verlies of blootstelling. Jy moet hierdie ry op 'n veilige plek hou, afgesien van ander rugsteun.
+This will restore the keys used to encrypt backups.|Dit sal die sleutels wat gebruik word om rugsteunkopieë te enkripteer, herstel.
+To add a new paragraph use the + button|Om 'n nuwe paragraaf by te voeg, gebruik die + -knoppie
+To claim/fork a page from another server click on the flag icon|Om 'n bladsy van 'n ander bediener te eis / vurk, klik op die vlagpictogram
+To edit a paragraph double click on it|Om 'n paragraaf te verander, dubbelklik daarop
+To remove a paragraph just delete all of its text|Om 'n paragraaf te verwyder, vee net al sy teks uit
+To upload music files install Syncthing then copy album directories into ~/Sync/music_upload, then within Koel go to settings and scan the directory /music|Om musieklêers op te laai, installeer Syncthing en kopieer albumgidse na ~ / Sync / music_upload, dan binne Koel gaan na instellings en scan die gids / musiek
+Tor Bridges|Tor Bridges
+Translate|vertaal
+Translations|vertalings
+Turkish|turkish
+Type: SRV|Tipe: SRV
+Ukrainian|Oekraïens
+Uncheck use global user information.|Verwyder die vinkje van globale gebruikersinligting.
+Uninstall|verwyder
+Update|Opdateer
+Updates settings changed|Opdateringsinstellings is verander
+Upgrade|opgradering
+Upgrades happen automatically. You don't need to start them manually like this, except in rare circumstances|Opgraderings gebeur outomaties. U hoef dit nie so handmatig te begin nie, behalwe in seldsame omstandighede
+Upload|oplaai
+URL to upload from|URL om vanaf te laai
+USB drive format has failed|USB-formaat het misluk
+USB drive format in progress|USB-stasie-formaat aan die gang
+USB drive format is complete|USB-formaat is voltooi
+Username: |Gebruikersnaam:
+Username: admin|Gebruikersnaam: admin
+Members|gebruikers
+Using your preferred editor|Gebruik jou voorkeurredakteur
+Video broadcast|Video-uitsending
+Vietnamese|Viëtnamees
+Voice chat|Stem klets
+WARNING: THIS WILL ERASE ALL CONTENT OF THE USB DRIVE|WAARSKUWING: DIT SAL ALLE INHOUD VAN DIE USB DRIVE VERWYDER
+We're sorry, but the username you gave is not suitable. Check that it does not contain spaces, is lower case and at least 3 characters in length.|Ons is jammer, maar die gebruikersnaam wat u gegee het, is nie geskik nie. Kontroleer of dit nie spasies bevat nie, is kleinletters en ten minste 3 karakters lank.
+Web publishing system|Web publiseer stelsel
+When done editing click on the wiki button again|As jy klaar is, kliek weer op die wiki-knoppie
+When it's done it will appear on the apps screen|Wanneer dit klaar is, sal dit op die programme skerm verskyn
+When removal is finished it will disappear from apps|Wanneer die verwydering klaar is, sal dit van programme verdwyn
+When you are done with translating select the 'import' button on the translations screen.|As jy klaar is met die vertaling, kies die 'invoer' knoppie op die vertalings skerm.
+When you've added your translations select the 'update' button. This will update the translations file for the selected language. Note that this does not change the current language within the user interface. If you want to do that go back to the language screen, select a language and then the 'select' button.|As jy jou vertalings bygevoeg het, kies die 'update'-knoppie. Dit sal die vertalingslêer vir die geselekteerde taal opdateer. Let daarop dat dit nie die huidige taal binne die gebruikerskoppelvlak verander nie. As jy dit wil doen, gaan terug na die taalskerm, kies 'n taal en dan die 'kies' -knoppie.
+Whichever screen you are currently on, you can get back to the previous screen by clicking or pressing on the LibreServer logo at the top.|Ongeag watter skerm jy tans is, kan jy terug na die vorige skerm deur op die LibreServer-logo te druk of op die top te druk.
+With Icecast you can run your own internet radio stream from an onion address. As always, be careful about copyright issues and preferably stick to Creative Commons music or music files that you own.|Met Icecast kan jy jou eie internetradio stroom vanaf 'n ui-adres bestuur. Wees altyd op die hoogte van kopieregkwessies en hou altyd by Creative Commons musiek- of musieklêers wat jy besit.
+Within the network list click, Add and enter your domain name then click Edit.|Binne die netwerklys klik, voeg jou naam by en voer jou domeinnaam in en klik dan op Redigeer.
+Within the Password field enter the password which you originally set up the box with.|Binne die veld Wagwoord moet u die wagwoord invoer waarmee u die boks oorspronklik opgestel het.
+Within the software center search for "mumble" and install the client then run it. Skip through the audio setup wizard. Cancel the initial connection window.|Binne die sagteware sentrum soek na "mompel" en installeer die kliënt dan hardloop dit. Slaan deur die audio setup wizard. Kanselleer die aanvanklike verbindingsvenster.
+Write it down or save it|Skryf dit neer of stoor dit
+XMPP|XMPP
+xmpp based chat system|xmpp gebaseerde klets stelsel
+Yes|Ja
+You can edit the translated text on the right side of the screen.|U kan die vertaalde teks aan die regterkant van die skerm wysig.
+You can get to this system remotely via:|U kan hierdie stelsel op afstand bereik via:
+You can now go back to the initial Conversations app screen and start using it. You'll probably want to add contacts using the icon at the bottom right. For more information see the Conversations website (conversations.im) or subscribe to the chat group conversations@conference.siacs.eu|U kan nou teruggaan na die oorspronklike Gespreksprogramskerm en begin dit gebruik. Jy sal waarskynlik kontakte wil voeg deur die ikoon regs onder te gebruik. Vir meer inligting, besoek die Gesprekke-webwerf (gesprekke.im) of teken in op die kletsgroep conversations@conference.siacs.eu.
+You can now log in with:|U kan nou inteken met:
+You can see upgrade progress|U kan opgradering vordering sien
+You can use left and right cursor keys to move through pages|U kan die linker en regter pyltjie sleutels gebruik om deur bladsye te beweeg
+You may also want to make another entry with the same settings but replacing tcp with udp.|U kan ook 'n ander inskrywing met dieselfde instellings maak, maar tcp vervang met UDP.
+You may now remove the USB drive|U kan nou die USB-skyf verwyder
+You might have mistyped one of them|Jy het dalk een van hulle verkeerd geloop
+You will see the translations file with some instructions at the top.|U sal die vertalingslêer met 'n paar instruksies boaan sien.
+Your password must be at least 8 characters in length and only use the characters a-z A-Z and 0-9|U wagwoord moet ten minste 8 karakters lank wees en gebruik slegs die karakters a-z A-Z en 0-9
+Zero knowledge pastebin|Nul kennis pastebin
+Theme|tema
+Light|lig
+Dark|donker
+Mail|pos
+If you find that you can't send out email and that you get 'failed delivery' messages returned instead then you may be able to proxy sent emails through another server. Sometimes ISPs or companies provide an SMTP server which can do this.|As jy vind dat jy nie e-pos kan stuur nie en dat jy 'mislukte aflewering'-boodskappe ontvang, sal jy dalk 'n proxy-pos per e-pos deur 'n ander bediener stuur. Soms bied ISP's of maatskappye 'n SMTP-bediener aan wat dit kan doen.
+Clear|duidelik
+Send email through a proxy|Stuur e-pos deur 'n proxy
+Failed to install. For details see admin/applog.txt|Kon nie installeer nie. Vir besonderhede, sien admin/applog.txt
+Installed successfully|Suksesvol geïnstalleer
+pihole| pihole
+Unlike browser based ad blockers, pihole works at the domain name resolution level to block domains known to privide the ads appearing in web pages.|In teenstelling met blaaier gebaseerde advertensie blokkers, werk pihole op die resolusie vlak van domeinnamen om domeine te blokkeer wat bekend is om die advertensies wat in webbladsye verskyn, te verlig.
+Set your DNS IP address to the one shown and many ads will get blocked even before they're delivered to your laptop or mobile device. This can save a lot of bandwidth and generally speed up the loading of websites.| Stel jou DNS-IP-adres op die een wat vertoon word, en baie advertensies sal geblokkeer word, selfs voordat dit afgelewer word op jou skootrekenaar of mobiele toestel. Dit kan 'n baie bandwydte bespaar en die laai van webwerwe bespoedig
+Change DNS on your internet router| Verander DNS op jou internet router
+If your internet router allows you to change the DNS IP address then this is the best way to use pihole because it will then provide coverage for all of the devices and computers in your home.|As u internet router u toelaat om die DNS IP-adres te verander, is dit die beste manier om pihole te gebruik, aangesien dit dan dekking sal bied vir al die toestelle en rekenaars in u huis.
+Change DNS on individual devices|Verander DNS op individuele toestelle
+If you can't change your internet router's DNS then you can do that on individual GNU/Linux systems as follows:| As jy nie jou DNS-router se DNS kan verander nie, kan jy dit op individuele GNU/Linux stelsels soos volg doen:
+Remove or comment out any existing nameservers and add one with the IP address shown for the pihole app. Something like:|Verwyder of kommentaar lewer op enige bestaande nameservers en voeg een by met die IP-adres wat vir die pihole-program gewys word. Iets soos:
+Then save and exit and prevent the file from being automatically changed with:| Slaan dan en verlaat en voorkom dat die lêer outomaties verander word met:
+If you're running the standard version of LibreServer (not the onion version) then you may need to modify your hosts file to access your own domain.|As jy die standaard weergawe van LibreServer (nie die uie weergawe) uitvoer nie, moet jy dalk jou gasheerlêer verander om toegang tot jou eie domein te verkry.
+Then add something like:|Voeg dan iets by soos:
+This only works when you're within your home network, so if you're outside of your home then undo the changes made above.|Dit werk net wanneer jy binne jou tuisnetwerk is, so as jy buite jou huis is, maak dan die veranderinge wat hierbo gemaak is, ongedaan
+The Pi-hole is a DNS sinkhole that protects your devices from unwanted content, without installing any client-side software.|Die Pi-gat is 'n DNS-sinkhole wat jou toestelle beskerm teen ongewenste inhoud, sonder om enige kliënt se sagteware te installeer.
+Search|Soek
+removed|verwyder
+To get email working you will need to forward some ports. Email using your onion address will work anyway, so long as you are contacting other onion based email addresses.|Om e-poswerk te kry, sal jy 'n paar hawens moet oordra. E-pos met jou ui-adres sal in elk geval werk, solank jy ander ui-gebaseerde e-posadresse kontak.
+Forward ports 25, 587 and 465 from your internet router|Stuur hawens 25, 587 en 465 van u internet router
+To access cryptpad you'll need to use a Tor browser. Navigate to the URL and enable javascript for the site under the NoScript icon. The screen will be blank for a few seconds while it's downloading the application into your browser.|Om toegang tot die cryptpad te verkry, moet u 'n Tor-blaaier gebruik. Navigeer na die URL en aktiveer javascript vir die webwerf onder die NoScript-ikoon. Die skerm sal vir 'n paar sekondes leeg wees terwyl die program in u blaaier afgelaai word.
+Cryptpad is an almost peer-to-peer application. No data is stored on the server, which only does minimal orchestration between the clients. If an adversary subsequently obtains the server they still learn nothing.|Cryptpad is 'n byna peer-to-peer-toepassing. Geen data word op die bediener gestoor, wat slegs minimale orkestrasie tussen die kliente behels. As 'n teëstander daarna die bediener kry, leer hulle nog niks nie.
+Authentication Token|Verifikasie Token
+This is only needed if you're using FreeDNS. Otherwise you can leave it blank.|Dit is slegs nodig as u FreeDNS gebruik. Anders kan u dit leeg laat.
+On the site where you obtained your domain name set up some custom nameservers as follows:|Op die webwerf waar u u domeinnaam verkry het, stel u 'n paar persoonlike nameervers op soos volg:
+On the FreeDNS site go to the "Dynamic DNS" section and make sure that "link updates of the same IP together" is set to ON.|Op die FreeDNS-werf, gaan na die "Dynamic DNS" afdeling en maak seker dat "koppelopdaterings van dieselfde IP saam" is ingestel op ON.
+For your main domain name select "quick cron example" and then your authentication token is the random string on the last line between the ? and = characters.Vir jou hoof domeinnaam kies 'vinnige cron voorbeeld' en dan is jou verifikasie token die ewekansige string op die laaste reël tussen die? En = karakters.|
+Your current IP address is shown at the top of the Dynamic DNS screen of the LibreServer user interface. You can use the "Mass Mod" feature at the top of the "Subdomains" part of the FreeDNS site to set all of your subdomains to that IP address.|U kan die funksie "Mass Mod" bo in die gedeelte "Subdomeinen" van die FreeDNS-webwerf gebruik om al jou subdomeinen daarop te stel. IP-adres.
+Select the MX entry for your main domain and change the destination to 10:mydomainname rather than 10:mail.mydomainname.Kies die MX-item vir jou hoof domein en verander die bestemming na 10: mydomainname eerder as 10: mail.mydomainname.|
+Enter your FreeDNS login details and the authentication token on the Dynamic DNS screen of the LibreServer user interface.|Gee jou FreeDNS login besonderhede en die verifikasie token op die Dynamic DNS skerm van die LibreServer gebruikerskoppelvlak.
+To make a playlist insert a USB drive containing audio files in a directory called playlist, add a description below and then select Update|Om 'n snitlys te maak, voeg 'n USB-stasie wat klanklêers bevat in 'n gids genaamd snitlys, voeg 'n beskrywing hieronder by en kies Update
+To add music copy it to a directory called Music on a USB drive then plug it into your server and select Update|Om musiek by te voeg, kopieer dit na 'n gids genaamd Musiek op 'n USB-stasie en steek dit dan in jou bediener en kies Update
+This is a wiki which stores its content in text files. Having no database makes maintaining it simpler, and it's not tied to any particular domain name so you can easily copy the files to a different domain if you need to.| Dit is 'n wiki wat sy inhoud in tekslêers stoor. As u geen databasis het nie, word dit makliker gehou en dit is nie gekoppel aan enige spesifieke domeinnaam nie, sodat u die lêers maklik na 'n ander domein kan kopieer as u dit nodig het.
+Provides an easy and private way to sync calendar and contacts between devices.|Bied 'n maklike en privaat manier om die kalender en kontakte tussen toestelle te sinkroniseer.
+Using on mobile|Gebruik op selfoon
+The user interface is a little misleading. Make sure that you log in with your username, not your email addres.|Die gebruikerskoppelvlak is 'n bietjie misleidend. Maak seker dat jy inteken met jou gebruikersnaam, nie jou e-pos adres.
+Also choose the advanced option and enter the subdomain that you installed etesync on.| Kies ook die gevorderde opsie en voer die subdomein in wat u etesync geïnstalleer het.
+This is a well known system for real time collaborative editing of documents. Just log in, choose a document title and then edit. Different users will appear in different colours, and can also chat in the sidebar. This is installed as a private system in which only users on your LibreServer server will be able to create and edit documents, so it's not open to any random users on the internet.|Dit is 'n bekende stelsel vir die werklike redigering van dokumente in real time. Net inloggen, kies 'n dokument titel en verander dan. Verskillende gebruikers sal in verskillende kleure verskyn, en kan ook in die zijbalk gesels. Dit word geïnstalleer as 'n privaat stelsel waarin slegs gebruikers op u LibreServer-bediener dokumente kan skep en wysig. Dit is dus nie oop vir enige willekeurige gebruikers op die internet nie.
+This is a federated social networking system. It can federate with other popular fediverse systems.|Dit is 'n federale sosiale netwerkstelsel. Dit kan saam met ander populêre fediverse stelsels.
+This is a blogging system which has no database and only uses text files for storage.|  Dit is 'n blogstelsel wat geen databasis het nie en slegs tekslêers gebruik vir stoor.
+This is a git hosting system. It's very similar to Github in appearance and use, is lightweight and so is well suited for use on low power ARM servers.|Dit is 'n git-hosting stelsel. Dit is baie soortgelyk aan Github in voorkoms en gebruik, is liggewig en is dus geskik vir gebruik op laer-krag-ARM-bedieners.
+This is a web publishing and social network system which includes wiki, web pages, photo albums and file storage. It also has nomadic identity allowing you to easily move your account between different servers and privacy controls which allow you to define who can see what content.| Dit is 'n webuitgewery en sosiale netwerkstelsel wat wiki, webbladsye, fotoalbums en lêeropslag insluit. Dit het ook 'n nomadiese identiteit wat u toelaat om u rekening maklik tussen verskillende bedieners en privaatheidskontroles te skuif, sodat u kan definieer wie die inhoud kan sien.
+Kanbans are one way of managing projects. They're traditionally used in businesses but can also be useful for personal TODO lists or within open source or DIY projects. If you have a list of things which need to be done and want to keep track of progress then this provides a way to do that.|Kanbans is een manier om projekte te bestuur. Hulle word tradisioneel in besighede gebruik, maar kan ook nuttig wees vir persoonlike TODO lyste of binne open source of DIY projekte. As jy 'n lys van dinge het wat gedoen moet word en vooruitgang wil hou, dan bied dit 'n manier om dit te doen.
+The default login is username "admin" and the login password which you usually use for the web interface.|  Die standaard aanmelding is gebruikersnaam "admin" en die aanmeld wagwoord wat u gewoonlik gebruik vir die webinterface.
+If you're using a Tor browser then you may need to allow javascript for the site by selecting the NoScript icon.|   As jy 'n Tor-blaaier gebruik, moet jy javascript vir die webwerf toelaat deur die NoScript-ikoon te kies.
+Extra users can be added from the drop down menu at the top right of the screen, under "Users management".| Ekstra gebruikers kan bygevoeg word in die keuselys bo regs van die skerm, onder "Gebruikersbestuur".
+This enables you to store your music on the LibreServer server and then access it from any internet connected device.|  Dit stel u in staat om u musiek op die LibreServer-bediener op te slaan en dan toegang te verkry tot enige internetverbinde toestel.
+This is a simple and lightweight photo album for the web. Whether you're an amateur or professional photographer, or want to publish random holiday pics or cat pictures. Lychee just does what it says it does without any fuss.|  Dit is 'n eenvoudige en ligte fotoalbum vir die web. Of jy nou 'n amateur- of professionele fotograaf is, of wil ewekansige vakansie foto's of katfoto's publiseer. Lychee doen net wat dit sê sonder enige ophef.
+This provides an webmail interface suitable for use on desktop or mobile clients and with built in support for encryption.| Dit bied 'n webmail-koppelvlak wat geskik is vir gebruik op rekenaar- of mobiele kliënte en met ingeboude ondersteuning vir enkripsie.
+This is a system for file synchronisation and also has many other plugins for calendar, videoconferencing, collaborative document editing and federated file sharing.|  Dit is 'n stelsel vir lêersynchronisasie en het ook baie ander invoegtoepassings vir kalender, videokonferensie, samewerkende dokument redigering en federale lêerdeling.
+This is a video hosting system which uses webtorrent to help distribute the files to or between clients.|   Dit is 'n video hosting stelsel wat webtorrent gebruik om die lêers te versprei na of tussen kliënte.
+Use the username 'root' and your usual password to log in as the administrator. You can then change settings as needed.|Gebruik die gebruikersnaam 'root' en jou gewone wagwoord om in te loggen as administrateur. U kan dan instellings verander soos nodig.
+This is an OStatus and ActivityPub compatible social networking server which federates with other fediverse systems. It is high-performance and so is especially well suited for running on low power single board computers without much RAM.| Dit is 'n OSTatus en ActivityPub-verenigbare sosiale netwerk bediener wat federateer met ander fediverse stelsels. Dit is 'n hoë-prestasie en dit is veral goed geskik vir die bestuur van lae-krag-eenbordrekenaars sonder veel RAM.
+Since Pleroma supports the same protocols, any Mastodon client for Android should work with it.|Aangesien Pleroma dieselfde protokolle ondersteun, moet enige Mastodon-kliënt vir Android daarmee saamwerk.
+This is a fork of GNU Social which includes some extra fixes and optimisations to improve performance. It federates with other fediverse servers, such as Pleroma or Mastodon.|Dit is 'n vurk van GNU Social, wat 'n paar ekstra oplossings en optimalisasies insluit om prestasie te verbeter. Dit federateer met ander fediverse-bedieners, soos Pleroma of Mastodon.
+This is an encrypted pastebin, such that the server has zero knowledge of the content. It's intended for small amounts of text less than 32K in length. It's not intended for transfering large files, or for storing pastes for more than a day.|Dit is 'n versleutelde pasteboom, sodat die bediener nulkennis van die inhoud het. Dit is bedoel vir klein hoeveelhede teks minder as 32K lank. Dit is nie bedoel vir die oordrag van groot lêers, of vir die stoor van pasta's vir meer as 'n dag nie.
+This is a web based user interface to the Matrix federated chat system. You will need to have already installed the Matrix app for this to work.|Dit is 'n webgebaseerde gebruikerskoppelvlak vir die Matrix federated chat stelsel. U moet die Matrix-program reeds geïnstalleer het om dit te kan werk.
+This is yet another chat system, but the server part of it isn't federated and so it's suitable for small private groups rather than for general public discussions.|Dit is nog 'n kletsstelsel, maar die bediener daarvan is nie federatief nie en is dus geskik vir klein private groepe eerder as vir algemene openbare besprekings.
+Provides a similar capability to proprietary systems such as Dropbox, and also is well suited for use with low power single board computers. You can have one or more directories which are synchronized across your various laptops/desktops/devices, and this makes it hard for you to ever lose important files. Of course, you don't necessarily need to be running a server in order to use Syncthing, but if you do have a server which is always running then there's always at least one place to synchronize your files to or from.|Verskaf 'n soortgelyke vermoë om eie stelsels soos Dropbox, en is ook geskik vir gebruik met lae-krag-eenbordrekenaars. U kan een of meer dopgehou hê wat gesynchroniseer word oor u verskillende skootrekenaars / desktops / toestelle, en dit maak dit moeilik vir u om ooit belangrike lêers te verloor. Natuurlik hoef jy nie noodwendig 'n bediener te gebruik om Syncthing te gebruik nie, maar as jy 'n bediener het wat altyd aan die gang is, is daar altyd ten minste een plek om jou lêers na of van te sinkroniseer.
+On a Debian based system:|Op 'n Debian-gebaseerde stelsel:
+Or on Android search for the Syncthing app.|Of op Android soek na die Syncthing-program.
+Using the settings button within the LibreServer web interface for the Syncthing app you can then paste in any IDs for other devices. They will then sync with your server.|Deur die instellingsknoppie in die LibreServer-webkoppelvlak vir die Syncthing-program te gebruik, kan jy enige ID's vir ander toestelle plak. Hulle sal dan met u bediener sinkroniseer.
+A system for privately creating and sharing notes and images, similar to Evernote. It can be set up so that a small number of users on the server can share their notes in a convenient way. It doesn't have any web user interface, and you need to install native clients on mobile or laptop/desktop machines.|'N stelsel vir privaat skep en deel notas en beelde, soortgelyk aan Evernote. Dit kan opgestel word sodat 'n klein aantal gebruikers op die bediener hul notas op 'n gerieflike manier kan deel. Dit het geen webgebruiker koppelvlak nie, en jy moet inheemse kliënte installeer op mobiele of skootrekenaar / lessenaar masjiene.
+Since the data at rest is stored in PGP encrypted format this is a good system to use in cases where security really is a critical factor.|Aangesien die data in rus in PGP-geïnkripteer formaat gestoor word, is dit 'n goeie stelsel om te gebruik in gevalle waar sekuriteit werklik 'n kritieke faktor is.
+Go to https://turtlapp.com/download and you'll then be able to download the appropriate app for your laptop or phone.|Gaan na https://turtlapp.com/download en dan kan jy die toepaslike artikels aflaai vir jou skootrekenaar of foon.
+Run the downloaded native app then at the bottom of the screen select "advanced settings" and enter your turl domain name, then register a new account. The password can be anything you choose, but since the client side encryption depends upon having a good password make it a long random string generated by a password manager such as KeepassX.|Begin die afgelaaide inligtingsprogram en klik dan onderaan die skerm op "gevorderde instellings" en voer jou turl domeinnaam in, en registreer dan 'n nuwe rekening. Die wagwoord kan enigiets wees wat u kies, maar aangesien die enkripsie van die kliënt afhang van 'n goeie wagwoord, maak dit 'n lang ewekansige string wat deur 'n wagwoordbestuurder soos KeepassX gegenereer word.
+You should then be able to log in and start using the app. You might also want to invite any other users of your LibreServer system to also sign up using the turtl domain name which you specified during installation.|Jy moet dan kan inteken en die program begin gebruik. U kan ook ander gebruikers van u LibreServer-stelsel nooi om ook aan te meld met die turtl-domeinnaam wat u tydens die installasie verskaf het.
+Disabling new registrations|Inskakel nuwe registrasies
+Once you have set up the server with however many users are needed you can then disable any new registrations by selecting Turtl on the LibreServer web interface and going to the settings screen.|Sodra jy die bediener opgestel het met hoeveel gebruikers daar benodig word, kan jy enige nuwe registrasies deaktiveer deur Turtl op die LibreServer-webkoppelvlak te kies en na die instellingsskerm te gaan.
+This is similar to Hubzilla but with a reduced range of features concentrating exclusively upon social networking with the latest version of the Zot protocol. Nomadic identity is supported, so to can export your channels and import them on other servers if necessary, without losing followers.|Dit is soortgelyk aan Hubzilla, maar met 'n beperkte reeks funksies wat uitsluitlik op sosiale netwerkgebruik konsentreer met die nuutste weergawe van die Zot-protokol. Nomadiese identiteit word ondersteun, sodat u kanale kan uitvoer en indien nodig op ander bedieners kan invoer sonder om volgelinge te verloor.
+Zap also has sophisticated privacy controls which enable you to decide exactly how you wish to interact with other users and what information of yours they can view.|Zap het ook gesofistikeerde privaatheidskontroles waarmee jy presies kan besluit hoe jy met ander gebruikers wil kommunikeer en watter inligting hulle kan sien.
+The first account you register will be the administrator user, and from there you can go to the admin settings and disable new registrations if needed.|Die eerste rekening wat jy registreer, sal die administrateur gebruiker wees, en van daar kan jy na die administrasie-instellings gaan en nuwe registrasies deaktiveer indien nodig.
+To find other users to follow select "directory" from the drop down menu at the top right of the screen and set "this site only" to "no".|Om ander gebruikers te vind, kies "gids" in die keuselys bo regs van die skerm en stel slegs "hierdie webwerf" op "nee".
+There is an Android app available called Nomad.|Daar is 'n Android-program beskikbaar genaamd Nomad.
+End-to-end encrypted sync of calendar and contacts between devices|End-to-end geënkripteerde sinkronisering van die kalender en kontakte tussen toestelle
+Secure, end-to-end encrypted and journaled personal information cloud synchronization for Android and the desktop, supporting contacts and calendars|Veilige, end-tot-end geïnkripteer en geskeduleerde persoonlike inligting wolk sinchronisasie vir Android en die lessenaar, ondersteunende kontakte en kalenders
+Nomadic social network server|Nomadiese sosiale netwerk bediener
+Zap is a full featured social network application running under the Zot6 protocol. It provides enhanced privacy modes and identity/content mirroring across multiple servers ("nomadic identity").|Zap is 'n volledige sosiale netwerkprogram wat onder die Zot6-protokol loop. Dit bied verbeterde privaatheidsmodusse en identiteit / inhoudspieëring oor verskeie bedieners ("nomadiese identiteit").
+Change background|Verander agtergrond
+Diagnostics|diagnose
+Please wait while your app is installing|Wag asseblief terwyl jou program geïnstalleer word
+The app could not be installed|Die program kon nie geïnstalleer word nie
+Add a new member|Voeg 'n nuwe lid by
+Kanban focussed on simplicity and minimalism|Kanban het gefokus op eenvoud en minimalisme
+Emails, chat or social network posts will be blocked if they contain the following words or phrases|E-pos, klets of sosiale netwerkposte sal geblokkeer word as hulle die volgende woorde of frases bevat
+Muted words|Gedempte woorde
+Disk space is getting too low. Installation stopped.|Skyfspasie word te laag. Installasie gestop.
+Password changed|Wagwoord verander
+Play media from any UPNP/DLNA device on your local network|Speel media vanaf enige UPNP / DLNA-toestel op u plaaslike netwerk
+This allows you to play media on any DLNA supporting device within your local network.|Dit laat jou toe om media op enige DLNA ondersteunende toestel in jou plaaslike netwerk te speel.
+No Access Control|Geen toegangsbeheer nie
+DLNA doesn't have any access controls, so keep in mind that anyone with a mobile device or laptop within your local network is potentially able to play any media on the server. Hence this may not be suitable for situations where you want parental control over what media can be accessed.|DLNA het geen toegangsbeheer nie. Hou dus in gedagte dat enigeen met 'n mobiele toestel of skootrekenaar in u plaaslike netwerk moontlik enige media op die bediener kan speel. Dit kan dus nie geskik wees vir situasies waar u ouerlike beheer wil hê oor watter media beskikbaar is nie.
+Adding Media|Media byvoeg
+You can add media by selecting the settings button from the DLNA app.|Jy kan media byvoeg deur die instellingsknoppie van die DLNA-program te kies.
+Your homepage can also be accessed with a Tor browser on:|U tuisblad kan ook verkry word met 'n Tor-blaaier op:
+Chat|Chat
+Media|Media
+Social|Sosiale
+Sync|Sync
+Publishing|
+Other||Ander
+Recommended Firefox Add-ons:|Aanbevole Firefox-byvoegings:
+Change your default domain name|Verander jou verstek domeinnaam
+Do you want to change your default domain name to:|Wil jy jou standaard domeinnaam verander na:
+rsync failed|rsync het misluk
+For most purposes Syncthing is an easier file synchronization system, but rsync is still a reliable solution if you prefer to do things the more traditional way or if you just want to create a mirror from an existing rsync server.|Vir die meeste doeleindes is Syncthing 'n makliker lêersynchronisasiestelsel, maar rsync is steeds 'n betroubare oplossing as jy verkies om dinge die meer tradisionele manier te doen of as jy net 'n spieël wil maak van 'n bestaande rsync-bediener.
+Rsync is unencrypted but can be used via an onion address for transport security. If you are using it via your domain name then third parties will be able to see the content, but this may not matter if you are synchronizing already public files, such as GNU/Linux distro downloads.|Rsync is ongecodeerd, maar kan gebruik word via 'n ui-adres vir vervoer sekuriteit. As jy dit via jou domeinnaam gebruik, sal derde partye die inhoud kan sien, maar dit maak nie saak of jy alreeds publieke lêers sinkroniseer nie, soos GNU / Linux distro downloads.
+Avoid using this for private data, unless you are exclusively using rsync via the onion address.|Vermy die gebruik van hierdie data vir privaat data, tensy jy uitsluitlik rsync gebruik via die ui-adres.
+Creating a Mirror|Skep 'n spieël
+Select the Settings button then enter the domain and module name for the mirror. From then on synchronization will happen once per day.|Kies die Instellings knoppie en voer dan die domein en module naam vir die spieël in. Van dan af sal sinkronisasie een keer per dag plaasvind.
+Local Sync|Plaaslike sinkronisering
+If you created a mirror to your server you can then sync those files to other machines or devices on your local network as follows:|As jy 'n spieël na jou bediener geskep het, kan jy die lêers soos volg na ander masjiene of toestelle op jou plaaslike netwerk sinkroniseer:
+If "libreserver" doesn't work then you can substitute the local IP address of your server.|As "libreserver" nie werk nie, kan u die plaaslike IP-adres van u bediener vervang.
+Create a mirror of public files|Skep 'n spieël van openbare lêers
+The domain name could not be changed|Die domeinnaam kon nie verander word nie
+This might be because you do not have ports 80 and 443 forwarded to the server.|Dit kan wees omdat u nie poorte 80 en 443 na die bediener gestuur het nie.
+Check the port forwarding settings on your internet router.|Gaan die instellings vir haweoordrag op jou internet router na.
+Please specify a domain name which will be used for your email or XMPP address.|Spesifiseer asb. 'N domeinnaam wat gebruik sal word vir u e-pos- of XMPP-adres.
+Please forward the following ports from your internet router:|Stuur asseblief die volgende poorte van u internet router:
+Search for 'Barcode Scanner', then select 'install'|Soek vir 'Barcode Scanner', kies dan 'installeer'
+Download the DarkMessenger apk file via the link below, preferably using a Tor based browser, then install it|Laai die DarkMessenger apk-lêer af via die onderstaande skakel, verkieslik met behulp van 'n Tor-gebaseerde blaaier, en installeer dit dan
+Run DarkMessenger and the initial account setup will be shown. DarkMessenger only allows onion addresses to be used to create accounts|Begin DarkMessenger en die aanvanklike rekeningopstelling sal gewys word. DarkMessenger laat net uieadresse toe wat gebruik kan word om rekeninge te skep
+You can obtain your onion XMPP address from the Members section within the web interface, usually at http://libreserver/admin or http://libreserver.local/admin. If you can't easily copy and paste it into the account setup within DarkMessenger then you can use the barcode scanner on the QRcode displayed|U kan u ui XMPP-adres verkry van die afdeling Lede binne die webkoppelvlak, gewoonlik by http: // libreserver / admin of http: //libreserver.local/admin. As u dit nie maklik kan kopieer en plak in die rekeningopstelling binne DarkMessenger nie, kan u die strepieskandeerder op die QRcode vertoon
+Enter the password which you stored during initial setup of the system and also the onion domain|Voer die wagwoord in wat jy gestoor het tydens die aanvanklike opstelling van die stelsel en ook die uie-domein
+You should now be able to connect to your onion XMPP account and set an avatar image if necessary|U moet nou kan koppel aan u ui XMPP rekening en stel 'n avatar beeld indien nodig
+When sending or receiving pictures or other attachments for the first time you will need to accept the self-signed certificates. Select 'always' twice. This should only happen once per contact|Wanneer u die eerste keer foto's of ander aanhangsels stuur of ontvang, moet u die self-ondertekende sertifikate aanvaar. Kies 'altyd' twee keer. Dit moet net een keer per kontak gebeur
+Under Settings/Expert you may want to change the automatic message deletion period. By default this is one day|Onder Instellings / Deskundige kan jy die outomatiese boodskapverwyderingstydperk verander. By verstek is dit een dag
+When setting up a group chat first ensure that you have separately confirmed two way messaging with each of the participants individually|Wanneer u 'n groepsklets instel, moet u eers verseker dat u elkeen van die deelnemers afsonderlik bevestig het met twee rigtings
+Enable strict TLS authentication between XMPP servers?|Aktiveer streng TLS-verifikasie tussen XMPP-bedieners?
+If you or other people are having difficulty joining multi-user chat then enabling this might help|As jy of ander mense probleme ondervind om met multi-gebruikersklets aan te sluit, kan dit dalk help
+Music can be uploaded using NextCloud. Install the app and then create a directory called 'Music'.|Musiek kan opgelaai word met NextCloud. Installeer die program en skep dan 'n gids genaamd 'Musiek'.
+Drag your files into the Music directory and they will then become available to mpd.|Sleep jou lêers na die musiek gids en hulle sal dan beskikbaar wees vir mpd.
+Select search (magnifying glass icon) and search for 'MALP', then select 'install'|Kies soektog (vergrootglasikoon) en soek 'MALP', kies dan 'installeer'
+Open MALP and from the settings select Profiles|Open MALP en kies Profiele uit die instellings
+Enter the following settings:|Voer die volgende instellings in:
+Save the settings by selecting the disk icon at the top right of the screen|Stoor die instellings deur die skyfikoon bo regs van die skerm te kies
+You should now be able to connect to mpd on your server and select and play albums.|Jy behoort nou aan MPD op jou bediener te kan koppel en albums te kan kies en speel.
+In a non-Tor browser navigate to http://libreserver:8250 or http://[server local IP address]:8250 and you should be able to play the selected album.|In 'n nie-Tor-blaaier navigeer na http: // libreserver: 8250 of http: // [plaaslike plaaslike IP-adres]: 8250 en jy moet die geselekteerde album kan speel.
+Setting up on the desktop|Opstel op die lessenaar
+Install Sonata|Installeer Sonata
+Run Sonata and enter the following settings:|Begin Sonata en voer die volgende instellings in:
+You should now be able to see your albums listed and be able to add them to the currently playing list.|Jy behoort nou jou albums te kan sien en kan hulle by die huidige speellys voeg.
+In a non-Tor browser navigate to http://libreserver:8250 or http://[server local IP address]:8250 and you should be able to play the selected album.|In 'n nie-Tor-blaaier navigeer na http: // libreserver: 8250 of http: // [plaaslike plaaslike IP-adres]: 8250 en jy moet die geselekteerde album kan speel.
+Select your music file format:|Kies jou musieklêerformaat:
+pixelfed allow new registrations|pixelfed laat nuwe registrasies toe
+Groceries and household management|Kruideniersware en huishoudelike bestuur
+Organization|organisasie
+VPN domain or IP address:|Skynprivaatnetwerk-domein of IP-adres:
+VPN public key:|Skynprivaatnetwerk publieke sleutel:
+Public key for this server:|Publieke sleutel vir hierdie bediener:
+Public keys for the laptops or devices that you wish to be able to use this server to connect to the internet.|Publieke sleutels vir die skootrekenaars of toestelle wat u wil gebruik om hierdie bediener te gebruik om aan die internet te koppel.
+Network|Network
+Set your coordinates on the map|Stel jou koördinate op die kaart
+Longitude:|Longitude:
+Latitude:|Latitude:
+Join|aansluit
+Docs|Dokumente
+Community network map is being generated|Gemeenskapsnetwerk kaart word gegenereer
+Please wait|Wag asseblief
+IP address (optional):|IP-adres (opsioneel):
+Export|uitvoer
+Add a new community network node|Voeg 'n nuwe gemeenskapsnetwerknodus by
+Remove a community network node|Verwyder 'n gemeenskapsnetwerknodus
+WARNING: Only change this if you know what you are doing. Selecting the wrong mesh protocol may make your server disappear from the network, and be difficult to recover|WAARSKUWING: Verander dit net as jy weet wat jy doen. As u die verkeerde netwerkprotokol kies, kan u bediener van die netwerk verdwyn en moeilik wees om te herstel
+WARNING: Only change this if you know what you are doing. Setting an incorrect IP address or gateway may cause your server to become inaccessible, and may be difficult to recover|WAARSKUWING: Verander dit net as jy weet wat jy doen. As u 'n verkeerde IP-adres of gateway instel, kan u bediener ontoeganklik raak, en dit kan moeilik wees om te herstel
+Choose your network:|Kies jou netwerk:
+Language is being changed|Taal word verander
+Community Network|Gemeenskapsnetwerk
+Theme is being changed|Tema word verander
+Install a new app|Installeer 'n nuwe program
+Restore APPNAME from backup?|Herstel APPNAME uit Friends?
+Add or remove feeds|Voeg feite by of verwyder
+Enter an RSS feed URL to add or remove. The domain name is enough for removals.|Voer 'n RSS-feed-URL in om by te voeg of te verwyder. Die domeinnaam is genoeg vir verwyderings.
+Show onion address|Toon ui adres
+Multi User Dungeon from the era of Welsh mainframe computing|Multi User Dungeon uit die era van Walliese hoofraamwerk
+Forward the UDP port 5100 from your internet router|Stuur die UDP-poort 5100 van u internet router
+Since this app only uses the UDP protocol it won't work via an onion address. If you are running the onion only version of LibreServer then use its local IP address (usually 192.168.1.x) to connect to the game on the above port.|Aangesien hierdie program net die UDP-protokol gebruik, sal dit nie via 'n ui-adres werk nie. As jy die ui-weergawe van LibreServer gebruik, gebruik dan sy plaaslike IP-adres (gewoonlik 192.168.1.x) om aan die spel op die bogenoemde poort te koppel.
+Near infinite world block sandbox game|Byna oneindige wêreld blok sandbox spel
+Federation List|Federasie Lys
+Add or remove the domain names for instances with whom you wish to federate. Don't include your own domain names.|Voeg of verwyder die domein name vir instansies met wie jy wil federeren. Moenie jou eie domeinname insluit nie.
+Notify via|Stel in kennis via
+Receive admin notifications|Ontvang admin kennisgewings
+New calendar event|Nuwe kalendergeleentheid
+New direct message|Nuwe direkte boodskap
+New reply|Nuwe antwoord
+New shared item|Nuwe gedeelde item
+New follow request|Nuwe opvolgversoek
+Number of connections on HTTP port is high|Aantal verbindings op die HTTP-poort is groot
+Number of connections on HTTPS port is high|Aantal verbindings op die HTTPS-poort is groot
+Cryptpad allow new signups|Cryptpad laat nuwe aanmeldings toe
+Name of the Dungeon Master|Naam van die Dungeon Master
+Message Of The Day|Boodskap van die dag
+port|hawe
+Server Password|Bedienerswagwoord
+DNS over TLS|DNS oor TLS
+IP Address|IP adres
+New git patch|Nuwe git patch
+liked your post|hou van jou plasing

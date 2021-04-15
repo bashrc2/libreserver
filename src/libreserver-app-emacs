@@ -1,0 +1,367 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Emacs application
+#
+# License
+# =======
+#
+# Copyright (C) 2014-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VARIANTS='full'
+
+IN_DEFAULT_INSTALL=1
+SHOW_ON_ABOUT=0
+NOT_ON_HOMEPAGE=1
+REQUIRES_APP=
+
+emacs_variables=(USB_MOUNT
+                 MY_USERNAME
+                 DEFAULT_LANGUAGE)
+
+function add_user_emacs {
+    echo '0'
+}
+
+function remove_user_emacs {
+    echo '0'
+}
+
+function upgrade_distro_emacs {
+    target_distro="$1"
+
+    if [[ "$target_distro" == 'bullseye' ]]; then
+        echo -n ''
+    fi
+}
+
+function logging_on_emacs {
+    echo -n ''
+}
+
+function logging_off_emacs {
+    echo -n ''
+}
+
+function reconfigure_emacs {
+    echo -n ''
+}
+
+function upgrade_emacs {
+    echo -n ''
+}
+
+function backup_local_emacs {
+    for d in /home/*/ ; do
+        USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+        if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+            if [ -d "/home/$USERNAME/.emacs.d" ]; then
+                echo $"Backing up Emacs config for $USERNAME"
+                if [ -f "/home/$USERNAME/.emacs" ]; then
+                    cp "/home/$USERNAME/.emacs" "/home/$USERNAME/.emacs.d/dotemacs"
+                fi
+                function_check backup_directory_to_usb
+                backup_directory_to_usb "/home/$USERNAME/.emacs.d" "emacs/$USERNAME"
+            fi
+        fi
+    done
+}
+
+function restore_local_emacs {
+    temp_restore_dir=/root/tempemacs
+    if [ -d "$USB_MOUNT/backup/emacs" ]; then
+        for d in $USB_MOUNT/backup/emacs/*/ ; do
+            USERNAME=$(echo "$d" | awk -F '/' '{print $6}')
+            if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+                if [ ! -d "/home/$USERNAME" ]; then
+                    "${PROJECT_NAME}-adduser" "$USERNAME"
+                fi
+                echo $"Restoring Emacs config for $USERNAME"
+                function_check restore_directory_from_usb
+                restore_directory_from_usb "$temp_restore_dir" "emacs/$USERNAME"
+                if [ -d "$temp_restore_dir/home/$USERNAME/.emacs.d" ]; then
+                    cp -r "$temp_restore_dir/home/$USERNAME/.emacs.d" "/home/$USERNAME/"
+                else
+                    if [ ! -d "/home/$USERNAME/.emacs.d" ]; then
+                        mkdir "/home/$USERNAME/.emacs.d"
+                    fi
+                    cp -r "$temp_restore_dir/"* "/home/$USERNAME/.emacs.d"
+                fi
+                # shellcheck disable=SC2181
+                if [ ! "$?" = "0" ]; then
+                    rm -rf $temp_restore_dir
+                    function_check set_user_permissions
+                    set_user_permissions
+                    function_check backup_unmount_drive
+                    backup_unmount_drive
+                    exit 66
+                fi
+                if [ -d "$temp_restore_dir/home/$USERNAME/.emacs.d" ]; then
+                    cp -f "$temp_restore_dir/home/$USERNAME/.emacs.d/dotemacs" "/home/$USERNAME/.emacs"
+                else
+                    cp -f "$temp_restore_dir/dotemacs" "/home/$USERNAME/.emacs"
+                fi
+                rm -rf $temp_restore_dir
+            fi
+        done
+    fi
+}
+
+function backup_remote_emacs {
+    echo -n ''
+}
+
+function restore_remote_emacs {
+    echo -n ''
+}
+
+function remove_emacs {
+    $REMOVE_PACKAGES_PURGE emacs-nox
+    update-alternatives --set editor /usr/bin/nano
+    sed -i '/install_emacs/d' "$COMPLETION_FILE"
+
+    if [ -f /etc/cron.daily/emacs-backups ]; then
+	rm /etc/cron.daily/emacs-backups
+    fi
+    
+    # remove emacs as the mutt email editor
+    if [ -f /etc/Muttrc ]; then
+        if grep -q "set editor=" /etc/Muttrc; then
+            sed -i '/set editor=/d' /etc/Muttrc
+        fi
+        for d in /home/*/ ; do
+            USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+            if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+                if [ -f "/home/$USERNAME/.muttrc" ]; then
+                    if grep -q "set editor=" "/home/$USERNAME/.muttrc"; then
+                        sed -i '/set editor=/d' "/home/$USERNAME/.muttrc"
+                    fi
+                fi
+            fi
+        done
+    fi
+}
+
+function install_emacs {
+    INSTALL_PACKAGES emacs-nox ispell ibritish ifrench ispanish iitalian irussian iswedish inorwegian iirish ingerman iswiss iogerman idutch idanish ibrazilian ibulgarian ipolish iczech iestonian ilithuanian iukrainian icatalan
+    update-alternatives --set editor /usr/bin/emacs
+
+    if [ ! -d /root/.emacs_backups ]; then
+	mkdir /root/.emacs_backups
+    fi
+
+    if [ ! -d /etc/skel/.emacs_backups ]; then
+	mkdir /etc/skel/.emacs_backups
+    fi
+
+    # remove backup files daily
+    { echo '#!/bin/bash';
+      echo 'if [ -d /root/.emacs_backups ]; then';
+      echo '    rm /root/.emacs_backups/*';
+      echo 'fi'; } > /etc/cron.daily/emacs-backups
+    chmod +x /etc/cron.daily/emacs-backups
+    
+    # A minimal emacs configuration
+    #echo -n "(add-to-list 'load-path " > /home/$MY_USERNAME/.emacs
+    #echo '"~/.emacs.d/")' >> /home/$MY_USERNAME/.emacs
+    #echo '' >> /home/$MY_USERNAME/.emacs
+    { echo $';; ===== Remove trailing whitepace ======================================';
+      echo '';
+      echo ";;(add-hook 'before-save-hook 'delete-trailing-whitespace)";
+      echo '';
+      echo ';; Goto a line number with CTRL-l';
+      echo -n '(global-set-key "\C-l" ';
+      echo "'goto-line)";
+      echo '';
+      echo $';; ===== Show line numbers ==============================================';
+      echo '';
+      echo "(add-hook 'find-file-hook (lambda () (linum-mode 1)))";
+      echo '';
+      echo $';; ===== Enable line wrapping in org-mode ===============================';
+      echo '';
+      echo " (add-hook 'org-mode-hook";
+      echo "           '(lambda ()";
+      echo "              (visual-line-mode 1)))";
+      echo '';
+      echo $';; ===== Enable shift select in org mode ================================';
+      echo '';
+      echo '(setq org-support-shift-select t)';
+      echo '';
+      echo $';; ===== Set standard indent to 4 rather that 4 =========================';
+      echo '';
+      echo '(setq standard-indent 4)';
+      echo '(setq-default tab-width 4)';
+      echo '(setq c-basic-offset 4)';
+      echo '';
+      echo $';; ===== Place Backup Files in Specific Directory =======================';
+      echo '';
+      echo '(setq';
+      echo '   backup-by-copying t';
+      echo '   backup-directory-alist';
+      echo "    '((\".\" . \"~/.emacs_backups/\"))";
+      echo '   delete-old-versions t';
+      echo '   kept-new-versions 6';
+      echo '   kept-old-versions 2';
+      echo '   version-control t)';
+      echo '';
+      echo $';; ===== Make Text mode the default mode for new buffers ================';
+      echo '';
+      echo "(setq default-major-mode 'text-mode)";
+      echo '';
+      echo $';; ===== Line length ====================================================';
+      echo '';
+      echo '(setq-default fill-column 72)';
+      echo '';
+      echo $';; ===== Enable Line and Column Numbering ===============================';
+      echo '';
+      echo '(line-number-mode 1)';
+      echo '(column-number-mode 1)';
+      echo '';
+      echo $';; ===== Turn on Auto Fill mode automatically in all modes ==============';
+      echo '';
+      echo ';; Auto-fill-mode the the automatic wrapping of lines and insertion of';
+      echo ';; newlines when the cursor goes over the column limit.';
+      echo '';
+      echo ';; This should actually turn on auto-fill-mode by default in all major';
+      echo ';; modes. The other way to do this is to turn on the fill for specific modes';
+      echo ';; via hooks.';
+      echo '';
+      echo '(setq auto-fill-mode 1)';
+      echo '';
+      echo $';; ===== Enable GPG encryption =========================================';
+      echo '';
+      echo "(require 'epa)";
+      echo '(epa-file-enable)';
+      echo '(menu-bar-mode -1)';
+      echo '(toggle-scroll-bar -1)';
+      echo '(tool-bar-mode -1)'; } >> "/home/$MY_USERNAME/.emacs"
+    cp "/home/$MY_USERNAME/.emacs" /root/.emacs
+    chown "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME/.emacs"
+
+    # add a mutt entry to use emacs to compose emails
+    if [ -f /etc/Muttrc ]; then
+        if ! grep -q "set editor=" /etc/Muttrc; then
+            echo 'set editor="emacs -q --load ~/.emacs-mutt"' >> /etc/Muttrc
+        else
+            sed -i 's|set editor=.*|set editor="emacs -q --load ~/.emacs-mutt"|g' /etc/Muttrc
+        fi
+        for d in /home/*/ ; do
+            USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+            if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+                if [ -f "/home/$USERNAME/.muttrc" ]; then
+                    if ! grep -q "set editor=" "/home/$USERNAME/.muttrc"; then
+                        echo 'set editor="emacs -q --load ~/.emacs-mutt"' >> "/home/$USERNAME/.muttrc"
+                    else
+                        sed -i 's|set editor=.*|set editor="emacs -q --load ~/.emacs-mutt"|g' "/home/$USERNAME/.muttrc"
+                    fi
+                fi
+
+                # create an Emacs configuration specifically for use with Mutt, which
+                # has word wrap and spell checking on by default
+                if [ ! -f "/home/$USERNAME/.emacs-mutt" ]; then
+                    { echo "(add-hook 'before-save-hook 'delete-trailing-whitespace)";
+                    echo '(setq org-support-shift-select t)';
+                    echo '(setq standard-indent 4)';
+                    echo '(setq-default tab-width 4)';
+                    echo '(setq c-basic-offset 4)';
+                    echo '(setq make-backup-files t)';
+                    echo '(setq version-control t)';
+                    echo '(setq backup-directory-alist (quote ((".*" . "~/.emacs_backups/"))))';
+                    echo "(setq default-major-mode 'text-mode)";
+                    echo "(dolist (hook '(text-mode-hook))";
+                    echo '    (add-hook hook (lambda () (flyspell-mode 1))))';
+                    echo '(setq-default fill-column 72)'; } > "/home/$USERNAME/.emacs-mutt"
+                    if [[ $DEFAULT_LANGUAGE == 'en_US'* ]]; then
+                        echo '(setq ispell-dictionary "american")' >> "/home/$USERNAME/.emacs-mutt"
+                    fi
+                    if [[ $DEFAULT_LANGUAGE == 'en_GB'* ]]; then
+                        echo '(setq ispell-dictionary "british")' >> "/home/$USERNAME/.emacs-mutt"
+                    fi
+                    if [[ $DEFAULT_LANGUAGE == 'fr_FR'* ]]; then
+                        echo '(setq ispell-dictionary "french")' >> "/home/$USERNAME/.emacs-mutt"
+                    fi
+                    if [[ $DEFAULT_LANGUAGE == 'it_IT'* ]]; then
+                        echo '(setq ispell-dictionary "italian")' >> "/home/$USERNAME/.emacs-mutt"
+                    fi
+                    if [[ $DEFAULT_LANGUAGE == 'cs_CZ'* ]]; then
+                        echo '(setq ispell-dictionary "czech")' >> "/home/$USERNAME/.emacs-mutt"
+                    fi
+                    if [[ $DEFAULT_LANGUAGE == 'da_DK'* ]]; then
+                        echo '(setq ispell-dictionary "danish")' >> "/home/$USERNAME/.emacs-mutt"
+                    fi
+                    if [[ $DEFAULT_LANGUAGE == 'nl_NL'* ]]; then
+                        echo '(setq ispell-dictionary "dutch")' >> "/home/$USERNAME/.emacs-mutt"
+                    fi
+                    if [[ $DEFAULT_LANGUAGE == 'ru_RU'* ]]; then
+                        echo '(setq ispell-dictionary "russian")' >> "/home/$USERNAME/.emacs-mutt"
+                    fi
+                    if [[ $DEFAULT_LANGUAGE == 'es_ES'* ]]; then
+                        echo '(setq ispell-dictionary "spanish")' >> "/home/$USERNAME/.emacs-mutt"
+                    fi
+                    if [[ $DEFAULT_LANGUAGE == 'sv_SE'* ]]; then
+                        echo '(setq ispell-dictionary "swedish")' >> "/home/$USERNAME/.emacs-mutt"
+                    fi
+                    if [[ $DEFAULT_LANGUAGE == 'no_NO'* ]]; then
+                        echo '(setq ispell-dictionary "norwegian")' >> "/home/$USERNAME/.emacs-mutt"
+                    fi
+                    if [[ $DEFAULT_LANGUAGE == 'de_DE'* ]]; then
+                        echo '(setq ispell-dictionary "ngerman")' >> "/home/$USERNAME/.emacs-mutt"
+                    fi
+                    if [[ $DEFAULT_LANGUAGE == 'bg_BG'* ]]; then
+                        echo '(setq ispell-dictionary "bulgarian")' >> "/home/$USERNAME/.emacs-mutt"
+                    fi
+                    if [[ $DEFAULT_LANGUAGE == 'pl'* ]]; then
+                        echo '(setq ispell-dictionary "polish")' >> "/home/$USERNAME/.emacs-mutt"
+                    fi
+                    if [[ $DEFAULT_LANGUAGE == 'et_EE'* ]]; then
+                        echo '(setq ispell-dictionary "estonian")' >> "/home/$USERNAME/.emacs-mutt"
+                    fi
+                    if [[ $DEFAULT_LANGUAGE == 'lt_LT'* ]]; then
+                        echo '(setq ispell-dictionary "lithuanian")' >> "/home/$USERNAME/.emacs-mutt"
+                    fi
+                    if [[ $DEFAULT_LANGUAGE == 'uk_UA'* ]]; then
+                        echo '(setq ispell-dictionary "ukranian")' >> "/home/$USERNAME/.emacs-mutt"
+                    fi
+                    if [[ $DEFAULT_LANGUAGE == 'ca_ES'* ]]; then
+                        echo '(setq ispell-dictionary "catalan")' >> "/home/$USERNAME/.emacs-mutt"
+                    fi
+                    { echo '(setq auto-fill-mode 0)';
+                      echo "(add-hook 'text-mode-hook 'turn-on-auto-fill)";
+                      echo "(setq-default auto-fill-function 'do-auto-fill)"; } >> "/home/$USERNAME/.emacs-mutt"
+                    chown "$USERNAME":"$USERNAME" "/home/$USERNAME/.emacs-mutt"
+
+                    # add the emacs mutt configuration to the user profile skeleton
+                    if [ ! -f /etc/skel/.emacs-mutt ]; then
+                        cp "/home/$USERNAME/.emacs-mutt" /etc/skel/.emacs-mutt
+                        chown root:root /etc/skel/.emacs-mutt
+                    fi
+                fi
+
+            fi
+        done
+    fi
+
+    APP_INSTALLED=1
+}
+
+function install_interactive_emacs {
+    install_emacs
+}
+
+# NOTE: deliberately no exit 0

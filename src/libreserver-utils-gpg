@@ -1,0 +1,431 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# gpg functions
+#
+# License
+# =======
+#
+# Copyright (C) 2016-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+function gpg_recv_key {
+    key_server="$1"
+    key_id="$2"
+    gpg --keyserver ${key_server} --recv-key ${key_id}
+}
+
+function gpg_add_key {
+    key_name="$1"
+    key_url="$2"
+
+    if [ ! "$rootdir" ]; then
+        keyfile="${key_name}.key"
+        wget -q "${key_url}" -O "${keyfile}"
+    else
+        keyfile="/root/${key_name}.key"
+        chroot "${rootdir}" wget -q "${key_url}" -O "${keyfile}"
+        keyfile="${rootdir}/root/${key_name}.key"
+    fi
+
+    if [ ! -f "${keyfile}" ]; then
+        echo "Unable to download key for ${key_name}"
+        exit 9
+    fi
+    if [ ! -d "${rootdir}/usr/share/keyrings" ]; then
+        mkdir "${rootdir}/usr/share/keyrings"
+    fi
+    cat "${keyfile}" | gpg --dearmor | sudo tee "${rootdir}/usr/share/keyrings/${key_name}-keyring.gpg" > /dev/null
+    rm "${keyfile}"
+}
+
+function gpg_update_mutt {
+    key_username="$1"
+
+    if [ ! -f "/home/$key_username/.muttrc" ]; then
+        return
+    fi
+
+    CURR_EMAIL_ADDRESS=$key_username@$HOSTNAME
+    CURR_GPG_ID=$(gpg --homedir="/home/$key_username/.gnupg" --list-keys "$CURR_EMAIL_ADDRESS" | sed -n '2p' | sed 's/^[ \t]*//')
+
+    # If the default key is specified within gpg.conf
+    if [ -f "/home/$key_username/gpg.conf" ]; then
+        if grep -q "default-key" "/home/$key_username/gpg.conf"; then
+            default_gpg_key=$(grep "default-key" "/home/$key_username/gpg.conf")
+            if [[ "$default_gpg_key" != *'#'* ]]; then
+                default_gpg_key=$(grep "default-key" "/home/$key_username/gpg.conf" | awk -F ' ' '{print $2}')
+                if [ ${#default_gpg_key} -gt 3 ]; then
+                    CURR_GPG_ID=$(gpg --homedir="/home/$key_username/.gnupg" --list-keys "$default_gpg_key" | sed -n '2p' | sed 's/^[ \t]*//')
+                fi
+            fi
+        fi
+    fi
+
+    sed -i "s|set pgp_encrypt_only_command.*|set pgp_encrypt_only_command=\"/usr/lib/mutt/pgpewrap gpg --batch --quiet --no-verbose --output - --encrypt --textmode --armor --trust-model always --encrypt-to $CURR_GPG_ID -- -r %r -- %f\"|g" "/home/$key_username/.muttrc"
+    sed -i "s|set pgp_encrypt_sign_command.*|set pgp_encrypt_sign_command=\"/usr/lib/mutt/pgpewrap gpg %?p?--passphrase-fd 0? --batch --quiet --no-verbose --textmode --output - --encrypt --sign %?a?-u %a? --armor --trust-model always --encrypt-to $CURR_GPG_ID -- -r %r -- %f\"|g" "/home/$key_username/.muttrc"
+
+    chown "$key_username":"$key_username" "/home/$key_username/.muttrc"
+}
+
+function gpg_import_public_key {
+    key_username="$1"
+    key_filename="$2"
+
+    gpg --homedir="/home/$key_username/.gnupg" --import "$key_filename"
+    gpg_set_permissions "$key_username"
+}
+
+function gpg_import_private_key {
+    key_username="$1"
+    key_filename="$2"
+
+    gpg --homedir="/home/$key_username/.gnupg" --allow-secret-key-import --import "$key_filename"
+    gpg_set_permissions "$key_username"
+}
+
+function gpg_export_public_key {
+    key_username="$1"
+    key_id="$2"
+    key_filename="$3"
+
+    chown -R "${key_username}":"${key_username}" "/home/${key_username}/.gnupg"
+    su -m root -c "gpg --homedir /home/${key_username}/.gnupg --armor --export ${key_id} > ${key_filename}" - "$key_username"
+}
+
+function gpg_export_private_key {
+    key_username="$1"
+    key_id="$2"
+    key_filename="$3"
+
+    chown -R "${key_username}":"${key_username}" "/home/${key_username}/.gnupg"
+    su -m root -c "gpg --homedir=/home/${key_username}/.gnupg --armor --export-secret-key ${key_id} > ${key_filename}" - "${key_username}"
+}
+
+function gpg_create_key {
+    key_username="$1"
+    key_passphrase="$2"
+
+    if [ ! "$MY_NAME" ]; then
+        MY_NAME="${key_username}"
+    fi
+
+    # construct email address if it doesn't exist
+    if [[ "${MY_EMAIL_ADDRESS}" == *"@" ]]; then
+	if [[ "${HOSTNAME}" == *".local" ]]; then
+	    if [ -f /var/lib/tor/hidden_service_email/hostname ]; then
+		MY_EMAIL_ADDRESS="${key_username}@$(cat /var/lib/tor/hidden_service_email/hostname)"
+	    fi
+	else
+	    MY_EMAIL_ADDRESS="${key_username}@${HOSTNAME}"
+	fi
+    fi
+    
+    gpg_dir="/home/${key_username}/.gnupg"
+
+    { echo 'Key-Type: eddsa';
+      echo 'Key-Curve: Ed25519';
+      echo 'Key-Usage: sign';
+      echo 'Subkey-Type: ecdh';
+      echo 'Subkey-Curve: Curve25519';
+      echo 'Preferences: SHA512 SHA384 SHA256 SHA224 CAMELLIA256 TWOFISH AES256 CAMELLIA192 AES192 Uncompressed ZIP ZLIB BZIP2';
+      echo 'Subkey-Usage: encrypt';
+      echo "Name-Real:  ${MY_NAME}";
+      echo "Name-Email: ${MY_EMAIL_ADDRESS}";
+      echo 'Expire-Date: 0';
+      echo '%commit';
+      echo '%echo gpg key generated'; } > "/home/${key_username}/gpg-genkey.conf"
+    cat "/home/${key_username}/gpg-genkey.conf"
+    chown "${key_username}":"${key_username}" "/home/${key_username}/gpg-genkey.conf"
+
+    if [ -d ${gpg_dir} ]; then
+	echo "Set permissions on ${gpg_dir}"
+	find ${gpg_dir} -type d -exec chmod 700 {} \;
+	find ${gpg_dir} -type f -exec chmod 600 {} \;
+    fi
+
+    echo $'Generating a new GPG key'
+    passStr="${key_passphrase}"
+    if [ ! "${passStr}" ]; then
+	passStr="${PROJECT_NAME}"
+    fi
+    echo "${passStr}" | su -m root -c "gpg --homedir ${gpg_dir} --batch --passphrase-fd 0 --full-gen-key /home/${key_username}/gpg-genkey.conf" - "${key_username}"
+    chown -R "${key_username}":"${key_username}" "${gpg_dir}"
+    KEY_EXISTS=$(gpg_key_exists "$key_username" "${MY_EMAIL_ADDRESS}" | tail -n 1)
+    if [[ $KEY_EXISTS == "no" ]]; then
+        echo $"A GPG key for ${MY_EMAIL_ADDRESS} could not be created"
+        exit 63
+    fi
+    rm "/home/${key_username}/gpg-genkey.conf"
+    CURR_GPG_PUBLIC_KEY_ID=$(gpg_pubkey_from_email "${key_username}" "${MY_EMAIL_ADDRESS}")
+    if [ ${#CURR_GPG_PUBLIC_KEY_ID} -lt 4 ]; then
+        echo $"GPG public key ID could not be obtained for ${MY_EMAIL_ADDRESS}"
+        exit 82
+    fi
+    gpg_set_permissions "${key_username}"
+}
+
+function gpg_delete_key {
+    key_username="$1"
+    key_id="$2"
+
+    chown -R "$key_username":"$key_username" "/home/$key_username/.gnupg"
+    su -c "gpg --batch --quiet --homedir=/home/$key_username/.gnupg --delete-secret-key $key_id" - "$key_username"
+    su -c "gpg --batch --quiet --homedir=/home/$key_username/.gnupg --delete-key $key_id" - "$key_username"
+}
+
+function gpg_set_permissions {
+    key_username=$1
+
+    if [[ "$key_username" != 'root' ]]; then
+        chmod 700 "/home/$key_username/.gnupg"
+        chmod -R 600 "/home/$key_username/.gnupg/"*
+        printf '%%Assuan%%\nsocket=/dev/shm/S.dirmngr\n' > "/home/$key_username/.gnupg/S.dirmngr"
+        if [ -d "/home/$key_username/.gnupg/crls.d" ]; then
+            chmod +x "/home/$key_username/.gnupg/crls.d"
+        fi
+        chown -R "$key_username":"$key_username" "/home/$key_username/.gnupg"
+    else
+        chmod 700 /root/.gnupg
+        chmod -R 600 /root/.gnupg/*
+        printf '%%Assuan%%\nsocket=/dev/shm/S.dirmngr\n' > /root/.gnupg/S.dirmngr
+        if [ -d /root/.gnupg/crls.d ]; then
+            chmod +x /root/.gnupg/crls.d
+        fi
+        chown -R "$key_username":"$key_username" /root/.gnupg
+    fi
+}
+
+function gpg_reconstruct_key {
+    key_username=$1
+    key_interactive=$2
+
+    if [ ! -d "/home/$key_username/.gnupg_fragments" ]; then
+        return
+    fi
+    cd "/home/$key_username/.gnupg_fragments" || exit 34
+    # shellcheck disable=SC2012
+    no_of_shares=$(ls -afq keyshare.asc.* | wc -l)
+    if (( no_of_shares < 4 )); then
+        if [ "$key_interactive" ]; then
+            dialog --title $"Recover Encryption Keys" --msgbox $'Not enough fragments to reconstruct the key' 6 70
+        else
+            echo $'Not enough fragments to reconstruct the key'
+        fi
+        exit 73
+    fi
+    if ! gfcombine "/home/$key_username/.gnupg_fragments/keyshare*"; then
+        if [ "$key_interactive" ]; then
+            dialog --title $"Recover Encryption Keys" --msgbox $'Unable to reconstruct the key' 6 70
+        else
+            echo $'Unable to reconstruct the key'
+        fi
+        exit 73
+    fi
+
+    KEYS_FILE=/home/$key_username/.gnupg_fragments/keyshare.asc
+    if [ ! -f "$KEYS_FILE" ]; then
+        if [ "$key_interactive" ]; then
+            dialog --title $"Recover Encryption Keys" --msgbox $'Unable to reconstruct the key' 6 70
+        else
+            echo $'Unable to reconstruct the key'
+        fi
+        exit 52
+    fi
+
+    if ! gpg --homedir="/home/$key_username/.gnupg" --allow-secret-key-import --import "$KEYS_FILE"; then
+        rm "$KEYS_FILE"
+        rm -rf "/home/$key_username/.tempgnupg"
+        if [ "$key_interactive" ]; then
+            dialog --title $"Recover Encryption Keys" --msgbox $'Unable to import gpg key' 6 70
+        else
+            echo $'Unable to import gpg key'
+        fi
+        exit 96
+    fi
+    rm "$KEYS_FILE"
+
+    gpg_set_permissions "$key_username"
+
+    if [ "$key_interactive" ]; then
+        dialog --title $"Recover Encryption Keys" --msgbox $'Key has been reconstructed' 6 70
+    else
+        echo $'Key has been reconstructed'
+    fi
+}
+
+function gpg_agent_setup {
+    gpg_username=$1
+
+    echo "gpg_agent_setup for $gpg_username"
+
+    if [[ $gpg_username == 'root' ]]; then
+        if ! grep -q 'GPG_TTY' /root/.bashrc; then
+            { echo '';
+              echo "GPG_TTY=\$(tty)";
+              echo 'export GPG_TTY'; } >> /root/.bashrc
+        fi
+        if grep -q '# use-agent' /root/.gnupg/gpg.conf; then
+            sed -i 's|# use-agent|use-agent|g' /root/.gnupg/gpg.conf
+        fi
+        if ! grep -q 'use-agent' /root/.gnupg/gpg.conf; then
+            echo 'use-agent' >> /root/.gnupg/gpg.conf
+        fi
+        { echo 'default-cache-ttl 300';
+          echo 'max-cache-ttl 999999';
+          echo 'allow-loopback-pinentry'; } > /root/.gnupg/gpg-agent.conf
+        if [ -f /root/.gnupg/S.dirmngr ]; then
+            rm /root/.gnupg/S.dirmngr
+        fi
+        echo 'Reloading gpg agent'
+        echo RELOADAGENT | gpg-connect-agent
+    else
+        if ! grep -q 'GPG_TTY' "/home/$gpg_username/.bashrc"; then
+            { echo '';
+              echo "GPG_TTY=\$(tty)";
+              echo 'export GPG_TTY'; } >> "/home/$gpg_username/.bashrc"
+            chown "$gpg_username":"$gpg_username" "/home/$gpg_username/.bashrc"
+        fi
+        if grep -q '# use-agent' "/home/$gpg_username/.gnupg/gpg.conf"; then
+            sed -i 's|# use-agent|use-agent|g' "/home/$gpg_username/.gnupg/gpg.conf"
+        fi
+        if ! grep -q 'use-agent' "/home/$gpg_username/.gnupg/gpg.conf"; then
+            echo 'use-agent' >> "/home/$gpg_username/.gnupg/gpg.conf"
+        fi
+        if ! grep -q 'pinentry-mode loopback' "/home/$gpg_username/.gnupg/gpg.conf"; then
+            echo 'pinentry-mode loopback' >> "/home/$gpg_username/.gnupg/gpg.conf"
+        fi
+        echo 'default-cache-ttl 300' > "/home/$gpg_username/.gnupg/gpg-agent.conf"
+        echo 'max-cache-ttl 999999' >> "/home/$gpg_username/.gnupg/gpg-agent.conf"
+        echo 'allow-loopback-pinentry' >> "/home/$gpg_username/.gnupg/gpg-agent.conf"
+        if [ -f "/home/$gpg_username/.gnupg/S.dirmngr" ]; then
+            rm "/home/$gpg_username/.gnupg/S.dirmngr"
+        fi
+        echo 'Reloading gpg agent'
+        if [[ "$gpg_username" != "$USER" ]]; then
+            su -c "echo RELOADAGENT | gpg-connect-agent" - "$gpg_username"
+        else
+            echo RELOADAGENT | gpg-connect-agent
+        fi
+    fi
+}
+
+function gpg_agent_enable {
+    gpg_username=$1
+
+    if [[ $gpg_username == 'root' ]]; then
+        return
+    else
+        if grep -q 'GPG_TTY' "/home/$gpg_username/.bashrc"; then
+            sed -i '/GPG_TTY/d' "/home/$gpg_username/.bashrc"
+            chown "$gpg_username":"$gpg_username" "/home/$gpg_username/.bashrc"
+        fi
+        if grep -q 'use-agent' "/home/$gpg_username/.gnupg/gpg.conf"; then
+           sed -i '/use-agent/d' "/home/$gpg_username/.gnupg/gpg.conf"
+        fi
+        if grep -q 'pinentry-mode loopback' "/home/$gpg_username/.gnupg/gpg.conf"; then
+            sed -i '/pinentry-mode loopback/d' "/home/$gpg_username/.gnupg/gpg.conf"
+        fi
+        if [ -f "/home/$gpg_username/.gnupg/gpg-agent.conf" ]; then
+            rm "/home/$gpg_username/.gnupg/gpg-agent.conf"
+        fi
+        if [[ "$gpg_username" != "$USER" ]]; then
+            su -c "echo RELOADAGENT | gpg-connect-agent" - "$gpg_username"
+        else
+            echo RELOADAGENT | gpg-connect-agent
+        fi
+    fi
+}
+
+function gpg_pubkey_from_email {
+    key_owner_username=$1
+    key_email_address=$2
+    key_id=
+    if [[ $key_owner_username != "root" ]]; then
+        key_id=$(su -c "gpg --list-keys $key_email_address" - "$key_owner_username" | sed -n '2p' | sed 's/^[ \t]*//')
+
+        # If the default key is specified within gpg.conf
+        if [ -f "/home/$key_owner_username/gpg.conf" ]; then
+            if grep -q "default-key" "/home/$key_owner_username/gpg.conf"; then
+                default_gpg_key=$(grep "default-key" "/home/$key_owner_username/gpg.conf")
+                if [[ "$default_gpg_key" != *'#'* ]]; then
+                    default_gpg_key=$(grep "default-key" "/home/$key_owner_username/gpg.conf" | awk -F ' ' '{print $2}')
+                    if [ ${#default_gpg_key} -gt 3 ]; then
+                        key_id=$(su -c "gpg --list-keys $default_gpg_key" - "$key_owner_username" | sed -n '2p' | sed 's/^[ \t]*//')
+                    fi
+                fi
+            fi
+        fi
+    else
+        key_id=$(gpg --list-keys "$key_email_address" | sed -n '2p' | sed 's/^[ \t]*//')
+
+        # If the default key is specified within gpg.conf
+        if [ -f /root/gpg.conf ]; then
+            if grep -q "default-key" /root/gpg.conf; then
+                default_gpg_key=$(grep "default-key" /root/gpg.conf)
+                if [[ "$default_gpg_key" != *'#'* ]]; then
+                    default_gpg_key=$(grep "default-key" /root/gpg.conf | awk -F ' ' '{print $2}')
+                    if [ ${#default_gpg_key} -gt 3 ]; then
+                        key_id=$(gpg --list-keys "$default_gpg_key" | sed -n '2p' | sed 's/^[ \t]*//')
+                    fi
+                fi
+            fi
+        fi
+    fi
+    echo "$key_id"
+}
+
+function enable_email_encryption_at_rest {
+    for d in /home/*/ ; do
+        USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+        if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+            if grep -q '#| /usr/bin/gpgit.pl' "/home/$USERNAME/.procmailrc"; then
+                sed -i 's@#| /usr/bin/gpgit.pl@| /usr/bin/gpgit.pl@g' "/home/$USERNAME/.procmailrc"
+                sed -i 's|#:0 f|:0 f|g' "/home/$USERNAME/.procmailrc"
+            fi
+        fi
+    done
+
+    if grep -q '#| /usr/bin/gpgit.pl' /etc/skel/.procmailrc; then
+        sed -i 's@#| /usr/bin/gpgit.pl@| /usr/bin/gpgit.pl@g' /etc/skel/.procmailrc
+        sed -i 's|#:0 f|:0 f|g' /etc/skel/.procmailrc
+    fi
+}
+
+function disable_email_encryption_at_rest {
+    for d in /home/*/ ; do
+        USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+        if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+            if grep -q 'gpgit.pl' "/home/$USERNAME/.procmailrc"; then
+                if ! grep -q '#| /usr/bin/gpgit.pl' "/home/$USERNAME/.procmailrc"; then
+                    sed -i 's@| /usr/bin/gpgit.pl@#| /usr/bin/gpgit.pl@g' "/home/$USERNAME/.procmailrc"
+                    #sed -i 's|:0 f|#:0 f|g' "/home/$USERNAME/.procmailrc"
+                fi
+            fi
+        fi
+    done
+
+    if grep -q 'gpgit.pl' /etc/skel/.procmailrc; then
+        if ! grep -q '#| /usr/bin/gpgit.pl' /etc/skel/.procmailrc; then
+            sed -i 's@| /usr/bin/gpgit.pl@#| /usr/bin/gpgit.pl@g' /etc/skel/.procmailrc
+            #sed -i 's|:0 f|#:0 f|g' /etc/skel/.procmailrc
+        fi
+    fi
+}
+
+# NOTE: deliberately no exit 0

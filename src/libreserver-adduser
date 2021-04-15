@@ -1,0 +1,303 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Adds an user to the system
+#
+# License
+# =======
+#
+# Copyright (C) 2015-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+PROJECT_NAME='libreserver'
+
+export TEXTDOMAIN=${PROJECT_NAME}-adduser
+export TEXTDOMAINDIR="/usr/share/locale"
+
+CONFIGURATION_FILE="$HOME/${PROJECT_NAME}.cfg"
+
+UTILS_FILES="/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-*"
+for f in $UTILS_FILES
+do
+    source "$f"
+done
+
+ADD_USERNAME=$1
+
+if [[ $(is_valid_user "$ADD_USERNAME") == '0' ]]; then
+    echo $'Invalid username'
+    exit 50
+fi
+
+APP_FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
+for f in $APP_FILES
+do
+    source "$f"
+done
+
+SSH_PUBLIC_KEY="$2"
+password_param=
+if [[ "$2" == "password="* ]]; then
+    SSH_PUBLIC_KEY=
+    password_param=$(echo -n "$2" | awk -F '=' '{print $2}')
+fi
+GPG_KEYSERVER='hkp://keys.gnupg.net'
+SSH_PORT=2222
+COMPLETION_FILE=$HOME/${PROJECT_NAME}-completed.txt
+DEFAULT_DOMAIN_NAME=
+
+if [ ! "$ADD_USERNAME" ]; then
+    echo $'No username was given'
+    exit 1
+fi
+
+if [ -d "/home/$ADD_USERNAME" ]; then
+    echo $"The user $ADD_USERNAME already exists"
+    exit 2
+fi
+
+if [ ! -f "$COMPLETION_FILE" ]; then
+    echo $"$COMPLETION_FILE not found"
+    userdel -r "$ADD_USERNAME"
+    exit 3
+fi
+
+no_of_users=0
+for d in /home/*/ ; do
+    EXISTING_USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+    if [[ $(is_valid_user "$EXISTING_USERNAME") == "1" ]]; then
+        no_of_users=$((no_of_users+1))
+    fi
+done
+
+# shellcheck disable=SC2086
+if [ $no_of_users -ge $MAXIMUM_USERS ]; then
+    echo $"Maximum number of users reached"
+    exit 4
+fi
+
+# Minimum number of characters in a password
+MINIMUM_PASSWORD_LENGTH=$(grep 'MINIMUM_PASSWORD_LENGTH=' "/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-passwords" | head -n 1 | awk -F '=' '{print $2}')
+
+if [ ! "$password_param" ]; then
+    NEW_USER_PASSWORD="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
+else
+    NEW_USER_PASSWORD="$password_param"
+fi
+chmod 600 /etc/shadow
+chmod 600 /etc/gshadow
+useradd -m -p "$NEW_USER_PASSWORD" -s /bin/bash "$ADD_USERNAME"
+# NOTE: this is needed. The previous password set isn't enough.
+echo -n "${ADD_USERNAME}:${NEW_USER_PASSWORD}" | /usr/sbin/chpasswd
+adduser "$ADD_USERNAME" sasl
+if ! grep -q "${ADD_USERNAME}:" /etc/group; then
+    groupadd "$ADD_USERNAME"
+fi
+chmod 0000 /etc/shadow
+chmod 0000 /etc/gshadow
+
+if [ ! -d "/home/$ADD_USERNAME" ]; then
+    echo $'Home directory was not created'
+    exit 4
+fi
+
+if [ "$SSH_PUBLIC_KEY" ]; then
+    if [ ${#SSH_PUBLIC_KEY} -gt 5 ]; then
+        if [ -f "$SSH_PUBLIC_KEY" ]; then
+            mkdir "/home/$ADD_USERNAME/.ssh"
+            cp "$SSH_PUBLIC_KEY" "/home/$ADD_USERNAME/.ssh/authorized_keys"
+            chown -R "$ADD_USERNAME":"$ADD_USERNAME" "/home/$ADD_USERNAME/.ssh"
+            echo $'ssh public key installed'
+        else
+            if [[ "$SSH_PUBLIC_KEY" == 'ssh-'* ]]; then
+                mkdir "/home/$ADD_USERNAME/.ssh"
+                echo "$SSH_PUBLIC_KEY" > "/home/$ADD_USERNAME/.ssh/authorized_keys"
+                chown -R "$ADD_USERNAME":"$ADD_USERNAME" "/home/$ADD_USERNAME/.ssh"
+                echo $'ssh public key installed'
+            else
+                echo $'The second parameter does not look like an ssh key'
+                exit 5
+            fi
+        fi
+    fi
+fi
+
+if [ -d "/home/$ADD_USERNAME/Maildir" ]; then
+    if grep -q "set from=" "/home/$ADD_USERNAME/.muttrc"; then
+        sed -i "s|set from=.*|set from='$ADD_USERNAME <$ADD_USERNAME@$HOSTNAME>'|g" "/home/$ADD_USERNAME/.muttrc"
+    else
+        echo "set from='$ADD_USERNAME <$ADD_USERNAME@$HOSTNAME>'" >> "/home/$ADD_USERNAME/.muttrc"
+    fi
+
+    sed -i "s|\$USER@|$ADD_USERNAME@|g" "/home/$ADD_USERNAME/.procmailrc"
+fi
+
+# generate a gpg key
+echo "Making a GPG key for ${ADD_USERNAME}@${HOSTNAME}"
+mkdir "/home/${ADD_USERNAME}/.gnupg"
+if [[ "${GPG_KEYSERVER}" != 'hkps://hkps.pool.sks-keyservers.net' ]]; then
+    { echo "keyserver ${GPG_KEYSERVER}";
+      echo 'keyserver hkps://hkps.pool.sks-keyservers.net'; } >> "/home/${ADD_USERNAME}/.gnupg/gpg.conf"
+else
+      echo 'keyserver hkps://hkps.pool.sks-keyservers.net' >> "/home/${ADD_USERNAME}/.gnupg/gpg.conf"
+fi
+
+{ echo 'keyserver-options auto-key-retrieve';
+  echo '';
+  echo '# default preferences';
+  echo 'personal-digest-preferences SHA256';
+  echo 'cert-digest-algo SHA256';
+  echo 'default-preference-list SHA512 SHA384 SHA256 SHA224 AES256 AES192 AES CAST5 ZLIB BZIP2 ZIP Uncompressed'; } >> "/home/$ADD_USERNAME/.gnupg/gpg.conf"
+
+chown -R "${ADD_USERNAME}":"${ADD_USERNAME}" "/home/${ADD_USERNAME}/.gnupg"
+chmod 700 "/home/${ADD_USERNAME}/.gnupg"
+chmod 600 "/home/${ADD_USERNAME}/.gnupg/"*
+
+# Generate a GPG key
+{ echo 'Key-Type: eddsa';
+  echo 'Key-Curve: Ed25519';
+  echo 'Key-Usage: sign';
+  echo 'Subkey-Type: ecdh';
+  echo 'Subkey-Curve: Curve25519';
+  echo 'Preferences: SHA512 SHA384 SHA256 SHA224 CAMELLIA256 TWOFISH AES256 CAMELLIA192 AES192 Uncompressed ZIP ZLIB BZIP2';
+  echo 'Subkey-Usage: encrypt';
+  echo "Name-Real:  ${ADD_USERNAME}";
+  echo "Name-Email: ${ADD_USERNAME}@${HOSTNAME}";
+  echo 'Expire-Date: 0';
+  echo "Passphrase: ${NEW_USER_PASSWORD}";
+  echo '%commit';
+  echo '%echo New user gpg key generated'; } > "/home/${ADD_USERNAME}/gpg-genkey.conf"
+chown "${ADD_USERNAME}":"${ADD_USERNAME}" "/home/${ADD_USERNAME}/gpg-genkey.conf"
+su -m root -c "gpg --homedir /home/${ADD_USERNAME}/.gnupg --batch --full-gen-key /home/${ADD_USERNAME}/gpg-genkey.conf" - "${ADD_USERNAME}"
+chown -R "${ADD_USERNAME}":"${ADD_USERNAME}" "/home/${ADD_USERNAME}/.gnupg"
+rm "/home/${ADD_USERNAME}/gpg-genkey.conf"
+MY_GPG_PUBLIC_KEY_ID=$(gpg_pubkey_from_email "${ADD_USERNAME}" "${ADD_USERNAME}@${HOSTNAME}")
+echo "New user GPG key Id ${MY_GPG_PUBLIC_KEY_ID}"
+MY_GPG_PUBLIC_KEY="/home/${ADD_USERNAME}/public_key.gpg"
+su -m root -c "gpg --armor --export ${MY_GPG_PUBLIC_KEY_ID} > ${MY_GPG_PUBLIC_KEY}" - "${ADD_USERNAME}"
+
+if [ ! -f "${MY_GPG_PUBLIC_KEY}" ]; then
+    echo "GPG public key was not generated for ${ADD_USERNAME}@${HOSTNAME} Key Id: ${MY_GPG_PUBLIC_KEY_ID}"
+    userdel -r "${ADD_USERNAME}"
+    exit 7
+fi
+
+gpg_agent_setup "${ADD_USERNAME}"
+
+if [ -f "/home/${ADD_USERNAME}/.muttrc" ]; then
+    # encrypt outgoing mail to the "sent" folder
+    if ! grep -q "pgp_encrypt_only_command" "/home/${ADD_USERNAME}/.muttrc"; then
+        { echo '';
+          echo $'# Encrypt items in the Sent folder';
+          echo "set pgp_encrypt_only_command=\"/usr/lib/mutt/pgpewrap gpg --batch --quiet --no-verbose --output - --encrypt --textmode --armor --always-trust --encrypt-to $MY_GPG_PUBLIC_KEY_ID -- -r %r -- %f\""; } >> "/home/${ADD_USERNAME}/.muttrc"
+    else
+        sed -i "s|set pgp_encrypt_only_command.*|set pgp_encrypt_only_command=\"/usr/lib/mutt/pgpewrap gpg --batch --quiet --no-verbose --output - --encrypt --textmode --armor --always-trust --encrypt-to $MY_GPG_PUBLIC_KEY_ID -- -r %r -- %f\"|g" "/home/${ADD_USERNAME}/.muttrc"
+    fi
+
+    if ! grep -q "pgp_encrypt_sign_command" "/home/${ADD_USERNAME}/.muttrc"; then
+        echo "set pgp_encrypt_sign_command=\"/usr/lib/mutt/pgpewrap gpg %?p?--passphrase-fd 0? --batch --quiet --no-verbose --textmode --output - --encrypt --sign %?a?-u %a? --armor --always-trust --encrypt-to $MY_GPG_PUBLIC_KEY_ID -- -r %r -- %f\"" >> "/home/${ADD_USERNAME}/.muttrc"
+    else
+        sed -i "s|set pgp_encrypt_sign_command.*|set pgp_encrypt_sign_command=\"/usr/lib/mutt/pgpewrap gpg %?p?--passphrase-fd 0? --batch --quiet --no-verbose --textmode --output - --encrypt --sign %?a?-u %a? --armor --always-trust --encrypt-to $MY_GPG_PUBLIC_KEY_ID -- -r %r -- %f\"|g" "/home/${ADD_USERNAME}/.muttrc"
+    fi
+fi
+
+chown "${ADD_USERNAME}":"${ADD_USERNAME}" "${MY_GPG_PUBLIC_KEY}"
+
+echo $'Detecting installed apps...'
+detect_apps
+get_apps_installed_names
+# shellcheck disable=SC2068
+for app_name in ${APPS_INSTALLED_NAMES[@]}
+do
+    if [[ $(function_exists "add_user_${app_name}") == "1" ]]; then
+        echo $"Adding user to ${app_name}"
+        app_load_variables "${app_name}"
+        retval=$("add_user_${app_name}" "${ADD_USERNAME}" "${NEW_USER_PASSWORD}")
+        retval_last_value=$(echo "$retval" | tail -n 1)
+        if [[ $retval_last_value != '0' ]]; then
+            echo $"Failed with error code ${retval_last_value}"
+            "${PROJECT_NAME}-rmuser" "${ADD_USERNAME}" --force
+            exit 67
+        fi
+        if ! grep -q "${app_name}_${ADD_USERNAME}" "${APP_USERS_FILE}"; then
+            echo "${app_name}_${ADD_USERNAME}" >> "${APP_USERS_FILE}"
+        fi
+    fi
+done
+
+if [ -f /etc/nginx/.htpasswd ]; then
+    if ! grep -q "${ADD_USERNAME}:" /etc/nginx/.htpasswd; then
+        echo "${NEW_USER_PASSWORD}" | htpasswd -i -s /etc/nginx/.htpasswd "${ADD_USERNAME}"
+    fi
+fi
+
+# add user menu on ssh login
+if ! grep -q 'controluser' "/home/${ADD_USERNAME}/.bashrc"; then
+    echo 'export PS1="\W \$"' >> "/home/${ADD_USERNAME}/.bashrc"
+    echo 'controluser' >> "/home/${ADD_USERNAME}/.bashrc"
+fi
+
+# fix some gpg strangeness when searching for keys
+printf '%%Assuan%%\nsocket=/dev/shm/S.dirmngr\n' > "/home/${ADD_USERNAME}/.gnupg/S.dirmngr"
+if [ -d "/home/${ADD_USERNAME}/.gnupg/crls.d" ]; then
+    chmod +x "/home/${ADD_USERNAME}/.gnupg/crls.d"
+fi
+
+"${PROJECT_NAME}-pass" -u "${ADD_USERNAME}" -a login -p "${NEW_USER_PASSWORD}"
+
+gpg_agent_enable "${ADD_USERNAME}"
+
+echo "Updating web admin for ${ADD_USERNAME}"
+web_admin_create_users
+
+# create qrcode for the user's public key
+local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+if [ -d "$webadmin_install_dir" ]; then
+    #pubkey_qrcode="$webadmin_install_dir/images/userprofile_${ADD_USERNAME}.png"
+    #su -c "gpg --armor --export \"$MY_GPG_PUBLIC_KEY_ID\"" - "$ADD_USERNAME" | qrencode -t PNG -o "$pubkey_qrcode"
+
+    xmpp_qrcode="$webadmin_install_dir/images/userprofile_${ADD_USERNAME}_xmpp.png"
+    if [ ! -f /usr/local/bin/myqr ]; then
+        echo -n "${ADD_USERNAME}@${HOSTNAME}" | qrencode -t PNG -o "$xmpp_qrcode"
+    else
+        myqr "${ADD_USERNAME}@${HOSTNAME}" -p /root/libreserver/img/android-app/xmpp.png -c -v 8 -n "$xmpp_qrcode"
+    fi
+fi
+
+echo "Notifying"
+${PROJECT_NAME}-notification -m $"A new user was added: $ADD_USERNAME $(date)" -s $"[${PROJECT_NAME}] New user added"
+
+# send an initial email. This creates the INBOX within webmail.
+translated_first_subject=$(web_admin_translate_text "Welcome to ${PROJECT_NAME}")
+translated_first_message=$(web_admin_translate_text "This is your new email account")
+echo "$translated_first_message" | mail -s "$translated_first_subject" "${ADD_USERNAME}@${HOSTNAME}"
+
+clear
+
+echo $"New user $ADD_USERNAME was created"
+#echo $"Password: $NEW_USER_PASSWORD"
+echo ''
+echo $"They can download their GPG keys with:"
+echo ''
+echo "    scp -P $SSH_PORT -r $ADD_USERNAME@$HOSTNAME:/home/$ADD_USERNAME/.gnupg ~/"
+echo ''
+echo $"They should also run ${PROJECT_NAME}-client on their system to ensure"
+echo $'the best security.'
+
+exit 0

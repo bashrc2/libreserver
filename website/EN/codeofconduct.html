@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2021-04-15 Thu 15:17 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LibreServer</title>
+<meta name="generator" content="Org mode" />
+<meta name="author" content="Bob Mottram" />
+<meta name="description" content="Code of Conduct for the LibreServer project"
+ />
+<meta name="keywords" content="libreserver, code of conduct" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  /* Languages per Org manual */
+  pre.src-asymptote:before { content: 'Asymptote'; }
+  pre.src-awk:before { content: 'Awk'; }
+  pre.src-C:before { content: 'C'; }
+  /* pre.src-C++ doesn't work in CSS */
+  pre.src-clojure:before { content: 'Clojure'; }
+  pre.src-css:before { content: 'CSS'; }
+  pre.src-D:before { content: 'D'; }
+  pre.src-ditaa:before { content: 'ditaa'; }
+  pre.src-dot:before { content: 'Graphviz'; }
+  pre.src-calc:before { content: 'Emacs Calc'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-fortran:before { content: 'Fortran'; }
+  pre.src-gnuplot:before { content: 'gnuplot'; }
+  pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-hledger:before { content: 'hledger'; }
+  pre.src-java:before { content: 'Java'; }
+  pre.src-js:before { content: 'Javascript'; }
+  pre.src-latex:before { content: 'LaTeX'; }
+  pre.src-ledger:before { content: 'Ledger'; }
+  pre.src-lisp:before { content: 'Lisp'; }
+  pre.src-lilypond:before { content: 'Lilypond'; }
+  pre.src-lua:before { content: 'Lua'; }
+  pre.src-matlab:before { content: 'MATLAB'; }
+  pre.src-mscgen:before { content: 'Mscgen'; }
+  pre.src-ocaml:before { content: 'Objective Caml'; }
+  pre.src-octave:before { content: 'Octave'; }
+  pre.src-org:before { content: 'Org mode'; }
+  pre.src-oz:before { content: 'OZ'; }
+  pre.src-plantuml:before { content: 'Plantuml'; }
+  pre.src-processing:before { content: 'Processing.js'; }
+  pre.src-python:before { content: 'Python'; }
+  pre.src-R:before { content: 'R'; }
+  pre.src-ruby:before { content: 'Ruby'; }
+  pre.src-sass:before { content: 'Sass'; }
+  pre.src-scheme:before { content: 'Scheme'; }
+  pre.src-screen:before { content: 'Gnu Screen'; }
+  pre.src-sed:before { content: 'Sed'; }
+  pre.src-sh:before { content: 'shell'; }
+  pre.src-sql:before { content: 'SQL'; }
+  pre.src-sqlite:before { content: 'SQLite'; }
+  /* additional languages in org.el's org-babel-load-languages alist */
+  pre.src-forth:before { content: 'Forth'; }
+  pre.src-io:before { content: 'IO'; }
+  pre.src-J:before { content: 'J'; }
+  pre.src-makefile:before { content: 'Makefile'; }
+  pre.src-maxima:before { content: 'Maxima'; }
+  pre.src-perl:before { content: 'Perl'; }
+  pre.src-picolisp:before { content: 'Pico Lisp'; }
+  pre.src-scala:before { content: 'Scala'; }
+  pre.src-shell:before { content: 'Shell Script'; }
+  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
+  /* additional language identifiers per "defun org-babel-execute"
+       in ob-*.el */
+  pre.src-cpp:before  { content: 'C++'; }
+  pre.src-abc:before  { content: 'ABC'; }
+  pre.src-coq:before  { content: 'Coq'; }
+  pre.src-groovy:before  { content: 'Groovy'; }
+  /* additional language identifiers from org-babel-shell-names in
+     ob-shell.el: ob-shell is the only babel language using a lambda to put
+     the execution function name together. */
+  pre.src-bash:before  { content: 'bash'; }
+  pre.src-csh:before  { content: 'csh'; }
+  pre.src-ash:before  { content: 'ash'; }
+  pre.src-dash:before  { content: 'dash'; }
+  pre.src-ksh:before  { content: 'ksh'; }
+  pre.src-mksh:before  { content: 'mksh'; }
+  pre.src-posh:before  { content: 'posh'; }
+  /* Additional Emacs modes also supported by the LaTeX listings package */
+  pre.src-ada:before { content: 'Ada'; }
+  pre.src-asm:before { content: 'Assembler'; }
+  pre.src-caml:before { content: 'Caml'; }
+  pre.src-delphi:before { content: 'Delphi'; }
+  pre.src-html:before { content: 'HTML'; }
+  pre.src-idl:before { content: 'IDL'; }
+  pre.src-mercury:before { content: 'Mercury'; }
+  pre.src-metapost:before { content: 'MetaPost'; }
+  pre.src-modula-2:before { content: 'Modula-2'; }
+  pre.src-pascal:before { content: 'Pascal'; }
+  pre.src-ps:before { content: 'PostScript'; }
+  pre.src-prolog:before { content: 'Prolog'; }
+  pre.src-simula:before { content: 'Simula'; }
+  pre.src-tcl:before { content: 'tcl'; }
+  pre.src-tex:before { content: 'TeX'; }
+  pre.src-plain-tex:before { content: 'Plain TeX'; }
+  pre.src-verilog:before { content: 'Verilog'; }
+  pre.src-vhdl:before { content: 'VHDL'; }
+  pre.src-xml:before { content: 'XML'; }
+  pre.src-nxml:before { content: 'XML'; }
+  /* add a generic configuration mode; LaTeX export needs an additional
+     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
+  pre.src-conf:before { content: 'Configuration File'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .equation-container {
+    display: table;
+    text-align: center;
+    width: 100%;
+  }
+  .equation {
+    vertical-align: middle;
+  }
+  .equation-label {
+    display: table-cell;
+    text-align: right;
+    vertical-align: middle;
+  }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  .org-svg { width: 90%; }
+  /*]]>*/-->
+</style>
+<link rel="stylesheet" type="text/css" href="libreserver.css" />
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2019 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">LibreServer</h1>
+
+<div class="figure">
+<p><img src="images/logo.png" alt="logo.png" width="80%" height="10%" align="center" />
+</p>
+</div>
+
+<div id="outline-container-orgd512d6e" class="outline-2">
+<h2 id="orgd512d6e">Code of Conduct</h2>
+</div>
+
+<div id="outline-container-org6e77741" class="outline-2">
+<h2 id="org6e77741">Be respectful</h2>
+<div class="outline-text-2" id="text-org6e77741">
+<p>
+In any Free Software project with more than one participant inevitably there may be people with whom you may disagree, or find it difficult to cooperate. Accept that, but even so, remain respectful. Disagreement is no excuse for poor behaviour or personal attacks, and a community in which people feel threatened is not a healthy community.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org5222b71" class="outline-2">
+<h2 id="org5222b71">Assume good faith</h2>
+<div class="outline-text-2" id="text-org5222b71">
+<p>
+LibreServer Contributors have many ways of reaching our common goal of providing freedom respecting internet or mesh systems which may differ from your ways. Assume that other people are working towards this goal.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org7580e86" class="outline-2">
+<h2 id="org7580e86">Be collaborative</h2>
+<div class="outline-text-2" id="text-org7580e86">
+<p>
+LibreServer is a moderately complex project, though nothing big and professional like GNU. It's good to ask for help when you need it. Similarly, offers for help should be seen in the context of our shared goal of improving the system.
+</p>
+
+<p>
+When you make something for the benefit of the project, be willing to explain to others how it works, so that they can build on your work to make it even better.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgdaedc8b" class="outline-2">
+<h2 id="orgdaedc8b">Try to be concise</h2>
+<div class="outline-text-2" id="text-orgdaedc8b">
+<p>
+If you're submitting documentation then keep in mind that what you write once could be read by many other people. To avoid TL;DR keep it as short and concise as possible. This will also reduce the amount of translations effort needed.
+</p>
+
+<p>
+If you're discussing an issue or bug, try to stay on topic, especially in discussions that are already fairly large.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org95086dc" class="outline-2">
+<h2 id="org95086dc">Public discussions</h2>
+<div class="outline-text-2" id="text-org95086dc">
+<p>
+For public discussions about the project use the Matrix room <b>#libreserver:matrix.libreserver.net</b> or the XMPP support conference at <b>support@chat.libreserver.net</b>.
+</p>
+</div>
+</div>
+<div id="outline-container-org0dda163" class="outline-2">
+<h2 id="org0dda163">No spamming</h2>
+<div class="outline-text-2" id="text-org0dda163">
+<p>
+Posting of adverts or other off-topic content in Matrix/XMPP or other public systems used by the project will be considered a violation of the code of conduct.
+</p>
+</div>
+</div>
+<div id="outline-container-org7202c19" class="outline-2">
+<h2 id="org7202c19">Respect others’ privacy</h2>
+<div class="outline-text-2" id="text-org7202c19">
+<p>
+No stalking, unwanted personal attention, or unwelcome revealing or speculating about personal details of others.
+</p>
+
+<p>
+In cases of sincere, good-faith curiosity about someone’s experience or identity, ask politely in a manner such that they will feel free to decline the request.
+</p>
+</div>
+</div>
+<div id="outline-container-org61b0aba" class="outline-2">
+<h2 id="org61b0aba">No hostile communication</h2>
+<div class="outline-text-2" id="text-org61b0aba">
+<p>
+No insults, harassment (sexual or otherwise), condescension, ad hominem, threats, or other intimidation. Claims that such communications were intended as "ironic" or humerous will also be considered a code of conduct violation.
+</p>
+
+<p>
+Condescension means treating others as inferior. Subtle condescension still violates the Code of Conduct even if not blatantly demeaning.
+</p>
+
+<p>
+No stereotyping of or promoting prejudice or discrimination against particular groups or classes of people, including sexism, racism, homophobia, transphobia, age discrimination or discrimination based upon nationality.
+</p>
+
+<p>
+In cases where criticism of ideology or culture remains on-topic, respectfully discuss the ideas.
+</p>
+</div>
+</div>
+<div id="outline-container-orgd082010" class="outline-2">
+<h2 id="orgd082010">No proprietary software</h2>
+<div class="outline-text-2" id="text-orgd082010">
+<p>
+This is a Free Software project and there is no intention to support or endorse any software which is proprietary, including that which may be running on client devices. For example, supporting iThings or Windows users is out of scope of the project. It's possible that LibreServer may work with those systems, but if there are problems it's not within the scope of this project to resolve compatibility issues with proprietary browsers or platforms.
+</p>
+</div>
+</div>
+<div id="outline-container-orgda131b3" class="outline-2">
+<h2 id="orgda131b3">Raising concerns</h2>
+<div class="outline-text-2" id="text-orgda131b3">
+<p>
+If you're raising concerns about something or someone, there must be demonstrable evidence that the thing exists or that the event occurred. That means having something to show or link to. Concerns not based upon observable evidence will be considered spurious.
+</p>
+
+<p>
+This is not a big project and so there is no division of labor or special enforcement committee or bureaucratic process.
+</p>
+
+<p>
+If your concern is something which is suitable for public discussion then raise it in one of the chat rooms mentioned above. Be mindful to do so in a polite and considerate manner. Hostile communication towards anyone raising concerns publicly will be considered a code of conduct violation.
+</p>
+
+<p>
+Private complaints should be sent to bob@libreserver.net, preferably via XMPP/Conversations with OMEMO enabled but you can also use the same address for email correspondence. If you're using email and have GPG capability the public key <a href="./support.html">can be found here</a>. XMPP messages are likely to get the quickest response.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org3ff81d9" class="outline-2">
+<h2 id="org3ff81d9">In case of violations</h2>
+<div class="outline-text-2" id="text-org3ff81d9">
+<p>
+Violators of this code of conduct will:
+</p>
+
+<ul class="org-ul">
+<li>Be removed from the Matrix and/or XMPP chat rooms</li>
+<li>Will not have pending or future patches or pull requests merged</li>
+<li>If they have a user account on <b>code.libreserver.net</b> it will be removed</li>
+</ul>
+
+<p>
+This applies regardless of past levels of commitment or technical abilities.
+</p>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: Bob Mottram</p>
+<p class="date">Created: 2021-04-15 Thu 15:17</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

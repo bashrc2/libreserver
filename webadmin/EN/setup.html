@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Refresh" content="15" charset="utf-8">
+    <style>
+      @import url("libreserver.css");
+
+      #welcomeicon {
+          width: 20%;
+          height: auto;
+          margin-right : auto;
+          margin-left : auto;
+          min-width : 100px;
+      }
+
+      #iconpic {
+          width: 20%;
+          height: auto;
+          margin-right : auto;
+          margin-left : auto;
+          min-width : 120px;
+      }
+
+      .appurl {
+          font-size: 100%;
+      }
+
+      .welcomeheader {
+          font-size: 200%;
+          font-weight: bold;
+      }
+
+      .welcometext {
+          font-size: 90%;
+      }
+
+      .logintext {
+          font-size: 90%;
+          font-weight: bold;
+          color: #981737;
+      }
+
+      button {
+          border: none;
+          outline: 0;
+          display: inline-block;
+          padding: 8px;
+          color: white;
+          background-color: #000;
+          text-align: center;
+          cursor: pointer;
+          width: 100%;
+          font-size: 18px;
+      }
+
+      button:hover, a:hover {
+          opacity: 0.7;
+      }
+
+      .chip {
+          display: inline-block;
+          padding: 0 25px;
+          height: 50px;
+          font-size: 70%;
+          line-height: 50px;
+          border-radius: 25px;
+          background-color: #f1f1f1;
+      }
+
+      .chip img {
+          float: left;
+          margin: 0 10px 0 -25px;
+          height: 50px;
+          width: 50px;
+          border-radius: 50%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="header">
+        <img id="headerpic" class="img-responsive" src="images/logo.png" alt="LibreServer"><br>
+        <br>
+        <img id="welcomeicon" class="img-responsive" src="images/setup.png" alt="Initial setup icon">
+        <p class="welcometext" translate="yes">Thankyou for choosing the LibreServer home internet appliance</p>
+
+        <p class="welcometext" translate="yes">Please write down or save these credentials</p>
+
+        <p class="logintext"><span translate="yes">Username:</span>
+          admin<br>
+          <span translate="yes">Password:</span><br>
+          WEBADMINPASSWORD
+        </p>
+
+        <p class="welcometext" translate="yes"><b>Remove any backup drives now</b></p>
+
+        <form action="setup.php" method="post">
+          <input type="hidden" name="my_username" value="admin">
+          <input type="submit" name="setup" translate="yes" value="Continue">
+        </form>
+
+        <br>
+      </div>
+    </div>
+  </body>
+</html>

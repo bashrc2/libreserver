@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+  <meta charset="utf-8">
+  <style>
+    @import url("libreserver.css");
+
+    * {
+        box-sizing: border-box;
+    }
+
+    .subheadertext {
+        margin-left : 10%;
+        text-align: left;
+        font-size: 110%;
+        font-weight: bold;
+    }
+
+    .subheaderports {
+        margin-left : 10%;
+        text-align: left;
+        font-size: 110%;
+        font-weight: bold;
+    }
+
+    .helptext {
+        width: 80%;
+        text-align: left;
+        font-size: 100%;
+        margin-left : 10%;
+    }
+
+    .codetext {
+        font-family: Courier;
+        width: 80%;
+        text-align: left;
+        font-size: 100%;
+        margin-left : 10%;
+    }
+
+    .portstext {
+        width: 80%;
+        text-align: left;
+        font-size: 100%;
+        margin-left : 10%;
+    }
+
+    .row {
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+        padding: 0 4px;
+    }
+
+    .column {
+        -ms-flex: 25%;
+        flex: 15%;
+        max-width: 25%;
+        padding: 0 4px;
+    }
+
+    .column img {
+        margin-top: 8px;
+        vertical-align: middle;
+    }
+
+    @media screen and (max-width: 800px) {
+        .column {
+            -ms-flex: 50%;
+            flex: 50%;
+            max-width: 50%;
+        }
+    }
+
+    @media screen and (max-width: 200px) {
+        .column {
+            -ms-flex: 100%;
+            flex: 100%;
+            max-width: 100%;
+        }
+    }
+  </style>
+  <body>
+
+    <div class="header">
+      <a href="dynamicdns.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
+    </div>
+
+    <p class="headertext" translate="yes">Dynamic DNS</p>
+
+    <p class="subheadertext" translate="yes">Authentication Token</p>
+
+    <p class="helptext" translate="yes">This is only needed if you're using FreeDNS. Otherwise you can leave it blank.</p>
+
+    <p class="subheadertext" translate="no">FreeDNS</p>
+
+    <p class="helptext" translate="yes">On the site where you obtained your domain name set up some custom nameservers as follows:</p>
+
+    <p class="codetext" translate="no">
+      NS1.AFRAID.ORG<br>
+      NS2.AFRAID.ORG<br>
+      NS3.AFRAID.ORG<br>
+      NS4.AFRAID.ORG
+    <p>
+
+    <p class="helptext" translate="yes">On the FreeDNS site go to the "Dynamic DNS" section and make sure that "link updates of the same IP together" is set to ON.</p>
+
+    <p class="helptext" translate="yes">For your main domain name select "quick cron example" and then your authentication token is the random string on the last line between the ? and = characters.</p>
+
+    <p class="helptext" translate="yes">Your current IP address is shown at the top of the Dynamic DNS screen of the LibreServer user interface. You can use the "Mass Mod" feature at the top of the "Subdomains" part of the FreeDNS site to set all of your subdomains to that IP address.</p>
+
+    <p class="helptext" translate="yes">Select the MX entry for your main domain and change the destination to 10:mydomainname rather than 10:mail.mydomainname.</p>
+
+    <p class="helptext" translate="yes">Enter your FreeDNS login details and the authentication token on the Dynamic DNS screen of the LibreServer user interface.</p>
+
+  </body>
+</html>

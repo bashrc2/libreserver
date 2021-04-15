@@ -1,0 +1,117 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# Random number generation functions
+#
+# License
+# =======
+#
+# Copyright (C) 2014-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# The type of hardware random number generator being used
+# This can be empty, "beaglebone" or "onerng"
+HWRNG_TYPE=
+
+# Download location for OneRNG driver
+ONERNG_PACKAGE="onerng_3.4-1_all.deb"
+ONERNG_PACKAGE_DOWNLOAD="https://github.com/OneRNG/onerng.github.io/blob/master/sw/$ONERNG_PACKAGE?raw=true"
+# Hash for OneRNG driver
+ONERNG_PACKAGE_HASH='78f1c2f52ae573e3b398a695ece7ab9f41868252657ea269f0d5cf0bd4f2eb59'
+
+# device name for OneRNG
+ONERNG_DEVICE='ttyACM0'
+
+function check_hwrng {
+    if [[ $HWRNG_TYPE == "beaglebone" ]]; then
+        # If hardware random number generation was enabled then make sure that the device exists.
+        # if /dev/hwrng is not found then any subsequent cryptographic key generation would
+        # suffer from low entropy and might be insecure
+        if [ ! -e /dev/hwrng ]; then
+            ls /dev/hw*
+            echo $'The hardware random number generator is enabled but could not be detected on'
+            echo $'/dev/hwrng.  There may be a problem with the installation or the Beaglebone hardware.'
+            exit 75
+        fi
+    fi
+
+    # If a OneRNG device was installed then verify its firmware
+    #check_onerng_verification
+}
+
+function check_onerng_verification {
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+    if [[ $HWRNG_TYPE != "onerng" ]]; then
+        return
+    fi
+    echo $'Checking OneRNG firmware verification'
+    last_onerng_validation=$(grep "OneRNG: firmware verification" /var/log/syslog.1 | awk '/./{line=$0} END{print line}')
+    if [[ $last_onerng_validation != *"passed OK"* ]]; then
+        last_onerng_validation=$(grep "OneRNG: firmware verification" /var/log/syslog | awk '/./{line=$0} END{print line}')
+        if [[ $last_onerng_validation != *"passed OK"* ]]; then
+            echo "$last_onerng_validation"
+            echo $'OneRNG firmware verification failed'
+            exit 73
+        fi
+    fi
+    echo $'OneRNG firmware verification passed'
+    # if haveged was previously installed then remove it
+    $REMOVE_PACKAGES haveged
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function random_number_generator {
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+    if [[ $INSTALLED_WITHIN_DOCKER == "yes" ]]; then
+        # it is assumed that docker uses the random number
+        # generator of the host system
+        return
+    fi
+
+    # if the hrng type has not been set but /dev/hwrng is detected
+    if [[ $HWRNG_TYPE != "beaglebone" ]]; then
+        if [ -e /dev/hwrng ]; then
+            HWRNG_TYPE="beaglebone"
+        fi
+    fi
+
+    case $HWRNG_TYPE in
+        beaglebone)
+            INSTALL_PACKAGES rng-tools
+            if [ -f /etc/default/rng-tools ]; then
+                sed -i 's|#HRNGDEVICE=|HRNGDEVICE=|g' /etc/default/rng-tools
+                sed -i 's|#HRNGDEVICE=.*|HRNGDEVICE=/dev/hwrng|g' /etc/default/rng-tools
+            fi
+            ;;
+        *)
+            # With some VMs, the hardware cycles counter is emulated and deterministic,
+            # and thus predictible, so havege should not be used
+            if [[ "$ARCHITECTURE" != "qemu"* ]]; then
+                INSTALL_PACKAGES haveged
+            fi
+            ;;
+    esac
+
+    mark_completed "${FUNCNAME[0]}"
+}
+
+# NOTE: deliberately no exit 0
