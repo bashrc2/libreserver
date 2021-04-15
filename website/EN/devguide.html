@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2021-04-15 Thu 15:17 -->
+<!-- 2021-04-15 Thu 21:48 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>LibreServer</title>
@@ -248,14 +248,9 @@ for the JavaScript code in this tag.
 <div id="content">
 <h1 class="title">LibreServer</h1>
 
-<div class="figure">
-<p><img src="images/logo.png" alt="logo.png" width="80%" height="10%" align="center" />
-</p>
-</div>
-
-<div id="outline-container-orgd6c31cc" class="outline-2">
-<h2 id="orgd6c31cc">Developers Guide</h2>
-<div class="outline-text-2" id="text-orgd6c31cc">
+<div id="outline-container-org0721293" class="outline-2">
+<h2 id="org0721293">Developers Guide</h2>
+<div class="outline-text-2" id="text-org0721293">
 <div class="org-center">
 <table border="-1" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
@@ -265,39 +260,39 @@ for the JavaScript code in this tag.
 </colgroup>
 <tbody>
 <tr>
-<td class="org-left"><a href="#org00efad1">Introduction</a></td>
+<td class="org-left"><a href="#orgd077f7a">Introduction</a></td>
 </tr>
 
 <tr>
-<td class="org-left"><a href="#org0b8b0aa">Source code</a></td>
+<td class="org-left"><a href="#orgfa470c3">Source code</a></td>
 </tr>
 
 <tr>
-<td class="org-left"><a href="#org3180b33">Creating images</a></td>
+<td class="org-left"><a href="#org9a1e29a">Creating images</a></td>
 </tr>
 
 <tr>
-<td class="org-left"><a href="#org48c8577">Adding extra apps</a></td>
+<td class="org-left"><a href="#org97b585a">Adding extra apps</a></td>
 </tr>
 
 <tr>
-<td class="org-left"><a href="#org4c4a368">Submitting patches or pull requests</a></td>
+<td class="org-left"><a href="#org8fb4378">Submitting patches or pull requests</a></td>
 </tr>
 
 <tr>
-<td class="org-left"><a href="#org6fe9e5d">Architecture</a></td>
+<td class="org-left"><a href="#org7d37c87">Architecture</a></td>
 </tr>
 
 <tr>
-<td class="org-left"><a href="#org5b5b1ca">Doing translations</a></td>
+<td class="org-left"><a href="#org2303c8f">Doing translations</a></td>
 </tr>
 
 <tr>
-<td class="org-left"><a href="#org405797f">Icons</a></td>
+<td class="org-left"><a href="#orga24349a">Icons</a></td>
 </tr>
 
 <tr>
-<td class="org-left"><a href="#org69fca97">Ideas for improvements</a></td>
+<td class="org-left"><a href="#org7475ace">Ideas for improvements</a></td>
 </tr>
 </tbody>
 </table>
@@ -305,26 +300,26 @@ for the JavaScript code in this tag.
 </div>
 </div>
 
-<div id="outline-container-org00efad1" class="outline-2">
-<h2 id="org00efad1">Introduction</h2>
-<div class="outline-text-2" id="text-org00efad1">
+<div id="outline-container-orgd077f7a" class="outline-2">
+<h2 id="orgd077f7a">Introduction</h2>
+<div class="outline-text-2" id="text-orgd077f7a">
 <p>
 LibreServer consists almost entirely of bash scripts, with some html, css and php for the web interface. There are many bash scripts, but they're not very complicated. If you're familiar with the GNU/Linux commandline and can hack a bash script then you can probably add a new app or fix a bug in the system. There are no trendy development frameworks to learn or to get in your way. You might also want to consult the <a href="./codeofconduct.html">Code of Conduct</a> for guidance upon the overall <i>esprit de corps</i>, and there is a Matrix room at <b>#libreserver:matrix.libreserver.net</b> and an XMPP multi-user chat at <b>support@chat.libreserver.net</b>
 </p>
 </div>
 </div>
-<div id="outline-container-org0b8b0aa" class="outline-2">
-<h2 id="org0b8b0aa">Source code</h2>
-<div class="outline-text-2" id="text-org0b8b0aa">
+<div id="outline-container-orgfa470c3" class="outline-2">
+<h2 id="orgfa470c3">Source code</h2>
+<div class="outline-text-2" id="text-orgfa470c3">
 <ul class="org-ul">
 <li><a href="https://code.libreserver.org/bashrc/libreserver">Repository</a> also mirrored <a href="https://gitlab.com/bashrc2/libreserver">here</a> and <a href="https://codeberg.org/bashrc/libreserver">here</a></li>
 <li><a href="https://libreserver.org/downloads/source.tar.gz">Compressed archive</a></li>
 </ul>
 </div>
 </div>
-<div id="outline-container-org3180b33" class="outline-2">
-<h2 id="org3180b33">Creating images</h2>
-<div class="outline-text-2" id="text-org3180b33">
+<div id="outline-container-org9a1e29a" class="outline-2">
+<h2 id="org9a1e29a">Creating images</h2>
+<div class="outline-text-2" id="text-org9a1e29a">
 <p>
 To build images you will need the <b>libreserver-maker</b> tool. It can be installed with:
 </p>
@@ -361,9 +356,9 @@ To copy it to a drive (eg. microSD or USB):
 </div>
 </div>
 </div>
-<div id="outline-container-org48c8577" class="outline-2">
-<h2 id="org48c8577">Adding extra apps</h2>
-<div class="outline-text-2" id="text-org48c8577">
+<div id="outline-container-org97b585a" class="outline-2">
+<h2 id="org97b585a">Adding extra apps</h2>
+<div class="outline-text-2" id="text-org97b585a">
 <p>
 Suppose you have some internet application which you want to add to the system. To do this you need to create an app script which tells the system how to install/remove and also backup/restore. The script should be designed to work with the current stable version of Debian.
 </p>
@@ -480,17 +475,17 @@ Submit your working app via one of the methods described below.
 </div>
 </div>
 
-<div id="outline-container-org4c4a368" class="outline-2">
-<h2 id="org4c4a368">Submitting patches or pull requests</h2>
-<div class="outline-text-2" id="text-org4c4a368">
+<div id="outline-container-org8fb4378" class="outline-2">
+<h2 id="org8fb4378">Submitting patches or pull requests</h2>
+<div class="outline-text-2" id="text-org8fb4378">
 <p>
 If you've made changes and want to submit them back to the LibreServer project then there are a couple of ways to do this. This project aims not to have prolonged formal debates over patch correctness and they will typically be merged as soon as possible, with any necessary correcting commits being made subsequently.
 </p>
 </div>
 
-<div id="outline-container-org21bfda1" class="outline-3">
-<h3 id="org21bfda1">Make a patch for a single small change</h3>
-<div class="outline-text-3" id="text-org21bfda1">
+<div id="outline-container-orga863e3f" class="outline-3">
+<h3 id="orga863e3f">Make a patch for a single small change</h3>
+<div class="outline-text-3" id="text-orga863e3f">
 <p>
 Commit your changes to your local repo.
 </p>
@@ -515,9 +510,9 @@ HEAD can be replaced by the specific commit hash if needed. Copy and paste the r
 </div>
 </div>
 
-<div id="outline-container-org928e8bb" class="outline-3">
-<h3 id="org928e8bb">Submitting multiple changes over time</h3>
-<div class="outline-text-3" id="text-org928e8bb">
+<div id="outline-container-orgee86f56" class="outline-3">
+<h3 id="orgee86f56">Submitting multiple changes over time</h3>
+<div class="outline-text-3" id="text-orgee86f56">
 <p>
 If you plan to make many changes over an extended period of time then send an email to <b>bob@libreserver.net</b> or a Matrix message to <b>@bob:matrix.libreserver.net</b> and ask for an account on code.libreserver.net. You'll then be able to fork and make pull requests.
 </p>
@@ -525,13 +520,13 @@ If you plan to make many changes over an extended period of time then send an em
 </div>
 </div>
 
-<div id="outline-container-org6fe9e5d" class="outline-2">
-<h2 id="org6fe9e5d">Architecture</h2>
-<div class="outline-text-2" id="text-org6fe9e5d">
+<div id="outline-container-org7d37c87" class="outline-2">
+<h2 id="org7d37c87">Architecture</h2>
+<div class="outline-text-2" id="text-org7d37c87">
 </div>
-<div id="outline-container-org40d2b6b" class="outline-3">
-<h3 id="org40d2b6b">Apps</h3>
-<div class="outline-text-3" id="text-org40d2b6b">
+<div id="outline-container-orge011c17" class="outline-3">
+<h3 id="orge011c17">Apps</h3>
+<div class="outline-text-3" id="text-orge011c17">
 <p>
 Apps are scripts beginning with <b>src/libreserver-app-</b>. New scripts can be created with the template command described above. Each script contains a number of function interfaces which enable the app to be installed, removed, backed up and for logging to be turned on or off. The interfaces are:
 </p>
@@ -566,9 +561,9 @@ change_password_appname
 </p>
 </div>
 </div>
-<div id="outline-container-org7baeedc" class="outline-3">
-<h3 id="org7baeedc">Web interface</h3>
-<div class="outline-text-3" id="text-org7baeedc">
+<div id="outline-container-orgb64ca47" class="outline-3">
+<h3 id="orgb64ca47">Web interface</h3>
+<div class="outline-text-3" id="text-orgb64ca47">
 <p>
 The web interface consists of a set of html files within <b>webadmin/EN</b>. These use forms to reference some php files within <b>webadmin</b> and those generate files which are then picked up by a systemd daemon running in the background (webadmin.service) which is implemented by <b>src/libreserver-installer</b>.
 </p>
@@ -603,9 +598,9 @@ The web interface operates in a strictly sequential/synchronous mode. So if you 
 </div>
 </div>
 
-<div id="outline-container-orgf85e1b1" class="outline-3">
-<h3 id="orgf85e1b1">How translations happen</h3>
-<div class="outline-text-3" id="text-orgf85e1b1">
+<div id="outline-container-org88b0981" class="outline-3">
+<h3 id="org88b0981">How translations happen</h3>
+<div class="outline-text-3" id="text-org88b0981">
 <p>
 Translations are stored within <b>webadmin/translations</b>. When you select a language html files are copied from <b>webadmin/EN</b> and then the English strings are searched and replaced. Strings to be translated are indicated within the html files with the parameter <b>translate=</b>"<b>yes</b>".
 </p>
@@ -617,9 +612,9 @@ Doing it this way avoids having duplicated versions of the many html files for d
 </div>
 </div>
 
-<div id="outline-container-org5b5b1ca" class="outline-2">
-<h2 id="org5b5b1ca">Doing translations</h2>
-<div class="outline-text-2" id="text-org5b5b1ca">
+<div id="outline-container-org2303c8f" class="outline-2">
+<h2 id="org2303c8f">Doing translations</h2>
+<div class="outline-text-2" id="text-org2303c8f">
 <p>
 These can be added or edited within the web UI. Navigate to <a href="http://libreserver/admin">http://libreserver/admin</a> or its onion address, select <b>settings</b> then <b>language</b>. Select the language that you want to translate to then the <b>translate</b> button. In the right hand column you can then manually edit the translated strings. When you are done select the <b>update</b> button.
 </p>
@@ -639,9 +634,9 @@ If you prefer to edit the raw files within your own editor of choice they can be
 </div>
 </div>
 
-<div id="outline-container-org405797f" class="outline-2">
-<h2 id="org405797f">Icons</h2>
-<div class="outline-text-2" id="text-org405797f">
+<div id="outline-container-orga24349a" class="outline-2">
+<h2 id="orga24349a">Icons</h2>
+<div class="outline-text-2" id="text-orga24349a">
 <p>
 If you want to change the icons of the web user interface they can be found within the <b>webadmin/images</b> directory of the repo.
 </p>
@@ -652,9 +647,9 @@ Icons used for the mesh desktop can be found within <b>img</b> and <b>img/avatar
 </div>
 </div>
 
-<div id="outline-container-org69fca97" class="outline-2">
-<h2 id="org69fca97">Ideas for improvements</h2>
-<div class="outline-text-2" id="text-org69fca97">
+<div id="outline-container-org7475ace" class="outline-2">
+<h2 id="org7475ace">Ideas for improvements</h2>
+<div class="outline-text-2" id="text-org7475ace">
 <ul class="org-ul">
 <li>A lot of the translations are currently automatic. If anyone has language skills then checking that the strings all make sense would be very helpful.</li>
 <li>Expanding the CI system to include tests that individual apps install correctly. This would be really useful and probably wouldn't take much work.</li>
@@ -678,7 +673,7 @@ Icons used for the mesh desktop can be found within <b>img</b> and <b>img/avatar
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: Bob Mottram</p>
-<p class="date">Created: 2021-04-15 Thu 15:17</p>
+<p class="date">Created: 2021-04-15 Thu 21:48</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
