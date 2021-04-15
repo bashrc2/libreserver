@@ -54,7 +54,7 @@ Even with free software apps it's not difficult to get into a situation where yo
 
 If you have Syncthing installed then change the settings so that it only syncs when charging and when on wifi. Avoid any apps which might be continuously polling and preventing the device from going into sleep mode when it's not used.
 
-If you're using the Riot mobile app to access a Matrix homeserver then you can significantly improve battery performance by going to the settings and changing *Sync request timeout* to 30 seconds and *Delay between two sync requests* to 600 seconds.
+If you're using the Element mobile app to access a Matrix homeserver then you can significantly improve battery performance by going to the settings and changing *Sync request timeout* to 30 seconds and *Delay between two sync requests* to 600 seconds.
 
 It's also recommended to disable battery optimisations for Conversations and Orbot. If you don't do that then you may have trouble receiving messages or some parts of the protocol may break. That can be done by going to *Settings*, selecting *Battery* then opening the menu (top right) and selecting *Battery optimisations* then selecting *Not optimised* and *All apps*, then finally choosing Conversations and Orbot not to be optimised.
 

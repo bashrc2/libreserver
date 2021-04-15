@@ -12,7 +12,7 @@
 * Matrix
 
 #+attr_html: :width 100% :align center
-[[file:images/matrix_riotweb.jpg]]
+[[file:images/matrix_elementweb.jpg]]
 
 Matrix is a federated communications system, typically for multi-user chat, with end-to-end content security features. You can consider it to be like a modernized version of IRC chat where the crypto and access controls have been built in by default. At present Matrix is really only a creature of the clearnet and so there isn't any way to protect the metadata. Despite the talk of security the lack of metadata defenses make this really only suitable for public communications, similar to microblogging or public IRC channels.
 
@@ -32,7 +32,7 @@ Select *Add/Remove Apps* then *matrix*. You will then be asked for a domain name
 * Initial setup
 Go to the *Administrator control panel* and select *Passwords* then *matrix*. This will give you the password to initially log in to the system and you can change it later from a client app if needed.
 
-Install the *Riot* app from *F-droid* on a mobile device. You can then log in with your username and password, making sure to select a custom server and then entering your Matrix domain name for both the main server and identity server.
+Install the *Element* app from *F-droid* on a mobile device. You can then log in with your username and password, making sure to select a custom server and then entering your Matrix domain name for both the main server and identity server.
 
 Other client apps are available but are currently mostly only at the alpha stage. You can also install the [[./app_element.html][Element libreserver app]] if you need a user interface for desktops or laptops.
 
@@ -49,4 +49,4 @@ Destination: 10 0 8448 [yourmatrixsubdomain]
 You may also want to make another entry with the same settings but replacing *tcp* with *udp*.
 
 * Mobile app
-If you're using the Riot mobile app to access your Matrix homeserver then you can significantly improve battery performance by going to the *settings* and changing *Sync request timeout* to 30 seconds and *Delay between two sync requests* to 600 seconds. Also turning off *msgs in group chats* will help, since it will avoid getting a notification whenever a group chat event happens, which then wakes up the screen.
+If you're using the Element mobile app to access your Matrix homeserver then you can significantly improve battery performance by going to the *settings* and changing *Sync request timeout* to 30 seconds and *Delay between two sync requests* to 600 seconds. Also turning off *msgs in group chats* will help, since it will avoid getting a notification whenever a group chat event happens, which then wakes up the screen.
