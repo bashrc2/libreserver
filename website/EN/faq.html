@@ -1,571 +1,116 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
-<head>
-<!-- 2021-04-15 Thu 21:46 -->
-<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>LibreServer</title>
-<meta name="generator" content="Org mode" />
-<meta name="author" content="Bob Mottram" />
-<meta name="description" content="Frequently asked questions"
- />
-<meta name="keywords" content="libreserver, faq" />
-<style type="text/css">
- <!--/*--><![CDATA[/*><!--*/
-  .title  { text-align: center;
-             margin-bottom: .2em; }
-  .subtitle { text-align: center;
-              font-size: medium;
-              font-weight: bold;
-              margin-top:0; }
-  .todo   { font-family: monospace; color: red; }
-  .done   { font-family: monospace; color: green; }
-  .priority { font-family: monospace; color: orange; }
-  .tag    { background-color: #eee; font-family: monospace;
-            padding: 2px; font-size: 80%; font-weight: normal; }
-  .timestamp { color: #bebebe; }
-  .timestamp-kwd { color: #5f9ea0; }
-  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
-  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
-  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
-  .underline { text-decoration: underline; }
-  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
-  p.verse { margin-left: 3%; }
-  pre {
-    border: 1px solid #ccc;
-    box-shadow: 3px 3px 3px #eee;
-    padding: 8pt;
-    font-family: monospace;
-    overflow: auto;
-    margin: 1.2em;
-  }
-  pre.src {
-    position: relative;
-    overflow: visible;
-    padding-top: 1.2em;
-  }
-  pre.src:before {
-    display: none;
-    position: absolute;
-    background-color: white;
-    top: -10px;
-    right: 10px;
-    padding: 3px;
-    border: 1px solid black;
-  }
-  pre.src:hover:before { display: inline;}
-  /* Languages per Org manual */
-  pre.src-asymptote:before { content: 'Asymptote'; }
-  pre.src-awk:before { content: 'Awk'; }
-  pre.src-C:before { content: 'C'; }
-  /* pre.src-C++ doesn't work in CSS */
-  pre.src-clojure:before { content: 'Clojure'; }
-  pre.src-css:before { content: 'CSS'; }
-  pre.src-D:before { content: 'D'; }
-  pre.src-ditaa:before { content: 'ditaa'; }
-  pre.src-dot:before { content: 'Graphviz'; }
-  pre.src-calc:before { content: 'Emacs Calc'; }
-  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
-  pre.src-fortran:before { content: 'Fortran'; }
-  pre.src-gnuplot:before { content: 'gnuplot'; }
-  pre.src-haskell:before { content: 'Haskell'; }
-  pre.src-hledger:before { content: 'hledger'; }
-  pre.src-java:before { content: 'Java'; }
-  pre.src-js:before { content: 'Javascript'; }
-  pre.src-latex:before { content: 'LaTeX'; }
-  pre.src-ledger:before { content: 'Ledger'; }
-  pre.src-lisp:before { content: 'Lisp'; }
-  pre.src-lilypond:before { content: 'Lilypond'; }
-  pre.src-lua:before { content: 'Lua'; }
-  pre.src-matlab:before { content: 'MATLAB'; }
-  pre.src-mscgen:before { content: 'Mscgen'; }
-  pre.src-ocaml:before { content: 'Objective Caml'; }
-  pre.src-octave:before { content: 'Octave'; }
-  pre.src-org:before { content: 'Org mode'; }
-  pre.src-oz:before { content: 'OZ'; }
-  pre.src-plantuml:before { content: 'Plantuml'; }
-  pre.src-processing:before { content: 'Processing.js'; }
-  pre.src-python:before { content: 'Python'; }
-  pre.src-R:before { content: 'R'; }
-  pre.src-ruby:before { content: 'Ruby'; }
-  pre.src-sass:before { content: 'Sass'; }
-  pre.src-scheme:before { content: 'Scheme'; }
-  pre.src-screen:before { content: 'Gnu Screen'; }
-  pre.src-sed:before { content: 'Sed'; }
-  pre.src-sh:before { content: 'shell'; }
-  pre.src-sql:before { content: 'SQL'; }
-  pre.src-sqlite:before { content: 'SQLite'; }
-  /* additional languages in org.el's org-babel-load-languages alist */
-  pre.src-forth:before { content: 'Forth'; }
-  pre.src-io:before { content: 'IO'; }
-  pre.src-J:before { content: 'J'; }
-  pre.src-makefile:before { content: 'Makefile'; }
-  pre.src-maxima:before { content: 'Maxima'; }
-  pre.src-perl:before { content: 'Perl'; }
-  pre.src-picolisp:before { content: 'Pico Lisp'; }
-  pre.src-scala:before { content: 'Scala'; }
-  pre.src-shell:before { content: 'Shell Script'; }
-  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
-  /* additional language identifiers per "defun org-babel-execute"
-       in ob-*.el */
-  pre.src-cpp:before  { content: 'C++'; }
-  pre.src-abc:before  { content: 'ABC'; }
-  pre.src-coq:before  { content: 'Coq'; }
-  pre.src-groovy:before  { content: 'Groovy'; }
-  /* additional language identifiers from org-babel-shell-names in
-     ob-shell.el: ob-shell is the only babel language using a lambda to put
-     the execution function name together. */
-  pre.src-bash:before  { content: 'bash'; }
-  pre.src-csh:before  { content: 'csh'; }
-  pre.src-ash:before  { content: 'ash'; }
-  pre.src-dash:before  { content: 'dash'; }
-  pre.src-ksh:before  { content: 'ksh'; }
-  pre.src-mksh:before  { content: 'mksh'; }
-  pre.src-posh:before  { content: 'posh'; }
-  /* Additional Emacs modes also supported by the LaTeX listings package */
-  pre.src-ada:before { content: 'Ada'; }
-  pre.src-asm:before { content: 'Assembler'; }
-  pre.src-caml:before { content: 'Caml'; }
-  pre.src-delphi:before { content: 'Delphi'; }
-  pre.src-html:before { content: 'HTML'; }
-  pre.src-idl:before { content: 'IDL'; }
-  pre.src-mercury:before { content: 'Mercury'; }
-  pre.src-metapost:before { content: 'MetaPost'; }
-  pre.src-modula-2:before { content: 'Modula-2'; }
-  pre.src-pascal:before { content: 'Pascal'; }
-  pre.src-ps:before { content: 'PostScript'; }
-  pre.src-prolog:before { content: 'Prolog'; }
-  pre.src-simula:before { content: 'Simula'; }
-  pre.src-tcl:before { content: 'tcl'; }
-  pre.src-tex:before { content: 'TeX'; }
-  pre.src-plain-tex:before { content: 'Plain TeX'; }
-  pre.src-verilog:before { content: 'Verilog'; }
-  pre.src-vhdl:before { content: 'VHDL'; }
-  pre.src-xml:before { content: 'XML'; }
-  pre.src-nxml:before { content: 'XML'; }
-  /* add a generic configuration mode; LaTeX export needs an additional
-     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
-  pre.src-conf:before { content: 'Configuration File'; }
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="libreserver.css">
+    <link rel="manifest" href="manifest.json">
+    <title>libreserver</title>
+  </head>
+  <body>
+    <br>
+    <h1>LibreServer</h1>
+    <div class="subtitle">Frequently Asked Questions</div>
+    <div class="networkImage"><img src="images/internet.png"></div>
 
-  table { border-collapse:collapse; }
-  caption.t-above { caption-side: top; }
-  caption.t-bottom { caption-side: bottom; }
-  td, th { vertical-align:top;  }
-  th.org-right  { text-align: center;  }
-  th.org-left   { text-align: center;   }
-  th.org-center { text-align: center; }
-  td.org-right  { text-align: right;  }
-  td.org-left   { text-align: left;   }
-  td.org-center { text-align: center; }
-  dt { font-weight: bold; }
-  .footpara { display: inline; }
-  .footdef  { margin-bottom: 1em; }
-  .figure { padding: 1em; }
-  .figure p { text-align: center; }
-  .equation-container {
-    display: table;
-    text-align: center;
-    width: 100%;
-  }
-  .equation {
-    vertical-align: middle;
-  }
-  .equation-label {
-    display: table-cell;
-    text-align: right;
-    vertical-align: middle;
-  }
-  .inlinetask {
-    padding: 10px;
-    border: 2px solid gray;
-    margin: 10px;
-    background: #ffffcc;
-  }
-  #org-div-home-and-up
-   { text-align: right; font-size: 70%; white-space: nowrap; }
-  textarea { overflow-x: auto; }
-  .linenr { font-size: smaller }
-  .code-highlighted { background-color: #ffff00; }
-  .org-info-js_info-navigation { border-style: none; }
-  #org-info-js_console-label
-    { font-size: 10px; font-weight: bold; white-space: nowrap; }
-  .org-info-js_search-highlight
-    { background-color: #ffff00; color: #000000; font-weight: bold; }
-  .org-svg { width: 90%; }
-  /*]]>*/-->
-</style>
-<link rel="stylesheet" type="text/css" href="libreserver.css" />
-<script type="text/javascript">
-/*
-@licstart  The following is the entire license notice for the
-JavaScript code in this tag.
-
-Copyright (C) 2012-2019 Free Software Foundation, Inc.
-
-The JavaScript code in this tag is free software: you can
-redistribute it and/or modify it under the terms of the GNU
-General Public License (GNU GPL) as published by the Free Software
-Foundation, either version 3 of the License, or (at your option)
-any later version.  The code is distributed WITHOUT ANY WARRANTY;
-without even the implied warranty of MERCHANTABILITY or FITNESS
-FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
-
-As additional permission under GNU GPL version 3 section 7, you
-may distribute non-source (e.g., minimized or compacted) forms of
-that code without the copy of the GNU GPL normally required by
-section 4, provided you include this license notice and a URL
-through which recipients can access the Corresponding Source.
-
-
-@licend  The above is the entire license notice
-for the JavaScript code in this tag.
-*/
-<!--/*--><![CDATA[/*><!--*/
- function CodeHighlightOn(elem, id)
- {
-   var target = document.getElementById(id);
-   if(null != target) {
-     elem.cacheClassElem = elem.className;
-     elem.cacheClassTarget = target.className;
-     target.className = "code-highlighted";
-     elem.className   = "code-highlighted";
-   }
- }
- function CodeHighlightOff(elem, id)
- {
-   var target = document.getElementById(id);
-   if(elem.cacheClassElem)
-     elem.className = elem.cacheClassElem;
-   if(elem.cacheClassTarget)
-     target.className = elem.cacheClassTarget;
- }
-/*]]>*///-->
-</script>
-</head>
-<body>
-<div id="content">
-<h1 class="title">LibreServer</h1>
 <blockquote>
 <p>
 "<i>What we have is tech that subordinates human needs to corporate power. You could call that dystopian if you like, but maybe it’s something worse</i>" &#x2013; McKenzie Wark
 </p>
 </blockquote>
 
-<div class="org-center">
-<table border="-1" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+<div class="projectDescription">
 
+<details>
+  <summary><h2>Does this project have a Code of Conduct?</h2></summary>
+  <p>Yes. It can be <a href="./codeofconduct.html">found here</a>.</p>
+</details>
 
-<colgroup>
-<col  class="org-left" />
-</colgroup>
-<tbody>
-<tr>
-<td class="org-left"><a href="#org16eb78d">Does this project have a Code of Conduct?</a></td>
-</tr>
+<details>
+  <summary><h2>What is the threat model for this system?</h2></summary>
+  <p>In security discussions there is often talk about threat models, but they rarely seem to be defined. The threat model for this system <a href="./threatmodel.html">is documented here</a>.</p>
+</details>
 
-<tr>
-<td class="org-left"><a href="#org136aba9">What is the threat model for this system?</a></td>
-</tr>
+<details>
+  <summary><h2>Can I sell this on ARM boxes?</h2></summary>
+  <p>Yes. You might want to change the branding and the upstream repo. The only requirement is that you abide by the terms of the AGPL license. Free Software is about freedom, not price, so there's nothing stopping you from charging for it. For further information see the <a href="./support.html">contact details</a>.</p>
+</details>
 
-<tr>
-<td class="org-left"><a href="#orgd88d298">Can I sell this on ARM boxes?</a></td>
-</tr>
+<details>
+  <summary><h2>What applications are supported?</h2></summary>
+  <p><a href="./apps.html">See here</a> for the complete list of apps. In addition to those as part of the base install you get an email server.</p>
+</details>
 
-<tr>
-<td class="org-left"><a href="#org9620370">Can I donate to the project?</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#org2020ad2">What applications are supported?</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#orged7f5b9">Can I send notifications to a member other than admin?</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#orgccce532">I don't have a static IP address. Can I still install this system?</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#org7ffa3f1">What are the best microSD cards to use?</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#org0c2d2b9">Why LibreServer and not FreedomBox?</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#org2eff778">Why not use full disk encryption?</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#org5c248ad">Do you support Raspberry Pi?</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#org8dce83e">Why use Tor? I've heard it's used by bad people</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#org6299135">How is Tor integrated with LibreServer?</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#orgd1afb59">How does LibreServer differ from Yunohost and Sandstorm?</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#orged00c24">Can I add a clearnet domain to an onion build?</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#org315528c">What are the data protection implications of running this system?</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#org0181ae5">After using nmap or other scanning tool I can no longer log in</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#orgf5bef5e">Should I upload my GPG keys to keybase.io?</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#org9635abd">Keys and emails should not be stored on servers. Why do you do that?</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#org91f5c53">Why can't I access my .onion site with a Tor browser?</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#org562a1f8">What is the best hardware to run this system on?</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#org5cad10c">Can I add more members to the system?</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#org9c41dac">Why not use Signal for mobile chat?</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#orgbbbde8d">What is the most secure chat app to use on mobile?</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#org9776dc6">How do I remove a member from the system?</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#org5588c57">Why is logging for web sites turned off by default?</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#orgff63d86">How do I reset the tripwire?</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#org38155fb">Is metadata protected?</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#orgcc8d7cd">Why not use LUKS on backup drives?</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#org92ee9c4">How do I create email processing rules?</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#org129446f">Why isn't dynamic DNS working?</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#org33a1491">How do I change my encryption settings?</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#orge1af3d7">How do I get a domain name?</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#orgaf1cf35">How do I renew a Let's Encrypt certificate?</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#org44e7a9b">I tried to renew a Let's Encrypt certificate and it failed. What should I do?</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#org351bc7e">Why not use the services of $company instead? They took the Seppuku pledge</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#org3db5c52">Why does my email keep getting rejected as spam by Gmail/etc?</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#orga79ac09">Tor is censored/blocked in my area. What can I do?</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#org116229d">The mesh system doesn't boot from USB drive</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#org57c2182">Mesh system doesn't connect to the network</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#org601f868">Do you have any metrics about numbers of LibreServer servers out there?</a></td>
-</tr>
-
-<tr>
-<td class="org-left"><a href="#org193c784">After restoring an app I get a TLS/self-signed error</a></td>
-</tr>
-</tbody>
-</table>
-</div>
-
-<div id="outline-container-org16eb78d" class="outline-2">
-<h2 id="org16eb78d">Does this project have a Code of Conduct?</h2>
-<div class="outline-text-2" id="text-org16eb78d">
-<p>
-Yes. It can be <a href="./codeofconduct.html">found here</a>.
-</p>
-</div>
-</div>
-<div id="outline-container-org136aba9" class="outline-2">
-<h2 id="org136aba9">What is the threat model for this system?</h2>
-<div class="outline-text-2" id="text-org136aba9">
-<p>
-In security discussions there is often talk about threat models, but they rarely seem to be defined. The threat model for this system <a href="./threatmodel.html">is documented here</a>.
-</p>
-</div>
-</div>
-<div id="outline-container-orgd88d298" class="outline-2">
-<h2 id="orgd88d298">Can I sell this on ARM boxes?</h2>
-<div class="outline-text-2" id="text-orgd88d298">
-<p>
-Yes. You might want to change the branding and the upstream repo. The only requirement is that you abide by the terms of the AGPL license. Free Software is about freedom, not price, so there's nothing stopping you from charging for it. For further information see the <a href="./support.html">contact details</a>.
-</p>
-</div>
-</div>
-<div id="outline-container-org2020ad2" class="outline-2">
-<h2 id="org2020ad2">What applications are supported?</h2>
-<div class="outline-text-2" id="text-org2020ad2">
-<p>
-<a href="./apps.html">See here</a> for the complete list of apps. In addition to those as part of the base install you get an email server.
-</p>
-</div>
-</div>
-<div id="outline-container-orged7f5b9" class="outline-2">
-<h2 id="orged7f5b9">Can I send notifications to a member other than admin?</h2>
-<div class="outline-text-2" id="text-orged7f5b9">
-<p>
-Yes. From the administration screen select <b>Settings</b> then <b>Members</b> then the account to send admin notifications to.
-</p>
-
+<details>
+  <summary><h2>Can I send notifications to a member other than admin?</h2></summary>
+  <p>Yes. From the administration screen select <b>Settings</b> then <b>Members</b> then the account to send admin notifications to.</p>
 <p>
 Check <b>Receive admin notifications</b> then select the <b>Submit</b> button.
 </p>
 
 <p>
 The admin notifications will now be diverted to that account. This can be useful if the administrator is unavailable and you want someone else to keep an eye on the server, or of you want to leave the admin account untouched and do most things on an unprivileged account, which improves security a little.
-</p>
-</div>
-</div>
-<div id="outline-container-org9620370" class="outline-2">
-<h2 id="org9620370">Can I donate to the project?</h2>
-<div class="outline-text-2" id="text-org9620370">
-<p>
-If you want to financially support this project it <a href="https://www.patreon.com/libreserver">has a Patreon</a> and <a href="https://liberapay.com/bashrc/donate">LiberaPay</a> is also available.
-</p>
-</div>
-</div>
-<div id="outline-container-orgccce532" class="outline-2">
-<h2 id="orgccce532">I don't have a static IP address. Can I still install this system?</h2>
-<div class="outline-text-2" id="text-orgccce532">
-<p>
-Yes. The minimum requirements are to have some hardware that you can install Debian onto and also that you have administrator access to your internet router so that you can forward ports to the system which has LibreServer installed.
-</p>
+</p>  
+</details>
 
+<details>
+  <summary><h2>Can I donate to the project?</h2></summary>
+  <p>If you want to financially support this project it <a href="https://www.patreon.com/libreserver">has a Patreon</a> and <a href="https://liberapay.com/bashrc/donate">LiberaPay</a> is also available.</p>
+</details>
+
+<details>
+  <summary><h2>I don't have a static IP address. Can I still install this system?</h2></summary>
+  <p>Yes. The minimum requirements are to have some hardware that you can install Debian onto and also that you have administrator access to your internet router so that you can forward ports to the system which has LibreServer installed.</p>
 <p>
 The lack of a static IP address can be worked around by using a dynamic DNS service. LibreServer uses <a href="https://troglobit.com/inadyn.html">inadyn</a> , which supports a variety of dynamic DNS providers.
 </p>
-</div>
-</div>
-<div id="outline-container-org7ffa3f1" class="outline-2">
-<h2 id="org7ffa3f1">What are the best microSD cards to use?</h2>
-<div class="outline-text-2" id="text-org7ffa3f1">
-<p>
-There can be big differences in the performance of microSD cards, and the cheaper ones are almost invariably terrible and/or unusable. Sandisk and Samsung currently appear to be the better brands. You can find some performance benchmarks <a href="http://www.pidramble.com/wiki/benchmarks/microsd-cards">here</a>. However, benchmarks like this only give a very rough idea of performance and they can vary significantly between individual cards even within the same brand.
-</p>
+</details>
 
-<p>
-If you're struggling to get good performance out of your microSD card then you might want to consider running from a SATA drive or SSD instead. Some boards such as Cubieboard and Olinuxino have SATA sockets such that you can connect an SSD. It doesn't have to be high cost and the smallest SSD you can find will probably be enough. It's then possible to build an image with the <b>&#x2013;sata</b> option or download one of the pre-built ones and copy it both to the microSD and SATA drive. SSD drives can give a 10x performance improvement over just using a microSD card.
-</p>
-</div>
-</div>
-<div id="outline-container-org0c2d2b9" class="outline-2">
-<h2 id="org0c2d2b9">Why LibreServer and not FreedomBox?</h2>
-<div class="outline-text-2" id="text-org0c2d2b9">
-<p>
-When the project began in late 2013 the FreedomBox project seemed to be going nowhere, and was only designed to work with the DreamPlug hardware. There was some new hardware out - the Beaglebone Black - which could run Debian and was also a free hardware design so seemed more appropriate. Hence the name "LibreServer", being like FreedomBox but on a Beaglebone.
-</p>
+<details>
+  <summary><h2>What are the best microSD cards to use?</h2></summary>
+  <p>There can be big differences in the performance of microSD cards, and the cheaper ones are almost invariably terrible and/or unusable. Sandisk and Samsung currently appear to be the better brands. You can find some performance benchmarks <a href="http://www.pidramble.com/wiki/benchmarks/microsd-cards">here</a>. However, benchmarks like this only give a very rough idea of performance and they can vary significantly between individual cards even within the same brand.</p>
+  <p>
+    If you're struggling to get good performance out of your microSD card then you might want to consider running from a SATA drive or SSD instead. Some boards such as Cubieboard and Olinuxino have SATA sockets such that you can connect an SSD. It doesn't have to be high cost and the smallest SSD you can find will probably be enough. It's then possible to build an image with the <b>&#x2013;sata</b> option or download one of the pre-built ones and copy it both to the microSD and SATA drive. SSD drives can give a 10x performance improvement over just using a microSD card.
+  </p>
+</details>
 
-<p>
-Right now the FreedomBox project's fortunes have turned around. It has more developers and an increasing catalog of conference talks - in part because the changing ambient politics have made it more relevant to more people whereas back in 2010 people tended to largely trust "big tech" companies. So is there still a need for something like LibreServer? There probably is, mainly because it includes things which are not necessarily packaged for Debian, whereas FreedomBox as a pure blend has to stick to official Debian packages and security defaults which are not necessarily well aligned with <a href="./threatmodel.html">self-hosted deployments</a>.
-</p>
+<details>
+  <summary><h2>Why LibreServer and not FreedomBox?</h2></summary>
+  <p>When the project began in late 2013 the FreedomBox project seemed to be going nowhere, and was only designed to work with the DreamPlug hardware. There was some new hardware out - the Beaglebone Black - which could run Debian and was also a free hardware design so seemed more appropriate. Hence the name "LibreServer", being like FreedomBox but on a Beaglebone.</p>
+  <p>
+    Right now the FreedomBox project's fortunes have turned around. It has more developers and an increasing catalog of conference talks - in part because the changing ambient politics have made it more relevant to more people whereas back in 2010 people tended to largely trust "big tech" companies. So is there still a need for something like LibreServer? There probably is, mainly because it includes things which are not necessarily packaged for Debian, whereas FreedomBox as a pure blend has to stick to official Debian packages and security defaults which are not necessarily well aligned with <a href="./threatmodel.html">self-hosted deployments</a>.
+  </p>
 
-<p>
-Here are the main similarities and differences between the two projects:
-</p>
-</div>
+  <p>
+    Here are the main similarities and differences between the two projects:
+  </p>
 
-<div id="outline-container-org6e9703c" class="outline-3">
-<h3 id="org6e9703c">Similarities</h3>
-<div class="outline-text-3" id="text-org6e9703c">
-<ul class="org-ul">
-<li>Uses freedom-maker and vmdebootstrap to build debian images</li>
-<li>Supports the use of Tor onion addresses to access websites</li>
-<li>Typically runs on ARM single board computers</li>
-<li>Both projects are have the goal of becoming ready for mass market use cases</li>
-<li>Both projects aim to increase independence and privacy</li>
-<li>Both projects aim to make running your own server at home easy</li>
-<li>Both projects include wiki, blog, VoIP and file sync</li>
-<li>Both projects enable easy installation and removal of apps</li>
-<li>Both are typically "bare metal" rather than running as VMs or containers</li>
-<li>Both can use the companion app for Android</li>
-</ul>
-</div>
-</div>
-<div id="outline-container-orgebd71f0" class="outline-3">
-<h3 id="orgebd71f0">Differences</h3>
-<div class="outline-text-3" id="text-orgebd71f0">
-<ul class="org-ul">
-<li>FreedomBox is a Debian pure blend. LibreServer is not</li>
-<li>LibreServer only supports Free Software. FreedomBox includes some closed binary boot blobs for certain ARM boards</li>
-<li>LibreServer includes some software not yet in the official Debian repos</li>
-<li>LibreServer includes an email server set up for use with GPG by default</li>
-<li>LibreServer implements recommendations from bettercrypto.org whereas FreedomBox sticks to Debian default crypto settings</li>
-<li>LibreServer has a mesh network version. FreedomBox doesn't yet</li>
-</ul>
-</div>
-</div>
-</div>
-<div id="outline-container-org2eff778" class="outline-2">
-<h2 id="org2eff778">Why not use full disk encryption?</h2>
-<div class="outline-text-2" id="text-org2eff778">
-<p>
-Full disk encryption helps with laptop security, but on a server uptime is expected to be close to 100% and full disk encryption only provides protection when the machine is powered off and unused. This means that such encryption provides very little useful security for a server.
-</p>
+  <h3>Similarities</h3>
+  <ul>
+    <li>Uses freedom-maker and vmdebootstrap to build debian images</li>
+    <li>Supports the use of Tor onion addresses to access websites</li>
+    <li>Typically runs on ARM single board computers</li>
+    <li>Both projects are have the goal of becoming ready for mass market use cases</li>
+    <li>Both projects aim to increase independence and privacy</li>
+    <li>Both projects aim to make running your own server at home easy</li>
+    <li>Both projects include wiki, blog, VoIP and file sync</li>
+    <li>Both projects enable easy installation and removal of apps</li>
+    <li>Both are typically "bare metal" rather than running as VMs or containers</li>
+    <li>Both can use the companion app for Android</li>
+  </ul>
 
+  <h3>Differences</h3>
+  <ul>
+    <li>FreedomBox is a Debian pure blend. LibreServer is not</li>
+    <li>LibreServer only supports Free Software. FreedomBox includes some closed binary boot blobs for certain ARM boards</li>
+    <li>LibreServer includes some software not yet in the official Debian repos</li>
+    <li>LibreServer includes an email server set up for use with GPG by default</li>
+    <li>LibreServer implements recommendations from bettercrypto.org whereas FreedomBox sticks to Debian default crypto settings</li>
+    <li>LibreServer has a mesh network version. FreedomBox doesn't yet</li>
+  </ul>
+</details>
+
+<details>
+  <summary><h2>Why not use full disk encryption?</h2></summary>
+  <p>Full disk encryption helps with laptop security, but on a server uptime is expected to be close to 100% and full disk encryption only provides protection when the machine is powered off and unused. This means that such encryption provides very little useful security for a server.</p>
 <p>
 There is also the additional problem that electrical power outages may leave you with an unusable server for long periods of time if you don't always have physical access to it (eg. out at work, or on holiday) to enter a disk encryption password. LibreServer typically runs on single board computers where there is not expected to be a screen and therefore it may be difficult to enter a disk password during the boot sequence.
 </p>
@@ -573,380 +118,323 @@ There is also the additional problem that electrical power outages may leave you
 <p>
 If you do need full disk encryption and the above points are not relevant then you can install Debian stable with LUKS and then do a manual setup of LibreServer after that with <b>libreserver menuconfig</b>.
 </p>
-</div>
-</div>
-<div id="outline-container-org5c248ad" class="outline-2">
-<h2 id="org5c248ad">Do you support Raspberry Pi?</h2>
-<div class="outline-text-2" id="text-org5c248ad">
-<p>
-Yes. Raspberry Pi is the world's most popular single board computer. From a software freedom point of view it's not ideal, because it uses a closed operating system owned by Microsoft called ThreadX, and the Linux based operating system is a secondary one running on top of that. You can think of ThreadX as being the Intel ME equivalent on the Pi, with similar security issues.
-</p>
+</details>
 
-<p>
-Due to its ubiquity, from an operational security point of view it may in some places be possible to anonymously obtain a Raspberry Pi in a shop paying in cash. All other boards are typically bought new in a much more traceable way. Depending upon what kind of regime you're living under, this may be an important consideration.
-</p>
-</div>
-</div>
-<div id="outline-container-org8dce83e" class="outline-2">
-<h2 id="org8dce83e">Why use Tor? I've heard it's used by bad people</h2>
-<div class="outline-text-2" id="text-org8dce83e">
-<p>
-Years ago Tor was usually depicted in the mainstream media as something scary inhabited by cyberterrorists and other bad cybers, but today to a large extent Tor is accepted as just another way of routing data in a network. Depending upon where you live there may still be some amount of fearmongering about Tor, but it now seems clear that the trajectory is towards general acceptance.
-</p>
+<details>
+  <summary><h2>Do you support Raspberry Pi?</h2></summary>
+  <p>Yes. Raspberry Pi is the world's most popular single board computer. From a software freedom point of view it's not ideal, because it uses a closed operating system owned by Microsoft called ThreadX, and the Linux based operating system is a secondary one running on top of that. You can think of ThreadX as being the Intel ME equivalent on the Pi, with similar security issues.</p>
+  <p>
+    Due to its ubiquity, from an operational security point of view it may in some places be possible to anonymously obtain a Raspberry Pi in a shop paying in cash. All other boards are typically bought new in a much more traceable way. Depending upon what kind of regime you're living under, this may be an important consideration.
+  </p>
+</details>
 
-<p>
-Tor and its onion addresses, previously called hidden addresses, have a few key advantages:
-</p>
+<details>
+  <summary><h2>Why use Tor? I've heard it's used by bad people</h2></summary>
+  <p>Years ago Tor was usually depicted in the mainstream media as something scary inhabited by cyberterrorists and other bad cybers, but today to a large extent Tor is accepted as just another way of routing data in a network. Depending upon where you live there may still be some amount of fearmongering about Tor, but it now seems clear that the trajectory is towards general acceptance.</p>
+  <p>
+    Tor and its onion addresses, previously called hidden addresses, have a few key advantages:
+  </p>
 
-<ul class="org-ul">
-<li>NAT traversal</li>
-<li>Firewall traversal</li>
-<li>Avoiding the domain name system (DNS), which is mostly centralized and not secure</li>
-<li>Avoiding passive bulk surveillance in which governments try to find out who is communicating with who</li>
-</ul>
+  <ul>
+    <li>NAT traversal</li>
+    <li>Firewall traversal</li>
+    <li>Avoiding the domain name system (DNS), which is mostly centralized and not secure</li>
+    <li>Avoiding passive bulk surveillance in which governments try to find out who is communicating with who</li>
+  </ul>
 
-<p>
-On the negative side it's a complex system which is not fully decentralized.
-</p>
-</div>
-</div>
-<div id="outline-container-org6299135" class="outline-2">
-<h2 id="org6299135">How is Tor integrated with LibreServer?</h2>
-<div class="outline-text-2" id="text-org6299135">
-<p>
-Within this project Tor is used more to provide <i>accessibility</i> than the <i>anonymity</i> factor for which Tor is better known. The onion address system provides a way of being able to access sites even if you don't own a conventional domain name or don't have administrator access to your local internet router to be able to do port forwarding.
-</p>
+  <p>
+    On the negative side it's a complex system which is not fully decentralized.
+  </p>
+</details>
 
-<p>
-Tor is installed by default, but it's not configured as a relay or exit node. From the administrator control panel you can optionally set up a Tor bridge, but this is only for adverse situations and not usually advisable.
-</p>
+<details>
+  <summary><h2>How is Tor integrated with LibreServer?</h2></summary>
+  <p>Within this project Tor is used more to provide <i>accessibility</i> than the <i>anonymity</i> factor for which Tor is better known. The onion address system provides a way of being able to access sites even if you don't own a conventional domain name or don't have administrator access to your local internet router to be able to do port forwarding.</p>
+  <p>
+    Tor is installed by default, but it's not configured as a relay or exit node. From the administrator control panel you can optionally set up a Tor bridge, but this is only for adverse situations and not usually advisable.
+  </p>
 
-<p>
-When you install an app you will be able to access it from its onion address.
-</p>
+  <p>
+    When you install an app you will be able to access it from its onion address.
+  </p>
 
-<p>
-Even if you're running the "onion only" build, this only means that sites are accessible via onion addresses. It doesn't mean that everything gets routed through Tor. If full anonymity is your aim then it's probably a good idea to just stick strictly to using TAILS.
-</p>
-</div>
-</div>
-<div id="outline-container-orged00c24" class="outline-2">
-<h2 id="orged00c24">Can I add a clearnet domain to an onion build?</h2>
-<div class="outline-text-2" id="text-orged00c24">
-<p>
-You could if you manually edited the relevant nginx configuration files and installed some dynamic DNS system yourself. If you already have sysadmin knowledge then that's probably not too hard. But the builds created with the <b>onion-addresses-only</b> option aren't really intended to support access via clearnet domains.
-</p>
-</div>
-</div>
-<div id="outline-container-org315528c" class="outline-2">
-<h2 id="org315528c">What are the data protection implications of running this system?</h2>
-<div class="outline-text-2" id="text-org315528c">
-<p>
-Data protection laws such as <a href="https://en.wikipedia.org/wiki/General_Data_Protection_Regulation">GDPR</a> in the EU or the <a href="https://en.wikipedia.org/wiki/Data_Protection_Act_1998">Data Protection Act</a> in the UK usually only apply to formal organizations which are recognized as being legal entities. So you have to be running a business or a charity or some other formal organization in order for the storage of what's known as <i>personally identifying information</i> to potentially become a legal issue. Laws like this usually include:
-</p>
+  <p>
+    Even if you're running the "onion only" build, this only means that sites are accessible via onion addresses. It doesn't mean that everything gets routed through Tor. If full anonymity is your aim then it's probably a good idea to just stick strictly to using TAILS.
+  </p>
+</details>
 
-<ul class="org-ul">
-<li>A right to obtain your information</li>
-<li>A right to be forgotten (i.e. to have your data permanently deleted)</li>
-<li>Ensuring that stored personal data remains accurate</li>
-</ul>
+<details>
+  <summary><h2>Can I add a clearnet domain to an onion build?</h2></summary>
+  <p>You could if you manually edited the relevant nginx configuration files and installed some dynamic DNS system yourself. If you already have sysadmin knowledge then that's probably not too hard. But the builds created with the <b>onion-addresses-only</b> option aren't really intended to support access via clearnet domains.</p>
+</details>
 
-<p>
-If you're self-hosting then in the language of data protection law the "<i>data controller</i>" and the "<i>data subject</i>" are one and the same, so there isn't any power differential of that sort. Each LibreServer server is only intended to be used by a small numbers of people typically in the same household, so if you are hosting more than one person chances are that you know the others quite well and can arrange to update their data or delete their account if that's needed. Even if data protection laws are later extended to include home server type scenarios it's unlikely that this will become a problem.
-</p>
+<details>
+  <summary><h2>What are the data protection implications of running this system?</h2></summary>
+  <p>Data protection laws such as <a href="https://en.wikipedia.org/wiki/General_Data_Protection_Regulation">GDPR</a> in the EU or the <a href="https://en.wikipedia.org/wiki/Data_Protection_Act_1998">Data Protection Act</a> in the UK usually only apply to formal organizations which are recognized as being legal entities. So you have to be running a business or a charity or some other formal organization in order for the storage of what's known as <i>personally identifying information</i> to potentially become a legal issue. Laws like this usually include:</p>
+  <ul>
+    <li>A right to obtain your information</li>
+    <li>A right to be forgotten (i.e. to have your data permanently deleted)</li>
+    <li>Ensuring that stored personal data remains accurate</li>
+  </ul>
 
-<p>
-For the mesh version similar applies. Each peer stores their own personal data and it never gets aggregated and stored in any centralized way.
-</p>
-</div>
-</div>
-<div id="outline-container-org0181ae5" class="outline-2">
-<h2 id="org0181ae5">After using nmap or other scanning tool I can no longer log in</h2>
-<div class="outline-text-2" id="text-org0181ae5">
-<p>
-This system tries to block port scanners. Any other system trying to scan for open ports will have their IP address added to a temporary block list for 24 hours.
-</p>
-</div>
-</div>
-<div id="outline-container-orgf5bef5e" class="outline-2">
-<h2 id="orgf5bef5e">Should I upload my GPG keys to keybase.io?</h2>
-<div class="outline-text-2" id="text-orgf5bef5e">
-<p>
-It's not recommended unless there exists some compelling reason for you to be on there. That site asks people to upload the <b>private keys</b>, and even if the keys are client side encrypted with a passphrase there's always the chance that there will be a data leak in future and letter agencies will then have a full time opportunity to crack the passphrases.
-</p>
+  <p>
+    If you're self-hosting then in the language of data protection law the "<i>data controller</i>" and the "<i>data subject</i>" are one and the same, so there isn't any power differential of that sort. Each LibreServer server is only intended to be used by a small numbers of people typically in the same household, so if you are hosting more than one person chances are that you know the others quite well and can arrange to update their data or delete their account if that's needed. Even if data protection laws are later extended to include home server type scenarios it's unlikely that this will become a problem.
+  </p>
 
-<p>
-Saying something resembling "<i>only noobs will use crackable private key passphrases</i>" isn't good enough. A passphrase should not be considered to be a substitute for a private key.
-</p>
-</div>
-</div>
-<div id="outline-container-org9635abd" class="outline-2">
-<h2 id="org9635abd">Keys and emails should not be stored on servers. Why do you do that?</h2>
-<div class="outline-text-2" id="text-org9635abd">
-<p>
-Ordinarily this is good advice. However, the threat model for a device in your home is different from the one for a generic server in a massive warehouse. Compare and contrast:
-</p>
+  <p>
+    For the mesh version similar applies. Each peer stores their own personal data and it never gets aggregated and stored in any centralized way.
+  </p>
+</details>
 
-<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+<details>
+  <summary><h2>After using nmap or other scanning tool I can no longer log in</h2></summary>
+  <p>This system tries to block port scanners. Any other system trying to scan for open ports will have their IP address added to a temporary block list for 24 hours.</p>
+</details>
 
+<details>
+  <summary><h2>Should I upload my GPG keys to keybase.io?</h2></summary>
+  <p>It's not recommended unless there exists some compelling reason for you to be on there. That site asks people to upload the <b>private keys</b>, and even if the keys are client side encrypted with a passphrase there's always the chance that there will be a data leak in future and letter agencies will then have a full time opportunity to crack the passphrases.</p>
+  <p>
+    Saying something resembling "<i>only noobs will use crackable private key passphrases</i>" isn't good enough. A passphrase should not be considered to be a substitute for a private key.
+  </p>
+</details>
 
-<colgroup>
-<col  class="org-left" />
+<details>
+  <summary><h2>Keys and emails should not be stored on servers. Why do you do that?</h2></summary>
+  <p>Ordinarily this is good advice. However, the threat model for a device in your home is different from the one for a generic server in a massive warehouse. Compare and contrast:</p>
+  <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+    <colgroup>
+      <col />
+      <col />
+    </colgroup>
+    <thead>
+      <tr>
+	<th scope="col">At home</th>
+	<th scope="col">In a warehouse</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+	<td>Accessible to a small number of people</td>
+	<td>Accessible to possibly many random strangers</td>
+      </tr>
 
-<col  class="org-left" />
-</colgroup>
-<thead>
-<tr>
-<th scope="col" class="org-left">At home</th>
-<th scope="col" class="org-left">In a warehouse</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="org-left">Accessible to a small number of people</td>
-<td class="org-left">Accessible to possibly many random strangers</td>
-</tr>
+      <tr>
+	<td>You control the environment</td>
+	<td>You have no control over the warehouse</td>
+      </tr>
 
-<tr>
-<td class="org-left">You control the environment</td>
-<td class="org-left">You have no control over the warehouse</td>
-</tr>
+      <tr>
+	<td>You know what gets plugged in to the box</td>
+	<td>Anything could be plugged in to the box and you might not know</td>
+      </tr>
 
-<tr>
-<td class="org-left">You know what gets plugged in to the box</td>
-<td class="org-left">Anything could be plugged in to the box and you might not know</td>
-</tr>
+      <tr>
+	<td>You know where your home is</td>
+	<td>The warehouse could be anywhere in the world</td>
+      </tr>
 
-<tr>
-<td class="org-left">You know where your home is</td>
-<td class="org-left">The warehouse could be anywhere in the world</td>
-</tr>
+      <tr>
+	<td>Normally requires a warrant to search</td>
+	<td>Requires little or no justification to search</td>
+      </tr>
 
-<tr>
-<td class="org-left">Normally requires a warrant to search</td>
-<td class="org-left">Requires little or no justification to search</td>
-</tr>
+      <tr>
+	<td>You know what jurisdiction your home is within</td>
+	<td>You may have no idea what jurisdiction the warehouse is within</td>
+      </tr>
+    </tbody>
+  </table>
 
-<tr>
-<td class="org-left">You know what jurisdiction your home is within</td>
-<td class="org-left">You may have no idea what jurisdiction the warehouse is within</td>
-</tr>
-</tbody>
-</table>
+  <p>
+    In the home environment a box with a good firewall and no GUI components installed may be much more secure than the end points, such as laptops and phones.
+  </p>
+</details>
 
-<p>
-In the home environment a box with a good firewall and no GUI components installed may be much more secure than the end points, such as laptops and phones.
-</p>
-</div>
-</div>
+<details>
+  <summary><h2>Why can't I access my .onion site with a Tor browser?</h2></summary>
+  <p>It can take a while for the onion address to become available within the Tor network. In tests the amount of time between creating a site and being able to access it's onion address seems to vary between a minute or two and half an hour. So don't be too impatient if the address doesn't appear to resolve straight away.</p>
+</details>
 
-<div id="outline-container-org91f5c53" class="outline-2">
-<h2 id="org91f5c53">Why can't I access my .onion site with a Tor browser?</h2>
-<div class="outline-text-2" id="text-org91f5c53">
-<p>
-It can take a while for the onion address to become available within the Tor network. In tests the amount of time between creating a site and being able to access it's onion address seems to vary between a minute or two and half an hour. So don't be too impatient if the address doesn't appear to resolve straight away.
-</p>
-</div>
-</div>
-<div id="outline-container-org562a1f8" class="outline-2">
-<h2 id="org562a1f8">What is the best hardware to run this system on?</h2>
-<div class="outline-text-2" id="text-org562a1f8">
-<p>
-It was originally designed to run on the Beaglebone Black, but that should be regarded as the most minimal system, because it's single core and has by today's standards a small amount of memory. Obviously the more powerful the hardware is the faster things like web pages (blog, social networking, etc) will be served but the more electricity such a system will require if you're running it 24/7. A good compromise between performance and energy consumption is something like an old netbook. The battery of an old netbook or laptop even gives you <a href="https://en.wikipedia.org/wiki/Uninterruptible_power_supply">UPS capability</a> to keep the system going during brief power outages or cable re-arrangements, and that means using full disk encryption on the server also becomes more practical.
-</p>
+<details>
+  <summary><h2>What is the best hardware to run this system on?</h2></summary>
+  <p>It was originally designed to run on the Beaglebone Black, but that should be regarded as the most minimal system, because it's single core and has by today's standards a small amount of memory. Obviously the more powerful the hardware is the faster things like web pages (blog, social networking, etc) will be served but the more electricity such a system will require if you're running it 24/7. A good compromise between performance and energy consumption is something like an old netbook. The battery of an old netbook or laptop even gives you <a href="https://en.wikipedia.org/wiki/Uninterruptible_power_supply">UPS capability</a> to keep the system going during brief power outages or cable re-arrangements, and that means using full disk encryption on the server also becomes more practical.</p>
+  <p>
+    <i>Out of fashion</i> but still working computer hardware tends to be cheap and readily available, yet still good for providing internet services.
+  </p>
+</details>
 
-<p>
-<i>Out of fashion</i> but still working computer hardware tends to be cheap and readily available, yet still good for providing internet services.
-</p>
-</div>
-</div>
-<div id="outline-container-org5cad10c" class="outline-2">
-<h2 id="org5cad10c">Can I add more members to the system?</h2>
-<div class="outline-text-2" id="text-org5cad10c">
-<p>
-Yes. LibreServer can support a small number of members, for a "<i>friends and family</i>" type of household installation. This gives them access to an email account, XMPP, VoIP, NextCloud and possibly other apps which have been installed.
-</p>
+<details>
+  <summary><h2>Can I add more members to the system?</h2></summary>
+  <p>Yes. LibreServer can support a small number of members, for a "<i>friends and family</i>" type of household installation. This gives them access to an email account, XMPP, VoIP, NextCloud and possibly other apps which have been installed.</p>
+  <p>
+    It's simple to add new members via the web interface, which on the local network can be accessed via <a href="http://libreserver/admin">http://libreserver/admin</a>, or via its onion address remotely.
+  </p>
+</details>
 
-<p>
-It's simple to add new members via the web interface, which on the local network can be accessed via <a href="http://libreserver/admin">http://libreserver/admin</a>, or via its onion address remotely.
-</p>
-</div>
-</div>
-<div id="outline-container-org9c41dac" class="outline-2">
-<h2 id="org9c41dac">Why not use Signal for mobile chat?</h2>
-<div class="outline-text-2" id="text-org9c41dac">
-<p>
-Celebrities recommend Signal. It's Free Software so it must be good, right?
-</p>
+<details>
+  <summary><h2>Why not use Signal for mobile chat?</h2></summary>
+  <p>Celebrities recommend Signal. It's Free Software so it must be good, right?</p>
+  <p>
+    If you are currently using a proprietary chat app, something without any encryption or something <i>really bad</i> such as Telegram, then Signal is definitely a step up in terms of security. But Signal has problems, which can be summarised as:
+  </p>
 
-<p>
-If you are currently using a proprietary chat app, something without any encryption or something <i>really bad</i> such as Telegram, then Signal is definitely a step up in terms of security. But Signal has problems, which can be summarised as:
-</p>
+  <ul>
+    <li><b>It uses phone numbers</b>. Phone numbers are used for Signal's initial verification, and they can of course be intercepted or faked. Plus it means that Open Whisper Systems keeps a list of phone numbers on its centralised server for its <i>"X has joined Signal"</i> notification. Even if they're hashed, they're still unique identifiers and <a href="https://en.wikipedia.org/wiki/Rainbow_table">rainbow tables</a> for the phone number system probably exist. Phone numbers are convenient for some people, but are also a non-trivial security risk. If you're using Signal then consider what it knows about who your contacts are, where that data is located and who else might have access to that. Consider what might happen if an adversary gets to know your mobile number.</li>
+    <li><b>It's based on a single server</b> run by Open Whisper Systems. That's a single point of failure and ought to be a big red flag (of the sporting rather than the socialist variety) as a possible locus for concentrated nefariousness.</li>
+    <li><b>It requires the installation of Google Play</b>. If you already have Google Play installed on a stock Android OS then this doesn't increase your security problems, but for other more secure Android variants it's a massive increase in attack surface. There is a separate apk available for download, but it won't receive updates and the hash shown on the site often doesn't match.</li>
+    <li><b>It depends entirely upon the Google message pushing system</b>. That means that Google <i>at least knows who Signal messages are being sent to and may be able to infer the rest via your (insecure) Android phone contact list or via timing correlation of alternating deliveries</i>. Remember that for an adversary metadata in aggregate is much better than having the content of messages. At any time Google could decide that it doesn't want to support Signal, or in adverse circumstances they could be leaned upon by the usual agencies or government cronies.</li>
+    <li><b>Their privacy policy indicates that they will give whatever server data they have to third parties</b> under some conditions. Of course this is always claimed to be <i>for the very best of reasons</i> - such as combating fraud - but once that sort of disclosure capability exists it may be abused without you ever knowing about it. Consider how difficult, or not, it may be for a government to reverse engineer a database of hashed telephone numbers.</li>
+    <li><b>Forking isn't really an option</b>. A fork was tried, but Moxie got annoyed when it still used his server. At the same time the level of interest in federating the server is not detectable with our best intrumentation, and is suspected to be negative. That's a catch 22 which effectively means that independent implementations of Signal will always leave some people unable to communicate with each other.</li>
+    <li><b>It uses GIPHY, a Facebook image service</b>. This ought to be the coup de grâce in terms of privacy. Yes, they may be proxying the requests going to Facebook and yes they may be doing funky things with the Content-Length header to try to emulate message padding, but this is Facebook and their prime directive is surveillance of the user. It would be far safer if Moxie just downloaded a bunch of cat gifs to his server and cut the Facebook middle-man out.</li>
+  </ul>
 
-<ul class="org-ul">
-<li><b>It uses phone numbers</b>. Phone numbers are used for Signal's initial verification, and they can of course be intercepted or faked. Plus it means that Open Whisper Systems keeps a list of phone numbers on its centralised server for its <i>"X has joined Signal"</i> notification. Even if they're hashed, they're still unique identifiers and <a href="https://en.wikipedia.org/wiki/Rainbow_table">rainbow tables</a> for the phone number system probably exist. Phone numbers are convenient for some people, but are also a non-trivial security risk. If you're using Signal then consider what it knows about who your contacts are, where that data is located and who else might have access to that. Consider what might happen if an adversary gets to know your mobile number.</li>
-<li><b>It's based on a single server</b> run by Open Whisper Systems. That's a single point of failure and ought to be a big red flag (of the sporting rather than the socialist variety) as a possible locus for concentrated nefariousness.</li>
-<li><b>It requires the installation of Google Play</b>. If you already have Google Play installed on a stock Android OS then this doesn't increase your security problems, but for other more secure Android variants it's a massive increase in attack surface. There is a separate apk available for download, but it won't receive updates and the hash shown on the site often doesn't match.</li>
-<li><b>It depends entirely upon the Google message pushing system</b>. That means that Google <i>at least knows who Signal messages are being sent to and may be able to infer the rest via your (insecure) Android phone contact list or via timing correlation of alternating deliveries</i>. Remember that for an adversary metadata in aggregate is much better than having the content of messages. At any time Google could decide that it doesn't want to support Signal, or in adverse circumstances they could be leaned upon by the usual agencies or government cronies.</li>
-<li><b>Their privacy policy indicates that they will give whatever server data they have to third parties</b> under some conditions. Of course this is always claimed to be <i>for the very best of reasons</i> - such as combating fraud - but once that sort of disclosure capability exists it may be abused without you ever knowing about it. Consider how difficult, or not, it may be for a government to reverse engineer a database of hashed telephone numbers.</li>
-<li><b>Forking isn't really an option</b>. A fork was tried, but Moxie got annoyed when it still used his server. At the same time the level of interest in federating the server is not detectable with our best intrumentation, and is suspected to be negative. That's a catch 22 which effectively means that independent implementations of Signal will always leave some people unable to communicate with each other.</li>
-<li><b>It uses GIPHY, a Facebook image service</b>. This ought to be the coup de grâce in terms of privacy. Yes, they may be proxying the requests going to Facebook and yes they may be doing funky things with the Content-Length header to try to emulate message padding, but this is Facebook and their prime directive is surveillance of the user. It would be far safer if Moxie just downloaded a bunch of cat gifs to his server and cut the Facebook middle-man out.</li>
-</ul>
+  <p>
+    To give credit where it's due Signal is good, but it could be a lot better. The real solution for private chat is to run your own XMPP server, as you can with LibreServer, or to have someone within your community do that. <i>There is no substitute for a decentralised solution which is within the control of your community</i>.
+  </p>
+</details>
 
-<p>
-To give credit where it's due Signal is good, but it could be a lot better. The real solution for private chat is to run your own XMPP server, as you can with LibreServer, or to have someone within your community do that. <i>There is no substitute for a decentralised solution which is within the control of your community</i>.
-</p>
-</div>
-</div>
-<div id="outline-container-orgbbbde8d" class="outline-2">
-<h2 id="orgbbbde8d">What is the most secure chat app to use on mobile?</h2>
-<div class="outline-text-2" id="text-orgbbbde8d">
-<p>
-On mobile there are various options. The apps which are likely to be most secure are ones which have end-to-end encryption enabled by default and which can also be onion routed via Orbot. End-to-end encryption secures the content of the message and onion routing obscures the metadata, making it hard for a passive adversary to know who is communicating with who.
-</p>
+<details>
+  <summary><h2>What is the most secure chat app to use on mobile?</h2></summary>
+  <p>On mobile there are various options. The apps which are likely to be most secure are ones which have end-to-end encryption enabled by default and which can also be onion routed via Orbot. End-to-end encryption secures the content of the message and onion routing obscures the metadata, making it hard for a passive adversary to know who is communicating with who.</p>
+  <p>
+    The current safest way to chat is to use <a href="https://conversations.im">Conversations</a> together with <a href="https://guardianproject.info/apps/orbot/">Orbot</a> - both of which can be installed from <a href="https://f-droid.org/">F-droid</a>. You may need to enable the <a href="https://guardianproject.info/">Guardian Project</a> repository within F-droid in order to be able to install Orbot. Within the settings of the Conversations app you can set it to route via Tor, and also you can use the XMPP service of your LibreServer server. That way all of the software infrastructure is controlled by you or your community.
+  </p>
 
-<p>
-The current safest way to chat is to use <a href="https://conversations.im">Conversations</a> together with <a href="https://guardianproject.info/apps/orbot/">Orbot</a> - both of which can be installed from <a href="https://f-droid.org/">F-droid</a>. You may need to enable the <a href="https://guardianproject.info/">Guardian Project</a> repository within F-droid in order to be able to install Orbot. Within the settings of the Conversations app you can set it to route via Tor, and also you can use the XMPP service of your LibreServer server. That way all of the software infrastructure is controlled by you or your community.
-</p>
+  <p>
+    Another possibility is the <a href="https://briarproject.org">Briar app</a>, which is peer-to-peer and runs over Tor. This may be more convenient, since it doesn't require Orbot to be installed.
+  </p>
 
-<p>
-Another possibility is the <a href="https://briarproject.org">Briar app</a>, which is peer-to-peer and runs over Tor. This may be more convenient, since it doesn't require Orbot to be installed.
-</p>
+  <p>
+    There are many <a href="#org9c41dac">other fashionable chat apps</a> with end-to-end security, but often they are closed source, have a single central server or can't be onion routed and so have no metadata protection. It's also important to remember that closed source chat apps should be assumed to be untrustworthy, since their security cannot be independently verified.
+  </p>
+</details>
 
-<p>
-There are many <a href="#org9c41dac">other fashionable chat apps</a> with end-to-end security, but often they are closed source, have a single central server or can't be onion routed and so have no metadata protection. It's also important to remember that closed source chat apps should be assumed to be untrustworthy, since their security cannot be independently verified.
-</p>
-</div>
-</div>
-<div id="outline-container-org9776dc6" class="outline-2">
-<h2 id="org9776dc6">How do I remove a member from the system?</h2>
-<div class="outline-text-2" id="text-org9776dc6">
-<p>
-Log into the web interface, select <i>members</i> then the person's nickname. You can then select the <i>remove</i> button.
-</p>
-</div>
-</div>
-<div id="outline-container-org5588c57" class="outline-2">
-<h2 id="org5588c57">Why is logging for web sites turned off by default?</h2>
-<div class="outline-text-2" id="text-org5588c57">
-<p>
-If you're making profits out of the logs by running large server warehouses and then data mining what people click on - as is the business model of well known internet companies - then logging everything makes total sense. However, if you're running a home server then logging really only makes sense if you're trying to diagnose some specific problem with the system, and outside of that context logging everything becomes more of a liability than an asset.
-</p>
+<details>
+  <summary><h2>How do I remove a member from the system?</h2></summary>
+  <p>Log into the web interface, select <i>members</i> then the person's nickname. You can then select the <i>remove</i> button.</p>
+</details>
 
-<p>
-Logs can potentially become quite large and frequent logging isn't a great idea if you're running on a flash disk since it just increases the wear rate and thus shortens its usable lifetime. Also from a security perspective if a compromise occurs then the attacker gets considerably less social information if there are no logs containing timestamped IP addresses.
-</p>
+<details>
+  <summary><h2>Why is logging for web sites turned off by default?</h2></summary>
+  <p>If you're making profits out of the logs by running large server warehouses and then data mining what people click on - as is the business model of well known internet companies - then logging everything makes total sense. However, if you're running a home server then logging really only makes sense if you're trying to diagnose some specific problem with the system, and outside of that context logging everything becomes more of a liability than an asset.</p>
+  <p>
+    Logs can potentially become quite large and frequent logging isn't a great idea if you're running on a flash disk since it just increases the wear rate and thus shortens its usable lifetime. Also from a security perspective if a compromise occurs then the attacker gets considerably less social information if there are no logs containing timestamped IP addresses.
+  </p>
 
-<p>
-On the LibreServer system web logs containing IP addresses are turned off by default. They're not deleted, they're just never created in the first place. If you need to turn logging on in order to fix a problem then go to the <b>Administrator control panel</b> and enable logging. If you don't manually turn it off again then it will turn itself off automatically at the next system update, which is typically a few days away.
-</p>
-</div>
-</div>
-<div id="outline-container-orgff63d86" class="outline-2">
-<h2 id="orgff63d86">How do I reset the tripwire?</h2>
-<div class="outline-text-2" id="text-orgff63d86">
-<p>
-The tripwire will be automatically reset once per week. If you want to reset it earlier then do the following:
-</p>
+  <p>
+    On the LibreServer system web logs containing IP addresses are turned off by default. They're not deleted, they're just never created in the first place. If you need to turn logging on in order to fix a problem then go to the <b>Administrator control panel</b> and enable logging. If you don't manually turn it off again then it will turn itself off automatically at the next system update, which is typically a few days away.
+  </p>
+</details>
 
-<div class="org-src-container">
-<pre class="src src-bash">ssh admin@libreserver -p 2222
-</pre>
-</div>
+<details>
+  <summary><h2>Is metadata protected?</h2></summary>
+  <p>Even when using LibreServer metadata analysis by third parties is still possible. This can be mitigated by accessing your blog, or other web services, via their <i>onion addresses</i>, rather than via more conventional domain names. In that case your ISP and any government which they might be compelled to report back to will know when your system is being accessed, but not necessarily <i>which</i> services are being accessed <i>or by whom</i>. So for instance using a Tor browser and the onion address people may be able to safely read your blog or wiki and be reasonably confident that metadata isn't being gathered about what they read (or more concisely the metadata which can be gathered by a third party may just not be very useful or personally identifiable). On the other hand if you access the system via conventional domain names and dynamic DNS then it's safe to assume that metadata can and will be collected by third parties.</p>
+</details>
 
-<p>
-Select <i>Administrator controls</i> then <i>Security settings</i> then <i>reset tripwire</i>.
-</p>
-</div>
-</div>
-<div id="outline-container-org38155fb" class="outline-2">
-<h2 id="org38155fb">Is metadata protected?</h2>
-<div class="outline-text-2" id="text-org38155fb">
-<blockquote>
-<p>
-"<i>We kill people based on metadata</i>"
-</p>
+<details>
+  <summary><h2>How do I create email processing rules?</h2></summary>
+  <p>The easy way to do this is to go <i>Domain-User Blocking</i> on the settings screen of the web interface. From there you can block particular email addresses or domains, or if you select <i>Muted words</i> then you can block incoming email containing particular words or phrases. Note that the muted words are case sensitive.</p>
+  <p>
+    If you prefer the commandline then enable ssh via the web interface by supplying a public key, then log in with:
+  </p>
 
-<p>
-&#x2013; Michael Hayden
-</p>
-</blockquote>
+  <pre>ssh admin@libreserver -p 2222
+  </pre>
 
-<p>
-Even when using LibreServer metadata analysis by third parties is still possible. This can be mitigated by accessing your blog, or other web services, via their <i>onion addresses</i>, rather than via more conventional domain names. In that case your ISP and any government which they might be compelled to report back to will know when your system is being accessed, but not necessarily <i>which</i> services are being accessed <i>or by whom</i>. So for instance using a Tor browser and the onion address people may be able to safely read your blog or wiki and be reasonably confident that metadata isn't being gathered about what they read (or more concisely the metadata which can be gathered by a third party may just not be very useful or personally identifiable). On the other hand if you access the system via conventional domain names and dynamic DNS then it's safe to assume that metadata can and will be collected by third parties.
-</p>
-</div>
-</div>
-<div id="outline-container-org92ee9c4" class="outline-2">
-<h2 id="org92ee9c4">How do I create email processing rules?</h2>
-<div class="outline-text-2" id="text-org92ee9c4">
-<p>
-The easy way to do this is to go <i>Domain-User Blocking</i> on the settings screen of the web interface. From there you can block particular email addresses or domains, or if you select <i>Muted words</i> then you can block incoming email containing particular words or phrases. Note that the muted words are case sensitive.
-</p>
+  <p>
+    Select <i>Change email filtering/blocking rules</i> then you can add rules to be applied to incoming email addresses or mailing lists.
+  </p>
 
-<p>
-If you prefer the commandline then enable ssh via the web interface by supplying a public key, then log in with:
-</p>
+  <p>
+    If you prefer to do things directly on the command line, without the control panel, then the following commands are available:
+  </p>
 
-<div class="org-src-container">
-<pre class="src src-bash">ssh admin@libreserver -p 2222
-</pre>
-</div>
+  <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+    <colgroup>
+      <col  />
 
-<p>
-Select <i>Change email filtering/blocking rules</i> then you can add rules to be applied to incoming email addresses or mailing lists.
-</p>
+      <col  />
+    </colgroup>
+    <tbody>
+      <tr>
+	<td>libreserver-addlist</td>
+	<td>Adds a mailing list</td>
+      </tr>
 
-<p>
-If you prefer to do things directly on the command line, without the control panel, then the following commands are available:
-</p>
+      <tr>
+	<td>libreserver-rmlist</td>
+	<td>Removes a mailing list</td>
+      </tr>
 
-<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+      <tr>
+	<td>libreserver-addemail</td>
+	<td>Transfers emails from an address to a given folder</td>
+      </tr>
+
+      <tr>
+	<td>libreserver-rmemail</td>
+	<td>Removes an email transferal rule</td>
+      </tr>
+
+      <tr>
+	<td>libreserver-ignore</td>
+	<td>Ignores email from an address or with a subject line containing text</td>
+      </tr>
+
+      <tr>
+	<td>libreserver-unignore</td>
+	<td>Removes an ignore rule</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    Spamassassin is also available and within Mutt you can use the S (shift+s) key to mark an email as spam or the H (shift+h) key to mark an email as not being spam. So by using a combination of email rules and spam filtering you should be able to avoid any spammers or trolls.
+  </p>
+</details>
+
+<details>
+  <summary><h2></h2></summary>
+  <p></p>
+</details>
+
+<details>
+  <summary><h2></h2></summary>
+  <p></p>
+</details>
+
+<details>
+  <summary><h2></h2></summary>
+  <p></p>
+</details>
+
+<details>
+  <summary><h2></h2></summary>
+  <p></p>
+</details>
+
+<details>
+  <summary><h2></h2></summary>
+  <p></p>
+</details>
+
+<details>
+  <summary><h2></h2></summary>
+  <p></p>
+</details>
+
+<details>
+  <summary><h2></h2></summary>
+  <p></p>
+</details>
 
 
-<colgroup>
-<col  class="org-left" />
 
-<col  class="org-left" />
-</colgroup>
-<tbody>
-<tr>
-<td class="org-left">libreserver-addlist</td>
-<td class="org-left">Adds a mailing list</td>
-</tr>
 
-<tr>
-<td class="org-left">libreserver-rmlist</td>
-<td class="org-left">Removes a mailing list</td>
-</tr>
 
-<tr>
-<td class="org-left">libreserver-addemail</td>
-<td class="org-left">Transfers emails from an address to a given folder</td>
-</tr>
 
-<tr>
-<td class="org-left">libreserver-rmemail</td>
-<td class="org-left">Removes an email transferal rule</td>
-</tr>
 
-<tr>
-<td class="org-left">libreserver-ignore</td>
-<td class="org-left">Ignores email from an address or with a subject line containing text</td>
-</tr>
-
-<tr>
-<td class="org-left">libreserver-unignore</td>
-<td class="org-left">Removes an ignore rule</td>
-</tr>
-</tbody>
-</table>
-
-<p>
-Spamassassin is also available and within Mutt you can use the S (shift+s) key to mark an email as spam or the H (shift+h) key to mark an email as not being spam. So by using a combination of email rules and spam filtering you should be able to avoid any spammers or trolls.
-</p>
-</div>
-</div>
 <div id="outline-container-org129446f" class="outline-2">
 <h2 id="org129446f">Why isn't dynamic DNS working?</h2>
 <div class="outline-text-2" id="text-org129446f">
@@ -1175,10 +663,6 @@ This usually happens because you are restoring to a different domain name. Unfor
 </div>
 </div>
 </div>
-<div id="postamble" class="status">
-<p class="author">Author: Bob Mottram</p>
-<p class="date">Created: 2021-04-15 Thu 21:46</p>
-<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
 </html>
