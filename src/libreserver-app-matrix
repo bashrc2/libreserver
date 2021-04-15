@@ -1227,15 +1227,15 @@ function install_home_server {
     rm -f "${MATRIX_DATA_DIR}/.emacs-mutt"
 }
 
-function matrix_update_riot_config {
-    read_config_param RIOT_DOMAIN_NAME
-    if [ ! "$RIOT_DOMAIN_NAME" ]; then
+function matrix_update_element_config {
+    read_config_param ELEMENT_DOMAIN_NAME
+    if [ ! "$ELEMENT_DOMAIN_NAME" ]; then
         return
     fi
-    if [ ! -d "/var/www/$RIOT_DOMAIN_NAME/htdocs" ]; then
+    if [ ! -d "/var/www/$ELEMENT_DOMAIN_NAME/htdocs" ]; then
         return
     fi
-    riot_set_default_homeserver
+    element_set_default_homeserver
 }
 
 function install_matrix_venv {
@@ -1469,7 +1469,7 @@ function install_matrix {
 
     increment_app_install_progress
 
-    matrix_update_riot_config
+    matrix_update_element_config
 
     increment_app_install_progress
 
