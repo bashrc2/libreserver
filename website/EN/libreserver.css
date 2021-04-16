@@ -6,6 +6,14 @@
     --font-size: 20px;
     --line-spacing: 180%;
     --rendering: normal;
+    --left-margin: 10%;
+    --text-width: 80%;
+    --left-margin-mobile: 2.5%;
+    --text-width-mobile: 95%;
+    --quote-left-margin: 20%;
+    --quote-width: 60%;
+    --quote-left-margin-mobile: 10%;
+    --quote-width-mobile: 80%;
 
     --header-font: 'Arial, Helvetica, sans-serif';
     --button-bottom-margin: 10px;
@@ -31,12 +39,29 @@ body, html {
     text-align: center;
 }
 
+blockquote {
+    border-left: 10px;
+    margin: 1.5em 10px;
+    padding: 0.5em 10px;
+    font-weight: var(--quote-font-weight);
+    font-style: italic;
+    quotes: "\201C""\201D""\2018""\2019";
+    margin-left: var(--quote-left-margin);
+    width: var(--quote-width);
+}
+blockquote p {
+    display: inline;
+}
+
 h1 {
     font-family: 'Exoplanetaria';
-    font-size: var(--font-size);
     color: var(--title-color);
     text-align: center;
     font-size: 70px;
+}
+
+.titlePrefix {
+    color: #777;
 }
 
 .subtitle {
@@ -50,8 +75,8 @@ h1 {
     font-family: 'Exoplanetaria';
     font-size: 20px;
     font-style: normal;
-    margin-left: 10%;
-    width: 80%;
+    margin-left: var(--left-margin);
+    width: var(--text-width);
     text-align: left;
 }
 
@@ -81,13 +106,12 @@ table, th {
     font-family: 'Exoplanetaria';
     font-size: var(--font-size);
     color: var(--main-bg-color);
-    background-color: var(--main-fg-color);
     text-align: center;
     font-size: 28px;
 }
 
 td {
-    background-color: var(--main-fg-color);
+    background-color: #777;
     width: 30%;
     border: 0px solid black;
     text-align: center;
@@ -105,13 +129,17 @@ a:hover {
 	width: 95%;
     }
     .projectDescription {
-	margin-left: 2.5%;
-	width: 95%;
+	margin-left: var(--left-margin-mobile);
+	width: var(--text-width-mobile);
     }
     h3 {
 	font-size: 18px;
     }
     .networkImage img {
 	width: 45%;
+    }
+    blockquote {
+	margin-left: var(--quote-left-margin-mobile);
+	width: var(--quote-width-mobile);
     }
 }
