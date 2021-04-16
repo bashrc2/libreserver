@@ -1,428 +1,155 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
-<head>
-<!-- 2021-04-15 Thu 10:41 -->
-<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>LibreServer</title>
-<meta name="generator" content="Org mode" />
-<meta name="author" content="Bob Mottram" />
-<meta name="description" content="How to use XMPP/Jabber"
- />
-<meta name="keywords" content="libreserver, xmpp" />
-<style type="text/css">
- <!--/*--><![CDATA[/*><!--*/
-  .title  { text-align: center;
-             margin-bottom: .2em; }
-  .subtitle { text-align: center;
-              font-size: medium;
-              font-weight: bold;
-              margin-top:0; }
-  .todo   { font-family: monospace; color: red; }
-  .done   { font-family: monospace; color: green; }
-  .priority { font-family: monospace; color: orange; }
-  .tag    { background-color: #eee; font-family: monospace;
-            padding: 2px; font-size: 80%; font-weight: normal; }
-  .timestamp { color: #bebebe; }
-  .timestamp-kwd { color: #5f9ea0; }
-  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
-  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
-  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
-  .underline { text-decoration: underline; }
-  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
-  p.verse { margin-left: 3%; }
-  pre {
-    border: 1px solid #ccc;
-    box-shadow: 3px 3px 3px #eee;
-    padding: 8pt;
-    font-family: monospace;
-    overflow: auto;
-    margin: 1.2em;
-  }
-  pre.src {
-    position: relative;
-    overflow: visible;
-    padding-top: 1.2em;
-  }
-  pre.src:before {
-    display: none;
-    position: absolute;
-    background-color: white;
-    top: -10px;
-    right: 10px;
-    padding: 3px;
-    border: 1px solid black;
-  }
-  pre.src:hover:before { display: inline;}
-  /* Languages per Org manual */
-  pre.src-asymptote:before { content: 'Asymptote'; }
-  pre.src-awk:before { content: 'Awk'; }
-  pre.src-C:before { content: 'C'; }
-  /* pre.src-C++ doesn't work in CSS */
-  pre.src-clojure:before { content: 'Clojure'; }
-  pre.src-css:before { content: 'CSS'; }
-  pre.src-D:before { content: 'D'; }
-  pre.src-ditaa:before { content: 'ditaa'; }
-  pre.src-dot:before { content: 'Graphviz'; }
-  pre.src-calc:before { content: 'Emacs Calc'; }
-  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
-  pre.src-fortran:before { content: 'Fortran'; }
-  pre.src-gnuplot:before { content: 'gnuplot'; }
-  pre.src-haskell:before { content: 'Haskell'; }
-  pre.src-hledger:before { content: 'hledger'; }
-  pre.src-java:before { content: 'Java'; }
-  pre.src-js:before { content: 'Javascript'; }
-  pre.src-latex:before { content: 'LaTeX'; }
-  pre.src-ledger:before { content: 'Ledger'; }
-  pre.src-lisp:before { content: 'Lisp'; }
-  pre.src-lilypond:before { content: 'Lilypond'; }
-  pre.src-lua:before { content: 'Lua'; }
-  pre.src-matlab:before { content: 'MATLAB'; }
-  pre.src-mscgen:before { content: 'Mscgen'; }
-  pre.src-ocaml:before { content: 'Objective Caml'; }
-  pre.src-octave:before { content: 'Octave'; }
-  pre.src-org:before { content: 'Org mode'; }
-  pre.src-oz:before { content: 'OZ'; }
-  pre.src-plantuml:before { content: 'Plantuml'; }
-  pre.src-processing:before { content: 'Processing.js'; }
-  pre.src-python:before { content: 'Python'; }
-  pre.src-R:before { content: 'R'; }
-  pre.src-ruby:before { content: 'Ruby'; }
-  pre.src-sass:before { content: 'Sass'; }
-  pre.src-scheme:before { content: 'Scheme'; }
-  pre.src-screen:before { content: 'Gnu Screen'; }
-  pre.src-sed:before { content: 'Sed'; }
-  pre.src-sh:before { content: 'shell'; }
-  pre.src-sql:before { content: 'SQL'; }
-  pre.src-sqlite:before { content: 'SQLite'; }
-  /* additional languages in org.el's org-babel-load-languages alist */
-  pre.src-forth:before { content: 'Forth'; }
-  pre.src-io:before { content: 'IO'; }
-  pre.src-J:before { content: 'J'; }
-  pre.src-makefile:before { content: 'Makefile'; }
-  pre.src-maxima:before { content: 'Maxima'; }
-  pre.src-perl:before { content: 'Perl'; }
-  pre.src-picolisp:before { content: 'Pico Lisp'; }
-  pre.src-scala:before { content: 'Scala'; }
-  pre.src-shell:before { content: 'Shell Script'; }
-  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
-  /* additional language identifiers per "defun org-babel-execute"
-       in ob-*.el */
-  pre.src-cpp:before  { content: 'C++'; }
-  pre.src-abc:before  { content: 'ABC'; }
-  pre.src-coq:before  { content: 'Coq'; }
-  pre.src-groovy:before  { content: 'Groovy'; }
-  /* additional language identifiers from org-babel-shell-names in
-     ob-shell.el: ob-shell is the only babel language using a lambda to put
-     the execution function name together. */
-  pre.src-bash:before  { content: 'bash'; }
-  pre.src-csh:before  { content: 'csh'; }
-  pre.src-ash:before  { content: 'ash'; }
-  pre.src-dash:before  { content: 'dash'; }
-  pre.src-ksh:before  { content: 'ksh'; }
-  pre.src-mksh:before  { content: 'mksh'; }
-  pre.src-posh:before  { content: 'posh'; }
-  /* Additional Emacs modes also supported by the LaTeX listings package */
-  pre.src-ada:before { content: 'Ada'; }
-  pre.src-asm:before { content: 'Assembler'; }
-  pre.src-caml:before { content: 'Caml'; }
-  pre.src-delphi:before { content: 'Delphi'; }
-  pre.src-html:before { content: 'HTML'; }
-  pre.src-idl:before { content: 'IDL'; }
-  pre.src-mercury:before { content: 'Mercury'; }
-  pre.src-metapost:before { content: 'MetaPost'; }
-  pre.src-modula-2:before { content: 'Modula-2'; }
-  pre.src-pascal:before { content: 'Pascal'; }
-  pre.src-ps:before { content: 'PostScript'; }
-  pre.src-prolog:before { content: 'Prolog'; }
-  pre.src-simula:before { content: 'Simula'; }
-  pre.src-tcl:before { content: 'tcl'; }
-  pre.src-tex:before { content: 'TeX'; }
-  pre.src-plain-tex:before { content: 'Plain TeX'; }
-  pre.src-verilog:before { content: 'Verilog'; }
-  pre.src-vhdl:before { content: 'VHDL'; }
-  pre.src-xml:before { content: 'XML'; }
-  pre.src-nxml:before { content: 'XML'; }
-  /* add a generic configuration mode; LaTeX export needs an additional
-     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
-  pre.src-conf:before { content: 'Configuration File'; }
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="libreserver.css" />
+    <link rel="manifest" href="manifest.json" />
+    <title>libreserver</title>
+  </head>
+  <body>
+    <br />
+    <a href="apps.html"><h1><span class="titlePrefix">Libre</span>Server</h1></a>
+    <div class="subtitle">XMPP/Jabber</div>
+    <div class="networkImage">
+      <img src="images/internet.png" />
+    </div>
 
-  table { border-collapse:collapse; }
-  caption.t-above { caption-side: top; }
-  caption.t-bottom { caption-side: bottom; }
-  td, th { vertical-align:top;  }
-  th.org-right  { text-align: center;  }
-  th.org-left   { text-align: center;   }
-  th.org-center { text-align: center; }
-  td.org-right  { text-align: right;  }
-  td.org-left   { text-align: left;   }
-  td.org-center { text-align: center; }
-  dt { font-weight: bold; }
-  .footpara { display: inline; }
-  .footdef  { margin-bottom: 1em; }
-  .figure { padding: 1em; }
-  .figure p { text-align: center; }
-  .equation-container {
-    display: table;
-    text-align: center;
-    width: 100%;
-  }
-  .equation {
-    vertical-align: middle;
-  }
-  .equation-label {
-    display: table-cell;
-    text-align: right;
-    vertical-align: middle;
-  }
-  .inlinetask {
-    padding: 10px;
-    border: 2px solid gray;
-    margin: 10px;
-    background: #ffffcc;
-  }
-  #org-div-home-and-up
-   { text-align: right; font-size: 70%; white-space: nowrap; }
-  textarea { overflow-x: auto; }
-  .linenr { font-size: smaller }
-  .code-highlighted { background-color: #ffff00; }
-  .org-info-js_info-navigation { border-style: none; }
-  #org-info-js_console-label
-    { font-size: 10px; font-weight: bold; white-space: nowrap; }
-  .org-info-js_search-highlight
-    { background-color: #ffff00; color: #000000; font-weight: bold; }
-  .org-svg { width: 90%; }
-  /*]]>*/-->
-</style>
-<link rel="stylesheet" type="text/css" href="libreserver.css" />
-<script type="text/javascript">
-/*
-@licstart  The following is the entire license notice for the
-JavaScript code in this tag.
+    <div class="projectDescription">
 
-Copyright (C) 2012-2019 Free Software Foundation, Inc.
+      <p>
+	Most people know XMPP as "<i>Jabber</i>" and it's sometimes regarded and an old protocol once used by Google and Facebook but which is no longer relevant. However, it still works and if appropriately configured, as it is on LibreServer, can provide the best chat messaging security currently available.
+      </p>
 
-The JavaScript code in this tag is free software: you can
-redistribute it and/or modify it under the terms of the GNU
-General Public License (GNU GPL) as published by the Free Software
-Foundation, either version 3 of the License, or (at your option)
-any later version.  The code is distributed WITHOUT ANY WARRANTY;
-without even the implied warranty of MERCHANTABILITY or FITNESS
-FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+      <p>
+	With regard to chat apps you might have read a lot of stuff about <i>end-to-end security</i>. That's important, but to also protect the metadata of who sends messages to who the data needs to be onion routed (wrapped in multiple layers of routing encryption), and that's something which most popular chat apps don't provide. Also beware of chat apps which fundamentally rely upon Google's infrastructure. You can be sure that they extensively data mine everything and will be able to reconstruct your social graph if that's at all technically feasible, then pass that to whatever governments they're friendly with or trying to lobby.
+      </p>
 
-As additional permission under GNU GPL version 3 section 7, you
-may distribute non-source (e.g., minimized or compacted) forms of
-that code without the copy of the GNU GPL normally required by
-section 4, provided you include this license notice and a URL
-through which recipients can access the Corresponding Source.
+      <p>
+	A well written article on the state of XMPP and how it compares to other chat protocols <a href="https://gultsch.de/xmpp_2016.html">can be found here</a>.
+      </p>
 
+      <h2>Using with Profanity</h2>
+      <p>
+	You can install the <a href="./app_profanity.html">profanity app</a> via <b>Add/remove apps</b> on the <b>Administrator control panel</b>. Logging in and then selecting <b>Run App</b> and <b>profanity</b> will start it.
+      </p>
 
-@licend  The above is the entire license notice
-for the JavaScript code in this tag.
-*/
-<!--/*--><![CDATA[/*><!--*/
- function CodeHighlightOn(elem, id)
- {
-   var target = document.getElementById(id);
-   if(null != target) {
-     elem.cacheClassElem = elem.className;
-     elem.cacheClassTarget = target.className;
-     target.className = "code-highlighted";
-     elem.className   = "code-highlighted";
-   }
- }
- function CodeHighlightOff(elem, id)
- {
-   var target = document.getElementById(id);
-   if(elem.cacheClassElem)
-     elem.className = elem.cacheClassElem;
-   if(elem.cacheClassTarget)
-     target.className = elem.cacheClassTarget;
- }
-/*]]>*///-->
-</script>
-</head>
-<body>
-<div id="content">
-<h1 class="title">LibreServer</h1>
+      <h2>Using with Gajim</h2>
+      <p>
+	In mid 2016 <a href="https://gajim.org/">Gajim</a> became the first desktop XMPP client to support the <a href="https://en.wikipedia.org/wiki/OMEMO">OMEMO end-to-end security standard</a>, which is superior to the more traditional <a href="https://en.wikipedia.org/wiki/Off-the-Record_Messaging">OTR</a> since it also includes multi-user chat and the ratcheting mechanism pioneered by Open Whisper Systems. To install it:
+      </p>
 
-<div class="figure">
-<p><img src="images/logo.png" alt="logo.png" width="80%" height="10%" align="center" />
-</p>
-</div>
+      <pre>
+	su -c 'echo "deb ftp://ftp.gajim.org/debian unstable main" &gt; /etc/apt/sources.list.d/gajim.list'
+	sudo apt-get update
+	sudo apt-get -y install gajim-dev-keyring
+	sudo apt-get -y install git tor python-dev python-pip gajim-nightly
+	mkdir ~/.local/share/gajim/plugins -p
+	cd ~/.local/share/gajim/plugins
+	git clone https://github.com/omemo/gajim-omemo
+	sudo pip install protobuf==2.6.1, python-axolotl==0.1.35
+      </pre>
 
-<div id="outline-container-orgc9185dc" class="outline-2">
-<h2 id="orgc9185dc">XMPP/Jabber</h2>
-<div class="outline-text-2" id="text-orgc9185dc">
-<p>
-Most people know XMPP as "<i>Jabber</i>" and it's sometimes regarded and an old protocol once used by Google and Facebook but which is no longer relevant. However, it still works and if appropriately configured, as it is on LibreServer, can provide the best chat messaging security currently available.
-</p>
+      <p>
+	Open Gajim and enter your XMPP address and password.
+      </p>
 
-<p>
-With regard to chat apps you might have read a lot of stuff about <i>end-to-end security</i>. That's important, but to also protect the metadata of who sends messages to who the data needs to be onion routed (wrapped in multiple layers of routing encryption), and that's something which most popular chat apps don't provide. Also beware of chat apps which fundamentally rely upon Google's infrastructure. You can be sure that they extensively data mine everything and will be able to reconstruct your social graph if that's at all technically feasible, then pass that to whatever governments they're friendly with or trying to lobby.
-</p>
+      <p>
+	Go to <b>Edit/Preferences</b> and select the <b>Advanced</b> tab. Under <b>Global Proxy</b> select <b>Tor</b> and the <b>Close</b> button. Then select <b>Edit/Plugins</b> and make sure that OMEMO is active (ticked), then select the <b>Close</b> button.
+      </p>
 
-<p>
-A well written article on the state of XMPP and how it compares to other chat protocols <a href="https://gultsch.de/xmpp_2016.html">can be found here</a>.
-</p>
-</div>
-</div>
+      <p>
+	Go to <b>Edit/Accounts</b>, select your account then the <b>Connection</b> tab. Ensure that <b>Use custom hostname/port</b> is checked and enter your onion address there as the hostname (it can be found on the <i>About</i> screen of the administrator control panel). Using the onion address will give you better protection against correlation attacks within the Tor network. Also under <b>Proxy</b> select <b>Tor</b>.
+      </p>
 
-<div id="outline-container-org9a024c0" class="outline-2">
-<h2 id="org9a024c0">Using with Profanity</h2>
-<div class="outline-text-2" id="text-org9a024c0">
-<p>
-You can install the <a href="./app_profanity.html">profanity app</a> via <b>Add/remove apps</b> on the <b>Administrator control panel</b>. Logging in and then selecting <b>Run App</b> and <b>profanity</b> will start it.
-</p>
-</div>
-</div>
-<div id="outline-container-org2f59e2a" class="outline-2">
-<h2 id="org2f59e2a">Using with Gajim</h2>
-<div class="outline-text-2" id="text-org2f59e2a">
-<p>
-In mid 2016 <a href="https://gajim.org/">Gajim</a> became the first desktop XMPP client to support the <a href="https://en.wikipedia.org/wiki/OMEMO">OMEMO end-to-end security standard</a>, which is superior to the more traditional <a href="https://en.wikipedia.org/wiki/Off-the-Record_Messaging">OTR</a> since it also includes multi-user chat and the ratcheting mechanism pioneered by Open Whisper Systems. To install it:
-</p>
+      <p>
+	When you start a conversation make sure that the OMEMO box is ticked. You can also click on the keys button and trust various fingerprints. Both sides will need to do that before an encrypted chat can start.
+      </p>
 
-<div class="org-src-container">
-<pre class="src src-bash">su -c <span style="color: #deb887;">'echo "deb ftp://ftp.gajim.org/debian unstable main" &gt; /etc/apt/sources.list.d/gajim.list'</span>
-sudo apt-get update
-sudo apt-get -y install gajim-dev-keyring
-sudo apt-get -y install git tor python-dev python-pip gajim-nightly
-mkdir ~/.local/share/gajim/plugins -p
-<span style="color: #f08080;">cd</span> ~/.local/share/gajim/plugins
-git clone https://github.com/omemo/gajim-omemo
-sudo pip install <span style="color: #4eee94;">protobuf</span>==2.6.1, python-axolotl==0.1.35
-</pre>
-</div>
+      <p>
+	If you wish to make backups of the OMEMO keys then they can be found within:
+      </p>
 
-<p>
-Open Gajim and enter your XMPP address and password.
-</p>
+      <pre>~/.local/share/gajim</pre>
 
-<p>
-Go to <b>Edit/Preferences</b> and select the <b>Advanced</b> tab. Under <b>Global Proxy</b> select <b>Tor</b> and the <b>Close</b> button. Then select <b>Edit/Plugins</b> and make sure that OMEMO is active (ticked), then select the <b>Close</b> button.
-</p>
+      <p>
+	If you wish to use OpenPGP to encrypt your messages then go to <b>Edit/Accounts</b>, select your account and then the <b>Personal Information</b> tab. You can then choose your GPG key. When initiating a chat you can select the <b>Advanced</b> button and then select <b>Toggle OpenPGP Encryption</b>. OpenPGP is not as secure as OMEMO, but does allow you to use XMPP in a similar style to email in that the recipient of the message does not necessarily need to be online at the same time that you send it.
+      </p>
 
-<p>
-Go to <b>Edit/Accounts</b>, select your account then the <b>Connection</b> tab. Ensure that <b>Use custom hostname/port</b> is checked and enter your onion address there as the hostname (it can be found on the <i>About</i> screen of the administrator control panel). Using the onion address will give you better protection against correlation attacks within the Tor network. Also under <b>Proxy</b> select <b>Tor</b>.
-</p>
+      <h2>Using with Jitsi</h2>
+      <p>
+	Jitsi can be downloaded from <a href="https://jitsi.org">https://jitsi.org</a>
+      </p>
 
-<p>
-When you start a conversation make sure that the OMEMO box is ticked. You can also click on the keys button and trust various fingerprints. Both sides will need to do that before an encrypted chat can start.
-</p>
+      <p>
+	On your desktop/laptop open Jitsi and select <b>Options</b> from the <b>Tools</b> menu.
+      </p>
 
-<p>
-If you wish to make backups of the OMEMO keys then they can be found within:
-</p>
+      <p>
+	Click <b>Add</b> to add a new user, then enter the Jabber ID (yourusername@yourmaindomainname). Close and then you should notice that your status is "Online" (or if not then you should be able to set it to online).
+      </p>
 
-<div class="org-src-container">
-<pre class="src src-bash">~/.local/share/gajim
-</pre>
-</div>
+      <p>
+	From the <b>File</b> menu you can add contacts, then select the chat icon to begin a chat.  Click on the lock icon on the right hand side and this will initiate an authentication procedure in which you can specify a question and answer to verify the identity of the person you're communicating with.  Once authentication is complete then you'll be chating using OTR, which provides an additional layer of security.
+      </p>
 
-<p>
-If you wish to use OpenPGP to encrypt your messages then go to <b>Edit/Accounts</b>, select your account and then the <b>Personal Information</b> tab. You can then choose your GPG key. When initiating a chat you can select the <b>Advanced</b> button and then select <b>Toggle OpenPGP Encryption</b>. OpenPGP is not as secure as OMEMO, but does allow you to use XMPP in a similar style to email in that the recipient of the message does not necessarily need to be online at the same time that you send it.
-</p>
-</div>
-</div>
+      <p>
+	When opening Jitsi initially you will get a certificate warning for your domain name (assuming that you're using a self-signed certificate). If this happens then select <b>View Certificate</b> and enable the checkbox to trust the certificate, then select <b>Continue Anyway</b>.  Once you've done this then the certificate warning will not appear again unless you reinstall Jitsi or use a different computer.
+      </p>
 
-<div id="outline-container-orga241a23" class="outline-2">
-<h2 id="orga241a23">Using with Jitsi</h2>
-<div class="outline-text-2" id="text-orga241a23">
-<p>
-Jitsi can be downloaded from <a href="https://jitsi.org">https://jitsi.org</a>
-</p>
+      <p>
+	You can also <a href="https://www.youtube.com/watch?v=vgx7VSrDGjk">see this video</a> as an example of using OTR.
+      </p>
 
-<p>
-On your desktop/laptop open Jitsi and select <b>Options</b> from the <b>Tools</b> menu.
-</p>
+      <h2>Using with Ubuntu</h2>
+      <p>
+	The default XMPP client in Ubuntu is Empathy.  Using Empathy isn't as secure as using Jitsi, since it doesn't include the <i>off the record</i> feature, but since it's the default it's what many users will have easy access to.
+      </p>
 
-<p>
-Click <b>Add</b> to add a new user, then enter the Jabber ID (yourusername@yourmaindomainname). Close and then you should notice that your status is "Online" (or if not then you should be able to set it to online).
-</p>
+      <p>
+	Open <b>System Settings</b> and select <b>Online Accounts</b>, <b>Add account</b>  and then <b>Jabber</b>.
+      </p>
 
-<p>
-From the <b>File</b> menu you can add contacts, then select the chat icon to begin a chat.  Click on the lock icon on the right hand side and this will initiate an authentication procedure in which you can specify a question and answer to verify the identity of the person you're communicating with.  Once authentication is complete then you'll be chating using OTR, which provides an additional layer of security.
-</p>
+      <p>
+	Enter your username (username@domainname) and password.
+      </p>
 
-<p>
-When opening Jitsi initially you will get a certificate warning for your domain name (assuming that you're using a self-signed certificate). If this happens then select <b>View Certificate</b> and enable the checkbox to trust the certificate, then select <b>Continue Anyway</b>.  Once you've done this then the certificate warning will not appear again unless you reinstall Jitsi or use a different computer.
-</p>
+      <p>
+	Click on <b>Advanced</b> and make sure that <b>Encryption required</b> and <b>Ignore SSL certificate errors</b> are checked.  Ignoring the certificate errors will allow you to use the self-signed certificate created earlier.  Then click <b>Done</b> and set your Jabber account and Empathy to <b>On</b>.
+      </p>
 
-<p>
-You can also <a href="https://www.youtube.com/watch?v=vgx7VSrDGjk">see this video</a> as an example of using OTR.
-</p>
-</div>
-</div>
+      <h2>Using with Android/Conversations</h2>
+      <p>
+	Install <a href="https://f-droid.org/">F-Droid</a>
+      </p>
 
-<div id="outline-container-org6b6addc" class="outline-2">
-<h2 id="org6b6addc">Using with Ubuntu</h2>
-<div class="outline-text-2" id="text-org6b6addc">
-<p>
-The default XMPP client in Ubuntu is Empathy.  Using Empathy isn't as secure as using Jitsi, since it doesn't include the <i>off the record</i> feature, but since it's the default it's what many users will have easy access to.
-</p>
+      <p>
+	Search for and install <b>Orbot</b> and <b>Conversations</b>.
+      </p>
 
-<p>
-Open <b>System Settings</b> and select <b>Online Accounts</b>, <b>Add account</b>  and then <b>Jabber</b>.
-</p>
+      <p>
+	Add an account and enter your Jabber/XMPP ID and password.
+      </p>
 
-<p>
-Enter your username (username@domainname) and password.
-</p>
+      <p>
+	From the menu select <b>Settings</b> then <b>Expert Settings</b>. Select <b>Connect via Tor</b> and depending on your situation you might also want to select <b>Don't save encrypted messages</b>. Also within expert settings select <b>Keep in foreground</b>. This will enable you to still receive notifications when your device is in standby mode with the screen turned off.
+      </p>
 
-<p>
-Click on <b>Advanced</b> and make sure that <b>Encryption required</b> and <b>Ignore SSL certificate errors</b> are checked.  Ignoring the certificate errors will allow you to use the self-signed certificate created earlier.  Then click <b>Done</b> and set your Jabber account and Empathy to <b>On</b>.
-</p>
-</div>
-</div>
+      <p>
+	From the menu select <b>Manage accounts</b> and add a new account.
+      </p>
 
-<div id="outline-container-org8991380" class="outline-2">
-<h2 id="org8991380">Using with Android/Conversations</h2>
-<div class="outline-text-2" id="text-org8991380">
-<p>
-Install <a href="https://f-droid.org/">F-Droid</a>
-</p>
+      <pre>
+	Jabber ID: myusername@mydomain
+	Password:  your XMPP password
+	Hostname:  mydomain (preferably your xmpp onion address)
+	Port:      5222</pre>
 
-<p>
-Search for and install <b>Orbot</b> and <b>Conversations</b>.
-</p>
+      <p>
+	Then select <b>Next</b>. When chatting you can use the lock icon to encrypt your conversation. OMEMO is the recommended type of encryption. It's also going through Tor, so passive surveillance of the metadata should not be easy for an adversary.
+      </p>
 
-<p>
-Add an account and enter your Jabber/XMPP ID and password.
-</p>
-
-<p>
-From the menu select <b>Settings</b> then <b>Expert Settings</b>. Select <b>Connect via Tor</b> and depending on your situation you might also want to select <b>Don't save encrypted messages</b>. Also within expert settings select <b>Keep in foreground</b>. This will enable you to still receive notifications when your device is in standby mode with the screen turned off.
-</p>
-
-<p>
-From the menu select <b>Manage accounts</b> and add a new account.
-</p>
-
-<div class="org-src-container">
-<pre class="src src-bash">Jabber ID: myusername@mydomain
-Password:  your XMPP password
-Hostname:  mydomain (preferably your xmpp onion address)
-Port:      5222
-</pre>
-</div>
-
-<p>
-Then select <b>Next</b>. When chatting you can use the lock icon to encrypt your conversation. OMEMO is the recommended type of encryption. It's also going through Tor, so passive surveillance of the metadata should not be easy for an adversary.
-</p>
-
-<p>
-It's also recommended to disable battery optimisations for Conversations and Orbot. If you don't do that then you may have trouble receiving messages or some parts of the protocol may break. That can be done by going to <b>Settings</b>, selecting <b>Battery</b> then opening the menu (top right) and selecting <b>Battery optimisations</b> then selecting <b>Not optimised</b> and <b>All apps</b>, then finally choosing Conversations and Orbot not to be optimised.
-</p>
-</div>
-</div>
-</div>
-<div id="postamble" class="status">
-<p class="author">Author: Bob Mottram</p>
-<p class="date">Created: 2021-04-15 Thu 10:41</p>
-<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
-</div>
-</body>
+      <p>
+	It's also recommended to disable battery optimisations for Conversations and Orbot. If you don't do that then you may have trouble receiving messages or some parts of the protocol may break. That can be done by going to <b>Settings</b>, selecting <b>Battery</b> then opening the menu (top right) and selecting <b>Battery optimisations</b> then selecting <b>Not optimised</b> and <b>All apps</b>, then finally choosing Conversations and Orbot not to be optimised.
+      </p>
+    </div>
+  </body>
 </html>
