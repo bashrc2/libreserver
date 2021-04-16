@@ -39,6 +39,37 @@ body, html {
     text-align: center;
 }
 
+details > summary {
+    padding: 4px;
+    border: none;
+    cursor: pointer;
+}
+
+details > p {
+    background-color: #eee;
+    padding: 4px;
+    margin: 0;
+}
+
+details > h3, ul {
+    color: #777;
+}
+
+details > summary {
+    list-style-type: none;
+}
+
+details > summary::-webkit-details-marker {
+    display: none;
+}
+
+details > summary::before {
+    content: '';
+}
+
+details[open] > summary::before {
+    content: '';
+}
 blockquote {
     border-left: 10px;
     margin: 1.5em 10px;
