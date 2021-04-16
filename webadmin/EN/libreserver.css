@@ -1,0 +1,103 @@
+@charset "UTF-8";
+
+:root {
+    --main-fg-color: #777;
+    --main-bg-color: #dddddd;
+    --main-link-color: red;
+    --main-visited-color: darkred;
+    --apps-border: #aaa;
+    --search-background: #fdfdfd;
+    --search-background2: #144163;
+    --text-entry-foreground: black;
+    --text-entry-background: #aaa;
+}
+
+body {
+    margin: 0;
+    font-family: Arial;
+    font-size: 110%;
+    background-color: var(--main-bg-color);
+    color: var(--main-fg-color);
+}
+
+a, u {
+    text-decoration: none;
+    color: var(--main-fg-color);
+    font-weight: bold;
+}
+
+a:visited{
+    color: var(--main-visited-color);
+    font-weight: bold;
+}
+
+a:link {
+    color: var(--main-link-color);
+    font-weight: bold;
+}
+
+#headerpic {
+    width: 30%;
+    height: auto;
+    margin-right : auto;
+    margin-left : auto;
+    min-width : 220px;
+}
+
+.header {
+    text-align: center;
+    padding: 32px;
+}
+
+.headertext {
+    color: var(--main-fg-color);
+    text-align: center;
+    font-size: 120%;
+    font-weight: bold;
+}
+
+.email {
+    color: var(--main-fg-color);
+    font-size: 65%;
+    font-weight: bold;
+}
+
+.button-search {
+    background-image: url(images/search.png);
+    background-size: 100% 100%;
+    width: 35px;
+    height: 35px;
+}
+
+.card {
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+    max-width: 600px;
+    margin: auto;
+    text-align: center;
+    font-family: arial;
+    clear: both;
+}
+
+.card input[type=text] {
+    width: 90%;
+    clear: both;
+    text-align: center;
+    color: var(--text-entry-foreground);
+    background-color: var(--text-entry-background);
+}
+
+.card input[type=radio] {
+    width: 4%;
+    height: 15em;
+    font-size: 10%;
+    margin-top: 5em;
+    vertical-align: middle;
+}
+
+.card input[type=password] {
+    width: 90%;
+    clear: both;
+    text-align: center;
+    color: var(--text-entry-foreground);
+    background-color: var(--text-entry-background);
+}
