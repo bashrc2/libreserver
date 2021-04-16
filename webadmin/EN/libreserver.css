@@ -3,8 +3,8 @@
 :root {
     --main-fg-color: #777;
     --main-bg-color: #dddddd;
-    --main-link-color: red;
-    --main-visited-color: darkred;
+    --main-link-color: #555;
+    --main-visited-color: #222;
     --apps-border: #aaa;
     --search-background: #fdfdfd;
     --search-background2: #144163;
