@@ -1,4 +1,4 @@
-<img src="https://gitlab.com/bashrc2/libreserver/-/raw/bullseye/img/collage.jpg?raw=true" width="90%"/>
+<img src="https://gitlab.com/bashrc2/libreserver/-/raw/bullseye/img/logo.png?raw=true" width="70%"/>
 
 Once imagined as a space of liberation, the internet today is a rabble of corporate monopolies, oppressive governments and hate mobs. Much of its empowering potential has faded or been trampled. But perhaps there is a way forward.
 
