@@ -46,10 +46,12 @@ pre {
 
 a:link {
     color: red;
+    text-decoration: none;
 }
 
 a:visited {
     color: darkred;
+    text-decoration: none;
 }
 
 details > summary {
