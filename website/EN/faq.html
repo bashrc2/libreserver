@@ -337,8 +337,8 @@
 	  If you prefer the commandline then enable ssh via the web interface by supplying a public key, then log in with:
 	</p>
 
-	<pre>ssh admin@libreserver -p 2222
-	</pre>
+	<pre>
+	  ssh admin@libreserver -p 2222</pre>
 
 	<p>
 	  Select <i>Change email filtering/blocking rules</i> then you can add rules to be applied to incoming email addresses or mailing lists.
@@ -396,24 +396,24 @@
 	<summary><h2>Why isn't dynamic DNS working?</h2></summary>
 	<p>If you run the command:</p>
 
-	<pre>systemctl status inadyn
-	</pre>
+	<pre>
+	  systemctl status inadyn</pre>
 
 	<p>
 	  And see some error related to checking for changes in the IP address then you can try other external IP services. Edit <b>/etc/inadyn.conf</b> and change the domain for the <b>checkip-url</b> parameter. Possible sites are:
 	</p>
 
-	<pre>https://check.torproject.org/
+	<pre>
+	  https://check.torproject.org/
 	  https://www.whatsmydns.net/whats-my-ip-address.html
-	  https://www.privateinternetaccess.com/pages/whats-my-ip/
-	</pre>
+	  https://www.privateinternetaccess.com/pages/whats-my-ip/</pre>
       </details>
 
       <details>
 	<summary><h2>How do I change my encryption settings?</h2></summary>
 	<p>Suppose that some new encryption vulnerability has been announced and that you need to change your encryption settings. Maybe an algorithm thought to be secure is now no longer so and you need to remove it. You can change your settings by doing the following:</p>
-	<pre class="src src-bash">ssh admin@libreserver -p 2222
-	</pre>
+	<pre>
+	  ssh admin@libreserver -p 2222</pre>
 	<p>
 	  Select <i>Administrator controls</i> then select <i>Security Settings</i>. You will then be able to edit the crypto settings for all of the installed applications. <b>Be very careful when editing</b>, since any mistake could make your system less secure rather than more.
 	</p>
@@ -426,11 +426,11 @@
 	  Remove any existing nameservers for your domain (or select "custom" nameservers), then add:
 	</p>
 
-	<pre>NS1.AFRAID.ORG
+	<pre>
+	  NS1.AFRAID.ORG
 	  NS2.AFRAID.ORG
 	  NS3.AFRAID.ORG
-	  NS4.AFRAID.ORG
-	</pre>
+	  NS4.AFRAID.ORG</pre>
 
 	<p>
 	  It might take a few minutes for the above change to take effect.  Within freedns click on "Domains" and add your domains (this might only be available to paid members).  Make sure that they're marked as "private".
@@ -448,8 +448,8 @@
 	  If you need to manually renew a certificate:
 	</p>
 
-	<pre>ssh admin@libreserver -p 2222
-	</pre>
+	<pre>
+	  ssh admin@libreserver -p 2222</pre>
 
 	<p>
 	  Select <i>Administrator controls</i> then <b>Security settings</b> then <b>Renew Let's Encrypt certificate</b>.
@@ -460,8 +460,8 @@
 	<summary><h2>I tried to renew a Let's Encrypt certificate and it failed. What should I do?</h2></summary>
 	<p>Most likely it's because Let's Encrypt doesn't support your particular domain or subdomain. Currently free subdomains tend not to work. You'll need to buy a domain name, link it to your dynamic DNS account and then do:</p>
 
-	<pre class="src src-bash">ssh admin@libreserver -p 2222
-	</pre>
+	<pre>
+	  ssh admin@libreserver -p 2222</pre>
 
 	<p>
 	  Select <i>Administrator controls</i> then <b>Security settings</b> then <b>Create a new Let's Encrypt certificate</b>.
@@ -470,7 +470,7 @@
 
       <details>
 	<summary><h2>Why not use the services of $company instead? They took the Seppuku pledge</h2></summary>
-	<p><a href="https://cryptostorm.org/viewtopic.php?f=63&amp;t=2954&amp;sid=7de2d1e699cfde2f574e6a7f6ea5a173">That pledge</a> is utterly worthless. Years ago people trusted Google in the same sort of way, because they promised not be be evil and because a lot of the engineers working for them seemed like honest types who were "<i>on our side</i>". Post-<a href="https://en.wikipedia.org/wiki/Nymwars">nymwars</a> and post-<a href="https://en.wikipedia.org/wiki/PRISM_%28surveillance_program%29">PRISM</a> we know exactly how much Google cared about the privacy and security of the people using its systems. But Google is only one particular example. In general don't trust pledges made by companies, even if the people running them seem really sincere.</p>
+	<p><a href="https://www.techdirt.com/articles/20130816/08404424206/who-will-take-privacy-seppuku-pledge.shtml">That pledge</a> is utterly worthless. Years ago people trusted Google in the same sort of way, because they promised not be be evil and because a lot of the engineers working for them seemed like honest types who were "<i>on our side</i>". Post-<a href="https://en.wikipedia.org/wiki/Nymwars">nymwars</a> and post-<a href="https://en.wikipedia.org/wiki/PRISM_%28surveillance_program%29">PRISM</a> we know exactly how much Google cared about the privacy and security of the people using its systems. But Google is only one particular example. In general don't trust pledges made by companies, even if the people running them seem really sincere.</p>
       </details>
 
       <details>

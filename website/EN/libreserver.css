@@ -39,6 +39,19 @@ body, html {
     text-align: center;
 }
 
+pre {
+    background-color: black;
+    color: white;
+}
+
+a:link {
+    color: red;
+}
+
+a:visited {
+    color: darkred;
+}
+
 details > summary {
     padding: 4px;
     border: none;
