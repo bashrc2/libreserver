@@ -98,8 +98,8 @@ function web_admin_background_color {
     visited_dark=eee
     text_entry_foreground_light='black'
     text_entry_background_light='aaa'
-    text_entry_foreground_dark='black'
-    text_entry_background_dark='lightblue'
+    text_entry_foreground_dark='#111'
+    text_entry_background_dark='#ddd'
 
     if ! grep -q 'WEBADMIN_BACKGROUND_COLOR=' "/root/${PROJECT_NAME}.cfg"; then
         echo 'WEBADMIN_BACKGROUND_COLOR=#dddddd' >> "/root/${PROJECT_NAME}.cfg"

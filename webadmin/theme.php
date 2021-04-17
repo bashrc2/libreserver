@@ -10,7 +10,7 @@
 // License
 // =======
 //
-// Copyright (C) 2018-2019 Bob Mottram <bob@libreserver.org>
+// Copyright (C) 2018-2021 Bob Mottram <bob@libreserver.org>
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -64,8 +64,8 @@ if (isset($_POST['submitthemedark'])) {
     $text_of_search_box = '#144163';
     $links = '#ccc';
     $visited_links = '#eee';
-    $text_entry_foreground = 'black';
-    $text_entry_background = 'lightblue';
+    $text_entry_foreground = '#111';
+    $text_entry_background = '#ddd';
     $icons_red = '113';
     $icons_green = '167';
     $icons_blue = '207';
