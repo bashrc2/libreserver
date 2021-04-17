@@ -57,8 +57,8 @@ if (isset($_POST['submitthemelight'])) {
 if (isset($_POST['submitthemedark'])) {
     $theme_file = fopen(".theme.txt", "w") or die("Unable to write to theme file");
     // dark theme
-    $screen_background = '#103b5c';
-    $foreground_text = '#72a7cf';
+    $screen_background = '#222';
+    $foreground_text = '#bbb';
     $border_around_app_categories = '#1f5177';
     $background_of_search_box = '#f9f3f3';
     $text_of_search_box = '#144163';
