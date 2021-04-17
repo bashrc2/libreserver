@@ -434,27 +434,27 @@ function web_admin_set_icon_color {
 
 function web_admin_background_color {
     # colors of the border around app categories
-    apps_border_light=cfdde7
+    apps_border_light=aaa
     apps_border_dark=1f5177
 
     search_background_light=5499ca
     search_background_dark=f9f3f3
     search_background_light2=fdfdfd
     search_background_dark2=144163
-    link_light=20a2cf
+    link_light=555
     link_dark=10a0cf
-    visited_light=10a0cf
+    visited_light=222
     visited_dark=20a2cf
     text_entry_foreground_light='black'
-    text_entry_background_light='lightblue'
+    text_entry_background_light='aaa'
     text_entry_foreground_dark='black'
     text_entry_background_dark='lightblue'
 
     if ! grep -q 'WEBADMIN_BACKGROUND_COLOR=' "${CONFIGURATION_FILE}"; then
-        echo 'WEBADMIN_BACKGROUND_COLOR=white' >> "${CONFIGURATION_FILE}"
+        echo 'WEBADMIN_BACKGROUND_COLOR=#dddddd' >> "${CONFIGURATION_FILE}"
     fi
     if ! grep -q 'WEBADMIN_FOREGROUND_COLOR=' "${CONFIGURATION_FILE}"; then
-        echo 'WEBADMIN_FOREGROUND_COLOR=#72a7cf' >> "${CONFIGURATION_FILE}"
+        echo 'WEBADMIN_FOREGROUND_COLOR=#777' >> "${CONFIGURATION_FILE}"
     fi
     bg_color=$(grep "WEBADMIN_BACKGROUND_COLOR=" "${CONFIGURATION_FILE}" | awk -F '=' '{print $2}')
     fg_color=$(grep "WEBADMIN_FOREGROUND_COLOR=" "${CONFIGURATION_FILE}" | awk -F '=' '{print $2}')

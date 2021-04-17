@@ -34,13 +34,13 @@ if (php_sapi_name()!=='fpm-fcgi') exit('php script must be run from the web inte
 if (isset($_POST['submitthemelight'])) {
     $theme_file = fopen(".theme.txt", "w") or die("Unable to write to theme file");
     // light theme
-    $screen_background = 'white';
-    $foreground_text = '#72a7cf';
-    $border_around_app_categories = '#cfdde7';
+    $screen_background = '#dddddd';
+    $foreground_text = '#777';
+    $border_around_app_categories = '#aaa';
     $background_of_search_box = '#5499ca';
     $text_of_search_box = '#fdfdfd';
-    $links = '#20a2cf';
-    $visited_links = '#10a0cf';
+    $links = '#555';
+    $visited_links = '#222';
     $text_entry_foreground = 'black';
     $text_entry_background = 'lightblue';
     $icons_red = '113';
