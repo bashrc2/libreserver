@@ -23,16 +23,17 @@ body {
 a, u {
     text-decoration: none;
     color: var(--main-fg-color);
-    font-weight: bold;
 }
 
 a:visited{
     color: var(--main-visited-color);
-    font-weight: bold;
 }
 
 a:link {
     color: var(--main-link-color);
+}
+
+a:hover {
     font-weight: bold;
 }
 
