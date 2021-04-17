@@ -1,8 +1,8 @@
 #!/bin/bash
-#  _    _ _            ___                      
-# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
-# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # Install daemon for the web admin system
 # See also libreserver-utils-webadmin
@@ -486,12 +486,24 @@ function web_admin_background_color {
         else
             echo "WEBADMIN_LINK_COLOR=${link_dark}" >> "${CONFIGURATION_FILE}"
         fi
+    else
+        if [[ "$bg_color" == '#dddddd' ]]; then
+            sed -i "s|WEBADMIN_LINK_COLOR=|WEBADMIN_LINK_COLOR=${link_light}|" "${CONFIGURATION_FILE}"
+        else
+            sed -i "s|WEBADMIN_LINK_COLOR=|WEBADMIN_LINK_COLOR=${link_dark}|" "${CONFIGURATION_FILE}"
+        fi
     fi
     if ! grep -q 'WEBADMIN_VISITED_COLOR=' "${CONFIGURATION_FILE}"; then
         if [[ "$bg_color" == '#dddddd' ]]; then
             echo "WEBADMIN_VISITED_COLOR=${visited_light}" >> "${CONFIGURATION_FILE}"
         else
             echo "WEBADMIN_VISITED_COLOR=${visited_dark}" >> "${CONFIGURATION_FILE}"
+        fi
+    else
+        if [[ "$bg_color" == '#dddddd' ]]; then
+            sed -i "s|WEBADMIN_VISITED_COLOR=|WEBADMIN_VISITED_COLOR=${visited_light}|" "${CONFIGURATION_FILE}"
+        else
+            sed -i "s|WEBADMIN_VISITED_COLOR=|WEBADMIN_VISITED_COLOR=${visited_dark}|" "${CONFIGURATION_FILE}"
         fi
     fi
     if ! grep -q 'WEBADMIN_TEXT_ENTRY_FOREGROUND_COLOR=' "${CONFIGURATION_FILE}"; then
@@ -3291,8 +3303,8 @@ function update_enable_ssh {
     if [ -f "$ssh_file" ]; then
         SSH_CONFIG='/etc/ssh/sshd_config'
         if grep -q 'PrintMotd yes' $SSH_CONFIG; then
-	    sed -i 's|PrintMotd yes|PrintMotd no|g' $SSH_CONFIG
-	fi
+            sed -i 's|PrintMotd yes|PrintMotd no|g' $SSH_CONFIG
+        fi
         if ! grep -q 'PasswordAuthentication' $SSH_CONFIG; then
             echo 'PasswordAuthentication no' >> $SSH_CONFIG
         fi
@@ -3302,11 +3314,11 @@ function update_enable_ssh {
         if ! grep -q 'PasswordAuthentication no' $SSH_CONFIG; then
             sed -i "s|PasswordAuthentication.*|PasswordAuthentication no|g" $SSH_CONFIG
         fi
-	if grep -q '#AuthorizedKeysFile' $SSH_CONFIG; then
-	    sed -i 's|#AuthorizedKeysFile.*|AuthorizedKeysFile     .ssh/authorized_keys|g' $SSH_CONFIG
-	else
-	    sed -i 's|AuthorizedKeysFile.*|AuthorizedKeysFile     .ssh/authorized_keys|g' $SSH_CONFIG
-	fi
+        if grep -q '#AuthorizedKeysFile' $SSH_CONFIG; then
+            sed -i 's|#AuthorizedKeysFile.*|AuthorizedKeysFile     .ssh/authorized_keys|g' $SSH_CONFIG
+        else
+            sed -i 's|AuthorizedKeysFile.*|AuthorizedKeysFile     .ssh/authorized_keys|g' $SSH_CONFIG
+        fi
 
         ssh_active=$(awk -F ',' '{print $1}' < "$ssh_file")
         ADMIN_USERNAME=$(grep 'MY_USERNAME=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')

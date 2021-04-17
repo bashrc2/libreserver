@@ -1,8 +1,8 @@
 #!/bin/bash
-#  _    _ _            ___                      
-# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
-# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # Web based administration user interface
 # typically available on http://libreserver.local
@@ -137,12 +137,24 @@ function web_admin_background_color {
         else
             echo "WEBADMIN_LINK_COLOR=${link_dark}" >> "/root/${PROJECT_NAME}.cfg"
         fi
+    else
+        if [[ "$bg_color" == '#dddddd' ]]; then
+            sed -i "s|WEBADMIN_LINK_COLOR=|WEBADMIN_LINK_COLOR=${link_light}|" "/root/${PROJECT_NAME}.cfg"
+        else
+            sed -i "s|WEBADMIN_LINK_COLOR=|WEBADMIN_LINK_COLOR=${link_dark}|" "/root/${PROJECT_NAME}.cfg"
+        fi
     fi
     if ! grep -q 'WEBADMIN_VISITED_COLOR=' "/root/${PROJECT_NAME}.cfg"; then
         if [[ "$bg_color" == '#dddddd' ]]; then
             echo "WEBADMIN_VISITED_COLOR=${visited_light}" >> "/root/${PROJECT_NAME}.cfg"
         else
             echo "WEBADMIN_VISITED_COLOR=${visited_dark}" >> "/root/${PROJECT_NAME}.cfg"
+        fi
+    else
+        if [[ "$bg_color" == '#dddddd' ]]; then
+            sed -i "s|WEBADMIN_VISITED_COLOR=|WEBADMIN_VISITED_COLOR=${visited_light}|" "/root/${PROJECT_NAME}.cfg"
+        else
+            sed -i "s|WEBADMIN_VISITED_COLOR=|WEBADMIN_VISITED_COLOR=${visited_dark}|" "/root/${PROJECT_NAME}.cfg"
         fi
     fi
     apps_border=$(grep "WEBADMIN_APPS_BORDER_COLOR=" "/root/${PROJECT_NAME}.cfg" | awk -F '=' '{print $2}')
