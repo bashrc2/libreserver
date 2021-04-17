@@ -205,8 +205,8 @@ function web_admin_background_color {
         sed -i "s|main-visited-color:.*|main-visited-color: ${visited_color};|g" "/var/www/${local_hostname}/htdocs/home/feeds.css"
         sed -i "s|addremove-foreground:.*|addremove-foreground: ${search_background_a};|g" "/var/www/${local_hostname}/htdocs/home/feeds.css"
         sed -i "s|addremove-background:.*|addremove-background: ${search_background_b};|g" "/var/www/${local_hostname}/htdocs/home/feeds.css"
-        sed -i "s|text-entry-foreground:.*|text-entry-foreground: ${text_entry_foreground_color};|g" "/var/www/${local_hostname}/htdocs/admin/feeds.css"
-        sed -i "s|text-entry-background:.*|text-entry-background: ${text_entry_background_color};|g" "/var/www/${local_hostname}/htdocs/admin/feeds.css"
+        sed -i "s|text-entry-foreground:.*|text-entry-foreground: ${text_entry_foreground_color};|g" "/var/www/${local_hostname}/htdocs/home/feeds.css"
+        sed -i "s|text-entry-background:.*|text-entry-background: ${text_entry_background_color};|g" "/var/www/${local_hostname}/htdocs/home/feeds.css"
     fi
 
     # change webmail theme
