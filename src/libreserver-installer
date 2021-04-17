@@ -488,9 +488,9 @@ function web_admin_background_color {
         fi
     else
         if [[ "$bg_color" == '#dddddd' ]]; then
-            sed -i "s|WEBADMIN_LINK_COLOR=|WEBADMIN_LINK_COLOR=${link_light}|" "${CONFIGURATION_FILE}"
+            sed -i "s|WEBADMIN_LINK_COLOR=.*|WEBADMIN_LINK_COLOR=${link_light}|" "${CONFIGURATION_FILE}"
         else
-            sed -i "s|WEBADMIN_LINK_COLOR=|WEBADMIN_LINK_COLOR=${link_dark}|" "${CONFIGURATION_FILE}"
+            sed -i "s|WEBADMIN_LINK_COLOR=.*|WEBADMIN_LINK_COLOR=${link_dark}|" "${CONFIGURATION_FILE}"
         fi
     fi
     if ! grep -q 'WEBADMIN_VISITED_COLOR=' "${CONFIGURATION_FILE}"; then
@@ -501,9 +501,9 @@ function web_admin_background_color {
         fi
     else
         if [[ "$bg_color" == '#dddddd' ]]; then
-            sed -i "s|WEBADMIN_VISITED_COLOR=|WEBADMIN_VISITED_COLOR=${visited_light}|" "${CONFIGURATION_FILE}"
+            sed -i "s|WEBADMIN_VISITED_COLOR=.*|WEBADMIN_VISITED_COLOR=${visited_light}|" "${CONFIGURATION_FILE}"
         else
-            sed -i "s|WEBADMIN_VISITED_COLOR=|WEBADMIN_VISITED_COLOR=${visited_dark}|" "${CONFIGURATION_FILE}"
+            sed -i "s|WEBADMIN_VISITED_COLOR=.*|WEBADMIN_VISITED_COLOR=${visited_dark}|" "${CONFIGURATION_FILE}"
         fi
     fi
     if ! grep -q 'WEBADMIN_TEXT_ENTRY_FOREGROUND_COLOR=' "${CONFIGURATION_FILE}"; then

@@ -139,9 +139,9 @@ function web_admin_background_color {
         fi
     else
         if [[ "$bg_color" == '#dddddd' ]]; then
-            sed -i "s|WEBADMIN_LINK_COLOR=|WEBADMIN_LINK_COLOR=${link_light}|" "/root/${PROJECT_NAME}.cfg"
+            sed -i "s|WEBADMIN_LINK_COLOR=.*|WEBADMIN_LINK_COLOR=${link_light}|" "/root/${PROJECT_NAME}.cfg"
         else
-            sed -i "s|WEBADMIN_LINK_COLOR=|WEBADMIN_LINK_COLOR=${link_dark}|" "/root/${PROJECT_NAME}.cfg"
+            sed -i "s|WEBADMIN_LINK_COLOR=.*|WEBADMIN_LINK_COLOR=${link_dark}|" "/root/${PROJECT_NAME}.cfg"
         fi
     fi
     if ! grep -q 'WEBADMIN_VISITED_COLOR=' "/root/${PROJECT_NAME}.cfg"; then
