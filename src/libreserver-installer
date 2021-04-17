@@ -435,16 +435,16 @@ function web_admin_set_icon_color {
 function web_admin_background_color {
     # colors of the border around app categories
     apps_border_light=aaa
-    apps_border_dark=1f5177
+    apps_border_dark=777
 
     search_background_light=5499ca
     search_background_dark=f9f3f3
     search_background_light2=fdfdfd
     search_background_dark2=144163
     link_light=555
-    link_dark=10a0cf
+    link_dark=ccc
     visited_light=222
-    visited_dark=20a2cf
+    visited_dark=eee
     text_entry_foreground_light='black'
     text_entry_background_light='aaa'
     text_entry_foreground_dark='black'
