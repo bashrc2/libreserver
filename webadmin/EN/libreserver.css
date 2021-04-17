@@ -12,9 +12,17 @@
     --text-entry-background: #aaa;
 }
 
+@font-face {
+  font-family: 'Exoplanetaria';
+  font-style: normal;
+  font-weight: normal;
+  font-display: block;
+  src: url('./fonts/Exoplanetaria-gxxJ5.ttf') format('truetype');
+}
+
 body {
     margin: 0;
-    font-family: Arial;
+    font-family: 'Exoplanetaria';
     font-size: 110%;
     background-color: var(--main-bg-color);
     color: var(--main-fg-color);
