@@ -460,61 +460,61 @@ function web_admin_background_color {
     fg_color=$(grep "WEBADMIN_FOREGROUND_COLOR=" "${CONFIGURATION_FILE}" | awk -F '=' '{print $2}')
 
     if ! grep -q 'WEBADMIN_APPS_BORDER_COLOR=' "${CONFIGURATION_FILE}"; then
-        if [[ "$bg_color" == '#dddddd' ]]; then
+        if [[ "$bg_color" == *'dddddd' ]]; then
             echo "WEBADMIN_APPS_BORDER_COLOR=${apps_border_light}" >> "${CONFIGURATION_FILE}"
         else
             echo "WEBADMIN_APPS_BORDER_COLOR=${apps_border_dark}" >> "${CONFIGURATION_FILE}"
         fi
     fi
     if ! grep -q 'WEBADMIN_SEARCH_BACKGROUND_COLOR=' "${CONFIGURATION_FILE}"; then
-        if [[ "$bg_color" == '#dddddd' ]]; then
+        if [[ "$bg_color" == *'dddddd' ]]; then
             echo "WEBADMIN_SEARCH_BACKGROUND_COLOR=${search_background_light}" >> "${CONFIGURATION_FILE}"
         else
             echo "WEBADMIN_SEARCH_BACKGROUND_COLOR=${search_background_dark}" >> "${CONFIGURATION_FILE}"
         fi
     fi
     if ! grep -q 'WEBADMIN_SEARCH_BACKGROUND_COLOR_2=' "${CONFIGURATION_FILE}"; then
-        if [[ "$bg_color" == '#dddddd' ]]; then
+        if [[ "$bg_color" == *'dddddd' ]]; then
             echo "WEBADMIN_SEARCH_BACKGROUND_COLOR_2=${search_background_light2}" >> "${CONFIGURATION_FILE}"
         else
             echo "WEBADMIN_SEARCH_BACKGROUND_COLOR_2=${search_background_dark2}" >> "${CONFIGURATION_FILE}"
         fi
     fi
     if ! grep -q 'WEBADMIN_LINK_COLOR=' "${CONFIGURATION_FILE}"; then
-        if [[ "$bg_color" == '#dddddd' ]]; then
+        if [[ "$bg_color" == *'dddddd' ]]; then
             echo "WEBADMIN_LINK_COLOR=${link_light}" >> "${CONFIGURATION_FILE}"
         else
             echo "WEBADMIN_LINK_COLOR=${link_dark}" >> "${CONFIGURATION_FILE}"
         fi
     else
-        if [[ "$bg_color" == '#dddddd' ]]; then
+        if [[ "$bg_color" == *'dddddd' ]]; then
             sed -i "s|WEBADMIN_LINK_COLOR=.*|WEBADMIN_LINK_COLOR=${link_light}|" "${CONFIGURATION_FILE}"
         else
             sed -i "s|WEBADMIN_LINK_COLOR=.*|WEBADMIN_LINK_COLOR=${link_dark}|" "${CONFIGURATION_FILE}"
         fi
     fi
     if ! grep -q 'WEBADMIN_VISITED_COLOR=' "${CONFIGURATION_FILE}"; then
-        if [[ "$bg_color" == '#dddddd' ]]; then
+        if [[ "$bg_color" == *'dddddd' ]]; then
             echo "WEBADMIN_VISITED_COLOR=${visited_light}" >> "${CONFIGURATION_FILE}"
         else
             echo "WEBADMIN_VISITED_COLOR=${visited_dark}" >> "${CONFIGURATION_FILE}"
         fi
     else
-        if [[ "$bg_color" == '#dddddd' ]]; then
+        if [[ "$bg_color" == *'dddddd' ]]; then
             sed -i "s|WEBADMIN_VISITED_COLOR=.*|WEBADMIN_VISITED_COLOR=${visited_light}|" "${CONFIGURATION_FILE}"
         else
             sed -i "s|WEBADMIN_VISITED_COLOR=.*|WEBADMIN_VISITED_COLOR=${visited_dark}|" "${CONFIGURATION_FILE}"
         fi
     fi
     if ! grep -q 'WEBADMIN_TEXT_ENTRY_FOREGROUND_COLOR=' "${CONFIGURATION_FILE}"; then
-        if [[ "$bg_color" == '#dddddd' ]]; then
+        if [[ "$bg_color" == *'dddddd' ]]; then
             echo "WEBADMIN_TEXT_ENTRY_FOREGROUND_COLOR=${text_entry_foreground_light}" >> "${CONFIGURATION_FILE}"
         else
             echo "WEBADMIN_TEXT_ENTRY_FOREGROUND_COLOR=${text_entry_foreground_dark}" >> "${CONFIGURATION_FILE}"
         fi
     fi
     if ! grep -q 'WEBADMIN_TEXT_ENTRY_BACKGROUND_COLOR=' "${CONFIGURATION_FILE}"; then
-        if [[ "$bg_color" == '#dddddd' ]]; then
+        if [[ "$bg_color" == *'dddddd' ]]; then
             echo "WEBADMIN_TEXT_ENTRY_BACKGROUND_COLOR=${text_entry_background_light}" >> "${CONFIGURATION_FILE}"
         else
             echo "WEBADMIN_TEXT_ENTRY_BACKGROUND_COLOR=${text_entry_background_dark}" >> "${CONFIGURATION_FILE}"
@@ -574,7 +574,7 @@ function web_admin_background_color {
 
     # change webmail theme
     if [ -f "/var/www/${local_hostname}/htdocs/mail/config/config.php" ]; then
-        if [[ "$bg_color" == '#dddddd' ]]; then
+        if [[ "$bg_color" == *'dddddd' ]]; then
             sed -i 's|theme_default.*|theme_default = 54;|g' "/var/www/${local_hostname}/htdocs/mail/config/config.php"
         else
             sed -i 's|theme_default.*|theme_default = 55;|g' "/var/www/${local_hostname}/htdocs/mail/config/config.php"
