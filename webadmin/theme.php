@@ -59,11 +59,11 @@ if (isset($_POST['submitthemedark'])) {
     // dark theme
     $screen_background = '#222';
     $foreground_text = '#bbb';
-    $border_around_app_categories = '#1f5177';
+    $border_around_app_categories = '#777';
     $background_of_search_box = '#f9f3f3';
     $text_of_search_box = '#144163';
-    $links = '#10a0cf';
-    $visited_links = '#20a2cf';
+    $links = '#ccc';
+    $visited_links = '#eee';
     $text_entry_foreground = 'black';
     $text_entry_background = 'lightblue';
     $icons_red = '113';
