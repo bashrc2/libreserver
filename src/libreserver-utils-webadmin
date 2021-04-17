@@ -1994,19 +1994,19 @@ function install_web_admin_webmail {
       echo ' */';
       echo '';
       echo "global \$color;";
-      echo "\$color[0]   = '#103b5c'; // (dark blue)         TitleBar";
+      echo "\$color[0]   = '#222';    // (black)             TitleBar";
       echo "\$color[1]   = '#a0a0a0'; // (gray)              Quoted Replies in Emails";
       echo "\$color[2]   = '#800000'; // (red)               Warning/Error Messages";
-      echo "\$color[3]   = '#103b5c'; // (dark blue)         Left Bar Background";
-      echo "\$color[4]   = '#103b5c'; // (dark blue)         Normal Background";
-      echo "\$color[5]   = '#103b5c'; // (dark blue)         Table Headers";
-      echo "\$color[6]   = '#ffffff'; // (light blue)        Text on left bar";
-      echo "\$color[7]   = '#71a7cf'; // (light blue)        Links";
+      echo "\$color[3]   = '#222';    // (black)             Left Bar Background";
+      echo "\$color[4]   = '#222';    // (black)             Normal Background";
+      echo "\$color[5]   = '#222';    // (black)             Table Headers";
+      echo "\$color[6]   = '#ffffff'; // (white)             Text on left bar";
+      echo "\$color[7]   = '#aaa';    // (grey)              Links";
       echo "\$color[8]   = '#ffffff'; // (white)             Normal text";
-      echo "\$color[9]   = '#103b5c'; // (dark blue)         Darker version of #0";
-      echo "\$color[10]  = '#103b5c'; // (dark blue)         Darker version of #9";
-      echo "\$color[11]  = '#71a7cf'; // (light blue)        Special Folders color";
-      echo "\$color[12]  = '#103b5c'; // (dark blue)         Alternate rows";
+      echo "\$color[9]   = '#222';    // (black)             Darker version of #0";
+      echo "\$color[10]  = '#222';    // (black)             Darker version of #9";
+      echo "\$color[11]  = '#aaa';    // (grey)              Special Folders color";
+      echo "\$color[12]  = '#222';    // (black)             Alternate rows";
       echo "\$color[13]  = '#b2ffff'; // Color for single-quoted text ('> text')";
       echo "\$color[14]  = '#b1ffff'; // Color for text with more than one quote ('>> text')";
       echo "\$color[15]  = '#c0c060'; // (dull yellow)       Unselectable folders"; } > "/var/www/${local_hostname}/htdocs/mail/themes/freedom_dark.php"
@@ -2026,20 +2026,20 @@ function install_web_admin_webmail {
       echo ' */';
       echo '';
       echo "global \$color;";
-      echo "\$color[0]   = '#71a7cf'; // Title bar at the top of the page header";
+      echo "\$color[0]   = '#dddddd'; // Title bar at the top of the page header";
       echo "\$color[1]   = '#800000'; // Not currently used";
       echo "\$color[2]   = '#cc0000'; // Warning/error messages";
-      echo "\$color[3]   = '#71a7cf'; // Left folder list background color";
+      echo "\$color[3]   = '#dddddd'; // Left folder list background color";
       echo "\$color[4]   = '#f9faff'; // Normal background color";
       echo "\$color[5]   = '#c7D3ea'; // Header of the message index (From, Date, Subject)";
       echo "\$color[6]   = '#000000'; // Normal text on the left folder list";
-      echo "\$color[7]   = '#3354aa'; // Links in the right frame";
+      echo "\$color[7]   = '#555';    // Links in the right frame";
       echo "\$color[8]   = '#000000'; // Normal text";
-      echo "\$color[9]   = '#71a7cf'; // Darker version of #0";
-      echo "\$color[10]  = '#71a7cf'; // Darker version of #9";
+      echo "\$color[9]   = '#dddddd'; // Darker version of #0";
+      echo "\$color[10]  = '#dddddd'; // Darker version of #9";
       echo "\$color[11]  = '#000000'; // Special folders color (Inbox, Trash, Sent)";
       echo "\$color[12]  = '#f2f3ff'; // Alternate color for message list (alters between #4 and this one)";
-      echo "\$color[13]  = '#333333'; // Color for single-quoted text ('> text')";
+      echo "\$color[13]  = '#555';    // Color for single-quoted text ('> text')";
       echo "\$color[14]  = '#666666'; // Color for text with more than one quote ('>> text')";
       echo "\$color[15]  = '#f5f9ff'; // Non-selectable folders in the left frame (defaults to #6)"; } > "/var/www/${local_hostname}/htdocs/mail/themes/freedom_light.php"
 
@@ -2283,7 +2283,7 @@ function install_web_admin_webmail {
       echo "@include SM_PATH . 'mail/config/config_local.php';"; } > "/var/www/${local_hostname}/htdocs/mail/config/config.php"
 
     cp "/root/${PROJECT_NAME}/webadmin/images/logo_webmail.png" "/var/www/${local_hostname}/htdocs/mail/images/sm_logo.png"
-
+    
     replace_str='SquirrelMail version %s'
     replace_str_new="http://$(cat /var/lib/tor/hidden_service_webadmin/hostname)/mail"
 
