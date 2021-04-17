@@ -41,8 +41,8 @@ if (isset($_POST['submitthemelight'])) {
     $text_of_search_box = '#fdfdfd';
     $links = '#555';
     $visited_links = '#222';
-    $text_entry_foreground = 'black';
-    $text_entry_background = 'lightblue';
+    $text_entry_foreground = '#111';
+    $text_entry_background = '#ddd';
     $icons_red = '113';
     $icons_green = '167';
     $icons_blue = '207';
