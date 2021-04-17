@@ -111,47 +111,47 @@ function web_admin_background_color {
     fg_color=$(grep "WEBADMIN_FOREGROUND_COLOR=" "/root/${PROJECT_NAME}.cfg" | awk -F '=' '{print $2}')
 
     if ! grep -q 'WEBADMIN_APPS_BORDER_COLOR=' "/root/${PROJECT_NAME}.cfg"; then
-        if [[ "$bg_color" == '#dddddd' ]]; then
+        if [[ "$bg_color" == *'dddddd' ]]; then
             echo "WEBADMIN_APPS_BORDER_COLOR=${apps_border_light}" >> "/root/${PROJECT_NAME}.cfg"
         else
             echo "WEBADMIN_APPS_BORDER_COLOR=${apps_border_dark}" >> "/root/${PROJECT_NAME}.cfg"
         fi
     fi
     if ! grep -q 'WEBADMIN_SEARCH_BACKGROUND_COLOR=' "/root/${PROJECT_NAME}.cfg"; then
-        if [[ "$bg_color" == '#dddddd' ]]; then
+        if [[ "$bg_color" == *'dddddd' ]]; then
             echo "WEBADMIN_SEARCH_BACKGROUND_COLOR=${search_background_light}" >> "/root/${PROJECT_NAME}.cfg"
         else
             echo "WEBADMIN_SEARCH_BACKGROUND_COLOR=${search_background_dark}" >> "/root/${PROJECT_NAME}.cfg"
         fi
     fi
     if ! grep -q 'WEBADMIN_SEARCH_BACKGROUND_COLOR_2=' "/root/${PROJECT_NAME}.cfg"; then
-        if [[ "$bg_color" == '#dddddd' ]]; then
+        if [[ "$bg_color" == *'dddddd' ]]; then
             echo "WEBADMIN_SEARCH_BACKGROUND_COLOR_2=${search_background_light2}" >> "/root/${PROJECT_NAME}.cfg"
         else
             echo "WEBADMIN_SEARCH_BACKGROUND_COLOR_2=${search_background_dark2}" >> "/root/${PROJECT_NAME}.cfg"
         fi
     fi
     if ! grep -q 'WEBADMIN_LINK_COLOR=' "/root/${PROJECT_NAME}.cfg"; then
-        if [[ "$bg_color" == '#dddddd' ]]; then
+        if [[ "$bg_color" == *'dddddd' ]]; then
             echo "WEBADMIN_LINK_COLOR=${link_light}" >> "/root/${PROJECT_NAME}.cfg"
         else
             echo "WEBADMIN_LINK_COLOR=${link_dark}" >> "/root/${PROJECT_NAME}.cfg"
         fi
     else
-        if [[ "$bg_color" == '#dddddd' ]]; then
+        if [[ "$bg_color" == *'dddddd' ]]; then
             sed -i "s|WEBADMIN_LINK_COLOR=.*|WEBADMIN_LINK_COLOR=${link_light}|" "/root/${PROJECT_NAME}.cfg"
         else
             sed -i "s|WEBADMIN_LINK_COLOR=.*|WEBADMIN_LINK_COLOR=${link_dark}|" "/root/${PROJECT_NAME}.cfg"
         fi
     fi
     if ! grep -q 'WEBADMIN_VISITED_COLOR=' "/root/${PROJECT_NAME}.cfg"; then
-        if [[ "$bg_color" == '#dddddd' ]]; then
+        if [[ "$bg_color" == *'dddddd' ]]; then
             echo "WEBADMIN_VISITED_COLOR=${visited_light}" >> "/root/${PROJECT_NAME}.cfg"
         else
             echo "WEBADMIN_VISITED_COLOR=${visited_dark}" >> "/root/${PROJECT_NAME}.cfg"
         fi
     else
-        if [[ "$bg_color" == '#dddddd' ]]; then
+        if [[ "$bg_color" == *'dddddd' ]]; then
             sed -i "s|WEBADMIN_VISITED_COLOR=|WEBADMIN_VISITED_COLOR=${visited_light}|" "/root/${PROJECT_NAME}.cfg"
         else
             sed -i "s|WEBADMIN_VISITED_COLOR=|WEBADMIN_VISITED_COLOR=${visited_dark}|" "/root/${PROJECT_NAME}.cfg"
@@ -211,7 +211,7 @@ function web_admin_background_color {
 
     # change webmail theme
     if [ -f "/var/www/${local_hostname}/htdocs/mail/config/config.php" ]; then
-        if [[ "$bg_color" == '#dddddd' ]]; then
+        if [[ "$bg_color" == *'dddddd' ]]; then
             sed -i 's|theme_default.*|theme_default = 54;|g' "/var/www/${local_hostname}/htdocs/mail/config/config.php"
         else
             sed -i 's|theme_default.*|theme_default = 55;|g' "/var/www/${local_hostname}/htdocs/mail/config/config.php"
@@ -1974,7 +1974,7 @@ function install_web_admin_webmail {
     webmail_theme=54
     if grep -q "WEBADMIN_BACKGROUND_COLOR=" "/root/${PROJECT_NAME}.cfg"; then
         bg_color=$(grep "WEBADMIN_BACKGROUND_COLOR=" "/root/${PROJECT_NAME}.cfg" | head -n 1 | awk -F '=' '{print $2}')
-        if [[ "$bg_color" != '#dddddd' ]]; then
+        if [[ "$bg_color" != *'dddddd' ]]; then
             webmail_theme=55
         fi
     fi
