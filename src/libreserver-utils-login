@@ -34,12 +34,10 @@ function change_login_message {
         rm -f /etc/init.d/motd
     fi
 
-    { echo '    _____               _           _';
-      echo '   |   __|___ ___ ___ _| |___ _____| |_ ___ ___ ___';
-      echo '   |   __|  _| -_| -_| . | . |     | . | . |   | -_|';
-      echo '   |__|  |_| |___|___|___|___|_|_|_|___|___|_|_|___|';
-      echo '';
-      echo $'          Your Data.  Your Server.  Your Place.';
+    { echo '  _    _ _            ___                      ';
+      echo ' | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ ';
+      echo " | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|";
+      echo ' |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  ';
       echo ''; } > /etc/motd
 
     mark_completed "${FUNCNAME[0]}"
