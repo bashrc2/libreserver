@@ -1412,6 +1412,7 @@ function image_install_web_admin {
     mkdir -p "$rootdir$webadmin_install_dir"
     cp -r "$rootdir/usr/share/${PROJECT_NAME}/webadmin"/* "$rootdir$webadmin_install_dir"
     cp "$rootdir/usr/share/${PROJECT_NAME}/webadmin/EN"/*.html "$rootdir$webadmin_install_dir"
+    cp -r "$rootdir/usr/share/${PROJECT_NAME}/webadmin/EN/fonts" "$rootdir$webadmin_install_dir"
     cp "$rootdir/usr/share/${PROJECT_NAME}/webadmin/EN/${PROJECT_NAME}.css" "$rootdir$webadmin_install_dir"
     cp "$rootdir/usr/share/${PROJECT_NAME}/webadmin/EN"/*.txt "$rootdir$webadmin_install_dir"
     cp "$rootdir$webadmin_install_dir/EN/index.html" "$rootdir$webadmin_install_dir"/index.prev
@@ -2455,6 +2456,7 @@ function install_web_admin {
     if [ -d "/usr/share/${PROJECT_NAME}/webadmin" ]; then
         if [ -d "/usr/share/${PROJECT_NAME}/webadmin/EN" ]; then
             cp -r "/usr/share/${PROJECT_NAME}/webadmin"/* "$webadmin_install_dir"
+            cp -r "/usr/share/${PROJECT_NAME}/webadmin/EN/fonts" "$webadmin_install_dir"
             cp "/usr/share/${PROJECT_NAME}/webadmin/EN"/*.html "$webadmin_install_dir"
             cp "/usr/share/${PROJECT_NAME}/webadmin/EN/${PROJECT_NAME}.css" "$webadmin_install_dir"
             cp "/usr/share/${PROJECT_NAME}/webadmin/EN"/*.txt "$webadmin_install_dir"
