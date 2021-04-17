@@ -537,8 +537,8 @@ function web_admin_background_color {
         sed -i "s|search-background2:.*|search-background2: ${search_background_b};|g" "/var/www/${local_hostname}/htdocs/admin/${PROJECT_NAME}.css"
         sed -i "s|text-entry-foreground:.*|text-entry-foreground: ${text_entry_foreground_color};|g" "/var/www/${local_hostname}/htdocs/admin/${PROJECT_NAME}.css"
         sed -i "s|text-entry-background:.*|text-entry-background: ${text_entry_background_color};|g" "/var/www/${local_hostname}/htdocs/admin/${PROJECT_NAME}.css"
-        sed -i "s|main-link-color:.*|main-link-color: ${link_color};|g" "/var/www/${local_hostname}/htdocs/home/${PROJECT_NAME}.css"
-        sed -i "s|main-visited-color:.*|main-visited-color: ${visited_color};|g" "/var/www/${local_hostname}/htdocs/home/${PROJECT_NAME}.css"
+        sed -i "s|main-link-color:.*|main-link-color: ${link_color};|g" "/var/www/${local_hostname}/htdocs/admin/${PROJECT_NAME}.css"
+        sed -i "s|main-visited-color:.*|main-visited-color: ${visited_color};|g" "/var/www/${local_hostname}/htdocs/admin/${PROJECT_NAME}.css"
     fi
     if [ -f "/var/www/${local_hostname}/htdocs/home/${PROJECT_NAME}.css" ]; then
         sed -i "s|main-fg-color:.*|main-fg-color: ${fg_color};|g" "/var/www/${local_hostname}/htdocs/home/${PROJECT_NAME}.css"
