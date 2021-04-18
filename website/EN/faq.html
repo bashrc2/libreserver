@@ -91,10 +91,9 @@
 
 	<h3>Similarities</h3>
 	<ul>
-	  <li>Uses freedom-maker and vmdebootstrap to build debian images</li>
+	  <li>Build system based on freedom-maker</li>
 	  <li>Supports the use of Tor onion addresses to access websites</li>
 	  <li>Typically runs on ARM single board computers</li>
-	  <li>Both projects are have the goal of becoming ready for mass market use cases</li>
 	  <li>Both projects aim to increase independence and privacy</li>
 	  <li>Both projects aim to make running your own server at home easy</li>
 	  <li>Both projects include wiki, blog, VoIP and file sync</li>
@@ -106,11 +105,11 @@
 	<h3>Differences</h3>
 	<ul>
 	  <li>FreedomBox is a Debian pure blend. LibreServer is not</li>
+	  <li>LibreServer is not aiming for mass market yet. "Hacker grade" is about all which can be expected given current resources</li>
 	  <li>LibreServer only supports Free Software. FreedomBox includes some closed binary boot blobs for certain ARM boards</li>
 	  <li>LibreServer includes some software not yet in the official Debian repos</li>
 	  <li>LibreServer includes an email server set up for use with GPG by default</li>
-	  <li>LibreServer implements recommendations from bettercrypto.org whereas FreedomBox sticks to Debian default crypto settings</li>
-	  <li>LibreServer has a mesh network version. FreedomBox doesn't yet</li>
+	  <li>LibreServer implements additional STIG tests to lock down the system security whereas FreedomBox sticks to Debian default settings</li>
 	</ul>
       </details>
 
@@ -185,10 +184,6 @@
 
 	<p>
 	  If you're self-hosting then in the language of data protection law the "<i>data controller</i>" and the "<i>data subject</i>" are one and the same, so there isn't any power differential of that sort. Each LibreServer server is only intended to be used by a small numbers of people typically in the same household, so if you are hosting more than one person chances are that you know the others quite well and can arrange to update their data or delete their account if that's needed. Even if data protection laws are later extended to include home server type scenarios it's unlikely that this will become a problem.
-	</p>
-
-	<p>
-	  For the mesh version similar applies. Each peer stores their own personal data and it never gets aggregated and stored in any centralized way.
 	</p>
       </details>
 
@@ -523,19 +518,6 @@
 	<p>
 	  You might have to try a few different bridges before you find one that works.
 	</p>
-      </details>
-
-      <details>
-	<summary><h2>The mesh system doesn't boot from USB drive</h2></summary>
-	<p>If the system doesn't boot and reports an error which includes <b>/dev/mapper/loop0p1</b> then reboot with <b>Ctrl-Alt-Del</b> and when you see the grub menu press <b>e</b> and manually change <b>/dev/mapper/loop0p1</b> to <b>/dev/sdb1</b>, then press <b>Ctrl-x</b>. If that doesn't work then reboot and try <b>/dev/sdc1</b> instead.</p>
-	<p>
-	  After the system has booted successfully the problem should resolve itself on subsequent reboots.
-	</p>
-      </details>
-
-      <details>
-	<summary><h2>Mesh system doesn't connect to the network</h2></summary>
-	<p>Sometimes after boot the mesh system won't connect to other peers on the network. If this happens select the <b>network restart</b> icon and enter the password, which by default is just "libreserver". Wait for a few minutes to see if it connects.</p>
       </details>
 
       <details>
