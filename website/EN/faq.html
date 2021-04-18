@@ -275,24 +275,7 @@
 
       <details>
 	<summary><h2>Why not use Signal for mobile chat?</h2></summary>
-	<p>Celebrities recommend Signal. It's Free Software so it must be good, right?</p>
-	<p>
-	  If you are currently using a proprietary chat app, something without any encryption or something <i>really bad</i> such as Telegram, then Signal is definitely a step up in terms of security. But Signal has problems, which can be summarised as:
-	</p>
-
-	<ul>
-	  <li><b>It uses phone numbers</b>. Phone numbers are used for Signal's initial verification, and they can of course be intercepted or faked. Plus it means that Open Whisper Systems keeps a list of phone numbers on its centralised server for its <i>"X has joined Signal"</i> notification. Even if they're hashed, they're still unique identifiers and <a href="https://en.wikipedia.org/wiki/Rainbow_table">rainbow tables</a> for the phone number system probably exist. Phone numbers are convenient for some people, but are also a non-trivial security risk. If you're using Signal then consider what it knows about who your contacts are, where that data is located and who else might have access to that. Consider what might happen if an adversary gets to know your mobile number.</li>
-	  <li><b>It's based on a single server</b> run by Open Whisper Systems. That's a single point of failure and ought to be a big red flag (of the sporting rather than the socialist variety) as a possible locus for concentrated nefariousness.</li>
-	  <li><b>It requires the installation of Google Play</b>. If you already have Google Play installed on a stock Android OS then this doesn't increase your security problems, but for other more secure Android variants it's a massive increase in attack surface. There is a separate apk available for download, but it won't receive updates and the hash shown on the site often doesn't match.</li>
-	  <li><b>It depends entirely upon the Google message pushing system</b>. That means that Google <i>at least knows who Signal messages are being sent to and may be able to infer the rest via your (insecure) Android phone contact list or via timing correlation of alternating deliveries</i>. Remember that for an adversary metadata in aggregate is much better than having the content of messages. At any time Google could decide that it doesn't want to support Signal, or in adverse circumstances they could be leaned upon by the usual agencies or government cronies.</li>
-	  <li><b>Their privacy policy indicates that they will give whatever server data they have to third parties</b> under some conditions. Of course this is always claimed to be <i>for the very best of reasons</i> - such as combating fraud - but once that sort of disclosure capability exists it may be abused without you ever knowing about it. Consider how difficult, or not, it may be for a government to reverse engineer a database of hashed telephone numbers.</li>
-	  <li><b>Forking isn't really an option</b>. A fork was tried, but Moxie got annoyed when it still used his server. At the same time the level of interest in federating the server is not detectable with our best intrumentation, and is suspected to be negative. That's a catch 22 which effectively means that independent implementations of Signal will always leave some people unable to communicate with each other.</li>
-	  <li><b>It uses GIPHY, a Facebook image service</b>. This ought to be the coup de grâce in terms of privacy. Yes, they may be proxying the requests going to Facebook and yes they may be doing funky things with the Content-Length header to try to emulate message padding, but this is Facebook and their prime directive is surveillance of the user. It would be far safer if Moxie just downloaded a bunch of cat gifs to his server and cut the Facebook middle-man out.</li>
-	</ul>
-
-	<p>
-	  To give credit where it's due Signal is good, but it could be a lot better. The real solution for private chat is to run your own XMPP server, as you can with LibreServer, or to have someone within your community do that. <i>There is no substitute for a decentralised solution which is within the control of your community</i>.
-	</p>
+	<p>There are many reasons why using Signal is not always the greatest option for private chat, but ultimately Signal is centralized and this gives whoever is running the server an enormous amount of political power. It's much better to run the server infrastructure yourself, then you can have far greater confidence that nothing dodgy is going on.</p>
       </details>
 
       <details>
