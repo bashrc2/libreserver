@@ -106,10 +106,6 @@ h1 {
     font-size: 70px;
 }
 
-.titlePrefix {
-    color: #777;
-}
-
 .subtitle {
     font-family: 'Exoplanetaria';
     font-size: 24px;
@@ -128,6 +124,10 @@ h1 {
 
 .donationLinks {
     text-align: center;
+}
+
+.titleLogo {
+    width: 30%;
 }
 
 .networkImage img {
@@ -187,5 +187,8 @@ a:hover {
     blockquote {
 	margin-left: var(--quote-left-margin-mobile);
 	width: var(--quote-width-mobile);
+    }
+    .titleLogo {
+	width: 50%;
     }
 }
