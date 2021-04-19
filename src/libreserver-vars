@@ -48,7 +48,7 @@ PROJECT_REPO="https://gitlab.com/bashrc2/${PROJECT_NAME}"
 INSTALLING_ON_BBB="no"
 
 # Version number of this script
-VERSION="4.0"
+VERSION="5.0"
 
 # if yes then this minimises the number of descisions presented during install
 MINIMAL_INSTALL="yes"

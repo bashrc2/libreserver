@@ -47,7 +47,7 @@ fi
 SETUP_CLIENT_APP_NAME=
 
 # Version number of this script
-VERSION="4.0"
+VERSION="5.0"
 
 # get the main project file, so that some values can be extracted
 MAIN_PROJECT_FILE=/usr/local/bin/${PROJECT_NAME}
