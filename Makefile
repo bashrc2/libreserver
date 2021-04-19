@@ -83,6 +83,6 @@ uninstall:
 	bash -c "./translate uninstall"
 clean:
 	rm -f \#* \.#* src/*~ tests/*~ doc/EN/*~ website/EN/*~ *~ gemini/EN/*~ image_build/*~
-	rm -f webadmin/*~ webadmin/EN/*~ IoT/*~
+	rm -f webadmin/*~ webadmin/EN/*~ IoT/*~ man/*~
 	rm -fr deb.*
 	rm -f ../${APP}*.deb ../${APP}*.changes ../${APP}*.asc ../${APP}*.dsc
