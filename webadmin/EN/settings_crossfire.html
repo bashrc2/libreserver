@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <meta charset="utf-8">
+  <style>
+    @import url("libreserver.css");
+
+    * {
+        box-sizing: border-box;
+    }
+
+    .settingtext {
+        text-align: center;
+        font-size: 100%;
+    }
+
+    .row {
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+        padding: 0 4px;
+    }
+
+    .column {
+        -ms-flex: 25%;
+        flex: 15%;
+        max-width: 25%;
+        padding: 0 4px;
+    }
+
+    .column img {
+        margin-top: 8px;
+        vertical-align: middle;
+    }
+
+    .card input[type=text] {
+        width: 50%;
+        clear: both;
+        text-align: left;
+        color: black;
+        background-color: lightblue;
+    }
+
+  </style>
+  <body>
+
+    <div class="card">
+      <div class="header">
+        <a href="app_crossfire.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
+
+
+        <form action="settings_crossfire.php" method="post">
+          <p class="headertext" translate="yes">Name of the Dungeon Master</p>
+          <input type="text" name="DMname" value="">
+          <p class="headertext" translate="yes">Message Of The Day</p>
+          <textarea rows="10" cols="50" name="motd" translate="no"></textarea>
+          <br><br>
+          <input type="submit" name="submitCrossfire" translate="yes" value="Update" />
+        </form>
+
+      </div>
+    </div>
+
+  </body>
+</html>

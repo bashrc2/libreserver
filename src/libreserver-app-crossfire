@@ -1,0 +1,277 @@
+#!/bin/bash
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# crossfire game
+#
+# NOTE: Don't use the admin password in dm_file because this
+# will likely be transmitted in the clear over $CROSSFIRE_PORT
+#
+# License
+# =======
+#
+# Copyright (C) 2019-2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VARIANTS='full full-vim games'
+
+APP_CATEGORY=games
+
+IN_DEFAULT_INSTALL=0
+SHOW_ON_ABOUT=1
+SHOW_DOMAIN_ONLY=1
+SHOW_APP_PORT=13327
+NOT_ON_HOMEPAGE=1
+REQUIRES_APP=
+
+CROSSFIRE_DOMAIN_NAME=
+CROSSFIRE_CODE=
+
+CROSSFIRE_PORT=13327
+
+CROSSFIRE_DIR=/var/games/crossfire
+
+CROSSFIRE_SHORT_DESCRIPTION=$'Roguelike Role-Playing Game'
+CROSSFIRE_DESCRIPTION=$'Roguelike Role-Playing Game'
+CROSSFIRE_MOBILE_APP_URL=""
+
+crossfire_variables=(ONION_ONLY
+		     SYSTEM_TYPE
+                     MY_USERNAME)
+
+function crossfire_setting_name {
+    # sets the name of the dm
+    dm_name="$1"
+
+    if [ ! "$dm_name" ]; then
+	return
+    fi
+    if ! grep -q "${dm_name}:" /var/games/crossfire/accounts; then
+	return
+    fi
+
+    echo "$dm_name:*:*" > /etc/crossfire/dm_file
+
+    local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+    webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+    if [ -f "${webadmin_install_dir}/settings_crossfire.html" ]; then
+	sed -i "s|name=\"DMname\".*|name=\"DMname\" value=\"${dm_name}\">|g" "${webadmin_install_dir}/settings_crossfire.html"
+    fi
+}
+
+function crossfire_setting_motd {
+    # sets the message of the day
+    motd="$1"
+
+    if [ ! "$motd" ]; then
+	return
+    fi
+
+    echo "$motd" > /etc/crossfire/motd
+
+    local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+    webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+    if [ -f "${webadmin_install_dir}/settings_crossfire.html" ]; then
+	sed -i "s|name=\"motd\".*|name=\"motd\" translate=\"no\">${motd}</textarea>|g" "${webadmin_install_dir}/settings_crossfire.html"
+    fi
+}
+
+function upgrade_distro_crossfire {
+    target_distro="$1"
+
+    if [[ "$target_distro" == 'buster' ]]; then
+        echo -n ''
+    fi
+}
+
+function logging_on_crossfire {
+    if [ ! -f /lib/systemd/system/crossfire-server.service ]; then
+	return
+    fi
+    if ! grep -q 'log /var/log/crossfire/logfile' /lib/systemd/system/crossfire-server.service; then
+	sed -i "s|ExecStart=.*|ExecStart=/usr/sbin/crossfire-server -csport ${CROSSFIRE_PORT} -log /var/log/crossfire/logfile|g" /lib/systemd/system/crossfire-server.service
+	systemctl daemon-reload
+	systemctl restart crossfire-server
+    fi
+}
+
+function logging_off_crossfire {
+    if [ ! -f /lib/systemd/system/crossfire-server.service ]; then
+	return
+    fi
+    if ! grep -q 'log /dev/null' /lib/systemd/system/crossfire-server.service; then
+	sed -i "s|ExecStart=.*|ExecStart=/usr/sbin/crossfire-server -csport ${CROSSFIRE_PORT} -log /dev/null|g" /lib/systemd/system/crossfire-server.service
+	systemctl daemon-reload
+	systemctl restart crossfire-server
+    fi
+}
+
+function install_interactive_crossfire {
+    echo -n ''
+    APP_INSTALLED=1
+}
+
+function reconfigure_crossfire {
+    echo -n ''
+}
+
+function upgrade_crossfire {
+    echo -n ''
+}
+
+function backup_local_crossfire {
+    source_directory=$CROSSFIRE_DIR
+    if [ -d $source_directory ]; then
+        dest_directory=crossfire
+        function_check backup_directory_to_usb
+        backup_directory_to_usb $source_directory $dest_directory
+    fi
+}
+
+function restore_local_crossfire {
+    if [ -d $CROSSFIRE_DIR ]; then
+        if [ -d "$USB_MOUNT_CROSSFIRE/backup/crossfire" ]; then
+            echo $"Restoring CROSSFIRE"
+            temp_restore_dir=/root/tempcrossfire
+            function_check restore_directory_from_usb
+            restore_directory_from_usb $temp_restore_dir crossfire
+            if [ -d $temp_restore_dir$CROSSFIRE_DIR ]; then
+                cp -r $temp_restore_dir$CROSSFIRE_DIR/* $CROSSFIRE_DIR/
+            else
+                cp -r $temp_restore_dir/* $CROSSFIRE_DIR/
+            fi
+	    chown -R games:games "$CROSSFIRE_DIR"
+            # shellcheck disable=SC2181
+            if [ ! "$?" = "0" ]; then
+                rm -rf $temp_restore_dir
+                function_check set_user_permissions
+                set_user_permissions
+                function_check backup_unmount_drive
+                backup_unmount_drive
+                exit 99
+            fi
+            rm -rf $temp_restore_dir
+        fi
+    fi
+}
+
+function backup_remote_crossfire {
+    echo -n ''
+}
+
+function restore_remote_crossfire {
+    echo -n ''
+}
+
+function remove_crossfire {
+    remove_onion_service crossfire ${CROSSFIRE_PORT}
+
+    $REMOVE_PACKAGES_PURGE crossfire*
+
+    remove_app crossfire
+    remove_completion_param install_crossfire
+    sed -i '/crossfire/d' "$COMPLETION_FILE"
+
+    if [ -d /var/www/crossfire ]; then
+        rm -rf /var/www/crossfire
+    fi
+    if [ -d $CROSSFIRE_DIR ]; then
+        rm -rf $CROSSFIRE_DIR
+    fi
+    if [ -d /usr/share/games/crossfire ]; then
+        rm -rf /usr/share/games/crossfire
+    fi
+    if [ -d /usr/lib/crossfire ]; then
+        rm -rf /usr/lib/crossfire
+    fi
+    if [ -d /etc/crossfire ]; then
+        rm -rf /etc/crossfire
+    fi
+    firewall_remove ${CROSSFIRE_PORT}
+}
+
+function install_crossfire {
+    if [ -f /etc/crossfire/settings ]; then
+        remove_crossfire
+    fi
+
+    increment_app_install_progress
+
+    if [ -d /var/www/crossfire ]; then
+        rm -rf /var/www/crossfire
+    fi
+    mkdir -p /var/www/crossfire/htdocs
+
+    increment_app_install_progress
+
+    chown -R www-data:www-data /var/www/crossfire/htdocs
+
+    increment_app_install_progress
+
+    $INSTALL_PACKAGES crossfire-server    
+
+    if [ ! -d $CROSSFIRE_DIR ]; then
+        echo $'Unable to install crossfire-server'
+        exit 32
+    fi    
+
+    increment_app_install_progress
+
+    crossfire_config_filename=/etc/crossfire/settings
+    if [ ! -f $crossfire_config_filename ]; then
+        echo $'Crossfire settings file not found'
+        exit 84
+    fi
+
+    sed -i 's|# dm_mail|dm_mail|g' ${crossfire_config_filename}
+    sed -i "s|dm_mail.*|dm_mail $MY_EMAIL_ADDRESS|g" ${crossfire_config_filename}
+
+    increment_app_install_progress
+
+    CROSSFIRE_ONION_HOSTNAME=$(add_onion_service crossfire ${CROSSFIRE_PORT} ${CROSSFIRE_PORT})
+    
+    increment_app_install_progress
+    
+    firewall_add crossfire ${CROSSFIRE_PORT}
+
+    crossfire_metaserver_filename=/etc/crossfire/metaserver2
+    if [[ $ONION_ONLY == "no" ]]; then
+	sed -i "s|localhostname.*|localhostname ${CROSSFIRE_DOMAIN_NAME}|g" ${crossfire_metaserver_filename}
+    else
+	sed -i "s|localhostname.*|localhostname ${CROSSFIRE_ONION_HOSTNAME}|g" ${crossfire_metaserver_filename}
+    fi
+    sed -i 's|metaserver2_notification.*|metaserver2_notification on|g' ${crossfire_metaserver_filename}
+    sed -i "s|#portnumber .*|portnumber ${CROSSFIRE_PORT}|g" ${crossfire_metaserver_filename}
+
+    if [ ! -f /var/games/crossfire/accounts ]; then
+	touch /var/games/crossfire/accounts
+	chown games:games /var/games/crossfire/accounts
+    fi
+
+    if [ ! -f /var/games/crossfire/highscore ]; then
+	touch /var/games/crossfire/highscore
+	chown games:games /var/games/crossfire/highscore
+    fi
+
+    sed -i "s|ExecStart=.*|ExecStart=/usr/sbin/crossfire-server -csport ${CROSSFIRE_PORT} -log /dev/null|g" /lib/systemd/system/crossfire-server.service    
+    systemctl daemon-reload
+    systemctl restart crossfire-server
+
+    APP_INSTALLED=1
+}
+
+# NOTE: deliberately no exit 0
