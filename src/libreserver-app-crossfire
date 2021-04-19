@@ -222,7 +222,7 @@ function install_crossfire {
 
     increment_app_install_progress
 
-    $INSTALL_PACKAGES crossfire-server    
+    INSTALL_PACKAGES crossfire-server    
 
     if [ ! -d $CROSSFIRE_DIR ]; then
         echo $'Unable to install crossfire-server'
