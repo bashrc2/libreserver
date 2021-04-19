@@ -3782,9 +3782,9 @@ function update_blocklist {
 }
 
 function block_evil_domains {
-    if ! grep -q "exited.eu\|cyzed.com\|gab.steeck.eu\|gab.polaris-1.work\|not-develop.gab.com\|develop.gab.com\|gab.com\|spinster.xyz" "${FIREWALL_DOMAINS}"; then
+    if ! grep -q "gab.com\|spinster.xyz" "${FIREWALL_DOMAINS}"; then
         renew_blocks=
-        evildoers=("exited.eu" "cyzed.com" "gab.steeck.eu" "gab.polaris-1.work" "gab.com" "spinster.xyz" "gabfed.com")
+        evildoers=("gab.com" "spinster.xyz")
         # shellcheck disable=SC2068
         for evil_domain in ${evildoers[@]}; do
             if ! grep -q "$evil_domain" "${FIREWALL_DOMAINS}"; then
