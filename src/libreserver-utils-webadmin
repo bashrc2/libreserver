@@ -2029,9 +2029,9 @@ function install_web_admin_webmail {
       echo "\$color[0]   = '#dddddd'; // Title bar at the top of the page header";
       echo "\$color[1]   = '#800000'; // Not currently used";
       echo "\$color[2]   = '#cc0000'; // Warning/error messages";
-      echo "\$color[3]   = '#dddddd'; // Left folder list background color";
-      echo "\$color[4]   = '#f9faff'; // Normal background color";
-      echo "\$color[5]   = '#c7D3ea'; // Header of the message index (From, Date, Subject)";
+      echo "\$color[3]   = '#eeeeee'; // Left folder list background color";
+      echo "\$color[4]   = '#dddddd'; // Normal background color";
+      echo "\$color[5]   = '#eeeeee'; // Header of the message index (From, Date, Subject)";
       echo "\$color[6]   = '#000000'; // Normal text on the left folder list";
       echo "\$color[7]   = '#555';    // Links in the right frame";
       echo "\$color[8]   = '#000000'; // Normal text";
