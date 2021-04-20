@@ -329,6 +329,7 @@ function cryptpad_create_config {
       echo "    httpSafePort: ${CRYPTPAD_PORT2},";
       echo '';
       echo '    httpUnsafeOrigin: domain,';
+      echo '    httpSafeOrigin: domain,';
       echo '';
       echo '    httpHeaders: {';
       echo '        "X-XSS-Protection": "1; mode=block",';
@@ -590,6 +591,7 @@ function install_cryptpad {
     cd ${CRYPTPAD_DIR} || exit 35
 
     /usr/bin/npm install
+    /usr/bin/npm install @mcrowe/minibloom
     /usr/bin/npm install -g bower
     # git config --global url."https://".insteadOf git://
     if [ ! -f /usr/bin/bower ]; then
