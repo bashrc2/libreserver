@@ -177,7 +177,7 @@ function upgrade_cryptpad {
         chown -R cryptpad:cryptpad "${CRYPTPAD_DIR}"
     fi
     rm -rf ${CRYPTPAD_DIR}/.cache/bower
-    su -c './node_modules/bower/bin/bower install --config.interactive=false' - cryptpad
+    su -c './node_modules/bower/bin/bower install --force-latest --config.interactive=false' - cryptpad
     su -c './node_modules/bower/bin/bower update --config.interactive=false' - cryptpad
     cryptpad_generate_api_config
     chown -R cryptpad:cryptpad ${CRYPTPAD_DIR}
@@ -660,7 +660,7 @@ function install_cryptpad {
     increment_app_install_progress
     chown -R cryptpad:cryptpad ${CRYPTPAD_DIR}/node_modules/bower
     increment_app_install_progress
-    su -c './node_modules/bower/bin/bower install --config.interactive=false' - cryptpad
+    su -c './node_modules/bower/bin/bower install --force-latest --config.interactive=false' - cryptpad
     increment_app_install_progress
     su -c './node_modules/bower/bin/bower update --config.interactive=false' - cryptpad
 
