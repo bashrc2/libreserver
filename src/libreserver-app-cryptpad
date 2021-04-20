@@ -592,17 +592,6 @@ function install_cryptpad {
 
     /usr/bin/npm install
     /usr/bin/npm install @mcrowe/minibloom
-    /usr/bin/npm install -g bower
-    # git config --global url."https://".insteadOf git://
-    if [ ! -f /usr/bin/bower ]; then
-        echo 'Unable to install bower'
-        exit 46
-    fi
-    if [ ! -d ${CRYPTPAD_DIR}/tmp ]; then
-        mkdir ${CRYPTPAD_DIR}/tmp
-    fi
-    TMPDIR=${CRYPTPAD_DIR}/tmp /usr/bin/bower install
-    TMPDIR=/tmp
 
     increment_app_install_progress
 
