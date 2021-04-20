@@ -401,211 +401,6 @@ function cryptpad_create_config {
     fi
 }
 
-function mesh_install_cryptpad {
-    # shellcheck disable=SC2153
-    if [[ "$VARIANT" != "meshclient" && "$VARIANT" != "meshusb" ]]; then
-        return
-    fi
-
-    if [ ! -d "$rootdir/var/www/cryptpad" ]; then
-        mkdir "$rootdir/var/www/cryptpad"
-    fi
-    if [ -d "$rootdir${CRYPTPAD_DIR}" ]; then
-        rm -rf "$rootdir${CRYPTPAD_DIR}"
-    fi
-
-    git_clone "$CRYPTPAD_REPO" "$rootdir${CRYPTPAD_DIR}"
-
-    if [ ! -d "$rootdir${CRYPTPAD_DIR}" ]; then
-        echo $'Unable to clone cryptpad repo'
-        exit 78
-    fi
-
-    # an unprivileged user to run as
-    chroot "$rootdir" useradd -d ${CRYPTPAD_DIR}/ cryptpad
-
-    cd "$rootdir${CRYPTPAD_DIR}" || exit 34
-    git checkout "$CRYPTPAD_COMMIT" -b "$CRYPTPAD_COMMIT"
-
-    chroot "$rootdir" chown -R cryptpad:cryptpad ${CRYPTPAD_DIR}
-
-    cryptpad_nginx_site=$rootdir/etc/nginx/sites-available/cryptpad
-    cryptpad_mesh_domain="P${PEER_ID}.local"
-    { echo 'server {';
-      echo '  listen [::]:80 default_server;';
-      echo "  server_name ${cryptpad_mesh_domain};";
-      echo '  port_in_redirect off;';
-      echo '';
-      echo '  # Logs';
-      echo '  access_log /dev/null;';
-      echo '  error_log /dev/null;';
-      echo '';
-      echo '  root /etc/cryptpad;';
-      echo '';
-      echo '  index index.html;';
-      echo '  error_page 404 /customize.dist/404.html;';
-      echo '';
-      echo "  set \$main_domain \"${cryptpad_mesh_domain}\";";
-      echo "    set \$sandbox_domain \"${cryptpad_mesh_domain}\";";
-      echo '';
-      echo "  set \$api_domain \"${cryptpad_mesh_domain}\";";
-      echo "  set \$files_domain \"${cryptpad_mesh_domain}\";";
-      echo '';
-      echo "  add_header X-XSS-Protection \"1; mode=block\";";
-      echo "  add_header X-Content-Type-Options nosniff;";
-      echo "  # add_header X-Frame-Options \"SAMEORIGIN\";";
-      echo '';
-      echo "  if (\$args ~ ver=) {";
-      echo "    set \$cacheControl max-age=31536000;";
-      echo '  }';
-      echo "  add_header Cache-Control \$cacheControl;";
-      echo '';
-      echo "  set \$styleSrc   \"'unsafe-inline' 'self' \${main_domain}\";";
-      echo '';
-      echo "  set \$connectSrc \"'self' https://\${main_domain} \$main_domain https://\${api_domain} blob:\";";
-      echo '';
-      echo "  set \$fontSrc    \"'self' data: \${main_domain}\";";
-      echo '';
-      echo "  set \$imgSrc     \"'self' data: * blob: \${main_domain}\";";
-      echo '';
-      echo "  set \$frameSrc   \"'self' \${sandbox_domain} blob:\";";
-      echo '';
-      echo "  set \$mediaSrc   \"'self' data: * blob: \${main_domain}\";";
-      echo '';
-      echo "  set \$childSrc   \"https://\${main_domain}\";";
-      echo '';
-      echo "  set \$workerSrc  \"https://\${main_domain}\";";
-      echo '';
-      echo "  set \$scriptSrc  \"'self' \${main_domain}\";";
-      echo '';
-      echo "  set \$unsafe 0;";
-      echo "  if (\$uri = \"/pad/inner.html\") { set \$unsafe 1; }";
-      echo "  if (\$uri = \"/sheet/inner.html\") { set \$unsafe 1; }";
-      echo "  if (\$uri ~ ^\/common\/onlyoffice\/.*\/index\.html.*\$) { set \$unsafe 1; }";
-      echo '';
-      echo "  if (\$unsafe) {";
-      echo "    set \$scriptSrc \"'self' 'unsafe-eval' 'unsafe-inline' \${main_domain}\";";
-      echo '  }';
-      echo "  add_header Content-Security-Policy \"default-src 'none'; child-src \$childSrc; worker-src \$workerSrc; media-src \$mediaSrc; style-src \$styleSrc; script-src \$scriptSrc; connect-src \$connectSrc; font-src \$fontSrc; img-src \$imgSrc; frame-src \$frameSrc;\";";
-      echo '  location ^~ /cryptpad_websocket {';
-      echo "      proxy_pass http://localhost:${CRYPTPAD_PORT};";
-      echo "      proxy_set_header X-Real-IP \$remote_addr;";
-      echo "      proxy_set_header Host \$host;";
-      echo "      proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;";
-      echo '';
-      echo "      proxy_http_version 1.1;";
-      echo "      proxy_set_header Upgrade \$http_upgrade;";
-      echo "      proxy_set_header Connection upgrade;";
-      echo '  }';
-      echo '';
-      echo '  location ^~ /customize.dist/ {';
-      echo '      # This is needed in order to prevent infinite recursion between /customize/ and the root';
-      echo '  }';
-      echo '  location ^~ /customize/ {';
-      echo "      rewrite ^/customize/(.*)\$ \$1 break;";
-      echo "      try_files /customize/\$uri /customize.dist/\$uri;";
-      echo '  }';
-      echo '';
-      echo '  location = /api/config {';
-      echo "      proxy_pass http://localhost:${CRYPTPAD_PORT};";
-      echo "      proxy_set_header X-Real-IP \$remote_addr;";
-      echo "      proxy_set_header Host \$host;";
-      echo "      proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;";
-      echo '  }';
-      echo '';
-      echo '  location ^~ /blob/ {';
-      echo "      if (\$request_method = 'OPTIONS') {";
-      echo "          add_header 'Access-Control-Allow-Origin' '*';";
-      echo "          add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';";
-      echo "          add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range';";
-      echo "          add_header 'Access-Control-Max-Age' 1728000;";
-      echo "          add_header 'Content-Type' 'application/octet-stream; charset=utf-8';";
-      echo "          add_header 'Content-Length' 0;";
-      echo '          return 204;';
-      echo '      }';
-      echo '      add_header Cache-Control max-age=31536000;';
-      echo "      add_header 'Access-Control-Allow-Origin' '*';";
-      echo "      add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';";
-      echo "      add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range';";
-      echo "      add_header 'Access-Control-Expose-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range';";
-      echo "      try_files \$uri =404;";
-      echo '  }';
-      echo '';
-      echo '  location ^~ /register {';
-      echo "    try_files \$uri =404;";
-      echo '  }';
-      echo '';
-      echo '  location ^~ /features.html {';
-      echo "    try_files \$uri =404;";
-      echo '  }';
-      echo '';
-      echo '  location ^~ /contact.html {';
-      echo "    try_files \$uri =404;";
-      echo '  }';
-      echo '';
-      echo '  location ~ ^/(register|login|settings|user|pad|drive|poll|slide|code|whiteboard|file|media|profile|contacts|todo|filepicker|debug|kanban|sheet|support|admin|notifications|teams)$ {';
-      echo "      rewrite ^(.*)\$ \$1/ redirect;";
-      echo '  }';
-      echo '';
-      echo "  try_files /www/\$uri /www/\$uri/index.html /customize/\$uri;";
-      echo '}'; } > "$cryptpad_nginx_site"
-
-    cd "$rootdir${CRYPTPAD_DIR}" || exit 62
-
-    cat <<EOF > "$rootdir/usr/bin/install_cryptpad"
-#!/bin/bash
-cd ${CRYPTPAD_DIR} || exit 35
-/usr/bin/npm install --build-from-source
-/usr/bin/npm install bower@${CRYPTPAD_BOWER_VERSION}
-chown -R cryptpad:cryptpad ${CRYPTPAD_DIR}
-su -c './node_modules/bower/bin/bower install --config.interactive=false' - cryptpad
-cp config/config.example.js config/config.js
-EOF
-    chmod +x "$rootdir/usr/bin/install_cryptpad"
-    chroot "$rootdir" /usr/bin/install_cryptpad
-
-    if [ ! -f "$rootdir${CRYPTPAD_DIR}/config/config.js" ]; then
-        echo $'Cryptpad config file not found'
-        exit 62
-    fi
-
-    rm "$rootdir/usr/bin/install_cryptpad"
-
-    cryptpad_create_config mesh
-
-    chroot "$rootdir" chown -R cryptpad:cryptpad ${CRYPTPAD_DIR}
-
-    # daemon
-    { echo '[Unit]';
-      echo 'Description=Cryptpad';
-      echo 'After=syslog.target';
-      echo 'After=network.target';
-      echo '';
-      echo '[Service]';
-      echo 'User=cryptpad';
-      echo 'Group=cryptpad';
-      echo "WorkingDirectory=${CRYPTPAD_DIR}";
-      echo "ExecStart=/usr/bin/node ${CRYPTPAD_DIR}/server.js";
-      echo 'Environment=PATH=/usr/bin:/usr/local/bin';
-      echo 'Environment=NODE_ENV=production';
-      echo 'Restart=on-failure';
-      echo 'PrivateTmp=true';
-      echo 'PrivateDevices=false';
-      echo 'CapabilityBoundingSet=~CAP_SYS_ADMIN';
-      echo 'ProtectSystem=yes';
-      echo 'ProtectHome=yes';
-      echo 'ProtectClock=yes';
-      echo 'ProtectHostname=yes';
-      echo 'PrivateUsers=yes';
-      echo 'ProtectKernelModules=yes';
-      echo 'ProtectKernelTunables=yes';
-      echo 'NoNewPrivileges=true';
-      echo '';
-      echo '[Install]';
-      echo 'WantedBy=multi-user.target'; } > "$rootdir/etc/systemd/system/cryptpad.service"
-    chroot "$rootdir" systemctl enable cryptpad.service
-}
-
 function install_cryptpad_main {
     if [[ $(app_is_installed cryptpad_main) == "1" ]]; then
         return
@@ -678,7 +473,7 @@ function install_cryptpad_main {
       echo '';
       echo "  set \$styleSrc   \"'unsafe-inline' 'self' \${main_domain}\";";
       echo '';
-      echo "  set \$connectSrc \"'self' https://\${main_domain} \$main_domain https://\${api_domain} blob:\";";
+      echo "  set \$connectSrc \"'self' https://\${main_domain} \$main_domain https://\${api_domain} blob: wss://\${api_domain} \${api_domain} \${files_domain}\";";
       echo '';
       echo "  set \$fontSrc    \"'self' data: \${main_domain}\";";
       echo '';
@@ -695,9 +490,10 @@ function install_cryptpad_main {
       echo "  set \$scriptSrc  \"'self' \${main_domain}\";";
       echo '';
       echo "  set \$unsafe 0;";
-      echo "  if (\$uri = \"/pad/inner.html\") { set \$unsafe 1; }";
-      echo "  if (\$uri = \"/sheet/inner.html\") { set \$unsafe 1; }";
+      echo "  if (\$uri ~ ^\/(sheet|doc|presentation)\/inner\.html.*\$) { set \$unsafe 1; }";
       echo "  if (\$uri ~ ^\/common\/onlyoffice\/.*\/index\.html.*\$) { set \$unsafe 1; }";
+      echo '';
+      echo "  if (\$host != \${sandbox_domain}) { set \$unsafe 0; }";
       echo '';
       echo "  if (\$unsafe) {";
       echo "    set \$scriptSrc \"'self' 'unsafe-eval' 'unsafe-inline' \${main_domain}\";";
@@ -722,7 +518,7 @@ function install_cryptpad_main {
       echo "      try_files /customize/\$uri /customize.dist/\$uri;";
       echo '  }';
       echo '';
-      echo '  location = /api/config {';
+      echo '  location ~ ^/api/(config|broadcast).*$ {';
       echo "      proxy_pass http://localhost:${CRYPTPAD_PORT};";
       echo "      proxy_set_header X-Real-IP \$remote_addr;";
       echo "      proxy_set_header Host \$host;";
