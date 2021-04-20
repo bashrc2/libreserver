@@ -1,8 +1,8 @@
 #!/bin/bash
-#  _    _ _            ___                      
-# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
-# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # cryptpad application
 #
@@ -39,7 +39,7 @@ CRYPTPAD_ONION_PORT=8119
 CRYPTPAD_PORT=9003
 CRYPTPAD_PORT2=9005
 CRYPTPAD_REPO="https://github.com/xwiki-labs/cryptpad"
-CRYPTPAD_COMMIT='58457a4890186dd0df08f1e1fa1f13dc606bb33a'
+CRYPTPAD_COMMIT='81fba02bc75781f6794bd77e6881f7b58e66e5bd'
 CRYPTPAD_DIR=/etc/cryptpad
 CRYPTPAD_DOMAIN_NAME=cryptpad.local
 
@@ -583,6 +583,17 @@ function install_cryptpad {
     cd ${CRYPTPAD_DIR} || exit 35
 
     /usr/bin/npm install
+    /usr/bin/npm install -g bower
+    # git config --global url."https://".insteadOf git://
+    if [ ! -f /usr/bin/bower ]; then
+	echo 'Unable to install bower'
+	exit 46
+    fi
+    if [ ! -d ${CRYPTPAD_DIR}/tmp ]; then
+	mkdir ${CRYPTPAD_DIR}/tmp
+    fi
+    TMPDIR=${CRYPTPAD_DIR}/tmp /usr/bin/bower install
+    TMPDIR=/tmp
 
     increment_app_install_progress
 
