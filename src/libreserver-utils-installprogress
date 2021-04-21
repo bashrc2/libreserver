@@ -102,12 +102,12 @@ function update_app_install_progress_bar {
         progress_percent=100
     fi
 
-    sed -i "s|<div class=\"w3-container.*|<div class=\"w3-container w3-blue w3-round-xlarge\" style=\"width:${progress_percent}%\">${progress_percent}%</div>|g" "$installing_page"
-    if ! grep -q 'w3-container w3-blue' "$webadmin_install_dir/index.html"; then
+    sed -i "s|<div class=\"w3-container.*|<div class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:${progress_percent}%\">${progress_percent}%</div>|g" "$installing_page"
+    if ! grep -q 'w3-container w3-dark-grey' "$webadmin_install_dir/index.html"; then
         cp "$webadmin_install_dir/index.html" "$webadmin_install_dir/index_app_installing.html"
         cp "$installing_page" "$webadmin_install_dir/index.html"
     fi
-    sed -i "s|<div class=\"w3-container.*|<div class=\"w3-container w3-blue w3-round-xlarge\" style=\"width:${progress_percent}%\">${progress_percent}%</div>|g" "$webadmin_install_dir/index.html"
+    sed -i "s|<div class=\"w3-container.*|<div class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:${progress_percent}%\">${progress_percent}%</div>|g" "$webadmin_install_dir/index.html"
 }
 
 function increment_app_install_progress {

@@ -1731,30 +1731,30 @@ function webadmin_update_system_monitor {
         fi
 
         if [ "$cpu_usage" ]; then
-            sed -i "s|<div name=\"cpuusage\" class=\"w3-container.*|<div name=\"cpuusage\" class=\"w3-container w3-blue w3-round-xlarge\" style=\"width:${cpu_usage}%\">${cpu_usage}%</div>|g" "$webadmin_install_dir/system_monitor.html"
+            sed -i "s|<div name=\"cpuusage\" class=\"w3-container.*|<div name=\"cpuusage\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:${cpu_usage}%\">${cpu_usage}%</div>|g" "$webadmin_install_dir/system_monitor.html"
         fi
 
         if [[ "$disk_use_percent" == *'%'* ]]; then
-            sed -i "s|<div name=\"diskspace\" class=\"w3-container.*|<div name=\"diskspace\" class=\"w3-container w3-blue w3-round-xlarge\" style=\"width:$disk_use_percent\">${disk_use_gb} / ${disk_size_gb}GB</div>|g" "$webadmin_install_dir/system_monitor.html"
+            sed -i "s|<div name=\"diskspace\" class=\"w3-container.*|<div name=\"diskspace\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:$disk_use_percent\">${disk_use_gb} / ${disk_size_gb}GB</div>|g" "$webadmin_install_dir/system_monitor.html"
         fi
 
         if [ "$backup_disk_use_gb" ]; then
-            sed -i "s|<div name=\"backupspace\" class=\"w3-container.*|<div name=\"backupspace\" class=\"w3-container w3-blue w3-round-xlarge\" style=\"width:$backup_disk_use_percent\">${backup_disk_use_gb} / ${backup_disk_size_gb}GB</div>|g" "$webadmin_install_dir/system_monitor.html"
+            sed -i "s|<div name=\"backupspace\" class=\"w3-container.*|<div name=\"backupspace\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:$backup_disk_use_percent\">${backup_disk_use_gb} / ${backup_disk_size_gb}GB</div>|g" "$webadmin_install_dir/system_monitor.html"
         else
             sed -i "/\"backupspace\"/d" "$webadmin_install_dir/system_monitor.html"
             sed -i '/titletextbackupspace/d' "$webadmin_install_dir/system_monitor.html"
         fi
 
-        sed -i "s|<div name=\"memory\" class=\"w3-container.*|<div name=\"memory\" class=\"w3-container w3-blue w3-round-xlarge\" style=\"width:${used_memory_percent}%\">${used_memory_gb} / ${total_memory_gb}GB</div>|g" "$webadmin_install_dir/system_monitor.html"
+        sed -i "s|<div name=\"memory\" class=\"w3-container.*|<div name=\"memory\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:${used_memory_percent}%\">${used_memory_gb} / ${total_memory_gb}GB</div>|g" "$webadmin_install_dir/system_monitor.html"
 
         if [ $cpu_temperature -gt 0 ]; then
-            sed -i "s|<div name=\"cputemp\" class=\"w3-container.*|<div name=\"cputemp\" class=\"w3-container w3-blue w3-round-xlarge\" style=\"width:${cpu_temperature}%\">${cpu_temperature}C</div>|g" "$webadmin_install_dir/system_monitor.html"
+            sed -i "s|<div name=\"cputemp\" class=\"w3-container.*|<div name=\"cputemp\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:${cpu_temperature}%\">${cpu_temperature}C</div>|g" "$webadmin_install_dir/system_monitor.html"
         else
             sed -i "/\"cputemp\"/d" "$webadmin_install_dir/system_monitor.html"
             sed -i '/titletextcputemp/d' "$webadmin_install_dir/system_monitor.html"
         fi
 
-        sed -i "s|<div name=\"diskio\" class=\"w3-container.*|<div name=\"diskio\" class=\"w3-container w3-blue w3-round-xlarge\" style=\"width:${disk_io_speed_percent}%\">${disk_io_speed} MB/s</div>|g" "$webadmin_install_dir/system_monitor.html"
+        sed -i "s|<div name=\"diskio\" class=\"w3-container.*|<div name=\"diskio\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:${disk_io_speed_percent}%\">${disk_io_speed} MB/s</div>|g" "$webadmin_install_dir/system_monitor.html"
 
         chown www-data:www-data "$webadmin_install_dir/system_monitor.html"
     fi
