@@ -257,15 +257,10 @@ function install_mumble {
 
     increment_app_install_progress
 
-    if [ -f "$IMAGE_PASSWORD_FILE" ]; then
-        MUMBLE_SERVER_PASSWORD="$(printf "%s" "$(cat "$IMAGE_PASSWORD_FILE")")"
-    else
-        if [ ! "$MUMBLE_SERVER_PASSWORD" ]; then
-            MUMBLE_SERVER_PASSWORD="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
-            if [ ${#MUMBLE_SERVER_PASSWORD} -lt "$MINIMUM_PASSWORD_LENGTH" ]; then
-                MUMBLE_SERVER_PASSWORD="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
-            fi
-        fi
+    # make a separate password for mumble
+    MUMBLE_SERVER_PASSWORD="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
+    if [ ${#MUMBLE_SERVER_PASSWORD} -lt "$MINIMUM_PASSWORD_LENGTH" ]; then
+        MUMBLE_SERVER_PASSWORD="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
     fi
 
     increment_app_install_progress
