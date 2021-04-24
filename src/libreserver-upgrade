@@ -70,7 +70,7 @@ source "/usr/share/${PROJECT_NAME}/base/${PROJECT_NAME}-base-email"
 source "/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-xmpp"
 
 read_config_param PROJECT_REPO
-if [[ "$PROJECT_REPO" == *"github.com/bashrc/${PROJECT_NAME}" || "$PROJECT_REPO" == *"libreserver.org"* ]]; then
+if [[ "$PROJECT_REPO" == *"github.com/bashrc2/${PROJECT_NAME}" || "$PROJECT_REPO" == *"libreserver.org"* ]]; then
     PROJECT_REPO=$DEFAULT_PROJECT_REPO
     write_config_param PROJECT_REPO "$PROJECT_REPO"
 fi
