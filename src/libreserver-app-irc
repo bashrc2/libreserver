@@ -37,7 +37,7 @@ REQUIRES_APP=
 IRC_PORT=6697
 
 IRC_REPO="https://github.com/jrosdahl/miniircd"
-IRC_COMMIT='c6473c51c989cfe23c99d12ad16ecb1abe585ac6'
+IRC_COMMIT='f3a998fd41a0052fafb416705452edd1b6139ec0'
 
 # An optional password to log into IRC. This applies to all users
 IRC_PASSWORD=
