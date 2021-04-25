@@ -56,6 +56,10 @@ irc_variables=(MY_USERNAME
                DEFAULT_DOMAIN_NAME
                ONION_ONLY)
 
+function irc_welcome_message {
+    sed -i "s|welcome to IRC|welcome to ${PROJECT_NAME} IRC|g" /usr/local/bin/miniircd
+}
+
 function upgrade_distro_irc {
     target_distro="$1"
 
@@ -293,6 +297,7 @@ function upgrade_irc {
 
     cp /etc/miniirc/miniircd /usr/local/bin/miniircd
     irc_fix_password
+    irc_welcome_message
 }
 
 function backup_local_irc {
@@ -380,6 +385,7 @@ function install_irc_server {
 
     cp /etc/miniirc/miniircd /usr/local/bin/miniircd
     irc_fix_password
+    irc_welcome_message
     make jail
 
     if [ ! -d /var/jail/miniircd ]; then
