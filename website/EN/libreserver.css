@@ -188,6 +188,7 @@ a:hover {
         line-height: var(--mobile-line-spacing);
     }
     .projectDescription {
+        font-size: var(--mobile-font-size);
         margin-left: var(--left-margin-mobile);
         width: var(--text-width-mobile);
     }
@@ -201,6 +202,7 @@ a:hover {
         width: 45%;
     }
     blockquote {
+        font-size: var(--mobile-font-size);
         margin-left: var(--quote-left-margin-mobile);
         width: var(--quote-width-mobile);
     }
