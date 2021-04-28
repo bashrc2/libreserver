@@ -10,6 +10,8 @@
     --text-width: 60%;
     --left-margin-mobile: 2.5%;
     --text-width-mobile: 95%;
+    --details-font-size: 12px;
+    --quote-font-size: 20px;
     --quote-left-margin: 20%;
     --quote-width: 60%;
     --quote-left-margin-mobile: 10%;
@@ -66,7 +68,7 @@ details > p {
     margin: 0;
 }
 
-details > h3, ul {
+details > h4, ul {
     color: #777;
 }
 
@@ -89,6 +91,7 @@ blockquote {
     border-left: 10px;
     margin: 1.5em 10px;
     padding: 0.5em 10px;
+    font-size: var(--quote-font-size);
     font-weight: var(--quote-font-weight);
     font-style: italic;
     quotes: "\201C""\201D""\2018""\2019";
@@ -178,7 +181,7 @@ a:hover {
 	margin-left: var(--left-margin-mobile);
 	width: var(--text-width-mobile);
     }
-    h3 {
+    h4 {
 	font-size: 18px;
     }
     .networkImage img {
