@@ -5,6 +5,8 @@
     --main-bg-color: #dddddd;
     --font-size: 12px;
     --line-spacing: 240%;
+    --mobile-font-size: 30px;
+    --mobile-line-spacing: 180%;
     --rendering: normal;
     --left-margin: 20%;
     --text-width: 60%;
@@ -174,24 +176,28 @@ a:hover {
 }
 
 @media screen and (max-width: 1000px) {
+    body, html, p {
+	font-size: var(--mobile-font-size);
+	line-height: var(--mobile-line-spacing);
+    }
     table, th {
-	width: 95%;
+        width: 95%;
     }
     .projectDescription {
-	margin-left: var(--left-margin-mobile);
-	width: var(--text-width-mobile);
+        margin-left: var(--left-margin-mobile);
+        width: var(--text-width-mobile);
     }
     h4 {
-	font-size: 18px;
+        font-size: 18px;
     }
     .networkImage img {
-	width: 45%;
+        width: 45%;
     }
     blockquote {
-	margin-left: var(--quote-left-margin-mobile);
-	width: var(--quote-width-mobile);
+        margin-left: var(--quote-left-margin-mobile);
+        width: var(--quote-width-mobile);
     }
     .titleLogo {
-	width: 60%;
+        width: 60%;
     }
 }
