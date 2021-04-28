@@ -3,9 +3,17 @@
 :root {
     --main-fg-color: #282c37;
     --main-bg-color: #dddddd;
-    --font-size: 20px;
-    --line-spacing: 180%;
+    --font-size: 12px;
+    --line-spacing: 240%;
     --rendering: normal;
+    --left-margin: 20%;
+    --text-width: 60%;
+    --left-margin-mobile: 2.5%;
+    --text-width-mobile: 95%;
+    --quote-left-margin: 20%;
+    --quote-width: 60%;
+    --quote-left-margin-mobile: 10%;
+    --quote-width-mobile: 80%;
 
     --header-font: 'Arial, Helvetica, sans-serif';
     --button-bottom-margin: 10px;
@@ -31,9 +39,68 @@ body, html {
     text-align: center;
 }
 
+pre {
+    background-color: black;
+    color: white;
+}
+
+a:link {
+    color: red;
+    text-decoration: none;
+}
+
+a:visited {
+    color: darkred;
+    text-decoration: none;
+}
+
+details > summary {
+    padding: 4px;
+    border: none;
+    cursor: pointer;
+}
+
+details > p {
+    background-color: #eee;
+    padding: 4px;
+    margin: 0;
+}
+
+details > h3, ul {
+    color: #777;
+}
+
+details > summary {
+    list-style-type: none;
+}
+
+details > summary::-webkit-details-marker {
+    display: none;
+}
+
+details > summary::before {
+    content: '';
+}
+
+details[open] > summary::before {
+    content: '';
+}
+blockquote {
+    border-left: 10px;
+    margin: 1.5em 10px;
+    padding: 0.5em 10px;
+    font-weight: var(--quote-font-weight);
+    font-style: italic;
+    quotes: "\201C""\201D""\2018""\2019";
+    margin-left: var(--quote-left-margin);
+    width: var(--quote-width);
+}
+blockquote p {
+    display: inline;
+}
+
 h1 {
     font-family: 'Exoplanetaria';
-    font-size: var(--font-size);
     color: var(--title-color);
     text-align: center;
     font-size: 70px;
@@ -50,13 +117,17 @@ h1 {
     font-family: 'Exoplanetaria';
     font-size: 20px;
     font-style: normal;
-    margin-left: 10%;
-    width: 80%;
+    margin-left: var(--left-margin);
+    width: var(--text-width);
     text-align: left;
 }
 
 .donationLinks {
     text-align: center;
+}
+
+.titleLogo {
+    width: 30%;
 }
 
 .networkImage img {
@@ -74,20 +145,19 @@ h1 {
 table, th {
     border: 0px solid black;
     text-align: center;
-    width: 80%;
+    width: var(--text-width);
 }
 
 .section {
     font-family: 'Exoplanetaria';
     font-size: var(--font-size);
     color: var(--main-bg-color);
-    background-color: var(--main-fg-color);
     text-align: center;
     font-size: 28px;
 }
 
 td {
-    background-color: var(--main-fg-color);
+    background-color: #777;
     width: 30%;
     border: 0px solid black;
     text-align: center;
@@ -105,13 +175,20 @@ a:hover {
 	width: 95%;
     }
     .projectDescription {
-	margin-left: 2.5%;
-	width: 95%;
+	margin-left: var(--left-margin-mobile);
+	width: var(--text-width-mobile);
     }
     h3 {
 	font-size: 18px;
     }
     .networkImage img {
 	width: 45%;
+    }
+    blockquote {
+	margin-left: var(--quote-left-margin-mobile);
+	width: var(--quote-width-mobile);
+    }
+    .titleLogo {
+	width: 60%;
     }
 }

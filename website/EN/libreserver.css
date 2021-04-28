@@ -3,11 +3,11 @@
 :root {
     --main-fg-color: #282c37;
     --main-bg-color: #dddddd;
-    --font-size: 20px;
-    --line-spacing: 180%;
+    --font-size: 12px;
+    --line-spacing: 240%;
     --rendering: normal;
-    --left-margin: 10%;
-    --text-width: 80%;
+    --left-margin: 20%;
+    --text-width: 60%;
     --left-margin-mobile: 2.5%;
     --text-width-mobile: 95%;
     --quote-left-margin: 20%;
@@ -145,7 +145,7 @@ h1 {
 table, th {
     border: 0px solid black;
     text-align: center;
-    width: 80%;
+    width: var(--text-width);
 }
 
 .section {
