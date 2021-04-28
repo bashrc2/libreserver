@@ -177,15 +177,22 @@ a:hover {
 
 @media screen and (max-width: 1000px) {
     body, html, p {
-	font-size: var(--mobile-font-size);
-	line-height: var(--mobile-line-spacing);
+        font-size: var(--mobile-font-size);
+        line-height: var(--mobile-line-spacing);
     }
     table, th {
         width: 95%;
     }
+    td {
+        font-size: var(--mobile-font-size);
+        line-height: var(--mobile-line-spacing);
+    }
     .projectDescription {
         margin-left: var(--left-margin-mobile);
         width: var(--text-width-mobile);
+    }
+    h3 {
+        font-size: var(--mobile-font-size);
     }
     h4 {
         font-size: 18px;
