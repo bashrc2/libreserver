@@ -183,6 +183,10 @@ a:hover {
     table, th {
         width: 95%;
     }
+    td {
+	font-size: var(--mobile-font-size);
+	line-height: var(--mobile-line-spacing);
+    }
     .projectDescription {
         margin-left: var(--left-margin-mobile);
         width: var(--text-width-mobile);
