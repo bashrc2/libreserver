@@ -318,10 +318,11 @@ function install_gemini {
 
     increment_app_install_progress
 
-    openssl req -x509 -newkey rsa:2048 \
+    openssl req -x509 -new -newkey ec \
+	    -pkeyopt ec_paramgen_curve:prime256v1 \
 	    -keyout "/home/gemini/molly.key" \
 	    -out "/home/gemini/molly.crt" \
-	    -days 9999 -nodes -subj "/CN=${DEFAULT_DOMAIN_NAME}"
+	    -days 99999 -nodes -subj "/CN=${DEFAULT_DOMAIN_NAME}"
 
     if [ ! -f "/home/gemini/molly.key" ]; then
 	exit 82
