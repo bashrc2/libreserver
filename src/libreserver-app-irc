@@ -182,11 +182,23 @@ function remove_user_irc {
 
 function irc_set_global_password_base {
     NEW_IRC_PASSWORD="$1"
-    echo -n "${NEW_IRC_PASSWORD}" > /etc/miniirc/password
-    if ! grep -q "password" /etc/systemd/system/irc.service; then
-        sed -i 's|/usr/local/bin/miniircd|/usr/local/bin/miniircd --password-file /etc/miniirc/password|g' /etc/systemd/system/irc.service
-        systemctl daemon-reload
-        systemctl restart irc
+    if [ "${NEW_IRC_PASSWORD}" ]; then
+	echo -n "${NEW_IRC_PASSWORD}" > /etc/miniirc/password
+	if ! grep -q "password" /etc/systemd/system/irc.service; then
+            sed -i 's|/usr/local/bin/miniircd|/usr/local/bin/miniircd --password-file /etc/miniirc/password|g' /etc/systemd/system/irc.service
+            systemctl daemon-reload
+            systemctl restart irc
+	fi
+    else
+	# remove password
+	if [ -f /etc/miniirc/password ]; then
+	    rm /etc/miniirc/password
+	fi
+	if grep -q "password" /etc/systemd/system/irc.service; then
+            sed -i 's|/usr/local/bin/miniircd --password-file /etc/miniirc/password|/usr/local/bin/miniircd|g' /etc/systemd/system/irc.service
+            systemctl daemon-reload
+            systemctl restart irc
+	fi
     fi
 }
 
