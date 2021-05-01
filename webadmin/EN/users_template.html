@@ -7,6 +7,10 @@
     <style>
       @import url("libreserver.css");
 
+      .page-align {
+          vertical-align: middle;
+      }
+
       .header {
           text-align: center;
           padding: 32px;
@@ -58,41 +62,54 @@
           width: 50px;
           border-radius: 50%;
       }
+      @media screen and (min-width: 400px) {
+          .page-align {
+              margin-top: 4%;
+          }
+      }
+
+      @media screen and (max-width: 700px) {
+          .page-align {
+              margin-top: 0%;
+          }
+      }
     </style>
   </head>
   <body>
 
-    <div class="header">
-      <a href="index.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
-      <br><label translate="yes">Members</label>
-    </div>
+    <div class="page-align">
+      <div class="header">
+        <a href="index.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
+        <br><label translate="yes">Members</label>
 
-    <!-- users list -->
-    <div class="row">
-      <div class="column">
-        <div class="chip">
-          <a href="userprofile.html">
-            <img src="images/admin_users.png" alt="Person" width="96" height="96" alt="User icon">
-            User A
-          </a>
-        </div>
-        <div class="chip">
-          <a href="userprofile.html">
-            <img src="images/admin_users.png" alt="Person" width="96" height="96" alt="User icon">
-            User B
-          </a>
-        </div>
-        <div class="chip">
-          <a href="userprofile.html">
-            <img src="images/admin_users.png" alt="Person" width="96" height="96" alt="User icon">
-            User C
-          </a>
-        </div>
-        <div class="chip">
-          <a href="new_user.html">
-            <img src="images/admin_users.png" alt="Person" width="96" height="96" alt="User icon">
-            <div class="adduser">+</div>
-          </a>
+        <!-- users list -->
+        <div class="row">
+          <div class="column">
+            <div class="chip">
+              <a href="userprofile.html">
+                <img src="images/admin_users.png" alt="Person" width="96" height="96" alt="User icon">
+                User A
+              </a>
+            </div>
+            <div class="chip">
+              <a href="userprofile.html">
+                <img src="images/admin_users.png" alt="Person" width="96" height="96" alt="User icon">
+                User B
+              </a>
+            </div>
+            <div class="chip">
+              <a href="userprofile.html">
+                <img src="images/admin_users.png" alt="Person" width="96" height="96" alt="User icon">
+                User C
+              </a>
+            </div>
+            <div class="chip">
+              <a href="new_user.html">
+                <img src="images/admin_users.png" alt="Person" width="96" height="96" alt="User icon">
+                <div class="adduser">+</div>
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </div>

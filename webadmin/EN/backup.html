@@ -28,7 +28,10 @@
         vertical-align: middle;
     }
 
-    @media screen and (max-width: 800px) {
+    @media screen and (min-width: 400px) {
+        .page-align {
+            margin-top: 4%;
+        }
         .column {
             -ms-flex: 50%;
             flex: 25%;
@@ -36,7 +39,10 @@
         }
     }
 
-    @media screen and (max-width: 500px) {
+    @media screen and (max-width: 700px) {
+        .page-align {
+            margin-top: 0%;
+        }
         .column {
             -ms-flex: 50%;
             flex: 25%;
@@ -46,34 +52,36 @@
   </style>
   <body>
 
-    <div class="header">
-      <a href="index.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
-    </div>
+    <div class="page-align">
+      <div class="header">
+	<a href="index.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
 
-    <div class="row">
-      <div class="column">
-        <div>
-        </div>
-      </div>
-      <div class="column">
-        <div>
-          <a href="./backup_password.html" title="Backup">
-            <img src="images/admin_create_backup.png" style="width:100%" alt="Backup">
-            <center translate="yes">Backup</center>
-          </a>
-        </div>
-      </div>
-      <div class="column">
-        <div>
-          <a href="./restore_password.html" title="Restore">
-            <img src="images/admin_restore.png" style="width:100%" alt="Restore">
-            <center translate="yes">Restore</center>
-          </a>
-        </div>
-      </div>
-      <div class="column">
-        <div>
-        </div>
+	<div class="row">
+	  <div class="column">
+            <div>
+            </div>
+	  </div>
+	  <div class="column">
+            <div>
+              <a href="./backup_password.html" title="Backup">
+		<img src="images/admin_create_backup.png" style="width:100%" alt="Backup">
+		<center translate="yes">Backup</center>
+              </a>
+            </div>
+	  </div>
+	  <div class="column">
+            <div>
+              <a href="./restore_password.html" title="Restore">
+		<img src="images/admin_restore.png" style="width:100%" alt="Restore">
+		<center translate="yes">Restore</center>
+              </a>
+            </div>
+	  </div>
+	  <div class="column">
+            <div>
+            </div>
+	  </div>
+	</div>
       </div>
     </div>
 
