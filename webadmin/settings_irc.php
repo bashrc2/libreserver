@@ -36,33 +36,12 @@ if (php_sapi_name()!=='fpm-fcgi') exit('php script must be run from the web inte
 if (isset($_POST['submitircpassword'])) {
     if(filter_string('irc_password',1024)) {
         $pass = trim(htmlspecialchars($_POST['irc_password']));
-        if (strpos($pass, ' ') === false) {
-            if (preg_match('/^[a-z\A-Z\d_]{8,512}$/', $pass)) {
-                $settings_file = fopen(".appsettings.txt", "w") or die("Unable to write to appsettings file");
-                fwrite($settings_file, "irc,password,".$pass);
-                fclose($settings_file);
-            }
-            else {
-                $output_filename = "invalid_password.html";
-            }
-        }
-        else {
-            $output_filename = "invalid_password.html";
-        }
+	$settings_file = fopen(".appsettings.txt", "w") or die("Unable to write to appsettings file");
+        fwrite($settings_file, "irc,password,".$pass);
+        fclose($settings_file);
     }
     else {
         $output_filename = "invalid_password.html";
-    }
-}
-
-if (isset($_POST['submitfavicon'])) {
-    if(filter_string('favicon_url')) {
-        $url = trim(htmlspecialchars($_POST['favicon_url']));
-        if (strpos($url, ' ') === false) {
-            $settings_file = fopen(".appsettings.txt", "w") or die("Unable to write to appsettings file");
-            fwrite($settings_file, "fedwiki,favicon,".$url);
-            fclose($settings_file);
-        }
     }
 }
 
