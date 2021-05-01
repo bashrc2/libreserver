@@ -39,8 +39,8 @@
           -ms-flex: 25%;
           flex: 25%;
           min-width: 55%;
-          max-width: 55%;
-          padding: 0 30%;
+          max-width: 100%;
+          padding: 0 23%;
           line-height: 60px;
       }
 
@@ -69,6 +69,13 @@
       }
 
       @media screen and (max-width: 700px) {
+          .chip {
+              width: 95%;
+          }
+          .column {
+              max-width: 95%;
+              padding: 0 5%;
+          }
           .page-align {
               margin-top: 0%;
           }
@@ -80,7 +87,8 @@
     <div class="page-align">
       <div class="header">
         <a href="index.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
-        <br><label translate="yes">Members</label>
+
+        <br><br>
 
         <!-- users list -->
         <div class="row">
