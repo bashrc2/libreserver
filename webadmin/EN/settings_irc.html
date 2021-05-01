@@ -38,20 +38,15 @@
 
     <div class="card">
       <div class="header">
-        <a href="settings_fedwiki.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
+        <a href="app_irc.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
 
-        <p class="headertext" translate="yes">Fedwiki Favicon</p>
+        <p class="headertext" translate="yes">Fedwiki Password</p>
 
-        <p class="settingtext" translate="yes">
-          Select a <b>png</b> or <b>jpg</b> image link to use as a favicon
-        </p>
-
-        <form action="settings_fedwiki.php" method="post">
-          <p translate="yes">URL to upload from</p>
-          <input type="text" name="favicon_url" value="https://">
-          <br><br>
+        <form action="settings_irc.php" method="post">
+          <p><input type="password" name="irc_password"></p>
+          <br>
           <input type="submit" name="submitcancel" translate="yes" value="Cancel" />
-          <input type="submit" name="submitfavicon" translate="yes" value="Upload" />
+          <input type="submit" name="submitircpassword" translate="yes" value="Update" />
         </form>
 
       </div>

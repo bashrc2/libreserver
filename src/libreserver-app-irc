@@ -202,8 +202,8 @@ function irc_set_global_password_base {
     fi
 }
 
-function change_password_irc {
-    new_global_password="$2"
+function irc_setting_password {
+    new_global_password="$1"
 
     set_password_for_all_users irc "$new_global_password"
     irc_set_global_password_base "$new_global_password"
