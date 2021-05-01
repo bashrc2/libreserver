@@ -2128,7 +2128,7 @@ function install_web_admin_webmail {
       echo "\$allow_charset_search     = true;";
       echo "\$uid_support              = true;";
       echo '';
-      echo "\$theme_css = '';";
+      echo "\$theme_css = '../themes/css/freedom.css';";
       echo "\$theme_default = $webmail_theme;";
       echo "\$theme[0]['PATH'] = SM_PATH . 'themes/default_theme.php';";
       echo "\$theme[0]['NAME'] = 'Default';";
@@ -2281,6 +2281,29 @@ function install_web_admin_webmail {
       echo "\$config_location_base    = '';";
       echo '';
       echo "@include SM_PATH . 'mail/config/config_local.php';"; } > "/var/www/${local_hostname}/htdocs/mail/config/config.php"
+
+    # style sheet and font
+    { echo '@font-face {';
+      echo "  font-family: 'Montserrat-Regular';";
+      echo '  font-style: normal;';
+      echo '  font-weight: normal;';
+      echo '  font-display: block;';
+      echo "  src: url('./fonts/Montserrat-Regular.ttf') format('truetype');";
+      echo '}';
+      echo 'body, td, th, dd, dt, h1, h2, h3, h4, h5, h6, p, ol, ul, li {';
+      echo "  font-family: 'Montserrat-Regular';";
+      echo '}';
+      echo 'body, small {';
+      echo '  font-size: 10pt;';
+      echo '}';
+      echo 'td, th {';
+      echo '  font-size: 12pt;';
+      echo '}';
+      echo 'textarea, pre {';
+      echo "  font-family: 'Montserrat-Regular';";
+      echo '  font-size: 12pt;';
+      echo '}'; } > "/var/www/${local_hostname}/htdocs/mail/themes/css/freedom.css"
+    cp -r "/root/${PROJECT_NAME}/webadmin/EN/fonts" "/var/www/${local_hostname}/htdocs/mail/themes/css/"
 
     cp "/root/${PROJECT_NAME}/webadmin/images/logo_webmail.png" "/var/www/${local_hostname}/htdocs/mail/images/sm_logo.png"
     
