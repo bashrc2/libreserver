@@ -1297,7 +1297,6 @@ function web_admin_create_installed_apps {
     cp "$appslist_template_filename" "$appslist_filename"
 
     # remove some lines from the template
-    sed -i '/<\/div> <!-- header -->/d' "$appslist_filename"
     sed -i '/<\/body>/d' "$appslist_filename"
     sed -i '/<\/html>/d' "$appslist_filename"
 

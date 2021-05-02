@@ -89,7 +89,6 @@ function web_create_homepage {
     fi
     cp "$homepage_template_filename" "$homepage_filename"
 
-    sed -i '/<\/div> <!-- header -->/d' "$homepage_filename"
     sed -i '/<\/body>/d' "$homepage_filename"
     sed -i '/<\/html>/d' "$homepage_filename"
 
