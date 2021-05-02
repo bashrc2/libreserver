@@ -5,6 +5,11 @@
     <style>
       @import url("libreserver.css");
 
+      .page-align {
+          vertical-align: middle;
+          margin-top: 4%;
+      }
+
       .appurl {
           font-size: 100%;
       }
@@ -50,23 +55,25 @@
     </style>
   </head>
   <body>
-    <div class="card">
+    <div class="page-align">
       <div class="header">
         <a href="apps.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a><br>
         <br>
-        <p class="proceedtext" translate="yes"><b>Remove APPNAME now?</b></p>
-        <br>
+        <div class="card">
+          <p class="proceedtext" translate="yes"><b>Remove APPNAME now?</b></p>
+          <br>
 
-        <form action="removeappconfirm.php" method="post">
-          <p>
-            <input type="radio" name="removeconfirm" value="0" checked><label translate="yes">No</label>
-            <input type="radio" name="removeconfirm" value="1"><label translate="yes">Yes</label>
-            <input type="hidden" name="app_name" value="APPNAME">
-          </p>
-          <br><br>
-          <input type="submit" name="removeconfirmsubmit" translate="yes" value="Continue" />
-        </form>
-        <br>
+          <form action="removeappconfirm.php" method="post">
+            <p>
+              <input type="radio" name="removeconfirm" value="0" checked><label translate="yes">No</label>
+              <input type="radio" name="removeconfirm" value="1"><label translate="yes">Yes</label>
+              <input type="hidden" name="app_name" value="APPNAME">
+            </p>
+            <br><br>
+            <input type="submit" name="removeconfirmsubmit" translate="yes" value="Continue" />
+          </form>
+          <br>
+        </div>
       </div>
     </div>
   </body>
