@@ -172,7 +172,7 @@ function upgrade_cryptpad {
     cryptpad_create_config
     /usr/bin/npm upgrade
     /usr/bin/npm install
-    if [ ! -d "${CRYPTPAD_DIR}/node_modules/bower/bin/bower" ]; then
+    if [ ! -f "${CRYPTPAD_DIR}/node_modules/bower/bin/bower" ]; then
         /usr/bin/npm install bower@${CRYPTPAD_BOWER_VERSION}
         chown -R cryptpad:cryptpad "${CRYPTPAD_DIR}"
     fi
