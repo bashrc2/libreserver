@@ -37,7 +37,6 @@ REQUIRES_APP=
 
 CRYPTPAD_ONION_PORT=8119
 CRYPTPAD_PORT=9003
-CRYPTPAD_PORT2=9005
 CRYPTPAD_REPO="https://github.com/xwiki-labs/cryptpad"
 CRYPTPAD_COMMIT='980a2369007a3b6eeb4de105bfcf1cf13e3444ec'
 CRYPTPAD_DIR=/etc/cryptpad
@@ -297,88 +296,21 @@ function cryptpad_create_config {
         cryptpad_mydomain="http://${CRYPTPAD_ONION_HOSTNAME}"
     fi
 
-    { echo '/*@flow*/';
-      echo "var _domain = '${cryptpad_mydomain}:${CRYPTPAD_PORT}/';";
-      echo "var domain = ' ' + _domain;";
-      echo '';
-      echo 'var baseCSP = [';
-      echo "    \"default-src 'none'\",";
-      echo "    \"style-src 'unsafe-inline' 'self' \" + domain,";
-      echo "    \"font-src 'self' data:\" + domain,";
-      echo '';
-      echo '    "child-src blob: *",';
-      echo '    "frame-src blob: *",';
-      echo "    \"connect-src 'self' ws: wss: blob:\" + domain,";
-      echo '';
-      echo "    \"img-src 'self' data: blob:\" + domain,";
-      echo '    "media-src * blob:",';
-      echo '';
-      echo '    "frame-ancestors *",';
-      echo '    ""';
-      echo '];';
-      echo '';
-      echo 'module.exports = {';
-      echo '    adminKeys: [';
-      echo '        //"http://domain.onion/user/#/1/cryptpad-user1/longrandomstring=",';
-      echo '    ],';
-      echo '';
-      echo "    httpAddress: '::',";
+    { echo 'module.exports = {';
+      echo "    httpUnsafeOrigin: 'http://localhost:${CRYPTPAD_PORT}',";
+      echo "    httpSafeOrigin: '${cryptpad_mydomain}',";
       echo "    httpPort: ${CRYPTPAD_PORT},";
-      echo '';
-      echo '    // This is for allowing the cross-domain iframe to function when developing';
-      echo "    httpSafePort: ${CRYPTPAD_PORT2},";
-      echo '';
-      echo '    httpUnsafeOrigin: domain,';
-      echo '    httpSafeOrigin: domain,';
-      echo '';
-      echo '    httpHeaders: {';
-      echo '        "X-XSS-Protection": "1; mode=block",';
-      echo '        "X-Content-Type-Options": "nosniff",';
-      echo '        "Access-Control-Allow-Origin": "*"';
-      echo '    },';
-      echo '';
-      echo "    contentSecurity: baseCSP.join('; ') +";
-      echo "        \"script-src 'self'\" + domain,";
-      echo '';
-      echo "    padContentSecurity: baseCSP.join('; ') +";
-      echo "        \"script-src 'self' 'unsafe-eval' 'unsafe-inline'\" + domain,";
-      echo '';
-      echo '    mainPages: [';
-      echo "        'index',";
-      echo "        'privacy',";
-      echo "        'terms',";
-      echo "        'about',";
-      echo "        'contact',";
-      echo "        'what-is-cryptpad',";
-      echo "        'faq',";
-      echo "        'maintenance'";
-      echo '    ],';
-      echo '';
-      echo "    websocketPath: '/cryptpad_websocket',";
-      echo '';
-      echo '    logToStdout: false,';
-      echo '';
-      echo '    verbose: false,';
-      echo '';
-      echo '    removeDonateButton: true,';
-      echo '    allowSubscriptions: true,';
-      echo '';
-      echo '    myDomain: _domain,';
-      echo '';
-      echo '    defaultStorageLimit: 50 * 1024 * 1024,';
-      echo '';
-      echo '    customLimits: {';
-      echo '    },';
-      echo '';
-      echo '    disableIntegratedTasks: false,';
-      echo '';
-      echo '    inactiveTime: 3, // days';
-      echo '';
+      echo "    adminEmail: '${MY_EMAIL_ADDRESS}',";
       echo '    retainData: false,';
       echo '    archiveRetentionTime: 15,';
       echo '    maxUploadSize: 20 * 1024 * 1024,';
+      echo "    defaultStorageLimit: 50 * 1024 * 1024,";
+      echo "    inactiveTime: 3, // days";
       echo '    channelExpirationMs: 30000,';
       echo '    openFileLimit: 2048,';
+      echo '    disableIntegratedTasks: false,';
+      echo '    removeDonateButton: true,';
+      echo '    allowSubscriptions: true,';
       echo '';
       echo "    filePath: './datastore/',";
       echo "    archivePath: './data/archive',";
@@ -387,14 +319,14 @@ function cryptpad_create_config {
       echo "    blockPath: './block',";
       echo "    blobPath: './blob',";
       echo "    blobStagingPath: './data/blobstage',";
+      echo "    decreePath: './data/decrees',";
       echo "    logPath: './data/logs',";
-      echo '';
-      echo '    logToStdout: false,';
-      echo "    logLevel: 'info',";
-      echo '    //logFeedback: false,';
-      echo '    verbose: false';
+      echo "    logToStdout: false,";
+      echo "    logLevel: 'error',";
+      echo "    logFeedback: false,";
+      echo "    verbose: false,";
       echo '};'; } > "$cryptpad_prefix${CRYPTPAD_DIR}/config/config.js"
-
+    
     if [[ "$cryptpad_install_type" != "mesh" ]]; then
         chown cryptpad:cryptpad "$cryptpad_prefix${CRYPTPAD_DIR}/config/config.js"
     else
