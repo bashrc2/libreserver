@@ -5,6 +5,10 @@
     <style>
       @import url("libreserver.css");
 
+      .page-align {
+          vertical-align: middle;
+      }
+
       .chip {
           display: inline-block;
           padding: 0 15px;
@@ -66,6 +70,9 @@
       }
 
       @media screen and (min-width: 400px) {
+          .page-align {
+              margin-top: 4%;
+          }
           .column {
               -ms-flex: 25%;
               flex: 25%;
@@ -73,7 +80,7 @@
           }
       }
 
-      @media screen and (max-width: 400px) {
+      @media screen and (max-width: 700px) {
           .column {
               -ms-flex: 50%;
               flex: 50%;
@@ -83,18 +90,18 @@
     </style>
   </head>
   <body>
+    <div class="page-align">
+      <div class="header">
+        <a href="index.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
+        <br><br>
+        <center>
+          <a href="apps_add.html" title="Install a new app">
+            <img class="img-responsive" src="images/add_app.png" alt="Install a new app"/>
+          </a>
+        </center>
+      </div> <!-- header -->
 
-    <div class="header">
-      <a href="index.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
-      <br><br>
-      <center>
-        <a href="apps_add.html" title="Install a new app">
-          <img class="img-responsive" src="images/add_app.png" alt="Install a new app"/>
-        </a>
-      </center>
-    </div> <!-- header -->
-
-    <p class="appstext" translate="yes">There are no apps installed. Select the plus button above to install new apps.</p>
-
+      <p class="appstext" translate="yes">There are no apps installed. Select the plus button above to install new apps.</p>
+    </div>
   </body>
 </html>
