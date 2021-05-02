@@ -5,6 +5,11 @@
     <style>
       @import url("libreserver.css");
 
+      .page-align {
+          vertical-align: middle;
+          margin-top: 4%;
+      }
+
       .appurl {
           font-size: 100%;
       }
@@ -69,31 +74,33 @@
     </style>
   </head>
   <body>
-    <div class="card">
+    <div class="page-align">
       <div class="header">
         <a href="settings.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a><br>
 
-        <form action="vpn.php" method="post">
-          <p translate="yes">VPN domain or IP address:</p>
-          <input type="text" name="remotevpndomain" value="" autofocus>
+	<div class="card">
+          <form action="vpn.php" method="post">
+            <p translate="yes">VPN domain or IP address:</p>
+            <input type="text" name="remotevpndomain" value="" autofocus>
 
-          <p translate="yes">VPN public key:</p>
-          <input type="text" name="remotevpnpublickey" value="">
+            <p translate="yes">VPN public key:</p>
+            <input type="text" name="remotevpnpublickey" value="">
 
-          <p class="descriptiontext" translate="yes">Public key for this server:</p>
+            <p class="descriptiontext" translate="yes">Public key for this server:</p>
 
-          <center><p class="descriptiontext" translate="no"><b>VPNPUBLICKEY</b></p></center>
+            <center><p class="descriptiontext" translate="no"><b>VPNPUBLICKEY</b></p></center>
 
-          <p class="descriptiontext" translate="yes">Public keys for the laptops or devices that you wish to be able to use this server to connect to the internet.</p>
+            <p class="descriptiontext" translate="yes">Public keys for the laptops or devices that you wish to be able to use this server to connect to the internet.</p>
 
-          <textarea rows="3" cols="50" name="vpnlist" translate="no">VPNLIST</textarea>
-          <br><br>
-          <input type="submit" name="submitvpncancel" translate="yes" value="Go Back">
-          <input type="submit" name="submitvpn" translate="yes" value="Continue">
-          <input type="submit" name="submitvpnhelp" translate="yes" value="Help">
-        </form>
+            <textarea rows="3" cols="50" name="vpnlist" translate="no">VPNLIST</textarea>
+            <br><br>
+            <input type="submit" name="submitvpncancel" translate="yes" value="Go Back">
+            <input type="submit" name="submitvpn" translate="yes" value="Continue">
+            <input type="submit" name="submitvpnhelp" translate="yes" value="Help">
+          </form>
 
-        <br>
+          <br>
+	</div>
       </div>
     </div>
   </body>

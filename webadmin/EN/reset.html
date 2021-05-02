@@ -5,6 +5,11 @@
     <style>
       @import url("libreserver.css");
 
+      .page-align {
+          vertical-align: middle;
+          margin-top: 4%;
+      }
+
       #qrcodepic {
           width: 15%;
           height: auto;
@@ -32,23 +37,25 @@
   </head>
   <body>
 
-    <div class="card">
+    <div class="page-align">
       <div class="header">
         <a href="settings.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back" /></a>
 
         <br><br><br>
+        <div class="card">
 
-        <form action="reset.php" method="post">
-          <input type="submit" name="submitshutdown" translate="yes" value="Shutdown" /><br><br><br>
-          <input type="submit" name="submitreset" translate="yes" value="Restart" /><br><br><br>
-          <input type="submit" name="submitupgradeoperatingsystem" translate="yes" value="Upgrade Operating System" /><br><br><br>
-          <input type="submit" name="submitfactoryreset" translate="yes" value="Reset to factory" /><br><br><br>
-          <input type="submit" name="submitresetcancel" translate="yes" value="Go Back" />
-        </form>
+          <form action="reset.php" method="post">
+            <input type="submit" name="submitshutdown" translate="yes" value="Shutdown" /><br><br><br>
+            <input type="submit" name="submitreset" translate="yes" value="Restart" /><br><br><br>
+            <input type="submit" name="submitupgradeoperatingsystem" translate="yes" value="Upgrade Operating System" /><br><br><br>
+            <input type="submit" name="submitfactoryreset" translate="yes" value="Reset to factory" /><br><br><br>
+            <input type="submit" name="submitresetcancel" translate="yes" value="Go Back" />
+          </form>
 
-        <br><br>
+          <br><br>
+        </div>
+
       </div>
-
     </div>
 
   </body>

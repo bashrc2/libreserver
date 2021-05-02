@@ -5,6 +5,11 @@
     <style>
       @import url("libreserver.css");
 
+      .page-align {
+          vertical-align: middle;
+          margin-top: 4%;
+      }
+
       #welcomeicon {
           width: 20%;
           height: auto;
@@ -90,22 +95,24 @@
     </style>
   </head>
   <body>
-    <div class="card">
+    <div class="page-align">
       <div class="header">
         <a href="settings.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a><br>
+        <div class="card">
 
-        <form action="ssh.php" method="post">
-          <p class="sshtext" translate="yes">Enable access via secure shell?</p>
-          <input type="radio" name="sshconfirm" value="0" checked><label translate="yes">No</label>
-          <input type="radio" name="sshconfirm" value="1"><label translate="yes">Yes</label>
-          <p translate="yes">Paste your ssh public key here</p>
-          <textarea rows="10" cols="50" name="publickey"></textarea>
-          <br><br>
-          <input type="submit" name="submitsshcancel" translate="yes" value="Go Back" />
-          <input type="submit" name="submitssh" translate="yes" value="Update" />
-        </form>
+          <form action="ssh.php" method="post">
+            <p class="sshtext" translate="yes">Enable access via secure shell?</p>
+            <input type="radio" name="sshconfirm" value="0" checked><label translate="yes">No</label>
+            <input type="radio" name="sshconfirm" value="1"><label translate="yes">Yes</label>
+            <p translate="yes">Paste your ssh public key here</p>
+            <textarea rows="10" cols="50" name="publickey"></textarea>
+            <br><br>
+            <input type="submit" name="submitsshcancel" translate="yes" value="Go Back" />
+            <input type="submit" name="submitssh" translate="yes" value="Update" />
+          </form>
 
-        <br>
+          <br>
+        </div>
       </div>
     </div>
   </body>

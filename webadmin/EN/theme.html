@@ -4,6 +4,11 @@
     <style>
       @import url("libreserver.css");
 
+      .page-align {
+          vertical-align: middle;
+          margin-top: 4%;
+      }
+
       #welcomeicon {
           width: 20%;
           height: auto;
@@ -76,17 +81,19 @@
     </style>
   </head>
   <body>
-    <div class="card">
+    <div class="page-align">
       <div class="header">
         <a href="settings.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a><br>
-        <p class="headertext" translate="yes">Theme</p>
+        <div class="card">
+          <p class="headertext" translate="yes">Theme</p>
 
-        <form action="theme.php" method="post">
-          <input type="submit" name="submitthemelight" translate="yes" value="Light" />
-          <input type="submit" name="submitthemedark" translate="yes" value="Dark" /><br><br>
-        </form>
+          <form action="theme.php" method="post">
+            <input type="submit" name="submitthemelight" translate="yes" value="Light" />
+            <input type="submit" name="submitthemedark" translate="yes" value="Dark" /><br><br>
+          </form>
 
-        <br>
+          <br>
+        </div>
       </div>
     </div>
   </body>

@@ -4,6 +4,11 @@
     <style>
       @import url("libreserver.css");
 
+      .page-align {
+          vertical-align: middle;
+          margin-top: 4%;
+      }
+
       .appurl {
           font-size: 100%;
       }
@@ -68,21 +73,23 @@
     </style>
   </head>
   <body>
-    <div class="card">
+    <div class="page-align">
       <div class="header">
         <a href="settings_communitynetwork.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a><br>
+        <div class="card">
 
-        <form action="communitynetwork_add.php" method="post">
-          <p class="descriptiontext" translate="yes">Add a new community network node</p>
+          <form action="communitynetwork_add.php" method="post">
+            <p class="descriptiontext" translate="yes">Add a new community network node</p>
 
-          <p translate="yes">Node name:<input type="text" name="node_name" value="" style="text-align:center;width:90%" autofocus><br>Longitude:<input type="text" name="longitude" value="">Latitude:<input type="text" name="latitude" value=""><br>IP address (optional):<input type="text" name="ip_address" value="" style="text-align:center;width:90%"></p>
-          <input type="submit" name="submitaddremovecancel" translate="yes" value="Go Back">
-          <input type="submit" name="submitadd" translate="yes" value="Continue">
-          <br><br>
+            <p translate="yes">Node name:<input type="text" name="node_name" value="" style="text-align:center;width:90%" autofocus><br>Longitude:<input type="text" name="longitude" value="">Latitude:<input type="text" name="latitude" value=""><br>IP address (optional):<input type="text" name="ip_address" value="" style="text-align:center;width:90%"></p>
+            <input type="submit" name="submitaddremovecancel" translate="yes" value="Go Back">
+            <input type="submit" name="submitadd" translate="yes" value="Continue">
+            <br><br>
 
-        </form>
+          </form>
 
-        <br>
+          <br>
+        </div>
       </div>
     </div>
   </body>

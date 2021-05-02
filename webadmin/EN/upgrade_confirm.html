@@ -5,6 +5,11 @@
     <style>
       @import url("libreserver.css");
 
+      .page-align {
+          vertical-align: middle;
+          margin-top: 4%;
+      }
+
       #upgradeicon {
           width: 20%;
           height: auto;
@@ -77,24 +82,26 @@
     </style>
   </head>
   <body>
-    <div class="card">
+    <div class="page-align">
       <div class="header">
         <a href="settings.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a><br>
-        <img id="upgradeicon" class="img-responsive" src="images/upgrade.png" alt="Upgrade icon">
-        <p class="upgradetext" translate="yes">Upgrades happen automatically. You don't need to start them manually like this, except in rare circumstances</p>
+        <div class="card">
+          <img id="upgradeicon" class="img-responsive" src="images/upgrade.png" alt="Upgrade icon">
+          <p class="upgradetext" translate="yes">Upgrades happen automatically. You don't need to start them manually like this, except in rare circumstances</p>
 
-        <p class="upgradetext" translate="yes">Manually upgrade now ?</p>
+          <p class="upgradetext" translate="yes">Manually upgrade now ?</p>
 
-        <br>
+          <br>
 
-        <form action="upgradeconfirm.php" method="post">
-          <p><input type="radio" name="upgradeconfirm" value="0" checked><label translate="yes">No</label>
-            <input type="radio" name="upgradeconfirm" value="1"><label translate="yes">Yes</label></p><br><br>
-          <input type="submit" name="submitupgradesettings" translate="yes" value="Settings" />
-          <input type="submit" name="upgradeconfirmsubmit" translate="yes" value="Continue" />
-        </form>
+          <form action="upgradeconfirm.php" method="post">
+            <p><input type="radio" name="upgradeconfirm" value="0" checked><label translate="yes">No</label>
+              <input type="radio" name="upgradeconfirm" value="1"><label translate="yes">Yes</label></p><br><br>
+            <input type="submit" name="submitupgradesettings" translate="yes" value="Settings" />
+            <input type="submit" name="upgradeconfirmsubmit" translate="yes" value="Continue" />
+          </form>
 
-        <br>
+          <br>
+        </div>
       </div>
     </div>
   </body>
