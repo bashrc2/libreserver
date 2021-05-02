@@ -5,6 +5,11 @@
     <style>
       @import url("libreserver.css");
 
+      .page-align {
+          vertical-align: middle;
+          margin-top: 4%;
+      }
+
       #iconpic {
           width: 20%;
           height: auto;
@@ -59,26 +64,28 @@
   </head>
   <body>
 
-    <div class="header">
-      <a href="apps_add.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
-    </div>
+    <div class="page-align">
+      <div class="header">
+        <a href="apps_add.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
+      </div>
 
-    <div class="card">
-      <a href="apps_add.html"><img id="iconpic" class="img-responsive" src="icons/APPNAME.png" alt="APPNAME"></a>
-      <h1 translate="no">APPNAME</h1>
-      <p class="appdesc" translate="no">APPDESCRIPTION</p>
+      <div class="card">
+        <a href="apps_add.html"><img id="iconpic" class="img-responsive" src="icons/APPNAME.png" alt="APPNAME"></a>
+        <h1 translate="no">APPNAME</h1>
+        <p class="appdesc" translate="no">APPDESCRIPTION</p>
 
-      <form action="installapp.php" method="post">
-        <p><label translate="yes">Domain:</label><input type="text" name="install_domain" value="APPNAME.HOSTNAME"></p>
-        <p><label translate="yes"><a href="https://freedns.afraid.org/dynamic">FreeDNS code</a>:</label><input type="text" name="freedns_code"></p>
-        <input type="hidden" name="app_name" value="APPNAME">
-        <input type="hidden" name="no_domain" value="0">
-        <input type="submit" name="submitappback" translate="yes" value="Go Back">
-        <input type="submit" name="submitappinstall" translate="yes" value="Install">
-      </form>
+        <form action="installapp.php" method="post">
+          <p><label translate="yes">Domain:</label><input type="text" name="install_domain" value="APPNAME.HOSTNAME"></p>
+          <p><label translate="yes"><a href="https://freedns.afraid.org/dynamic">FreeDNS code</a>:</label><input type="text" name="freedns_code"></p>
+          <input type="hidden" name="app_name" value="APPNAME">
+          <input type="hidden" name="no_domain" value="0">
+          <input type="submit" name="submitappback" translate="yes" value="Go Back">
+          <input type="submit" name="submitappinstall" translate="yes" value="Install">
+        </form>
 
-      <br>
+        <br>
 
+      </div>
     </div>
   </body>
 </html>
