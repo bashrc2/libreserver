@@ -5,6 +5,11 @@
     <style>
       @import url("libreserver.css");
 
+      .page-align {
+          vertical-align: middle;
+          margin-top: 4%;
+      }
+
       .iconpic {
           width: 30%;
           height: auto;
@@ -70,42 +75,45 @@
   </head>
   <body>
 
-    <div class="header">
-      <a href="apps.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
-    </div>
+    <div class="page-align">
+      <div class="header">
+        <a href="apps.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
+        <h1 translate="no">APPNAME</h1>
 
-    <div class="card">
+        <div class="card">
 
-      <div class="row">
-        <div class="column">
-          <div>
-            <a href="apps.html">
-              <img class="iconpic" src="icons/APPNAME.png" alt="APPNAME">
-            </a>
+          <div class="row">
+            <div class="column">
+              <div>
+                <a href="apps.html">
+                  <img class="iconpic" src="icons/APPNAME.png" alt="APPNAME">
+                </a>
+              </div>
+            </div>
+            <div class="column">
+              <div>
+                <a href="app_qrcode_APPNAME.png"><img class="iconpic" src="app_qrcode_APPNAME.png" alt="QR code"></a>
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="column">
-          <div>
-            <a href="app_qrcode_APPNAME.png"><img class="iconpic" src="app_qrcode_APPNAME.png" alt="QR code"></a>
-          </div>
+
+          <br>
+          <p class="appmobile"><a href="MOBILEAPPURL"><img src="images/android.png" alt="Android"/></a></p>
+          <p class="appdesc" translate="no">APPDESCRIPTION</p>
+          <p class="appurl" translate="no"><a href="APPURL">APPURL</a></p>
+          <p class="appurl" translate="no">ONIONURL</p>
+          <br>
+          <form action="removeapp.php" method="post">
+            <input type="hidden" name="app_name" translate="no" value="APPNAME">
+            <input type="submit" name="appback" translate="yes" value="Go Back">
+            <input type="submit" name="submitapprestore" translate="yes" value="Restore">
+            <input type="submit" name="uninstall" translate="yes" value="Uninstall">
+            <input type="submit" name="submitappsettings" translate="yes" value="Settings">
+            <input type="submit" name="submithelp" translate="yes" value="Help">
+          </form>
+          <br>
         </div>
       </div>
-
-      <h1 translate="no">APPNAME</h1>
-      <p class="appmobile"><a href="MOBILEAPPURL"><img src="images/android.png" alt="Android"/></a></p>
-      <p class="appdesc" translate="no">APPDESCRIPTION</p>
-      <p class="appurl" translate="no"><a href="APPURL">APPURL</a></p>
-      <p class="appurl" translate="no">ONIONURL</p>
-      <br>
-      <form action="removeapp.php" method="post">
-        <input type="hidden" name="app_name" translate="no" value="APPNAME">
-        <input type="submit" name="appback" translate="yes" value="Go Back">
-        <input type="submit" name="submitapprestore" translate="yes" value="Restore">
-        <input type="submit" name="uninstall" translate="yes" value="Uninstall">
-        <input type="submit" name="submitappsettings" translate="yes" value="Settings">
-        <input type="submit" name="submithelp" translate="yes" value="Help">
-      </form>
-      <br>
     </div>
 
   </body>
