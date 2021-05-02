@@ -5,6 +5,11 @@
     <style>
       @import url("libreserver.css");
 
+      .page-align {
+          vertical-align: middle;
+          margin-top: 4%;
+      }
+
       #domainicon {
           width: 20%;
           height: auto;
@@ -76,23 +81,25 @@
     </style>
   </head>
   <body>
-    <div class="card">
+    <div class="page-align">
       <div class="header">
         <a href="users.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a><br>
-        <img id="domainicon" class="img-responsive" src="images/new_user.png" alt="New Member">
-        <h2 translate="yes">New Member</h2>
+        <div class="card">
+          <img id="domainicon" class="img-responsive" src="images/new_user.png" alt="New Member">
+          <h2 translate="yes">New Member</h2>
 
-        <p class="domaintext" translate="yes">Please enter their nickname. This should be lower case only and with no spaces.</p>
+          <p class="domaintext" translate="yes">Please enter their nickname. This should be lower case only and with no spaces.</p>
 
-        <form action="newuser.php" method="post">
-          <p><input type="text" name="username" autofocus></p>
+          <form action="newuser.php" method="post">
+            <p><input type="text" name="username" autofocus></p>
+            <br><br>
+            <input type="submit" name="submitcanceluser" translate="yes" value="Go Back">
+            <input type="submit" name="submitnewuser" translate="yes" value="Add">
+          </form>
+
           <br><br>
-          <input type="submit" name="submitcanceluser" translate="yes" value="Go Back">
-          <input type="submit" name="submitnewuser" translate="yes" value="Add">
-        </form>
 
-        <br><br>
-
+        </div>
       </div>
     </div>
   </body>

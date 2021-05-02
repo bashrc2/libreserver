@@ -5,6 +5,11 @@
     <style>
       @import url("libreserver.css");
 
+      .page-align {
+          vertical-align: middle;
+          margin-top: 4%;
+      }
+
       #iconpic {
           width: 20%;
           height: auto;
@@ -69,25 +74,27 @@
     </style>
   </head>
   <body>
-    <div class="card">
+    <div class="page-align">
       <div class="header">
         <img id="headerpic" class="img-responsive" src="images/logo.png" alt="LibreServer"><br>
         <br>
-        <p class="proceedtext" translate="yes">Install APPNAME now?</p>
-        <br>
+        <div class="card">
+          <p class="proceedtext" translate="yes">Install APPNAME now?</p>
+          <br>
 
-        <form action="installappconfirm.php" method="post">
-          <p>
-            <input type="radio" name="installconfirm" value="0" checked><label translate="yes">No</label>
-            <input type="radio" name="installconfirm" value="1"><label translate="yes">Yes</label>
-            <input type="hidden" name="app_name" value="APPNAME">
-            <input type="hidden" name="install_domain" value="APPDOMAIN">
-            <input type="hidden" name="no_domain" value="NODOMAIN">
-          </p>
-          <br><br>
-          <input type="submit" name="installconfirmsubmit" translate="yes" value="Continue" />
-        </form>
-        <br>
+          <form action="installappconfirm.php" method="post">
+            <p>
+              <input type="radio" name="installconfirm" value="0" checked><label translate="yes">No</label>
+              <input type="radio" name="installconfirm" value="1"><label translate="yes">Yes</label>
+              <input type="hidden" name="app_name" value="APPNAME">
+              <input type="hidden" name="install_domain" value="APPDOMAIN">
+              <input type="hidden" name="no_domain" value="NODOMAIN">
+            </p>
+            <br><br>
+            <input type="submit" name="installconfirmsubmit" translate="yes" value="Continue" />
+          </form>
+          <br>
+        </div>
       </div>
     </div>
   </body>

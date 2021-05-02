@@ -5,6 +5,11 @@
     <style>
       @import url("libreserver.css");
 
+      .page-align {
+          vertical-align: middle;
+          margin-top: 4%;
+      }
+
       #iconpic {
           width: 20%;
           height: auto;
@@ -72,22 +77,24 @@
     </style>
   </head>
   <body>
-    <div class="card">
+    <div class="page-align">
       <div class="header">
         <a href="users.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
         <br>
-        <p class="proceedtext" translate="yes">Remove user USERNAME?</p>
-        <br>
+        <div class="card">
+          <p class="proceedtext" translate="yes">Remove user USERNAME?</p>
+          <br>
 
-        <form action="removeuserconfirm.php" method="post">
-          <p>
-            <input type="radio" name="removeuserconfirm" value="0" checked><label translate="yes">No</label>
-            <input type="radio" name="removeuserconfirm" value="1"><label translate="yes">Yes</label>
-          </p>
-          <br><br>
-          <input type="submit" name="submitremoveuser" translate="yes" value="Continue" />
-        </form>
-        <br>
+          <form action="removeuserconfirm.php" method="post">
+            <p>
+              <input type="radio" name="removeuserconfirm" value="0" checked><label translate="yes">No</label>
+              <input type="radio" name="removeuserconfirm" value="1"><label translate="yes">Yes</label>
+            </p>
+            <br><br>
+            <input type="submit" name="submitremoveuser" translate="yes" value="Continue" />
+          </form>
+          <br>
+        </div>
       </div>
     </div>
   </body>
