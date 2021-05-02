@@ -91,6 +91,7 @@ function web_create_homepage {
 
     sed -i '/<\/body>/d' "$homepage_filename"
     sed -i '/<\/html>/d' "$homepage_filename"
+    sed -i '/<\/div>/d' "$homepage_filename"
 
     # copy the about screen for homepage
     cp "$webadmin_install_dir/homepage_about.html" "$homepage_about_filename"
@@ -235,7 +236,8 @@ function web_create_homepage {
         sed -i "/\"appstext\"/d" "$homepage_filename"
     fi
 
-    { echo '    </div>';
+    { echo '      </div>';
+      echo '    </div>';
       echo '    <br><br>';
       echo '  </body>';
       echo '</html>'; } >> "$homepage_filename"

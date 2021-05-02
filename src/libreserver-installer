@@ -1311,6 +1311,7 @@ function web_admin_create_installed_apps {
     cp "$appslist_template_filename" "$appslist_filename"
     sed -i '/<\/body>/d' "$appslist_filename"
     sed -i '/<\/html>/d' "$appslist_filename"
+    sed -i '/<\/div>/d' "$appslist_filename"
 
     installed_apps_ctr=0
 
@@ -1324,7 +1325,8 @@ function web_admin_create_installed_apps {
           echo '      </div>'; } >> "$appslist_filename"
     done
 
-    { echo '  </div>';
+    { echo '    </div>';
+      echo '  </div>';
       echo '  </body>';
       echo '</html>'; } >> "$appslist_filename"
 

@@ -1299,6 +1299,7 @@ function web_admin_create_installed_apps {
     # remove some lines from the template
     sed -i '/<\/body>/d' "$appslist_filename"
     sed -i '/<\/html>/d' "$appslist_filename"
+    sed -i '/<\/div>/d' "$appslist_filename"
 
     get_app_categories
 
@@ -1317,7 +1318,8 @@ function web_admin_create_installed_apps {
         sed -i "/\"appstext\"/d" "$appslist_filename"
     fi
 
-    { echo '    </div>';
+    { echo '      </div>';
+      echo '    </div>';
       echo '    <br><br>';
       echo '  </body>';
       echo '</html>'; } >> "$appslist_filename"
