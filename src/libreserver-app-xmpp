@@ -81,77 +81,77 @@ xmpp_variables=(ONION_ONLY
 function xmpp_setup_turn {
     domain=$DEFAULT_DOMAIN_NAME
     if [[ "$ONION_ONLY" != 'no' ]]; then
-	echo $'TURN will not be installed on onion versions'
-	return
+        echo $'TURN will not be installed on onion versions'
+        return
     fi
 
     if ! grep -q '"turncredentials"; -- VoIP' /etc/prosody/prosody.cfg.lua; then
-	sed -i '/"http";/a "turncredentials"; -- VoIP' /etc/prosody/prosody.cfg.lua
-	sed -i 's|"turncredentials"; -- VoIP|  "turncredentials"; -- VoIP|g' /etc/prosody/prosody.cfg.lua
+        sed -i '/"http";/a "turncredentials"; -- VoIP' /etc/prosody/prosody.cfg.lua
+        sed -i 's|"turncredentials"; -- VoIP|  "turncredentials"; -- VoIP|g' /etc/prosody/prosody.cfg.lua
     fi
 
     if ! grep -q "turncredentials_host" /etc/prosody/prosody.cfg.lua; then
-	sed -i "/VirtualHost/a turncredentials_host = \"$domain\";" /etc/prosody/prosody.cfg.lua
-	sed -i "s|turncredentials_host|    turncredentials_host|g" /etc/prosody/prosody.cfg.lua
+        sed -i "/VirtualHost/a turncredentials_host = \"$domain\";" /etc/prosody/prosody.cfg.lua
+        sed -i "s|turncredentials_host|    turncredentials_host|g" /etc/prosody/prosody.cfg.lua
     else
-	sed -i "s|turncredentials_host.*|turncredentials_host = \"$domain\";|g" /etc/prosody/prosody.cfg.lua
+        sed -i "s|turncredentials_host.*|turncredentials_host = \"$domain\";|g" /etc/prosody/prosody.cfg.lua
     fi
     turncredentials_secret=$(grep "static-auth-secret=" /etc/turnserver.conf | awk -F '=' '{print $2}')
     if ! grep -q "turncredentials_secret" /etc/prosody/prosody.cfg.lua; then
-	sed -i "/VirtualHost/a turncredentials_secret = \"$turncredentials_secret\";" /etc/prosody/prosody.cfg.lua
-	sed -i "s|turncredentials_secret.*|    turncredentials_secret|g" /etc/prosody/prosody.cfg.lua
+        sed -i "/VirtualHost/a turncredentials_secret = \"$turncredentials_secret\";" /etc/prosody/prosody.cfg.lua
+        sed -i "s|turncredentials_secret.*|    turncredentials_secret|g" /etc/prosody/prosody.cfg.lua
     else
-	sed -i "s|turncredentials_secret.*|turncredentials_secret = \"$turncredentials_secret\";|g" /etc/prosody/prosody.cfg.lua
+        sed -i "s|turncredentials_secret.*|turncredentials_secret = \"$turncredentials_secret\";|g" /etc/prosody/prosody.cfg.lua
     fi
 }
 
 function xmpp_i2p_virtualhost {
     if [ ! -d /var/lib/i2pd ]; then
-	return
+        return
     fi
     if [ ! -f /var/lib/i2pd/tunnels.d/xmpp ]; then
-	xmpp_i2p_bridge
+        xmpp_i2p_bridge
     fi
     filename="/etc/prosody/prosody.cfg.lua"
     if ! grep -q "\.b32\.i2p" "$filename"; then
-	i2p_domain=$(get_i2p_domain "${PROJECT_NAME}")
-	if [[ "$i2p_domain" == *".b32.i2p" ]]; then
+        i2p_domain=$(get_i2p_domain "${PROJECT_NAME}")
+        if [[ "$i2p_domain" == *".b32.i2p" ]]; then
             "${PROJECT_NAME}-addcert" -h i2p --dhkey 2048
-	    if [ ! -f /etc/ssl/certs/i2p.crt ]; then
-		echo "i2p TLS public key was not generated"
-		return
-	    fi
-	    if [ ! -f /etc/ssl/private/i2p.key ]; then
-		echo "i2p TLS private key was not generated"
-		return
-	    fi
-	    cp /etc/ssl/certs/i2p.crt /etc/prosody/certs
-	    cp /etc/ssl/private/i2p.key /etc/prosody/certs
-	    chown -R prosody:prosody /etc/prosody/certs/i2p*
-	    { echo "VirtualHost \"${i2p_domain}\"";
-	      echo '    ssl = {';
-	      echo "        key = \"/etc/prosody/certs/i2p.key\";";
-	      echo "        certificate = \"/etc/prosody/certs/i2p.crt\";";
-	      echo '        dhparam = "/etc/prosody/xmpp.dhparam";';
-	      echo '    }';
-	      echo '    c2s_require_encryption = true;';
-	      echo '    s2s_secure_auth = false;';
-	      echo '    authentication = "internal_plain";';
-	      echo '    modules_enabled = { "i2p" };'; } >> "$filename"
-	    xmpp_restart=1
-	fi
+            if [ ! -f /etc/ssl/certs/i2p.crt ]; then
+                echo "i2p TLS public key was not generated"
+                return
+            fi
+            if [ ! -f /etc/ssl/private/i2p.key ]; then
+                echo "i2p TLS private key was not generated"
+                return
+            fi
+            cp /etc/ssl/certs/i2p.crt /etc/prosody/certs
+            cp /etc/ssl/private/i2p.key /etc/prosody/certs
+            chown -R prosody:prosody /etc/prosody/certs/i2p*
+            { echo "VirtualHost \"${i2p_domain}\"";
+              echo '    ssl = {';
+              echo "        key = \"/etc/prosody/certs/i2p.key\";";
+              echo "        certificate = \"/etc/prosody/certs/i2p.crt\";";
+              echo '        dhparam = "/etc/prosody/xmpp.dhparam";';
+              echo '    }';
+              echo '    c2s_require_encryption = true;';
+              echo '    s2s_secure_auth = false;';
+              echo '    authentication = "internal_plain";';
+              echo '    modules_enabled = { "i2p" };'; } >> "$filename"
+            xmpp_restart=1
+        fi
     fi
 }
 
 function xmpp_i2p_bridge {
     if [ ! -d /var/lib/i2pd/tunnels.d ]; then
-	mkdir /var/lib/i2pd/tunnels.d
-	chown -R i2pd:i2pd /var/lib/i2pd/tunnels.d
+        mkdir /var/lib/i2pd/tunnels.d
+        chown -R i2pd:i2pd /var/lib/i2pd/tunnels.d
     fi
     if [ -f /var/lib/i2pd/tunnels.d/xmpp ]; then
-	if [ -d ${XMPP_DIRECTORY}/prosody-modules/mod_i2p ]; then
-	    return
-	fi
+        if [ -d ${XMPP_DIRECTORY}/prosody-modules/mod_i2p ]; then
+            return
+        fi
     fi
     { echo '[xmpp-s2s]';
       echo 'type=server';
@@ -168,16 +168,16 @@ function xmpp_i2p_bridge {
       echo "keys=${PROJECT_NAME}.dat"; } > /var/lib/i2pd/tunnels.d/xmpp
 
     if [ -f ${XMPP_DIRECTORY}/prosody-modules/mod_i2p ]; then
-	rm ${XMPP_DIRECTORY}/prosody-modules/mod_i2p
+        rm ${XMPP_DIRECTORY}/prosody-modules/mod_i2p
     fi
     if [ -f /usr/lib/prosody/modules/mod_i2p ]; then
-	rm /usr/lib/prosody/modules/mod_i2p
+        rm /usr/lib/prosody/modules/mod_i2p
     fi
     if [ -d "/root/${PROJECT_NAME}/image_build/prosody_mod_i2p" ]; then
-	cp -r "/root/${PROJECT_NAME}/image_build/prosody_mod_i2p" ${XMPP_DIRECTORY}/prosody-modules/mod_i2p
-	chown -R prosody:prosody ${XMPP_DIRECTORY}/prosody-modules/mod_i2p
-	cp -r "/root/${PROJECT_NAME}/image_build/prosody_mod_i2p" /usr/lib/prosody/modules/mod_i2p
-	chown -R prosody:prosody /usr/lib/prosody/modules/mod_i2p
+        cp -r "/root/${PROJECT_NAME}/image_build/prosody_mod_i2p" ${XMPP_DIRECTORY}/prosody-modules/mod_i2p
+        chown -R prosody:prosody ${XMPP_DIRECTORY}/prosody-modules/mod_i2p
+        cp -r "/root/${PROJECT_NAME}/image_build/prosody_mod_i2p" /usr/lib/prosody/modules/mod_i2p
+        chown -R prosody:prosody /usr/lib/prosody/modules/mod_i2p
     fi
 
     chown -R i2pd:i2pd /var/lib/i2pd/tunnels.d
@@ -190,7 +190,7 @@ function upgrade_distro_xmpp {
     target_distro="$1"
 
     if [[ "$target_distro" == 'bullseye' ]]; then
-	echo -n ''
+        echo -n ''
     fi
 }
 
@@ -356,11 +356,11 @@ function prosody_add_module {
 function xmpp_fix_exists {
     if ! grep -q "CREATE INDEX IF NOT EXISTS" /usr/lib/prosody/util/sql.lua; then
         sed -i 's|CREATE INDEX|CREATE INDEX IF NOT EXISTS|g' /usr/lib/prosody/util/sql.lua
-	xmpp_restart=1
+        xmpp_restart=1
     fi
     if ! grep -q "CREATE TABLE IF NOT EXISTS" /usr/lib/prosody/util/sql.lua; then
         sed -i 's|CREATE TABLE|CREATE TABLE IF NOT EXISTS|g' /usr/lib/prosody/util/sql.lua
-	xmpp_restart=1
+        xmpp_restart=1
     fi
 }
 
@@ -781,11 +781,11 @@ function update_prosody_modules {
 
         # Obtain the modules
         if [ -f "/root/${PROJECT_NAME}/image_build/$prosody_modules_filename" ]; then
-	    echo "Copying $prosody_modules_filename to $INSTALL_DIR"
+            echo "Copying $prosody_modules_filename to $INSTALL_DIR"
             cp "/root/${PROJECT_NAME}/image_build/$prosody_modules_filename" "$INSTALL_DIR"
         else
             if [ -f "/home/$MY_USERNAME/${PROJECT_NAME}/image_build/$prosody_modules_filename" ]; then
-		echo "Copying $prosody_modules_filename to $INSTALL_DIR"
+                echo "Copying $prosody_modules_filename to $INSTALL_DIR"
                 cp "/home/$MY_USERNAME/${PROJECT_NAME}/image_build/$prosody_modules_filename" "$INSTALL_DIR"
             fi
         fi
@@ -811,16 +811,16 @@ function update_prosody_modules {
                     fi
                     cp -r "$INSTALL_DIR/prosody-modules/"* ${XMPP_DIRECTORY}/prosody-modules/
                     cp -r "$INSTALL_DIR/prosody-modules/"* /usr/lib/prosody/modules/
-		    if [ -f ${XMPP_DIRECTORY}/prosody-modules/mod_i2p ]; then
-			rm ${XMPP_DIRECTORY}/prosody-modules/mod_i2p
-		    fi
-		    if [ -f /usr/lib/prosody/modules/mod_i2p ]; then
-			rm /usr/lib/prosody/modules/mod_i2p
-		    fi
-		    if [ -d "/root/${PROJECT_NAME}/image_build/prosody_mod_i2p" ]; then
-			cp -r "/root/${PROJECT_NAME}/image_build/prosody_mod_i2p" ${XMPP_DIRECTORY}/prosody-modules/mod_i2p
-			cp -r "/root/${PROJECT_NAME}/image_build/prosody_mod_i2p" /usr/lib/prosody/modules/mod_i2p
-		    fi
+                    if [ -f ${XMPP_DIRECTORY}/prosody-modules/mod_i2p ]; then
+                        rm ${XMPP_DIRECTORY}/prosody-modules/mod_i2p
+                    fi
+                    if [ -f /usr/lib/prosody/modules/mod_i2p ]; then
+                        rm /usr/lib/prosody/modules/mod_i2p
+                    fi
+                    if [ -d "/root/${PROJECT_NAME}/image_build/prosody_mod_i2p" ]; then
+                        cp -r "/root/${PROJECT_NAME}/image_build/prosody_mod_i2p" ${XMPP_DIRECTORY}/prosody-modules/mod_i2p
+                        cp -r "/root/${PROJECT_NAME}/image_build/prosody_mod_i2p" /usr/lib/prosody/modules/mod_i2p
+                    fi
                     chown -R prosody:prosody ${XMPP_DIRECTORY}/prosody-modules
                     chown -R prosody:prosody /usr/lib/prosody/modules
                     systemctl start prosody
@@ -829,17 +829,17 @@ function update_prosody_modules {
                     exit 72
                 fi
             fi
-	else
-	    echo "Can't find prosody modules $INSTALL_DIR/$prosody_modules_filename"
+        else
+            echo "Can't find prosody modules $INSTALL_DIR/$prosody_modules_filename"
         fi
     fi
 
     if [ -d "${XMPP_DIRECTORY}/prosody-modules" ]; then
-	prosody_add_module 's2s_blacklist' muc
-	prosody_add_module 'firewall'
-	prosody_add_module 'block_strangers'
+        prosody_add_module 's2s_blacklist' muc
+        prosody_add_module 'firewall'
+        prosody_add_module 'block_strangers'
     else
-	echo "Prosody modules directory not found ${XMPP_DIRECTORY}/prosody-modules"
+        echo "Prosody modules directory not found ${XMPP_DIRECTORY}/prosody-modules"
     fi
 
     xmpp_server_blocklist /etc/prosody/prosody.cfg.lua
@@ -892,42 +892,42 @@ function xmpp_update_certs {
 
     if grep -q "xmpp.key" /etc/prosody/prosody.cfg.lua; then
         if [ -f "/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/privkey.pem" ]; then
-	    if grep -q "/etc/ssl/private/xmpp.key" /etc/prosody/prosody.cfg.lua; then
-		sed -i "s|/etc/ssl/private/xmpp.key|/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/privkey.pem|g" /etc/prosody/prosody.cfg.lua
-		xmpp_restart=1
-	    fi
-	    if grep -q "/var/lib/prosody/xmpp.key" /etc/prosody/prosody.cfg.lua; then
-		sed -i "s|/var/lib/prosody/xmpp.key|/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/privkey.pem|g" /etc/prosody/prosody.cfg.lua
-		xmpp_restart=1
-	    fi
-	else
-	    if grep -q "/etc/ssl/private/xmpp.key" /etc/prosody/prosody.cfg.lua; then
-		sed -i "s|/etc/ssl/private/xmpp.key|/var/lib/prosody/xmpp.key|g" /etc/prosody/prosody.cfg.lua
-		xmpp_restart=1
-	    fi
+            if grep -q "/etc/ssl/private/xmpp.key" /etc/prosody/prosody.cfg.lua; then
+                sed -i "s|/etc/ssl/private/xmpp.key|/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/privkey.pem|g" /etc/prosody/prosody.cfg.lua
+                xmpp_restart=1
+            fi
+            if grep -q "/var/lib/prosody/xmpp.key" /etc/prosody/prosody.cfg.lua; then
+                sed -i "s|/var/lib/prosody/xmpp.key|/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/privkey.pem|g" /etc/prosody/prosody.cfg.lua
+                xmpp_restart=1
+            fi
+        else
+            if grep -q "/etc/ssl/private/xmpp.key" /etc/prosody/prosody.cfg.lua; then
+                sed -i "s|/etc/ssl/private/xmpp.key|/var/lib/prosody/xmpp.key|g" /etc/prosody/prosody.cfg.lua
+                xmpp_restart=1
+            fi
         fi
     fi
 
     if grep -q "xmpp.crt" /etc/prosody/prosody.cfg.lua; then
         if [ -f "/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/fullchain.pem" ]; then
-	    if grep -q "/etc/ssl/certs/xmpp.crt" /etc/prosody/prosody.cfg.lua; then
-		sed -i "s|/etc/ssl/certs/xmpp.crt|/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/fullchain.pem|g" /etc/prosody/prosody.cfg.lua
-		xmpp_restart=1
-	    fi
-	    if grep -q "/var/lib/prosody/xmpp.crt" /etc/prosody/prosody.cfg.lua; then
-		sed -i "s|/var/lib/prosody/xmpp.crt|/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/fullchain.pem|g" /etc/prosody/prosody.cfg.lua
-		xmpp_restart=1
-	    fi
-	else
-	    if grep -q "/etc/ssl/certs/xmpp.crt" /etc/prosody/prosody.cfg.lua; then
-		sed -i "s|/etc/ssl/certs/xmpp.crt|/var/lib/prosody/xmpp.crt|g" /etc/prosody/prosody.cfg.lua
-		xmpp_restart=1
-	    fi
+            if grep -q "/etc/ssl/certs/xmpp.crt" /etc/prosody/prosody.cfg.lua; then
+                sed -i "s|/etc/ssl/certs/xmpp.crt|/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/fullchain.pem|g" /etc/prosody/prosody.cfg.lua
+                xmpp_restart=1
+            fi
+            if grep -q "/var/lib/prosody/xmpp.crt" /etc/prosody/prosody.cfg.lua; then
+                sed -i "s|/var/lib/prosody/xmpp.crt|/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/fullchain.pem|g" /etc/prosody/prosody.cfg.lua
+                xmpp_restart=1
+            fi
+        else
+            if grep -q "/etc/ssl/certs/xmpp.crt" /etc/prosody/prosody.cfg.lua; then
+                sed -i "s|/etc/ssl/certs/xmpp.crt|/var/lib/prosody/xmpp.crt|g" /etc/prosody/prosody.cfg.lua
+                xmpp_restart=1
+            fi
         fi
     fi
 
     if ! grep -q "/etc/prosody/xmpp.dhparam" /etc/prosody/prosody.cfg.lua; then
-	sed -i 's|dhparam =.*|dhparam = "/etc/prosody/xmpp.dhparam";|g' /etc/prosody/prosody.cfg.lua
+        sed -i 's|dhparam =.*|dhparam = "/etc/prosody/xmpp.dhparam";|g' /etc/prosody/prosody.cfg.lua
         xmpp_restart=1
     fi
 }
@@ -935,8 +935,8 @@ function xmpp_update_certs {
 function upgrade_xmpp {
     # deprecated module
     if grep -q 'smacks_offline' /etc/prosody/prosody.cfg.lua; then
-	sed -i '/smacks_offline/d' /etc/prosody/prosody.cfg.lua
-	systemctl restart prosody
+        sed -i '/smacks_offline/d' /etc/prosody/prosody.cfg.lua
+        systemctl restart prosody
     fi
 
     #xmpp_version=$(prosodyctl about)
@@ -946,23 +946,23 @@ function upgrade_xmpp {
     #fi
 
     if [ ! -f /etc/turnserver.conf ]; then
-	install_turn
-	xmpp_setup_turn
-	systemctl restart prosody
+        install_turn
+        xmpp_setup_turn
+        systemctl restart prosody
     fi
 
     xmpp_restart=
 
     if [ ! -f /usr/bin/sendxmpp ]; then
-	$PACKAGE_INSTALL sendxmpp
+        $PACKAGE_INSTALL sendxmpp
     fi
 
     xmpp_fix_exists
 
     if [ -f /etc/prosody/conf.d/xmpp.cfg.lua ]; then
-	rm /etc/prosody/conf.d/xmpp.cfg.lua
-	rm /etc/prosody/conf.avail/xmpp.cfg.lua
-	xmpp_restart=1
+        rm /etc/prosody/conf.d/xmpp.cfg.lua
+        rm /etc/prosody/conf.avail/xmpp.cfg.lua
+        xmpp_restart=1
     fi
 
     $PACKAGE_UNHOLD prosody
@@ -1041,6 +1041,11 @@ function upgrade_xmpp {
     # remove omemo_all_access
     # This isn't needed with prosody 0.11+
     prosody_remove_module "omemo_all_access"
+
+    # add groups/circles
+    prosody_add_module "groups_internal"
+    prosody_add_module "groups_migration"
+    prosody_add_module "groups_muc_bookmarks"
 
     # remove muc logging
     prosody_remove_module "muc_log"
@@ -1261,6 +1266,9 @@ function xmpp_modules {
       echo '  "limits"; -- rate limits';
       echo '  "http_upload";';
       echo '  "websocket";';
+      echo '  "groups_internal";';
+      echo '  "groups_migration";';
+      echo '  "groups_muc_bookmarks";';
       echo '  "throttle_presence"; -- Reduce battery and bandwidth usage';
       echo '  "filter_chatstates"; -- Reduce battery and bandwidth usage';
       echo '};'; } >> "$filename"
@@ -1351,16 +1359,16 @@ function xmpp_server_blocklist {
     # should the xmpp firewall be updated?
     update_prosody_firewall=
     if [ ! -f "$prosody_firewall_rules" ]; then
-	update_prosody_firewall=1
+        update_prosody_firewall=1
     else
-	if ! grep -q 'RATE normal: 4' "$prosody_firewall_rules"; then
-	    update_prosody_firewall=1
-	fi
+        if ! grep -q 'RATE normal: 4' "$prosody_firewall_rules"; then
+            update_prosody_firewall=1
+        fi
     fi
 
     if [ $update_prosody_firewall ]; then
         # create firewall rules
-	# rate limit is in stanzas per second
+        # rate limit is in stanzas per second
         { echo "%LIST blacklist: file:${blocklisted_addresses_filename}";
           echo '';
           echo 'KIND: presence';
@@ -1413,16 +1421,16 @@ function xmpp_create_config {
     xmpp_muc_domain="$DEFAULT_DOMAIN_NAME"
     xmpp_plain_auth='false'
     if [[ "$ONION_ONLY" != 'no' ]]; then
-	xmpp_muc_domain="$XMPP_ONION_HOSTNAME"
-	# plain aith allows xmpp notifications to work on onion addresses
-	xmpp_plain_auth='true'
+        xmpp_muc_domain="$XMPP_ONION_HOSTNAME"
+        # plain aith allows xmpp notifications to work on onion addresses
+        xmpp_plain_auth='true'
     fi
     ADMIN_USER=$(get_completion_param "Admin user")
     XMPP_ADMINS="\"${MY_USERNAME}@${xmpp_muc_domain}\", \"notification@${xmpp_muc_domain}\""
     if [ "${ADMIN_USER}" ]; then
-	if [[ "${ADMIN_USER}" != "${MY_USERNAME}" ]]; then
-	    XMPP_ADMINS="\"${MY_USERNAME}@${xmpp_muc_domain}\", \"${ADMIN_USER}@${xmpp_muc_domain}\", \"notification@${xmpp_muc_domain}\""
-	fi
+        if [[ "${ADMIN_USER}" != "${MY_USERNAME}" ]]; then
+            XMPP_ADMINS="\"${MY_USERNAME}@${xmpp_muc_domain}\", \"${ADMIN_USER}@${xmpp_muc_domain}\", \"notification@${xmpp_muc_domain}\""
+        fi
     fi
     echo "admins = { ${XMPP_ADMINS} }" > /etc/prosody/prosody.cfg.lua
     echo 'plugin_paths = { "/var/lib/prosody/prosody-modules" }' >> /etc/prosody/prosody.cfg.lua
@@ -1454,9 +1462,9 @@ function xmpp_create_config {
       echo '    options = {"no_sslv2", "no_sslv3" };'; } >> /etc/prosody/prosody.cfg.lua
 
     if [ -f "/etc/ssl/certs/${DEFAULT_DOMAIN_NAME}.dhparam" ]; then
-	cp "/etc/ssl/certs/${DEFAULT_DOMAIN_NAME}.dhparam" /etc/prosody/xmpp.dhparam
+        cp "/etc/ssl/certs/${DEFAULT_DOMAIN_NAME}.dhparam" /etc/prosody/xmpp.dhparam
     else
-	cp "/etc/ssl/certs/xmpp.dhparam" /etc/prosody/xmpp.dhparam
+        cp "/etc/ssl/certs/xmpp.dhparam" /etc/prosody/xmpp.dhparam
     fi
     chown prosody:prosody /etc/prosody/xmpp.dhparam
     echo "    dhparam = \"/etc/prosody/xmpp.dhparam\";" >> /etc/prosody/prosody.cfg.lua
@@ -1715,7 +1723,7 @@ function install_xmpp {
     fi
 
     if ! grep -q "prosody:" /etc/group; then
-	groupadd prosody
+        groupadd prosody
     fi
 
     if [ ! -d ${XMPP_DIRECTORY}/http_uploads ]; then
@@ -1755,17 +1763,17 @@ function install_xmpp {
             fi
             chmod g=rX /etc/ssl/private/xmpp.key
             chmod g=rX /etc/ssl/certs/xmpp.*
-	    cp /etc/ssl/certs/xmpp.crt /var/lib/prosody/xmpp.crt
-	    chown prosody:prosody /var/lib/prosody/xmpp.crt
-	    cp /etc/ssl/private/xmpp.key /var/lib/prosody/xmpp.key
-	    chown prosody:prosody /var/lib/prosody/xmpp.key
+            cp /etc/ssl/certs/xmpp.crt /var/lib/prosody/xmpp.crt
+            chown prosody:prosody /var/lib/prosody/xmpp.crt
+            cp /etc/ssl/private/xmpp.key /var/lib/prosody/xmpp.key
+            chown prosody:prosody /var/lib/prosody/xmpp.key
         fi
     fi
 
     increment_app_install_progress
 
     if ! grep -q "default:" /etc/group; then
-	groupadd default
+        groupadd default
     fi
     chmod 600 /etc/shadow
     chmod 600 /etc/gshadow
@@ -1861,10 +1869,10 @@ function install_xmpp {
     increment_app_install_progress
 
     if [[ $ONION_ONLY != 'no' ]]; then
-	prosody_register_str="prosodyctl register \"$MY_USERNAME\" \"$XMPP_ONION_HOSTNAME\" \"[password]\""
+        prosody_register_str="prosodyctl register \"$MY_USERNAME\" \"$XMPP_ONION_HOSTNAME\" \"[password]\""
         prosodyctl register "$MY_USERNAME" "$XMPP_ONION_HOSTNAME" "$XMPP_PASSWORD"
     else
-	prosody_register_str="prosodyctl register \"$MY_USERNAME\" \"$DEFAULT_DOMAIN_NAME\" \"[password]\""
+        prosody_register_str="prosodyctl register \"$MY_USERNAME\" \"$DEFAULT_DOMAIN_NAME\" \"[password]\""
         prosodyctl register "$MY_USERNAME" "$DEFAULT_DOMAIN_NAME" "$XMPP_PASSWORD"
     fi
     # shellcheck disable=SC2181
@@ -1877,7 +1885,7 @@ function install_xmpp {
         cat /etc/prosody/prosody.cfg.lua
         echo ''
         echo ''
-	echo "$prosody_register_str"
+        echo "$prosody_register_str"
         #remove_xmpp
         echo $'Unable to register prosody user'
         exit 34
@@ -1931,7 +1939,7 @@ function install_xmpp {
     increment_app_install_progress
 
     if [ ! -f /etc/turnserver.conf ]; then
-	install_turn
+        install_turn
     fi
 
     increment_app_install_progress
