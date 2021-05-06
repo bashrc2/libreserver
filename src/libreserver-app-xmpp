@@ -1042,10 +1042,11 @@ function upgrade_xmpp {
     # This isn't needed with prosody 0.11+
     prosody_remove_module "omemo_all_access"
 
-    # add groups/circles
-    prosody_add_module "groups_internal"
-    prosody_add_module "groups_migration"
-    prosody_add_module "groups_muc_bookmarks"
+    # groups/circles
+    prosody_remove_module "groups_internal"
+    prosody_remove_module "groups_migration"
+    prosody_remove_module "groups_muc_bookmarks"
+    # prosody_set_parameter "group_default_name" "${PROJECT_NAME}"
 
     # remove muc logging
     prosody_remove_module "muc_log"
@@ -1266,9 +1267,9 @@ function xmpp_modules {
       echo '  "limits"; -- rate limits';
       echo '  "http_upload";';
       echo '  "websocket";';
-      echo '  "groups_internal";';
-      echo '  "groups_migration";';
-      echo '  "groups_muc_bookmarks";';
+      echo '  -- "groups_internal";';
+      echo '  -- "groups_migration";';
+      echo '  -- "groups_muc_bookmarks";';
       echo '  "throttle_presence"; -- Reduce battery and bandwidth usage';
       echo '  "filter_chatstates"; -- Reduce battery and bandwidth usage';
       echo '};'; } >> "$filename"
