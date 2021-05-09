@@ -615,6 +615,42 @@ function firewall_unblock_range {
 }
 
 function firewall_block_cloudflare {
+    if grep -q 'Cloudflare start' /etc/hosts; then
+        sed -i '/Cloudflare start/,/Cloudflare end/d' /etc/hosts
+    fi
+    { echo '# Cloudflare start';
+      echo '127.0.0.1  betterinternet.com'
+      echo '127.0.0.1  brokendnssec.net';
+      echo '127.0.0.1  cloudflare-dns.com';
+      echo '127.0.0.1  cloudflare-free.com';
+      echo '127.0.0.1  cloudflare-ipfs.com';
+      echo '127.0.0.1  cloudflare-quic.com';
+      echo '127.0.0.1  cloudflare.com';
+      echo '127.0.0.1  cloudflare.com.ve';
+      echo '127.0.0.1  cloudflare.net';
+      echo '127.0.0.1  cloudflareaccess.com';
+      echo '127.0.0.1  cloudflareapi.com';
+      echo '127.0.0.1  cloudflareapps.com';
+      echo '127.0.0.1  cloudflarechallenge.com';
+      echo '127.0.0.1  cloudflareclient.com';
+      echo '127.0.0.1  cloudflareenterprise.com';
+      echo '127.0.0.1  cloudflareinsights.com';
+      echo '127.0.0.1  cloudflarepreview.com';
+      echo '127.0.0.1  cloudflarepreviews.com';
+      echo '127.0.0.1  cloudflareresolve.com';
+      echo '127.0.0.1  cloudflarespeedtest.com';
+      echo '127.0.0.1  cloudflaressl.com';
+      echo '127.0.0.1  cloudflarestatus.com';
+      echo '127.0.0.1  cloudflaresupport.com';
+      echo '127.0.0.1  cloudflarewarp.com';
+      echo '127.0.0.1  encryptedsni.com';
+      echo '127.0.0.1  mycloudflare.com';
+      echo '127.0.0.1  one.one';
+      echo '127.0.0.1  trycloudflare.com';
+      echo '127.0.0.1  warp.plus';
+      echo '127.0.0.1  workers.dev';
+      echo '# Cloudflare end'; } >> /etc/hosts
+
     # A possible problem with this is that cloudflare has become so pervasive
     # that blocking it could cause significant issues
     ruleset=$(/usr/sbin/nft list ruleset)
@@ -645,39 +681,6 @@ function firewall_block_cloudflare {
         fi
     done <"$cloudflare_ips"
     save_firewall_settings
-
-    if ! grep -q "cloudflare" /etc/hosts; then
-        { echo '127.0.0.1  betterinternet.com'
-          echo '127.0.0.1  brokendnssec.net';
-          echo '127.0.0.1  cloudflare-dns.com';
-          echo '127.0.0.1  cloudflare-free.com';
-          echo '127.0.0.1  cloudflare-ipfs.com';
-          echo '127.0.0.1  cloudflare-quic.com';
-          echo '127.0.0.1  cloudflare.com';
-          echo '127.0.0.1  cloudflare.com.ve';
-          echo '127.0.0.1  cloudflare.net';
-          echo '127.0.0.1  cloudflareaccess.com';
-          echo '127.0.0.1  cloudflareapi.com';
-          echo '127.0.0.1  cloudflareapps.com';
-          echo '127.0.0.1  cloudflarechallenge.com';
-          echo '127.0.0.1  cloudflareclient.com';
-          echo '127.0.0.1  cloudflareenterprise.com';
-          echo '127.0.0.1  cloudflareinsights.com';
-          echo '127.0.0.1  cloudflarepreview.com';
-          echo '127.0.0.1  cloudflarepreviews.com';
-          echo '127.0.0.1  cloudflareresolve.com';
-          echo '127.0.0.1  cloudflarespeedtest.com';
-          echo '127.0.0.1  cloudflaressl.com';
-          echo '127.0.0.1  cloudflarestatus.com';
-          echo '127.0.0.1  cloudflaresupport.com';
-          echo '127.0.0.1  cloudflarewarp.com';
-          echo '127.0.0.1  encryptedsni.com';
-          echo '127.0.0.1  mycloudflare.com';
-          echo '127.0.0.1  one.one';
-          echo '127.0.0.1  trycloudflare.com';
-          echo '127.0.0.1  warp.plus';
-          echo '127.0.0.1  workers.dev'; } >> /etc/hosts
-    fi
 
     echo ''
     echo 'Cloudflare blocked'
