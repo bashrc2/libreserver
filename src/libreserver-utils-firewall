@@ -683,6 +683,38 @@ function firewall_block_cloudflare {
     echo 'Cloudflare blocked'
 }
 
+function firewall_block_analytics {
+    if grep -q 'Google analytics start' /etc/hosts; then
+        sed -i '/Google analytics start/,/Google analytics end/d' /etc/hosts
+    fi
+
+    { echo '# Google analytics start';
+      echo '127.0.0.1 apis.googletagmanager.com';
+      echo '127.0.0.1 click.google-analytics.com';
+      echo '127.0.0.1 crashlytics.com';
+      echo '127.0.0.1 google-analytics.com';
+      echo '127.0.0.1 googletagmanager.com';
+      echo '127.0.0.1 googletagservices.com';
+      echo '127.0.0.1 htps.googletagmanager.com';
+      echo '127.0.0.1 httpswww.googletagmanager.com';
+      echo '127.0.0.1 qs11.googletagmanager.com';
+      echo '127.0.0.1 sandbox.google-analytics.com';
+      echo '127.0.0.1 settings.crashlytics.com';
+      echo '127.0.0.1 ssl.google-analytics.com';
+      echo '127.0.0.1 tagmanager.google.com';
+      echo '127.0.0.1 test-web.googletagmanager.com';
+      echo '127.0.0.1 wp.googletagmanager.com';
+      echo '127.0.0.1 www-googletagmanager.l.google.com';
+      echo '127.0.0.1 www.google-analytics.com';
+      echo '127.0.0.1 www.googletagmanager.com';
+      echo '127.0.0.1 www.googletagservices.com';
+      echo '127.0.0.1 wwwctp.googletagmanager.com';
+      echo '# Google analytics end'; } >> /etc/hosts
+
+    echo ''
+    echo 'Analytics blocked'
+}
+
 function firewall_unblock_cloudflare {
     ruleset=$(/usr/sbin/nft list ruleset)
     # does the firewall exist?

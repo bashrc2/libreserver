@@ -819,6 +819,9 @@ function setup_firewall {
     #function_check firewall_block_cloudflare
     #firewall_block_cloudflare
 
+    function_check firewall_block_analytics
+    firewall_block_analytics
+
     function_check firewall_facebook
     firewall_facebook
 }
