@@ -684,6 +684,7 @@ function firewall_block_cloudflare {
 }
 
 function firewall_block_analytics {
+    # https://github.com/nickspaargaren/no-google/blob/master/categories/analytics.txt
     if grep -q 'Google analytics start' /etc/hosts; then
         sed -i '/Google analytics start/,/Google analytics end/d' /etc/hosts
     fi
