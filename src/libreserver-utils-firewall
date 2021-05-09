@@ -693,6 +693,9 @@ function firewall_block_analytics {
     fi
 
     { echo '# Google analytics start';
+      echo '127.0.0.1 fonts.google.com';
+      echo '127.0.0.1 fonts.googleapis.com';
+      echo '127.0.0.1 fonts.gstatic.com';
       echo '127.0.0.1 apis.googletagmanager.com';
       echo '127.0.0.1 click.google-analytics.com';
       echo '127.0.0.1 crashlytics.com';
