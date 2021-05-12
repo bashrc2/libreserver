@@ -252,11 +252,7 @@ if ! grep -q 'controluser' "/home/${ADD_USERNAME}/.bashrc"; then
     echo 'controluser' >> "/home/${ADD_USERNAME}/.bashrc"
 fi
 
-# fix some gpg strangeness when searching for keys
-printf '%%Assuan%%\nsocket=/dev/shm/S.dirmngr\n' > "/home/${ADD_USERNAME}/.gnupg/S.dirmngr"
-if [ -d "/home/${ADD_USERNAME}/.gnupg/crls.d" ]; then
-    chmod +x "/home/${ADD_USERNAME}/.gnupg/crls.d"
-fi
+gpg_fix_searching_for_keys "${ADD_USERNAME}"
 
 "${PROJECT_NAME}-pass" -u "${ADD_USERNAME}" -a login -p "${NEW_USER_PASSWORD}"
 

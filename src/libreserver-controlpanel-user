@@ -643,17 +643,17 @@ function mutt_set_avatar {
     case $sel in
         0)
             AVATAR_IMAGE=$(<"$data")
-	    clear
-	    if ! /usr/local/bin/${PROJECT_NAME}-email-avatar "$AVATAR_IMAGE"; then
+            clear
+            if ! /usr/local/bin/${PROJECT_NAME}-email-avatar "$AVATAR_IMAGE"; then
                 dialog --title $"Set your email avatar image" \
                        --backtitle $"LibreServer User Control Panel" \
                        --msgbox $"\nEmail avatar could not be set" 7 50
-	    else
+            else
                 dialog --title $"Set your email avatar image" \
                        --backtitle $"LibreServer User Control Panel" \
                        --msgbox $"\nEmail avatar created" 7 50
-	    fi
-	    ;;
+            fi
+            ;;
     esac
     rm -f "$data"
 }
@@ -814,13 +814,18 @@ function show_your_email_address {
     fi
 }
 
+function run_email_client {
+    gpg_fix_searching_for_keys "$USER"
+    mutt
+}
+
 function menu_top_level {
     while true
     do
         W=(1 $"Use Email"
            2 $"Show your Email Address"
            3 $"Change Email Filtering/Blocking Rules"
-	   4 $"Set Email avatar image"
+           4 $"Set Email avatar image"
            5 $"Run an App"
            6 $"Browse the Web"
            7 $"My Encryption Keys"
@@ -834,10 +839,10 @@ function menu_top_level {
         fi
 
         case $selection in
-            1) mutt;;
+            1) run_email_client;;
             2) show_your_email_address;;
             3) menu_email;;
-	    4) mutt_set_avatar;;
+            4) mutt_set_avatar;;
             5) menu_run_client_app;;
             6) torify elinks -no-home;;
             7) menu_encryption_keys;;

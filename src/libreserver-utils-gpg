@@ -127,13 +127,13 @@ function gpg_create_key {
 
     # construct email address if it doesn't exist
     if [[ "${MY_EMAIL_ADDRESS}" == *"@" ]]; then
-	if [[ "${HOSTNAME}" == *".local" ]]; then
-	    if [ -f /var/lib/tor/hidden_service_email/hostname ]; then
-		MY_EMAIL_ADDRESS="${key_username}@$(cat /var/lib/tor/hidden_service_email/hostname)"
-	    fi
-	else
-	    MY_EMAIL_ADDRESS="${key_username}@${HOSTNAME}"
-	fi
+        if [[ "${HOSTNAME}" == *".local" ]]; then
+            if [ -f /var/lib/tor/hidden_service_email/hostname ]; then
+                MY_EMAIL_ADDRESS="${key_username}@$(cat /var/lib/tor/hidden_service_email/hostname)"
+            fi
+        else
+            MY_EMAIL_ADDRESS="${key_username}@${HOSTNAME}"
+        fi
     fi
     
     gpg_dir="/home/${key_username}/.gnupg"
@@ -154,15 +154,15 @@ function gpg_create_key {
     chown "${key_username}":"${key_username}" "/home/${key_username}/gpg-genkey.conf"
 
     if [ -d ${gpg_dir} ]; then
-	echo "Set permissions on ${gpg_dir}"
-	find ${gpg_dir} -type d -exec chmod 700 {} \;
-	find ${gpg_dir} -type f -exec chmod 600 {} \;
+        echo "Set permissions on ${gpg_dir}"
+        find ${gpg_dir} -type d -exec chmod 700 {} \;
+        find ${gpg_dir} -type f -exec chmod 600 {} \;
     fi
 
     echo $'Generating a new GPG key'
     passStr="${key_passphrase}"
     if [ ! "${passStr}" ]; then
-	passStr="${PROJECT_NAME}"
+        passStr="${PROJECT_NAME}"
     fi
     echo "${passStr}" | su -m root -c "gpg --homedir ${gpg_dir} --batch --passphrase-fd 0 --full-gen-key /home/${key_username}/gpg-genkey.conf" - "${key_username}"
     chown -R "${key_username}":"${key_username}" "${gpg_dir}"
@@ -425,6 +425,14 @@ function disable_email_encryption_at_rest {
             sed -i 's@| /usr/bin/gpgit.pl@#| /usr/bin/gpgit.pl@g' /etc/skel/.procmailrc
             #sed -i 's|:0 f|#:0 f|g' /etc/skel/.procmailrc
         fi
+    fi
+}
+
+function gpg_fix_searching_for_keys {
+    CURRUSER="$1"
+    printf '%%Assuan%%\nsocket=/dev/shm/S.dirmngr\n' > "/home/${CURRUSER}/.gnupg/S.dirmngr"
+    if [ -d "/home/${CURRUSER}/.gnupg/crls.d" ]; then
+        chmod +x "/home/${CURRUSER}/.gnupg/crls.d"
     fi
 }
 
