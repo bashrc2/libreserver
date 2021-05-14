@@ -305,7 +305,7 @@ function upgrade_epicyon {
     epicyon_clear_browser_cache
     if [ -d "/usr/local/lib/${PYTHON_VERSION}/dist-packages/six.py" ]; then
         pip3 uninstall -y six
-        INSTALL_PACKAGES python3-six --reinstall	
+        REINSTALL_PACKAGES python3-six
     fi
     if [ ! -d /usr/lib/python3/dist-packages/cryptography ]; then
         INSTALL_PACKAGES python3-cryptography
@@ -469,7 +469,7 @@ function install_epicyon {
 
     if [ -d "/usr/local/lib/${PYTHON_VERSION}/dist-packages/six.py" ]; then
         pip3 uninstall -y six
-        INSTALL_PACKAGES python3-six --reinstall
+        REINSTALL_PACKAGES python3-six
     fi
     INSTALL_PACKAGES python3-socks imagemagick python3-setuptools python3-cryptography python3-dateutil libimage-exiftool-perl python3-flake8 python3-pyqrcode python3-png python3-pyld python3-six wget
 
