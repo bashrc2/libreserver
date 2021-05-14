@@ -51,6 +51,31 @@ function INSTALL_PACKAGES {
     done;
 }
 
+function REINSTALL_PACKAGES {
+    for arg; do
+        install_tries=0
+        install_max_tries=3
+        while [ $install_tries -lt $install_max_tries ]; do
+            echo "Reinstalling package $arg"
+            apt-get -yq ${CONFDEF_OPTION} install --reinstall $arg
+            if dpkg-query -W --showformat='${Status}\n' $arg 2> /dev/null; then
+                break
+            fi
+            install_tries=$((install_tries + 1))
+        done
+        if [ $install_tries -ge $install_max_tries ]; then
+            echo "Failed to reinstall package $arg"
+	    if [ -f /tmp/.upgrading ]; then
+		# exiting during an upgrade could leave the
+		# webadmin in a half updated state
+		return
+	    else
+		exit 7
+	    fi
+        fi
+    done;
+}
+
 function INSTALL_PACKAGES_BACKPORTS {
     for arg; do
         install_tries=0

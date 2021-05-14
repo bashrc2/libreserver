@@ -1239,7 +1239,7 @@ function matrix_update_element_config {
 }
 
 function install_matrix_venv {
-    INSTALL_PACKAGES python3-pip --reinstall
+    REINSTALL_PACKAGES python3-pip
 
     { echo '#!/bin/bash';
       echo 'cd /etc/matrix | exit 1';
@@ -1314,7 +1314,7 @@ function install_matrix {
     if [ -d "/usr/local/lib/${PYTHON_VERSION}/dist-packages/pip" ]; then
         rm -rf "/usr/local/lib/${PYTHON_VERSION}/dist-packages/pip"
     fi
-    INSTALL_PACKAGES --reinstall python3-pip
+    REINSTALL_PACKAGES python3-pip
 
     if [ -d "/usr/local/lib/${PYTHON_VERSION}/dist-packages/twisted" ]; then
         pip3 uninstall -y twisted
