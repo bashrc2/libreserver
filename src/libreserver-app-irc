@@ -101,6 +101,12 @@ function create_irssi_config {
 
     { echo 'servers = (';
       echo '  {';
+      echo '    address = "irc.libera.chat";';
+      echo '    chatnet = "LiberaChat";';
+      echo '    port = "6697";';
+      echo '    autoconnect = "no";';
+      echo '  },';
+      echo '  {';
       echo '    address = "irc.oftc.net";';
       echo '    chatnet = "OFTC";';
       echo '    port = "6667";';
