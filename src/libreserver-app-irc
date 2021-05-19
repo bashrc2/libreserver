@@ -101,12 +101,6 @@ function create_irssi_config {
 
     { echo 'servers = (';
       echo '  {';
-      echo '    address = "chat.freenode.net";';
-      echo '    chatnet = "Freenode";';
-      echo '    port = "6667";';
-      echo '    autoconnect = "no";';
-      echo '  },';
-      echo '  {';
       echo '    address = "irc.oftc.net";';
       echo '    chatnet = "OFTC";';
       echo '    port = "6667";';
