@@ -37,7 +37,7 @@ REQUIRES_APP=
 IRC_PORT=6697
 
 IRC_REPO="https://gitlab.com/bashrc2/miniircd"
-IRC_COMMIT='5c2bda625e5625e67836fb78fb81ec9bc7e2e007'
+IRC_COMMIT='8b8024ff9b8c11a879bfcd315e7a166c86c3e144'
 
 # An optional password to log into IRC. This applies to all users
 IRC_PASSWORD=
