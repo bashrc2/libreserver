@@ -87,14 +87,42 @@ function irc_get_global_password {
 
 function create_irssi_config {
     new_username="$1"
+    new_password="$2"
 
     read_config_param IRC_PORT
     IRC_PASSWORD=$(irc_get_global_password)
 
-    new_name="$2"
+    new_name="$3"
     if [ ${#new_name} -eq 0 ]; then
         new_name="$new_username"
     fi
+
+    { echo 'use strict;';
+      echo 'use warnings;';
+      echo 'use Irssi;';
+      echo 'use Irssi::Irc;';
+      echo "use vars qw(\$VERSION %IRSSI);";
+      echo '';
+      echo "\$VERSION = \"0.0.2\";";
+      echo '%IRSSI = (';
+      echo "	authors     => \"Sebastian 'yath' Schmidt\",";
+      echo "	contact     => \"yathen\@web.de\",";
+      echo "	name        => \"Command dispatcher\",";
+      echo "	description => \"This scripts sends unknown commands to the server\",";
+      echo "	license     => \"GNU GPLv2\",";
+      echo "	changed     => \"Tue Mar  5 14:55:29 CET 2002\",";
+      echo ');';
+      echo '';
+      echo 'sub event_default_command {';
+      echo "	my (\$command, \$server) = @_;";
+      echo "	return if (Irssi::settings_get_bool(\"dispatch_unknown_commands\") == 0";
+      echo "		|| !\$server);";
+      echo "	\$server->send_raw(\$command);";
+      echo '	Irssi::signal_stop();';
+      echo '}';
+      echo '';
+      echo "Irssi::settings_add_bool(\"misc\", \"dispatch_unknown_commands\", 1);";
+      echo "Irssi::signal_add_first(\"default command\", \"event_default_command\");"; } > "/home/${new_username}/.irssi/dispatch.pl"
 
     { echo 'servers = (';
       echo '  {';
@@ -128,11 +156,13 @@ function create_irssi_config {
       echo 'chatnets = {';
       echo '  LibreServer = {';
       echo '    type = "IRC";';
+      echo "    nick = \"${new_username}\";";
+      echo "    autosendcmd = \"/quote identify ${new_username} ${new_password};wait 2000\";";
       echo '    max_kicks = "1";';
       echo '    max_msgs = "4";';
       echo '    max_whois = "1";';
       echo '  };';
-      echo '  Freenode = {';
+      echo '  LiberaChat = {';
       echo '    type = "IRC";';
       echo '    max_kicks = "1";';
       echo '    max_msgs = "4";';
@@ -225,7 +255,7 @@ function add_user_irc {
         mkdir "/home/${new_username}/.irssi"
     fi
 
-    create_irssi_config "${new_username}"
+    create_irssi_config "${new_username}" "${new_user_password}"
 
     /usr/local/bin/miniircd --state-dir=/var/jail/miniircd --add-account "${new_username}":"${new_user_password}"
     chown -R miniirc:miniirc /var/jail/miniircd
@@ -477,7 +507,7 @@ function install_irc_client {
         mkdir "/home/${MY_USERNAME}/.irssi"
     fi
 
-    create_irssi_config "${MY_USERNAME}" "$MY_NAME"
+    create_irssi_config "${MY_USERNAME}" "${IRC_ADMIN_PASSWORD}"
     install_completed irc_client
 }
 
@@ -485,10 +515,6 @@ function install_irc {
     increment_app_install_progress
 
     install_irc_server
-
-    increment_app_install_progress
-
-    install_irc_client
 
     increment_app_install_progress
 
@@ -503,6 +529,10 @@ function install_irc {
     add_user_irc "${MY_USERNAME}" "${IRC_ADMIN_PASSWORD}"
 
     systemctl restart irc
+
+    increment_app_install_progress
+
+    install_irc_client
 
     APP_INSTALLED=1
 }
