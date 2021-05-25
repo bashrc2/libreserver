@@ -178,6 +178,7 @@ function remove_user_irc {
     if [ -d "/home/${remove_username}/irclogs" ]; then
         rm -rf "/home/${remove_username}/irclogs"
     fi
+    /usr/local/bin/miniircd --state-dir=/etc/miniirc --del_account "${remove_username}"
 }
 
 function irc_set_global_password_base {
@@ -223,6 +224,9 @@ function add_user_irc {
     fi
 
     create_irssi_config "${new_username}"
+
+    /usr/local/bin/miniircd --state-dir=/etc/miniirc --add_account "${new_username}":"${new_user_password}"
+
     echo '0'
 }
 
@@ -454,7 +458,7 @@ function install_irc_server {
     chroot "$rootdir" systemctl enable irc.service
     chown -R miniirc:miniirc /var/jail
     chroot "$rootdir" systemctl restart irc.service
-
+    
     function_check configure_firewall_for_irc
     configure_firewall_for_irc
     install_completed irc_server
