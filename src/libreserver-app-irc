@@ -439,7 +439,7 @@ function install_irc_server {
       echo 'User=root';
       echo 'Group=root';
       echo "WorkingDirectory=/etc/miniirc";
-      echo "ExecStart=/usr/local/bin/miniircd --state-dir=/ --setuid=miniirc ${IRC_SSL_OPTION} --registered-only --chroot=/var/jail/miniircd";
+      echo "ExecStart=/usr/local/bin/miniircd --state-dir=/ --setuid=miniirc ${IRC_SSL_OPTION} --registered-only --new-registrations 0 --chroot=/var/jail/miniircd";
       echo 'Environment=PATH=/usr/bin:/usr/local/bin';
       echo 'Restart=on-failure';
       echo 'PrivateTmp=true';
