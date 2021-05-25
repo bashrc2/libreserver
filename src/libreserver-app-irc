@@ -170,7 +170,8 @@ function remove_user_irc {
     if [ -d "/home/${remove_username}/irclogs" ]; then
         rm -rf "/home/${remove_username}/irclogs"
     fi
-    /usr/local/bin/miniircd --state-dir=/etc/miniirc --del-account "${remove_username}"
+    /usr/local/bin/miniircd --state-dir=/var/jail/miniircd --del-account "${remove_username}"
+    chown -R miniirc:miniirc /var/jail/miniircd
 }
 
 function irc_set_global_password_base {
@@ -207,7 +208,8 @@ function change_password_irc {
     new_user_password="$2"
 
     "${PROJECT_NAME}-pass" -u "${curr_username}" -a irc -p "${new_user_password}"
-    /usr/local/bin/miniircd --state-dir=/etc/miniirc --add-account "${curr_username}":"${new_user_password}"
+    /usr/local/bin/miniircd --state-dir=/var/jail/miniircd --add-account "${curr_username}":"${new_user_password}"
+    chown -R miniirc:miniirc /var/jail/miniircd
 }
 
 function add_user_irc {
@@ -225,7 +227,8 @@ function add_user_irc {
 
     create_irssi_config "${new_username}"
 
-    /usr/local/bin/miniircd --state-dir=/etc/miniirc --add-account "${new_username}":"${new_user_password}"
+    /usr/local/bin/miniircd --state-dir=/var/jail/miniircd --add-account "${new_username}":"${new_user_password}"
+    chown -R miniirc:miniirc /var/jail/miniircd
 
     echo '0'
 }
