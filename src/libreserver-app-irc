@@ -450,7 +450,7 @@ function install_irc_server {
     chroot "$rootdir" systemctl enable irc.service
     chown -R miniirc:miniirc /var/jail
     chroot "$rootdir" systemctl restart irc.service
-    
+
     function_check configure_firewall_for_irc
     configure_firewall_for_irc
     install_completed irc_server
@@ -478,6 +478,18 @@ function install_irc {
     increment_app_install_progress
 
     install_irc_client
+
+    increment_app_install_progress
+
+    if [ -f "$IMAGE_PASSWORD_FILE" ]; then
+        IRC_ADMIN_PASSWORD="$(printf "%s" "$(cat "$IMAGE_PASSWORD_FILE")")"
+    fi
+    if [ ! "$IRC_ADMIN_PASSWORD" ]; then
+        IRC_ADMIN_PASSWORD="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
+    fi
+    "${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a irc -p "$IRC_ADMIN_PASSWORD"
+
+    add_user_irc "${MY_USERNAME}" "${IRC_ADMIN_PASSWORD}"
 
     systemctl restart irc
 
