@@ -42,9 +42,6 @@ IRC_COMMIT='985bede21c1e86efaf17e4946322cc7d0152310a'
 # An optional password to log into IRC. This applies to all users
 IRC_PASSWORD=
 
-# Number of entries for the bouncer to buffer
-IRC_BUFFER_LENGTH=300
-
 IRC_SHORT_DESCRIPTION=$'Classic chat system'
 IRC_DESCRIPTION=$'The classic low bandwidth chat system'
 IRC_MOBILE_APP_URL='https://f-droid.org/packages/org.yaaic'
@@ -162,16 +159,11 @@ function create_irssi_config {
     chown -R "${new_username}":"${new_username}" "/home/${new_username}/.irssi"
 }
 
-function remove_user_irc_bouncer {
-    remove_username="$1"
-}
-
 function remove_user_irc {
     remove_username="$1"
 
     "${PROJECT_NAME}-pass" -u "$remove_username" --rmapp irc
 
-    remove_user_irc_bouncer "${remove_username}"
     if [ -d "/home/${remove_username}/.irssi" ]; then
         rm -rf "/home/${remove_username}/.irssi"
     fi
