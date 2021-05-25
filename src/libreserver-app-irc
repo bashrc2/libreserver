@@ -202,6 +202,14 @@ function irc_setting_password {
     irc_set_global_password_base "$new_global_password"
 }
 
+function change_password_irc {
+    curr_username="$1"
+    new_user_password="$2"
+
+    "${PROJECT_NAME}-pass" -u "${curr_username}" -a irc -p "${new_user_password}"
+    /usr/local/bin/miniircd --state-dir=/etc/miniirc --add-account "${curr_username}":"${new_user_password}"
+}
+
 function add_user_irc {
     new_username="$1"
     new_user_password="$2"
