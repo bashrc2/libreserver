@@ -52,7 +52,7 @@ EPICYON_DOMAIN_NAME=
 EPICYON_CODE=
 EPICYON_ONION_PORT=9552
 EPICYON_REPO="https://gitlab.com/bashrc2/epicyon"
-EPICYON_COMMIT='bb4afef15fdd7655ca1eac55dcb999eb8e5b3afa'
+EPICYON_COMMIT='f20fcdb30049fb7bc50e368cf04a62b450be7703'
 EPICYON_PORT_INTERNAL=7156
 
 # These parameters are used by the FreedomBox mobile app and web UI
@@ -529,7 +529,7 @@ function install_epicyon {
         echo '  # Security' >> "$epicyon_nginx_site"
         nginx_ssl "$EPICYON_DOMAIN_NAME"
 
-        nginx_security_options "$EPICYON_DOMAIN_NAME"
+#        nginx_security_options "$EPICYON_DOMAIN_NAME"
         nginx_robots "$EPICYON_DOMAIN_NAME"
 
         { echo '  add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
@@ -556,8 +556,6 @@ function install_epicyon {
           echo "    proxy_set_header X-Forward-For \$proxy_add_x_forwarded_for;";
           echo '    proxy_set_header X-Forward-Proto http;';
           echo '    proxy_set_header X-Nginx-Proxy true;';
-          echo '    expires epoch;';
-          echo '    proxy_no_cache 0;';
           echo '    proxy_temp_file_write_size 64k;';
           echo '    proxy_connect_timeout 10080s;';
           echo '    proxy_send_timeout 10080;';
@@ -566,30 +564,13 @@ function install_epicyon {
           echo '    proxy_buffers 16 32k;';
           echo '    proxy_busy_buffers_size 64k;';
           echo '    proxy_redirect off;';
-          echo '    proxy_request_buffering on;';
-          echo '    proxy_buffering on;';
-          echo '    proxy_cache my_cache;';
-          echo '    proxy_cache_use_stale error timeout http_500 http_502 http_503 http_504;';
-          echo '    location ~ ^/(icons|images|media|emoji)/(.*)/(.*).(png|jpg|gif|webp|svg|mp3|ogv|ogg|mp4) {';
-          echo '        expires 7d;';
-          echo "        proxy_pass http://localhost:$EPICYON_PORT_INTERNAL;";
-          echo '    }';
-          echo '    location ~ ^/icons/(.*)/(like|repeat|calendar)(.*).(png|jpg|gif|webp|svg|mp3|ogv|ogg|mp4) {';
-          echo '        expires epoch;';
-          echo '        proxy_no_cache 0;';
-          echo "        proxy_pass http://localhost:$EPICYON_PORT_INTERNAL;";
-          echo '    }';
-          echo '    location ~ ^/icons/(like|repeat|calendar)(.*).(png|jpg|gif|webp|svg|mp3|ogv|ogg|mp4) {';
-          echo '        expires epoch;';
-          echo '        proxy_no_cache 0;';
-          echo "        proxy_pass http://localhost:$EPICYON_PORT_INTERNAL;";
-          echo '    }';
-          echo '    location ~ ^/users/(.*)/(image|banner).(png|jpg|gif|webp|svg|mp3|ogv|ogg|mp4) {';
-          echo '        expires epoch;';
-          echo '        proxy_no_cache 0;';
-          echo "        proxy_pass http://localhost:$EPICYON_PORT_INTERNAL;";
-          echo '    }';
-          echo "    proxy_pass http://localhost:$EPICYON_PORT_INTERNAL;";
+          echo '    proxy_request_buffering off;';
+          echo '    proxy_buffering off;';
+	  echo '    location ~ ^/accounts/(avatars|headers)/(.*).(png|jpg|gif|webp|svg) {';
+	  echo '        expires 1y;';
+	  echo "        proxy_pass http://localhost:${EPICYON_PORT_INTERNAL};";
+	  echo '    }';
+          echo "    proxy_pass http://localhost:${EPICYON_PORT_INTERNAL};";
           echo '  }';
           echo '}'; } >> "$epicyon_nginx_site"
     else
@@ -625,8 +606,6 @@ function install_epicyon {
       echo "    proxy_set_header X-Forward-For \$proxy_add_x_forwarded_for;";
       echo '    proxy_set_header X-Forward-Proto http;';
       echo '    proxy_set_header X-Nginx-Proxy true;';
-      echo '    expires epoch;';
-      echo '    proxy_no_cache 0;';
       echo '    proxy_temp_file_write_size 64k;';
       echo '    proxy_connect_timeout 10080s;';
       echo '    proxy_send_timeout 10080;';
@@ -635,28 +614,11 @@ function install_epicyon {
       echo '    proxy_buffers 16 32k;';
       echo '    proxy_busy_buffers_size 64k;';
       echo '    proxy_redirect off;';
-      echo '    proxy_request_buffering on;';
-      echo '    proxy_buffering on;';
-      echo '    proxy_cache my_cache;';
-      echo '    proxy_cache_use_stale error timeout http_500 http_502 http_503 http_504;';
-      echo '    location ~ ^/(icons|images|media|emoji)/(.*)/(.*).(png|jpg|gif|webp|svg|mp3|ogv|ogg|mp4) {';
-      echo '        expires 7d;';
-      echo "        proxy_pass http://localhost:$EPICYON_PORT_INTERNAL;";
-      echo '    }';
-      echo '    location ~ ^/icons/(.*)/(like|repeat|calendar)(.*).(png|jpg|gif|webp|svg|mp3|ogv|ogg|mp4) {';
-      echo '        expires epoch;';
-      echo '        proxy_no_cache 0;';
-      echo "        proxy_pass http://localhost:$EPICYON_PORT_INTERNAL;";
-      echo '    }';
-      echo '    location ~ ^/icons/(like|repeat|calendar)(.*).(png|jpg|gif|webp|svg|mp3|ogv|ogg|mp4) {';
-      echo '        expires epoch;';
-      echo '        proxy_no_cache 0;';
-      echo "        proxy_pass http://localhost:$EPICYON_PORT_INTERNAL;";
-      echo '    }';
-      echo '    location ~ ^/users/(.*)/(image|banner).(png|jpg|gif|webp|svg|mp3|ogv|ogg|mp4) {';
-      echo '        expires epoch;';
-      echo '        proxy_no_cache 0;';
-      echo "        proxy_pass http://localhost:$EPICYON_PORT_INTERNAL;";
+      echo '    proxy_request_buffering off;';
+      echo '    proxy_buffering off;';
+      echo '    location ~ ^/accounts/(avatars|headers)/(.*).(png|jpg|gif|webp|svg) {';
+      echo '        expires 1y;';
+      echo "        proxy_pass http://localhost:${EPICYON_PORT_INTERNAL};";
       echo '    }';
       echo "    proxy_pass http://localhost:$EPICYON_PORT_INTERNAL;";
       echo '  }';
