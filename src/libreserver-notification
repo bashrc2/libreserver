@@ -164,6 +164,21 @@ function epicyon_notifications {
             fi
         fi
 
+        # send notifications for posts arriving from a particular person
+        epicyonNotifyFile="$epicyonDir/.newNotifiedPost"
+        if [ -f "$epicyonNotifyFile" ]; then
+            if ! grep -q "##sent##" "$epicyonNotifyFile"; then
+                epicyonNotifyMessage=$(notification_translate_text 'New post')
+                epicyonNotifyFileContent=$(echo "$epicyonNotifyMessage")" "$(cat "$epicyonNotifyFile")
+                if [[ "$epicyonNotifyFileContent" == *':'* ]]; then
+                    epicyonNotifyMessage="Epicyon: $epicyonNotifyFileContent"
+                fi
+                "${PROJECT_NAME}-notification" -u "$USERNAME" -s "Epicyon" -m "$epicyonNotifyMessage" --sensitive yes
+                echo "##sent##" > "$epicyonNotifyFile"
+                chown epicyon:epicyon "$epicyonNotifyFile"
+            fi
+        fi
+
         # send notifications for replies to XMPP/email users
         epicyonReplyFile="$epicyonDir/.newReply"
         if [ -f "$epicyonReplyFile" ]; then
