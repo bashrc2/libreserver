@@ -64,6 +64,9 @@ function remove_bridge_irc_to_xmpp {
 }
 
 function bridge_irc_to_xmpp {
+    if [[ "$ONION_ONLY" != 'no' ]]; then
+	return
+    fi
     if [ ! -d /etc/prosody ]; then
         remove_bridge_irc_to_xmpp
         return
