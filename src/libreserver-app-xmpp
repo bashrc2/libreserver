@@ -1210,6 +1210,10 @@ function remove_xmpp {
     rm /etc/avahi/services/xmpp.service
     rm /etc/avahi/services/xmpp-server.service
     systemctl restart avahi-daemon
+
+    if [ -f /etc/biboumi/biboumi.cfg ]; then
+	$REMOVE_PACKAGES_PURGE biboumi
+    fi
 }
 
 function xmpp_contact_info {

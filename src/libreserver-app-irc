@@ -55,9 +55,15 @@ irc_variables=(MY_USERNAME
 
 function bridge_irc_to_xmpp {
     if [ ! -d /etc/prosody ]; then
+	if [ -f /etc/biboumi/biboumi.cfg ]; then
+	    $REMOVE_PACKAGES_PURGE biboumi
+	fi
 	return
     fi
     if [ ! -d /etc/miniirc ]; then
+	if [ -f /etc/biboumi/biboumi.cfg ]; then
+	    $REMOVE_PACKAGES_PURGE biboumi
+	fi
 	return
     fi
     if [ -f /etc/biboumi/biboumi.cfg ]; then
@@ -426,6 +432,9 @@ function remove_irc {
     remove_completion_param configure_firewall_for_irc
     sed -i '/IRC /d' "${COMPLETION_FILE}"
     userdel -r miniirc
+    if [ -f /etc/biboumi/biboumi.cfg ]; then
+	$REMOVE_PACKAGES_PURGE biboumi
+    fi
 }
 
 function configure_firewall_for_irc {
