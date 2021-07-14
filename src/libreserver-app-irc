@@ -53,6 +53,42 @@ irc_variables=(MY_USERNAME
                DEFAULT_DOMAIN_NAME
                ONION_ONLY)
 
+function bridge_irc_to_xmpp {
+    if [ ! -d /etc/prosody ]; then
+	return
+    fi
+    if [ ! -d /etc/miniirc ]; then
+	return
+    fi
+    if [ -f /etc/biboumi/biboumi.cfg ]; then
+	return
+    fi
+    INSTALL_PACKAGES biboumi
+    irc_bridge_hostname="ircbridge.${DEFAULT_DOMAIN_NAME}"
+    irc_bridge_secret=$(create_password 30)$(create_password 30)
+    { echo "hostname=${irc_bridge_hostname}";
+      echo "password=${irc_bridge_secret}";
+      echo "xmpp_server_ip=127.0.0.1";
+      echo "port=5347";
+      echo "admin=";
+      echo "realname_customization=true";
+      echo "realname_from_jid=false";
+      echo "log_file=";
+      echo "ca_file=";
+      echo "outgoing_bind=";
+      echo "log_level=1"; } > /etc/biboumi/biboumi.cfg
+
+    if ! grep -q "${irc_bridge_hostname}" /etc/prosody/prosody.cfg.lua; then
+	{ echo "";
+	  echo "Component \"${irc_bridge_hostname}\"";
+          echo "    component_secret = \"${irc_bridge_secret}\""; } >> /etc/prosody/prosody.cfg.lua
+    else
+	sed -i "s|component_secret = .*|component_secret = \"${irc_bridge_secret}\"|g" /etc/prosody/prosody.cfg.lua
+    fi
+    systemctl restart prosody
+    systemctl restart biboumi
+}
+
 function irc_welcome_message {
     sed -i "s|welcome to IRC|welcome to ${PROJECT_NAME} IRC|g" /usr/local/bin/miniircd
 }
@@ -332,6 +368,8 @@ function irc_fix_password {
 }
 
 function upgrade_irc {
+    bridge_irc_to_xmpp
+
     if [[ "$ONION_ONLY" == 'no' ]]; then
         cat "/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/fullchain.pem" "/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/privkey.pem" > /var/jail/miniircd/miniircd.pem
     fi
@@ -533,6 +571,10 @@ function install_irc {
     increment_app_install_progress
 
     install_irc_client
+
+    increment_app_install_progress
+
+    bridge_irc_to_xmpp
 
     APP_INSTALLED=1
 }
