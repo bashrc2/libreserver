@@ -53,18 +53,24 @@ irc_variables=(MY_USERNAME
                DEFAULT_DOMAIN_NAME
                ONION_ONLY)
 
+function remove_bridge_irc_to_xmpp {
+    if [ ! -f /etc/biboumi/biboumi.cfg ]; then
+        return
+    fi
+    $REMOVE_PACKAGES_PURGE biboumi
+    if [ -d /var/lib/biboumi ]; then
+        rm -rf /var/lib/biboumi
+    fi
+}
+
 function bridge_irc_to_xmpp {
     if [ ! -d /etc/prosody ]; then
-	if [ -f /etc/biboumi/biboumi.cfg ]; then
-	    $REMOVE_PACKAGES_PURGE biboumi
-	fi
-	return
+        remove_bridge_irc_to_xmpp
+        return
     fi
     if [ ! -d /etc/miniirc ]; then
-	if [ -f /etc/biboumi/biboumi.cfg ]; then
-	    $REMOVE_PACKAGES_PURGE biboumi
-	fi
-	return
+        remove_bridge_irc_to_xmpp
+        return
     fi
     bridge_domain_name=${DEFAULT_DOMAIN_NAME}
     if [[ "$ONION_ONLY" != 'no' ]]; then
@@ -72,11 +78,11 @@ function bridge_irc_to_xmpp {
     fi
     irc_bridge_hostname="ircbridge.${bridge_domain_name}"
     if [ -f /etc/biboumi/biboumi.cfg ]; then
-	if grep -q "hostname=${irc_bridge_hostname}" /etc/biboumi/biboumi.cfg; then
-	    if [ -f /var/lib/biboumi/.config/biboumi/biboumi.sqlite ]; then
-		return
-	    fi
-	fi
+        if grep -q "hostname=${irc_bridge_hostname}" /etc/biboumi/biboumi.cfg; then
+            if [ -f /var/lib/biboumi/.config/biboumi/biboumi.sqlite ]; then
+                return
+            fi
+        fi
     fi
     INSTALL_PACKAGES biboumi
     irc_bridge_secret=$(create_password 30)$(create_password 30)
@@ -94,11 +100,11 @@ function bridge_irc_to_xmpp {
       echo "log_level=1"; } > /etc/biboumi/biboumi.cfg
 
     if ! grep -q "${irc_bridge_hostname}" /etc/prosody/prosody.cfg.lua; then
-	{ echo "";
-	  echo "Component \"${irc_bridge_hostname}\"";
+        { echo "";
+          echo "Component \"${irc_bridge_hostname}\"";
           echo "    component_secret = \"${irc_bridge_secret}\""; } >> /etc/prosody/prosody.cfg.lua
     else
-	sed -i "s|component_secret = .*|component_secret = \"${irc_bridge_secret}\"|g" /etc/prosody/prosody.cfg.lua
+        sed -i "s|component_secret = .*|component_secret = \"${irc_bridge_secret}\"|g" /etc/prosody/prosody.cfg.lua
     fi
     systemctl restart prosody
     systemctl restart biboumi
@@ -156,20 +162,20 @@ function create_irssi_config {
       echo '';
       echo "\$VERSION = \"0.0.2\";";
       echo '%IRSSI = (';
-      echo "	authors     => \"Sebastian 'yath' Schmidt\",";
-      echo "	contact     => \"yathen\@web.de\",";
-      echo "	name        => \"Command dispatcher\",";
-      echo "	description => \"This scripts sends unknown commands to the server\",";
-      echo "	license     => \"GNU GPLv2\",";
-      echo "	changed     => \"Tue Mar  5 14:55:29 CET 2002\",";
+      echo "    authors     => \"Sebastian 'yath' Schmidt\",";
+      echo "    contact     => \"yathen\@web.de\",";
+      echo "    name        => \"Command dispatcher\",";
+      echo "    description => \"This scripts sends unknown commands to the server\",";
+      echo "    license     => \"GNU GPLv2\",";
+      echo "    changed     => \"Tue Mar  5 14:55:29 CET 2002\",";
       echo ');';
       echo '';
       echo 'sub event_default_command {';
-      echo "	my (\$command, \$server) = @_;";
-      echo "	return if (Irssi::settings_get_bool(\"dispatch_unknown_commands\") == 0";
-      echo "		|| !\$server);";
-      echo "	\$server->send_raw(\$command);";
-      echo '	Irssi::signal_stop();';
+      echo "    my (\$command, \$server) = @_;";
+      echo "    return if (Irssi::settings_get_bool(\"dispatch_unknown_commands\") == 0";
+      echo "            || !\$server);";
+      echo "    \$server->send_raw(\$command);";
+      echo '    Irssi::signal_stop();';
       echo '}';
       echo '';
       echo "Irssi::settings_add_bool(\"misc\", \"dispatch_unknown_commands\", 1);";
@@ -258,22 +264,22 @@ function remove_user_irc {
 function irc_set_global_password_base {
     NEW_IRC_PASSWORD="$1"
     if [ "${NEW_IRC_PASSWORD}" ]; then
-	echo -n "${NEW_IRC_PASSWORD}" > /etc/miniirc/password
-	if ! grep -q "password" /etc/systemd/system/irc.service; then
+        echo -n "${NEW_IRC_PASSWORD}" > /etc/miniirc/password
+        if ! grep -q "password" /etc/systemd/system/irc.service; then
             sed -i 's|/usr/local/bin/miniircd|/usr/local/bin/miniircd --password-file /etc/miniirc/password|g' /etc/systemd/system/irc.service
             systemctl daemon-reload
             systemctl restart irc
-	fi
+        fi
     else
-	# remove password
-	if [ -f /etc/miniirc/password ]; then
-	    rm /etc/miniirc/password
-	fi
-	if grep -q "password" /etc/systemd/system/irc.service; then
+        # remove password
+        if [ -f /etc/miniirc/password ]; then
+            rm /etc/miniirc/password
+        fi
+        if grep -q "password" /etc/systemd/system/irc.service; then
             sed -i 's|/usr/local/bin/miniircd --password-file /etc/miniirc/password|/usr/local/bin/miniircd|g' /etc/systemd/system/irc.service
             systemctl daemon-reload
             systemctl restart irc
-	fi
+        fi
     fi
 }
 
@@ -441,9 +447,7 @@ function remove_irc {
     remove_completion_param configure_firewall_for_irc
     sed -i '/IRC /d' "${COMPLETION_FILE}"
     userdel -r miniirc
-    if [ -f /etc/biboumi/biboumi.cfg ]; then
-	$REMOVE_PACKAGES_PURGE biboumi
-    fi
+    remove_bridge_irc_to_xmpp
 }
 
 function configure_firewall_for_irc {

@@ -1211,9 +1211,7 @@ function remove_xmpp {
     rm /etc/avahi/services/xmpp-server.service
     systemctl restart avahi-daemon
 
-    if [ -f /etc/biboumi/biboumi.cfg ]; then
-	$REMOVE_PACKAGES_PURGE biboumi
-    fi
+    remove_bridge_irc_to_xmpp
 }
 
 function xmpp_contact_info {
