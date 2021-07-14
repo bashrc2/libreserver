@@ -66,11 +66,13 @@ function bridge_irc_to_xmpp {
 	fi
 	return
     fi
+    irc_bridge_hostname="ircbridge.${DEFAULT_DOMAIN_NAME}"
     if [ -f /etc/biboumi/biboumi.cfg ]; then
-	return
+	if grep -q "hostname=${irc_bridge_hostname}" /etc/biboumi/biboumi.cfg; then
+	    return
+	fi
     fi
     INSTALL_PACKAGES biboumi
-    irc_bridge_hostname="ircbridge.${DEFAULT_DOMAIN_NAME}"
     irc_bridge_secret=$(create_password 30)$(create_password 30)
     { echo "hostname=${irc_bridge_hostname}";
       echo "password=${irc_bridge_secret}";
