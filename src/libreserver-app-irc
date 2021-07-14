@@ -66,7 +66,11 @@ function bridge_irc_to_xmpp {
 	fi
 	return
     fi
-    irc_bridge_hostname="ircbridge.${HOSTNAME}"
+    bridge_domain_name=${DEFAULT_DOMAIN_NAME}
+    if [[ "$ONION_ONLY" != 'no' ]]; then
+        bridge_domain_name=$(cat /var/lib/tor/hidden_service_email/hostname)
+    fi
+    irc_bridge_hostname="ircbridge.${bridge_domain_name}"
     if [ -f /etc/biboumi/biboumi.cfg ]; then
 	if grep -q "hostname=${irc_bridge_hostname}" /etc/biboumi/biboumi.cfg; then
 	    if [ -f /var/lib/biboumi/.config/biboumi/biboumi.sqlite ]; then
@@ -81,7 +85,7 @@ function bridge_irc_to_xmpp {
       echo "xmpp_server_ip=127.0.0.1";
       echo "db_name=/var/lib/biboumi/biboumi.sqlite";
       echo "port=5347";
-      echo "admin=admin@${DEFAULT_DOMAIN_NAME}";
+      echo "admin=admin@${irc_bridge_hostname}";
       echo "realname_customization=true";
       echo "realname_from_jid=false";
       echo "log_file=";
