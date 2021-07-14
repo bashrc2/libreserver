@@ -91,7 +91,7 @@ function bridge_irc_to_xmpp {
       echo "xmpp_server_ip=127.0.0.1";
       echo "db_name=/var/lib/biboumi/biboumi.sqlite";
       echo "port=5347";
-      echo "admin=admin@${irc_bridge_hostname}";
+      echo "admin=admin@${bridge_domain_name}";
       echo "realname_customization=true";
       echo "realname_from_jid=false";
       echo "log_file=";
