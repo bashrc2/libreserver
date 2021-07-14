@@ -66,10 +66,12 @@ function bridge_irc_to_xmpp {
 	fi
 	return
     fi
-    irc_bridge_hostname="ircbridge.${DEFAULT_DOMAIN_NAME}"
+    irc_bridge_hostname="ircbridge.${HOSTNAME}"
     if [ -f /etc/biboumi/biboumi.cfg ]; then
 	if grep -q "hostname=${irc_bridge_hostname}" /etc/biboumi/biboumi.cfg; then
-	    return
+	    if [ -f /var/lib/biboumi/.config/biboumi/biboumi.sqlite ]; then
+		return
+	    fi
 	fi
     fi
     INSTALL_PACKAGES biboumi
@@ -77,8 +79,9 @@ function bridge_irc_to_xmpp {
     { echo "hostname=${irc_bridge_hostname}";
       echo "password=${irc_bridge_secret}";
       echo "xmpp_server_ip=127.0.0.1";
+      echo "db_name=/var/lib/biboumi/biboumi.sqlite";
       echo "port=5347";
-      echo "admin=";
+      echo "admin=admin@${DEFAULT_DOMAIN_NAME}";
       echo "realname_customization=true";
       echo "realname_from_jid=false";
       echo "log_file=";
