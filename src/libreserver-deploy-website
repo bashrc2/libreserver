@@ -288,5 +288,26 @@ if [ -d "${rootdir}/var/gemini" ]; then
     # shellcheck disable=SC2086
     echo "Gemini site deployed to $(cat ${rootdir}/var/lib/tor/hidden_service_email/hostname)"
 fi
+
+if [ -d "${rootdir}${epicyon_dir}/website/EN" ]; then
+    dest_dir='/var/www/libreserver.org/htdocs'
+    if [ -d "$dest_dir" ]; then
+	epicyon_dir=
+	if [ -d "${rootdir}/etc/epicyon" ]; then
+	    epicyon_dir="${rootdir}/etc/epicyon"
+	fi
+	if [ -d "${rootdir}/opt/epicyon" ]; then
+	    epicyon_dir="${rootdir}/opt/epicyon"
+	fi
+	if [ -d "$epicyon_dir" ]; then
+	    if [ ! -d "${dest_dir}/epicyon" ]; then
+		mkdir "${dest_dir}/epicyon"
+	    fi
+	    cp -r "${rootdir}${epicyon_dir}/website/EN"/* "${dest_dir}/epicyon"
+	    chown -R www-data:www-data $dest_dir
+	    echo "Epicyon website copied to https://libreserver.org/epicyon"
+	fi
+    fi
+fi
 echo "$site_domain"
 echo "$site_onion_domain"
