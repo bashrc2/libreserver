@@ -103,6 +103,7 @@ function get_local_ipv4_address {
 }
 
 function get_external_ipv4_address {
+    INSTALL_PACKAGES curl
     ipv4_result=$(curl -s ipinfo.io/ip)
     if [[ "$ipv4_result" != *'<'* ]]; then
         echo "$ipv4_result"
