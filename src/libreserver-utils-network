@@ -1,8 +1,8 @@
 #!/bin/bash
-#  _    _ _            ___                      
-# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
-# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # Network functions
 #
@@ -104,7 +104,7 @@ function get_local_ipv4_address {
 
 function get_external_ipv4_address {
     if [ ! -f /usr/bin/curl ]; then
-	INSTALL_PACKAGES curl
+        INSTALL_PACKAGES curl
     fi
     ipv4_result=$(/usr/bin/curl -s ipinfo.io/ip)
     if [[ "$ipv4_result" != *'<'* ]]; then
@@ -126,7 +126,7 @@ function get_ipv6_address {
 
 function update_external_ip {
     if [ ! -f /usr/bin/curl ]; then
-	INSTALL_PACKAGES curl
+        INSTALL_PACKAGES curl
     fi
     ip_update_script=/usr/bin/externalipupdate
     { echo '#!/bin/bash';
