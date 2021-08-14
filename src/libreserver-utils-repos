@@ -102,7 +102,7 @@ function create_tor_repo_sources {
 
 function create_repo_sources {
     if grep -q "security.debian.org/ " /etc/apt/sources.list; then
-	sed -i "s|security.debian.org/ .*|deb.debian.org/debian-security bullseye-security main contrib|g" /etc/apt/sources.list
+	sed -i "s|security.debian.org/ .*|deb.debian.org/debian-security ${DEBIAN_VERSION}-security main contrib|g" /etc/apt/sources.list
     fi
     #if [[ "$ONION_ONLY" != 'no' ]]; then
     #    create_tor_repo_sources
