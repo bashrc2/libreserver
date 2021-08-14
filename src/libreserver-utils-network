@@ -125,6 +125,9 @@ function get_ipv6_address {
 }
 
 function update_external_ip {
+    if [ ! -f /usr/bin/curl ]; then
+	INSTALL_PACKAGES curl
+    fi
     ip_update_script=/usr/bin/externalipupdate
     { echo '#!/bin/bash';
       echo "existing_ip=\$(cat $CONFIGURATION_FILE | grep \"EXTERNAL_IPV4_ADDRESS=\" | head -n 1 | awk -F '=' '{print \$2}')'";
