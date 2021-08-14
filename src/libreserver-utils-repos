@@ -101,6 +101,9 @@ function create_tor_repo_sources {
 }
 
 function create_repo_sources {
+    if grep -q "security.debian.org/ " /etc/apt/sources.list; then
+	sed -i "s|security.debian.org/ .*|deb.debian.org/debian-security bullseye-security main contrib|g" /etc/apt/sources.list
+    fi
     #if [[ "$ONION_ONLY" != 'no' ]]; then
     #    create_tor_repo_sources
     #    return
@@ -122,7 +125,7 @@ function create_repo_sources {
             return
         fi
     fi
-
+    
     if [ ! -f /etc/apt/sources.list.old ]; then
 	# keep a copy of the original sources
 	cp /etc/apt/sources.list /etc/apt/sources.list.old
@@ -130,8 +133,8 @@ function create_repo_sources {
     { echo "deb http://${DEBIAN_REPO}/debian/ ${DEBIAN_VERSION} main contrib";
       echo "deb-src http://${DEBIAN_REPO}/debian/ ${DEBIAN_VERSION} main contrib";
       echo '';
-      echo "# deb http://security.debian.org/ ${DEBIAN_VERSION}/updates main contrib";
-      echo "# deb-src http://security.debian.org/ ${DEBIAN_VERSION}/updates main contrib";
+      echo "deb https://deb.debian.org/debian-security bullseye-security main contrib";
+      echo "deb-src https://deb.debian.org/debian-security bullseye-security main contrib";
       echo '';
       echo "deb http://${DEBIAN_REPO}/debian/ ${DEBIAN_VERSION}-updates main contrib";
       echo "deb-src http://${DEBIAN_REPO}/debian/ ${DEBIAN_VERSION}-updates main contrib";
