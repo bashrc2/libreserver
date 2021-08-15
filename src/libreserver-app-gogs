@@ -145,14 +145,14 @@ function gogs_parameters {
     fi
     if [[ ${ARCHITECTURE} == *"arm"* || ${ARCHITECTURE} == *"aarch"* ]]; then
         CURR_ARCH=armv7
-        gogs_os_type=raspi
+        # gogs_os_type=raspi
     fi
     if [ ! ${CURR_ARCH} ]; then
         echo $'No architecture specified'
         ARCHITECTURE=$(uname -m)
         if [[ ${ARCHITECTURE} == "arm"* || ${ARCHITECTURE} == *"aarch"* ]]; then
             CURR_ARCH=armv7
-            gogs_os_type=raspi
+            # gogs_os_type=raspi
             echo $"Using $CURR_ARCH"
         fi
         if [[ ${ARCHITECTURE} == "amd"* || ${ARCHITECTURE} == "x86_64" ]]; then
