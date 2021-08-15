@@ -517,10 +517,7 @@ function install_epicyon {
     epicyon_nginx_site=/etc/nginx/sites-available/$EPICYON_DOMAIN_NAME
     if [[ "$ONION_ONLY" == "no" ]]; then
         nginx_http_redirect "$EPICYON_DOMAIN_NAME" "index index.html"
-        { echo 'proxy_cache_path /var/www/cache levels=1:2 keys_zone=my_cache:10m max_size=10g';
-          echo '                 inactive=60m use_temp_path=off;';
-          echo '';
-          echo 'server {';
+        { echo 'server {';
           echo '  listen 443 ssl;';
           echo '  #listen [::]:443 ssl;';
           echo "  server_name $EPICYON_DOMAIN_NAME;";
@@ -549,8 +546,6 @@ function install_epicyon {
           echo '  location / {';
           echo '    proxy_http_version 1.1;';
           echo '    client_max_body_size 31M;';
-          echo "    proxy_set_header Upgrade \$http_upgrade;";
-          echo '    proxy_set_header Connection "upgrade";';
           echo "    proxy_set_header Host \$http_host;";
           echo "    proxy_set_header X-Real-IP \$remote_addr;";
           echo "    proxy_set_header X-Forward-For \$proxy_add_x_forwarded_for;";
@@ -566,20 +561,15 @@ function install_epicyon {
           echo '    proxy_redirect off;';
           echo '    proxy_request_buffering off;';
           echo '    proxy_buffering off;';
-	  echo '    location ~ ^/accounts/(avatars|headers)/(.*).(png|jpg|gif|webp|svg) {';
-	  echo '        expires 1d;';
-	  echo "        proxy_pass http://localhost:${EPICYON_PORT_INTERNAL};";
-	  echo '    }';
           echo "    proxy_pass http://localhost:${EPICYON_PORT_INTERNAL};";
           echo '  }';
           echo '}'; } >> "$epicyon_nginx_site"
     else
-        { echo 'proxy_cache_path /var/www/cache levels=1:2 keys_zone=my_cache:10m max_size=10g';
-          echo '                 inactive=60m use_temp_path=off;';
-          echo ''; } > "$epicyon_nginx_site"
+        echo '' > "$epicyon_nginx_site"
     fi
     { echo 'server {';
       echo "    listen 127.0.0.1:$EPICYON_ONION_PORT default_server;";
+      echo "    #listen [::]:$EPICYON_ONION_PORT default_server;";
       echo "    server_name $EPICYON_ONION_HOSTNAME;";
       echo ''; } >> "$epicyon_nginx_site"
     nginx_compress "$EPICYON_DOMAIN_NAME"
@@ -599,8 +589,6 @@ function install_epicyon {
       echo '  location / {';
       echo '    proxy_http_version 1.1;';
       echo '    client_max_body_size 31M;';
-      echo "    proxy_set_header Upgrade \$http_upgrade;";
-      echo '    proxy_set_header Connection "upgrade";';
       echo "    proxy_set_header Host \$http_host;";
       echo "    proxy_set_header X-Real-IP \$remote_addr;";
       echo "    proxy_set_header X-Forward-For \$proxy_add_x_forwarded_for;";
@@ -616,10 +604,6 @@ function install_epicyon {
       echo '    proxy_redirect off;';
       echo '    proxy_request_buffering off;';
       echo '    proxy_buffering off;';
-      echo '    location ~ ^/accounts/(avatars|headers)/(.*).(png|jpg|gif|webp|svg) {';
-      echo '        expires 1d;';
-      echo "        proxy_pass http://localhost:${EPICYON_PORT_INTERNAL};";
-      echo '    }';
       echo "    proxy_pass http://localhost:$EPICYON_PORT_INTERNAL;";
       echo '  }';
       echo '}'; } >> "$epicyon_nginx_site"
