@@ -110,7 +110,7 @@ function install_interactive_gogs {
         write_config_param "GOGS_DOMAIN_NAME" "$GOGS_DOMAIN_NAME"
     else
         function_check interactive_site_details
-        interactive_site_details git
+        interactive_site_details gogs
     fi
     APP_INSTALLED=1
 }
