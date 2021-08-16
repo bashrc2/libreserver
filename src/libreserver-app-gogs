@@ -485,6 +485,7 @@ function remove_gogs {
 
 function install_gogs {
     if [ ! "$GOGS_DOMAIN_NAME" ]; then
+	echo $"Missing gogs domain name"
         return
     fi
 
