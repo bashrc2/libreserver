@@ -1895,15 +1895,20 @@ function install_xmpp {
 
     increment_app_install_progress
 
+    registered_prosody_user=
     if [[ $ONION_ONLY != 'no' ]]; then
         prosody_register_str="prosodyctl register \"$MY_USERNAME\" \"$XMPP_ONION_HOSTNAME\" \"[password]\""
-        prosodyctl register "$MY_USERNAME" "$XMPP_ONION_HOSTNAME" "$XMPP_PASSWORD"
+        if prosodyctl register "$MY_USERNAME" "$XMPP_ONION_HOSTNAME" "$XMPP_PASSWORD"; then
+	    registered_prosody_user=1
+	fi
     else
         prosody_register_str="prosodyctl register \"$MY_USERNAME\" \"$DEFAULT_DOMAIN_NAME\" \"[password]\""
-        prosodyctl register "$MY_USERNAME" "$DEFAULT_DOMAIN_NAME" "$XMPP_PASSWORD"
+        if prosodyctl register "$MY_USERNAME" "$DEFAULT_DOMAIN_NAME" "$XMPP_PASSWORD"; then
+	    registered_prosody_user=1
+	fi
     fi
     # shellcheck disable=SC2181
-    if [ ! "$?" = "0" ]; then
+    if [ ! $registered_prosody_user ]; then
         echo ''
         echo ''
         systemctl status prosody -l
