@@ -1898,11 +1898,13 @@ function install_xmpp {
     registered_prosody_user=
     if [[ $ONION_ONLY != 'no' ]]; then
         prosody_register_str="prosodyctl register \"$MY_USERNAME\" \"$XMPP_ONION_HOSTNAME\" \"[password]\""
+        prosodyctl deluser "$MY_USERNAME@XMPP_ONION_HOSTNAME"
         if prosodyctl register "$MY_USERNAME" "$XMPP_ONION_HOSTNAME" "$XMPP_PASSWORD"; then
 	    registered_prosody_user=1
 	fi
     else
         prosody_register_str="prosodyctl register \"$MY_USERNAME\" \"$DEFAULT_DOMAIN_NAME\" \"[password]\""
+        prosodyctl deluser "$MY_USERNAME@$DEFAULT_DOMAIN_NAME"
         if prosodyctl register "$MY_USERNAME" "$DEFAULT_DOMAIN_NAME" "$XMPP_PASSWORD"; then
 	    registered_prosody_user=1
 	fi
