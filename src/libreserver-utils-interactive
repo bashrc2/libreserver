@@ -89,10 +89,14 @@ function interactive_site_details {
     while [ ! $SITE_DETAILS_COMPLETE ]
     do
         data=$(mktemp 2>/dev/null)
+	suggested_domain="$(grep "${site_name_upper}_DOMAIN_NAME" temp.cfg | awk -F '=' '{print $2}')"
+	if [ ! "$suggested_domain" ]; then
+	    suggested_domain="${site_name}.${DEFAULT_DOMAIN_NAME}"
+	fi
         dialog --backtitle "$SITE_BACKTITLE" \
                --title "$SITE_CONFIG_TITLE" \
                --form "$SITE_FORM_TEXT" 12 55 2 \
-               $"Domain:" 1 1 "$(grep "${site_name_upper}_DOMAIN_NAME" temp.cfg | awk -F '=' '{print $2}')" 1 16 33 40 ${site_name}.${DEFAULT_DOMAIN_NAME} \
+               $"Domain:" 1 1 "$suggested_domain" 1 16 33 40 \
                2> "$data"
         sel=$?
         case $sel in
