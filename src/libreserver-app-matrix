@@ -1,8 +1,8 @@
 #!/bin/bash
-#  _    _ _            ___                      
-# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
-# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # matrix server
 #
@@ -66,6 +66,8 @@ matrix_is_installing=
 
 MATRIX_FIREWALL_PORTS="${MATRIX_HTTP_PORT}"
 MATRIX_FIREWALL_MAX_CONNECTIONS=100
+
+matrix_user_added=
 
 matrix_variables=(ONION_ONLY
                   MY_USERNAME
@@ -755,6 +757,22 @@ function add_user_matrix {
     echo "0"
 }
 
+function add_user_matrix_with_retries {
+    new_matrix_username="$1"
+    new_matrix_password="$2"
+
+    matrix_user_added=
+    # shellcheck disable=SC2034
+    for i in {1..16}
+    do
+        if [[ $(add_user_matrix "${new_matrix_username}" "${new_matrix_password}" | tail -n 1) == "0" ]]; then
+            matrix_user_added=1
+            break
+        fi
+        sleep 2
+    done
+}
+
 function install_interactive_matrix {
     if [ ! "$ONION_ONLY" ]; then
         ONION_ONLY='no'
@@ -1428,16 +1446,7 @@ function install_matrix {
     increment_app_install_progress
 
     echo "Adding a matrix user for ${MY_USERNAME}"
-    matrix_user_added=
-    # shellcheck disable=SC2034
-    for i in {1..16}
-    do
-        if [[ $(add_user_matrix "${MY_USERNAME}" "${MATRIX_PASSWORD}" | tail -n 1) == "0" ]]; then
-            matrix_user_added=1
-            break
-        fi
-        sleep 2
-    done
+    add_user_matrix_with_retries "${MY_USERNAME}" "${MATRIX_PASSWORD}"
 
     if [ ! $matrix_user_added ]; then
         echo $'Failed to add matrix admin user';
