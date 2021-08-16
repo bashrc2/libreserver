@@ -769,10 +769,12 @@ function add_user_matrix {
     do
         if [[ $(add_user_matrix_base "${new_matrix_username}" "${new_matrix_password}" | tail -n 1) == "0" ]]; then
             matrix_user_added=1
+            echo "1"
             break
         fi
         sleep 2
     done
+    echo "0"
 }
 
 function install_interactive_matrix {
