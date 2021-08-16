@@ -103,6 +103,13 @@ function xmpp_setup_turn {
     else
         sed -i "s|turncredentials_secret.*|turncredentials_secret = \"$turncredentials_secret\";|g" /etc/prosody/prosody.cfg.lua
     fi
+    turncredentials_port=$(grep "tls-listening-port=" /etc/turnserver.conf | awk -F '=' '{print $2}')
+    if ! grep -q "turncredentials_port" /etc/prosody/prosody.cfg.lua; then
+        sed -i "/VirtualHost/a turncredentials_port = $turncredentials_port;" /etc/prosody/prosody.cfg.lua
+        sed -i "s|turncredentials_port.*|    turncredentials_port = $turncredentials_port;|g" /etc/prosody/prosody.cfg.lua
+    else
+        sed -i "s|turncredentials_port.*|turncredentials_port = $turncredentials_port;|g" /etc/prosody/prosody.cfg.lua
+    fi
 }
 
 function xmpp_i2p_virtualhost {
