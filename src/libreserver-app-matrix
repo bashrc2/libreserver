@@ -685,7 +685,7 @@ function matrix_enable_registration {
     fi
 }
 
-function add_user_matrix {
+function add_user_matrix_base {
     new_username="$1"
     new_user_password="$2"
     add_user_matrix_admin=''
@@ -757,15 +757,17 @@ function add_user_matrix {
     echo "0"
 }
 
-function add_user_matrix_with_retries {
+function add_user_matrix {
     new_matrix_username="$1"
     new_matrix_password="$2"
 
+    # yes, this is quite unpleasant. What else did you expect from Synapse?
+    
     matrix_user_added=
     # shellcheck disable=SC2034
     for i in {1..16}
     do
-        if [[ $(add_user_matrix "${new_matrix_username}" "${new_matrix_password}" | tail -n 1) == "0" ]]; then
+        if [[ $(add_user_matrix_base "${new_matrix_username}" "${new_matrix_password}" | tail -n 1) == "0" ]]; then
             matrix_user_added=1
             break
         fi
@@ -1446,7 +1448,7 @@ function install_matrix {
     increment_app_install_progress
 
     echo "Adding a matrix user for ${MY_USERNAME}"
-    add_user_matrix_with_retries "${MY_USERNAME}" "${MATRIX_PASSWORD}"
+    add_user_matrix "${MY_USERNAME}" "${MATRIX_PASSWORD}"
 
     if [ ! $matrix_user_added ]; then
         echo $'Failed to add matrix admin user';
