@@ -722,8 +722,10 @@ function add_user_xmpp {
     EMAIL_ADDRESS="$new_username@$DOMAIN_NAME"
 
     if [ ${#new_user_password} -eq 0 ]; then
+        prosodyctl deluser "$EMAIL_ADDRESS"
         prosodyctl adduser "$EMAIL_ADDRESS"
     else
+        prosodyctl deluser "${new_username}@${DOMAIN_NAME}"
         if ! prosodyctl register "$new_username" "$DOMAIN_NAME" "$new_user_password"; then
             exit 65
         fi
