@@ -31,7 +31,7 @@ lang=$2
 CONFIGURATION_FILE=/root/${PROJECT_NAME}.cfg
 
 ONION_ONLY='no'
-site_domain=${PROJECT_NAME}.net
+site_domain=${PROJECT_NAME}.org
 site_onion_port=8149
 rootdir=
 
