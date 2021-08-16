@@ -770,7 +770,7 @@ function add_user_matrix {
         if [[ $(add_user_matrix_base "${new_matrix_username}" "${new_matrix_password}" | tail -n 1) == "0" ]]; then
             matrix_user_added=1
             echo "0"
-            break
+            return
         fi
         sleep 2
     done
