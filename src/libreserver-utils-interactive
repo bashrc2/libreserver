@@ -92,7 +92,7 @@ function interactive_site_details {
         dialog --backtitle "$SITE_BACKTITLE" \
                --title "$SITE_CONFIG_TITLE" \
                --form "$SITE_FORM_TEXT" 12 55 2 \
-               $"Domain:" 1 1 "$(grep "${site_name_upper}_DOMAIN_NAME" temp.cfg | awk -F '=' '{print $2}')" 1 16 33 40 \
+               $"Domain:" 1 1 "$(grep "${site_name_upper}_DOMAIN_NAME" temp.cfg | awk -F '=' '{print $2}')" 1 16 33 40 ${site_name}.${DEFAULT_DOMAIN_NAME} \
                2> "$data"
         sel=$?
         case $sel in
