@@ -1949,6 +1949,12 @@ function configure_dkim {
         echo $'WARN: Could not create DKIM private key'
         return
     fi
+    if [ -f /etc/exim4/dkim_dnskey.txt ]; then
+	if ! grep -q "Domain: ${HOSTNAME}" /etc/exim4/dkim_dnskey.txt; then
+	    # regenerate if the hostname changes
+	    rm /etc/exim4/dkim_dnskey.txt
+	fi
+    fi
     if [ ! -f /etc/exim4/dkim_dnskey.txt ]; then
         cd /etc/exim4 || return
         DKIM_PUBKEY=$(openssl rsa -in dkim_privkey.pem -pubout -outform der 2>/dev/null | openssl base64 -A)
