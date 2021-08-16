@@ -1,8 +1,8 @@
 #!/bin/bash
-#  _    _ _            ___                      
-# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
-# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # Email functions
 #
@@ -1950,10 +1950,10 @@ function configure_dkim {
         return
     fi
     if [ -f /etc/exim4/dkim_dnskey.txt ]; then
-	if ! grep -q "Domain: ${HOSTNAME}" /etc/exim4/dkim_dnskey.txt; then
-	    # regenerate if the hostname changes
-	    rm /etc/exim4/dkim_dnskey.txt
-	fi
+        if ! grep -q "Domain: ${HOSTNAME}" /etc/exim4/dkim_dnskey.txt; then
+            # regenerate if the hostname changes
+            rm /etc/exim4/dkim_dnskey.txt
+        fi
     fi
     if [ ! -f /etc/exim4/dkim_dnskey.txt ]; then
         cd /etc/exim4 || return
@@ -1986,17 +1986,26 @@ function configure_dkim {
           echo "Destination: \"v=DMARC1; p=reject; adkim=r; aspf=r; fo=1; rua=mailto:admin@${HOSTNAME}\""; } > /etc/exim4/dkim_dnskey.txt
         create_dmarc_file=1
     fi
+    restart_email_server=
     if [ -d /etc/exim4/conf.d/main ]; then
         if [ ! -f /etc/exim4/conf.d/main/00_local_macros ]; then
             { echo 'DKIM_CANON = relaxed';
               echo "DKIM_SELECTOR = ${PROJECT_NAME}";
               echo "DKIM_DOMAIN = ${HOSTNAME}";
               echo 'DKIM_FILE = /etc/exim4/dkim_privkey.pem'; } > /etc/exim4/conf.d/main/00_local_macros
-            update-exim4.conf.template -r
-            update-exim4.conf
-            dpkg-reconfigure --frontend noninteractive exim4-config
-            systemctl restart exim4
+            restart_email_server=1
+        else
+            if ! grep -q "DKIM_DOMAIN = ${HOSTNAME}" /etc/exim4/conf.d/main/00_local_macros; then
+                sed -i "s|DKIM_DOMAIN =.*|DKIM_DOMAIN = ${HOSTNAME}|g" /etc/exim4/conf.d/main/00_local_macros
+                restart_email_server=1
+            fi
         fi
+    fi
+    if [ $restart_email_server ]; then
+        update-exim4.conf.template -r
+        update-exim4.conf
+        dpkg-reconfigure --frontend noninteractive exim4-config
+        systemctl restart exim4
     fi
     if [ -f /etc/exim4/dkim_dnskey.txt ]; then
         local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
