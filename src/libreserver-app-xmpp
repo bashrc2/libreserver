@@ -727,6 +727,7 @@ function add_user_xmpp {
     else
         prosodyctl deluser "${new_username}@${DOMAIN_NAME}"
         if ! prosodyctl register "$new_username" "$DOMAIN_NAME" "$new_user_password"; then
+	    echo "Failed to add prosody user: prosodyctl register $new_username $DOMAIN_NAME [password]"
             exit 65
         fi
     fi
