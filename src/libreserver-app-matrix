@@ -901,9 +901,7 @@ function upgrade_matrix {
         install_turn
     fi
 
-    if [ ! -f /usr/bin/matrix-reactivate-user ]; then
-        create_matrix_user_reactivation_script
-    fi
+    create_matrix_user_reactivation_script
 
     # log_file config parameter no longer used
     if grep -q 'log_file' "${MATRIX_DATA_DIR}/homeserver.yaml"; then
