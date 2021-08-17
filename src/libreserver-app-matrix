@@ -628,6 +628,41 @@ function create_matrix_user_removal_script {
     chmod +x $matrix_remove_user
 }
 
+function create_matrix_user_reactivation_script {
+    read_config_param ONION_ONLY
+    read_config_param MY_USERNAME
+    read_config_param MATRIX_DOMAIN_NAME
+
+    curl_command='curl'
+    homebase="https://$MATRIX_DOMAIN_NAME"
+    if [[ "$ONION_ONLY" != 'no' ]]; then
+        curl_command='torsocks curl'
+        homebase="http://$(cat /var/lib/tor/hidden_service_matrix/hostname)"
+    fi
+
+    matrix_domain=$MATRIX_DOMAIN_NAME
+    if [[ "$ONION_ONLY" != 'no' ]]; then
+        matrix_domain=$(cat /var/lib/tor/hidden_service_matrix/hostname)
+    fi
+
+    matrix_reactivate_user=/usr/bin/matrix-reactivate-user
+    { echo '#!/bin/bash';
+      echo "cd $MATRIX_DATA_DIR || exit 1";
+      echo "reactivate_username=\$1";
+      echo "reactivate_password=\$2";
+      echo "if [ ! \"\$reactivate_username\" ]; then";
+      echo '    exit 1';
+      echo 'fi';
+      echo "ADMIN=\"@${MY_USERNAME}:$MATRIX_DOMAIN_NAME\"";
+      echo 'BUSY="pragma busy_timeout=20000"';
+      echo "BUFFER=\$(sqlite3 homeserver.db \"\$BUSY;select token from access_tokens where user_id like '\$ADMIN' order by id desc limit 1;\")";
+      echo "TOKEN=\$(echo \$BUFFER|awk '{print \$2}')";
+      echo 'set -x';
+      echo "${curl_command} --header \"Authorization: Bearer ${TOKEN}\" -XPUT -d '{\"deactivated\": false, \"password\": \"\${reactivate_password}\"}' ${homebase}/_synapse/admin/v2/users/%40\${reactivate_username}%3A${matrix_domain}"; } > $matrix_reactivate_user
+
+    chmod +x $matrix_reactivate_user
+}
+
 function create_matrix_whois_script {
     read_config_param ONION_ONLY
     read_config_param MY_USERNAME
@@ -721,6 +756,11 @@ function add_user_matrix_base {
       echo 'exit 0'; } > /usr/bin/register-matrix-user
     chmod +x /usr/bin/register-matrix-user
 
+    create_matrix_user_reactivation_script
+    if [ "$matrix_reactivate_user" ]; then
+        $matrix_reactivate_user "${new_matrix_username}" "${new_matrix_password}"
+    fi
+
     register_result_file="/etc/matrix/.registeruser_${new_username}"
     if [ -f "$register_result_file" ]; then
         rm "$register_result_file"
@@ -762,7 +802,7 @@ function add_user_matrix {
     new_matrix_password="$2"
 
     # yes, this is quite unpleasant. What else did you expect from Synapse?
-    
+
     matrix_user_added=
     # shellcheck disable=SC2034
     for i in {1..16}
@@ -859,6 +899,10 @@ function upgrade_matrix {
 
     if [ ! -f /etc/turnserver.conf ]; then
         install_turn
+    fi
+
+    if [ ! -f /usr/bin/matrix-reactivate-user ]; then
+        create_matrix_user_reactivation_script
     fi
 
     # log_file config parameter no longer used
@@ -1457,6 +1501,7 @@ function install_matrix {
         exit 87
     fi
     create_matrix_user_removal_script
+    create_matrix_user_reactivation_script
     matrix_expire_old_posts
 
     increment_app_install_progress
@@ -1495,6 +1540,12 @@ function install_matrix {
     increment_app_install_progress
 
     set_matrix_trusted_key_servers
+
+    increment_app_install_progress
+
+    if [ ! -f /usr/bin/matrix-reactivate-user ]; then
+        create_matrix_user_reactivation_script
+    fi
 
     increment_app_install_progress
 
