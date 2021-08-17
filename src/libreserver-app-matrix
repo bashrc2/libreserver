@@ -650,6 +650,7 @@ function create_matrix_user_reactivation_script {
       echo "cd $MATRIX_DATA_DIR || exit 1";
       echo "reactivate_username=\$1";
       echo "reactivate_password=\$2";
+      echo "reactivate_password=\${reactivate_password%\$'\n'}";
       echo "if [ ! \"\$reactivate_username\" ]; then";
       echo '    exit 1';
       echo 'fi';
@@ -658,7 +659,7 @@ function create_matrix_user_reactivation_script {
       echo "BUFFER=\$(sqlite3 homeserver.db \"\$BUSY;select token from access_tokens where user_id like '\$ADMIN' order by id desc limit 1;\")";
       echo "TOKEN=\$(echo \$BUFFER|awk '{print \$2}')";
       echo 'set -x';
-      echo "${curl_command} --header \"Authorization: Bearer \${TOKEN}\" -XPUT -d '{\"deactivated\": false, \"password\": \"\${reactivate_password}\"}' ${homebase}/_synapse/admin/v2/users/%40\${reactivate_username}%3A${matrix_domain}"; } > $matrix_reactivate_user
+      echo "${curl_command} --header \"Authorization: Bearer \${TOKEN}\" -XPUT -d \"{\\\"deactivated\\\": false, \\\"password\\\": \\\"\${reactivate_password}\\\"}\" ${homebase}/_synapse/admin/v2/users/%40\${reactivate_username}%3A${matrix_domain}"; } > $matrix_reactivate_user
 
     chmod +x $matrix_reactivate_user
 }
