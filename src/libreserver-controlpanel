@@ -1271,7 +1271,7 @@ Enter a static local IP address for this system.\\n\\nIt will typically be ${IPv
                   echo 'iface eth0 inet static';
                   echo "    address ${NEW_STATIC_IP}";
                   echo '    netmask 255.255.255.0';
-                  echo "    gateway ${NEW_STATIC_GATEWAY}"; } >> /etc/network/interfaces.d/static
+                  echo "    gateway ${NEW_STATIC_GATEWAY}"; } > /etc/network/interfaces.d/static
             else
                 # wifi network
                 wifi_settings
