@@ -257,6 +257,11 @@ if [ -f "$dest_dir/downloads/images.txt" ]; then
 fi
 chown -R www-data:www-data "$dest_dir"
 
+if [ ! -f "/etc/ssl/certs/${site_domain}.dhparam" ]; then
+    echo "Generating dhparams for ${site_domain}"
+    "${PROJECT_NAME}-dhparam" -h "${site_domain}" --fast yes
+fi
+
 if [ ! "$rootdir" ]; then
     systemctl restart nginx
 fi
