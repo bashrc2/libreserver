@@ -429,11 +429,11 @@ if [ -d /etc/prosody ]; then
                         ONION_ONLY=$(cat "/root/${PROJECT_NAME}.cfg" | grep "ONION_ONLY=" | awk -F '=' '{print $2}')
                     fi
 
-                    tlspath="--tls-ca-path=\"/etc/ssl/certs\""
+                    tlspath="--tls-ca-path=\"/etc/ssl/certs\" --tls"
                     if [[ "$ONION_ONLY" != 'no' ]]; then
                         tlspath=
                     fi
-                    echo "${MESSAGE}" | /usr/bin/sendxmpp -u notification -p "${notification_user_password}" -j localhost -o ${local_domain} $tlspath --message-type=headline -n -t -s ${PROJECT_NAME} ${ADMIN_USERNAME}@${local_domain}
+                    echo "${MESSAGE}" | /usr/bin/sendxmpp -u notification -p "${notification_user_password}" -j localhost -o ${local_domain} $tlspath --message-type=headline -n -s ${PROJECT_NAME} ${ADMIN_USERNAME}@${local_domain}
                 fi
             fi
             prosodyctl deluser "notification@$local_domain"

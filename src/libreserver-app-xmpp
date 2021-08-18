@@ -1745,7 +1745,8 @@ function install_xmpp {
     # which prevents sendxmpp from working.
     # Use the prosody project's version of the package instead
     echo deb http://packages.prosody.im/debian $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list
-    wget https://prosody.im/files/prosody-debian-packages.key -O- | sudo apt-key add -
+    # wget https://prosody.im/files/prosody-debian-packages.key -O- | sudo apt-key add -
+    wget -O /usr/share/keyrings/prosody.gpg https://prosody.im/files/prosody-debian-packages.key
     apt-get update
     INSTALL_PACKAGES prosody
     if [ ! -f /usr/bin/prosody ]; then
