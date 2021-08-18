@@ -405,9 +405,9 @@ function restore_directory_from_usb {
 
 function backup_database_to_usb {
     database_name=$1
-    local_database_dir=/root/temp${1}data
+    local_database_dir=/root/temp${database_name}data
     backup_database_local_usb "${database_name}"
-    if [ ! -f "${local_database_dir}/${1}.sql" ]; then
+    if [ ! -f "${local_database_dir}/${database_name}.sql" ]; then
         echo $"Error backing up ${1} database to ${local_database_dir}/${1}.sql"
         exit 62
     fi
