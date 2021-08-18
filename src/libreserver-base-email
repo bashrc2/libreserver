@@ -636,7 +636,7 @@ function email_client {
       echo 'set pgp_timeout=1800';
       echo '';
       echo '# automatically sign and encrypt with PGP/MIME';
-      echo 'set pgp_autosign         # autosign all outgoing mails';
+      echo '# set pgp_autosign         # autosign all outgoing mails';
       echo 'set pgp_autoencrypt      # Try to encrypt automatically';
       echo 'set pgp_replyencrypt     # autocrypt replies to crypted';
       echo 'set pgp_replysign        # autosign replies to signed';
