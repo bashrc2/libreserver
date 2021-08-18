@@ -1741,7 +1741,17 @@ function install_xmpp {
 
     increment_app_install_progress
 
+    # NOTE: there is a bug in the packaged version 0.11.9 of prosodyctl
+    # which prevents sendxmpp from working.
+    # Use the prosody project's version of the package instead
+    echo deb http://packages.prosody.im/debian $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list
+    wget https://prosody.im/files/prosody-debian-packages.key -O- | sudo apt-key add -
+    apt-get update
     INSTALL_PACKAGES prosody
+    if [ ! -f /usr/bin/prosody ]; then
+	echo '$prosody was not installed'
+	exit 6
+    fi
 
     increment_app_install_progress
 

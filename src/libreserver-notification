@@ -1,8 +1,8 @@
 #!/bin/bash
-#  _    _ _            ___                      
-# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
-# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # Sends a notification to the administrator user
 #
@@ -422,17 +422,17 @@ if [ -d /etc/prosody ]; then
                 if [ -f /usr/bin/sendxmpp ]; then
                     kill_sendxmpp_process
 
-		    # is this an onion only server?
-		    ONION_ONLY='no'
-		    if grep -q "ONION_ONLY=" "/root/${PROJECT_NAME}.cfg"; then
-			# shellcheck disable=SC2002
-			ONION_ONLY=$(cat "/root/${PROJECT_NAME}.cfg" | grep "ONION_ONLY=" | awk -F '=' '{print $2}')
-		    fi
+                    # is this an onion only server?
+                    ONION_ONLY='no'
+                    if grep -q "ONION_ONLY=" "/root/${PROJECT_NAME}.cfg"; then
+                        # shellcheck disable=SC2002
+                        ONION_ONLY=$(cat "/root/${PROJECT_NAME}.cfg" | grep "ONION_ONLY=" | awk -F '=' '{print $2}')
+                    fi
 
-		    tlspath="--tls-ca-path=\"/etc/ssl/certs\""
-		    if [[ "$ONION_ONLY" != 'no' ]]; then
-			tlspath=
-		    fi
+                    tlspath="--tls-ca-path=\"/etc/ssl/certs\""
+                    if [[ "$ONION_ONLY" != 'no' ]]; then
+                        tlspath=
+                    fi
                     echo "${MESSAGE}" | /usr/bin/sendxmpp -u notification -p "${notification_user_password}" -j localhost -o ${local_domain} $tlspath --message-type=headline -n -t -s ${PROJECT_NAME} ${ADMIN_USERNAME}@${local_domain}
                 fi
             fi
