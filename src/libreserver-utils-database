@@ -256,12 +256,7 @@ function backup_databases_script_header {
           echo "EMAIL='$MY_EMAIL_ADDRESS'";
           echo '';
           echo "MYSQL_PASSWORD=\$(${PROJECT_NAME}-pass -u root -a mariadb)";
-          echo 'umask 0077';
-          echo '';
-          echo '# exit if we are backing up to friends servers';
-          echo "if [ -f $FRIENDS_SERVERS_LIST ]; then";
-          echo '  exit 1';
-          echo 'fi'; } > /usr/bin/backupdatabases
+          echo 'umask 0077'; } > /usr/bin/backupdatabases
         chmod 600 /usr/bin/backupdatabases
         chmod +x /usr/bin/backupdatabases
 
