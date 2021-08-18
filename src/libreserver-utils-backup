@@ -1,8 +1,8 @@
 #!/bin/bash
-#  _    _ _            ___                      
-# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
-# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # Backup functions
 #
@@ -81,7 +81,7 @@ function configure_backup_key {
     printf '%%Assuan%%\nsocket=/dev/shm/S.dirmngr\n' > ~/.gnupg/S.dirmngr
 
     if [ ! "$MY_NAME" ]; then
-	MY_NAME="$MY_USERNAME"
+        MY_NAME="$MY_USERNAME"
     fi
 
     BACKUP_KEY_EXISTS=$(gpg_key_exists "root" "${MY_NAME} (backup key)" | tail -n 1)
@@ -91,13 +91,13 @@ function configure_backup_key {
 
     # construct email address if it doesn't exist
     if [[ "${MY_EMAIL_ADDRESS}" == *"@" ]]; then
-	if [[ "${HOSTNAME}" == *".local" ]]; then
-	    if [ -f /var/lib/tor/hidden_service_email/hostname ]; then
-		MY_EMAIL_ADDRESS="${MY_USERNAME}@$(cat /var/lib/tor/hidden_service_email/hostname)"
-	    fi
-	else
-	    MY_EMAIL_ADDRESS="${MY_USERNAME}@${HOSTNAME}"
-	fi
+        if [[ "${HOSTNAME}" == *".local" ]]; then
+            if [ -f /var/lib/tor/hidden_service_email/hostname ]; then
+                MY_EMAIL_ADDRESS="${MY_USERNAME}@$(cat /var/lib/tor/hidden_service_email/hostname)"
+            fi
+        else
+            MY_EMAIL_ADDRESS="${MY_USERNAME}@${HOSTNAME}"
+        fi
     fi
 
     gpg_agent_setup root
@@ -114,22 +114,22 @@ function configure_backup_key {
           echo "Name-Email: ${MY_EMAIL_ADDRESS}";
           echo "Name-Comment: backup key";
           echo 'Expire-Date: 0';
-	  echo '%commit';
-	  echo '%echo gpg backup key generated'; } > "/home/${MY_USERNAME}/gpg-genkey.conf"
+          echo '%commit';
+          echo '%echo gpg backup key generated'; } > "/home/${MY_USERNAME}/gpg-genkey.conf"
         cat "/home/${MY_USERNAME}/gpg-genkey.conf"
         chown "${MY_USERNAME}":"${MY_USERNAME}" "/home/${MY_USERNAME}/gpg-genkey.conf"
 
-	gpg_dir="/home/${MY_USERNAME}/.gnupg"
-	if [ -d ${gpg_dir} ]; then
-	    echo "Set backup key permissions on ${gpg_dir}"
-	    find ${gpg_dir} -type d -exec chmod 700 {} \;
-	    find ${gpg_dir} -type f -exec chmod 600 {} \;
-	fi
+        gpg_dir="/home/${MY_USERNAME}/.gnupg"
+        if [ -d ${gpg_dir} ]; then
+            echo "Set backup key permissions on ${gpg_dir}"
+            find ${gpg_dir} -type d -exec chmod 700 {} \;
+            find ${gpg_dir} -type f -exec chmod 600 {} \;
+        fi
 
-	echo $'Backup key does not exist. Creating it.'
-	passStr="${BACKUP_DUMMY_PASSWORD}"
-	echo "echo \"passphrase\" | su -m root -c \"gpg --homedir ${gpg_dir} --batch --passphrase-fd 0 --full-gen-key /home/${MY_USERNAME}/gpg-genkey.conf\" - \"${MY_USERNAME}\""
-	echo "${passStr}" | su -m root -c "gpg --homedir ${gpg_dir} --batch --passphrase-fd 0 --full-gen-key /home/${MY_USERNAME}/gpg-genkey.conf" - "${MY_USERNAME}"
+        echo $'Backup key does not exist. Creating it.'
+        passStr="${BACKUP_DUMMY_PASSWORD}"
+        echo "echo \"passphrase\" | su -m root -c \"gpg --homedir ${gpg_dir} --batch --passphrase-fd 0 --full-gen-key /home/${MY_USERNAME}/gpg-genkey.conf\" - \"${MY_USERNAME}\""
+        echo "${passStr}" | su -m root -c "gpg --homedir ${gpg_dir} --batch --passphrase-fd 0 --full-gen-key /home/${MY_USERNAME}/gpg-genkey.conf" - "${MY_USERNAME}"
         chown -R "${MY_USERNAME}":"${MY_USERNAME}" "${gpg_dir}"
 
         echo $'Checking that the Backup key was created'
@@ -242,14 +242,19 @@ function backup_database_local_usb {
     fi
     echo $"Obtaining ${1} database backup"
     database_file_extension='sql'
+    local_database_filename="${local_database_dir}/${1}.${database_file_extension}"
     if [ $USE_POSTGRESQL ]; then
         USE_POSTGRESQL=
         cd /etc/postgresql || exit 67
         # shellcheck disable=2024
-        sudo -u postgres pg_dump "${1}" > "${local_database_dir}/${1}.${database_file_extension}"
+        sudo -u postgres pg_dump "${1}" > "${local_database_filename}"
+    else
+        if [ ! -f "${local_database_filename}" ]; then
+            mysqldump --password="$DATABASE_PASSWORD" "${1}" > "${local_database_filename}"
+        fi
     fi
-    if [ -f "${local_database_dir}/${1}.${database_file_extension}" ]; then
-        if [ ! -s "${local_database_dir}/${1}.${database_file_extension}" ]; then
+    if [ -f "${local_database_filename}" ]; then
+        if [ ! -s "${local_database_filename}" ]; then
             echo $"${1} database could not be saved"
             rm -rf "${local_database_dir}"
             umount "$USB_MOUNT"
@@ -258,7 +263,7 @@ function backup_database_local_usb {
             exit 68
         fi
     else
-        echo $"${1} database could not be dumped"
+        echo $"${1} database could not be dumped ${local_database_filename}"
         rm -rf "${local_database_dir}"
         umount "$USB_MOUNT"
         rm -rf "$USB_MOUNT"
@@ -316,7 +321,7 @@ function backup_tor_config_to_usb {
     app_name="$1"
     backup_tor_dir="/var/lib/tor/hidden_service_${app_name}"
     if [ ! -d "${backup_tor_dir}" ]; then
-	return
+        return
     fi
     backup_directory_to_usb "${backup_tor_dir}" "${app_name}-tor"
 }
@@ -460,7 +465,7 @@ function backup_database_remote {
             exit 57
         fi
     else
-        echo $"${1} database could not be dumped"
+        echo $"${1} database could not be dumped ${local_database_dir}/${1}.${database_file_extension}"
         rm -rf "${local_database_dir}"
         # Send a warning email
         "${PROJECT_NAME}-notification" -m $"Unable to dump ${1} database" -s $"${PROJECT_NAME} backup to friends"
