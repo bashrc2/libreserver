@@ -570,6 +570,16 @@ function install_lychee {
     function_check add_ddns_domain
     add_ddns_domain "$LYCHEE_DOMAIN_NAME"
 
+    # Ensure that the database gets backed up locally, if remote
+    # backups are not being used
+    function_check backup_databases_script_header
+    backup_databases_script_header
+
+    increment_app_install_progress
+
+    function_check backup_database_local
+    backup_database_local lychee
+
     set_completion_param "lychee domain" "$LYCHEE_DOMAIN_NAME"
     APP_INSTALLED=1
 }
