@@ -91,22 +91,22 @@ function xmpp_setup_turn {
     fi
 
     if ! grep -q "turncredentials_host" /etc/prosody/prosody.cfg.lua; then
-        sed -i "/VirtualHost/a turncredentials_host = \"$domain\";" /etc/prosody/prosody.cfg.lua
-        sed -i "s|turncredentials_host|    turncredentials_host|g" /etc/prosody/prosody.cfg.lua
+        echo "turncredentials_host = \"$domain\";" >> /etc/prosody/prosody.cfg.lua
+        sed -i "s|turncredentials_host|turncredentials_host|g" /etc/prosody/prosody.cfg.lua
     else
         sed -i "s|turncredentials_host.*|turncredentials_host = \"$domain\";|g" /etc/prosody/prosody.cfg.lua
     fi
     turncredentials_secret=$(grep "static-auth-secret=" /etc/turnserver.conf | awk -F '=' '{print $2}')
     if ! grep -q "turncredentials_secret" /etc/prosody/prosody.cfg.lua; then
-        sed -i "/VirtualHost/a turncredentials_secret = \"$turncredentials_secret\";" /etc/prosody/prosody.cfg.lua
-        sed -i "s|turncredentials_secret.*|    turncredentials_secret = \"$turncredentials_secret\";|g" /etc/prosody/prosody.cfg.lua
+        echo "turncredentials_secret = \"$turncredentials_secret\";" >> /etc/prosody/prosody.cfg.lua
+        sed -i "s|turncredentials_secret.*|turncredentials_secret = \"$turncredentials_secret\";|g" /etc/prosody/prosody.cfg.lua
     else
         sed -i "s|turncredentials_secret.*|turncredentials_secret = \"$turncredentials_secret\";|g" /etc/prosody/prosody.cfg.lua
     fi
     turncredentials_port=$(grep "tls-listening-port=" /etc/turnserver.conf | awk -F '=' '{print $2}')
     if ! grep -q "turncredentials_port" /etc/prosody/prosody.cfg.lua; then
-        sed -i "/VirtualHost/a turncredentials_port = $turncredentials_port;" /etc/prosody/prosody.cfg.lua
-        sed -i "s|turncredentials_port.*|    turncredentials_port = $turncredentials_port;|g" /etc/prosody/prosody.cfg.lua
+        echo "turncredentials_port = $turncredentials_port;" >> /etc/prosody/prosody.cfg.lua
+        sed -i "s|turncredentials_port.*|turncredentials_port = $turncredentials_port;|g" /etc/prosody/prosody.cfg.lua
     else
         sed -i "s|turncredentials_port.*|turncredentials_port = $turncredentials_port;|g" /etc/prosody/prosody.cfg.lua
     fi
