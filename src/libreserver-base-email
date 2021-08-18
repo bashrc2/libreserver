@@ -652,14 +652,6 @@ function email_client {
       echo 'macro pager \ef "|/usr/local/bin/view-x-face<enter>" "display the X-Face included in the mail"';
     } > /etc/Muttrc
 
-    if [[ "$ONION_ONLY" != 'no' ]]; then
-        # On onion only systems email is onion router anyway, with its
-        # own encryption system, so we don't need the additional pgp layer
-        # except perhaps for some additional confidence
-        sed -i 's|set pgp_autoencrypt|unset pgp_autoencrypt|g' /etc/Muttrc
-        sed -i 's|set pgp_autosign|unset pgp_autosign|g' /etc/Muttrc
-    fi
-
     # For viewing long URLs
     # shellcheck disable=SC2028
     echo 'REGEXP (((http|https|ftp|gopher)|mailto)[.:][^ >"\t]*|www\.[-a-z0-9.]+)[^ .,;\t>">\):]' > "/home/$MY_USERNAME/.urlview"
