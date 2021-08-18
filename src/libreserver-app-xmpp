@@ -1589,7 +1589,7 @@ function xmpp_create_config {
       echo '        "muc_mam";';
       echo '        "pep";';
       echo '        "muc_defaults";';
-      echo '        "muc_moderate";';
+      echo '        "muc_moderation";';
       echo '        "muc_limits";';
       echo '        "filter_words";';
       echo '        "muc_block_pm";';
