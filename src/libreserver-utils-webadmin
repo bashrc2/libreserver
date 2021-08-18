@@ -152,9 +152,9 @@ function web_admin_background_color {
         fi
     else
         if [[ "$bg_color" == *'dddddd' ]]; then
-            sed -i "s|WEBADMIN_VISITED_COLOR=|WEBADMIN_VISITED_COLOR=${visited_light}|" "/root/${PROJECT_NAME}.cfg"
+            sed -i "s|WEBADMIN_VISITED_COLOR=.*|WEBADMIN_VISITED_COLOR=${visited_light}|" "/root/${PROJECT_NAME}.cfg"
         else
-            sed -i "s|WEBADMIN_VISITED_COLOR=|WEBADMIN_VISITED_COLOR=${visited_dark}|" "/root/${PROJECT_NAME}.cfg"
+            sed -i "s|WEBADMIN_VISITED_COLOR=.*|WEBADMIN_VISITED_COLOR=${visited_dark}|" "/root/${PROJECT_NAME}.cfg"
         fi
     fi
     apps_border=$(grep "WEBADMIN_APPS_BORDER_COLOR=" "/root/${PROJECT_NAME}.cfg" | awk -F '=' '{print $2}')
