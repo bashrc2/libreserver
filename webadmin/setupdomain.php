@@ -37,7 +37,7 @@ if (isset($_POST['setupdomain'])) {
     if(filter_string('default_domain_name')) {
         $install_domain = htmlspecialchars($_POST['default_domain_name']);
 
-        if (preg_match('/^[a-z\d_\.\-]{4,128}$/i', $install_domain)) {
+        if (preg_match('/^[a-z_.-]{4,128}$/i', $install_domain)) {
             $domain_file = fopen(".temp_domain.txt", "w") or die("Unable to write to domain file");
             fwrite($domain_file, $install_domain);
             fclose($domain_file);

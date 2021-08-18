@@ -39,7 +39,7 @@ if (isset($_POST['submitbackuppassword'])) {
             $pass_confirm = trim(htmlspecialchars($_POST['backup_password_confirm']));
             if ($pass === $pass_confirm) {
                 if (strpos($pass, ' ') === false) {
-                    if (preg_match('/^[a-z\A-Z\d_]{8,512}$/', $pass)) {
+                    if (preg_match('/^[a-zA-Z0-9_]{8,512}$/', $pass)) {
                         $settings_file = fopen("/tmp/backup_password.txt", "w") or die("Unable to write to backup_password file");
                         fwrite($settings_file, $pass);
                         fclose($settings_file);
@@ -75,10 +75,10 @@ if (isset($_POST['submitbackuppassword'])) {
 
 if (isset($_POST['submitrestorepassword'])) {
     $pass = trim(htmlspecialchars($_POST['backup_password']));
-    if(strlen($pass) > 5) {
-        if(strlen($pass) < 1024) {
+    if (strlen($pass) > 5) {
+        if (strlen($pass) < 1024) {
             if (strpos($pass, ' ') === false) {
-                if (preg_match('/^[a-z\A-Z\d_]{8,512}$/', $pass)) {
+                if (preg_match('/^[a-zA-Z0-9_]{8,512}$/', $pass)) {
                     $settings_file = fopen("/tmp/backup_password.txt", "w") or die("Unable to write to backup_password file");
                     fwrite($settings_file, $pass);
                     fclose($settings_file);

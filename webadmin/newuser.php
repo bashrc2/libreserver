@@ -35,7 +35,7 @@ if (isset($_POST['submitnewuser'])) {
     if(filter_string('username')) {
         $username = htmlspecialchars($_POST['username']);
 
-        if (!preg_match('/^[a-z\d_]{3,32}$/', $username)) {
+        if (!preg_match('/^[a-z_]{3,32}$/', $username)) {
             $output_filename = "new_user_invalid.html";
         }
         else {

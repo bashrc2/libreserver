@@ -35,7 +35,7 @@ if (isset($_POST['changedomain'])) {
     if(filter_string('default_domain_name')) {
         $change_domain = htmlspecialchars($_POST['default_domain_name']);
 
-        if (preg_match('/^[a-z\d_\.\-]{4,128}$/i', $change_domain)) {
+        if (preg_match('/^[a-z_.-]{4,128}$/i', $change_domain)) {
             $domain_file = fopen(".default_domain_temp.txt", "w") or die("Unable to write to default_domain file");
             fwrite($domain_file, $change_domain);
             fclose($domain_file);
