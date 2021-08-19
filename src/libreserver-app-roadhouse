@@ -462,8 +462,6 @@ function install_roadhouse {
       echo "\$db_data = 'roadhouse';";
       echo "\$db_type = '0'; // an integer. 0 or unset for mysql, 1 for postgres";
       echo '';
-      echo "define('NOMADIC',1);";
-      echo '';
       echo "App::\$config['system']['timezone'] = 'Europe/London';";
       echo '';
       echo "App::\$config['system']['baseurl'] = 'https://${ROADHOUSE_DOMAIN_NAME}';";
