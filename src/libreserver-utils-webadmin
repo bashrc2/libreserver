@@ -421,7 +421,8 @@ function web_admin_create_users {
     # what notification methods are available?
     can_notify_by_xmpp=
     if [ -d /etc/prosody ]; then
-        can_notify_by_xmpp=1
+	# TODO re-enable this when xmpp notifications are fixed
+        can_notify_by_xmpp=
     fi
     can_notify_by_matrix=
     if [ -d /etc/matrix ]; then
