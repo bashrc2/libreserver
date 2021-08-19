@@ -535,7 +535,7 @@ function install_roadhouse {
     chown -R www-data:www-data "$ROADHOUSE_PATH/doc"
 
     if ! grep -q 'Zotlabs' /etc/crontab; then
-        echo "*/10 * * * *  www-data cd $ROADHOUSE_PATH; /usr/bin/php Zotlabs/Daemon/Master.php Cron > /dev/null 2>&1" >> /etc/crontab
+        echo "*/10 * * * *  www-data cd $ROADHOUSE_PATH; /usr/bin/php Zotlabs/Daemon/Run.php Cron > /dev/null 2>&1" >> /etc/crontab
     fi
 
     increment_app_install_progress
