@@ -104,7 +104,6 @@ For details see:|Podrobnosti naleznete v části:
 For further information see the website at https://libreserver.org|Další informace naleznete na adrese https://libreserver.org
 For the initial login use username: admin password admin|Pro počáteční přihlášení použijte uživatelské jméno: admin admin admin
 For the Jabber ID enter the email address from your LibreServer user settings|Pro Jabber ID zadejte e-mailovou adresu z uživatelských nastavení LibreServer
-For the password use the password which you initially wrote down or stored during the setup of the LibreServer system|Pro heslo použijte heslo, které jste původně zapsali nebo uložili během instalace systému LibreServer
 Forward port 80 and 443 from your internet router|Vpřed port 80 a 443 z vašeho internetového směrovače
 Forward the following ports from your internet router:|Posílejte z vašeho internetového směrovače následující porty:
 Forward the port 64738 from your internet router|Předat port 64738 z vašeho internetového směrovače
@@ -459,14 +458,12 @@ You should then be able to log in and start using the app. You might also want t
 Disabling new registrations|Zakázání nových registrací
 Once you have set up the server with however many users are needed you can then disable any new registrations by selecting Turtl on the LibreServer web interface and going to the settings screen.|Jakmile budete mít server nastaven tak, aby bylo zapotřebí mnoho uživatelů, pak můžete zakázat všechny nové registrace tím, že vyberete Turtl na webovém rozhraní LibreServer a přejdete na obrazovku nastavení.
 This is similar to Hubzilla but with a reduced range of features concentrating exclusively upon social networking with the latest version of the Zot protocol. Nomadic identity is supported, so to can export your channels and import them on other servers if necessary, without losing followers.|Toto je podobné jako Hubzilla, ale s omezeným rozsahem funkcí, které se soustředí výlučně na sociální sítě s nejnovější verzí protokolu Zot. Nomadická identita je podporována, takže můžete exportovat kanály a importovat je na jiných serverech, pokud to bude nutné, aniž byste museli ztrácet následovníky.
-Zap also has sophisticated privacy controls which enable you to decide exactly how you wish to interact with other users and what information of yours they can view.|Společnost Zap má také sofistikované ovládací prvky ochrany osobních údajů, které vám umožňují přesně rozhodnout, jak chcete komunikovat s ostatními uživateli a jaké informace si můžete prohlédnout.
 The first account you register will be the administrator user, and from there you can go to the admin settings and disable new registrations if needed.|Prvým účtem, který zaregistrujete, bude uživatel správce a odtud můžete přejít na nastavení administrátora a v případě potřeby zakázat nové registrace.
 To find other users to follow select "directory" from the drop down menu at the top right of the screen and set "this site only" to "no".|Chcete-li najít další uživatele, kteří budou následovat vybrat "adresář" z rozbalovací nabídky v pravém horním rohu obrazovky a nastavte "pouze tento web" na "ne".
 There is an Android app available called Nomad.|K dispozici je aplikace pro Android s názvem Nomad.
 End-to-end encrypted sync of calendar and contacts between devices|Konečná a šifrovaná synchronizace kalendáře a kontaktů mezi zařízeními
 Secure, end-to-end encrypted and journaled personal information cloud synchronization for Android and the desktop, supporting contacts and calendars|Zabezpečená, synchronizovaná cloudová synchronizace osobních informací se zakončenou koncovou synchronizací pro Android a pracovní plochu, podpora kontaktů a kalendářů
 Nomadic social network server|Nomadický server sociální sítě
-Zap is a full featured social network application running under the Zot6 protocol. It provides enhanced privacy modes and identity/content mirroring across multiple servers ("nomadic identity").|Zap je plnohodnotná aplikace sociální sítě běžící pod protokolem Zot6. Poskytuje vylepšené režimy ochrany soukromí a zrcadlení identity / obsahu na více serverech ("nomadní identita").
 Change background|Změnit pozadí
 Diagnostics|Diagnostika
 Please wait while your app is installing|Počkejte prosím, než aplikace nainstaluje

@@ -459,14 +459,12 @@ You should then be able to log in and start using the app. You might also want t
 Disabling new registrations|تعطيل التسجيلات الجديدة
 Once you have set up the server with however many users are needed you can then disable any new registrations by selecting Turtl on the LibreServer web interface and going to the settings screen.|وبمجرد الانتهاء من إعداد الخادم مع وجود حاجة إلى العديد من المستخدمين ، يمكنك عندئذ تعطيل أي تسجيلات جديدة عن طريق اختيار Turtl على واجهة الويب LibreServer والانتقال إلى شاشة الإعدادات.
 This is similar to Hubzilla but with a reduced range of features concentrating exclusively upon social networking with the latest version of the Zot protocol. Nomadic identity is supported, so to can export your channels and import them on other servers if necessary, without losing followers.|هذا يشبه Hubzilla ولكن مع مجموعة محدودة من الميزات التي تركز حصرا على الشبكات الاجتماعية مع أحدث إصدار من بروتوكول ZOT. يتم دعم الهوية البدوية ، لذلك يمكنك تصدير قنواتك واستيرادها على خوادم أخرى إذا لزم الأمر ، دون أن تفقد أي متابعين.
-Zap also has sophisticated privacy controls which enable you to decide exactly how you wish to interact with other users and what information of yours they can view.|يحتوي Zap أيضًا على عناصر تحكم متطورة في الخصوصية والتي تمكنك من تحديد كيفية التفاعل مع المستخدمين الآخرين وتحديد المعلومات التي يمكنهم مشاهدتها.
 The first account you register will be the administrator user, and from there you can go to the admin settings and disable new registrations if needed.|الحساب الأول الذي تقوم بالتسجيل به سيكون مستخدم المسؤول ، ومن هناك يمكنك الانتقال إلى إعدادات المسؤول وتعطيل التسجيلات الجديدة إذا لزم الأمر.
 To find other users to follow select "directory" from the drop down menu at the top right of the screen and set "this site only" to "no".|للعثور على مستخدمين آخرين لمتابعة "الدليل" المحدد من القائمة المنسدلة في أعلى يمين الشاشة وتعيين "هذا الموقع فقط" إلى "لا".
 There is an Android app available called Nomad.|هناك تطبيق Android متاح يسمى Nomad.
 End-to-end encrypted sync of calendar and contacts between devices|المزامنة المشفرة بين نهاية التقويم والتقويم بين الأجهزة
 Secure, end-to-end encrypted and journaled personal information cloud synchronization for Android and the desktop, supporting contacts and calendars|تزامن سحابي لمعلوماتك الشخصية الآمنة والمحفوظة من Google إلى Android وسطح المكتب ، مع دعم جهات الاتصال والتقاويم
 Nomadic social network server|خادم الشبكة الاجتماعية الرحل
-Zap is a full featured social network application running under the Zot6 protocol. It provides enhanced privacy modes and identity/content mirroring across multiple servers ("nomadic identity").|Zap هو تطبيق شبكة اجتماعية مميز كامل يعمل بموجب بروتوكول Zot6. وهو يوفر وسائل محسنة للخصوصية ومراعاة للهوية / المحتوى عبر خوادم متعددة ("هوية بدوية").
 Change background|غير الخلفية
 Diagnostics|التشخيص
 Please wait while your app is installing|الرجاء الانتظار حتى يتم تثبيت تطبيقك

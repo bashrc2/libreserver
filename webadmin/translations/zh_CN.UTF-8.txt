@@ -459,14 +459,12 @@ You should then be able to log in and start using the app. You might also want t
 Disabling new registrations|禁用新注册
 Once you have set up the server with however many users are needed you can then disable any new registrations by selecting Turtl on the LibreServer web interface and going to the settings screen.|一旦您设置了服务器，但需要很多用户，您可以通过选择LibreServer Web界面上的Turtl并进入设置屏幕来禁用任何新注册。
 This is similar to Hubzilla but with a reduced range of features concentrating exclusively upon social networking with the latest version of the Zot protocol. Nomadic identity is supported, so to can export your channels and import them on other servers if necessary, without losing followers.|这与Hubzilla类似，但功能范围缩小，专注于使用最新版Zot协议的社交网络。支持游牧身份，因此可以导出您的频道并在必要时将其导入其他服务器，而不会丢失关注者。
-Zap also has sophisticated privacy controls which enable you to decide exactly how you wish to interact with other users and what information of yours they can view.|Zap还拥有先进的隐私控制功能，使您可以确切地决定如何与其他用户进行互动以及他们可以查看您的哪些信息。
 The first account you register will be the administrator user, and from there you can go to the admin settings and disable new registrations if needed.|您注册的第一个帐户将是管理员用户，从那里您可以转到管理员设置并在需要时禁用新注册。
 To find other users to follow select "directory" from the drop down menu at the top right of the screen and set "this site only" to "no".|要查找其他用户，请从屏幕右上角的下拉菜单中选择“目录”，并将“仅此站点”设置为“否”。
 There is an Android app available called Nomad.|有一个名为Nomad的Android应用程序。
 End-to-end encrypted sync of calendar and contacts between devices|设备之间的日历和联系人的端到端加密同步
 Secure, end-to-end encrypted and journaled personal information cloud synchronization for Android and the desktop, supporting contacts and calendars|适用于Android和桌面的安全，端到端加密和记录的个人信息云同步，支持联系人和日历
 Nomadic social network server|游牧社交网络服务器
-Zap is a full featured social network application running under the Zot6 protocol. It provides enhanced privacy modes and identity/content mirroring across multiple servers ("nomadic identity").|Zap是一个在Zot6协议下运行的全功能社交网络应用程序。它在多个服务器上提供增强的隐私模式和身份/内容镜像（“游牧身份”）。
 Change background|换背景
 Diagnostics|诊断
 Please wait while your app is installing|请等待您的应用安装

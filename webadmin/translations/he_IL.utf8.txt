@@ -459,14 +459,12 @@ You should then be able to log in and start using the app. You might also want t
 Disabling new registrations|השבתת רישומים חדשים
 Once you have set up the server with however many users are needed you can then disable any new registrations by selecting Turtl on the LibreServer web interface and going to the settings screen.|לאחר שהגדרת את השרת עם כמה משתמשים רבים נדרשים אתה יכול להשבית כל רישומים חדשים על ידי בחירת Turtl בממשק האינטרנט LibreServer ו הולך למסך ההגדרות.
 This is similar to Hubzilla but with a reduced range of features concentrating exclusively upon social networking with the latest version of the Zot protocol. Nomadic identity is supported, so to can export your channels and import them on other servers if necessary, without losing followers.|זה דומה Hubzilla אבל עם מגוון מופחת של תכונות להתרכז אך ורק ברשת החברתית עם הגרסה העדכנית ביותר של פרוטוקול זוט. זהות נומדית נתמכת, כך שניתן לייצא את הערוצים שלך ולייבא אותם בשרתים אחרים במידת הצורך, מבלי לאבד את העוקבים.
-Zap also has sophisticated privacy controls which enable you to decide exactly how you wish to interact with other users and what information of yours they can view.|לזאפ יש גם פקדי פרטיות מתוחכמים המאפשרים לך להחליט בדיוק איך אתה רוצה לתקשר עם משתמשים אחרים ואיזה מידע שלך הם יכולים להציג.
 The first account you register will be the administrator user, and from there you can go to the admin settings and disable new registrations if needed.|החשבון הראשון שתירשם יהיה המשתמש המנהל, ומשם אתה יכול ללכת להגדרות מנהל ולהשבית רישומים חדשים במידת הצורך.
 To find other users to follow select "directory" from the drop down menu at the top right of the screen and set "this site only" to "no".|כדי למצוא משתמשים אחרים כדי לעקוב אחר בחר "ספרייה" מהתפריט הנפתח בפינה השמאלית העליונה של המסך ולהגדיר "אתר זה בלבד" ל "לא".
 There is an Android app available called Nomad.|יש אפליקציית Android זמינה בשם Nomad.
 End-to-end encrypted sync of calendar and contacts between devices|סינכרון מוצפן מקצה לקצה של לוח שנה ואנשי קשר בין התקנים
 Secure, end-to-end encrypted and journaled personal information cloud synchronization for Android and the desktop, supporting contacts and calendars|סינכרון ענן מאובטחת, מקצה לקצה, מסונכרן ויישומון של מידע אישי עבור Android ושולחן העבודה, תמיכה ביומנים ובלוחות שנה
 Nomadic social network server|Nomadic שרת רשת חברתית
-Zap is a full featured social network application running under the Zot6 protocol. It provides enhanced privacy modes and identity/content mirroring across multiple servers ("nomadic identity").|Zap הוא יישום רשת חברתית מובלט מלא הפועל תחת פרוטוקול Zot6. הוא מספק מצבי פרטיות משופרים וזהות / שיקוף תוכן על פני מספר שרתים ("זהות נוודית").
 Change background|שנה רקע
 Diagnostics|אבחון
 Please wait while your app is installing|המתן בזמן שהאפליקציה שלך מותקנת

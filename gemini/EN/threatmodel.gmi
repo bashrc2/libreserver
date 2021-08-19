@@ -90,7 +90,7 @@ You can add Tor bridges via the settings screen of the web interface.
 
 ## Harrassment
 
-An adversary sends you repeated unwanted correspondence, to intimidate, annoy or manipulate (psychological warfare). It is possible to block addresses or domains for email and XMPP systems from the blocking controls within the web interface settings screen. Systems like Hubzilla and Zap have more sophisticated controls over how other users can interact with you, such as who can reply to posts. Blocked emails are dropped at the email server level. An adversary can repeatedly change their address, but domain based blocking may limit their ability to mutate.
+An adversary sends you repeated unwanted correspondence, to intimidate, annoy or manipulate (psychological warfare). It is possible to block addresses or domains for email and XMPP systems from the blocking controls within the web interface settings screen. Blocked emails are dropped at the email server level. An adversary can repeatedly change their address, but domain based blocking may limit their ability to mutate.
 
 Advanced adversaries with financial resources may be able to rapidly spin up throwaway VMs or containers on different domains and this is hard to defend against. On the blocking controls screen there is also the ability to block communications containing certain words, and this could help in such cases.
 

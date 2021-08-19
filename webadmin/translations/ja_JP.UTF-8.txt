@@ -459,14 +459,12 @@ You should then be able to log in and start using the app. You might also want t
 Disabling new registrations|新しい登録を無効にする
 Once you have set up the server with however many users are needed you can then disable any new registrations by selecting Turtl on the LibreServer web interface and going to the settings screen.|多くのユーザーが必要なサーバーをセットアップしたら、LibreServer WebインターフェイスでTurtlを選択し、設定画面に移動して新しい登録を無効にすることができます。
 This is similar to Hubzilla but with a reduced range of features concentrating exclusively upon social networking with the latest version of the Zot protocol. Nomadic identity is supported, so to can export your channels and import them on other servers if necessary, without losing followers.|これはHubzillaに似ていますが、Zotプロトコルの最新バージョンとのソーシャルネットワーキングに集中している機能の範囲が狭くなっています。ノマディックアイデンティティがサポートされているため、必要に応じてチャンネルをエクスポートして他のサーバーにインポートすることができ、フォロワーを失うこともありません。
-Zap also has sophisticated privacy controls which enable you to decide exactly how you wish to interact with other users and what information of yours they can view.|Zapには高度なプライバシー管理機能があり、他のユーザーとのやりとりの仕方や、自分が閲覧できる情報を正確に決めることができます。
 The first account you register will be the administrator user, and from there you can go to the admin settings and disable new registrations if needed.|登録する最初のアカウントは管理者ユーザーになります。そこから管理者設定に移動し、必要に応じて新しい登録を無効にすることができます。
 To find other users to follow select "directory" from the drop down menu at the top right of the screen and set "this site only" to "no".|画面の右上にあるドロップダウンメニューから「ディレクトリ」を選択し、「このサイトのみ」を「いいえ」に設定します。
 There is an Android app available called Nomad.|NomadというAndroidアプリがあります。
 End-to-end encrypted sync of calendar and contacts between devices|デバイス間のカレンダーと連絡先のエンドツーエンドの暗号化された同期
 Secure, end-to-end encrypted and journaled personal information cloud synchronization for Android and the desktop, supporting contacts and calendars|連絡先とカレンダーをサポートし、安全なエンドツーエンドの暗号化とジャーナル化された個人情報のクラウド同期をAndroidおよびデスクトップに提供
 Nomadic social network server|ノマディックソーシャルネットワークサーバー
-Zap is a full featured social network application running under the Zot6 protocol. It provides enhanced privacy modes and identity/content mirroring across multiple servers ("nomadic identity").|Zapは、Zot6プロトコルで動作するフル機能のソーシャルネットワークアプリケーションです。複数のサーバー間で強化されたプライバシーモードとID /コンテンツのミラーリング（「ノマディックアイデンティティ」）を提供します。
 Change background|背景を変更する
 Diagnostics|診断
 Please wait while your app is installing|あなたのアプリのインストール中にお待ちください
