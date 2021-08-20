@@ -1,14 +1,12 @@
 <img src="https://gitlab.com/bashrc2/libreserver/-/raw/bullseye/img/logo.png?raw=true" width="70%"/>
 
-Once imagined as a space of liberation, the internet today is a rabble of oppressive corporations and governments. Much of its empowering potential has faded, or been trampled by hate mobs. But perhaps there is a way forward.
+The internet today is too centralized. It's controlled by a few companies who don't give a damn about you or your community. Their abuses of power are many. But it doesn't have to be this way.
 
-What if you had your own personal server, and then you wouldn't need to deal with the corporate monopolies? Or you could run a small server and help other people too. They could be family, people on your street, a club you're in or a software project.
+Running a personal server for you and your friends or family can be one way to regain agency within an otherwise dehumanizing system. Such servers can federate together to create community oases within the information desert. Growing and connecting in a decentralized way, rather than building a single monolithic platform for the next Silicon Valley tyrant to monopolize.
 
 LibreServer is a small server system which enables you to run your own internet services independently. It includes all of the things you'd expect such as email, chat, VoIP, wikis, blogs, social networks, and more. You can run LibreServer on an old laptop or single board computer. You can also run it on an onion address.
 
 Reclaim the internet, one server at a time.
-
-XMPP MUC: **support@chat.libreserver.org**
 
 Matrix room: **#libreserver:matrix.libreserver.org**
 
