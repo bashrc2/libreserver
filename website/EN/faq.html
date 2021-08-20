@@ -95,41 +95,6 @@
       </details>
 
       <details>
-        <summary><h3>Why LibreServer and not FreedomBox?</h3></summary>
-        <p>When the project began in late 2013 the FreedomBox project seemed to be going nowhere, and was only designed to work with the DreamPlug hardware. There was some new hardware out - the Beaglebone Black - which could run Debian and was also a free hardware design so seemed more appropriate. Hence the name "LibreServer", being like FreedomBox but on a Beaglebone.</p>
-        <p>
-          Right now the FreedomBox project's fortunes have turned around. It has more developers and an increasing catalog of conference talks - in part because the changing ambient politics have made it more relevant to more people whereas back in 2010 people tended to largely trust "big tech" companies. So is there still a need for something like LibreServer? There probably is, mainly because it includes things which are not necessarily packaged for Debian, whereas FreedomBox as a pure blend has to stick to official Debian packages and security defaults which are not necessarily well aligned with <a href="./threatmodel.html">self-hosted deployments</a>.
-        </p>
-
-        <p>
-          Here are the main similarities and differences between the two projects:
-        </p>
-
-        <h4>Similarities</h4>
-        <ul>
-          <li>Build system based on freedom-maker</li>
-          <li>Supports the use of Tor onion addresses to access websites</li>
-          <li>Typically runs on ARM single board computers</li>
-          <li>Both projects aim to increase independence and privacy</li>
-          <li>Both projects aim to make running your own server at home easy</li>
-          <li>Both projects include wiki, blog, VoIP and file sync</li>
-          <li>Both projects enable easy installation and removal of apps</li>
-          <li>Both are typically "bare metal" rather than running as VMs or containers</li>
-          <li>Both can use the companion app for Android</li>
-        </ul>
-
-        <h4>Differences</h4>
-        <ul>
-          <li>FreedomBox is a Debian pure blend. LibreServer is not</li>
-          <li>LibreServer is not aiming for mass market yet. "Hacker grade" is about all which can be expected given current resources</li>
-          <li>LibreServer only supports Free Software. FreedomBox includes some closed binary boot blobs for certain ARM boards</li>
-          <li>LibreServer includes some software not yet in the official Debian repos</li>
-          <li>LibreServer includes an email server set up for use with GPG by default</li>
-          <li>LibreServer implements additional STIG tests to lock down the system security whereas FreedomBox sticks to Debian default settings</li>
-        </ul>
-      </details>
-
-      <details>
         <summary><h3>Why not use full disk encryption?</h3></summary>
         <p>Full disk encryption helps with laptop security, but on a server uptime is expected to be close to 100% and full disk encryption only provides protection when the machine is powered off and unused. This means that such encryption provides very little useful security for a server.</p>
         <p>
