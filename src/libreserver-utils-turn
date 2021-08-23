@@ -1,11 +1,11 @@
 #!/bin/bash
-#  _    _ _            ___                      
-# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
-# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # TURN server functions
-# NOTE: the turnserver package is deprecated in Debian 10 
+# NOTE: the turnserver package is deprecated in Debian 10
 #
 # License
 # =======
@@ -49,7 +49,7 @@ function install_turn {
     firewall_add turn ${TURN_PORT}
     firewall_add turntls ${TURN_TLS_PORT}
     firewall_add_range turnrange 49152 65535 udp
-    
+
     curr_ipv4=$(get_external_ipv4_address)
     { echo "listening-port=${TURN_PORT}";
       echo "tls-listening-port=${TURN_TLS_PORT}";
@@ -81,7 +81,7 @@ function install_turn {
       echo '#no-stun';
       echo 'total-quota=100';
       echo 'no-multicast-peers'; } > /etc/turnserver.conf
-    
+
     sed -i "s|#TURNSERVER_ENABLED.*|TURNSERVER_ENABLED=1|g" /etc/default/coturn
     sed -i "s|TURNSERVER_ENABLED.*|TURNSERVER_ENABLED=1|g" /etc/default/coturn
 
