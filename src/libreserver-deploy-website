@@ -196,6 +196,7 @@ if [ ! "$rootdir" ]; then
       echo '        }';
       echo '}';
       echo '';
+      echo '# Start of TURN Server';
       echo 'server {';
       echo '    listen 127.0.0.1:8110 default_server;';
       echo "    server_name ${site_onion_domain};";
