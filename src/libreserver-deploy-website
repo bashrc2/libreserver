@@ -31,7 +31,11 @@ lang=$2
 CONFIGURATION_FILE=/root/${PROJECT_NAME}.cfg
 
 ONION_ONLY='no'
-site_domain=${PROJECT_NAME}.org
+if [[ "$HOSTNAME" == *'.'* && "$HOSTNAME" != *'.local' ]]; then
+    site_domain=${HOSTNAME}
+else
+    site_domain=${PROJECT_NAME}.org
+fi
 site_onion_port=8149
 rootdir=
 
