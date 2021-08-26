@@ -49,13 +49,13 @@ pre {
 }
 
 a:link {
-    color: red;
+    color: var(--main-bg-color);
     text-decoration: none;
     cursor: pointer;
 }
 
 a:visited {
-    color: darkred;
+    color: var(--main-bg-color);
     text-decoration: none;
 }
 
