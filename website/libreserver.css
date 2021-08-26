@@ -3,6 +3,7 @@
 :root {
     --main-fg-color: #282c37;
     --main-bg-color: #dddddd;
+    --link-color: red;
     --font-size: 12px;
     --line-spacing: 240%;
     --mobile-font-size: 30px;
@@ -49,7 +50,7 @@ pre {
 }
 
 a:link {
-    color: var(--main-bg-color);
+    color: var(--link-color);
     text-decoration: none;
     cursor: pointer;
 }
@@ -167,6 +168,12 @@ td {
     width: 30%;
     border: 0px solid black;
     text-align: center;
+}
+
+td a:link {
+    color: var(--main-bg-color);
+    text-decoration: none;
+    cursor: pointer;
 }
 
 a:hover {
