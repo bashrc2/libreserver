@@ -1,8 +1,8 @@
 #!/bin/bash
-#  _    _ _            ___                      
-# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
-# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # Setup functions
 #
@@ -106,12 +106,12 @@ function configure_cpu_monitor {
 }
 
 function support_256_colours {
-    if ! grep -q 'xterm-256color' /etc/skel/.profile; then
+    if ! grep -q 'export TERM=xterm-256color' /etc/skel/.profile; then
         echo '' >> /etc/skel/.profile
         echo 'export TERM=xterm-256color' >> /etc/skel/.profile
     fi
 
-    if ! grep -q 'xterm-256color' "/home/$MY_USERNAME/.profile"; then
+    if ! grep -q 'export TERM=xterm-256color' "/home/$MY_USERNAME/.profile"; then
         echo '' >> "/home/$MY_USERNAME/.profile"
         echo 'export TERM=xterm-256color' >> "/home/$MY_USERNAME/.profile"
         chown "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME/.profile"
