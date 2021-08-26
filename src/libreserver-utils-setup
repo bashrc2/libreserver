@@ -110,11 +110,20 @@ function support_256_colours {
         echo '' >> /etc/skel/.profile
         echo 'export TERM=xterm-256color' >> /etc/skel/.profile
     fi
+    if ! grep -q 'export TERM=xterm-256color' /etc/skel/.bashrc; then
+        echo '' >> /etc/skel/.bashrc
+        echo 'export TERM=xterm-256color' >> /etc/skel/.bashrc
+    fi
 
     if ! grep -q 'export TERM=xterm-256color' "/home/$MY_USERNAME/.profile"; then
         echo '' >> "/home/$MY_USERNAME/.profile"
         echo 'export TERM=xterm-256color' >> "/home/$MY_USERNAME/.profile"
         chown "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME/.profile"
+    fi
+    if ! grep -q 'export TERM=xterm-256color' "/home/$MY_USERNAME/.bashrc"; then
+        echo '' >> "/home/$MY_USERNAME/.bashrc"
+        echo 'export TERM=xterm-256color' >> "/home/$MY_USERNAME/.bashrc"
+        chown "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME/.bashrc"
     fi
 }
 
