@@ -51,6 +51,7 @@ pre {
 a:link {
     color: red;
     text-decoration: none;
+    cursor: pointer;
 }
 
 a:visited {
@@ -169,6 +170,7 @@ td {
 }
 
 a:hover {
+    cursor: pointer;
     filter: brightness(150%);
 }
 
