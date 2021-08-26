@@ -550,7 +550,7 @@ function email_client {
     if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
         return
     fi
-    INSTALL_PACKAGES lynx abook urlview mutt
+    INSTALL_PACKAGES lynx abook urlview neomutt
 
     if [ ! -f /etc/Muttrc ]; then
         echo $"ERROR: Mutt does not appear to have installed. $CHECK_MESSAGE"

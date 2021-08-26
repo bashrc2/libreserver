@@ -816,7 +816,7 @@ function show_your_email_address {
 
 function run_email_client {
     gpg_fix_searching_for_keys "$USER"
-    mutt
+    neomutt
 }
 
 function menu_top_level {
