@@ -440,6 +440,10 @@ function create_matrix_nginx_config {
           echo '';
           echo '  index index.html;';
           echo '';
+          echo '  location /.well-known/acme-challenge {';
+	  echo "    proxy_pass http://localhost:${MATRIX_PORT};";
+          echo '  }';
+          echo '';
           echo '  location /_matrix {'; } >> $matrix_nginx_site
         function_check nginx_limits
         nginx_limits "${MATRIX_DOMAIN_NAME}" '15m'
@@ -505,6 +509,10 @@ function create_matrix_nginx_config {
       echo '  error_log /dev/null;';
       echo '';
       echo "  root ${MATRIX_DATA_DIR}/media_store;";
+      echo '';
+      echo '  location /.well-known/acme-challenge {';
+      echo "    proxy_pass http://localhost:${MATRIX_PORT};";
+      echo '  }';
       echo '';
       echo '  location /_matrix {'; } >> $matrix_nginx_site
     function_check nginx_limits
