@@ -492,7 +492,7 @@ function install_element {
     echo '  }' >> "$element_nginx_site"
     echo '}' >> "$element_nginx_site"
 
-    sed '/Content-Security-Policy/d' "$element_nginx_site"
+    sed -i '/Content-Security-Policy/d' "$element_nginx_site"
     sed -i 's| DENY;| SAMEORIGIN;|g' "$element_nginx_site"
     sed -i 's|limit_conn conn_limit_per_ip.*|limit_conn conn_limit_per_ip 50;|g' "$element_nginx_site"
     sed -i 's|limit_req zone.*|limit_req zone=req_limit_per_ip burst=50 nodelay;|g' "$element_nginx_site"
