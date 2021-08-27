@@ -454,7 +454,8 @@ function create_matrix_nginx_config {
           echo '}';
           echo '';
           echo 'server {';
-          echo "  listen ${MATRIX_HTTP_PORT};";
+          echo "  listen ${MATRIX_HTTP_PORT} ssl;";
+          echo '    port_in_redirect off;';
           echo "  server_name ${MATRIX_DOMAIN_NAME};";
           echo '';
           echo '  # Security'; } >> $matrix_nginx_site
