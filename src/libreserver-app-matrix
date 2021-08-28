@@ -101,11 +101,14 @@ function matrix_configure_homeserver_yaml {
     fi
 
     matrix_domain="${MATRIX_DOMAIN_NAME}"
+    matrix_http_prefix='https'
     if [[ $ONION_ONLY != "no" ]]; then
         matrix_domain=$(cat /var/lib/tor/hidden_service_matrix/hostname)
+	matrix_http_prefix='http'
     fi
 
     { echo "server_name: \"${matrix_domain}\"";
+      echo "public_baseurl: \"${matrix_http_prefix}://${matrix_domain}\"";
       echo 'pid_file: /etc/matrix/homeserver.pid';
       echo 'enable_search: False';
       echo 'enable_metrics: False';
@@ -440,6 +443,12 @@ function create_matrix_nginx_config {
           echo '';
           echo '  index index.html;';
           echo '';
+	  echo '  location /.well-known/matrix/client {';
+	  echo "    return 200 '{\"m.homeserver\": {\"base_url\": \"https://${MATRIX_DOMAIN_NAME}\"}}';";
+	  echo '    default_type application/json;';
+	  echo '    add_header Access-Control-Allow-Origin *;';
+	  echo '  }';
+	  echo '';
 	  echo "  location ~* ^(\/_matrix|\/_synapse\/client) {";
 	  echo "    proxy_pass http://localhost:${MATRIX_PORT};";
 	  echo "    proxy_set_header X-Forwarded-For \$remote_addr;";
@@ -471,6 +480,12 @@ function create_matrix_nginx_config {
           echo '';
           echo '  index index.html;';
           echo '';
+	  echo '  location /.well-known/matrix/client {';
+	  echo "    return 200 '{\"m.homeserver\": {\"base_url\": \"https://${MATRIX_DOMAIN_NAME}\"}}';";
+	  echo '    default_type application/json;';
+	  echo '    add_header Access-Control-Allow-Origin *;';
+	  echo '  }';
+          echo '';
 	  echo "  location ~* ^(\/_matrix|\/_synapse\/client) {";
 	  echo "    proxy_pass http://localhost:${MATRIX_PORT};";
 	  echo "    proxy_set_header X-Forwarded-For \$remote_addr;";
@@ -497,6 +512,12 @@ function create_matrix_nginx_config {
       echo '  error_log /dev/null;';
       echo '';
       echo "  root ${MATRIX_DATA_DIR}/media_store;";
+      echo '';
+      echo '  location /.well-known/matrix/client {';
+      echo "    return 200 '{\"m.homeserver\": {\"base_url\": \"https://${MATRIX_ONION_HOSTNAME}\"}}';";
+      echo '    default_type application/json;';
+      echo '    add_header Access-Control-Allow-Origin *;';
+      echo '  }';
       echo '';
       echo "  location ~* ^(\/_matrix|\/_synapse\/client) {";
       echo "    proxy_pass http://localhost:${MATRIX_PORT};";
