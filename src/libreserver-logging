@@ -303,7 +303,7 @@ if [ -d /etc/postgresql ]; then
     systemctl restart postgresql
 fi
 if [ -f /etc/turnserver.conf ]; then
-    systemctl restart turn
+    systemctl restart coturn
 fi
 if [ -d /etc/mosquitto ]; then
     systemctl restart mosquitto

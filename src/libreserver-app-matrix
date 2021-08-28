@@ -1230,7 +1230,7 @@ function upgrade_matrix {
         return
     fi
 
-    systemctl stop turn
+    systemctl stop coturn
     systemctl stop matrix
 
     function_check set_repo_commit
@@ -1259,7 +1259,7 @@ function upgrade_matrix {
         chmod 755 /etc/ssl/certs/${MATRIX_DOMAIN_NAME}.dhparam
     fi
 
-    systemctl start turn
+    systemctl start coturn
     systemctl start matrix
 
     export TMPDIR=/tmp
@@ -1271,7 +1271,7 @@ function upgrade_matrix {
 function backup_local_matrix {
     source_directory=/etc/matrix
     if [ -d $source_directory ]; then
-        systemctl stop turn
+        systemctl stop coturn
         systemctl stop matrix
 
         function_check backup_directory_to_usb
@@ -1281,14 +1281,14 @@ function backup_local_matrix {
             backup_directory_to_usb $source_directory matrixdata
         fi
 
-        systemctl start turn
+        systemctl start coturn
         systemctl start matrix
     fi
 }
 
 function restore_local_matrix {
     if [ -d /etc/matrix ]; then
-        systemctl stop turn
+        systemctl stop coturn
         systemctl stop matrix
 
         temp_restore_dir=/root/tempmatrix
@@ -1330,7 +1330,7 @@ function restore_local_matrix {
             fi
         fi
 
-        systemctl start turn
+        systemctl start coturn
         systemctl start matrix
     fi
 }
@@ -1725,7 +1725,7 @@ function install_matrix {
 
     increment_app_install_progress
 
-    systemctl restart turn
+    systemctl restart coturn
 
     increment_app_install_progress
 
