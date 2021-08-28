@@ -104,7 +104,7 @@ function matrix_configure_homeserver_yaml {
     matrix_http_prefix='https'
     if [[ $ONION_ONLY != "no" ]]; then
         matrix_domain=$(cat /var/lib/tor/hidden_service_matrix/hostname)
-	matrix_http_prefix='http'
+        matrix_http_prefix='http'
     fi
 
     { echo "server_name: \"${matrix_domain}\"";
@@ -450,20 +450,20 @@ function create_matrix_nginx_config {
           echo '';
           echo '  index index.html;';
           echo '';
-	  echo '  location /.well-known/matrix/client {';
-	  echo "    return 200 '{\"m.homeserver\": {\"base_url\": \"${matrix_baseurl}\"}}';";
-	  echo '    default_type application/json;';
-	  echo '    add_header Access-Control-Allow-Origin *;';
-	  echo '  }';
-	  echo '';
-	  echo "  location ~* ^(\/_matrix|\/_synapse\/client) {";
-	  echo "    proxy_pass http://localhost:${MATRIX_PORT};";
-	  echo "    proxy_set_header X-Forwarded-For \$remote_addr;";
-	  echo "    proxy_set_header X-Forwarded-Proto \$scheme;";
-	  echo "    proxy_set_header Host \$host;";
-	  echo '    client_max_body_size 50M;';
-	  echo '  }';
-	  echo '}';
+          echo '  location /.well-known/matrix/client {';
+          echo "    return 200 '{\"m.homeserver\": {\"base_url\": \"${matrix_baseurl}\"}}';";
+          echo '    default_type application/json;';
+          echo '    add_header Access-Control-Allow-Origin *;';
+          echo '  }';
+          echo '';
+          echo "  location ~* ^(\/_matrix|\/_synapse\/client) {";
+          echo "    proxy_pass http://localhost:${MATRIX_PORT};";
+          echo "    proxy_set_header X-Forwarded-For \$remote_addr;";
+          echo "    proxy_set_header X-Forwarded-Proto \$scheme;";
+          echo "    proxy_set_header Host \$host;";
+          echo '    client_max_body_size 50M;';
+          echo '  }';
+          echo '}';
           echo '';
           echo 'server {';
           echo "  listen ${MATRIX_HTTP_PORT} ssl;";
@@ -487,24 +487,24 @@ function create_matrix_nginx_config {
           echo '';
           echo '  index index.html;';
           echo '';
-	  echo '  location /.well-known/matrix/client {';
-	  echo "    return 200 '{\"m.homeserver\": {\"base_url\": \"${matrix_baseurl}\"}}';";
-	  echo '    default_type application/json;';
-	  echo '    add_header Access-Control-Allow-Origin *;';
-	  echo '  }';
+          echo '  location /.well-known/matrix/client {';
+          echo "    return 200 '{\"m.homeserver\": {\"base_url\": \"${matrix_baseurl}\"}}';";
+          echo '    default_type application/json;';
+          echo '    add_header Access-Control-Allow-Origin *;';
+          echo '  }';
           echo '';
-	  echo "  location ~* ^(\/_matrix|\/_synapse\/client) {";
-	  echo "    proxy_pass http://localhost:${MATRIX_PORT};";
-	  echo "    proxy_set_header X-Forwarded-For \$remote_addr;";
-	  echo "    proxy_set_header X-Forwarded-Proto \$scheme;";
-	  echo "    proxy_set_header Host \$host;";
-	  echo '    client_max_body_size 50M;';
-	  echo '  }';
+          echo "  location ~* ^(\/_matrix|\/_synapse\/client) {";
+          echo "    proxy_pass http://localhost:${MATRIX_PORT};";
+          echo "    proxy_set_header X-Forwarded-For \$remote_addr;";
+          echo "    proxy_set_header X-Forwarded-Proto \$scheme;";
+          echo "    proxy_set_header Host \$host;";
+          echo '    client_max_body_size 50M;';
+          echo '  }';
           echo '}';
           echo ''; } >> $matrix_nginx_site
     else
         echo -n '' > $matrix_nginx_site
-	matrix_baseurl="http://${MATRIX_ONION_HOSTNAME}"
+        matrix_baseurl="http://${MATRIX_ONION_HOSTNAME}"
     fi
 
     { echo 'server {';
@@ -542,6 +542,10 @@ function create_matrix_nginx_config {
 
     sed -i 's|limit_conn conn_limit_per_ip.*|limit_conn conn_limit_per_ip 50;|g' "$matrix_nginx_site"
     sed -i 's|limit_req zone.*|limit_req zone=req_limit_per_ip burst=50 nodelay;|g' "$matrix_nginx_site"
+
+    # enable mic and camera
+    sed -i 's|microphone=(),||g' "$matrix_nginx_site"
+    sed -i 's|camera=(),||g' "$matrix_nginx_site"
 
     nginx_ensite "$MATRIX_DOMAIN_NAME"
 

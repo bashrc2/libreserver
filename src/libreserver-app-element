@@ -1,8 +1,8 @@
 #!/bin/bash
-#  _    _ _            ___                      
-# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
-# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # Element Web user interface for Matrix
 #
@@ -365,11 +365,11 @@ function install_element {
           echo '    },';
           echo "    \"disable_custom_urls\": false,";
           echo "    \"disable_guests\": true,";
-	  echo '    "disable_login_language_selector": false,';
-	  echo '    "disable_3pid_login": true,';
-	  echo "    \"defaultCountryCode\": \"GB\",";
-	  echo '    "default_federate": true,';
-	  echo "    \"default_theme\": \"dark\",";
+          echo '    "disable_login_language_selector": false,';
+          echo '    "disable_3pid_login": true,';
+          echo "    \"defaultCountryCode\": \"GB\",";
+          echo '    "default_federate": true,';
+          echo "    \"default_theme\": \"dark\",";
           echo '    "brand": "Element",';
           echo '    "integrations_ui_url": "",';
           echo '    "integrations_rest_url": "",';
@@ -379,12 +379,12 @@ function install_element {
           echo '    "jitsi": {';
           echo "        \"preferredDomain\": \"$ELEMENT_DEFAULT_JITSI\"";
           echo '    },';
-	  echo '    "settingDefaults": {';
-	  echo '        "breadcrumbs": true';
-	  echo '    },';	  
-	  echo '    "enable_presence_by_hs_url": {';
-	  echo "        \"https://${MATRIX_DOMAIN_NAME}\": false";
-	  echo '    },';
+          echo '    "settingDefaults": {';
+          echo '        "breadcrumbs": true';
+          echo '    },';
+          echo '    "enable_presence_by_hs_url": {';
+          echo "        \"https://${MATRIX_DOMAIN_NAME}\": false";
+          echo '    },';
           echo '    "roomDirectory": {';
           echo '        "servers": [';
           echo "            \"${MATRIX_DOMAIN_NAME}\",";
@@ -405,22 +405,22 @@ function install_element {
           echo '    },';
           echo "    \"disable_custom_urls\": false,";
           echo "    \"disable_guests\": true,";
-	  echo '    "disable_login_language_selector": false,';
-	  echo '    "disable_3pid_login": true,';
-	  echo "    \"defaultCountryCode\": \"GB\",";
-	  echo '    "default_federate": true,';
-	  echo "    \"default_theme\": \"dark\",";
+          echo '    "disable_login_language_selector": false,';
+          echo '    "disable_3pid_login": true,';
+          echo "    \"defaultCountryCode\": \"GB\",";
+          echo '    "default_federate": true,';
+          echo "    \"default_theme\": \"dark\",";
           echo '    "brand": "Element",';
           echo '    "integrations_ui_url": "",';
           echo '    "integrations_rest_url": "",';
           echo "    \"bug_report_endpoint_url\": \"\",";
           echo '    "showLabsSettings": false,';
-	  echo '    "settingDefaults": {';
-	  echo '        "breadcrumbs": true';
-	  echo '    },';
-	  echo '    "enable_presence_by_hs_url": {';
-	  echo "        \"http://${MATRIX_ONION_DOMAIN_NAME}\": false";
-	  echo '    },';
+          echo '    "settingDefaults": {';
+          echo '        "breadcrumbs": true';
+          echo '    },';
+          echo '    "enable_presence_by_hs_url": {';
+          echo "        \"http://${MATRIX_ONION_DOMAIN_NAME}\": false";
+          echo '    },';
           echo '    "roomDirectory": {';
           echo '        "servers": [';
           echo "            \"${MATRIX_ONION_DOMAIN_NAME}\"";
@@ -496,6 +496,10 @@ function install_element {
     sed -i 's| DENY;| SAMEORIGIN;|g' "$element_nginx_site"
     sed -i 's|limit_conn conn_limit_per_ip.*|limit_conn conn_limit_per_ip 50;|g' "$element_nginx_site"
     sed -i 's|limit_req zone.*|limit_req zone=req_limit_per_ip burst=50 nodelay;|g' "$element_nginx_site"
+
+    # enable mic and camera
+    sed -i 's|microphone=(),||g' "$element_nginx_site"
+    sed -i 's|camera=(),||g' "$element_nginx_site"
 
     increment_app_install_progress
 
