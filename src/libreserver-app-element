@@ -135,7 +135,6 @@ function add_user_element {
 }
 
 function element_remove_bad_links {
-    sed -i '/riot.im/d' "/var/www/${ELEMENT_DOMAIN_NAME}/htdocs/welcome.html"
     sed -i '/element.im/d' "/var/www/${ELEMENT_DOMAIN_NAME}/htdocs/welcome.html"
 }
 
