@@ -421,6 +421,7 @@ function create_matrix_nginx_config {
     MATRIX_ONION_HOSTNAME=$(add_onion_service matrix 80 ${MATRIX_ONION_PORT})
 
     matrix_nginx_site=/etc/nginx/sites-available/$MATRIX_DOMAIN_NAME
+    matrix_baseurl="https://${MATRIX_DOMAIN_NAME}"
     if [[ $ONION_ONLY == "no" ]]; then
         { echo 'server {';
           echo "  listen 443 ssl;";
@@ -433,6 +434,7 @@ function create_matrix_nginx_config {
         nginx_security_options "${MATRIX_DOMAIN_NAME}"
         nginx_robots "${MATRIX_DOMAIN_NAME}"
 
+
         { echo '  add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
           echo "  add_header Onion-Location http://${MATRIX_ONION_HOSTNAME}\$request_uri;";
           echo '';
@@ -444,7 +446,7 @@ function create_matrix_nginx_config {
           echo '  index index.html;';
           echo '';
 	  echo '  location /.well-known/matrix/client {';
-	  echo "    return 200 '{\"m.homeserver\": {\"base_url\": \"https://${MATRIX_DOMAIN_NAME}\"}}';";
+	  echo "    return 200 '{\"m.homeserver\": {\"base_url\": \"${matrix_baseurl}\"}}';";
 	  echo '    default_type application/json;';
 	  echo '    add_header Access-Control-Allow-Origin *;';
 	  echo '  }';
@@ -481,7 +483,7 @@ function create_matrix_nginx_config {
           echo '  index index.html;';
           echo '';
 	  echo '  location /.well-known/matrix/client {';
-	  echo "    return 200 '{\"m.homeserver\": {\"base_url\": \"https://${MATRIX_DOMAIN_NAME}\"}}';";
+	  echo "    return 200 '{\"m.homeserver\": {\"base_url\": \"${matrix_baseurl}\"}}';";
 	  echo '    default_type application/json;';
 	  echo '    add_header Access-Control-Allow-Origin *;';
 	  echo '  }';
@@ -497,6 +499,7 @@ function create_matrix_nginx_config {
           echo ''; } >> $matrix_nginx_site
     else
         echo -n '' > $matrix_nginx_site
+	matrix_baseurl="http://${MATRIX_ONION_HOSTNAME}"
     fi
 
     { echo 'server {';
@@ -514,7 +517,7 @@ function create_matrix_nginx_config {
       echo "  root ${MATRIX_DATA_DIR}/media_store;";
       echo '';
       echo '  location /.well-known/matrix/client {';
-      echo "    return 200 '{\"m.homeserver\": {\"base_url\": \"https://${MATRIX_ONION_HOSTNAME}\"}}';";
+      echo "    return 200 '{\"m.homeserver\": {\"base_url\": \"${matrix_baseurl}\"}}';";
       echo '    default_type application/json;';
       echo '    add_header Access-Control-Allow-Origin *;';
       echo '  }';
