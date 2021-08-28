@@ -43,7 +43,7 @@ ELEMENT_CODE=
 
 ELEMENT_SHORT_DESCRIPTION=$'Web based client for Matrix'
 ELEMENT_DESCRIPTION=$'Web based client for Matrix'
-ELEMENT_MOBILE_APP_URL='https://f-droid.org/packages/im.vector.alpha'
+ELEMENT_MOBILE_APP_URL='https://f-droid.org/en/packages/im.vector.app'
 
 ELEMENT_DEFAULT_JITSI="jitsi.riot.im"
 
@@ -136,6 +136,9 @@ function add_user_element {
 
 function element_remove_bad_links {
     sed -i '/element.im/d' "/var/www/${ELEMENT_DOMAIN_NAME}/htdocs/welcome.html"
+    sed -i "s|<a href=\"https://www.google.com/chrome\">Chrome</a>, ||g" "/var/www/${ELEMENT_DOMAIN_NAME}/htdocs/static/incompatible-browser.html"
+    sed -i "s|https://play.google.com/store/apps/details?id=im.vector.app|https://f-droid.org/en/packages/im.vector.app|g" "/var/www/${ELEMENT_DOMAIN_NAME}/htdocs/static/incompatible-browser.html"
+    sed -i "s|https://play.google.com/store/apps/details?id=im.vector.app|https://f-droid.org/en/packages/im.vector.app|g" "/var/www/${ELEMENT_DOMAIN_NAME}/htdocs/manifest.json"
 }
 
 function install_interactive_element {
