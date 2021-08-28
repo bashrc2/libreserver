@@ -440,26 +440,18 @@ function create_matrix_nginx_config {
           echo '';
           echo '  index index.html;';
           echo '';
-          echo '  location /.well-known/acme-challenge {';
+	  echo "  location ~* ^(\/_matrix|\/_synapse\/client) {";
 	  echo "    proxy_pass http://localhost:${MATRIX_PORT};";
-          echo '  }';
-          echo '';
-          echo '  location /_matrix {'; } >> $matrix_nginx_site
-        function_check nginx_limits
-        nginx_limits "${MATRIX_DOMAIN_NAME}" '15m'
-        { echo "    proxy_pass http://localhost:${MATRIX_PORT};";
-          echo '  }';
-          echo '';
-          echo '  location /_synapse {'; } >> $matrix_nginx_site
-        function_check nginx_limits
-        nginx_limits "${MATRIX_DOMAIN_NAME}" '15m'
-        { echo "    proxy_pass http://localhost:${MATRIX_PORT};";
-          echo '  }';
-          echo '}';
+	  echo "    proxy_set_header X-Forwarded-For \$remote_addr;";
+	  echo "    proxy_set_header X-Forwarded-Proto \$scheme;";
+	  echo "    proxy_set_header Host \$host;";
+	  echo '    client_max_body_size 50M;';
+	  echo '  }';
+	  echo '}';
           echo '';
           echo 'server {';
           echo "  listen ${MATRIX_HTTP_PORT} ssl;";
-          echo '    port_in_redirect off;';
+          echo '  port_in_redirect off;';
           echo "  server_name ${MATRIX_DOMAIN_NAME};";
           echo '';
           echo '  # Security'; } >> $matrix_nginx_site
@@ -479,17 +471,13 @@ function create_matrix_nginx_config {
           echo '';
           echo '  index index.html;';
           echo '';
-          echo '  location /_matrix {'; } >> $matrix_nginx_site
-        function_check nginx_limits
-        nginx_limits "${MATRIX_DOMAIN_NAME}" '15m'
-        { echo "    proxy_pass http://localhost:${MATRIX_PORT};";
-          echo '  }';
-          echo '';
-          echo '  location /_synapse {'; } >> $matrix_nginx_site
-        function_check nginx_limits
-        nginx_limits "${MATRIX_DOMAIN_NAME}" '15m'
-        { echo "    proxy_pass http://localhost:${MATRIX_PORT};";
-          echo '  }';
+	  echo "  location ~* ^(\/_matrix|\/_synapse\/client) {";
+	  echo "    proxy_pass http://localhost:${MATRIX_PORT};";
+	  echo "    proxy_set_header X-Forwarded-For \$remote_addr;";
+	  echo "    proxy_set_header X-Forwarded-Proto \$scheme;";
+	  echo "    proxy_set_header Host \$host;";
+	  echo '    client_max_body_size 50M;';
+	  echo '  }';
           echo '}';
           echo ''; } >> $matrix_nginx_site
     else
@@ -510,20 +498,12 @@ function create_matrix_nginx_config {
       echo '';
       echo "  root ${MATRIX_DATA_DIR}/media_store;";
       echo '';
-      echo '  location /.well-known/acme-challenge {';
+      echo "  location ~* ^(\/_matrix|\/_synapse\/client) {";
       echo "    proxy_pass http://localhost:${MATRIX_PORT};";
-      echo '  }';
-      echo '';
-      echo '  location /_matrix {'; } >> $matrix_nginx_site
-    function_check nginx_limits
-    nginx_limits "${MATRIX_DOMAIN_NAME}" '15m'
-    { echo "    proxy_pass http://localhost:${MATRIX_PORT};";
-      echo '  }';
-      echo '';
-      echo '  location /_synapse {'; } >> $matrix_nginx_site
-    function_check nginx_limits
-    nginx_limits "${MATRIX_DOMAIN_NAME}" '15m'
-    { echo "    proxy_pass http://localhost:${MATRIX_PORT};";
+      echo "    proxy_set_header X-Forwarded-For \$remote_addr;";
+      echo "    proxy_set_header X-Forwarded-Proto \$scheme;";
+      echo "    proxy_set_header Host \$host;";
+      echo '    client_max_body_size 50M;';
       echo '  }';
       echo '}'; } >> "$matrix_nginx_site"
 
