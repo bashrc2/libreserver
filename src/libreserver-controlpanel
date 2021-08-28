@@ -241,8 +241,8 @@ function show_domains {
             W+=("SKS" "${KEYSERVER_DOMAIN_NAME} / ${domain_onion}")
         fi
 
-        if [ -f /var/lib/turn/turnserver.conf ]; then
-            W+=("TURN secret" "$(grep 'static-auth-secret' /var/lib/turn/turnserver.conf | awk -F '=' '{print $2}')")
+        if [ -f /etc/turnserver.conf ]; then
+            W+=("TURN secret" "$(grep 'static-auth-secret' /etc/turnserver.conf | awk -F '=' '{print $2}')")
         fi
 
         show_tor_bridges

@@ -121,13 +121,13 @@ function nextcloud_check_php_init {
 }
 
 function setup_nextcloud_turn {
-    if [ ! -f /var/lib/turn/turnserver.conf ]; then
+    if [ ! -f /etc/turnserver.conf ]; then
         echo $'There is no turn server installed'
         return
     fi
-    turnkey=$(grep 'static-auth-secret' /var/lib/turn/turnserver.conf | awk -F '=' '{print $2}')
+    turnkey=$(grep 'static-auth-secret' /etc/turnserver.conf | awk -F '=' '{print $2}')
     if [ ! "$turnkey" ]; then
-        echo $'No TURN secret found in /var/lib/turn/turnserver.conf'
+        echo $'No TURN secret found in /etc/turnserver.conf'
         exit 35
     fi
 

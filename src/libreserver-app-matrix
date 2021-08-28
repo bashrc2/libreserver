@@ -606,8 +606,8 @@ function matrix_generate {
     matrix_generate_homeserver_file $homeserver_config
 
     turnkey=
-    if [ -f /var/lib/turn/turnserver.conf ]; then
-        turnkey=$(grep 'static-auth-secret' /var/lib/turn/turnserver.conf | awk -F '=' '{print $2}')
+    if [ -f /etc/turnserver.conf ]; then
+        turnkey=$(grep 'static-auth-secret' /etc/turnserver.conf | awk -F '=' '{print $2}')
     fi
     matrix_configure_homeserver_yaml "${turnkey}" $homeserver_config
 }

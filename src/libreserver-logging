@@ -127,8 +127,8 @@ if [[ "$1" == "on" || "$1" == "On" || "$1" == "ON" ]]; then
 	fi
     fi
 
-    if [ -f /var/lib/turn/turnserver.conf ]; then
-        sed -i 's|log-file=.*|log-file=/var/lib/turn/turnserver.log|g' /var/lib/turn/turnserver.conf
+    if [ -f /etc/turnserver.conf ]; then
+        sed -i 's|log-file=.*|log-file=/var/lib/turn/turnserver.log|g' /etc/turnserver.conf
     fi
 
     if [ -d /etc/tor ]; then
@@ -198,8 +198,8 @@ else
 	fi
     fi
     
-    if [ -f /var/lib/turn/turnserver.conf ]; then
-        sed -i 's|log-file=.*|log-file=/dev/null|g' /var/lib/turn/turnserver.conf
+    if [ -f /etc/turnserver.conf ]; then
+        sed -i 's|log-file=.*|log-file=/dev/null|g' /etc/turnserver.conf
     fi
 
     if [ -d /etc/torrc.d ]; then
@@ -302,7 +302,7 @@ fi
 if [ -d /etc/postgresql ]; then
     systemctl restart postgresql
 fi
-if [ -f /var/lib/turn/turnserver.conf ]; then
+if [ -f /etc/turnserver.conf ]; then
     systemctl restart turn
 fi
 if [ -d /etc/mosquitto ]; then
