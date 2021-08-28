@@ -136,9 +136,13 @@ function add_user_element {
 
 function element_remove_bad_links {
     sed -i '/element.im/d' "/var/www/${ELEMENT_DOMAIN_NAME}/htdocs/welcome.html"
-    sed -i "s|<a href=\"https://www.google.com/chrome\">Chrome</a>, ||g" "/var/www/${ELEMENT_DOMAIN_NAME}/htdocs/static/incompatible-browser.html"
-    sed -i "s|https://play.google.com/store/apps/details?id=im.vector.app|https://f-droid.org/en/packages/im.vector.app|g" "/var/www/${ELEMENT_DOMAIN_NAME}/htdocs/static/incompatible-browser.html"
-    sed -i "s|https://play.google.com/store/apps/details?id=im.vector.app|https://f-droid.org/en/packages/im.vector.app|g" "/var/www/${ELEMENT_DOMAIN_NAME}/htdocs/manifest.json"
+    # NOTE: there should not be any quotes around the files with wildcards
+    sed -i "s|<a href=\"https://www.google.com/chrome\">Chrome</a>||g" /var/www/${ELEMENT_DOMAIN_NAME}/htdocs/static/*.html
+    sed -i "s|https://play.google.com/store/apps/details?id=im.vector.app|https://f-droid.org/en/packages/im.vector.app|g" /var/www/${ELEMENT_DOMAIN_NAME}/htdocs/static/*.html
+    sed -i "s|https://play.google.com/store/apps/details?id=im.vector.app|https://f-droid.org/en/packages/im.vector.app|g" /var/www/${ELEMENT_DOMAIN_NAME}/htdocs/*.json
+    sed -i "s|https://play.google.com/store/apps/details?id=im.vector.app|https://f-droid.org/en/packages/im.vector.app|g" /var/www/${ELEMENT_DOMAIN_NAME}/htdocs/mobile_guide/*.html
+    sed -i "s|www.google.com|${ELEMENT_DOMAIN_NAME}|g" /var/www/${ELEMENT_DOMAIN_NAME}/htdocs/bundles/*/*.js
+    sed -i "s|google.com|${ELEMENT_DOMAIN_NAME}|g" /var/www/${ELEMENT_DOMAIN_NAME}/htdocs/bundles/*/*.js
 }
 
 function install_interactive_element {
