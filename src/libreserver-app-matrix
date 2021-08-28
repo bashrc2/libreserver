@@ -148,8 +148,13 @@ function matrix_configure_homeserver_yaml {
       echo '    type: http';
       echo '    x_forwarded: False';
       echo '    resources:';
-      echo '      - names: [client, federation]';
-      echo '        compress: False';
+      echo '      -';
+      echo '        names:';
+      echo '          - client';
+      echo '          - webclient';
+      echo '        compress: true';
+      echo '      - names: [federation]';
+      echo '        compress: false';
       echo "tls_certificate_path: \"/etc/letsencrypt/live/${matrix_domain}/fullchain.pem\"";
       echo "tls_private_key_path: \"/etc/letsencrypt/live/${matrix_domain}/privkey.pem\"";
       echo "tls_dh_params_path: \"/etc/ssl/certs/${matrix_domain}.dhparam\"";
