@@ -429,10 +429,10 @@ function create_matrix_nginx_config {
           echo '}';
           echo '';
           echo 'server {';
-          echo "  listen 443 ssl;";
-          echo "  listen [::]:443 ssl;";
-          echo "  listen ${MATRIX_HTTP_PORT} ssl;";
-          echo "  listen [::]:${MATRIX_HTTP_PORT} ssl;";
+          echo "  listen 443 ssl http2;";
+          echo "  listen [::]:443 ssl http2;";
+          echo "  listen ${MATRIX_HTTP_PORT} ssl http2;";
+          echo "  listen [::]:${MATRIX_HTTP_PORT} ssl http2;";
           echo "  server_name ${MATRIX_DOMAIN_NAME};";
           echo ''; } > $matrix_nginx_site
         function_check nginx_ssl

@@ -442,8 +442,8 @@ function install_element {
         function_check nginx_http_redirect
         nginx_http_redirect "${ELEMENT_DOMAIN_NAME}"
         { echo 'server {';
-          echo '  listen 443 ssl;';
-          echo '  listen [::]:443 ssl;';
+          echo '  listen 443 ssl http2;';
+          echo '  listen [::]:443 ssl http2;';
           echo "  server_name ${ELEMENT_DOMAIN_NAME};";
           echo '';
           echo '  # Security'; } >> $element_nginx_site
