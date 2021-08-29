@@ -110,6 +110,7 @@ function matrix_configure_homeserver_yaml {
     # see https://github.com/matrix-org/synapse/blob/master/docs/sample_config.yaml
 
     { echo "server_name: \"${matrix_domain}\"";
+      echo "default_identity_server: \"\"";
       echo "public_baseurl: \"${matrix_http_prefix}://${matrix_domain}\"";
       echo 'pid_file: /etc/matrix/homeserver.pid';
       echo 'enable_search: False';
@@ -142,7 +143,8 @@ function matrix_configure_homeserver_yaml {
       echo '    resources:';
       echo '      - names: [client,federation]';
       echo '        compress: false';
-      echo 'stats.enabled: false';
+      echo 'stats:';
+      echo '  enabled: false';
       echo "tls_certificate_path: \"/etc/letsencrypt/live/${matrix_domain}/fullchain.pem\"";
       echo "tls_private_key_path: \"/etc/letsencrypt/live/${matrix_domain}/privkey.pem\"";
       echo "tls_dh_params_path: \"/etc/ssl/certs/${matrix_domain}.dhparam\"";
