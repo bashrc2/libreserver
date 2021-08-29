@@ -430,6 +430,7 @@ function create_matrix_nginx_config {
 
     matrix_nginx_site=/etc/nginx/sites-available/$MATRIX_DOMAIN_NAME
     matrix_baseurl="https://${MATRIX_DOMAIN_NAME}"
+    matrix_server_baseurl="${MATRIX_DOMAIN_NAME}:443"
     if [[ $ONION_ONLY == "no" ]]; then
         { echo 'server {';
           echo '  listen 80;';
@@ -466,13 +467,16 @@ function create_matrix_nginx_config {
           echo "    proxy_set_header X-Forwarded-For \$remote_addr;";
           echo '  }';
           echo '';
+          echo '  location /.well-known/matrix/server {';
+          echo '    add_header Access-Control-Allow-Origin *;';
+          echo "    return 200 '{\"m.server\": \"${matrix_server_baseurl}\"}';";
+          echo '    default_type application/json;';
+          echo '  }';
+          echo '';
           echo '  location /.well-known/matrix/client {';
           echo '    add_header Access-Control-Allow-Origin *;';
-          echo "    proxy_set_header X-Forwarded-For \$remote_addr;";
-          echo '';
           echo "    return 200 '{\"m.homeserver\": {\"base_url\": \"${matrix_baseurl}\"}}';";
           echo '    default_type application/json;';
-          echo '    client_max_body_size 50M;';
           echo '  }';
           echo '';
           echo '  location / {';
@@ -484,6 +488,7 @@ function create_matrix_nginx_config {
     else
         echo -n '' > $matrix_nginx_site
         matrix_baseurl="http://${MATRIX_ONION_HOSTNAME}"
+        matrix_server_baseurl="${MATRIX_DOMAIN_NAME}:80"
     fi
 
     { echo 'server {';
@@ -505,13 +510,16 @@ function create_matrix_nginx_config {
       echo "    proxy_set_header X-Forwarded-For \$remote_addr;";
       echo '  }';
       echo '';
+      echo '  location /.well-known/matrix/server {';
+      echo '    add_header Access-Control-Allow-Origin *;';
+      echo "    return 200 '{\"m.server\": \"${matrix_server_baseurl}\"}';";
+      echo '    default_type application/json;';
+      echo '  }';
+      echo '';
       echo '  location /.well-known/matrix/client {';
       echo '    add_header Access-Control-Allow-Origin *;';
-      echo "    proxy_set_header X-Forwarded-For \$remote_addr;";
-      echo '';
       echo "    return 200 '{\"m.homeserver\": {\"base_url\": \"${matrix_baseurl}\"}}';";
       echo '    default_type application/json;';
-      echo '    client_max_body_size 50M;';
       echo '  }';
       echo '';
       echo '  location / {';
