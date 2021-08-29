@@ -124,32 +124,33 @@ function matrix_configure_homeserver_yaml {
       echo "  - 'fe80::/64'";
       echo "  - 'fc00::/7'";
       echo '# Number of messages a client can send per second';
-      echo 'rc_messages_per_second: 0.2';
+      echo '#rc_messages_per_second: 0.2';
       echo '# Number of message a client can send before being throttled';
-      echo 'rc_message_burst_count: 10.0';
+      echo '#rc_message_burst_count: 10.0';
       echo '# The federation window size in milliseconds';
-      echo 'federation_rc_window_size: 1000';
+      echo '#federation_rc_window_size: 1000';
       echo '# The number of federation requests from a single server in a window';
       echo '# before the server will delay processing the request.';
-      echo 'federation_rc_sleep_limit: 10';
+      echo '#federation_rc_sleep_limit: 10';
       echo '# The duration in milliseconds to delay processing events from';
       echo '# remote servers by if they go over the sleep limit.';
-      echo 'federation_rc_sleep_delay: 500';
+      echo '#federation_rc_sleep_delay: 500';
       echo '# The maximum number of concurrent federation requests allowed';
       echo '# from a single server';
-      echo 'federation_rc_reject_limit: 50';
+      echo '#federation_rc_reject_limit: 50';
       echo '# The number of federation requests to concurrently process from a';
       echo '# single server';
       echo 'federation_rc_concurrent: 3';
       echo 'listeners:';
       echo "  - port: $MATRIX_PORT";
-      echo '    tls: False';
+      echo '    tls: false';
       echo "    bind_addresses: ['::1', '127.0.0.1']";
       echo '    type: http';
-      echo '    x_forwarded: False';
+      echo '    x_forwarded: true';
       echo '    resources:';
       echo '      - names: [client,federation]';
-      echo '        compress: False';
+      echo '        compress: false';
+      echo 'stats.enabled: false';
       echo "tls_certificate_path: \"/etc/letsencrypt/live/${matrix_domain}/fullchain.pem\"";
       echo "tls_private_key_path: \"/etc/letsencrypt/live/${matrix_domain}/privkey.pem\"";
       echo "tls_dh_params_path: \"/etc/ssl/certs/${matrix_domain}.dhparam\"";
@@ -177,6 +178,7 @@ function matrix_configure_homeserver_yaml {
       echo 'old_signing_keys: {}';
       echo 'key_refresh_interval: "1d" # 1 Day.';
       echo 'opentracing:';
+      echo '    enabled: False';
       echo 'verbose: 0';
       echo 'event_cache_size: "10K"';
       echo 'soft_file_limit: 0';
@@ -206,6 +208,11 @@ function matrix_configure_homeserver_yaml {
         sed -i 's|tls_certificate_path|#tls_certificate_path|g' "${filepath}"
         sed -i 's|tls_private_key_path|#tls_private_key_path|g' "${filepath}"
         sed -i 's|tls_dh_params_path|#tls_dh_params_path|g' "${filepath}"
+    else
+        { echo 'trusted_third_party_id_servers:';
+          echo "  - ${matrix_domain}";
+          echo '  - matrix.org';
+          echo '  - vector.im'; } >> "$filepath"
     fi
 }
 
@@ -425,8 +432,16 @@ function create_matrix_nginx_config {
     matrix_baseurl="https://${MATRIX_DOMAIN_NAME}"
     if [[ $ONION_ONLY == "no" ]]; then
         { echo 'server {';
+          echo '  listen 80;';
+          echo "  server_name ${MATRIX_DOMAIN_NAME};";
+          echo '  return 301 https://$host$request_uri;';
+          echo '}';
+          echo '';
+          echo 'server {';
           echo "  listen 443 ssl;";
           echo "  listen [::]:443 ssl;";
+          echo "  listen ${MATRIX_HTTP_PORT} ssl;";
+          echo "  listen [::]:${MATRIX_HTTP_PORT} ssl;";
           echo "  server_name ${MATRIX_DOMAIN_NAME};";
           echo ''; } > $matrix_nginx_site
         function_check nginx_ssl
@@ -435,7 +450,6 @@ function create_matrix_nginx_config {
         function_check nginx_security_options
         nginx_security_options "${MATRIX_DOMAIN_NAME}"
         nginx_robots "${MATRIX_DOMAIN_NAME}"
-
 
         { echo '  add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
           echo "  add_header Onion-Location http://${MATRIX_ONION_HOSTNAME}\$request_uri;";
@@ -447,225 +461,23 @@ function create_matrix_nginx_config {
           echo '';
           echo '  index index.html;';
           echo '';
-          echo '  location /_matrix {';
-          echo '    client_max_body_size 50M;';
-          echo '    client_body_buffer_size 128k;';
-          echo '';
-          echo '    limit_conn conn_limit_per_ip 50;';
-          echo '    limit_req zone=req_limit_per_ip burst=50 nodelay;';
-          echo '';
-          echo '    proxy_http_version 1.1;';
-          echo "    proxy_set_header Host \$http_host;";
-          echo "    proxy_set_header X-Real-IP \$remote_addr;";
-          echo "    proxy_set_header X-Forward-For \$proxy_add_x_forwarded_for;";
-          echo '    proxy_set_header X-Forward-Proto http;';
-          echo '    proxy_set_header X-Nginx-Proxy true;';
-          echo '    proxy_temp_file_write_size 64k;';
-          echo '    proxy_connect_timeout 10080s;';
-          echo '    proxy_send_timeout 10080;';
-          echo '    proxy_read_timeout 10080;';
-          echo '    proxy_buffer_size 64k;';
-          echo '    proxy_buffers 16 32k;';
-          echo '    proxy_busy_buffers_size 64k;';
-          echo '    proxy_redirect off;';
-          echo '    proxy_request_buffering off;';
-          echo '    proxy_buffering off;';
-          echo '';
+          echo '  location ~* ^(\/_matrix|\/_synapse\/client) {';
           echo "    proxy_pass http://localhost:${MATRIX_PORT};";
-          echo '  }';
-          echo '';
-          echo '';
-          echo '  location /_synapse {';
-          echo '    client_max_body_size 50M;';
-          echo '    client_body_buffer_size 128k;';
-          echo '';
-          echo '    limit_conn conn_limit_per_ip 50;';
-          echo '    limit_req zone=req_limit_per_ip burst=50 nodelay;';
-          echo '';
-          echo '    proxy_http_version 1.1;';
-          echo "    proxy_set_header Host \$http_host;";
-          echo "    proxy_set_header X-Real-IP \$remote_addr;";
-          echo "    proxy_set_header X-Forward-For \$proxy_add_x_forwarded_for;";
-          echo '    proxy_set_header X-Forward-Proto http;';
-          echo '    proxy_set_header X-Nginx-Proxy true;';
-          echo '    proxy_temp_file_write_size 64k;';
-          echo '    proxy_connect_timeout 10080s;';
-          echo '    proxy_send_timeout 10080;';
-          echo '    proxy_read_timeout 10080;';
-          echo '    proxy_buffer_size 64k;';
-          echo '    proxy_buffers 16 32k;';
-          echo '    proxy_busy_buffers_size 64k;';
-          echo '    proxy_redirect off;';
-          echo '    proxy_request_buffering off;';
-          echo '    proxy_buffering off;';
-          echo '';
-          echo "    proxy_pass http://localhost:${MATRIX_PORT};";
+          echo "    proxy_set_header X-Forwarded-For \$remote_addr;";
           echo '  }';
           echo '';
           echo '  location /.well-known/matrix/client {';
-          echo '    proxy_http_version 1.1;';
-          echo "    proxy_set_header Host \$http_host;";
-          echo "    proxy_set_header X-Real-IP \$remote_addr;";
-          echo "    proxy_set_header X-Forward-For \$proxy_add_x_forwarded_for;";
-          echo '    proxy_set_header X-Forward-Proto http;';
-          echo '    proxy_set_header X-Nginx-Proxy true;';
-          echo '    proxy_temp_file_write_size 64k;';
-          echo '    proxy_connect_timeout 10080s;';
-          echo '    proxy_send_timeout 10080;';
-          echo '    proxy_read_timeout 10080;';
-          echo '    proxy_buffer_size 64k;';
-          echo '    proxy_buffers 16 32k;';
-          echo '    proxy_busy_buffers_size 64k;';
-          echo '    proxy_redirect off;';
-          echo '    proxy_request_buffering off;';
-          echo '    proxy_buffering off;';
+          echo '    add_header Access-Control-Allow-Origin *;';
+          echo "    proxy_set_header X-Forwarded-For \$remote_addr;";
+          echo '';
           echo "    return 200 '{\"m.homeserver\": {\"base_url\": \"${matrix_baseurl}\"}}';";
           echo '    default_type application/json;';
-          echo "    proxy_pass http://localhost:${MATRIX_PORT};";
           echo '    client_max_body_size 50M;';
           echo '  }';
           echo '';
-          echo "  location / {";
-          echo '    client_max_body_size 50M;';
-          echo '    proxy_http_version 1.1;';
-          echo "    proxy_set_header Host \$http_host;";
-          echo "    proxy_set_header X-Real-IP \$remote_addr;";
-          echo "    proxy_set_header X-Forward-For \$proxy_add_x_forwarded_for;";
-          echo '    proxy_set_header X-Forward-Proto http;';
-          echo '    proxy_set_header X-Nginx-Proxy true;';
-          echo '    proxy_temp_file_write_size 64k;';
-          echo '    proxy_connect_timeout 10080s;';
-          echo '    proxy_send_timeout 10080;';
-          echo '    proxy_read_timeout 10080;';
-          echo '    proxy_buffer_size 64k;';
-          echo '    proxy_buffers 16 32k;';
-          echo '    proxy_busy_buffers_size 64k;';
-          echo '    proxy_redirect off;';
-          echo '    proxy_request_buffering off;';
-          echo '    proxy_buffering off;';
-          echo "    proxy_pass http://localhost:${MATRIX_PORT};";
-          echo '  }';
-          echo '}';
-          echo '';
-          echo 'server {';
-          echo "  listen ${MATRIX_HTTP_PORT} ssl;";
-          echo "  listen [::]:${MATRIX_HTTP_PORT} ssl;";
-          echo '  port_in_redirect off;';
-          echo "  server_name ${MATRIX_DOMAIN_NAME};";
-          echo '';
-          echo '  # Security'; } >> $matrix_nginx_site
-        function_check nginx_ssl
-        nginx_ssl "${MATRIX_DOMAIN_NAME}"
-
-        # function_check nginx_security_options
-        # nginx_security_options "${MATRIX_DOMAIN_NAME}"
-
-        { echo '  add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
-          echo '';
-          echo '  # Logs';
-          echo '  access_log /dev/null;';
-          echo '  error_log /dev/null;';
-          echo '';
-          echo "  root ${MATRIX_DATA_DIR}/media_store;";
-          echo '';
-          echo '  index index.html;';
-          echo '';
-          echo '  location /_matrix {';
-          echo '    client_max_body_size 50M;';
-          echo '    client_body_buffer_size 128k;';
-          echo '';
-          echo '    limit_conn conn_limit_per_ip 50;';
-          echo '    limit_req zone=req_limit_per_ip burst=50 nodelay;';
-          echo '';
-          echo '    proxy_http_version 1.1;';
-          echo "    proxy_set_header Host \$http_host;";
-          echo "    proxy_set_header X-Real-IP \$remote_addr;";
-          echo "    proxy_set_header X-Forward-For \$proxy_add_x_forwarded_for;";
-          echo '    proxy_set_header X-Forward-Proto http;';
-          echo '    proxy_set_header X-Nginx-Proxy true;';
-          echo '    proxy_temp_file_write_size 64k;';
-          echo '    proxy_connect_timeout 10080s;';
-          echo '    proxy_send_timeout 10080;';
-          echo '    proxy_read_timeout 10080;';
-          echo '    proxy_buffer_size 64k;';
-          echo '    proxy_buffers 16 32k;';
-          echo '    proxy_busy_buffers_size 64k;';
-          echo '    proxy_redirect off;';
-          echo '    proxy_request_buffering off;';
-          echo '    proxy_buffering off;';
-          echo '';
-          echo "    proxy_pass http://localhost:${MATRIX_PORT};";
-          echo '  }';
-          echo '';
-          echo '  location /_synapse {';
-          echo '    client_max_body_size 50M;';
-          echo '    client_body_buffer_size 128k;';
-          echo '';
-          echo '    limit_conn conn_limit_per_ip 50;';
-          echo '    limit_req zone=req_limit_per_ip burst=50 nodelay;';
-          echo '';
-          echo '    proxy_http_version 1.1;';
-          echo "    proxy_set_header Host \$http_host;";
-          echo "    proxy_set_header X-Real-IP \$remote_addr;";
-          echo "    proxy_set_header X-Forward-For \$proxy_add_x_forwarded_for;";
-          echo '    proxy_set_header X-Forward-Proto http;';
-          echo '    proxy_set_header X-Nginx-Proxy true;';
-          echo '    proxy_temp_file_write_size 64k;';
-          echo '    proxy_connect_timeout 10080s;';
-          echo '    proxy_send_timeout 10080;';
-          echo '    proxy_read_timeout 10080;';
-          echo '    proxy_buffer_size 64k;';
-          echo '    proxy_buffers 16 32k;';
-          echo '    proxy_busy_buffers_size 64k;';
-          echo '    proxy_redirect off;';
-          echo '    proxy_request_buffering off;';
-          echo '    proxy_buffering off;';
-          echo '';
-          echo "    proxy_pass http://localhost:${MATRIX_PORT};";
-          echo '  }';
-          echo '';
-          echo '  location /.well-known/matrix/client {';
-          echo '    client_max_body_size 50M;';
-          echo '    proxy_http_version 1.1;';
-          echo "    proxy_set_header Host \$http_host;";
-          echo "    proxy_set_header X-Real-IP \$remote_addr;";
-          echo "    proxy_set_header X-Forward-For \$proxy_add_x_forwarded_for;";
-          echo '    proxy_set_header X-Forward-Proto http;';
-          echo '    proxy_set_header X-Nginx-Proxy true;';
-          echo '    proxy_temp_file_write_size 64k;';
-          echo '    proxy_connect_timeout 10080s;';
-          echo '    proxy_send_timeout 10080;';
-          echo '    proxy_read_timeout 10080;';
-          echo '    proxy_buffer_size 64k;';
-          echo '    proxy_buffers 16 32k;';
-          echo '    proxy_busy_buffers_size 64k;';
-          echo '    proxy_redirect off;';
-          echo '    proxy_request_buffering off;';
-          echo '    proxy_buffering off;';
-          echo "    return 200 '{\"m.homeserver\": {\"base_url\": \"${matrix_baseurl}\"}}';";
-          echo '    default_type application/json;';
-          echo "    proxy_pass http://localhost:${MATRIX_PORT};";
-          echo '  }';
-          echo '';
-          echo "  location / {";
-          echo '    client_max_body_size 50M;';
-          echo '    proxy_http_version 1.1;';
-          echo "    proxy_set_header Host \$http_host;";
-          echo "    proxy_set_header X-Real-IP \$remote_addr;";
-          echo "    proxy_set_header X-Forward-For \$proxy_add_x_forwarded_for;";
-          echo '    proxy_set_header X-Forward-Proto http;';
-          echo '    proxy_set_header X-Nginx-Proxy true;';
-          echo '    proxy_temp_file_write_size 64k;';
-          echo '    proxy_connect_timeout 10080s;';
-          echo '    proxy_send_timeout 10080;';
-          echo '    proxy_read_timeout 10080;';
-          echo '    proxy_buffer_size 64k;';
-          echo '    proxy_buffers 16 32k;';
-          echo '    proxy_busy_buffers_size 64k;';
-          echo '    proxy_redirect off;';
-          echo '    proxy_request_buffering off;';
-          echo '    proxy_buffering off;';
-          echo "    proxy_pass http://localhost:${MATRIX_PORT};";
+          echo '  location / {';
+          echo "      proxy_pass http://localhost:${MATRIX_PORT};";
+          echo "      proxy_set_header X-Forwarded-For \$remote_addr;";
           echo '  }';
           echo '}';
           echo ''; } >> $matrix_nginx_site
@@ -688,102 +500,23 @@ function create_matrix_nginx_config {
       echo '';
       echo "  root ${MATRIX_DATA_DIR}/media_store;";
       echo '';
-      echo '  location /_matrix {';
-      echo '    client_max_body_size 50M;';
-      echo '    client_body_buffer_size 128k;';
-      echo '';
-      echo '    limit_conn conn_limit_per_ip 50;';
-      echo '    limit_req zone=req_limit_per_ip burst=50 nodelay;';
-      echo '';
-      echo '    proxy_http_version 1.1;';
-      echo "    proxy_set_header Host \$http_host;";
-      echo "    proxy_set_header X-Real-IP \$remote_addr;";
-      echo "    proxy_set_header X-Forward-For \$proxy_add_x_forwarded_for;";
-      echo '    proxy_set_header X-Forward-Proto http;';
-      echo '    proxy_set_header X-Nginx-Proxy true;';
-      echo '    proxy_temp_file_write_size 64k;';
-      echo '    proxy_connect_timeout 10080s;';
-      echo '    proxy_send_timeout 10080;';
-      echo '    proxy_read_timeout 10080;';
-      echo '    proxy_buffer_size 64k;';
-      echo '    proxy_buffers 16 32k;';
-      echo '    proxy_busy_buffers_size 64k;';
-      echo '    proxy_redirect off;';
-      echo '    proxy_request_buffering off;';
-      echo '    proxy_buffering off;';
-      echo '';
+      echo '  location ~* ^(\/_matrix|\/_synapse\/client) {';
       echo "    proxy_pass http://localhost:${MATRIX_PORT};";
-      echo '  }';
-      echo '';
-      echo '  location /_synapse {';
-      echo '    client_max_body_size 50M;';
-      echo '    client_body_buffer_size 128k;';
-      echo '';
-      echo '    limit_conn conn_limit_per_ip 50;';
-      echo '    limit_req zone=req_limit_per_ip burst=50 nodelay;';
-      echo '';
-      echo '    proxy_http_version 1.1;';
-      echo "    proxy_set_header Host \$http_host;";
-      echo "    proxy_set_header X-Real-IP \$remote_addr;";
-      echo "    proxy_set_header X-Forward-For \$proxy_add_x_forwarded_for;";
-      echo '    proxy_set_header X-Forward-Proto http;';
-      echo '    proxy_set_header X-Nginx-Proxy true;';
-      echo '    proxy_temp_file_write_size 64k;';
-      echo '    proxy_connect_timeout 10080s;';
-      echo '    proxy_send_timeout 10080;';
-      echo '    proxy_read_timeout 10080;';
-      echo '    proxy_buffer_size 64k;';
-      echo '    proxy_buffers 16 32k;';
-      echo '    proxy_busy_buffers_size 64k;';
-      echo '    proxy_redirect off;';
-      echo '    proxy_request_buffering off;';
-      echo '    proxy_buffering off;';
-      echo '';
-      echo "    proxy_pass http://localhost:${MATRIX_PORT};";
+      echo "    proxy_set_header X-Forwarded-For \$remote_addr;";
       echo '  }';
       echo '';
       echo '  location /.well-known/matrix/client {';
-      echo '    client_max_body_size 50M;';
-      echo '    proxy_http_version 1.1;';
-      echo "    proxy_set_header Host \$http_host;";
-      echo "    proxy_set_header X-Real-IP \$remote_addr;";
-      echo "    proxy_set_header X-Forward-For \$proxy_add_x_forwarded_for;";
-      echo '    proxy_set_header X-Forward-Proto http;';
-      echo '    proxy_set_header X-Nginx-Proxy true;';
-      echo '    proxy_temp_file_write_size 64k;';
-      echo '    proxy_connect_timeout 10080s;';
-      echo '    proxy_send_timeout 10080;';
-      echo '    proxy_read_timeout 10080;';
-      echo '    proxy_buffer_size 64k;';
-      echo '    proxy_buffers 16 32k;';
-      echo '    proxy_busy_buffers_size 64k;';
-      echo '    proxy_redirect off;';
-      echo '    proxy_request_buffering off;';
-      echo '    proxy_buffering off;';
+      echo '    add_header Access-Control-Allow-Origin *;';
+      echo "    proxy_set_header X-Forwarded-For \$remote_addr;";
+      echo '';
       echo "    return 200 '{\"m.homeserver\": {\"base_url\": \"${matrix_baseurl}\"}}';";
       echo '    default_type application/json;';
-      echo "    proxy_pass http://localhost:${MATRIX_PORT};";
+      echo '    client_max_body_size 50M;';
       echo '  }';
       echo '';
-      echo "  location / {";
-      echo '    client_max_body_size 50M;';
-      echo '    proxy_http_version 1.1;';
-      echo "    proxy_set_header Host \$http_host;";
-      echo "    proxy_set_header X-Real-IP \$remote_addr;";
-      echo "    proxy_set_header X-Forward-For \$proxy_add_x_forwarded_for;";
-      echo '    proxy_set_header X-Forward-Proto http;';
-      echo '    proxy_set_header X-Nginx-Proxy true;';
-      echo '    proxy_temp_file_write_size 64k;';
-      echo '    proxy_connect_timeout 10080s;';
-      echo '    proxy_send_timeout 10080;';
-      echo '    proxy_read_timeout 10080;';
-      echo '    proxy_buffer_size 64k;';
-      echo '    proxy_buffers 16 32k;';
-      echo '    proxy_busy_buffers_size 64k;';
-      echo '    proxy_redirect off;';
-      echo '    proxy_request_buffering off;';
-      echo '    proxy_buffering off;';
-      echo "    proxy_pass http://localhost:${MATRIX_PORT};";
+      echo '  location / {';
+      echo "      proxy_pass http://localhost:${MATRIX_PORT};";
+      echo "      proxy_set_header X-Forwarded-For \$remote_addr;";
       echo '  }';
       echo '}'; } >> "$matrix_nginx_site"
 
@@ -795,8 +528,10 @@ function create_matrix_nginx_config {
     sed -i 's|limit_req zone.*|limit_req zone=req_limit_per_ip burst=50 nodelay;|g' "$matrix_nginx_site"
 
     # enable mic and camera
-    sed -i 's|microphone=(),||g' "$matrix_nginx_site"
-    sed -i 's|camera=(),||g' "$matrix_nginx_site"
+    if [[ $ONION_ONLY != "no" ]]; then
+        sed -i 's|microphone=(),||g' "$matrix_nginx_site"
+        sed -i 's|camera=(),||g' "$matrix_nginx_site"
+    fi
 
     nginx_ensite "$MATRIX_DOMAIN_NAME"
 
