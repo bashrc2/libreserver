@@ -107,6 +107,8 @@ function matrix_configure_homeserver_yaml {
         matrix_http_prefix='http'
     fi
 
+    # see https://github.com/matrix-org/synapse/blob/master/docs/sample_config.yaml
+
     { echo "server_name: \"${matrix_domain}\"";
       echo "public_baseurl: \"${matrix_http_prefix}://${matrix_domain}\"";
       echo 'pid_file: /etc/matrix/homeserver.pid';
