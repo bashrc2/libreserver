@@ -296,14 +296,6 @@ function install_gemini {
     cd "/home/gemini" || exit 24
     GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/gemini PATH=$PATH:/home/gemini:/home/go/go${GO_VERSION}/bin go get -u -v $GEMINI_PATH
 
-    # check that the source directory exists
-    molly_dir="/home/gemini/src"
-    if [ ! -d "$molly_dir" ]; then
-	find "/home/gemini" -name molly-brown
-	echo "Missing directory ${molly_dir}"
-	exit 52
-    fi
-
     increment_app_install_progress
 
     # check that the executable exists
