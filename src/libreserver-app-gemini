@@ -1,8 +1,8 @@
 #!/bin/bash
-#  _    _ _            ___                      
-# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
-# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # License
 # =======
@@ -65,27 +65,27 @@ gemini_variables=(ONION_ONLY
 function convert_blog_to_gemini {
     remove_gemini_blog_cron=
     if [ ! -d /var/gemini ]; then
-	remove_gemini_blog_cron=1
+        remove_gemini_blog_cron=1
     fi
     if ! grep -q "BLUDIT_DOMAIN_NAME=" "$CONFIGURATION_FILE"; then
-	remove_gemini_blog_cron=1
+        remove_gemini_blog_cron=1
     fi
     if [ $remove_gemini_blog_cron ]; then
-	if [ -f /etc/cron.hourly/gemini-blog ]; then
-	    rm /etc/cron.hourly/gemini-blog
-	fi
-	return
+        if [ -f /etc/cron.hourly/gemini-blog ]; then
+            rm /etc/cron.hourly/gemini-blog
+        fi
+        return
     fi
     if [ ! -d /var/gemini/blog ]; then
-	mkdir /var/gemini/blog
-	chown -R gemini:gemini /var/gemini
+        mkdir /var/gemini/blog
+        chown -R gemini:gemini /var/gemini
     fi
     read_config_param BLUDIT_DOMAIN_NAME
     if [ "$BLUDIT_DOMAIN_NAME" ]; then
-	{ echo '#!/bin/bash';
-	  echo "/usr/bin/python3 /usr/local/bin/libreserver-blog-to-gmi --geminidomain \$HOSTNAME --blogdomain $BLUDIT_DOMAIN_NAME";
-	  echo 'chown -R gemini:gemini /var/gemini'; } > /etc/cron.hourly/gemini-blog
-	chmod +x /etc/cron.hourly/gemini-blog
+        { echo '#!/bin/bash';
+          echo "/usr/bin/python3 /usr/local/bin/libreserver-blog-to-gmi --geminidomain \$HOSTNAME --blogdomain $BLUDIT_DOMAIN_NAME";
+          echo 'chown -R gemini:gemini /var/gemini'; } > /etc/cron.hourly/gemini-blog
+        chmod +x /etc/cron.hourly/gemini-blog
     fi
 }
 
@@ -97,7 +97,7 @@ function change_default_domain_name_gemini {
 
 function logging_on_gemini {
     if [ ! -f /etc/molly.conf ]; then
-	return
+        return
     fi
     sed -i 's|LogPath.*|LogPath = "/home/gemini/molly.log"|g' /etc/molly.conf
     systemctl restart gemini
@@ -105,7 +105,7 @@ function logging_on_gemini {
 
 function logging_off_gemini {
     if [ ! -f /etc/molly.conf ]; then
-	return
+        return
     fi
     sed -i 's|LogPath.*|LogPath = "/dev/null"|g' /etc/molly.conf
     systemctl restart gemini
@@ -154,8 +154,8 @@ function upgrade_gemini {
     GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/gemini PATH=$PATH:/home/gemini:/home/go/go${GO_VERSION}/bin go get -u -v $GEMINI_PATH
     chown -R gemini:gemini /home/gemini
     if ! grep -q "go${GO_VERSION}" /etc/systemd/system/gemini.service; then
-	sed -i "s|Environment=.*|Environment=\"USER=gemini\" \"HOME=/home/gemini\" \"GOPATH=/home/go/go${GO_VERSION}\"|g" /etc/systemd/system/gemini.service
-	systemctl daemon-reload
+        sed -i "s|Environment=.*|Environment=\"USER=gemini\" \"HOME=/home/gemini\" \"GOPATH=/home/go/go${GO_VERSION}\"|g" /etc/systemd/system/gemini.service
+        systemctl daemon-reload
     fi
     systemctl restart gemini
 }
@@ -191,8 +191,8 @@ function restore_local_gemini {
             fi
             cp -rp "$temp_restore_dir"/* "$gemini_dir"/
         fi
-	mv ${gemini_dir}/*.crt /home/gemini
-	mv ${gemini_dir}/*.key /home/gemini	
+        mv ${gemini_dir}/*.crt /home/gemini
+        mv ${gemini_dir}/*.key /home/gemini
         chown -R gemini:gemini /home/gemini
         chown -R gemini:gemini "$gemini_dir"
         rm -rf $temp_restore_dir
@@ -211,7 +211,7 @@ function restore_remote_gemini {
 
 function remove_gemini {
     if [ -f /etc/cron.hourly/gemini-blog ]; then
-	rm /etc/cron.hourly/gemini-blog
+        rm /etc/cron.hourly/gemini-blog
     fi
     if [ -f /etc/systemd/system/gemini.service ]; then
         systemctl stop gemini
@@ -219,8 +219,8 @@ function remove_gemini {
         rm /etc/systemd/system/gemini.service
     fi
     if grep -q "127.0.0.1:${GEMINI_PORT}" "/etc/torrc.d/${PROJECT_NAME}"; then
-	sed -i "/127.0.0.1:${GEMINI_PORT}/d" "/etc/torrc.d/${PROJECT_NAME}"
-	restart_tor_daemon
+        sed -i "/127.0.0.1:${GEMINI_PORT}/d" "/etc/torrc.d/${PROJECT_NAME}"
+        restart_tor_daemon
     fi
     userdel -r gemini
     groupdel -f gemini
@@ -232,13 +232,13 @@ function remove_gemini {
     sed -i '/gemini/d' "$COMPLETION_FILE"
 
     if [ -f /etc/molly.conf ]; then
-	rm /etc/molly.conf
+        rm /etc/molly.conf
     fi
     if [ -d /home/gemini ]; then
-	rm -rf /home/gemini
+        rm -rf /home/gemini
     fi
     if [ -d /var/gemini ]; then
-	rm -rf /var/gemini
+        rm -rf /var/gemini
     fi
 
     firewall_remove "${GEMINI_PORT}" tcp
@@ -249,7 +249,7 @@ function install_gemini {
 
     # remove existing directories
     if [ -d "/var/gemini" ]; then
-	rm -rf "/var/gemini"
+        rm -rf "/var/gemini"
     fi
 
     # create new directories
@@ -260,33 +260,33 @@ function install_gemini {
     groupdel -f gemini
     userdel -r gemini
     if [ -d "/home/gemini" ]; then
-	rm -rf "/home/gemini"
+        rm -rf "/home/gemini"
     fi
     if ! grep -q "gemini:" /etc/group; then
-	groupadd gemini
+        groupadd gemini
     fi
     useradd -c "gemini account" -d "/home/gemini" -m -r -g gemini gemini
     # add this user to the go group
     usermod -a -G go gemini
 
     if [ ! -d /home/gemini ]; then
-	echo $'gemini user account was not created'
-	exit 92
+        echo $'gemini user account was not created'
+        exit 92
     fi
 
     increment_app_install_progress
 
     if [ ! -f /home/gemini/.bashrc ]; then
-	echo "No .bashrc found for gemini user home directory"
-	exit 39
+        echo "No .bashrc found for gemini user home directory"
+        exit 39
     fi
     # add go path setup for the gemini user
     if ! grep -q "GOPATH=" /home/gemini/.bashrc; then
-	{ echo "export GOROOT=/home/go/go${GO_VERSION}";
-	  echo "export GOPATH=/home/gemini";
-	  echo "export PATH=\$PATH:\$GOPATH:/home/go/go${GO_VERSION}/bin"; } >> /home/gemini/.bashrc
+        { echo "export GOROOT=/home/go/go${GO_VERSION}";
+          echo "export GOPATH=/home/gemini";
+          echo "export PATH=\$PATH:\$GOPATH:/home/go/go${GO_VERSION}/bin"; } >> /home/gemini/.bashrc
     else
-	sed -i "s|GOPATH=.*|GOPATH=/home/gemini|g" /home/gemini/.bashrc
+        sed -i "s|GOPATH=.*|GOPATH=/home/gemini|g" /home/gemini/.bashrc
     fi
     chown -R gemini:gemini /home/gemini
 
@@ -302,8 +302,8 @@ function install_gemini {
     # shellcheck disable=SC2086
     molly_filename="/home/gemini/bin/molly-brown"
     if [ ! -f "$molly_filename" ]; then
-	echo "molly-brown file not found $molly_filename"
-	exit 61
+        echo "molly-brown file not found $molly_filename"
+        exit 61
     fi
 
     cd "/home/gemini" || exit 34
@@ -311,26 +311,29 @@ function install_gemini {
     increment_app_install_progress
 
     openssl req -x509 -new -newkey ec \
-	    -pkeyopt ec_paramgen_curve:prime256v1 \
-	    -keyout "/home/gemini/molly.key" \
-	    -out "/home/gemini/molly.crt" \
-	    -days 99999 -nodes -subj "/CN=${DEFAULT_DOMAIN_NAME}"
+            -pkeyopt ec_paramgen_curve:prime256v1 \
+            -keyout "/home/gemini/molly.key" \
+            -out "/home/gemini/molly.crt" \
+            -days 99999 -nodes -subj "/CN=${DEFAULT_DOMAIN_NAME}"
 
     if [ ! -f "/home/gemini/molly.key" ]; then
-	exit 82
+        exit 82
     fi
     if [ ! -f "/home/gemini/molly.crt" ]; then
-	exit 83
+        exit 83
     fi
 
     # add gemini to the email/xmpp onion address
     if ! grep -q "127.0.0.1:${GEMINI_PORT}" "/etc/torrc.d/${PROJECT_NAME}"; then
-	sed -i "/127.0.0.1:5222/a HiddenServicePort ${GEMINI_PORT} 127.0.0.1:${GEMINI_PORT}" "/etc/torrc.d/${PROJECT_NAME}"
-	restart_tor_daemon
+        sed -i "/127.0.0.1:5222/a HiddenServicePort ${GEMINI_PORT} 127.0.0.1:${GEMINI_PORT}" "/etc/torrc.d/${PROJECT_NAME}"
+        restart_tor_daemon
     fi
-    
-    # shellcheck disable=SC2034
-    #GEMINI_ONION_HOSTNAME=$(cat /var/lib/tor/hidden_service_email/hostname)
+
+    gemini_domain=${DEFAULT_DOMAIN_NAME}
+    if [[ "$ONION_ONLY" != 'no' ]]; then
+        # shellcheck disable=SC2034
+        gemini_domain=$(cat /var/lib/tor/hidden_service_email/hostname)
+    fi
 
     increment_app_install_progress
 
@@ -339,7 +342,7 @@ function install_gemini {
     { echo "CertPath = \"/home/gemini/molly.crt\"";
       echo "DocBase = \"/var/gemini/\"";
       echo "#HomeDocBase = \"users\"";
-      echo "#Hostname = \"localhost\"";
+      echo "Hostname = \"${gemini_domain}\"";
       echo "KeyPath = \"/home/gemini/molly.key\"";
       echo "LogPath = \"/dev/null\"";
       echo "Port = ${GEMINI_PORT}";
@@ -395,7 +398,7 @@ function install_gemini {
       echo '=> https://libreserver.org LibreServer site';
       echo '=> https://blog.libreserver.org LibreServer Blog'; } > /var/gemini/index.gmi
     chown -R gemini:gemini "/var/gemini"
-    
+
     increment_app_install_progress
 
     convert_blog_to_gemini
