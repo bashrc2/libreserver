@@ -86,6 +86,7 @@ function convert_blog_to_gemini {
           echo "/usr/bin/python3 /usr/local/bin/libreserver-blog-to-gmi --geminidomain \$HOSTNAME --blogdomain $BLUDIT_DOMAIN_NAME";
           echo 'chown -R gemini:gemini /var/gemini'; } > /etc/cron.hourly/gemini-blog
         chmod +x /etc/cron.hourly/gemini-blog
+	/etc/cron.hourly/gemini-blog
     fi
 }
 
