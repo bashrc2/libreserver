@@ -44,6 +44,8 @@ body, html {
     text-align: center;
 }
 
+p { text-align: justify; }
+
 pre {
     background-color: black;
     color: white;
