@@ -186,6 +186,7 @@ function epicyon_create_archive {
     { echo '#!/bin/bash';
       echo 'cd /etc/epicyon || exit 0';
       echo '/usr/bin/python3 epicyon.py --archive none'; } > "/usr/bin/epicyon-archive"
+    chmod +x "/usr/bin/epicyon-archive"
     cron_add_mins 60 "/usr/bin/epicyon-archive"
 }
 
