@@ -1,8 +1,8 @@
 #!/bin/bash
-#  _    _ _            ___                      
-# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
-# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # License
 # =======
@@ -71,24 +71,24 @@ epicyon_variables=(ONION_ONLY
 
 function run_client_epicyon {
     if [ ! -f ~/.epicyon_domain_name ]; then
-	return
+        return
     fi
     EPICYONDOMAIN=$(cat ~/.epicyon_domain_name)
     clear
     if [ ! -d ~/.epicyon ]; then
-	git clone ${EPICYON_REPO} ~/.epicyon
+        git clone ${EPICYON_REPO} ~/.epicyon
     else
-	cd ~/.epicyon || return
-	git pull
+        cd ~/.epicyon || return
+        git pull
     fi
     clear
     echo 'Epicyon Client'
     echo ''
     cd ~/.epicyon || return
     if [[ "${EPICYONDOMAIN}" != *'.onion' ]]; then
-	python3 epicyon.py --desktop ${USER}@${EPICYONDOMAIN}
+        python3 epicyon.py --desktop ${USER}@${EPICYONDOMAIN}
     else
-	python3 epicyon.py --desktop ${USER}@${EPICYONDOMAIN} --http
+        python3 epicyon.py --desktop ${USER}@${EPICYONDOMAIN} --http
     fi
 }
 
@@ -452,12 +452,12 @@ function epicyon_update_domain_name_users {
     # so that the desktop client knows its domain
     epicyon_domain=${EPICYON_DOMAIN_NAME}
     if [[ "${ONION_ONLY}" != 'no' ]]; then
-	epicyon_domain=$(cat /var/lib/tor/hidden_service_epicyon/hostname)
+        epicyon_domain=$(cat /var/lib/tor/hidden_service_epicyon/hostname)
     fi
     for d in /home/*/ ; do
         USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
-	echo -n "${epicyon_domain}" > "/home/${USERNAME}/.epicyon_domain_name"
-	chown "${USERNAME}":"${USERNAME}" "/home/${USERNAME}/.epicyon_domain_name"
+        echo -n "${epicyon_domain}" > "/home/${USERNAME}/.epicyon_domain_name"
+        chown "${USERNAME}":"${USERNAME}" "/home/${USERNAME}/.epicyon_domain_name"
     done
 }
 
@@ -528,9 +528,9 @@ function install_epicyon {
         nginx_ssl "$EPICYON_DOMAIN_NAME"
 
 #        nginx_security_options "$EPICYON_DOMAIN_NAME"
-        nginx_robots "$EPICYON_DOMAIN_NAME"
 
-        { echo '  add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
+        { echo '  add_header X-Robots-Tag "noindex";';
+          echo '  add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
           echo "  add_header Onion-Location http://${EPICYON_ONION_HOSTNAME}\$request_uri;";
           echo '';
           echo '  access_log /dev/null;';
