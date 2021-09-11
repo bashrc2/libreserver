@@ -2024,94 +2024,96 @@ function set_static_ip_address {
 
 # shellcheck disable=SC2120
 function install_apps_from_webadmin {
-    if [ -f "$pending_installs" ]; then
-        if [ ! -f "$currently_installing_app_name" ]; then
-            linestr=$(head -n 1 "$pending_installs")
-            if [[ "$linestr" == "install_"* && "$linestr" != *'_running'* ]]; then
-                app_name=$(echo "$linestr" | awk -F '_' '{print $2}' | awk -F ',' '{print $1}')
-                if [ -f "/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-${app_name}" ]; then
-                    app_domain=$(echo "$linestr" | awk -F ',' '{print $2}')
-                    if [ ! "$app_domain" ]; then
-                        app_domain=${app_name}.local
-                    fi
-                    app_name_upper=$(echo "$app_name" | awk '{print toupper($0)}')
-                    if [[ "${app_name_upper}" && "${app_name_upper}" != "DEFAULT" ]]; then
-
-                        # indicate that we are installing
-                        sed -i "s|${app_name}|${app_name}_running|g" "$pending_installs"
-
-                        # Add domain name to the config
-                        if grep -q "${app_name_upper}_DOMAIN_NAME=" "$CONFIGURATION_FILE"; then
-                            sed -i "/${app_name_upper}_DOMAIN_NAME=/d" "$CONFIGURATION_FILE"
-                        fi
-                        echo "${app_name_upper}_DOMAIN_NAME=${app_domain}" >> "$CONFIGURATION_FILE"
-
-                        # remove app from the removed file
-                        if grep -Fxq "_${app_name}_" "$REMOVED_APPS_FILE"; then
-                            sed -i "/_${app_name}_/d" "$REMOVED_APPS_FILE"
-                        fi
-
-                        # remove the qrcode for the app if it exists
-                        if [ -f "$webadmin_install_dir/app_qrcode_${app_name}.png" ]; then
-                            rm "$webadmin_install_dir/app_qrcode_${app_name}.png"
-                        fi
-
-                        # remove from pending list so that if the install gets stuck
-                        # it won't repeatedly try to install a bad app
-                        sed -i "/$linestr/d" "$pending_installs"
-
-                        translated_notification_failed=$(web_admin_translate_text "Failed to install. For details see admin/applog.txt")
-                        translated_notification_success=$(web_admin_translate_text "Installed successfully")
-
-                        # Store the name and domain of the app being installed.
-                        # This allows the correct nginx config to be removed if the install is cancelled
-                        echo "$app_name" > "$currently_installing_app_name"
-                        echo "$app_domain" > "$currently_installing_app_domain"
-
-                        # make a script to do the install
-                        { echo "#!/bin/bash";
-                          echo '';
-                          echo '# exit if an install is already happening';
-                          echo "kill_pid=\$(ps aux | grep \"addremove add\" | grep -v grep | head -n 1 | awk -F ' ' '{print $2}')";
-                          echo "if [ \"\$kill_pid\" ]; then";
-                          echo "    echo \"App install already in progress\" >> \"$webadmin_install_dir/applog.txt\"";
-                          echo "    grep \"addremove add\" | head -n 1 >> \"$webadmin_install_dir/applog.txt\"";
-                          echo "    chown www-data:www-data \"$webadmin_install_dir/applog.txt\"";
-                          echo '    exit 0';
-                          echo 'fi';
-                          echo '';
-                          echo "if ! /usr/bin/timeout $APP_INSTALL_TIMEOUT_SEC /usr/local/bin/${PROJECT_NAME}-addremove add \"${app_name}\" > \"$webadmin_install_dir/applog.txt\"; then";
-                          echo "    sed -i \"/$linestr/d\" \"$pending_installs\"";
-                          echo "    notification_str=\"$translated_notification_failed\"";
-                          echo "    if [ -f \"/etc/nginx/sites-available/${app_domain}\" ]; then";
-                          echo "        echo \"Removing /etc/nginx/sites-available/${app_domain}\" >> \"$webadmin_install_dir/applog.txt\"";
-                          echo "        nginx_dissite \"${app_domain}\"";
-                          echo "        rm \"/etc/nginx/sites-available/${app_domain}\"";
-                          echo "        echo \"Restarting nginx\" >> \"$webadmin_install_dir/applog.txt\"";
-                          echo '        systemctl restart nginx';
-                          echo '    fi';
-                          echo 'else';
-                          echo "    notification_str=\"$translated_notification_success\"";
-                          echo 'fi';
-                          echo "if [ -f $currently_installing_app_domain ]; then";
-                          echo "    rm $currently_installing_app_domain";
-                          echo 'fi';
-                          echo "rm $currently_installing_app_name";
-                          echo "/usr/local/bin/${PROJECT_NAME}-notification -s \"[${PROJECT_NAME}] ${app_name} ${translated_notification_str}\" -m \"${app_name} \${notification_str}\" &";
-                          echo "chown www-data:www-data \"$webadmin_install_dir/applog.txt\"";
-                          echo "exit 0"; } > $install_app_script
-                        chmod +x $install_app_script
-                        /bin/bash $install_app_script &
-                    fi
-                else
-                    # remove from pending list
-                    sed -i "/$linestr/d" "$pending_installs"
-                fi
-            else
-                # if any unusual line is found then remove the file
-                rm "$pending_installs"
+    if [ ! -f "$pending_installs" ]; then
+        return
+    fi
+    if [ -f "$currently_installing_app_name" ]; then
+        return
+    fi
+    linestr=$(head -n 1 "$pending_installs")
+    if [[ "$linestr" == "install_"* && "$linestr" != *'_running'* ]]; then
+        app_name=$(echo "$linestr" | awk -F '_' '{print $2}' | awk -F ',' '{print $1}')
+        if [ -f "/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-${app_name}" ]; then
+            app_domain=$(echo "$linestr" | awk -F ',' '{print $2}')
+            if [ ! "$app_domain" ]; then
+                app_domain=${app_name}.local
             fi
+            app_name_upper=$(echo "$app_name" | awk '{print toupper($0)}')
+            if [[ "${app_name_upper}" && "${app_name_upper}" != "DEFAULT" ]]; then
+
+                # indicate that we are installing
+                sed -i "s|${app_name}|${app_name}_running|g" "$pending_installs"
+
+                # Add domain name to the config
+                if grep -q "${app_name_upper}_DOMAIN_NAME=" "$CONFIGURATION_FILE"; then
+                    sed -i "/${app_name_upper}_DOMAIN_NAME=/d" "$CONFIGURATION_FILE"
+                fi
+                echo "${app_name_upper}_DOMAIN_NAME=${app_domain}" >> "$CONFIGURATION_FILE"
+
+                # remove app from the removed file
+                if grep -Fxq "_${app_name}_" "$REMOVED_APPS_FILE"; then
+                    sed -i "/_${app_name}_/d" "$REMOVED_APPS_FILE"
+                fi
+
+                # remove the qrcode for the app if it exists
+                if [ -f "$webadmin_install_dir/app_qrcode_${app_name}.png" ]; then
+                    rm "$webadmin_install_dir/app_qrcode_${app_name}.png"
+                fi
+
+                # remove from pending list so that if the install gets stuck
+                # it won't repeatedly try to install a bad app
+                sed -i "/$linestr/d" "$pending_installs"
+
+                translated_notification_failed=$(web_admin_translate_text "Failed to install. For details see admin/applog.txt")
+                translated_notification_success=$(web_admin_translate_text "Installed successfully")
+
+                # Store the name and domain of the app being installed.
+                # This allows the correct nginx config to be removed if the install is cancelled
+                echo "$app_name" > "$currently_installing_app_name"
+                echo "$app_domain" > "$currently_installing_app_domain"
+
+                # make a script to do the install
+                { echo "#!/bin/bash";
+                  echo '';
+                  echo '# exit if an install is already happening';
+                  echo "kill_pid=\$(ps aux | grep \"addremove add\" | grep -v grep | head -n 1 | awk -F ' ' '{print $2}')";
+                  echo "if [ \"\$kill_pid\" ]; then";
+                  echo "    echo \"App install already in progress\" >> \"$webadmin_install_dir/applog.txt\"";
+                  echo "    grep \"addremove add\" | head -n 1 >> \"$webadmin_install_dir/applog.txt\"";
+                  echo "    chown www-data:www-data \"$webadmin_install_dir/applog.txt\"";
+                  echo '    exit 0';
+                  echo 'fi';
+                  echo '';
+                  echo "if ! /usr/bin/timeout $APP_INSTALL_TIMEOUT_SEC /usr/local/bin/${PROJECT_NAME}-addremove add \"${app_name}\" > \"$webadmin_install_dir/applog.txt\"; then";
+                  echo "    sed -i \"/$linestr/d\" \"$pending_installs\"";
+                  echo "    notification_str=\"$translated_notification_failed\"";
+                  echo "    if [ -f \"/etc/nginx/sites-available/${app_domain}\" ]; then";
+                  echo "        echo \"Removing /etc/nginx/sites-available/${app_domain}\" >> \"$webadmin_install_dir/applog.txt\"";
+                  echo "        nginx_dissite \"${app_domain}\"";
+                  echo "        rm \"/etc/nginx/sites-available/${app_domain}\"";
+                  echo "        echo \"Restarting nginx\" >> \"$webadmin_install_dir/applog.txt\"";
+                  echo '        systemctl restart nginx';
+                  echo '    fi';
+                  echo 'else';
+                  echo "    notification_str=\"$translated_notification_success\"";
+                  echo 'fi';
+                  echo "if [ -f $currently_installing_app_domain ]; then";
+                  echo "    rm $currently_installing_app_domain";
+                  echo 'fi';
+                  echo "rm $currently_installing_app_name";
+                  echo "/usr/local/bin/${PROJECT_NAME}-notification -s \"[${PROJECT_NAME}] ${app_name} ${translated_notification_str}\" -m \"${app_name} \${notification_str}\" &";
+                  echo "chown www-data:www-data \"$webadmin_install_dir/applog.txt\"";
+                  echo "exit 0"; } > $install_app_script
+                chmod +x $install_app_script
+                /bin/bash $install_app_script &
+            fi
+        else
+            # remove from pending list
+            sed -i "/$linestr/d" "$pending_installs"
         fi
+    else
+        # if any unusual line is found then remove the file
+        rm "$pending_installs"
     fi
 }
 
