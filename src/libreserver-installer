@@ -2043,7 +2043,7 @@ function install_apps_from_webadmin {
                     if ! grep -q "${app_name_upper}_DOMAIN_NAME=" "$CONFIGURATION_FILE"; then
                         echo "${app_name_upper}_DOMAIN_NAME=${app_domain}" >> "$CONFIGURATION_FILE"
                     else
-                        sed -i "s|${app_name_upper}_DOMAIN_NAME=.*|${app_name_upper}_DOMAIN_NAME=${app_domain}|g" "$CONFIGURATION_FILE"
+                        # sed -i "s|${app_name_upper}_DOMAIN_NAME=.*|${app_name_upper}_DOMAIN_NAME=${app_domain}|g" "$CONFIGURATION_FILE"
                     fi
 
                     # remove app from the removed file
