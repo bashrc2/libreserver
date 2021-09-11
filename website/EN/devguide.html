@@ -52,7 +52,7 @@ To copy it to a drive (eg. microSD or USB):
 
 <pre>
 xzcat build/libreserver-bullseye-*-amd64.img.xz | \
-  sudo dd bs=4M of=/dev/sdg conv=fsync status=progress
+  sudo dd bs=4096 of=/dev/sdg conv=fsync status=progress
 </pre>
 
 <h2>Adding extra apps</h2>

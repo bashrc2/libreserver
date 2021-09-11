@@ -30,7 +30,7 @@
 
       <pre>
 xzcat libreserver-bullseye-*-amd64.img.xz | \
-    sudo dd bs=4M of=/dev/sdX \
+    sudo dd bs=4096 of=/dev/sdX \
     conv=fsync,sync,noerror status=progress</pre>
       <p>
 	Where <b>sdX</b> is the name of your drive.
