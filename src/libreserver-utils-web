@@ -142,7 +142,7 @@ function nginx_compress {
       echo '    gzip_comp_level 6;';
       echo '    gzip_buffers 16 8k;';
       echo '    gzip_http_version 1.1;';
-      echo '    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;'; } >> "$filename"
+      echo '    gzip_types text/plain text/css application/json application/ld+json application/javascript text/xml application/xml application/rdf+xml application/xml+rss text/javascript;'; } >> "$filename"
 }
 
 function nginx_ssl {
@@ -813,7 +813,7 @@ function image_install_web_server {
       echo '        # gzip_comp_level 6;';
       echo '        # gzip_buffers 16 8k;';
       echo '        # gzip_http_version 1.1;';
-      echo '        # gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;';
+      echo '        # gzip_types text/plain text/css application/json application/ld+json application/javascript text/xml application/xml application/rdf+xml application/xml+rss text/javascript;';
       echo '';
       echo '        ##';
       echo '        # Virtual Host Configs';
@@ -961,7 +961,7 @@ function install_web_server {
       echo '        # gzip_comp_level 6;';
       echo '        # gzip_buffers 16 8k;';
       echo '        # gzip_http_version 1.1;';
-      echo '        # gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;';
+      echo '        # gzip_types text/plain text/css application/json application/ld+json application/javascript text/xml application/xml application/rdf+xml application/xml+rss text/javascript;';
       echo '';
       echo '        ##';
       echo '        # Virtual Host Configs';
