@@ -1,8 +1,8 @@
 #!/bin/bash
-#  _    _ _            ___                      
-# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
-# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # Emacs application
 #
@@ -137,9 +137,9 @@ function remove_emacs {
     sed -i '/install_emacs/d' "$COMPLETION_FILE"
 
     if [ -f /etc/cron.daily/emacs-backups ]; then
-	rm /etc/cron.daily/emacs-backups
+        rm /etc/cron.daily/emacs-backups
     fi
-    
+
     # remove emacs as the mutt email editor
     if [ -f /etc/Muttrc ]; then
         if grep -q "set editor=" /etc/Muttrc; then
@@ -163,11 +163,11 @@ function install_emacs {
     update-alternatives --set editor /usr/bin/emacs
 
     if [ ! -d /root/.emacs_backups ]; then
-	mkdir /root/.emacs_backups
+        mkdir /root/.emacs_backups
     fi
 
     if [ ! -d /etc/skel/.emacs_backups ]; then
-	mkdir /etc/skel/.emacs_backups
+        mkdir /etc/skel/.emacs_backups
     fi
 
     # remove backup files daily
@@ -176,7 +176,7 @@ function install_emacs {
       echo '    rm /root/.emacs_backups/*';
       echo 'fi'; } > /etc/cron.daily/emacs-backups
     chmod +x /etc/cron.daily/emacs-backups
-    
+
     # A minimal emacs configuration
     #echo -n "(add-to-list 'load-path " > /home/$MY_USERNAME/.emacs
     #echo '"~/.emacs.d/")' >> /home/$MY_USERNAME/.emacs
@@ -250,7 +250,17 @@ function install_emacs {
       echo '(epa-file-enable)';
       echo '(menu-bar-mode -1)';
       echo '(toggle-scroll-bar -1)';
-      echo '(tool-bar-mode -1)'; } >> "/home/$MY_USERNAME/.emacs"
+      echo '(tool-bar-mode -1)';
+      echo '';
+      echo $';; ===== scratchpad message  ===========================================';
+      echo '(setq initial-scratch-message';
+      echo '      (concat';
+      echo '       ";; This buffer is for text that is not saved, and for Lisp evaluation.\n"';
+      echo '       ";; To create a file, visit it with C-x C-f and enter text in its buffer.\n"';
+      echo '       ";;\n"';
+      echo '       ";; Welcome\n"))';
+      echo $';; ===== highlight current line ========================================';
+      echo '(global-hl-line-mode)'; } >> "/home/$MY_USERNAME/.emacs"
     cp "/home/$MY_USERNAME/.emacs" /root/.emacs
     chown "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME/.emacs"
 
