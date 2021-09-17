@@ -396,6 +396,9 @@ function letsencrypt_renewals {
       echo '    if [ -d /etc/prosody ]; then';
       echo '        systemctl reload prosody';
       echo '    fi';
+      echo '    if [ -d /etc/miniirc ]; then';
+      echo '        systemctl restart miniirc';
+      echo '    fi';
       echo '';
       echo 'fi'; } > "$renewals_script"
     chmod +x "$renewals_script"
