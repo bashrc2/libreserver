@@ -820,6 +820,20 @@ function block_ips_from_asn {
         fi
     fi
 
+    # should gmail addresses be permitted?
+    if [[ "$ONION_ONLY" == 'no' ]]; then
+        allow_google_gmail=1
+        if grep -q "ALLOW_GOOGLE_GMAIL=n" /root/${PROJECT_NAME}.cfg; then
+            allow_google_gmail=
+        fi
+        if [ $allow_google_gmail ]; then
+            echo $'FIREWALL: Allowing Google Gmail'
+        fi
+    else
+        # on onion installs block email from/to gmail
+        allow_google_gmail=
+    fi
+
     echo $"Firewalling ${block_comment} ${asn}"
     printf "%s\n" "${list_prefixes_ipv4}" | while IFS= read -r blockediprange
     do
@@ -829,10 +843,17 @@ function block_ips_from_asn {
                 continue
             fi
         fi
-	if [[ "${ruleset}" != *"${blockediprange}"* ]]; then
+        if [ $allow_google_gmail ]; then
+            # see https://support.google.com/a/answer/60764?hl=en
+            if [[ "${blockediprange}" == *"108.177.16.."* || "${blockediprange}" == *"108.177.17."* || "${blockediprange}" == *"142.250.220."* || "${blockediprange}" == *"142.250.221."* ]]; then
+                firewall_unblock_ip "${blockediprange}" "${block_comment}${asn}" "nosave"
+                continue
+            fi
+        fi
+        if [[ "${ruleset}" != *"${blockediprange}"* ]]; then
             firewall_block_ip "${blockediprange}" "${block_comment}${asn}" "nosave"
-	fi
-	echo -n '.'
+        fi
+        echo -n '.'
     done
     save_firewall_settings
     echo ''
