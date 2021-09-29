@@ -804,42 +804,43 @@ function block_ips_from_asn {
 
     # should google DNS be allowed?
     allow_google_dns=
-    if grep -q "ALLOW_GOOGLE_DNS=y" /root/${PROJECT_NAME}.cfg; then
-        echo $'FIREWALL: Allowing Google DNS'
-        allow_google_dns=1
-    fi
-    if [ ! $allow_google_dns ]; then
-        if [ -f /etc/resolv.conf ]; then
-            if grep -q "8.8.8." /etc/resolv.conf; then
-                echo $'FIREWALL: Allowing Google DNS'
-                allow_google_dns=1
-            fi
-            if [ ! $allow_google_dns ]; then
-                if grep -q "4.4.4." /etc/resolv.conf; then
+    allow_google_gmail=
+    allow_golang=
+    if [[ "${block_comment}" == *'google'* ]]; then
+        allow_golang=1
+        if grep -q "ALLOW_GOOGLE_DNS=y" /root/${PROJECT_NAME}.cfg; then
+            echo $'FIREWALL: Allowing Google DNS'
+            allow_google_dns=1
+        fi
+        if [ ! $allow_google_dns ]; then
+            if [ -f /etc/resolv.conf ]; then
+                if grep -q "8.8.8." /etc/resolv.conf; then
                     echo $'FIREWALL: Allowing Google DNS'
                     allow_google_dns=1
                 fi
+                if [ ! $allow_google_dns ]; then
+                    if grep -q "4.4.4." /etc/resolv.conf; then
+                        echo $'FIREWALL: Allowing Google DNS'
+                        allow_google_dns=1
+                    fi
+                fi
             fi
         fi
-    fi
 
-    # should gmail addresses be permitted?
-    if [[ "$ONION_ONLY" == 'no' ]]; then
-        allow_google_gmail=1
-        if grep -q "ALLOW_GOOGLE_GMAIL=n" /root/${PROJECT_NAME}.cfg; then
-            allow_google_gmail=
+        # should gmail addresses be permitted?
+        if [[ "$ONION_ONLY" == 'no' ]]; then
+            allow_google_gmail=1
+            if grep -q "ALLOW_GOOGLE_GMAIL=n" /root/${PROJECT_NAME}.cfg; then
+                allow_google_gmail=
+            fi
+            if [ $allow_google_gmail ]; then
+                echo $'FIREWALL: Allowing Google Gmail'
+            fi
         fi
+
         if [ $allow_google_gmail ]; then
-            echo $'FIREWALL: Allowing Google Gmail'
+            echo $'FIREWALL: Allowing golang.org on Google IP range'
         fi
-    else
-        # on onion installs block email from/to gmail
-        allow_google_gmail=
-    fi
-
-    allow_golang=1
-    if [ $allow_google_gmail ]; then
-        echo $'FIREWALL: Allowing golang.org on Google IP range'
     fi
 
     echo $"Firewalling ${block_comment} ${asn}"
@@ -908,7 +909,9 @@ function firewall_google {
         firewall_block_range googlebot13 216.239.32.0 216.239.63.255 "${block_google_comment}"
     fi
 
-    block_ips_from_asn AS15169 google
+    # NOTE: blocking google's AS number is thorough,
+    # but prevents anything written in Go from installing
+    # block_ips_from_asn AS15169 google
 }
 
 function firewall_remove {
