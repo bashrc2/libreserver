@@ -67,19 +67,19 @@ function delete_firewall_port_via_handle {
     # get the handles for all lines containing the port number
     delete_handle_list=$(/usr/sbin/nft -a list ruleset | grep "dport ${firewall_port} \|daddr ${firewall_port} \|saddr ${firewall_port} \|icmp ${firewall_port} \| meter ${firewall_port} ")
     if [ "${delete_handle_list}" ]; then
-	nft_handles=$(echo -n "${delete_handle_list}" | awk -F '#' '{print $2}' | uniq)
-	if [ "$nft_handles" ]; then
+        nft_handles=$(echo -n "${delete_handle_list}" | awk -F '#' '{print $2}' | uniq)
+        if [ "$nft_handles" ]; then
             # remove using the handle numbers
             IFS=$'\n'
             while IFS= read -r nft_handle; do
-		# shellcheck disable=SC2086
-		/usr/sbin/nft delete rule inet filter INPUT ${nft_handle} 2> /dev/null
-		# shellcheck disable=SC2086
-		/usr/sbin/nft delete rule inet filter FORWARD ${nft_handle} 2> /dev/null
-		# shellcheck disable=SC2086
-		/usr/sbin/nft delete rule inet filter OUTPUT ${nft_handle} 2> /dev/null
+                # shellcheck disable=SC2086
+                /usr/sbin/nft delete rule inet filter INPUT ${nft_handle} 2> /dev/null
+                # shellcheck disable=SC2086
+                /usr/sbin/nft delete rule inet filter FORWARD ${nft_handle} 2> /dev/null
+                # shellcheck disable=SC2086
+                /usr/sbin/nft delete rule inet filter OUTPUT ${nft_handle} 2> /dev/null
             done <<< "$nft_handles"
-	fi
+        fi
     fi
 }
 
@@ -842,16 +842,20 @@ function block_ips_from_asn {
     do
         if [ $allow_google_dns ]; then
             if [[ "${blockediprange}" == *"8.8.8."* || "${blockediprange}" == *"4.4.4."* ]]; then
-		echo -n 'D'
-                firewall_unblock_ip "${blockediprange}" "${block_comment}${asn}" "nosave"
+                echo -n 'D'
+                if [[ "${ruleset}" == *"${blockediprange}"* ]]; then
+                    firewall_unblock_ip "${blockediprange}" "${block_comment}${asn}" "nosave"
+                fi
                 continue
             fi
         fi
         if [ $allow_google_gmail ]; then
             # see https://support.google.com/a/answer/60764?hl=en
             if [[ "${blockediprange}" == *"108.177.16."* || "${blockediprange}" == *"108.177.17."* || "${blockediprange}" == *"142.250.220."* || "${blockediprange}" == *"142.250.221."* ]]; then
-		echo -n 'G'
-                firewall_unblock_ip "${blockediprange}" "${block_comment}${asn}" "nosave"
+                echo -n 'G'
+                if [[ "${ruleset}" == *"${blockediprange}"* ]]; then
+                    firewall_unblock_ip "${blockediprange}" "${block_comment}${asn}" "nosave"
+                fi
                 continue
             fi
         fi
