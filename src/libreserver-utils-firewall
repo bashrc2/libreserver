@@ -839,6 +839,7 @@ function block_ips_from_asn {
     do
         if [ $allow_google_dns ]; then
             if [[ "${blockediprange}" == *"8.8.8."* || "${blockediprange}" == *"4.4.4."* ]]; then
+		echo -n 'D'
                 firewall_unblock_ip "${blockediprange}" "${block_comment}${asn}" "nosave"
                 continue
             fi
@@ -846,6 +847,7 @@ function block_ips_from_asn {
         if [ $allow_google_gmail ]; then
             # see https://support.google.com/a/answer/60764?hl=en
             if [[ "${blockediprange}" == *"108.177.16.."* || "${blockediprange}" == *"108.177.17."* || "${blockediprange}" == *"142.250.220."* || "${blockediprange}" == *"142.250.221."* ]]; then
+		echo -n 'G'
                 firewall_unblock_ip "${blockediprange}" "${block_comment}${asn}" "nosave"
                 continue
             fi
