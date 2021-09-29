@@ -36,6 +36,7 @@ MUTED_WORDS=$HOME/${PROJECT_NAME}-firewall-words.cfg
 FIREWALL_EIFACE=eth0
 EXTERNAL_IPV4_ADDRESS=
 FIREFOX_TELEMETRY_IP='52.88.27.118'
+WHOISDOMAIN='whois.radb.net'
 
 # If these ports are scanned from outside of the local network
 # then the IP address will be blocked for 24 hours
@@ -769,6 +770,68 @@ function firewall_unblock_cloudflare {
     echo 'Cloudflare unblocked'
 }
 
+function block_ips_from_asn {
+    # return ip addresses from AS number, eg. AS15169
+    asn="$1"
+    block_comment="$2"
+
+    ruleset=$(/usr/sbin/nft list ruleset)
+    # does the firewall exist?
+    if [ ! "${ruleset}" ]; then
+        echo $'No firewall exists'
+        return
+    fi
+
+    if [ ! -f /usr/bin/whois ]; then
+        INSTALL_PACKAGES whois
+    fi
+    if [ ! -f /usr/bin/whois ]; then
+        echo $'whois is missing'
+        return
+    fi
+    if [ ! "${block_comment}" ]; then
+        echo $'No firewall block comment'
+    fi
+
+    list_prefixes_ipv4=$(/usr/bin/whois -h "${WHOISDOMAIN}" -- -i origin "${asn}" | awk '/route:/ {print $2}')
+    if [[ ! "$list_prefixes_ipv4" ]]; then
+        echo "FIREWALL: No ip addresses returned from $whoisdomain $asn"
+        return
+    fi
+
+    # should google DNS be allowed?
+    allow_google_dns=
+    if grep -q "ALLOW_GOOGLE_DNS=y" /root/${PROJECT_NAME}.cfg; then
+        echo $'FIREWALL: Allowing Google DNS'
+        allow_google_dns=1
+    fi
+    if [ ! $allow_google_dns ]; then
+        if [ -f /etc/resolv.conf ]; then
+            if grep -q "8.8.8." /etc/resolv.conf; then
+                echo $'FIREWALL: Allowing Google DNS'
+                allow_google_dns=1
+            fi
+            if [ ! $allow_google_dns ]; then
+                if grep -q "4.4.4." /etc/resolv.conf; then
+                    echo $'FIREWALL: Allowing Google DNS'
+                    allow_google_dns=1
+                fi
+            fi
+        fi
+    fi
+
+    printf "%s\n" "${list_prefixes_ipv4}" | while IFS= read -r blockediprange
+    do
+        if [ $allow_google_dns ]; then
+            if [[ "${blockediprange}" == *"8.8.8."* || "${blockediprange}" == *"4.4.4."* ]]; then
+                firewall_unblock_ip "${blockediprange}" "${block_comment}${asn}"
+                continue
+            fi
+        fi
+        firewall_block_ip "${blockediprange}" "${block_comment}${asn}"
+    done
+}
+
 function firewall_google {
     ruleset=$(/usr/sbin/nft list ruleset)
     # does the firewall exist?
@@ -795,111 +858,7 @@ function firewall_google {
         firewall_block_range googlebot13 216.239.32.0 216.239.63.255 "${block_google_comment}"
     fi
 
-    block_google_comment='googleAS15169'
-    # is google already configured?
-    if [[ "$ruleset" != *"$block_google_comment"* ]]; then
-        # https://ipinfo.io/AS15169
-        firewall_block_ip 104.154.0.0/15 "$block_google_comment"
-        firewall_block_ip 104.154.0.0/19 "$block_google_comment"
-        firewall_block_ip 104.154.128.0/19 "$block_google_comment"
-        firewall_block_ip 104.154.160.0/19 "$block_google_comment"
-        firewall_block_ip 104.154.192.0/19 "$block_google_comment"
-        firewall_block_ip 104.154.224.0/19 "$block_google_comment"
-        firewall_block_ip 104.154.32.0/19 "$block_google_comment"
-        firewall_block_ip 104.154.64.0/19 "$block_google_comment"
-        firewall_block_ip 104.154.96.0/19 "$block_google_comment"
-        firewall_block_ip 104.155.0.0/19 "$block_google_comment"
-        firewall_block_ip 104.155.128.0/19 "$block_google_comment"
-        firewall_block_ip 104.155.160.0/19 "$block_google_comment"
-        firewall_block_ip 104.155.192.0/19 "$block_google_comment"
-        firewall_block_ip 104.155.224.0/19 "$block_google_comment"
-        firewall_block_ip 104.155.32.0/19 "$block_google_comment"
-        firewall_block_ip 104.155.64.0/19 "$block_google_comment"
-        firewall_block_ip 104.155.96.0/19 "$block_google_comment"
-        firewall_block_ip 104.196.0.0/14 "$block_google_comment"
-        firewall_block_ip 104.196.0.0/19 "$block_google_comment"
-        firewall_block_ip 104.196.128.0/19 "$block_google_comment"
-        firewall_block_ip 104.196.160.0/19 "$block_google_comment"
-        firewall_block_ip 104.196.192.0/19 "$block_google_comment"
-        firewall_block_ip 104.196.224.0/19 "$block_google_comment"
-        firewall_block_ip 104.196.32.0/19 "$block_google_comment"
-        firewall_block_ip 104.196.64.0/19 "$block_google_comment"
-        firewall_block_ip 104.196.96.0/19 "$block_google_comment"
-        firewall_block_ip 104.197.0.0/19 "$block_google_comment"
-        firewall_block_ip 104.197.128.0/19 "$block_google_comment"
-        firewall_block_ip 104.197.160.0/19 "$block_google_comment"
-        firewall_block_ip 104.197.192.0/19 "$block_google_comment"
-        firewall_block_ip 104.197.224.0/19 "$block_google_comment"
-        firewall_block_ip 104.197.32.0/19 "$block_google_comment"
-        firewall_block_ip 104.197.64.0/19 "$block_google_comment"
-        firewall_block_ip 104.197.96.0/19 "$block_google_comment"
-        firewall_block_ip 104.198.0.0/19 "$block_google_comment"
-        firewall_block_ip 104.198.128.0/19 "$block_google_comment"
-        firewall_block_ip 104.198.160.0/19 "$block_google_comment"
-        firewall_block_ip 104.198.192.0/19 "$block_google_comment"
-        firewall_block_ip 104.198.224.0/19 "$block_google_comment"
-        firewall_block_ip 104.198.32.0/19 "$block_google_comment"
-        firewall_block_ip 104.198.64.0/19 "$block_google_comment"
-        firewall_block_ip 104.198.96.0/19 "$block_google_comment"
-        firewall_block_ip 104.199.0.0/19 "$block_google_comment"
-        firewall_block_ip 104.199.128.0/19 "$block_google_comment"
-        firewall_block_ip 104.199.160.0/19 "$block_google_comment"
-        firewall_block_ip 104.199.192.0/19 "$block_google_comment"
-        firewall_block_ip 104.199.224.0/19 "$block_google_comment"
-        firewall_block_ip 104.199.32.0/19 "$block_google_comment"
-        firewall_block_ip 104.199.64.0/19 "$block_google_comment"
-        firewall_block_ip 104.199.96.0/19 "$block_google_comment"
-        firewall_block_ip 107.167.160.0/19 "$block_google_comment"
-        firewall_block_ip 107.178.192.0/18 "$block_google_comment"
-        firewall_block_ip 108.170.192.0/18 "$block_google_comment"
-        firewall_block_ip 108.177.0.0/17 "$block_google_comment"
-        firewall_block_ip 108.177.100.0/24 "$block_google_comment"
-        firewall_block_ip 108.177.10.0/24 "$block_google_comment"
-        firewall_block_ip 108.177.101.0/24 "$block_google_comment"
-        firewall_block_ip 108.177.102.0/24 "$block_google_comment"
-        firewall_block_ip 108.177.103.0/24 "$block_google_comment"
-        firewall_block_ip 108.177.104.0/24 "$block_google_comment"
-        firewall_block_ip 108.177.108.0/24 "$block_google_comment"
-        firewall_block_ip 108.177.109.0/24 "$block_google_comment"
-        firewall_block_ip 108.177.110.0/24 "$block_google_comment"
-        firewall_block_ip 108.177.11.0/24 "$block_google_comment"
-        firewall_block_ip 108.177.111.0/24 "$block_google_comment"
-        firewall_block_ip 108.177.112.0/24 "$block_google_comment"
-        firewall_block_ip 108.177.113.0/24 "$block_google_comment"
-        firewall_block_ip 108.177.114.0/24 "$block_google_comment"
-        firewall_block_ip 108.177.115.0/24 "$block_google_comment"
-        firewall_block_ip 108.177.116.0/24 "$block_google_comment"
-        firewall_block_ip 108.177.117.0/24 "$block_google_comment"
-        firewall_block_ip 108.177.118.0/24 "$block_google_comment"
-        firewall_block_ip 108.177.119.0/24 "$block_google_comment"
-        firewall_block_ip 108.177.120.0/24 "$block_google_comment"
-        firewall_block_ip 108.177.12.0/24 "$block_google_comment"
-        firewall_block_ip 108.177.121.0/24 "$block_google_comment"
-        firewall_block_ip 108.177.122.0/24 "$block_google_comment"
-        firewall_block_ip 108.177.125.0/24 "$block_google_comment"
-        firewall_block_ip 108.177.126.0/24 "$block_google_comment"
-        firewall_block_ip 108.177.127.0/24 "$block_google_comment"
-        firewall_block_ip 108.177.13.0/24 "$block_google_comment"
-        firewall_block_ip 108.177.14.0/24 "$block_google_comment"
-        firewall_block_ip 108.177.15.0/24 "$block_google_comment"
-        firewall_block_ip 108.177.8.0/24 "$block_google_comment"
-        firewall_block_ip 108.177.9.0/24 "$block_google_comment"
-        firewall_block_ip 108.177.96.0/24 "$block_google_comment"
-        firewall_block_ip 108.177.97.0/24 "$block_google_comment"
-        firewall_block_ip 108.177.98.0/24 "$block_google_comment"
-        firewall_block_ip 108.177.99.0/24 "$block_google_comment"
-        firewall_block_ip 108.59.80.0/20 "$block_google_comment"
-        firewall_block_ip 130.211.0.0/16 "$block_google_comment"
-        firewall_block_ip 136.112.0.0/12 "$block_google_comment"
-        firewall_block_ip 142.250.0.0/15 "$block_google_comment"
-        firewall_block_ip 142.250.0.0/24 "$block_google_comment"
-        firewall_block_ip 142.250.100.0/24 "$block_google_comment"
-        firewall_block_ip 142.250.10.0/24 "$block_google_comment"
-        firewall_block_ip 142.250.101.0/24 "$block_google_comment"
-        firewall_block_ip 142.250.102.0/24 "$block_google_comment"
-        firewall_block_ip 142.250.1.0/24 "$block_google_comment"
-        firewall_block_ip 142.250.103.0/24 "$block_google_comment"
-    fi
+    block_ips_from_asn AS15169 google
 }
 
 function firewall_remove {
@@ -1042,117 +1001,7 @@ function firewall_block_ip {
 }
 
 function firewall_facebook {
-    ruleset=$(/usr/sbin/nft list ruleset)
-    # does the firewall exist?
-    if [ ! "$ruleset" ]; then
-        return
-    fi
-
-    # is facebook already configured?
-    block_facebook_comment='facebookAS32934'
-    if [[ "$ruleset" != *"${block_facebook_comment}"* ]]; then
-        # see https://ipinfo.io/AS32934
-        firewall_block_ip 102.132.100.0/24 "$block_facebook_comment"
-        firewall_block_ip 102.132.101.0/24 "$block_facebook_comment"
-        firewall_block_ip 102.132.96.0/20 "$block_facebook_comment"
-        firewall_block_ip 102.132.96.0/24 "$block_facebook_comment"
-        firewall_block_ip 102.132.99.0/24 "$block_facebook_comment"
-        firewall_block_ip 103.4.96.0/22 "$block_facebook_comment"
-        firewall_block_ip 129.134.0.0/17 "$block_facebook_comment"
-        firewall_block_ip 129.134.25.0/24 "$block_facebook_comment"
-        firewall_block_ip 129.134.26.0/24 "$block_facebook_comment"
-        firewall_block_ip 129.134.27.0/24 "$block_facebook_comment"
-        firewall_block_ip 129.134.28.0/24 "$block_facebook_comment"
-        firewall_block_ip 129.134.29.0/24 "$block_facebook_comment"
-        firewall_block_ip 129.134.30.0/23 "$block_facebook_comment"
-        firewall_block_ip 129.134.30.0/24 "$block_facebook_comment"
-        firewall_block_ip 129.134.31.0/24 "$block_facebook_comment"
-        firewall_block_ip 129.134.64.0/24 "$block_facebook_comment"
-        firewall_block_ip 129.134.65.0/24 "$block_facebook_comment"
-        firewall_block_ip 129.134.66.0/24 "$block_facebook_comment"
-        firewall_block_ip 129.134.67.0/24 "$block_facebook_comment"
-        firewall_block_ip 129.134.68.0/24 "$block_facebook_comment"
-        firewall_block_ip 129.134.69.0/24 "$block_facebook_comment"
-        firewall_block_ip 129.134.70.0/24 "$block_facebook_comment"
-        firewall_block_ip 129.134.71.0/24 "$block_facebook_comment"
-        firewall_block_ip 129.134.72.0/24 "$block_facebook_comment"
-        firewall_block_ip 129.134.73.0/24 "$block_facebook_comment"
-        firewall_block_ip 129.134.74.0/24 "$block_facebook_comment"
-        firewall_block_ip 129.134.75.0/24 "$block_facebook_comment"
-        firewall_block_ip 129.134.76.0/24 "$block_facebook_comment"
-        firewall_block_ip 129.134.79.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.0.0/17 "$block_facebook_comment"
-        firewall_block_ip 157.240.10.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.11.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.12.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.13.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.14.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.15.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.17.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.18.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.19.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.192.0/18 "$block_facebook_comment"
-        firewall_block_ip 157.240.194.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.195.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.196.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.197.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.199.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.200.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.20.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.201.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.2.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.204.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.205.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.206.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.207.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.209.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.210.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.21.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.211.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.212.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.213.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.214.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.215.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.216.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.217.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.218.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.220.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.22.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.221.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.222.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.223.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.224.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.225.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.226.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.229.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.231.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.232.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.233.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.234.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.235.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.236.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.240.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.24.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.241.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.25.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.26.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.27.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.28.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.30.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.3.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.6.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.7.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.8.0/24 "$block_facebook_comment"
-        firewall_block_ip 157.240.9.0/24 "$block_facebook_comment"
-        firewall_block_ip 173.252.64.0/19 "$block_facebook_comment"
-        firewall_block_ip 173.252.88.0/21 "$block_facebook_comment"
-        firewall_block_ip 173.252.96.0/19 "$block_facebook_comment"
-        firewall_block_ip 179.60.192.0/22 "$block_facebook_comment"
-        firewall_block_ip 179.60.192.0/24 "$block_facebook_comment"
-        firewall_block_ip 179.60.194.0/24 "$block_facebook_comment"
-        firewall_block_ip 179.60.195.0/24 "$block_facebook_comment"
-        firewall_block_ip 185.60.216.0/22 "$block_facebook_comment"
-    fi
+    block_ips_from_asn AS32934 facebook
 }
 
 function firewall_unblock_ip {
