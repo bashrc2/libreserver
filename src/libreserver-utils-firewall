@@ -829,7 +829,9 @@ function block_ips_from_asn {
                 continue
             fi
         fi
-        firewall_block_ip "${blockediprange}" "${block_comment}${asn}" "nosave"
+	if [[ "${ruleset}" != *"${blockediprange}"* ]]; then
+            firewall_block_ip "${blockediprange}" "${block_comment}${asn}" "nosave"
+	fi
 	echo -n '.'
     done
     save_firewall_settings
