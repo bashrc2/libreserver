@@ -837,9 +837,23 @@ function block_ips_from_asn {
         allow_google_gmail=
     fi
 
+    allow_golang=1
+    if [ $allow_google_gmail ]; then
+        echo $'FIREWALL: Allowing golang.org on Google IP range'
+    fi
+
     echo $"Firewalling ${block_comment} ${asn}"
     printf "%s\n" "${list_prefixes_ipv4}" | while IFS= read -r blockediprange
     do
+        if [ $allow_golang ]; then
+            if [[ "${blockediprange}" == *"142.250.185."* ]]; then
+                echo -n 'O'
+                if [[ "${ruleset}" == *"${blockediprange}"* ]]; then
+                    firewall_unblock_ip "${blockediprange}" "${block_comment}${asn}" "nosave"
+                fi
+                continue
+            fi
+        fi
         if [ $allow_google_dns ]; then
             if [[ "${blockediprange}" == *"8.8.8."* || "${blockediprange}" == *"4.4.4."* ]]; then
                 echo -n 'D'
