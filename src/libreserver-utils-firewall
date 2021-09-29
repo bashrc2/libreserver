@@ -846,7 +846,7 @@ function block_ips_from_asn {
     printf "%s\n" "${list_prefixes_ipv4}" | while IFS= read -r blockediprange
     do
         if [ $allow_golang ]; then
-            if [[ "${blockediprange}" == *"142.250.185."* || "${blockediprange}" == *"142.250.186."* || "${blockediprange}" == *"142.250.74."* || "${blockediprange}" == *"216.58.213."* ]]; then
+            if [[ "${blockediprange}" == *"142.250.185."* || "${blockediprange}" == *"142.250.186."* || "${blockediprange}" == *"142.250.74."* || "${blockediprange}" == *"216.58.213."* || "${blockediprange}" == *"108.177.15."* || "${blockediprange}" == *"64.233.164."* ]]; then
                 echo -n 'O'
                 if [[ "${ruleset}" == *"${blockediprange}"* ]]; then
                     firewall_unblock_ip "${blockediprange}" "${block_comment}${asn}" "nosave"
