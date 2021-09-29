@@ -912,6 +912,13 @@ function firewall_google {
     # NOTE: blocking google's AS number is thorough,
     # but prevents anything written in Go from installing
     # block_ips_from_asn AS15169 google
+    if grep -q 'googleAS15169' /etc/firewall.conf; then
+        sed -i '/googleAS15169/d' /etc/firewall.conf
+        # reload the firewall
+        /usr/sbin/nft flush ruleset
+        /usr/sbin/nft -f /etc/firewall.conf
+        echo $'Removed google firewall'
+    fi
 }
 
 function firewall_remove {
