@@ -743,7 +743,7 @@ function firewall_unblock_cloudflare {
     while read -r cf_ip; do
         if [[ "$cf_ip" != '#'* ]]; then
             if [[ "$cf_ip" == *'.'* ]]; then
-                firewall_unblock_ip "$cf_ip" "nosave"
+                firewall_unblock_ip "$cf_ip" "." "nosave"
                 echo -n '.'
             fi
         fi
@@ -825,13 +825,14 @@ function block_ips_from_asn {
     do
         if [ $allow_google_dns ]; then
             if [[ "${blockediprange}" == *"8.8.8."* || "${blockediprange}" == *"4.4.4."* ]]; then
-                firewall_unblock_ip "${blockediprange}" "${block_comment}${asn}"
+                firewall_unblock_ip "${blockediprange}" "${block_comment}${asn}" "nosave"
                 continue
             fi
         fi
-        firewall_block_ip "${blockediprange}" "${block_comment}${asn}"
+        firewall_block_ip "${blockediprange}" "${block_comment}${asn}" "nosave"
 	echo -n '.'
     done
+    save_firewall_settings
     echo ''
 }
 
@@ -1009,6 +1010,7 @@ function firewall_facebook {
 
 function firewall_unblock_ip {
     blocked_ip="$1"
+    block_ip_comment="$2"
     if [[ "$blocked_ip" == *'@'* ]]; then
         # Don't try to block email/microblog addresses
         return
@@ -1026,8 +1028,8 @@ function firewall_unblock_ip {
             sed -i "/$blocked_ip/d" "$firewall_domains_file"
         fi
 
-        if [ "$2" ]; then
-            if [[ "$2" != "nosave" ]]; then
+        if [ "$3" ]; then
+            if [[ "$3" != "nosave" ]]; then
                 save_firewall_settings
             fi
         else
