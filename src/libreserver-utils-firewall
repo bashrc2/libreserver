@@ -65,7 +65,7 @@ function delete_firewall_port_via_handle {
     firewall_port="$1"
 
     # get the handles for all lines containing the port number
-    nft_handles=$(/usr/sbin/nft list ruleset -a | grep "dport ${firewall_port} \|daddr ${firewall_port} \|saddr ${firewall_port} \|icmp ${firewall_port} \| meter ${firewall_port} " | awk -F '#' '{print $2}' | uniq)
+    nft_handles=$(/usr/sbin/nft -a list ruleset | grep "dport ${firewall_port} \|daddr ${firewall_port} \|saddr ${firewall_port} \|icmp ${firewall_port} \| meter ${firewall_port} " | awk -F '#' '{print $2}' | uniq)
     if [ "$nft_handles" ]; then
         # remove using the handle numbers
         IFS=$'\n'
