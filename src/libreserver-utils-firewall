@@ -820,6 +820,7 @@ function block_ips_from_asn {
         fi
     fi
 
+    echo $"Firewalling ${block_comment}${asn}"
     printf "%s\n" "${list_prefixes_ipv4}" | while IFS= read -r blockediprange
     do
         if [ $allow_google_dns ]; then
@@ -829,7 +830,9 @@ function block_ips_from_asn {
             fi
         fi
         firewall_block_ip "${blockediprange}" "${block_comment}${asn}"
+	echo -n '.'
     done
+    echo ''
 }
 
 function firewall_google {
