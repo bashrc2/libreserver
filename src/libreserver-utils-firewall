@@ -65,18 +65,21 @@ function delete_firewall_port_via_handle {
     firewall_port="$1"
 
     # get the handles for all lines containing the port number
-    nft_handles=$(/usr/sbin/nft -a list ruleset | grep "dport ${firewall_port} \|daddr ${firewall_port} \|saddr ${firewall_port} \|icmp ${firewall_port} \| meter ${firewall_port} " | awk -F '#' '{print $2}' | uniq)
-    if [ "$nft_handles" ]; then
-        # remove using the handle numbers
-        IFS=$'\n'
-        while IFS= read -r nft_handle; do
-            # shellcheck disable=SC2086
-            /usr/sbin/nft delete rule inet filter INPUT ${nft_handle} 2> /dev/null
-            # shellcheck disable=SC2086
-            /usr/sbin/nft delete rule inet filter FORWARD ${nft_handle} 2> /dev/null
-            # shellcheck disable=SC2086
-            /usr/sbin/nft delete rule inet filter OUTPUT ${nft_handle} 2> /dev/null
-        done <<< "$nft_handles"
+    delete_handle_list=$(/usr/sbin/nft -a list ruleset | grep "dport ${firewall_port} \|daddr ${firewall_port} \|saddr ${firewall_port} \|icmp ${firewall_port} \| meter ${firewall_port} ")
+    if [ "${delete_handle_list}" ]; then
+	nft_handles=$(echo -n "${delete_handle_list}" | awk -F '#' '{print $2}' | uniq)
+	if [ "$nft_handles" ]; then
+            # remove using the handle numbers
+            IFS=$'\n'
+            while IFS= read -r nft_handle; do
+		# shellcheck disable=SC2086
+		/usr/sbin/nft delete rule inet filter INPUT ${nft_handle} 2> /dev/null
+		# shellcheck disable=SC2086
+		/usr/sbin/nft delete rule inet filter FORWARD ${nft_handle} 2> /dev/null
+		# shellcheck disable=SC2086
+		/usr/sbin/nft delete rule inet filter OUTPUT ${nft_handle} 2> /dev/null
+            done <<< "$nft_handles"
+	fi
     fi
 }
 
