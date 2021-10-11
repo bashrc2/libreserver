@@ -544,6 +544,9 @@ function install_epicyon {
           echo '    try_files $uri =404;';
           echo '  }';
           echo '';
+          echo '  keepalive_timeout 70;';
+          echo '  sendfile on;';
+          echo '';
           echo '  location / {';
           echo '    proxy_http_version 1.1;';
           echo '    client_max_body_size 31M;';
@@ -563,6 +566,7 @@ function install_epicyon {
           echo '    proxy_request_buffering off;';
           echo '    proxy_buffering off;';
           echo "    proxy_pass http://localhost:${EPICYON_PORT_INTERNAL};";
+	  echo '    tcp_nodelay on;';
           echo '  }';
           echo '}'; } >> "$epicyon_nginx_site"
     else
@@ -587,6 +591,9 @@ function install_epicyon {
       echo '    try_files $uri =404;';
       echo '  }';
       echo '';
+      echo '  keepalive_timeout 70;';
+      echo '  sendfile on;';
+      echo '';
       echo '  location / {';
       echo '    proxy_http_version 1.1;';
       echo '    client_max_body_size 31M;';
@@ -606,6 +613,7 @@ function install_epicyon {
       echo '    proxy_request_buffering off;';
       echo '    proxy_buffering off;';
       echo "    proxy_pass http://localhost:$EPICYON_PORT_INTERNAL;";
+      echo '    tcp_nodelay on;';
       echo '  }';
       echo '}'; } >> "$epicyon_nginx_site"
 
