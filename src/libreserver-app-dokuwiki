@@ -43,7 +43,7 @@ DOKUWIKI_COMMIT='7347c7c107a0885329924cdcad9bec872eefd339'
 
 DOKUWIKI_SHORT_DESCRIPTION=$'Databaseless wiki'
 DOKUWIKI_DESCRIPTION=$'Databaseless wiki'
-DOKUWIKI_MOBILE_APP_URL=
+DOKUWIKI_MOBILE_APP_URL='https://f-droid.org/en/packages/com.fabienli.dokuwiki/'
 
 dokuwiki_variables=(ONION_ONLY
                     MY_USERNAME
