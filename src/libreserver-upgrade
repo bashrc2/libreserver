@@ -145,6 +145,7 @@ if [ -d "$PROJECT_DIR" ]; then
                     exit 45
                 fi
 
+		journalctl --vacuum-size=200M
                 update_portscan_defense
                 install_dynamicdns
                 torrc_migrate
