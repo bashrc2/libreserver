@@ -755,7 +755,7 @@ function image_install_web_server {
       echo 'pid /run/nginx.pid;';
       echo '';
       echo 'events {';
-      echo '        worker_connections 50;';
+      echo '        worker_connections 200;';
       echo '        # multi_accept on;';
       echo '}';
       echo '';
