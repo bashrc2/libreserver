@@ -311,11 +311,17 @@ function install_gemini {
 
     increment_app_install_progress
 
+    gemini_domain=${DEFAULT_DOMAIN_NAME}
+    if [[ "$ONION_ONLY" != 'no' ]]; then
+        # shellcheck disable=SC2034
+        gemini_domain=$(cat /var/lib/tor/hidden_service_email/hostname)
+    fi
+
     openssl req -x509 -new -newkey ec \
             -pkeyopt ec_paramgen_curve:prime256v1 \
             -keyout "/home/gemini/molly.key" \
             -out "/home/gemini/molly.crt" \
-            -days 99999 -nodes -subj "/CN=${DEFAULT_DOMAIN_NAME}"
+            -days 99999 -nodes -subj "/CN=${gemini_domain}"
 
     if [ ! -f "/home/gemini/molly.key" ]; then
         exit 82
@@ -328,12 +334,6 @@ function install_gemini {
     if ! grep -q "127.0.0.1:${GEMINI_PORT}" "/etc/torrc.d/${PROJECT_NAME}"; then
         sed -i "/127.0.0.1:5222/a HiddenServicePort ${GEMINI_PORT} 127.0.0.1:${GEMINI_PORT}" "/etc/torrc.d/${PROJECT_NAME}"
         restart_tor_daemon
-    fi
-
-    gemini_domain=${DEFAULT_DOMAIN_NAME}
-    if [[ "$ONION_ONLY" != 'no' ]]; then
-        # shellcheck disable=SC2034
-        gemini_domain=$(cat /var/lib/tor/hidden_service_email/hostname)
     fi
 
     increment_app_install_progress
