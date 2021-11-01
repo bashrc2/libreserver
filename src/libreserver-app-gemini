@@ -40,7 +40,7 @@ NOT_ON_API=1
 NOT_ON_HOMEPAGE=1
 
 # show port number within the URL on app screens
-SHOW_URL_PORT=0
+SHOW_URL_PORT=
 
 # Whether another app is required to be installed before this one
 REQUIRES_APP=
