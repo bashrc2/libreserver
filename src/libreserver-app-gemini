@@ -4,6 +4,9 @@
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
 # |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
+# Although the server will run on an onion address, no current client
+# will connect to it, even via torify/torsocks
+#
 # License
 # =======
 #
@@ -29,6 +32,7 @@ APP_CATEGORY=publishing
 IN_DEFAULT_INSTALL=0
 INSTALLED_ON_DEFAULT_DOMAIN=1
 SHOW_ON_ABOUT=1
+NOT_ON_ONION=1
 
 # whether to show https://domain or just the domain on its own on app screen
 SHOW_DOMAIN_ONLY=1
