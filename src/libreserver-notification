@@ -164,6 +164,21 @@ function epicyon_notifications {
             fi
         fi
 
+        # send notifications for emoji reactions to XMPP/email users
+        epicyonReactionFile="$epicyonDir/.newReaction"
+        if [ -f "$epicyonReactionFile" ]; then
+            if ! grep -q "##sent##" "$epicyonReactionFile"; then
+                epicyonReactionMessage=$(notification_translate_text 'Reaction by')
+                epicyonReactionFileContent=$(cat "$epicyonReactionFile" | awk -F ' ' '{print $1}')" "$(echo "$epicyonReactionMessage")" "$(cat "$epicyonReactionFile" | awk -F ' ' '{print $2}')
+                if [[ "$epicyonReactionFileContent" == *':'* ]]; then
+                    epicyonReactionMessage="Epicyon: $epicyonReactionFileContent"
+                fi
+                "${PROJECT_NAME}-notification" -u "$USERNAME" -s "Epicyon" -m "$epicyonReactionMessage" --sensitive yes
+                echo "##sent##" > "$epicyonReactionFile"
+                chown epicyon:epicyon "$epicyonReactionFile"
+            fi
+        fi
+
         # send notifications for posts arriving from a particular person
         epicyonNotifyFile="$epicyonDir/.newNotifiedPost"
         if [ -f "$epicyonNotifyFile" ]; then
@@ -421,9 +436,9 @@ if [ -d /etc/prosody ]; then
 
                 if [ -f /usr/bin/sendxmpp ]; then
                     kill_sendxmpp_process
-		    curl http://localhost:5280/rest --user "notification:${notification_user_password}" -H 'Content-Type: application/json' --data-binary "{ \"body\" : \"${MESSAGE}\", \"\kind\" : \"message\", \"to\" : \"${ADMIN_USERNAME}@${local_domain}\", \"type\" : \"headline\" }"
+                    curl http://localhost:5280/rest --user "notification:${notification_user_password}" -H 'Content-Type: application/json' --data-binary "{ \"body\" : \"${MESSAGE}\", \"\kind\" : \"message\", \"to\" : \"${ADMIN_USERNAME}@${local_domain}\", \"type\" : \"headline\" }"
 
-		    #curl -k http://localhost:5280/rest -u notification:${notification_user_password} -H "Content-Type: text/xml" -d "<iq to=\"${ADMIN_USERNAME}@${local_domain}\" type=\"set\" id=\"3de1a1e3-ef91-4017-a5aa-aaba0a82eb94-1\" from=\"notification@${local_domain}\"><pubsub xmlns=\"http://jabber.org/protocol/pubsub\"><publish node=\"${SUBJECT}\"><item>${MESSAGE}</item></publish></pubsub></iq>"
+                    #curl -k http://localhost:5280/rest -u notification:${notification_user_password} -H "Content-Type: text/xml" -d "<iq to=\"${ADMIN_USERNAME}@${local_domain}\" type=\"set\" id=\"3de1a1e3-ef91-4017-a5aa-aaba0a82eb94-1\" from=\"notification@${local_domain}\"><pubsub xmlns=\"http://jabber.org/protocol/pubsub\"><publish node=\"${SUBJECT}\"><item>${MESSAGE}</item></publish></pubsub></iq>"
                 fi
             fi
             prosodyctl deluser "notification@$local_domain"
