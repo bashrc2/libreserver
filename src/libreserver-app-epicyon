@@ -52,7 +52,7 @@ EPICYON_DOMAIN_NAME=
 EPICYON_CODE=
 EPICYON_ONION_PORT=9552
 EPICYON_REPO="https://gitlab.com/bashrc2/epicyon"
-EPICYON_COMMIT='edd62c1f1b863cd1238fd16367adc399db1e2a03'
+EPICYON_COMMIT='97496587d42a9023cb454d908f6356bb1d57e62e'
 EPICYON_PORT_INTERNAL=7156
 
 # These parameters are used by the FreedomBox mobile app and web UI
@@ -554,7 +554,7 @@ function install_epicyon {
           echo "    proxy_set_header Host \$http_host;";
           echo "    proxy_set_header X-Real-IP \$remote_addr;";
           echo "    proxy_set_header X-Forward-For \$proxy_add_x_forwarded_for;";
-          echo '    proxy_set_header X-Forward-Proto http;';
+          echo '    proxy_set_header X-Forward-Proto https;';
           echo '    proxy_set_header X-Nginx-Proxy true;';
           echo '    proxy_temp_file_write_size 64k;';
           echo '    proxy_connect_timeout 10080s;';
