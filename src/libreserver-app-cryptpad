@@ -378,6 +378,7 @@ function install_cryptpad_main {
       echo "  listen 127.0.0.1:$CRYPTPAD_ONION_PORT default_server;";
       echo '  port_in_redirect off;';
       echo "  server_name ${CRYPTPAD_ONION_HOSTNAME};";
+      echo '  server_tokens off;';
       echo '';
       echo '  # Logs';
       echo '  access_log /dev/null;';
@@ -402,6 +403,7 @@ function install_cryptpad_main {
       echo '  add_header Cross-Origin-Embedder-Policy require-corp;';
       echo '';
       echo "  server_name ${CRYPTPAD_ONION_HOSTNAME};";
+      echo '  server_tokens off;';
       echo '';
       echo "  add_header X-XSS-Protection \"1; mode=block\";";
       echo "  add_header X-Content-Type-Options nosniff;";

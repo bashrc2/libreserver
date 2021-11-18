@@ -416,6 +416,7 @@ function install_kanboard {
           echo '  listen 443 ssl;';
           echo '  #listen [::]:443 ssl;';
           echo "  server_name $KANBOARD_DOMAIN_NAME;";
+	  echo '  server_tokens off;';
           echo '';
           echo '  # Security'; } >> "$kanboard_nginx_site"
         function_check nginx_ssl
@@ -485,6 +486,7 @@ function install_kanboard {
       echo "    listen 127.0.0.1:$KANBOARD_ONION_PORT default_server;";
       echo '    port_in_redirect off;';
       echo "    server_name $KANBOARD_ONION_HOSTNAME;";
+      echo '    server_tokens off;';
       echo ''; } >> "$kanboard_nginx_site"
     echo '' >> "$kanboard_nginx_site"
     function_check nginx_security_options

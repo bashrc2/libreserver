@@ -709,6 +709,7 @@ function install_icecast {
       echo "    listen 127.0.0.1:$ICECAST_ONION_PORT default_server;";
       echo '    port_in_redirect off;';
       echo "    server_name $ICECAST_ONION_HOSTNAME;";
+      echo '    server_tokens off;';
       echo '';
       echo "    proxy_set_header Host \$host;";
       echo "    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;";

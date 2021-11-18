@@ -427,6 +427,7 @@ function install_friendica {
           echo '    #listen [::]:443 ssl;';
           echo "    root $FRIENDICA_PATH;";
           echo "    server_name $FRIENDICA_DOMAIN_NAME;";
+	  echo '    server_tokens off;';
           echo "    error_log /dev/null;";
           echo '    index index.php;';
           echo '    charset utf-8;';
@@ -503,6 +504,7 @@ function install_friendica {
           echo '    port_in_redirect off;';
           echo "    root $FRIENDICA_PATH;";
           echo "    server_name $FRIENDICA_ONION_HOSTNAME;";
+	  echo '    server_tokens off;';
           echo "    error_log /dev/null;";
           echo '    index index.php;';
           echo '    charset utf-8;';

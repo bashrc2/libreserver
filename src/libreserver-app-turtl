@@ -398,6 +398,7 @@ function install_turtl {
           echo '  listen 443 ssl;';
           echo '  #listen [::]:443 ssl;';
           echo "  server_name ${TURTL_DOMAIN_NAME};";
+	  echo '  server_tokens off;';
           echo ''; } >> "$turtl_nginx_site"
         nginx_compress "${TURTL_DOMAIN_NAME}"
         echo '' >> "$turtl_nginx_site"
@@ -431,6 +432,7 @@ function install_turtl {
     { echo 'server {';
       echo "    listen 127.0.0.1:${TURTL_ONION_PORT} default_server;";
       echo "    server_name ${TURTL_ONION_HOSTNAME};";
+      echo '    server_tokens off;';
       echo ''; } >> "$turtl_nginx_site"
     nginx_compress "${TURTL_DOMAIN_NAME}"
     echo '' >> "$turtl_nginx_site"

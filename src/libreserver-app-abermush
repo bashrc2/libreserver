@@ -239,6 +239,7 @@ function install_abermush_website {
           echo '    #listen [::]:443 ssl;';
           echo "    root /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs;";
           echo "    server_name ${ABERMUSH_DOMAIN_NAME};";
+	  echo '    server_tokens off;';
           echo '    access_log /dev/null;';
           echo "    error_log /dev/null;";
           echo '    index index.html;';
@@ -286,6 +287,7 @@ function install_abermush_website {
       echo '    port_in_redirect off;';
       echo "    root /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs;";
       echo "    server_name ${ABERMUSH_ONION_HOSTNAME};";
+      echo '    server_tokens off;';
       echo '    access_log /dev/null;';
       echo "    error_log /dev/null;";
       echo '    index index.html;';

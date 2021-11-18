@@ -762,6 +762,7 @@ function install_pixelfed {
           echo '  listen 443 ssl;';
           echo '  #listen [::]:443 ssl;';
           echo "  server_name $PIXELFED_DOMAIN_NAME;";
+	  echo '  server_tokens off;';
           echo ''; } >> "$pixelfed_nginx_site"
         function_check nginx_compress
         nginx_compress "$PIXELFED_DOMAIN_NAME"
@@ -813,6 +814,7 @@ function install_pixelfed {
       echo "    listen 127.0.0.1:$PIXELFED_ONION_PORT default_server;";
       echo '    port_in_redirect off;';
       echo "    server_name $PIXELFED_ONION_HOSTNAME;";
+      echo '    server_tokens off;';
       echo ''; } >> "$pixelfed_nginx_site"
       function_check nginx_compress
     nginx_compress "$PIXELFED_DOMAIN_NAME"

@@ -657,6 +657,7 @@ function install_gogs {
           echo '    #listen [::]:443 ssl;';
           echo "    root /var/www/${GOGS_DOMAIN_NAME}/htdocs;";
           echo "    server_name ${GOGS_DOMAIN_NAME};";
+	  echo '    server_tokens off;';
           echo '    access_log /dev/null;';
           echo "    error_log /dev/null;";
           echo ''; } >> "/etc/nginx/sites-available/${GOGS_DOMAIN_NAME}"
@@ -694,6 +695,7 @@ function install_gogs {
       echo '    port_in_redirect off;';
       echo "    root /var/www/$GOGS_DOMAIN_NAME/htdocs;";
       echo "    server_name $GOGS_DOMAIN_NAME;";
+      echo '    server_tokens off;';
       echo '    access_log /dev/null;';
       echo "    error_log /dev/null;";
       echo ''; } >> "/etc/nginx/sites-available/${GOGS_DOMAIN_NAME}"

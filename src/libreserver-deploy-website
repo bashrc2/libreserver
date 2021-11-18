@@ -88,6 +88,7 @@ if [ ! "$rootdir" ]; then
           echo '    listen 80;';
           echo '    listen [::]:80;';
           echo "    server_name ${site_domain};";
+	  echo '    server_tokens off;';
           echo "    root ${dest_dir};";
           echo '    access_log /dev/null;';
           echo '    error_log /dev/null;';
@@ -104,6 +105,7 @@ if [ ! "$rootdir" ]; then
           echo 'server {';
           echo '  listen 443 ssl;';
           echo "  server_name ${site_domain};";
+	  echo '  server_tokens off;';
           echo '';
           echo '    gzip            on;';
           echo '    gzip_min_length 1000;';
@@ -167,6 +169,7 @@ if [ ! "$rootdir" ]; then
     { echo 'server {';
       echo "    listen 127.0.0.1:${site_onion_port} default_server;";
       echo "    server_name ${site_onion_domain};";
+      echo '    server_tokens off;';
       echo '';
       echo '    add_header X-Frame-Options DENY;';
       echo '    add_header X-Content-Type-Options nosniff;';
@@ -205,6 +208,7 @@ if [ ! "$rootdir" ]; then
       echo 'server {';
       echo '    listen 127.0.0.1:8110 default_server;';
       echo "    server_name ${site_onion_domain};";
+      echo '    server_tokens off;';
       echo '';
       echo '    add_header X-Frame-Options DENY;';
       echo '    add_header X-Content-Type-Options nosniff;';

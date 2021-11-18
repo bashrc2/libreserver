@@ -1156,6 +1156,7 @@ function peertube_setup_web {
           echo '  listen 80;';
           echo '  listen [::]:80;';
           echo "  server_name ${PEERTUBE_DOMAIN_NAME};";
+	  echo '  server_tokens off;';
           echo '';
           echo "  access_log /dev/null;";
           echo "  error_log /dev/null;";
@@ -1167,6 +1168,7 @@ function peertube_setup_web {
           echo '  listen 443 ssl http2;';
           echo '  listen [::]:443 ssl http2;';
           echo "  server_name ${PEERTUBE_DOMAIN_NAME};";
+	  echo '  server_tokens off;';
           echo ''; } > "$peertube_nginx_file"
 
         function_check nginx_ssl
@@ -1259,6 +1261,7 @@ function peertube_setup_web {
       echo "  listen 127.0.0.1:$PEERTUBE_ONION_PORT default_server;";
       echo '  port_in_redirect off;';
       echo "  server_name $PEERTUBE_ONION_HOSTNAME;";
+      echo '  server_tokens off;';
       echo '';
       echo '  # Enable compression for JS/CSS/HTML bundle, for improved client load times.';
       echo '  # It might be nice to compress JSON, but leaving that out to protect against potential';

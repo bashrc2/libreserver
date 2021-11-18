@@ -429,6 +429,7 @@ function create_matrix_nginx_config {
         { echo 'server {';
           echo '  listen 80;';
           echo "  server_name ${MATRIX_DOMAIN_NAME};";
+	  echo '  server_tokens off;';
           echo '  return 301 https://$host$request_uri;';
           echo '}';
           echo '';
@@ -438,6 +439,7 @@ function create_matrix_nginx_config {
           echo "  listen ${MATRIX_HTTP_PORT} ssl http2;";
           echo "  listen [::]:${MATRIX_HTTP_PORT} ssl http2;";
           echo "  server_name ${MATRIX_DOMAIN_NAME};";
+	  echo '  server_tokens off;';
           echo ''; } > $matrix_nginx_site
         function_check nginx_ssl
         nginx_ssl "${MATRIX_DOMAIN_NAME}"
@@ -505,6 +507,7 @@ function create_matrix_nginx_config {
       echo "    listen 127.0.0.1:$MATRIX_ONION_PORT default_server;";
       echo '    port_in_redirect off;';
       echo "    server_name $MATRIX_ONION_HOSTNAME;";
+      echo '    server_tokens off;';
       echo ''; } >> $matrix_nginx_site
     # function_check nginx_security_options
     # nginx_security_options "$MATRIX_DOMAIN_NAME"

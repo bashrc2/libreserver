@@ -321,6 +321,7 @@ function install_privatebin {
           echo '  listen 443 ssl;';
           echo '  #listen [::]:443 ssl;';
           echo "  server_name $PRIVATEBIN_DOMAIN_NAME;";
+	  echo '  server_tokens off;';
           echo ''; } >> "$privatebin_nginx_site"
         function_check nginx_compress
         nginx_compress "$PRIVATEBIN_DOMAIN_NAME"
@@ -370,6 +371,7 @@ function install_privatebin {
       echo "    listen 127.0.0.1:$PRIVATEBIN_ONION_PORT default_server;";
       echo '    port_in_redirect off;';
       echo "    server_name $PRIVATEBIN_ONION_HOSTNAME;";
+      echo '    server_tokens off;';
       echo ''; } >> "$privatebin_nginx_site"
     function_check nginx_compress
     nginx_compress "$PRIVATEBIN_DOMAIN_NAME"

@@ -1449,6 +1449,7 @@ function image_install_web_admin {
       echo '  listen 80 default_server;';
       echo '  #listen [::]:80;';
       echo "  server_name ${local_hostname};";
+      echo '  server_tokens off;';
       echo "  root /var/www/${local_hostname}/htdocs;";
       echo '  index index.html;';
       echo '';
@@ -2398,6 +2399,7 @@ function web_admin_onion_config {
       echo "  listen 127.0.0.1:${onion_port} default_server;";
       echo '  port_in_redirect off;';
       echo "  server_name ${onion_hostname};";
+      echo '  server_tokens off;';
       echo "  root /var/www/${local_hostname}/htdocs;";
       echo '  index index.html;';
       echo '  charset UTF-8;';
@@ -2548,6 +2550,7 @@ function install_web_admin {
       echo '  listen 80 default_server;';
       echo '  #listen [::]:80;';
       echo "  server_name ${local_hostname};";
+      echo '  server_tokens off;';
       echo "  root /var/www/${local_hostname}/htdocs;";
       echo '  index index.html;';
       echo '  charset UTF-8;';
@@ -2628,6 +2631,7 @@ function install_web_admin {
       echo '  listen 443 default_server ssl;';
       echo '  #listen [::]:443 ssl;';
       echo "  server_name ${local_hostname};";
+      echo '  server_tokens off;';
       echo "  root /var/www/${local_hostname}/htdocs;";
       echo '  index index.html;';
       echo '  charset UTF-8;';

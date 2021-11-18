@@ -345,6 +345,7 @@ function install_rss_main {
       echo "  listen 127.0.0.1:$RSS_MOBILE_READER_ONION_PORT;";
       echo '  port_in_redirect off;';
       echo "  server_name $RSS_MOBILE_READER_ONION_HOSTNAME;";
+      echo '  server_tokens off;';
       echo '';
       echo '  access_log /dev/null;';
       echo '  error_log /dev/null;';
@@ -388,6 +389,7 @@ function install_rss_main {
       echo "  listen 127.0.0.1:$RSS_READER_ONION_PORT default_server;";
       echo '  port_in_redirect off;';
       echo "  server_name $RSS_READER_ONION_HOSTNAME;";
+      echo '  server_tokens off;';
       echo '';
       echo '  access_log /dev/null;';
       echo '  error_log /dev/null;';

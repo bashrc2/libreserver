@@ -522,6 +522,7 @@ function install_epicyon {
           echo '  listen 443 ssl;';
           echo '  #listen [::]:443 ssl;';
           echo "  server_name $EPICYON_DOMAIN_NAME;";
+	  echo '  server_tokens off;';
           echo ''; } >> "$epicyon_nginx_site"
         nginx_compress "$EPICYON_DOMAIN_NAME"
         echo '  # Security' >> "$epicyon_nginx_site"
@@ -576,6 +577,7 @@ function install_epicyon {
       echo "    listen 127.0.0.1:$EPICYON_ONION_PORT default_server;";
       echo "    #listen [::]:$EPICYON_ONION_PORT default_server;";
       echo "    server_name $EPICYON_ONION_HOSTNAME;";
+      echo '    server_tokens off;';
       echo ''; } >> "$epicyon_nginx_site"
     nginx_compress "$EPICYON_DOMAIN_NAME"
     nginx_security_options "$EPICYON_DOMAIN_NAME"

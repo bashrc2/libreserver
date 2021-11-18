@@ -540,6 +540,7 @@ function setup_mesh_website {
     { echo 'server {';
       echo "  listen 127.0.0.1:${COMMUNITYNETWORK_ONION_PORT} default_server;";
       echo "  server_name ${MAP_DOMAIN};";
+      echo '  server_tokens off;';
       echo "  root ${COMMUNITYNETWORK_PATH};";
       echo '  charset UTF-8;';
       echo '';

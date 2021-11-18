@@ -440,6 +440,7 @@ function install_element {
           echo '  listen 443 ssl http2;';
           echo '  listen [::]:443 ssl http2;';
           echo "  server_name ${ELEMENT_DOMAIN_NAME};";
+	  echo '  server_tokens off;';
           echo '';
           echo '  # Security'; } >> $element_nginx_site
         function_check nginx_ssl
@@ -474,6 +475,7 @@ function install_element {
       echo "    listen 127.0.0.1:$ELEMENT_ONION_PORT default_server;";
       echo '    port_in_redirect off;';
       echo "    server_name $ELEMENT_ONION_HOSTNAME;";
+      echo '    server_tokens off;';
       echo ''; } >> $element_nginx_site
     function_check nginx_security_options
     nginx_security_options "${ELEMENT_DOMAIN_NAME}"

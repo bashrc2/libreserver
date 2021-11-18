@@ -319,6 +319,7 @@ function install_roadhouse {
       echo '    #listen [::]:443 ssl;';
       echo "    root $ROADHOUSE_PATH;";
       echo "    server_name $ROADHOUSE_DOMAIN_NAME;";
+      echo '    server_tokens off;';
       echo "    error_log /dev/null;";
       echo '    index index.php;';
       echo '    charset utf-8;';

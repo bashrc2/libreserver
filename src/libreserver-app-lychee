@@ -273,6 +273,7 @@ function install_lychee_website {
       echo '    #listen [::]:443 ssl;';
       echo "    root /var/www/$LYCHEE_DOMAIN_NAME/htdocs;";
       echo "    server_name $LYCHEE_DOMAIN_NAME;";
+      echo '    server_tokens off;';
       echo '    access_log /dev/null;';
       echo "    error_log /dev/null;";
       echo '    index index.html;';
@@ -339,6 +340,7 @@ function install_lychee_website_onion {
       echo '    port_in_redirect off;';
       echo "    root /var/www/$LYCHEE_DOMAIN_NAME/htdocs;";
       echo "    server_name $LYCHEE_ONION_HOSTNAME;";
+      echo '    server_tokens off;';
       echo '    access_log /dev/null;';
       echo "    error_log /dev/null;";
       echo '    index index.html;';
