@@ -160,14 +160,58 @@ function remove_user_nextcloud {
 function set_email_nextcloud {
     username="$1"
 
-    nextcloud_domain=${NEXTCLOUD_DOMAIN_NAME}
+    email_domain="${DEFAULT_DOMAIN_NAME}"
     if [ ! "$ONION_ONLY" ]; then
         ONION_ONLY='no'
     fi
     if [[ "$ONION_ONLY" != 'no' ]]; then
-        nextcloud_domain=$(cat /var/lib/tor/hidden_service_email/hostname)
+        email_domain=$(cat /var/lib/tor/hidden_service_email/hostname)
     fi
-    sudo -u www-data ./occ user:setting "${username}" settings email "${username}@${nextcloud_domain}"
+    sudo -u www-data ./occ user:setting "${username}" settings email "${username}@${email_domain}"
+}
+
+function nextcloud_configure_smtp {
+    email_domain="${DEFAULT_DOMAIN_NAME}"
+    if [ ! "$ONION_ONLY" ]; then
+        ONION_ONLY='no'
+    fi
+    if [[ "$ONION_ONLY" != 'no' ]]; then
+        email_domain=$(cat /var/lib/tor/hidden_service_email/hostname)
+    fi
+
+    nextcloud_config="/var/www/$NEXTCLOUD_DOMAIN_NAME/htdocs/config/config.php"
+    if ! grep -q "mail_domain" "${nextcloud_config}"; then
+        sed -i "/datadirectory/a 'mail_domain' => '${nextcloud_domain}'," "${nextcloud_config}"
+    fi
+    if ! grep -q "mail_from_address" "${nextcloud_config}"; then
+        sed -i "/datadirectory/a 'mail_from_address' => 'admin'," "${nextcloud_config}"
+    fi
+    if ! grep -q "mail_smtpmode" "${nextcloud_config}"; then
+        sed -i "/datadirectory/a 'mail_smtpmode' => 'smtp'," "${nextcloud_config}"
+    fi
+    if ! grep -q "mail_smtphost" "${nextcloud_config}"; then
+        sed -i "/datadirectory/a 'mail_smtphost' => '127.0.0.1'," "${nextcloud_config}"
+    fi
+    if ! grep -q "mail_smtpport" "${nextcloud_config}"; then
+        sed -i "/datadirectory/a 'mail_smtpport' => 25," "${nextcloud_config}"
+    fi
+    if ! grep -q "mail_smtptimeout" "${nextcloud_config}"; then
+        sed -i "/datadirectory/a 'mail_smtptimeout' => 10," "${nextcloud_config}"
+    fi
+    if ! grep -q "mail_smtpsecure" "${nextcloud_config}"; then
+        sed -i "/datadirectory/a 'mail_smtpsecure' => ''," "${nextcloud_config}"
+    fi
+    if ! grep -q "mail_smtpauth" "${nextcloud_config}"; then
+        sed -i "/datadirectory/a 'mail_smtpauth' => false," "${nextcloud_config}"
+    fi
+    if ! grep -q "mail_send_plaintext_only" "${nextcloud_config}"; then
+        sed -i "/datadirectory/a 'mail_send_plaintext_only' => true," "${nextcloud_config}"
+    fi
+    if ! grep -q "mail_sendmailmode" "${nextcloud_config}"; then
+        sed -i "/datadirectory/a 'mail_sendmailmode' => 'smtp'," "${nextcloud_config}"
+    fi
+    cp "${nextcloud_config}" "/var/www/${NEXTCLOUD_DOMAIN_NAME}/config.php"
+    chown -R www-data:www-data "${NEXTCLOUD_WWW}"
 }
 
 function add_user_nextcloud {
@@ -293,6 +337,7 @@ function upgrade_nextcloud_base {
     # shellcheck disable=SC2086
     systemctl restart php${PHP_VERSION}-fpm
 
+    nextcloud_configure_smtp
     chown -R www-data:www-data "${NEXTCLOUD_WWW}"
     chown -R www-data:www-data "/var/www/$NEXTCLOUD_DOMAIN_NAME/data"
     cd "${NEXTCLOUD_WWW}" || exit 23
@@ -921,7 +966,7 @@ function install_nextcloud_base {
 
     increment_app_install_progress
 
-    cp "/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs/config/config.php" "/var/www/${NEXTCLOUD_DOMAIN_NAME}/config.php"
+    nextcloud_configure_smtp
 
     increment_app_install_progress
 
