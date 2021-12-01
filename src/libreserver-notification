@@ -471,7 +471,7 @@ if [ -d /etc/matrix ]; then
 fi
 
 if grep -q "NEXTCLOUD_DOMAIN_NAME=" "$CONFIGURATION_FILE"; then
-    nextcloud_domain=$(grep "NEXTCLOUD_DOMAIN_NAME=" | awk -F '=' '{print $2}')
+    nextcloud_domain=$(grep "NEXTCLOUD_DOMAIN_NAME=" "$CONFIGURATION_FILE" | awk -F '=' '{print $2}')
     if [ "${nextcloud_domain}" ]; then
         if [ -d "/var/www/${nextcloud_domain}" ]; then
             notify_by_nextcloud=1
