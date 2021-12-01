@@ -172,7 +172,8 @@ function set_email_nextcloud {
     if [[ "$ONION_ONLY" != 'no' ]]; then
         email_domain=$(cat /var/lib/tor/hidden_service_email/hostname)
     fi
-    sudo -u www-data ./occ user:setting "${username}" settings email "${username}@${email_domain}"
+    cd "${NEXTCLOUD_WWW}" || return
+    ${NEXTCLOUD_COMMAND_ROOT} user:setting "${username}" settings email "${username}@${email_domain}"
 }
 
 function nextcloud_configure_smtp {
