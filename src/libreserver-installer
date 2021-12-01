@@ -4677,7 +4677,7 @@ function update_notification_type {
         if [ -f "$profile_screen_filename" ]; then
             # TODO re-enable this when xmpp notifications are fixed
             # if [[ "$notification_type" == 'email' || "$notification_type" == 'xmpp' || "$notification_type" == 'matrix' ]]; then
-            if [[ "$notification_type" == 'email' || "$notification_type" == 'matrix' ]]; then
+            if [[ "$notification_type" == 'email' || "$notification_type" == 'matrix' || "$notification_type" == 'nextcloud' ]]; then
                 echo "$notification_type" > "/home/${notify_username}/.notify"
                 chown "${notify_username}":"${notify_username}" "/home/${notify_username}/.notify"
                 # mark as selected within user profile screen
