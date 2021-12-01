@@ -1,8 +1,8 @@
 #!/bin/bash
-#  _    _ _            ___                      
-# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
-# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # nextcloud application
 #
@@ -157,15 +157,30 @@ function remove_user_nextcloud {
     "${PROJECT_NAME}-pass" -u "$remove_username" --rmapp nextcloud
 }
 
+function set_email_nextcloud {
+    username="$1"
+
+    nextcloud_domain=${NEXTCLOUD_DOMAIN_NAME}
+    if [ ! "$ONION_ONLY" ]; then
+        ONION_ONLY='no'
+    fi
+    if [[ "$ONION_ONLY" != 'no' ]]; then
+        nextcloud_domain=$(cat /var/lib/tor/hidden_service_email/hostname)
+    fi
+    sudo -u www-data ./occ user:setting "${username}" settings email "${username}@${nextcloud_domain}"
+}
+
 function add_user_nextcloud {
     new_username="$1"
+    new_user_password="$2"
 
     read_config_param NEXTCLOUD_DOMAIN_NAME
     cd "/var/www/$NEXTCLOUD_DOMAIN_NAME/htdocs" || exit 36
     chmod +x "/var/www/$NEXTCLOUD_DOMAIN_NAME/htdocs/occ"
-    sudo -u www-data OC_PASS="${2}" ./occ user:add --password-from-env --display-name="${new_username}" "${new_username}"
+    sudo -u www-data OC_PASS="${new_user_password}" ./occ user:add --password-from-env --display-name="${new_username}" "${new_username}"
 
     "${PROJECT_NAME}-pass" -u "$new_username" -a nextcloud -p "$new_user_password"
+    set_email_nextcloud "${new_username}"
     echo '0'
 }
 
@@ -627,7 +642,7 @@ function install_nextcloud_base {
           echo '  listen 443 ssl;';
           echo '  #listen [::]:443 ssl;';
           echo "  server_name ${NEXTCLOUD_DOMAIN_NAME};";
-	  echo '  server_tokens off;';
+          echo '  server_tokens off;';
           echo '';
           echo '  # Security'; } >> "${nextcloud_nginx_site}"
         function_check nginx_ssl
@@ -907,6 +922,10 @@ function install_nextcloud_base {
     increment_app_install_progress
 
     cp "/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs/config/config.php" "/var/www/${NEXTCLOUD_DOMAIN_NAME}/config.php"
+
+    increment_app_install_progress
+
+    set_email_nextcloud "${MY_USERNAME}"
 
     increment_app_install_progress
 
