@@ -160,6 +160,11 @@ function remove_user_nextcloud {
 function set_email_nextcloud {
     username="$1"
 
+    if [ ! -d "/home/${username}" ]; then
+        echo $"User account /home/${username} does not exist"
+        return
+    fi
+
     email_domain="${DEFAULT_DOMAIN_NAME}"
     if [ ! "$ONION_ONLY" ]; then
         ONION_ONLY='no'
@@ -173,14 +178,15 @@ function set_email_nextcloud {
 function nextcloud_configure_smtp {
     nextcloud_config="/var/www/$NEXTCLOUD_DOMAIN_NAME/htdocs/config/config.php"
     if ! grep -q "mail_domain" "${nextcloud_config}"; then
-	email_domain="${DEFAULT_DOMAIN_NAME}"
-	if [ ! "$ONION_ONLY" ]; then
+        email_domain="${DEFAULT_DOMAIN_NAME}"
+        if [ ! "$ONION_ONLY" ]; then
             ONION_ONLY='no'
-	fi
-	if [[ "$ONION_ONLY" != 'no' ]]; then
+        fi
+        if [[ "$ONION_ONLY" != 'no' ]]; then
             email_domain=$(cat /var/lib/tor/hidden_service_email/hostname)
-	fi
+        fi
         sed -i "/datadirectory/a 'mail_domain' => '${email_domain}'," "${nextcloud_config}"
+        set_email_nextcloud admin
     fi
     if ! grep -q "mail_from_address" "${nextcloud_config}"; then
         sed -i "/datadirectory/a 'mail_from_address' => 'admin'," "${nextcloud_config}"
