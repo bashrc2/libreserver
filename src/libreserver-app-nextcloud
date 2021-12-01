@@ -172,7 +172,7 @@ function set_email_nextcloud {
     if [[ "$ONION_ONLY" != 'no' ]]; then
         email_domain=$(cat /var/lib/tor/hidden_service_email/hostname)
     fi
-    cd "${NEXTCLOUD_WWW}" || return
+    cd "/var/www/$NEXTCLOUD_DOMAIN_NAME/htdocs" || return
     nextcloud_password=$("${PROJECT_NAME}-pass" -u "$username" -a nextcloud)
     sudo -u www-data OC_PASS="${nextcloud_password}" ./occ user:setting "${username}" settings email "${username}@${email_domain}"
 }
