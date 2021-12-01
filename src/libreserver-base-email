@@ -189,6 +189,10 @@ function email_create_template {
         mkdir -m 700 /etc/skel/Maildir/.learn-ham/cur
         mkdir -m 700 /etc/skel/Maildir/.learn-ham/new
         mkdir -m 700 /etc/skel/Maildir/.learn-ham/tmp
+        mkdir -m 700 /etc/skel/Maildir/maybe-spam
+        mkdir -m 700 /etc/skel/Maildir/maybe-spam/cur
+        mkdir -m 700 /etc/skel/Maildir/maybe-spam/new
+        mkdir -m 700 /etc/skel/Maildir/maybe-spam/tmp
         ln -s /etc/skel/Maildir/.learn-spam /etc/skel/Maildir/spam
         ln -s /etc/skel/Maildir/.learn-ham /etc/skel/Maildir/ham
     fi
