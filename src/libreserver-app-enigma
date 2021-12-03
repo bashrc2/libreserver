@@ -290,7 +290,8 @@ function install_enigma {
           echo '';
           echo '  location / {'; } >> "$enigma_nginx_site"
         nginx_limits "$ENIGMA_DOMAIN_NAME" '15m'
-        { echo "    try_files \$uri \$uri/;";
+        { echo "    index index.html;";
+	  echo "    error_page 405 = $uri;";
           echo '  }';
           echo '}'; } >> "$enigma_nginx_site"
     else
@@ -313,7 +314,8 @@ function install_enigma {
       echo '  # Location';
       echo '  location / {'; } >> "$enigma_nginx_site"
     nginx_limits "$ENIGMA_DOMAIN_NAME" '15m'
-    { echo "    try_files \$uri \$uri/;";
+    { echo "    index index.html;";
+      echo "    error_page 405 = $uri;";
       echo '  }';
       echo '}'; } >> "$enigma_nginx_site"
 
