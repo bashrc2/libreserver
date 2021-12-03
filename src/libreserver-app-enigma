@@ -1,9 +1,9 @@
 #!/bin/bash
 #
-#  _    _ _            ___                      
-# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
-# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # License
 # =======
@@ -136,7 +136,7 @@ function upgrade_enigma {
     fi
 
     if [ ! -d "${INSTALL_DIR}" ]; then
-	mkdir -p "${INSTALL_DIR}"
+        mkdir -p "${INSTALL_DIR}"
     fi
 
     # hash the hash changed?
@@ -144,26 +144,26 @@ function upgrade_enigma {
     curr_hash=$(sha256sum "${enigma_filename}" | awk -F ' ' '{print $1}')
 
     if [[ "${ENIGMA_HASH}" != "${curr_hash}" ]]; then
-	# upgrade the app
-	cp "${enigma_filename}" "${INSTALL_DIR}/enigma.zip"
-	cd "${INSTALL_DIR}" || exit 33
-	if [ -d "${INSTALL_DIR}/enigma-reloaded-gh-pages" ]; then
-	    rm -rf "${INSTALL_DIR}/enigma-reloaded-gh-pages"
-	fi
-	unzip "${INSTALL_DIR}/enigma.zip"	
-	if [ ! -d "${INSTALL_DIR}/enigma-reloaded-gh-pages" ]; then
-	    echo $"Unable to extract ${INSTALL_DIR}/enigma.zip"
-	    return
-	fi
-	cp -r "${INSTALL_DIR}/enigma-reloaded-gh-pages"/* "/var/www/${ENIGMA_DOMAIN_NAME}/htdocs"
-	if [ ! -d "/var/www/${ENIGMA_DOMAIN_NAME}/htdocs/enigma-reloaded" ]; then
-	    mkdir "/var/www/${ENIGMA_DOMAIN_NAME}/htdocs/enigma-reloaded"
-	fi
-	cp -r "${INSTALL_DIR}/enigma-reloaded-gh-pages"/* "/var/www/${ENIGMA_DOMAIN_NAME}/htdocs/enigma-reloaded"
-	chown -R www-data:www-data "/var/www/${ENIGMA_DOMAIN_NAME}/htdocs"
-	write_config_param ENIGMA_HASH "${curr_hash}"
-	rm "${INSTALL_DIR}/enigma.zip"
-	rm -rf "${INSTALL_DIR}/enigma-reloaded-gh-pages"
+        # upgrade the app
+        cp "${enigma_filename}" "${INSTALL_DIR}/enigma.zip"
+        cd "${INSTALL_DIR}" || exit 33
+        if [ -d "${INSTALL_DIR}/enigma-reloaded-gh-pages" ]; then
+            rm -rf "${INSTALL_DIR}/enigma-reloaded-gh-pages"
+        fi
+        unzip "${INSTALL_DIR}/enigma.zip"
+        if [ ! -d "${INSTALL_DIR}/enigma-reloaded-gh-pages" ]; then
+            echo $"Unable to extract ${INSTALL_DIR}/enigma.zip"
+            return
+        fi
+        cp -r "${INSTALL_DIR}/enigma-reloaded-gh-pages"/* "/var/www/${ENIGMA_DOMAIN_NAME}/htdocs"
+        if [ ! -d "/var/www/${ENIGMA_DOMAIN_NAME}/htdocs/enigma-reloaded" ]; then
+            mkdir "/var/www/${ENIGMA_DOMAIN_NAME}/htdocs/enigma-reloaded"
+        fi
+        cp -r "${INSTALL_DIR}/enigma-reloaded-gh-pages"/* "/var/www/${ENIGMA_DOMAIN_NAME}/htdocs/enigma-reloaded"
+        chown -R www-data:www-data "/var/www/${ENIGMA_DOMAIN_NAME}/htdocs"
+        write_config_param ENIGMA_HASH "${curr_hash}"
+        rm "${INSTALL_DIR}/enigma.zip"
+        rm -rf "${INSTALL_DIR}/enigma-reloaded-gh-pages"
     fi
 }
 
@@ -223,6 +223,12 @@ function remove_enigma {
     nginx_dissite "$ENIGMA_DOMAIN_NAME"
     remove_certs "$ENIGMA_DOMAIN_NAME"
 
+    if [ -f "${INSTALL_DIR}/enigma.zip" ]; then
+        rm "${INSTALL_DIR}/enigma.zip"
+    fi
+    if [ -d "${INSTALL_DIR}/enigma-reloaded-gh-pages" ]; then
+        rm -rf "${INSTALL_DIR}/enigma-reloaded-gh-pages"
+    fi
 
     if [ -d "/var/www/$ENIGMA_DOMAIN_NAME" ]; then
         rm -rf "/var/www/$ENIGMA_DOMAIN_NAME"
@@ -291,7 +297,7 @@ function install_enigma {
           echo '  location / {'; } >> "$enigma_nginx_site"
         nginx_limits "$ENIGMA_DOMAIN_NAME" '15m'
         { echo "    index index.html;";
-	  echo "    error_page 405 = $uri;";
+          echo "    error_page 405 = $uri;";
           echo '  }';
           echo '}'; } >> "$enigma_nginx_site"
     else
@@ -330,8 +336,8 @@ function install_enigma {
     upgrade_enigma
 
     if [ ! -f "/var/www/$ENIGMA_DOMAIN_NAME/htdocs/index.html" ]; then
-	echo $"enigma files were not installed"
-	exit 24
+        echo $"enigma files were not installed"
+        exit 24
     fi
 
     systemctl restart nginx
