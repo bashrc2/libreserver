@@ -156,6 +156,10 @@ function upgrade_enigma {
 	    return
 	fi
 	cp -r "${INSTALL_DIR}/enigma-reloaded-gh-pages"/* "/var/www/${ENIGMA_DOMAIN_NAME}/htdocs"
+	if [ ! -d "/var/www/${ENIGMA_DOMAIN_NAME}/htdocs/enigma-reloaded" ]; then
+	    mkdir "/var/www/${ENIGMA_DOMAIN_NAME}/htdocs/enigma-reloaded"
+	fi
+	cp -r "${INSTALL_DIR}/enigma-reloaded-gh-pages"/* "/var/www/${ENIGMA_DOMAIN_NAME}/htdocs/enigma-reloaded"
 	chown -R www-data:www-data "/var/www/${ENIGMA_DOMAIN_NAME}/htdocs"
 	write_config_param ENIGMA_HASH "${curr_hash}"
 	rm "${INSTALL_DIR}/enigma.zip"
