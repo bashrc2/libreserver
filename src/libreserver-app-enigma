@@ -147,6 +147,9 @@ function upgrade_enigma {
 	# upgrade the app
 	cp "${enigma_filename}" "${INSTALL_DIR}/enigma.zip"
 	cd "${INSTALL_DIR}" || exit 33
+	if [ -d "${INSTALL_DIR}/enigma-reloaded-gh-pages" ]; then
+	    rm -rf "${INSTALL_DIR}/enigma-reloaded-gh-pages"
+	fi
 	unzip "${INSTALL_DIR}/enigma.zip"	
 	if [ ! -d "${INSTALL_DIR}/enigma-reloaded-gh-pages" ]; then
 	    echo $"Unable to extract ${INSTALL_DIR}/enigma.zip"
@@ -155,6 +158,8 @@ function upgrade_enigma {
 	cp -r "${INSTALL_DIR}/enigma-reloaded-gh-pages"/* "/var/www/${ENIGMA_DOMAIN_NAME}/htdocs"
 	chown -R www-data:www-data "/var/www/${ENIGMA_DOMAIN_NAME}/htdocs"
 	write_config_param ENIGMA_HASH "${curr_hash}"
+	rm "${INSTALL_DIR}/enigma.zip"
+	rm -rf "${INSTALL_DIR}/enigma-reloaded-gh-pages"
     fi
 }
 
