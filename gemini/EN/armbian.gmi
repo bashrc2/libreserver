@@ -1,0 +1,87 @@
+## Installation on Armbian
+
+> we are the music makers, we are the dreamers of dreams. cyberpunks and pirates. chaotic spectres haunting cyberspace. engineers, artists, hackers.
+
+=> https://www.armbian.com/download Download the Armbian image for your board.
+
+It must be version 11 (Bullseye), otherwise it won't work. Extract the image from its archive, then copy it to a microSD card
+
+``` command
+sudo dd bs=32M if=[Armbian .img file] of=/dev/sdX conv=fdatasync,sync,noerror status=progress
+```
+
+Where /dev/sdX is the path for the microSD drive on your system.
+
+When that's done use a tool such as Gparted to resize the partition on the microSD card to fill up any remaining available space.
+
+Insert the microSD drive into your ARM board, connect it to your internet router with an ethernet cable and plug in the power.
+
+The board should then show up somewhere on your local network. You can log into your internet router to see what devices are connected and obtain the local IP address for the board that way, or use a network scanning tool.
+
+Once you know the local IP address of your ARM board then you can log into it with:
+
+``` command
+ssh root@[local IP address]
+```
+
+Using the default Armbian password of 1234. You should see the Armbian welcome message and will be asked to change the password, then create a new user account.
+
+When the user account is created type 'exit' to leave the ssh session then log back in with your new user account.
+
+``` command
+ssh myusername@[local IP address]
+```
+
+Become the root user:
+
+``` command
+sudo su
+```
+
+Update the system:
+
+``` command
+apt update
+apt upgrade
+```
+
+Then clone the LibreServer repository and checkout the bullseye development branch.
+
+``` command
+apt install -y git dialog build-essential
+git clone https://gitlab.com/bashrc2/libreserver
+cd libreserver
+git checkout bullseye
+```
+
+Install the LibreServer commands:
+
+``` command
+make install
+```
+
+Create an admin user:
+
+``` command
+adduser admin
+```
+
+Their name could just be "admin" and the other details are unimportant.
+
+And now you can begin installing the LibreServer system. There are two ways of doing this. If you already own a domain name which you want to use then run:
+
+``` command
+libreserver menuconfig --noninteractive
+```
+
+Alternatively, if you don't own a domain name, don't have administrator access to your internet router or if you want to be able to access your sites only via onion addresses then run:
+
+``` command
+libreserver menuconfig-onion --noninteractive
+```
+
+You will then be taken through a few questions and the system will install.
+
+Afterwards you'll be able to log into your system via the web interface at http://[local IP address]/admin.
+
+=> https://libreserver.org/admin.html Advice on how to use LibreServer once it's installed
