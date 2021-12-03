@@ -333,6 +333,7 @@ function install_enigma {
 
     increment_app_install_progress
 
+    write_config_param ENIGMA_HASH "installing"
     upgrade_enigma
 
     if [ ! -f "/var/www/$ENIGMA_DOMAIN_NAME/htdocs/index.html" ]; then
