@@ -1,0 +1,335 @@
+#!/bin/bash
+#
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# License
+# =======
+#
+# Copyright (C) 2021 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VARIANTS='full full-vim'
+
+APP_CATEGORY=social
+
+IN_DEFAULT_INSTALL=0
+INSTALLED_ON_DEFAULT_DOMAIN=0
+SHOW_ON_ABOUT=1
+
+# whether to show the domain name in the web UI
+SHOW_DOMAIN_IN_WEBADMIN=1
+
+# whether to show https://domain or just the domain on its own on app screen
+SHOW_DOMAIN_ONLY=0
+
+# whether this app will be included in the json API for the FreedomBox android app
+NOT_ON_API=0
+
+# Whether to show on http://libreserver/home
+NOT_ON_HOMEPAGE=0
+
+# show port number within the URL on app screens
+SHOW_URL_PORT=
+
+# Whether another app is required to be installed before this one
+REQUIRES_APP=
+
+ENIGMA_DOMAIN_NAME=
+ENIGMA_CODE=
+ENIGMA_ONION_PORT=9507
+
+# These parameters are used by the FreedomBox mobile app and web UI
+ENIGMA_SHORT_DESCRIPTION="Encrypted communication across less trustworthy channels"
+ENIGMA_DESCRIPTION="Encrypted communication across less trustworthy channels"
+ENIGMA_MOBILE_APP_URL=
+
+# Any ports which should be added to the firewall, separated by commas
+ENIGMA_FIREWALL_PORTS=""
+
+enigma_variables=(ONION_ONLY
+                  ENIGMA_DOMAIN_NAME
+                  ENIGMA_CODE
+                  DDNS_PROVIDER
+                  MY_USERNAME)
+
+function change_default_domain_name_enigma {
+    new_default_domain_name="$1"
+    # If anything references DEFAULT_DOMAIN_NAME then change it here
+}
+
+function logging_on_enigma {
+    echo -n ''
+}
+
+function logging_off_enigma {
+    echo -n ''
+}
+
+function remove_user_enigma {
+    remove_username="$1"
+}
+
+function add_user_enigma {
+    new_username="$1"
+    new_user_password="$2"
+    echo '0'
+}
+
+function install_interactive_enigma {
+    if [ ! "$ONION_ONLY" ]; then
+        ONION_ONLY='no'
+    fi
+
+    if [[ "$ONION_ONLY" != "no" ]]; then
+        ENIGMA_DOMAIN_NAME='enigma.local'
+        write_config_param "ENIGMA_DOMAIN_NAME" "$ENIGMA_DOMAIN_NAME"
+    else
+        interactive_site_details "enigma" "ENIGMA_DOMAIN_NAME" "ENIGMA_CODE"
+    fi
+    APP_INSTALLED=1
+}
+
+function change_password_enigma {
+    curr_username="$1"
+    new_user_password="$2"
+
+    read_config_param 'ENIGMA_DOMAIN_NAME'
+}
+
+function reconfigure_enigma {
+    # This is used if you need to switch identity. Dump old keys and generate new ones
+    echo -n ''
+}
+
+function upgrade_distro_enigma {
+    target_distro="$1"
+    # include anything here needed to upgrade to the target distro
+}
+
+function upgrade_enigma {
+    enigma_filename=
+    if [ -f "/root/${PROJECT_NAME}/image_build/enigma.zip" ]; then
+        enigma_filename="/root/${PROJECT_NAME}/image_build/enigma.zip"
+    else
+        if [ -f "/home/${MY_USERNAME}/${PROJECT_NAME}/image_build/enigma.zip" ]; then
+            enigma_filename="/home/${MY_USERNAME}/${PROJECT_NAME}/image_build/enigma.zip"
+        fi
+    fi
+
+    if [ ! -f "${enigma_filename}" ]; then
+        return
+    fi
+
+    if [ ! -d "${INSTALL_DIR}" ]; then
+	mkdir -p "${INSTALL_DIR}"
+    fi
+
+    # hash the hash changed?
+    read_config_param ENIGMA_HASH
+    curr_hash=$(sha256sum "${enigma_filename}" | awk -F ' ' '{print $1}')
+
+    if [[ "${ENIGMA_HASH}" != "${curr_hash}" ]]; then
+	# upgrade the app
+	cp "${enigma_filename}" "${INSTALL_DIR}/enigma.zip"
+	cd "${INSTALL_DIR}" || exit 33
+	unzip "${INSTALL_DIR}/enigma.zip"	
+	if [ ! -d "${INSTALL_DIR}/enigma-reloaded-gh-pages" ]; then
+	    echo $"Unable to extract ${INSTALL_DIR}/enigma.zip"
+	    return
+	fi
+	cp -r "${INSTALL_DIR}/enigma-reloaded-gh-pages"/* "/var/www/${ENIGMA_DOMAIN_NAME}/htdocs"
+	chown -R www-data:www-data "/var/www/${ENIGMA_DOMAIN_NAME}/htdocs"
+	write_config_param ENIGMA_HASH "${curr_hash}"
+    fi
+}
+
+function backup_local_enigma {
+    ENIGMA_DOMAIN_NAME='enigma'
+    if grep -q "enigma domain" "$COMPLETION_FILE"; then
+        ENIGMA_DOMAIN_NAME=$(get_completion_param "enigma domain")
+    fi
+
+    source_directory=/var/www/${ENIGMA_DOMAIN_NAME}/htdocs
+
+    suspend_site "${ENIGMA_DOMAIN_NAME}"
+
+    dest_directory=enigma
+    backup_directory_to_usb "$source_directory" $dest_directory
+
+    restart_site
+}
+
+function restore_local_enigma {
+    if ! grep -q "enigma domain" "$COMPLETION_FILE"; then
+        return
+    fi
+    ENIGMA_DOMAIN_NAME=$(get_completion_param "enigma domain")
+    if [ ! "$ENIGMA_DOMAIN_NAME" ]; then
+        return
+    fi
+    suspend_site "${ENIGMA_DOMAIN_NAME}"
+    temp_restore_dir=/root/tempenigma
+    enigma_dir=/var/www/${ENIGMA_DOMAIN_NAME}/htdocs
+
+    restore_directory_from_usb $temp_restore_dir enigma
+    if [ -d $temp_restore_dir ]; then
+        if [ -d "$temp_restore_dir$enigma_dir" ]; then
+            cp -rp "$temp_restore_dir$enigma_dir"/* "$enigma_dir"/
+        else
+            if [ ! -d "$enigma_dir" ]; then
+                mkdir "$enigma_dir"
+            fi
+            cp -rp "$temp_restore_dir"/* "$enigma_dir"/
+        fi
+        chown -R www-data:www-data "$enigma_dir"
+        rm -rf $temp_restore_dir
+    fi
+    restart_site
+}
+
+function backup_remote_enigma {
+    echo -n ''
+}
+
+function restore_remote_enigma {
+    echo -n ''
+}
+
+function remove_enigma {
+    nginx_dissite "$ENIGMA_DOMAIN_NAME"
+    remove_certs "$ENIGMA_DOMAIN_NAME"
+
+
+    if [ -d "/var/www/$ENIGMA_DOMAIN_NAME" ]; then
+        rm -rf "/var/www/$ENIGMA_DOMAIN_NAME"
+    fi
+    if [ -f "/etc/nginx/sites-available/$ENIGMA_DOMAIN_NAME" ]; then
+        rm "/etc/nginx/sites-available/$ENIGMA_DOMAIN_NAME"
+    fi
+    remove_onion_service enigma "${ENIGMA_ONION_PORT}"
+    remove_app enigma
+    remove_completion_param install_enigma
+    sed -i '/enigma/d' "$COMPLETION_FILE"
+
+    remove_ddns_domain "$ENIGMA_DOMAIN_NAME"
+}
+
+function install_enigma {
+    increment_app_install_progress
+    INSTALL_PACKAGES git curl unzip
+
+    increment_app_install_progress
+
+    if [ ! "$ENIGMA_DOMAIN_NAME" ]; then
+        echo $'No domain name was given for enigma'
+        exit 35
+    fi
+
+    if [ -d "/var/www/$ENIGMA_DOMAIN_NAME/htdocs" ]; then
+        rm -rf "/var/www/$ENIGMA_DOMAIN_NAME/htdocs"
+    fi
+    mkdir -p "/var/www/$ENIGMA_DOMAIN_NAME/htdocs"
+    cd "/var/www/$ENIGMA_DOMAIN_NAME/htdocs" || exit 36
+
+    chmod g+w "/var/www/$ENIGMA_DOMAIN_NAME/htdocs"
+    chown -R www-data:www-data "/var/www/$ENIGMA_DOMAIN_NAME/htdocs"
+
+    add_ddns_domain "$ENIGMA_DOMAIN_NAME"
+
+    ENIGMA_ONION_HOSTNAME=$(add_onion_service enigma 80 "${ENIGMA_ONION_PORT}")
+
+    increment_app_install_progress
+
+    enigma_nginx_site=/etc/nginx/sites-available/$ENIGMA_DOMAIN_NAME
+    if [[ "$ONION_ONLY" == "no" ]]; then
+        nginx_http_redirect "$ENIGMA_DOMAIN_NAME" "index index.html"
+        { echo 'server {';
+          echo '  listen 443 ssl;';
+          echo '  #listen [::]:443 ssl;';
+          echo "  server_name $ENIGMA_DOMAIN_NAME;";
+          echo "  server_tokens off;";
+          echo ''; } >> "$enigma_nginx_site"
+        nginx_compress "$ENIGMA_DOMAIN_NAME"
+        echo '' >> "$enigma_nginx_site"
+        echo '  # Security' >> "$enigma_nginx_site"
+        nginx_ssl "$ENIGMA_DOMAIN_NAME"
+
+        nginx_security_options "$ENIGMA_DOMAIN_NAME"
+        nginx_robots "$ENIGMA_DOMAIN_NAME"
+
+        { echo '  add_header Strict-Transport-Security \"max-age=15768000; includeSubDomains\" always;';
+          echo '';
+          echo '  access_log /dev/null;';
+          echo '  error_log /dev/null;';
+          echo '';
+          echo "  root /var/www/$ENIGMA_DOMAIN_NAME/htdocs;";
+          echo '';
+          echo '  location / {'; } >> "$enigma_nginx_site"
+        nginx_limits "$ENIGMA_DOMAIN_NAME" '15m'
+        { echo "    try_files \$uri \$uri/;";
+          echo '  }';
+          echo '}'; } >> "$enigma_nginx_site"
+    else
+        echo -n '' > "$enigma_nginx_site"
+    fi
+    { echo 'server {';
+      echo "    listen 127.0.0.1:$ENIGMA_ONION_PORT default_server;";
+      echo "    server_name $ENIGMA_ONION_HOSTNAME;";
+      echo "    server_tokens off;";
+      echo ''; } >> "$enigma_nginx_site"
+    nginx_compress "$ENIGMA_DOMAIN_NAME"
+    echo '' >> "$enigma_nginx_site"
+    nginx_security_options "$ENIGMA_DOMAIN_NAME"
+    { echo '';
+      echo '  access_log /dev/null;';
+      echo '  error_log /dev/null;';
+      echo '';
+      echo "  root /var/www/$ENIGMA_DOMAIN_NAME/htdocs;";
+      echo '';
+      echo '  # Location';
+      echo '  location / {'; } >> "$enigma_nginx_site"
+    nginx_limits "$ENIGMA_DOMAIN_NAME" '15m'
+    { echo "    try_files \$uri \$uri/;";
+      echo '  }';
+      echo '}'; } >> "$enigma_nginx_site"
+
+    increment_app_install_progress
+
+    create_site_certificate "$ENIGMA_DOMAIN_NAME" 'yes'
+
+    nginx_ensite "$ENIGMA_DOMAIN_NAME"
+
+    increment_app_install_progress
+
+    upgrade_enigma
+
+    if [ ! -f "/var/www/$ENIGMA_DOMAIN_NAME/htdocs/index.html" ]; then
+	echo $"enigma files were not installed"
+	exit 24
+    fi
+
+    systemctl restart nginx
+
+    increment_app_install_progress
+
+    set_completion_param "enigma domain" "$ENIGMA_DOMAIN_NAME"
+
+    APP_INSTALLED=1
+}
+
+# NOTE: deliberately there is no "exit 0"
