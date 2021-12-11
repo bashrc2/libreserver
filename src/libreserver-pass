@@ -1,8 +1,8 @@
 #!/bin/bash
-#  _    _ _            ___                      
-# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
-# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # It's useful to be able to store user passwords, but not a good
 # idea to do that in plain text. This implements a simple password
@@ -51,6 +51,32 @@ MAIN_PASSWORD=''
 
 # If this file is present then don't store passwords
 NO_PASSWORD_STORE_FILE=~/.nostore
+
+function update_basic_auth_all_passwords {
+    # remove existing passwords file
+    ALLPASS_FILENAME="/etc/nginx/.allpasswd"
+    if [ -f "${ALLPASS_FILENAME}" ]; then
+        rm "${ALLPASS_FILENAME}"
+    fi
+    if [ -f /etc/nginx/.webadminpasswd ]; then
+        cp /etc/nginx/.webadminpasswd "${ALLPASS_FILENAME}"
+    fi
+
+    # create a passwords file
+    for d in /home/*/ ; do
+        USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+        if [[ $(is_valid_user "${USERNAME}") == "1" ]]; then
+            USER_PASS=$(${PROJECT_NAME}-pass -u "${USERNAME}" -a "login")
+            if [ "${USER_PASS}" ]; then
+                echo -n "${USER_PASS}" | htpasswd -i -s -c "${ALLPASS_FILENAME}" "${USERNAME}"
+            fi
+        fi
+    done
+
+    if [ -f "${ALLPASS_FILENAME}" ]; then
+        chmod 644 "${ALLPASS_FILENAME}"
+    fi
+}
 
 function get_backup_key_id {
     MY_BACKUP_KEY_ID=$(gpg --list-keys "(backup key)" | sed -n '2p' | sed 's/^[ \t]*//')
@@ -121,7 +147,7 @@ function run_tests {
     fi
     returned_pass=$(${PROJECT_NAME}-pass -u root -a tests)
     if [[ "$pass" != "$returned_pass" ]]; then
-	echo $'Password encryption test failed'
+        echo $'Password encryption test failed'
         echo "pass     :${pass}:"
         echo "padded   :${padded}:"
         echo "returned :${returned_pass}:"
@@ -326,6 +352,8 @@ else
         MAIN_PASSWORD=
         exit 5
     fi
+    # update a passwords list for basic auth
+    update_basic_auth_all_passwords
 fi
 
 MAIN_PASSWORD=

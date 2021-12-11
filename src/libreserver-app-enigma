@@ -61,6 +61,8 @@ ENIGMA_MOBILE_APP_URL=
 # Any ports which should be added to the firewall, separated by commas
 ENIGMA_FIREWALL_PORTS=""
 
+ENIGMA_LOGIN_TEXT="Enigma Login"
+
 enigma_variables=(ONION_ONLY
                   ENIGMA_DOMAIN_NAME
                   ENIGMA_CODE
@@ -270,6 +272,14 @@ function install_enigma {
 
     increment_app_install_progress
 
+    ALLPASS_FILENAME="/etc/nginx/.allpasswd"
+    if [ ! -f "${ALLPASS_FILENAME}" ]; then
+        if [ -f /etc/nginx/.webadminpasswd ]; then
+            cp /etc/nginx/.webadminpasswd "${ALLPASS_FILENAME}"
+	    chmod 644 "${ALLPASS_FILENAME}"
+        fi
+    fi
+
     enigma_nginx_site=/etc/nginx/sites-available/$ENIGMA_DOMAIN_NAME
     if [[ "$ONION_ONLY" == "no" ]]; then
         nginx_http_redirect "$ENIGMA_DOMAIN_NAME" "index index.html"
@@ -297,6 +307,8 @@ function install_enigma {
           echo '  location / {'; } >> "$enigma_nginx_site"
         nginx_limits "$ENIGMA_DOMAIN_NAME" '15m'
         { echo "    index index.html;";
+          echo "    auth_basic \"${ENIGMA_LOGIN_TEXT}\";";
+          echo "    auth_basic_user_file ${ALLPASS_FILENAME};";
           echo "    error_page 405 = $uri;";
           echo '  }';
           echo '}'; } >> "$enigma_nginx_site"
@@ -321,6 +333,8 @@ function install_enigma {
       echo '  location / {'; } >> "$enigma_nginx_site"
     nginx_limits "$ENIGMA_DOMAIN_NAME" '15m'
     { echo "    index index.html;";
+      echo "    auth_basic \"${ENIGMA_LOGIN_TEXT}\";";
+      echo "    auth_basic_user_file ${ALLPASS_FILENAME};";
       echo "    error_page 405 = $uri;";
       echo '  }';
       echo '}'; } >> "$enigma_nginx_site"
