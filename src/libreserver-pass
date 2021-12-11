@@ -65,7 +65,7 @@ function update_basic_auth_all_passwords {
     # create a passwords file
     for d in /home/*/ ; do
         USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
-        if [[ $(is_valid_user "${USERNAME}") == "1" ]]; then
+	if ${PROJECT_NAME}-pass -u "${USERNAME}" -a "login"; then
             USER_PASS=$(${PROJECT_NAME}-pass -u "${USERNAME}" -a "login")
             if [ "${USER_PASS}" ]; then
                 echo -n "${USER_PASS}" | htpasswd -i -s -c "${ALLPASS_FILENAME}" "${USERNAME}"
