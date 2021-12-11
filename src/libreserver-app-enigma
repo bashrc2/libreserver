@@ -287,7 +287,7 @@ function install_enigma {
         nginx_security_options "$ENIGMA_DOMAIN_NAME"
         nginx_robots "$ENIGMA_DOMAIN_NAME"
 
-        { echo '  add_header Strict-Transport-Security \"max-age=15768000; includeSubDomains\" always;';
+        { echo "  add_header Strict-Transport-Security \"max-age=15768000; includeSubDomains\" always;";
           echo '';
           echo '  access_log /dev/null;';
           echo '  error_log /dev/null;';
