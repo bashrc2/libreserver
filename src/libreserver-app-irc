@@ -37,7 +37,7 @@ REQUIRES_APP=
 IRC_PORT=6697
 
 IRC_REPO="https://gitlab.com/bashrc2/miniircd"
-IRC_COMMIT='d07d839a09f4d5cf4fad76974b752bd89350b449'
+IRC_COMMIT='23f6f7fc2e16acf4b83779d9ca28b2916243de75'
 
 IRC_SHORT_DESCRIPTION=$'Classic chat system'
 IRC_DESCRIPTION=$'The classic low bandwidth chat system'
