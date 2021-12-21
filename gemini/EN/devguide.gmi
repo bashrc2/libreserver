@@ -28,9 +28,9 @@ Libreserver consists almost entirely of bash scripts, with some html, css and ph
 
 ## Source code
 
-=> https://code.libreserver.org/bashrc/libreserver ► Main repo
-=> https://gitlab.com/bashrc2/libreserver ► Mirror 1
-=> https://codeberg.org/bashrc/libreserver ► Mirror 2
+=> https://gitlab.com/bashrc2/libreserver ► Main Repo
+=> https://codeberg.org/bashrc/libreserver ► Mirror 1
+=> https://github.com/bashrc2/libreserver ► Mirror 2
 => https://libreserver.org/downloads/source.tar.gz ► Compressed archive
 
 ## Creating images
@@ -149,7 +149,7 @@ HEAD can be replaced by the specific commit hash if needed. Copy and paste the r
 
 ### Submitting multiple changes over time
 
-If you plan to make many changes over an extended period of time then send an email to bob@libreserver.org or a Matrix message to @bob:matrix.libreserver.org and ask for an account on code.libreserver.org. You'll then be able to fork and make pull requests.
+If you plan to make many changes over an extended period of time then create an account on gitlab and make pull requests to https://gitlab.com/bashrc2/libreserver.
 
 ## Architecture
 
