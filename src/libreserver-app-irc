@@ -37,7 +37,7 @@ REQUIRES_APP=
 IRC_PORT=6697
 
 IRC_REPO="https://gitlab.com/bashrc2/miniircd"
-IRC_COMMIT='23f6f7fc2e16acf4b83779d9ca28b2916243de75'
+IRC_COMMIT='297eae7668f14ab88646add07fe6841e58aa1f09'
 
 IRC_SHORT_DESCRIPTION=$'Classic chat system'
 IRC_DESCRIPTION=$'The classic low bandwidth chat system'
@@ -432,6 +432,7 @@ function install_irc_server {
       echo "WorkingDirectory=/etc/miniirc";
       echo "ExecStart=/usr/local/bin/miniircd --state-dir=/ --setuid=miniirc ${IRC_SSL_OPTION} --registered-only --new-registrations 0 --chroot=/var/jail/miniircd";
       echo 'Environment=PATH=/usr/bin:/usr/local/bin';
+      echo 'Environment=LC_ALL=C.UTF-8';
       echo 'Restart=on-failure';
       echo 'PrivateTmp=true';
       echo 'PrivateDevices=false';
