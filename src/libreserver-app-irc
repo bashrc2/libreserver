@@ -255,7 +255,7 @@ function change_password_irc {
     new_user_password="$2"
 
     "${PROJECT_NAME}-pass" -u "${curr_username}" -a irc -p "${new_user_password}"
-    /usr/local/bin/miniircd --state-dir=/var/jail/miniircd --add-account "${curr_username}":"${new_user_password}"
+    /usr/local/bin/miniircd --state-dir=/var/jail/miniircd --set-password "${curr_username}":"${new_user_password}"
     chown -R miniirc:miniirc /var/jail/miniircd
 }
 
