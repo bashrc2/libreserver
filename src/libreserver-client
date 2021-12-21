@@ -228,7 +228,7 @@ function setup_client_app_irc {
       echo 'net_proxy_type = 3';
       echo 'net_proxy_use = 0';
 
-      echo 'net_proxy_auth = 1';
+      echo 'net_proxy_auth = 0';
       echo 'net_proxy_pass = HexChat';
       echo 'net_proxy_user = HexChat';
 
