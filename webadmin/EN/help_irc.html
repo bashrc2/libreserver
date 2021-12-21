@@ -117,15 +117,19 @@
     <p class="helptext"><b>5.</b> <span translate="yes">Uncheck use global user information.</span></p>
 
     <p class="helptext" translate="yes">Enter first and second nicknames and check connect to this network on startup.</p>
-    <p class="helptext"><b>6.</b> <span translate="yes">If you are using the ordinary domain name (clearnet/ICANN) then make sure that Use SSL is checked.</span></p>
 
-    <p class="helptext"><b>7.</b> <span translate="yes">If you are using the onion address then use SSL should be unchecked and the transport encryption will be handled via the onion address itself.</span></p>
-
-    <p class="helptext"><b>8.</b> <span translate="yes">Within the Password field enter the password which you originally set up the box with.</span></p>
+    <p class="helptext"><b>7.</b> <span translate="yes">Use SSL for all servers should be checked.</span></p>
+    <p class="helptext"><b>8.</b> <span translate="yes">Accept invalid SSL should be checked.</span></p>
 
     <p class="helptext"><b>9.</b> <span translate="yes">Select the Autojoin channels tab, click Add and enter #libreserver as the channel name.</span></p>
 
-    <p class="helptext"><b>10.</b> <span translate="yes">Click close and then connect.</span></p>
+    <p class="helptext"><b>10.</b> <span translate="yes">Select the Connect Commands tab, click Add and enter:</span></p>
+    <p class="codetext" translate="no">
+identify admin yourpassword
+    </p>
+    <p class="helptext"><span translate="yes">Where yourpassword is the password that you use to log into the administrator web interface.</span></p>
+
+    <p class="helptext"><b>11.</b> <span translate="yes">Click close and then connect.</span></p>
 
     <p class="subheadertext" translate="yes">Installing in Emacs</p>
 

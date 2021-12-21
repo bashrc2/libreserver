@@ -39,9 +39,6 @@ IRC_PORT=6697
 IRC_REPO="https://gitlab.com/bashrc2/miniircd"
 IRC_COMMIT='d07d839a09f4d5cf4fad76974b752bd89350b449'
 
-# An optional password to log into IRC. This applies to all users
-IRC_PASSWORD=
-
 IRC_SHORT_DESCRIPTION=$'Classic chat system'
 IRC_DESCRIPTION=$'The classic low bandwidth chat system'
 IRC_MOBILE_APP_URL='https://f-droid.org/packages/org.yaaic'
@@ -65,7 +62,7 @@ function remove_bridge_irc_to_xmpp {
 
 function bridge_irc_to_xmpp {
     if [[ "$ONION_ONLY" != 'no' ]]; then
-	return
+        return
     fi
     if [ ! -d /etc/prosody ]; then
         remove_bridge_irc_to_xmpp
@@ -137,20 +134,11 @@ function logging_off_irc {
     echo -n ''
 }
 
-function irc_get_global_password {
-    if [ -f /etc/miniirc/password ]; then
-        cat /etc/miniirc/password
-    else
-        echo -n ''
-    fi
-}
-
 function create_irssi_config {
     new_username="$1"
     new_password="$2"
 
     read_config_param IRC_PORT
-    IRC_PASSWORD=$(irc_get_global_password)
 
     new_name="$3"
     if [ ${#new_name} -eq 0 ]; then
@@ -207,9 +195,7 @@ function create_irssi_config {
     fi
     echo '    chatnet = "LibreServer";' >> "/home/${new_username}/.irssi/config"
     echo '    autoconnect = "yes";' >> "/home/${new_username}/.irssi/config"
-    if [ "${IRC_PASSWORD}" ]; then
-        echo "    password = \"${IRC_PASSWORD}\";" >> "/home/${new_username}/.irssi/config"
-    fi
+    # echo "    password = \"${IRC_PASSWORD}\";" >> "/home/${new_username}/.irssi/config"
     { echo '  }';
       echo ');';
       echo '';
@@ -264,35 +250,6 @@ function remove_user_irc {
     chown -R miniirc:miniirc /var/jail/miniircd
 }
 
-function irc_set_global_password_base {
-    NEW_IRC_PASSWORD="$1"
-    if [ "${NEW_IRC_PASSWORD}" ]; then
-        echo -n "${NEW_IRC_PASSWORD}" > /etc/miniirc/password
-        if ! grep -q "password" /etc/systemd/system/irc.service; then
-            sed -i 's|/usr/local/bin/miniircd|/usr/local/bin/miniircd --password-file /etc/miniirc/password|g' /etc/systemd/system/irc.service
-            systemctl daemon-reload
-            systemctl restart irc
-        fi
-    else
-        # remove password
-        if [ -f /etc/miniirc/password ]; then
-            rm /etc/miniirc/password
-        fi
-        if grep -q "password" /etc/systemd/system/irc.service; then
-            sed -i 's|/usr/local/bin/miniircd --password-file /etc/miniirc/password|/usr/local/bin/miniircd|g' /etc/systemd/system/irc.service
-            systemctl daemon-reload
-            systemctl restart irc
-        fi
-    fi
-}
-
-function irc_setting_password {
-    new_global_password="$1"
-
-    set_password_for_all_users irc "$new_global_password"
-    irc_set_global_password_base "$new_global_password"
-}
-
 function change_password_irc {
     curr_username="$1"
     new_user_password="$2"
@@ -305,11 +262,6 @@ function change_password_irc {
 function add_user_irc {
     new_username="$1"
     new_user_password="$2"
-
-    IRC_PASSWORD=$(irc_get_global_password)
-    if [ ${#IRC_PASSWORD} -lt 2 ]; then
-        IRC_PASSWORD=
-    fi
 
     if [ ! -d "/home/${new_username}/.irssi" ]; then
         mkdir "/home/${new_username}/.irssi"
@@ -327,57 +279,6 @@ function run_client_irc {
     irssi
 }
 
-function irc_show_password {
-    IRC_PASSWORD=$(irc_get_global_password)
-    dialog --title $"IRC Password" \
-           --msgbox "$IRC_PASSWORD" 6 40
-}
-
-function irc_set_global_password {
-    EXISTING_IRC_PASSWORD=$(irc_get_global_password)
-    data=$(mktemp 2>/dev/null)
-    dialog --title $"IRC Password" \
-           --clear \
-           --backtitle $"LibreServer Control Panel" \
-           --passwordbox $"Password for all IRC users, or press Enter for no password" 10 60 "$EXISTING_IRC_PASSWORD" 2> "$data"
-    sel=$?
-    case $sel in
-        0)
-            NEW_IRC_PASSWORD=$(<"$data")
-            irc_set_global_password_base "$NEW_IRC_PASSWORD"
-            dialog --title $"IRC Password" \
-                   --msgbox $"The IRC password was changed" 6 40
-            ;;
-    esac
-    rm -f "$data"
-}
-
-function configure_interactive_irc {
-    if [ ! -d /etc/miniirc ]; then
-        dialog --title $"IRC Menu" \
-               --msgbox $"No IRC server is installed" 6 70
-        return
-    fi
-
-    W=(1 $"Set a password for all IRC users"
-       2 $"Show current IRC login password")
-
-    while true
-    do
-        # shellcheck disable=SC2068
-        selection=$(dialog --backtitle $"LibreServer Administrator Control Panel" --title $"IRC" --menu $"Choose an operation, or ESC to exit:" 10 60 2 "${W[@]}" 3>&2 2>&1 1>&3)
-
-        if [ ! "$selection" ]; then
-            break
-        fi
-
-        case $selection in
-            1) irc_set_global_password;;
-            2) irc_show_password;;
-        esac
-    done
-}
-
 function install_interactive_irc {
     echo -n ''
     APP_INSTALLED=1
@@ -385,10 +286,6 @@ function install_interactive_irc {
 
 function reconfigure_irc {
     echo -n ''
-}
-
-function irc_fix_password {
-    sed -i 's|if arguments\[0] == server.password:|if arguments\[0].decode("utf-8") == server.password:|g' /usr/local/bin/miniircd
 }
 
 function upgrade_irc {
@@ -407,7 +304,6 @@ function upgrade_irc {
     set_repo_commit /etc/miniirc "irc commit" "$IRC_COMMIT" "$IRC_REPO"
 
     cp /etc/miniirc/miniircd /usr/local/bin/miniircd
-    irc_fix_password
     irc_welcome_message
 }
 
@@ -496,7 +392,6 @@ function install_irc_server {
     set_completion_param "irc commit" "$IRC_COMMIT"
 
     cp /etc/miniirc/miniircd /usr/local/bin/miniircd
-    irc_fix_password
     irc_welcome_message
     make jail
 
