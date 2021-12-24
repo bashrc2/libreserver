@@ -159,7 +159,7 @@ function remove_emacs {
 }
 
 function install_emacs {
-    INSTALL_PACKAGES emacs-nox ispell ibritish ifrench ispanish iitalian irussian iswedish inorwegian iirish ingerman iswiss iogerman idutch idanish ibrazilian ibulgarian ipolish iczech iestonian ilithuanian iukrainian icatalan
+    INSTALL_PACKAGES emacs-nox ispell ibritish ifrench ispanish iitalian irussian iswedish inorwegian iirish ingerman iswiss iogerman idutch idanish ibrazilian ibulgarian ipolish iczech iestonian ilithuanian iukrainian icatalan elpa-jedi python3-jedi elpa-flycheck elpa-use-package pylint
     update-alternatives --set editor /usr/bin/emacs
 
     if [ ! -d /root/.emacs_backups ]; then
@@ -249,8 +249,8 @@ function install_emacs {
       echo "(require 'epa)";
       echo '(epa-file-enable)';
       echo '(menu-bar-mode -1)';
-      echo '(toggle-scroll-bar -1)';
-      echo '(tool-bar-mode -1)';
+      echo ';;(toggle-scroll-bar -1)';
+      echo ';;(tool-bar-mode -1)';
       echo '';
       echo $';; ===== scratchpad message  ===========================================';
       echo '(setq initial-scratch-message';
@@ -260,7 +260,23 @@ function install_emacs {
       echo '       ";;\n"';
       echo '       ";; Welcome\n"))';
       echo $';; ===== highlight current line ========================================';
-      echo '(global-hl-line-mode)'; } >> "/home/$MY_USERNAME/.emacs"
+      echo '(global-hl-line-mode)';
+      echo '';
+      echo $';; ===== Python autocompletion =========================================';
+      echo '';
+      echo '(setq py-shell-local-path "/usr/bin/python3" py-use-local-default t)';
+      echo '(setq python-python-command "/usr/bin/python3")';
+      echo '';
+      echo '(use-package flycheck';
+      echo '  :ensure t';
+      echo '  :init';
+      echo '  (global-flycheck-mode t))';
+      echo '';
+      echo '(use-package jedi';
+      echo '  :ensure t';
+      echo '  :init';
+      echo "  (add-hook 'python-mode-hook 'jedi:setup)";
+      echo "  (add-hook 'python-mode-hook 'jedi:ac-setup))"; } > "/home/$MY_USERNAME/.emacs"
     cp "/home/$MY_USERNAME/.emacs" /root/.emacs
     chown "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME/.emacs"
 
