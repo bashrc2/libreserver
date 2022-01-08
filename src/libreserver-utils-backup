@@ -85,7 +85,7 @@ function configure_backup_key {
     fi
 
     BACKUP_KEY_EXISTS=$(gpg_key_exists "root" "${MY_NAME} (backup key)" | tail -n 1)
-    if [[ $BACKUP_KEY_EXISTS == "yes" ]]; then
+    if [[ "$BACKUP_KEY_EXISTS" == "yes" ]]; then
         return
     fi
 
@@ -105,7 +105,7 @@ function configure_backup_key {
 
     # Generate a GPG key for backups
     BACKUP_KEY_EXISTS=$(gpg_key_exists "${MY_USERNAME}" "${MY_NAME} (backup key)" | tail -n 1)
-    if [[ $BACKUP_KEY_EXISTS != "yes" ]]; then
+    if [[ "$BACKUP_KEY_EXISTS" != "yes" ]]; then
         { echo 'Key-Type: rsa';
           echo 'Key-Length: 2048';
           echo 'Subkey-Type: rsa';
@@ -134,7 +134,7 @@ function configure_backup_key {
 
         echo $'Checking that the Backup key was created'
         BACKUP_KEY_EXISTS=$(gpg_key_exists "${MY_USERNAME}" "${MY_NAME} (backup key)" | tail -n 1)
-        if [[ ${BACKUP_KEY_EXISTS} == "no" ]]; then
+        if [[ "${BACKUP_KEY_EXISTS}" == "no" ]]; then
             echo $'Backup key could not be created'
             exit 43
         fi
@@ -143,7 +143,7 @@ function configure_backup_key {
 
     MY_BACKUP_KEY_ID=$(su -c "gpg --list-keys \"$MY_NAME (backup key)\"" - "$MY_USERNAME" | sed -n '2p' | sed 's/^[ \t]*//')
     if [ ! "$MY_BACKUP_KEY_ID" ]; then
-	echo "MY_BACKUP_KEY_ID is missing. Backups gpg key might not have been created"
+	echo "MY_BACKUP_KEY_ID is missing. Backups gpg key might not have been created."
 	exit 28
     fi
     echo "Backup key: $MY_BACKUP_KEY_ID"
