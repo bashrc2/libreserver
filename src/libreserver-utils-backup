@@ -148,6 +148,7 @@ function configure_backup_key {
 
     if [ ! -f "${MY_BACKUP_KEY}_public.asc" ]; then
         echo 'Public backup key could not be exported'
+        echo "su -m root -c \"gpg --homedir /home/$MY_USERNAME/.gnupg --armor --export $MY_BACKUP_KEY_ID > ${MY_BACKUP_KEY}_public.asc\" - \"$MY_USERNAME\""
         exit 36
     fi
 
@@ -155,6 +156,7 @@ function configure_backup_key {
 
     if [ ! -f "${MY_BACKUP_KEY}_private.asc" ]; then
         echo 'Private backup key could not be exported'
+        echo "su -m root -c \"echo '\$BACKUP_DUMMY_PASSWORD' | gpg --homedir /home/$MY_USERNAME/.gnupg --output ${MY_BACKUP_KEY}_private.asc --armor --batch --passphrase-fd 0 --export-secret-key $MY_BACKUP_KEY_ID\" - \"$MY_USERNAME\""
         exit 29
     fi
 
