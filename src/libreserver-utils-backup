@@ -105,7 +105,7 @@ function configure_backup_key {
 
     # Generate a GPG key for backups
     BACKUP_KEY_EXISTS=$(gpg_key_exists "${MY_USERNAME}" "${MY_NAME} (backup key)" | tail -n 1)
-    if [[ $BACKUP_KEY_EXISTS == "no" ]]; then
+    if [[ $BACKUP_KEY_EXISTS != "yes" ]]; then
         { echo 'Key-Type: rsa';
           echo 'Key-Length: 2048';
           echo 'Subkey-Type: rsa';
@@ -120,7 +120,7 @@ function configure_backup_key {
         chown "${MY_USERNAME}":"${MY_USERNAME}" "/home/${MY_USERNAME}/gpg-genkey.conf"
 
         gpg_dir="/home/${MY_USERNAME}/.gnupg"
-        if [ -d ${gpg_dir} ]; then
+        if [ -d "${gpg_dir}" ]; then
             echo "Set backup key permissions on ${gpg_dir}"
             find ${gpg_dir} -type d -exec chmod 700 {} \;
             find ${gpg_dir} -type f -exec chmod 600 {} \;
@@ -142,6 +142,10 @@ function configure_backup_key {
     fi
 
     MY_BACKUP_KEY_ID=$(su -c "gpg --list-keys \"$MY_NAME (backup key)\"" - "$MY_USERNAME" | sed -n '2p' | sed 's/^[ \t]*//')
+    if [ ! "$MY_BACKUP_KEY_ID" ]; then
+	echo "MY_BACKUP_KEY_ID is missing. Backups gpg key might not have been created"
+	exit 28
+    fi
     echo "Backup key: $MY_BACKUP_KEY_ID"
     MY_BACKUP_KEY=/home/$MY_USERNAME/backup_key
     su -m root -c "gpg --homedir /home/$MY_USERNAME/.gnupg --armor --export $MY_BACKUP_KEY_ID > ${MY_BACKUP_KEY}_public.asc" - "$MY_USERNAME"
