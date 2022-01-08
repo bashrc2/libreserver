@@ -403,7 +403,6 @@ function install_cryptpad_main {
       echo '  add_header Cross-Origin-Embedder-Policy require-corp;';
       echo '';
       echo "  server_name ${CRYPTPAD_ONION_HOSTNAME};";
-      echo '  server_tokens off;';
       echo '';
       echo "  add_header X-XSS-Protection \"1; mode=block\";";
       echo "  add_header X-Content-Type-Options nosniff;";
