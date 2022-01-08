@@ -122,18 +122,18 @@ function block_microsoft_on_raspbian {
         echo '127.0.0.1  packages.microsoft.com' >> /etc/hosts
     fi
     apt-mark hold raspberrypi-sys-mods
-    if [ -f /etc/apt/trusted.gpg.d/microsoft.gpg ]; then
-        echo "microsoft.gpg found. Attempting to remove it."
-        chattr -i /etc/apt/trusted.gpg.d/microsoft.gpg
-        rm -vf /etc/apt/trusted.gpg.d/microsoft.gpg
-        touch /etc/apt/trusted.gpg.d/microsoft.gpg
-        chattr +i /etc/apt/trusted.gpg.d/microsoft.gpg
-        lsattr /etc/apt/trusted.gpg.d/microsoft.gpg
-    fi
-    if [ -f /etc/apt/trusted.gpg.d/microsoft.gpg ]; then
-        echo "***********************************************"
-        echo "WARNING: microsoft gpg key could not be removed"
-        echo "***********************************************"
+    MALICIOUS_GPG_KEY=/etc/apt/trusted.gpg.d/microsoft.gpg
+    if [ -f "${MALICIOUS_GPG_KEY}" ]; then
+	if [ -s "${MALICIOUS_GPG_KEY}" ]; then	
+            echo "microsoft.gpg found. Removing it by clearing the contents of the file."
+            chattr -i "${MALICIOUS_GPG_KEY}"
+            rm -vf "${MALICIOUS_GPG_KEY}"
+            touch "${MALICIOUS_GPG_KEY}"
+            chattr +i "${MALICIOUS_GPG_KEY}"
+            lsattr "${MALICIOUS_GPG_KEY}"
+	else
+	    echo "Malicious microsoft gpg key neutralized"
+	fi
     fi
 }
 
