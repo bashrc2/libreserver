@@ -104,8 +104,8 @@ function configure_backup_key {
     gpg_agent_setup "${MY_USERNAME}"
 
     # Generate a GPG key for backups
-    BACKUP_KEY_EXISTS=$(gpg_key_exists "${MY_USERNAME}" "${MY_NAME} (backup key)" | tail -n 1)
-    if [[ "$BACKUP_KEY_EXISTS" != "yes" ]]; then
+    MY_BACKUP_KEY_ID=$(su -c "gpg --list-keys \"$MY_NAME (backup key)\"" - "$MY_USERNAME" | sed -n '2p' | sed 's/^[ \t]*//')
+    if [ ! "${MY_BACKUP_KEY_ID}" ]; then
         { echo 'Key-Type: rsa';
           echo 'Key-Length: 2048';
           echo 'Subkey-Type: rsa';
@@ -131,20 +131,17 @@ function configure_backup_key {
         echo "echo \"passphrase\" | su -m root -c \"gpg --homedir ${gpg_dir} --batch --passphrase-fd 0 --full-gen-key /home/${MY_USERNAME}/gpg-genkey.conf\" - \"${MY_USERNAME}\""
         echo "${passStr}" | su -m root -c "gpg --homedir ${gpg_dir} --batch --passphrase-fd 0 --full-gen-key /home/${MY_USERNAME}/gpg-genkey.conf" - "${MY_USERNAME}"
         chown -R "${MY_USERNAME}":"${MY_USERNAME}" "${gpg_dir}"
-
-        echo $'Checking that the Backup key was created'
-        BACKUP_KEY_EXISTS=$(gpg_key_exists "${MY_USERNAME}" "${MY_NAME} (backup key)" | tail -n 1)
-        if [[ "${BACKUP_KEY_EXISTS}" == "no" ]]; then
-            echo $'Backup key could not be created'
-            exit 43
-        fi
-        rm "/home/${MY_USERNAME}/gpg-genkey.conf"
     fi
 
+    echo $'Checking that the Backup key was created'
     MY_BACKUP_KEY_ID=$(su -c "gpg --list-keys \"$MY_NAME (backup key)\"" - "$MY_USERNAME" | sed -n '2p' | sed 's/^[ \t]*//')
-    if [ ! "$MY_BACKUP_KEY_ID" ]; then
-	echo "MY_BACKUP_KEY_ID is missing. Backups gpg key might not have been created."
-	exit 28
+    if [ ! "${MY_BACKUP_KEY_ID}" ]; then
+        echo "MY_BACKUP_KEY_ID is missing. Backups gpg key might not have been created."
+        exit 28
+    fi
+    if [ -f "/home/${MY_USERNAME}/gpg-genkey.conf" ]; then
+        echo "Removing backups key creation script"
+        rm "/home/${MY_USERNAME}/gpg-genkey.conf"
     fi
     echo "Backup key: $MY_BACKUP_KEY_ID"
     MY_BACKUP_KEY=/home/$MY_USERNAME/backup_key
