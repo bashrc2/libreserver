@@ -123,11 +123,17 @@ function block_microsoft_on_raspbian {
     fi
     apt-mark hold raspberrypi-sys-mods
     if [ -f /etc/apt/trusted.gpg.d/microsoft.gpg ]; then
+        echo "microsoft.gpg found. Attempting to remove it."
         chattr -i /etc/apt/trusted.gpg.d/microsoft.gpg
         rm -vf /etc/apt/trusted.gpg.d/microsoft.gpg
         touch /etc/apt/trusted.gpg.d/microsoft.gpg
         chattr +i /etc/apt/trusted.gpg.d/microsoft.gpg
         lsattr /etc/apt/trusted.gpg.d/microsoft.gpg
+    fi
+    if [ -f /etc/apt/trusted.gpg.d/microsoft.gpg ]; then
+        echo "***********************************************"
+        echo "WARNING: microsoft gpg key could not be removed"
+        echo "***********************************************"
     fi
 }
 
