@@ -488,6 +488,11 @@ function remove_default_user {
         userdel -r debian
         echo 'Default debian user account removed'
     fi
+
+    if [ -d /home/pi ]; then
+        userdel -r pi
+        echo 'Default pi user account removed'
+    fi
 }
 
 function create_completion_file {
