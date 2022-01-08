@@ -4480,7 +4480,7 @@ function update_system_monitor {
         io_test_drive=
 
         # if this is raspbian running from usb drive
-        if grep -q 'raspbian' /etc/apt/sources.list; then
+        if grep -q 'raspbian' /etc/apt/sources.list; then	    
             # no microSD connected
             if [ ! -f /dev/mmcblk0p1 ]; then
                 test_drive=/dev/root

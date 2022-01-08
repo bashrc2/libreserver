@@ -86,7 +86,7 @@ function create_tor_repo_sources {
     if [ -f /etc/apt/sources.list ]; then
         # if this is raspbian then skip the replacement and hope for the best
         if grep -q "raspbian" /etc/apt/sources.list; then
-            raspbian_add_backports
+            # raspbian_add_backports
             $UPDATE_PACKAGES
             INSTALL_PACKAGES apt-transport-tor
             mark_completed "${FUNCNAME[0]}"
@@ -121,7 +121,7 @@ function create_repo_sources {
     if [ -f /etc/apt/sources.list ]; then
         # if this is raspbian then skip the replacement and hope for the best
         if grep -q "raspbian" /etc/apt/sources.list; then
-            raspbian_add_backports
+            # raspbian_add_backports
             $UPDATE_PACKAGES
             INSTALL_PACKAGES apt-transport-https
             mark_completed "${FUNCNAME[0]}"
