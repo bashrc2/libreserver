@@ -24,6 +24,123 @@ LibreServer consists almost entirely of bash scripts, with some html, css and ph
 <li><a href="https://libreserver.org/downloads/libreserver-bullseye-r1-src.tar.gz">Compressed archive</a></li>
 </ul>
 
+<h2>Creating the Raspbian image</h2>
+
+<p>
+  Download the <a href="https://www.raspberrypi.com/software/operating-systems">Raspberry Pi OS Lite</a>, then copy it to a USB drive:
+</p>
+
+<pre>
+  unzip *-raspios-bullseye-armhf-lite.zip
+  sudo dd bs=512 if=*-raspios-bullseye-armhf-lite.img of=/dev/sdX conv=fdatasync,sync,noerror status=progress
+</pre>
+
+<p>
+  Mount the rootfs on the USB drive, then add some scripts.
+</p>
+
+<pre>
+  sudo su
+  cd /media/yourusername/rootfs
+  nano etc/profile.d/libreserver.sh
+</pre>
+
+Add the following:
+
+<pre>
+#!/bin/bash
+
+install_libreserver_message()
+{
+    LIBREROOT=/root/libreserver
+    if [ -f /root/libreserver-completed.txt ]; then
+        if grep -q "install_final" /root/libreserver-completed.txt; then
+            return
+        fi
+    fi
+    clear
+    if [[ "$USER" == "pi" ]]; then
+        echo "Welcome, traveller"
+        echo "Type \"sudo su\" to proceed with installation of LibreServer"
+        return
+    fi
+}
+  
+install_libreserver_message
+</pre>
+
+<p>
+  Save and exit. Then add another script:
+</p>
+
+<pre>
+  nano root/.bashrc
+</pre>
+
+<p>
+  Add the following:
+</p>
+
+<pre>
+install_libreserver()
+{
+    LIBREROOT=/root/libreserver
+    if [ -f /root/libreserver-completed.txt ]; then
+        if grep -q "install_final" /root/libreserver-completed.txt; then
+            return
+        fi
+    fi
+    clear
+    echo -e "\nBeginning LibreServer install\n"
+    echo -e "\nIf at any point it asks to choose a version of a file, choose the Maintainer's version.\n\n"
+    echo -e "\nWhen the install is complete use a browser to navigate to: http://[local ip address]/admin\n\n"
+    if [ -d ${LIBREROOT} ]; then
+        echo -e "\nRemoving existing LibreServer files."
+        rm -rf ${LIBREROOT}
+    fi
+    echo -e "\nInstalling packages needed for LibreServer."
+    apt install -y git build-essential dialog
+    echo -e "\nCloning LibreServer repo."
+    git clone https://gitlab.com/bashrc2/libreserver ${LIBREROOT}
+    if [ ! -d ${LIBREROOT} ]; then
+        echo -e "\nFailed to clone LibreServer repo"
+        return
+    fi
+    if [ ! -d /home/admin ]; then
+        echo ""
+        echo "Creating an admin account. You can use whatever password you want here, since it will be replaced during the installation."
+        echo ""
+        /usr/sbin/adduser admin
+    fi
+    cd ${LIBREROOT} || return
+    make install
+    echo ""
+    while true; do
+        read -p "Install the onion (Tor only) version? Y/N" yn
+        case $yn in
+            [Yy]* ) libreserver menuconfig-onion; break;;
+            [Nn]* ) libreserver menuconfig; break;;
+            ,* ) echo "Please answer yes or no.";;
+        esac
+    done
+}
+    
+install_libreserver
+</pre>
+
+<p>
+  Save and exit. Then sync the USB drive.
+</p>
+
+<pre>
+  sync
+  exit
+</pre>
+
+<p>
+  You can now unmount the USB drive and use it as the basis for an img file. See the manpage for <i>libreserver-distro</i> for details of how to create an image which only includes the needed partitions and not the full drive size.
+</p>
+
 <h2>Creating images</h2>
 <p>
 To build images you will need the <b>libreserver-maker</b> tool. It can be installed with:
