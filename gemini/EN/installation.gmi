@@ -55,6 +55,12 @@ Log into your server using ssh.
 
 The initial password is libreserver. On first login you will be asked to change this and the server will log you out again. Log back in with your chosen password. Note that the password that you entered is temporary and will be thrown away when installation is complete.
 
+If you are installing the Raspbian image then use the login which is usually expected by Raspbian:
+
+  ssh pi@192.168.x.y
+
+With the password "raspberry".
+
 ## ⃟ Step 6: Start the install
 
 Follow the instructions to begin the install. Typically this will be:
