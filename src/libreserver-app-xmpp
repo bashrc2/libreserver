@@ -1920,6 +1920,9 @@ function install_xmpp {
 
     increment_app_install_progress
 
+    # wait for the prosody daemon to become active
+    sleep 5
+
     registered_prosody_user=
     if [[ $ONION_ONLY != 'no' ]]; then
         prosody_register_str="prosodyctl register \"$MY_USERNAME\" \"$XMPP_ONION_HOSTNAME\" \"[password]\""
