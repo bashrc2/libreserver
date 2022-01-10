@@ -578,9 +578,12 @@ if [ -d /home/libreserver ]; then
 fi
 
 if [ -f /usr/bin/raspi-config ]; then
-    # reboot raspbian after install
-    systemctl reboot -i
-    reboot
+    if [ ! -f /root/.rpi_initial_reboot ]; then
+        # reboot raspbian after install
+        touch /root/.rpi_initial_reboot
+        systemctl reboot -i
+        reboot
+    fi
 fi
 
 exit 0
