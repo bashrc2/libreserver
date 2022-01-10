@@ -1,8 +1,8 @@
 #!/bin/bash
-#  _    _ _            ___                      
-# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
-# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # This install script is intended for use with Debian
 #
@@ -575,6 +575,12 @@ if [ -d /home/libreserver ]; then
     echo $'The default libreserver user will be deleted when the system restarts.'
     echo $'Next time you login use the username you gave during the install.'
     echo ''
+fi
+
+if [ -f /usr/bin/raspi-config ]; then
+    # reboot raspbian after install
+    systemctl reboot -i
+    reboot
 fi
 
 exit 0
