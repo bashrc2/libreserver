@@ -52,7 +52,7 @@ EPICYON_DOMAIN_NAME=
 EPICYON_CODE=
 EPICYON_ONION_PORT=9552
 EPICYON_REPO="https://gitlab.com/bashrc2/epicyon"
-EPICYON_COMMIT='5341e5a274a517f7fd6dfbff623d267d3d5d505c'
+EPICYON_COMMIT='05fa76dfdded8a4760f83a253ef829128e63e09c'
 EPICYON_PORT_INTERNAL=7156
 
 # These parameters are used by the FreedomBox mobile app and web UI
