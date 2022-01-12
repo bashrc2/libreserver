@@ -239,6 +239,17 @@ function set_default_language {
     fi
 }
 
+function stop_dhcpcd {
+    # this applies particularly on raspbian, where the pi's configuration
+    # system may interfere with the libreserver network settings
+    if [ -f /usr/bin/raspi-config ]; then
+        if [ -f /etc/dhcpcd.conf ]; then
+            systemctl stop dhcpcd
+            systemctl disable dhcpcd
+        fi
+    fi
+}
+
 function remove_default_nginx_domain {
     restart_nginx=
     if [ -f /etc/nginx/sites-available/default ]; then
@@ -4480,7 +4491,7 @@ function update_system_monitor {
         io_test_drive=
 
         # if this is raspbian running from usb drive
-        if grep -q 'raspbian' /etc/apt/sources.list; then	    
+        if grep -q 'raspbian' /etc/apt/sources.list; then
             # no microSD connected
             if [ ! -f /dev/mmcblk0p1 ]; then
                 test_drive=/dev/root
@@ -4933,6 +4944,8 @@ ifconfig eth0 | awk '/inet / {print $2}' | cut -f2 -d: > /etc/issue
 if [ $manual_install_completed ]; then
     check_resolvconf
 fi
+
+stop_dhcpcd
 
 while true
 do
