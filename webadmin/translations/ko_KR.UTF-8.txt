@@ -517,7 +517,7 @@ Under Settings/Expert you may want to change the automatic message deletion peri
 When setting up a group chat first ensure that you have separately confirmed two way messaging with each of the participants individually|그룹 채팅을 설정할 때 먼저 각 참가자와 양방향 메시징을 개별적으로 확인했는지 확인하십시오
 Enable strict TLS authentication between XMPP servers?|XMPP 서버간에 엄격한 TLS 인증을 사용 하시겠습니까?
 If you or other people are having difficulty joining multi-user chat then enabling this might help|귀하 또는 다른 사람들이 다중 사용자 채팅에 참여하는 데 어려움이있는 경우이 기능을 사용하면 도움이 될 수 있습니다.
-Music can be uploaded using NextCloud. Install the app and then create a directory called 'Music'.|NextCloud를 사용하여 음악을 업로드 할 수 있습니다. 앱을 설치하고 'Music'이라는 디렉토리를 만듭니다.
+Music can be uploaded using Nextcloud. Install the app and then create a directory called 'Music'.|Nextcloud를 사용하여 음악을 업로드 할 수 있습니다. 앱을 설치하고 'Music'이라는 디렉토리를 만듭니다.
 Drag your files into the Music directory and they will then become available to mpd.|파일을 음악 디렉토리로 드래그하면 mpd에서 사용할 수있게됩니다.
 Select search (magnifying glass icon) and search for 'MALP', then select 'install'|검색 (돋보기 아이콘)을 선택하고 'MALP'를 검색 한 다음 '설치'를 선택하십시오.
 Open MALP and from the settings select Profiles|MALP를 열고 설정에서 프로파일 선택

@@ -517,7 +517,7 @@ Under Settings/Expert you may want to change the automatic message deletion peri
 When setting up a group chat first ensure that you have separately confirmed two way messaging with each of the participants individually|عند إعداد دردشة جماعية ، تأكد أولاً من أنك قمت بتأكيد المراسلة بشكل منفرد مع كل مشارك على حدة
 Enable strict TLS authentication between XMPP servers?|تمكين مصادقة TLS صارمة بين خوادم XMPP؟
 If you or other people are having difficulty joining multi-user chat then enabling this might help|إذا واجهت أنت أو غيرك من الأشخاص صعوبة في الانضمام إلى دردشة متعددة المستخدمين ، فقد يساعدك تمكين ذلك
-Music can be uploaded using NextCloud. Install the app and then create a directory called 'Music'.|يمكن تحميل الموسيقى باستخدام NextCloud. ثبّت التطبيق ثم أنشئ دليلًا باسم "الموسيقى".
+Music can be uploaded using Nextcloud. Install the app and then create a directory called 'Music'.|يمكن تحميل الموسيقى باستخدام Nextcloud. ثبّت التطبيق ثم أنشئ دليلًا باسم "الموسيقى".
 Drag your files into the Music directory and they will then become available to mpd.|اسحب ملفاتك إلى دليل الموسيقى وسيصبح متاحًا لـ mpd.
 Select search (magnifying glass icon) and search for 'MALP', then select 'install'|حدد البحث (رمز النظارة المكبرة) وابحث عن "MALP" ، ثم حدد "تثبيت"
 Open MALP and from the settings select Profiles|افتح MALP ومن الإعدادات حدد ملفات التعريف
