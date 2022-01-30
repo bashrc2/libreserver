@@ -283,7 +283,11 @@ function kill_sendxmpp_process {
     # Sometimes the process can get stuck, so ensure that
     # it gets killed if necessary
     # shellcheck disable=SC2009
-    sendxmpp_pid=$(ps ax | grep /usr/bin/sendxmpp | grep -v grep | awk -F ' ' '{print $1}')
+    sendxmpp_binary=/usr/bin/sendxmpp
+    if [ -f /root/.cargo/bin/sendxmpp ]; then
+        sendxmpp_binary=/root/.cargo/bin/sendxmpp
+    fi
+    sendxmpp_pid=$(ps ax | grep ${sendxmpp_binary} | grep -v grep | awk -F ' ' '{print $1}')
     if [ "$sendxmpp_pid" ]; then
         kill -9 "$sendxmpp_pid"
     fi
@@ -428,7 +432,23 @@ if [ "$SUBJECT" ]; then
 fi
 
 if [ -d /etc/prosody ]; then
-    if [ -f /usr/bin/sendxmpp ]; then
+    sendxmpp_config=
+    sendxmpp_binary=/usr/bin/sendxmpp
+    if [ -f /root/.cargo/bin/sendxmpp ]; then
+        sendxmpp_binary=/root/.cargo/bin/sendxmpp
+        if [ ! -d /etc/sendxmpp ]; then
+            mkdir /etc/sendxmpp
+        fi
+        sendxmpp_config=/etc/sendxmpp/sendxmpp.toml
+    else
+        if [ -f /etc/sendxmpp/sendxmpp.toml ]; then
+            rm /etc/sendxmpp/sendxmpp.toml
+        fi
+        if [ -f /root/.config/sendxmpp.toml ]; then
+            rm /root/.config/sendxmpp.toml
+        fi
+    fi
+    if [ -f "${sendxmpp_binary}" ]; then
         notify_by_xmpp=1
         if [ -f "$notification_method_filename" ]; then
             notify_by_xmpp=
@@ -443,9 +463,24 @@ if [ -d /etc/prosody ]; then
                     MESSAGE="$SUBJECT"
                 fi
 
-                if [ -f /usr/bin/sendxmpp ]; then
+                if [ -f "${sendxmpp_binary}" ]; then
+                    # kill any existing send process
                     kill_sendxmpp_process
-                    curl http://localhost:5280/rest --user "notification:${notification_user_password}" -H 'Content-Type: application/json' --data-binary "{ \"body\" : \"${MESSAGE}\", \"\kind\" : \"message\", \"to\" : \"${ADMIN_USERNAME}@${local_domain}\", \"type\" : \"headline\" }"
+                    # create the sendxmpp configuration file
+                    if [ "${sendxmpp_config}" ]; then
+                        echo "jid = \"notification@${local_domain}\"" > "${sendxmpp_config}"
+                        echo "password = \"${notification_user_password}\"" >> "${sendxmpp_config}"
+                    fi
+                    # send the message
+                    echo "$MESSAGE" | ${sendxmpp_binary} "$ADMIN_EMAIL_ADDRESS"
+                    # remove the sendxmpp configuration file
+                    if [ "${sendxmpp_config}" ]; then
+                        if [ -f "${sendxmpp_config}" ]; then
+                            rm "${sendxmpp_config}"
+                        fi
+                    fi
+
+                    #curl http://localhost:5280/rest --user "notification:${notification_user_password}" -H 'Content-Type: application/json' --data-binary "{ \"body\" : \"${MESSAGE}\", \"\kind\" : \"message\", \"to\" : \"${ADMIN_USERNAME}@${local_domain}\", \"type\" : \"headline\" }"
 
                     #curl -k http://localhost:5280/rest -u notification:${notification_user_password} -H "Content-Type: text/xml" -d "<iq to=\"${ADMIN_USERNAME}@${local_domain}\" type=\"set\" id=\"3de1a1e3-ef91-4017-a5aa-aaba0a82eb94-1\" from=\"notification@${local_domain}\"><pubsub xmlns=\"http://jabber.org/protocol/pubsub\"><publish node=\"${SUBJECT}\"><item>${MESSAGE}</item></publish></pubsub></iq>"
                 fi
@@ -475,18 +510,18 @@ if grep -q "NEXTCLOUD_DOMAIN_NAME=" "$CONFIGURATION_FILE"; then
     if [ "${nextcloud_domain}" ]; then
         if [ -d "/var/www/${nextcloud_domain}" ]; then
             notify_by_nextcloud=1
-	    if [ -f "$notification_method_filename" ]; then
-		notify_by_nextcloud=
-		if grep -q 'nextcloud' "$notification_method_filename"; then
-		    notify_by_nextcloud=1
-		fi
-	    fi
-	    if [ $notify_by_nextcloud ]; then
-		# shellcheck disable=SC2002
-		server_admin=$(cat "/root/${PROJECT_NAME}-completed.txt" | grep "Admin user:" | awk -F ':' '{print $2}')
-		nextcloud_server_message "${server_admin}" "${MESSAGE}" "${nextcloud_domain}"
-	    fi
-	fi
+            if [ -f "$notification_method_filename" ]; then
+                notify_by_nextcloud=
+                if grep -q 'nextcloud' "$notification_method_filename"; then
+                    notify_by_nextcloud=1
+                fi
+            fi
+            if [ $notify_by_nextcloud ]; then
+                # shellcheck disable=SC2002
+                server_admin=$(cat "/root/${PROJECT_NAME}-completed.txt" | grep "Admin user:" | awk -F ':' '{print $2}')
+                nextcloud_server_message "${server_admin}" "${MESSAGE}" "${nextcloud_domain}"
+            fi
+        fi
     fi
 fi
 
