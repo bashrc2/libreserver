@@ -440,13 +440,14 @@ if [ -d /etc/prosody ]; then
             mkdir /etc/sendxmpp
         fi
         sendxmpp_config=/etc/sendxmpp/sendxmpp.toml
+	echo "Sending xmpp message via sendxmpp-rs"
     else
         if [ -f /etc/sendxmpp/sendxmpp.toml ]; then
             rm /etc/sendxmpp/sendxmpp.toml
         fi
-        if [ -f /root/.config/sendxmpp.toml ]; then
-            rm /root/.config/sendxmpp.toml
-        fi
+    fi
+    if [ -f /root/.config/sendxmpp.toml ]; then
+        rm /root/.config/sendxmpp.toml
     fi
     if [ -f "${sendxmpp_binary}" ]; then
         notify_by_xmpp=1
@@ -470,9 +471,11 @@ if [ -d /etc/prosody ]; then
                     if [ "${sendxmpp_config}" ]; then
                         echo "jid = \"notification@${local_domain}\"" > "${sendxmpp_config}"
                         echo "password = \"${notification_user_password}\"" >> "${sendxmpp_config}"
+			echo "Created ${sendxmpp_config}"
                     fi
                     # send the message
                     echo "$MESSAGE" | ${sendxmpp_binary} "${ADMIN_EMAIL_ADDRESS}"
+		    echo "xmpp message sent"
                     # remove the sendxmpp configuration file
                     #if [ "${sendxmpp_config}" ]; then
                     #    if [ -f "${sendxmpp_config}" ]; then
