@@ -474,8 +474,8 @@ if [ -d /etc/prosody ]; then
 			echo "Created ${sendxmpp_config}"
                     fi
                     # send the message
-                    echo "$MESSAGE" | ${sendxmpp_binary} "${ADMIN_EMAIL_ADDRESS}"
-		    echo "xmpp message sent"
+                    echo "$MESSAGE" | ${sendxmpp_binary} -p "${ADMIN_EMAIL_ADDRESS}"
+		    echo "xmpp message sent to ${ADMIN_EMAIL_ADDRESS}"
                     # remove the sendxmpp configuration file
                     #if [ "${sendxmpp_config}" ]; then
                     #    if [ -f "${sendxmpp_config}" ]; then
