@@ -472,7 +472,7 @@ if [ -d /etc/prosody ]; then
                         echo "password = \"${notification_user_password}\"" >> "${sendxmpp_config}"
                     fi
                     # send the message
-                    echo "$MESSAGE" | ${sendxmpp_binary} "$ADMIN_EMAIL_ADDRESS"
+                    echo "$MESSAGE" | ${sendxmpp_binary} "notification@${local_domain}"
                     # remove the sendxmpp configuration file
                     if [ "${sendxmpp_config}" ]; then
                         if [ -f "${sendxmpp_config}" ]; then
