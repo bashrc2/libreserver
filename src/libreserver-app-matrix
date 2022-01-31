@@ -181,7 +181,7 @@ function matrix_configure_homeserver_yaml {
       echo 'url_preview_enabled: False';
       echo 'dynamic_thumbnails: False';
       echo 'expire_access_token: False';
-      echo 'room_invite_state_types:';
+      echo 'room_prejoin_state:';
       echo '    - "m.room.join_rules"';
       echo '    - "m.room.canonical_alias"';
       echo '    - "m.room.avatar"';
@@ -429,7 +429,7 @@ function create_matrix_nginx_config {
         { echo 'server {';
           echo '  listen 80;';
           echo "  server_name ${MATRIX_DOMAIN_NAME};";
-	  echo '  server_tokens off;';
+          echo '  server_tokens off;';
           echo '  return 301 https://$host$request_uri;';
           echo '}';
           echo '';
@@ -439,7 +439,7 @@ function create_matrix_nginx_config {
           echo "  listen ${MATRIX_HTTP_PORT} ssl http2;";
           echo "  listen [::]:${MATRIX_HTTP_PORT} ssl http2;";
           echo "  server_name ${MATRIX_DOMAIN_NAME};";
-	  echo '  server_tokens off;';
+          echo '  server_tokens off;';
           echo ''; } > $matrix_nginx_site
         function_check nginx_ssl
         nginx_ssl "${MATRIX_DOMAIN_NAME}"
@@ -948,6 +948,10 @@ function upgrade_matrix {
     fi
 
     create_matrix_user_reactivation_script
+
+    if grep -q 'room_invite_state_types' "${MATRIX_DATA_DIR}/homeserver.yaml"; then
+        sed -i 's|room_invite_state_types|room_prejoin_state|g' "${MATRIX_DATA_DIR}/homeserver.yaml"
+    fi
 
     # log_file config parameter no longer used
     if grep -q 'log_file' "${MATRIX_DATA_DIR}/homeserver.yaml"; then
