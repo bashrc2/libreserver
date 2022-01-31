@@ -181,11 +181,6 @@ function matrix_configure_homeserver_yaml {
       echo 'url_preview_enabled: False';
       echo 'dynamic_thumbnails: False';
       echo 'expire_access_token: False';
-      echo 'room_prejoin_state:';
-      echo '    - "m.room.join_rules"';
-      echo '    - "m.room.canonical_alias"';
-      echo '    - "m.room.avatar"';
-      echo '    - "m.room.name"';
       echo 'app_service_config_files: []';
       echo 'password_config:';
       echo '   enabled: True';
@@ -950,7 +945,11 @@ function upgrade_matrix {
     create_matrix_user_reactivation_script
 
     if grep -q 'room_invite_state_types' "${MATRIX_DATA_DIR}/homeserver.yaml"; then
-        sed -i 's|room_invite_state_types|room_prejoin_state|g' "${MATRIX_DATA_DIR}/homeserver.yaml"
+        sed -i '/room_invite_state_types/d' "${MATRIX_DATA_DIR}/homeserver.yaml"
+        sed -i '/m.room.join_rules/d' "${MATRIX_DATA_DIR}/homeserver.yaml"
+        sed -i '/m.room.canonical_alias/d' "${MATRIX_DATA_DIR}/homeserver.yaml"
+        sed -i '/m.room.avatar/d' "${MATRIX_DATA_DIR}/homeserver.yaml"
+        sed -i '/m.room.name/d' "${MATRIX_DATA_DIR}/homeserver.yaml"
     fi
 
     # log_file config parameter no longer used
