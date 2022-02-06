@@ -734,7 +734,7 @@ function add_user_xmpp {
     else
         prosodyctl deluser "${new_username}@${DOMAIN_NAME}"
         if ! prosodyctl register "$new_username" "$DOMAIN_NAME" "$new_user_password"; then
-	    echo "Failed to add prosody user: prosodyctl register $new_username $DOMAIN_NAME [password]"
+            echo "Failed to add prosody user: prosodyctl register $new_username $DOMAIN_NAME [password]"
             exit 65
         fi
     fi
@@ -774,6 +774,17 @@ function change_password_xmpp {
 
 function reconfigure_xmpp {
     echo -n ''
+}
+
+function prosody_allow_http_upload {
+    # particularly on onion installs, upload via http:// should be permitted
+    if [ ! -f /usr/lib/prosody/modules/mod_http_upload/mod_http_upload.lua ]; then
+        return
+    fi
+    if grep -q 'ignore://' /usr/lib/prosody/modules/mod_http_upload/mod_http_upload.lua; then
+        return
+    fi
+    sed -i 's|module:http_url():match("^http://")|module:http_url():match("^ignore://")|g' /usr/lib/prosody/modules/mod_http_upload/mod_http_upload.lua
 }
 
 function update_prosody_modules {
@@ -831,6 +842,9 @@ function update_prosody_modules {
                         cp -r "/root/${PROJECT_NAME}/image_build/prosody_mod_i2p" ${XMPP_DIRECTORY}/prosody-modules/mod_i2p
                         cp -r "/root/${PROJECT_NAME}/image_build/prosody_mod_i2p" /usr/lib/prosody/modules/mod_i2p
                     fi
+
+                    prosody_allow_http_upload
+
                     chown -R prosody:prosody ${XMPP_DIRECTORY}/prosody-modules
                     chown -R prosody:prosody /usr/lib/prosody/modules
                     systemctl start prosody
@@ -1748,14 +1762,14 @@ function install_xmpp {
     # wget https://prosody.im/files/prosody-debian-packages.key -O- | sudo apt-key add -
     wget -O /usr/share/keyrings/prosody.gpg https://prosody.im/files/prosody-debian-packages.key
     if [ ! -f /usr/share/keyrings/prosody.gpg ]; then
-	echo $'prosody package signing key not downloaded'
-	exit 8
+        echo $'prosody package signing key not downloaded'
+        exit 8
     fi
     apt-get update
     INSTALL_PACKAGES prosody
     if [ ! -f /usr/bin/prosody ]; then
-	echo '$prosody was not installed'
-	exit 6
+        echo '$prosody was not installed'
+        exit 6
     fi
 
     increment_app_install_progress
@@ -1928,14 +1942,14 @@ function install_xmpp {
         prosody_register_str="prosodyctl register \"$MY_USERNAME\" \"$XMPP_ONION_HOSTNAME\" \"[password]\""
         prosodyctl deluser "$MY_USERNAME@XMPP_ONION_HOSTNAME"
         if prosodyctl register "$MY_USERNAME" "$XMPP_ONION_HOSTNAME" "$XMPP_PASSWORD"; then
-	    registered_prosody_user=1
-	fi
+            registered_prosody_user=1
+        fi
     else
         prosody_register_str="prosodyctl register \"$MY_USERNAME\" \"$DEFAULT_DOMAIN_NAME\" \"[password]\""
         prosodyctl deluser "$MY_USERNAME@$DEFAULT_DOMAIN_NAME"
         if prosodyctl register "$MY_USERNAME" "$DEFAULT_DOMAIN_NAME" "$XMPP_PASSWORD"; then
-	    registered_prosody_user=1
-	fi
+            registered_prosody_user=1
+        fi
     fi
     # shellcheck disable=SC2181
     if [ ! $registered_prosody_user ]; then
