@@ -58,7 +58,7 @@ a:link {
 }
 
 a:visited {
-    color: var(--main-bg-color);
+    color: var(--link-color);
     text-decoration: none;
 }
 
