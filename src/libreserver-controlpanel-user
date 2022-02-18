@@ -470,7 +470,7 @@ function add_gpg_key {
     data=$(mktemp 2>/dev/null)
     dialog --title $"Enter email address, Key ID or full key below" \
            --backtitle $"LibreServer User Control Panel" \
-           --editbox "$data" 8 60
+           --editbox "$data" 40 70 2> "${data}"
     sel=$?
     case $sel in
         0)
@@ -494,11 +494,11 @@ function add_gpg_key {
                     clear
                     if [[ "$ADD_EMAIL_ADDRESS" == *"$publicstr"* ]]; then
                         echo "$ADD_EMAIL_ADDRESS" > ~/.gpg_key_import.txt
-			gpg --import ~/.gpg_key_import.txt
+                        gpg --import ~/.gpg_key_import.txt
                         dialog --title $"Add someone's PGP/GPG key" \
                                --backtitle $"LibreServer User Control Panel" \
                                --msgbox $"GPG public key was imported" 6 50
-			rm ~/.gpg_key_import.txt
+                        rm ~/.gpg_key_import.txt
                     else
                         torsocks gpg --search-keys "$ADD_EMAIL_ADDRESS"
                         gpg_set_trust "$ADD_EMAIL_ADDRESS"
