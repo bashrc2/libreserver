@@ -493,10 +493,12 @@ function add_gpg_key {
                 if [ $address_is_valid ]; then
                     clear
                     if [[ "$ADD_EMAIL_ADDRESS" == *"$publicstr"* ]]; then
-                        echo "$ADD_EMAIL_ADDRESS" | gpg --import
+                        echo "$ADD_EMAIL_ADDRESS" > ~/.gpg_key_import.txt
+			gpg --import ~/.gpg_key_import.txt
                         dialog --title $"Add someone's PGP/GPG key" \
                                --backtitle $"LibreServer User Control Panel" \
                                --msgbox $"GPG public key was imported" 6 50
+			rm ~/.gpg_key_import.txt
                     else
                         torsocks gpg --search-keys "$ADD_EMAIL_ADDRESS"
                         gpg_set_trust "$ADD_EMAIL_ADDRESS"
