@@ -52,7 +52,7 @@ EPICYON_DOMAIN_NAME=
 EPICYON_CODE=
 EPICYON_ONION_PORT=9552
 EPICYON_REPO="https://gitlab.com/bashrc2/epicyon"
-EPICYON_COMMIT='cc30725f6c7ae733f76ff9e87c9e6cf63c9dd566'
+EPICYON_COMMIT='8bd278c52c22c7aa15fce339aa9fb9ec9e890d92'
 EPICYON_PORT_INTERNAL=7156
 
 # These parameters are used by the FreedomBox mobile app and web UI
@@ -649,6 +649,7 @@ function install_epicyon {
       # shellcheck disable=SC2230
       echo "ExecStart=$(which python3) /etc/epicyon/epicyon.py --port $epicyon_port --proxy $EPICYON_PORT_INTERNAL --domain $epicyon_domain $epicyonOnionDomain --registration closed $EPICYON_TOR_OPTION";
       echo 'Environment=USER=epicyon';
+      echo 'Environment=PYTHONUNBUFFERED=true';      
       echo 'Restart=always';
       echo 'CPUQuota=80%';
       echo 'ProtectSystem=yes';
