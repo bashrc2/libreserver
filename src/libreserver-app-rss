@@ -333,12 +333,10 @@ function install_rss_main {
 
     rss_create_database
 
-    USE_V2_ONION_ADDRESS=1
     RSS_READER_ONION_HOSTNAME=$(add_onion_service rss 80 ${RSS_READER_ONION_PORT})
 
     sleep 2
 
-    USE_V2_ONION_ADDRESS=1
     RSS_MOBILE_READER_ONION_HOSTNAME=$(add_onion_service mobilerss 80 ${RSS_MOBILE_READER_ONION_PORT})
 
     { echo 'server {';
