@@ -35,6 +35,7 @@ NOT_ON_HOMEPAGE=1
 REQUIRES_APP=
 
 IRC_PORT=6697
+IRC_PORT_I2P=6698
 
 IRC_REPO="https://gitlab.com/bashrc2/miniircd"
 IRC_COMMIT='297eae7668f14ab88646add07fe6841e58aa1f09'
@@ -289,6 +290,7 @@ function reconfigure_irc {
 }
 
 function upgrade_irc {
+    add_i2p_service irc $IRC_PORT $IRC_PORT_I2P
     bridge_irc_to_xmpp
 
     if [[ "$ONION_ONLY" == 'no' ]]; then
@@ -328,6 +330,8 @@ function remove_irc {
     systemctl disable irc
     rm /etc/systemd/system/irc.service
     $REMOVE_PACKAGES_PURGE irssi
+
+    remove_i2p_service irc
 
     function_check save_firewall_settings
     save_firewall_settings
@@ -456,6 +460,10 @@ function install_irc_server {
     install_completed irc_server
 }
 
+function install_irc_i2p {
+    add_i2p_service irc $IRC_PORT $IRC_PORT
+}
+
 function install_irc_client {
     if [[ $(app_is_installed irc_client) == "1" ]]; then
         return
@@ -496,6 +504,8 @@ function install_irc {
     increment_app_install_progress
 
     bridge_irc_to_xmpp
+
+    add_i2p_service irc $IRC_PORT $IRC_PORT_I2P
 
     APP_INSTALLED=1
 }
