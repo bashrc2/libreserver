@@ -30,7 +30,7 @@
 
 # Login username is @username:domain
 
-VARIANTS='full full-vim chat'
+VARIANTS='full full-vim full-micro chat'
 
 APP_CATEGORY=chat
 

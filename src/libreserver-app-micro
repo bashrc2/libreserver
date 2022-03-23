@@ -1,0 +1,212 @@
+#!/bin/bash
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
+#
+# micro editor
+#
+# License
+# =======
+#
+# Copyright (C) 2016-2022 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VARIANTS='full-micro'
+
+IN_DEFAULT_INSTALL=0
+SHOW_ON_ABOUT=0
+NOT_ON_HOMEPAGE=1
+REQUIRES_APP=
+
+MICRO_TEMP_DIR='.microtemp'
+MICRO_MUTT_EDITOR='micro'
+
+micro_variables=(MY_USERNAME
+                 MICRO_MUTT_EDITOR)
+
+function default_settings_micro {
+    USERNAME="$1"
+
+    micro_dir="/home/${USERNAME}/.config/micro"
+    if [ ! -d ${micro_dir} ]; then
+        mkdir -p ${micro_dir}
+    fi
+    { echo '{';
+      echo '    "colorscheme": "solarized-tc",';
+      echo '    "xterm": true';
+      echo '}'; } > ${micro_dir}/settings.json
+}
+
+function upgrade_distro_micro {
+    target_distro="$1"
+
+    if [[ "$target_distro" == 'bullseye' ]]; then
+        echo -n ''
+    fi
+}
+
+function logging_on_micro {
+    echo -n ''
+}
+
+function logging_off_micro {
+    echo -n ''
+}
+
+function reconfigure_micro {
+    echo -n ''
+}
+
+function upgrade_micro {
+    echo -n ''
+}
+
+function backup_local_micro {
+    for d in /home/*/ ; do
+        USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+        if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+            echo $"Backing up Micro config for $USERNAME"
+
+            # create a temporary directory
+            if [ ! -d "/home/$USERNAME/$MICRO_TEMP_DIR" ]; then
+                mkdir "/home/$USERNAME/$MICRO_TEMP_DIR"
+            fi
+
+            # copy config files into the directory
+            if [ -d "/home/$USERNAME/.config/micro" ]; then
+                cp -r "/home/$USERNAME/.config/micro/"* "/home/$USERNAME/$MICRO_TEMP_DIR"
+                chown -R "$USERNAME":"$USERNAME" "/home/$USERNAME/$MICRO_TEMP_DIR"
+            fi
+
+            # backup the directory
+            function_check backup_directory_to_usb
+            backup_directory_to_usb "/home/$USERNAME/$MICRO_TEMP_DIR" "micro/$USERNAME"
+
+            # remove temporary directory
+            if [ -d "/home/$USERNAME/$MICRO_TEMP_DIR" ]; then
+                rm -rf "/home/${USERNAME:?}/$MICRO_TEMP_DIR"
+            fi
+        fi
+    done
+}
+
+function restore_local_micro {
+    temp_restore_dir=/root/tempmicro
+    if [ -d "$USB_MOUNT/backup/micro" ]; then
+        for d in $USB_MOUNT/backup/micro/*/ ; do
+            USERNAME=$(echo "$d" | awk -F '/' '{print $6}')
+            if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+                if [ ! -d "/home/$USERNAME" ]; then
+                    "${PROJECT_NAME}-adduser" "$USERNAME"
+                fi
+                echo $"Restoring Micro config for $USERNAME"
+                function_check restore_directory_from_usb
+                restore_directory_from_usb "$temp_restore_dir" "micro/$USERNAME"
+                if [ ! -d "/home/$USERNAME/.config/micro" ]; then
+                    mkdir -p "/home/$USERNAME/.config/micro"
+                fi
+                if [ -d "$temp_restore_dir/home/$USERNAME/$MICRO_TEMP_DIR" ]; then
+                    cp -r "$temp_restore_dir/home/$USERNAME/$MICRO_TEMP_DIR/"* "/home/$USERNAME/.config/micro"
+                else
+                    if [ ! -d "/home/$USERNAME/$MICRO_TEMP_DIR" ]; then
+                        mkdir "/home/$USERNAME/$MICRO_TEMP_DIR"
+                    fi
+                    cp -r "$temp_restore_dir/"* "/home/$USERNAME/$MICRO_TEMP_DIR/"
+                fi
+                # shellcheck disable=SC2181
+                if [ ! "$?" = "0" ]; then
+                    rm -rf $temp_restore_dir
+                    function_check set_user_permissions
+                    set_user_permissions
+                    function_check backup_unmount_drive
+                    backup_unmount_drive
+                    exit 66
+                fi
+                cp "/home/$USERNAME/$MICRO_TEMP_DIR/"* "/home/$USERNAME/.config/micro"
+                chown -R "$USERNAME":"$USERNAME" "/home/$USERNAME/.config/micro"
+                rm -rf "/home/${USERNAME:?}/$MICRO_TEMP_DIR"
+                rm -rf $temp_restore_dir
+            fi
+        done
+    fi
+}
+
+function backup_remote_micro {
+    echo -n ''
+}
+
+function restore_remote_micro {
+    echo -n ''
+}
+
+function remove_micro {
+    # Don't remove micro because micro-common is needed for showing ssh host keys
+    $REMOVE_PACKAGES_PURGE micro
+    update-alternatives --set editor /usr/bin/nano
+    sed -i '/install_micro/d' "$COMPLETION_FILE"
+
+    # remove Micro as the mutt email editor
+    if [ -f /etc/Muttrc ]; then
+        if grep -q "set editor=" /etc/Muttrc; then
+            sed -i '/set editor=/d' /etc/Muttrc
+        fi
+        for d in /home/*/ ; do
+            USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+            if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+                if [ -f "/home/$USERNAME/.muttrc" ]; then
+                    if grep -q "set editor=" "/home/$USERNAME/.muttrc"; then
+                        sed -i '/set editor=/d' "/home/$USERNAME/.muttrc"
+                    fi
+                fi
+            fi
+        done
+    fi
+}
+
+function install_micro {
+    INSTALL_PACKAGES micro
+    update-alternatives --set editor /usr/bin/micro
+
+    # add a mutt entry to use Micro to compose emails
+    if [ -f /etc/Muttrc ]; then
+        if ! grep -q "set editor=" /etc/Muttrc; then
+            echo "set editor=\"$MICRO_MUTT_EDITOR\"" >> /etc/Muttrc
+        else
+            sed -i "s|set editor=.*|set editor=\"$MICRO_MUTT_EDITOR\"|g" /etc/Muttrc
+        fi
+        for d in /home/*/ ; do
+            USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+            if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+                if [ -f "/home/$USERNAME/.muttrc" ]; then
+                    if ! grep -q "set editor=" "/home/$USERNAME/.muttrc"; then
+                        echo "set editor=\"$MICRO_MUTT_EDITOR\"" >> "/home/$USERNAME/.muttrc"
+                    else
+                        sed -i "s|set editor=.*|set editor=\"$MICRO_MUTT_EDITOR\"|g" "/home/$USERNAME/.muttrc"
+                    fi
+                fi
+            fi
+            default_settings_micro "${USERNAME}"
+        done
+    fi
+
+    APP_INSTALLED=1
+}
+
+function install_interactive_micro {
+    install_micro
+}
+
+# NOTE: deliberately no exit 0
