@@ -625,7 +625,7 @@ function install_epicyon {
 
     epicyon_domain=$EPICYON_DOMAIN_NAME
     epicyon_port=443
-    EPICYON_TOR_OPTION='--tor'
+    EPICYON_TOR_OPTION=''
     extraParams=
     epicyonOnionDomain="--onion $EPICYON_ONION_HOSTNAME"
     if [[ "$ONION_ONLY" != 'no' ]]; then
