@@ -498,7 +498,11 @@ install_wireguard
 
 if [ -f "$IMAGE_PASSWORD_FILE" ]; then
     simplebackup_password=$(cat "$IMAGE_PASSWORD_FILE")
-    ${PROJECT_NAME}-pass -u admin -a simplebackup -p "$simplebackup_password"
+    if [ "$simplebackup_password" ]; then
+	${PROJECT_NAME}-pass -u admin -a simplebackup -p "$simplebackup_password"
+    else
+	echo "Backup password file found but not set"
+    fi
 fi
 
 function_check hostname_check
