@@ -500,7 +500,6 @@ if [ -f "$IMAGE_PASSWORD_FILE" ]; then
     simplebackup_password=$(cat "$IMAGE_PASSWORD_FILE")
     if [ "$simplebackup_password" ]; then
 	echo "Setting password for simple backup"
-	echo "${PROJECT_NAME}-pass -u admin -a simplebackup -p \"$simplebackup_password\""
 	${PROJECT_NAME}-pass -u admin -a simplebackup -p "$simplebackup_password"
 	echo "password set"
     else
