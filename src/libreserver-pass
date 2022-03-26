@@ -333,7 +333,7 @@ if [ ${#CURR_PASSWORD} -eq 0 ]; then
         exit 4
     else
         pass=$(gpg --batch -dq --passphrase "$MAIN_PASSWORD" "${HOME}/.passwords/$CURR_USERNAME/$CURR_APP")
-        pass=$(remove_padding "${pass}")
+        remove_padding "${pass}"
     fi
 else
     # store password
