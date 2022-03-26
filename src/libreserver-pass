@@ -141,7 +141,7 @@ function run_tests {
         echo $'Incorrect padded length'
         exit 78
     fi
-    if ! "${PROJECT_NAME}-pass" -u root -a tests -p "$pass"; then
+    if ! "${PROJECT_NAME}-pass" -u root -a tests -p "$pass" > /dev/null; then
         echo $'Unable to encrypt password'
         exit 72
     fi
