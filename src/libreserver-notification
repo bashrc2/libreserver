@@ -456,8 +456,8 @@ if [ -d /etc/prosody ]; then
         rm /root/.config/sendxmpp.toml
     fi
     if [ -f "${sendxmpp_binary}" ]; then
+        notify_by_xmpp=
         if [ -f "$notification_method_filename" ]; then
-            notify_by_xmpp=
             if grep -q 'xmpp' "$notification_method_filename"; then
                 notify_by_xmpp=1
             fi
