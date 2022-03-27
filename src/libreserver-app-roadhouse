@@ -160,7 +160,9 @@ function upgrade_roadhouse {
     fi
 
     chown -R www-data:www-data "$ROADHOUSE_PATH/extend"
+    cd "${ROADHOUSE_PATH}" || return
     ./util/importdoc
+    echo "yes" | php composer.phar i $composer_options
     roadhouse_set_permissions
 }
 
