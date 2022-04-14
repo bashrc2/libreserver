@@ -1430,6 +1430,7 @@ function install_peertube {
       echo "Environment=PATH=${PEERTUBE_DIR}/node_modules/.bin:/usr/bin:/usr/local/bin";
       echo 'Environment=NODE_ENV=production';
       echo "Environment=NODE_CONFIG_DIR=${PEERTUBE_DIR}/config";
+      echo "Environment=GIT_CEILING_DIRECTORIES=${PEERTUBE_DIR}";
       echo 'User=peertube';
       echo 'Group=peertube';
       echo "ExecStart=${PEERTUBE_DIR}/node_modules/.bin/npm start";

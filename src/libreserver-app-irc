@@ -437,6 +437,7 @@ function install_irc_server {
       echo "ExecStart=/usr/local/bin/miniircd --state-dir=/ --setuid=miniirc ${IRC_SSL_OPTION} --registered-only --new-registrations 0 --chroot=/var/jail/miniircd";
       echo 'Environment=PATH=/usr/bin:/usr/local/bin';
       echo 'Environment=LC_ALL=C.UTF-8';
+      echo "Environment=GIT_CEILING_DIRECTORIES=/etc/miniirc";
       echo 'Restart=on-failure';
       echo 'PrivateTmp=true';
       echo 'PrivateDevices=false';

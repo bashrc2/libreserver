@@ -557,6 +557,7 @@ function install_cryptpad {
       echo 'Environment=PATH=/usr/bin:/usr/local/bin';
       echo 'Environment=NODE_ENV=production';
       echo "Environment='PWD=\"/etc/cryptpad\"'";
+      echo "Environment=GIT_CEILING_DIRECTORIES=${CRYPTPAD_DIR}";
       echo 'PrivateTmp=true';
       echo 'PrivateDevices=false';
       echo 'NoNewPrivileges=true';

@@ -468,6 +468,7 @@ function install_turtl {
       echo 'WorkingDirectory=/etc/turtl';
       echo 'ExecStart=/usr/bin/node server.js';
       echo 'Environment=USER=turtl';
+      echo "Environment=GIT_CEILING_DIRECTORIES=/etc/turtl";
       echo 'Restart=always';
       echo 'PrivateTmp=true';
       echo 'PrivateDevices=false';

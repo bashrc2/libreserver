@@ -615,6 +615,7 @@ function install_gogs {
       echo 'Restart=always';
       echo 'RestartSec=10';
       echo "Environment=\"USER=${GOGS_USERNAME}\" \"HOME=/home/${GOGS_USERNAME}\" \"GOPATH=/home/go/go${GO_VERSION}\"";
+      echo "Environment=GIT_CEILING_DIRECTORIES=/home/${GOGS_USERNAME}";
       echo 'PrivateTmp=true';
       echo 'PrivateDevices=false';
       echo 'CapabilityBoundingSet=~CAP_SYS_ADMIN';

@@ -649,7 +649,8 @@ function install_epicyon {
       # shellcheck disable=SC2230
       echo "ExecStart=$(which python3) /etc/epicyon/epicyon.py --port $epicyon_port --proxy $EPICYON_PORT_INTERNAL --domain $epicyon_domain $epicyonOnionDomain --registration closed $EPICYON_TOR_OPTION";
       echo 'Environment=USER=epicyon';
-      echo 'Environment=PYTHONUNBUFFERED=true';      
+      echo 'Environment=PYTHONUNBUFFERED=true';
+      echo 'Environment=GIT_CEILING_DIRECTORIES=/etc/epicyon';
       echo 'Restart=always';
       echo 'CPUQuota=80%';
       echo 'ProtectSystem=yes';

@@ -480,6 +480,7 @@ function install_etesync {
       echo "Environment=DJANGO_STATICS=/var/www/$ETESYNC_DOMAIN_NAME/htdocs";
       echo "Environment=DJANGO_PORT=${ETESYNC_PORT_INTERNAL}";
       echo 'Environment=SERVER="standalone"';
+      echo "Environment=GIT_CEILING_DIRECTORIES=${ETESYNC_PATH}";
       echo 'Restart=always';
       echo 'PrivateTmp=true';
       echo 'PrivateDevices=false';

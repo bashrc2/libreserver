@@ -159,7 +159,7 @@ function upgrade_gemini {
     GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/gemini PATH=$PATH:/home/gemini:/home/go/go${GO_VERSION}/bin go get -u -v $GEMINI_PATH
     chown -R gemini:gemini /home/gemini
     if ! grep -q "go${GO_VERSION}" /etc/systemd/system/gemini.service; then
-        sed -i "s|Environment=.*|Environment=\"USER=gemini\" \"HOME=/home/gemini\" \"GOPATH=/home/go/go${GO_VERSION}\"|g" /etc/systemd/system/gemini.service
+        sed -i "s|Environment=.*|Environment=\"USER=gemini\" \"HOME=/home/gemini\" \"GOPATH=/home/go/go${GO_VERSION}\" \"GIT_CEILING_DIRECTORIES=/home/gemini\"|g" /etc/systemd/system/gemini.service
         systemctl daemon-reload
     fi
     systemctl restart gemini
@@ -366,6 +366,7 @@ function install_gemini {
       echo 'WorkingDirectory=/home/gemini';
       echo 'ExecStart=/home/gemini/bin/molly-brown';
       echo "Environment=\"USER=gemini\" \"HOME=/home/gemini\" \"GOPATH=/home/go/go${GO_VERSION}\""
+      echo "Environment=GIT_CEILING_DIRECTORIES=/home/gemini";
       echo 'Restart=always';
       echo 'RestartSec=10';
       echo 'PrivateTmp=true';

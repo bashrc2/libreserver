@@ -426,9 +426,10 @@ function install_abermush {
       echo 'Type=simple';
       echo 'User=abermush';
       echo "Group=${abermush_group}";
-      echo "WorkingDirectory=$ABERMUSH_DIR";
+      echo "WorkingDirectory=${ABERMUSH_DIR}";
       echo "ExecStart=/usr/bin/python3 $ABERMUSH_DIR/abermush.py";
       echo 'Environment=PATH=/usr/bin:/usr/local/bin';
+      echo "Environment=GIT_CEILING_DIRECTORIES=${ABERMUSH_DIR}";
       echo 'Restart=always';
       echo 'TimeoutSec=30m';
       echo 'ProtectSystem=yes';

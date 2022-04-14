@@ -585,8 +585,9 @@ function install_etherpad {
       echo 'Group=etherpad';
       echo "Environment=PATH=/usr/bin:/usr/local/bin";
       echo 'Environment=NODE_ENV=production';
-      echo "WorkingDirectory=/var/www/$ETHERPAD_DOMAIN_NAME/htdocs";
-      echo "ExecStart=/usr/bin/node /var/www/$ETHERPAD_DOMAIN_NAME/htdocs/node_modules/ep_etherpad-lite/node/server.js";
+      echo "Environment=GIT_CEILING_DIRECTORIES=/var/www/${ETHERPAD_DOMAIN_NAME}/htdocs";
+      echo "WorkingDirectory=/var/www/${ETHERPAD_DOMAIN_NAME}/htdocs";
+      echo "ExecStart=/usr/bin/node /var/www/${ETHERPAD_DOMAIN_NAME}/htdocs/node_modules/ep_etherpad-lite/node/server.js";
       echo 'Restart=always';
       echo 'ProtectSystem=yes';
       echo 'ProtectHome=yes';
