@@ -1934,6 +1934,13 @@ function menu_app_settings {
     fi
 }
 
+function run_system_monitor {
+    if [ ! -f /usr/bin/bpytop ]; then
+        INSTALL_PACKAGES bpytop
+    fi
+    /usr/bin/bpytop
+}
+
 function menu_top_level {
     while true
     do
@@ -1941,20 +1948,21 @@ function menu_top_level {
            2 $"Backup and Restore"
            3 $"App Settings"
            4 $"Add/Remove Apps"
-           5 $"Logging on/off"
-           6 $"Manage Users"
-           7 $"Email Menu"
-           8 $"Domain or User Blocking"
-           9 $"Security Settings"
-           10 $"Change the name of this system"
-           11 $"Set a static local IP address"
-           12 $"Wifi menu"
-           13 $"Add Clacks"
-           14 $"Check for updates"
-           15 $"Performance Benchmarks"
-           16 $"Change Dynamic DNS settings"
-           17 $"Power off the system"
-           18 $"Restart the system")
+           5 $"System Monitor"
+           6 $"Logging on/off"
+           7 $"Manage Users"
+           8 $"Email Menu"
+           9 $"Domain or User Blocking"
+           10 $"Security Settings"
+           11 $"Change the name of this system"
+           12 $"Set a static local IP address"
+           13 $"Wifi menu"
+           14 $"Add Clacks"
+           15 $"Check for updates"
+           16 $"Performance Benchmarks"
+           17 $"Change Dynamic DNS settings"
+           18 $"Power off the system"
+           19 $"Restart the system")
 
         # shellcheck disable=SC2068
         selection=$(dialog --backtitle $"LibreServer Administrator Control Panel" --title $"Administrator Control Panel" --menu $"Choose an operation, or ESC to exit:" 25 60 25 "${W[@]}" 3>&2 2>&1 1>&3)
@@ -1980,20 +1988,21 @@ function menu_top_level {
                    systemctl restart nginx
                fi
                ;;
-            5) logging_on_off;;
-            6) menu_users;;
-            7) menu_email;;
-            8) domain_blocking;;
-            9) security_settings;;
-            10) change_system_name;;
-            11) set_static_IP;;
-            12) menu_wifi;;
-            13) add_clacks;;
-            14) check_for_updates;;
-            15) performance_benchmarks;;
-            16) "${PROJECT_NAME}-ddns";;
-            17) shut_down_system;;
-            18) restart_system;;
+            5) run_system_monitor;;
+            6) logging_on_off;;
+            7) menu_users;;
+            8) menu_email;;
+            9) domain_blocking;;
+            10) security_settings;;
+            11) change_system_name;;
+            12) set_static_IP;;
+            13) menu_wifi;;
+            14) add_clacks;;
+            15) check_for_updates;;
+            16) performance_benchmarks;;
+            17) "${PROJECT_NAME}-ddns";;
+            18) shut_down_system;;
+            19) restart_system;;
         esac
     done
 }
