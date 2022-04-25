@@ -211,7 +211,7 @@ function reverse_shell_detect {
 
 function check_ssh_sessions {
     max_ssh_sessions=3
-    ssh_sessions_count=$(netstat -nt | grep :2222 | grep "ESTABLISHED" | wc -l)
+    ssh_sessions_count=$(netstat -nt | grep ":2222 " | grep "ESTABLISHED" | wc -l)
     if [ $ssh_sessions_count -le $max_ssh_sessions ]; then
         # normal number of ssh connections
         if [ -f ${ssh_sessions_count_filename} ]; then
