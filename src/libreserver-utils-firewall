@@ -276,7 +276,8 @@ function configure_firewall_base {
       echo '';
       echo '        ip protocol icmp counter drop comment "drop icmp"';
       echo '';
-      echo '        tcp dport { 2222, 80, 443 } ct state new accept';
+      echo '        tcp dport { 80, 443 } ct state new accept';
+      echo '        tcp dport { 2222 } ip saddr { 192.168.1.0/24, 192.168.2.0/24, 192.168.10.0/24 } ct state new accept';
       echo '';
       echo "        tcp dport { $FIREWALL_PORTSCAN } add @blackhole { ip saddr timeout 1d }  counter packets 0 bytes 0 drop comment \"portscan\"";
       echo '        tcp dport 2222 meter test-2222-count-meter size 65535 { ip saddr & 255.255.255.0 ct count over 3 }  counter packets 0 bytes 0 reject with tcp reset';
