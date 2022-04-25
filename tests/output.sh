@@ -496,13 +496,13 @@ time, are stored in the following directories by default:\n\n/lib\n/lib64\n/usr/
                       printf '\n######################\n\nSTIG-ID:RHEL-06-000046\n\nVulnerability Discussion:  Files from shared library directories are loaded into the address space of processes (including privileged ones) or of the kernel itself at runtime. Proper ownership is necessary to protect the integrity of the system.\n\nFix text: System-wide shared library files, which are linked to executables during process load time or run time, are stored in the following directories by default:\n\n/lib\n/lib64\n/usr/lib\n/usr/lib64\n\nIf any file in these directories is found to be owned by a user other than root, correct its ownership with the following command:\n\n#chown root [FILE]\n\n######################\n\n' >> $LOG
                       find -L /lib  \! -user root  -exec ls -l {} \; | grep -v '> /dev/null'
                       if [ -d /lib64 ]; then
-			  find -L /lib64  \! -user root  -exec ls -l {} \;
+                          find -L /lib64  \! -user root  -exec ls -l {} \;
                       fi
                       find -L /usr/lib -path /usr/lib/prosody -prune -o \! -user root  -exec ls -l {} \;
                       if [ -d /usr/lib64 ]; then
-			  find -L /usr/lib64  \! -user root  -exec ls -l {} \;
+                          find -L /usr/lib64  \! -user root  -exec ls -l {} \;
                       fi
-		  fi
+                  fi
                   ;;
         V-7824824) log_msg $1 $2 'Kernel address space layout randomization must be enabled'
                    if [ $2 -ne 0 ];then
@@ -526,7 +526,7 @@ time, are stored in the following directories by default:\n\n/lib\n/lib64\n/usr/
                   fi
                   if [ $2 -ne 0 ];then
                       printf '\n######################\n\nSTIG-ID:RHEL-06-000048\n\nVulnerability Discussion: System binaries are executed by privileged users as well as system services, and restrictive permissions are necessary to ensure that their execution of these programs cannot be co-opted.\n\nFix text: System executables are stored in the following directories by default:\n\n/bin\n/usr/bin\n/usr/local/bin\n/sbin\n/usr/sbin\n/usr/local/sbin\n\nIf any file [FILE] in these directories is found to be owned by a user other than root, correct its ownership with the following command:\n\n#chown root [FILE]\n\n######################\n\n' >> $LOG
-		      find -L /bin  \! -user root  -exec ls -l {} \;
+                      find -L /bin  \! -user root  -exec ls -l {} \;
                       find -L /usr/bin  \! -user root  -exec ls -l {} \;
                       find -L /usr/local/bin  \! -user root  -exec ls -l {} \;
                       find -L /sbin  \! -user root  -exec ls -l {} \;
@@ -1480,6 +1480,26 @@ disabled. The "nis" service can be disabled with the following commands:\n\n#upd
                       printf '\n######################\n\nSTIG-ID:RHEL-06-000237\n\nVulnerability Discussion: Permitting direct root login reduces auditable information about who ran privileged commands on the system and also allows direct attack attempts on root\047s password.\n\nFix text: The root user should never be allowed to log in to a system directly over a network. To disable root login via SSH, add or correct the following line in "/etc/ssh/sshd_config":\n\nPermitRootLogin no\n\n######################\n\n' >> $LOG
                   fi
                   ;;
+        V-21736)  log_msg $1 $2 'A grace time must be set for ssh logins.'
+                  if [ $2 -ne 0 ];then
+                      printf '\n######################\n\nSTIG-ID:C-LoginGraceTime\n\nAdding a grace time makes it more difficult for a remote attacker to try to perform brute force login attempts, tieing up server resources.\n\nFix text: add or correct the following line in "/etc/ssh/sshd_config":\n\nLoginGraceTime 1m\n\n######################\n\n' >> $LOG
+                  fi
+                  ;;
+        V-25716)  log_msg $1 $2 'A maximum authentication attempts value must be set for ssh logins.'
+                  if [ $2 -ne 0 ];then
+                      printf '\n######################\n\nSTIG-ID:C-MaxAuthTries\n\nSetting a maximum number of ssh authentication retries disrupts attackers who are attempting to gain brute force access.\n\nFix text: add or correct the following line in "/etc/ssh/sshd_config":\n\nMaxAuthTries 6\n\n######################\n\n' >> $LOG
+                  fi
+                  ;;
+        V-29152)  log_msg $1 $2 'A maximum ssh sessions value must be set.'
+                  if [ $2 -ne 0 ];then
+                      printf '\n######################\n\nSTIG-ID:C-MaxSessions\n\nOnly a few ssh logins are expected at any point in time.\n\nFix text: add or correct the following line in "/etc/ssh/sshd_config":\n\nMaxSessions 5\n\n######################\n\n' >> $LOG
+                  fi
+                  ;;
+        V-22717)  log_msg $1 $2 'TCP forwarding via ssh should not be permitted.'
+                  if [ $2 -ne 0 ];then
+                      printf '\n######################\n\nSTIG-ID:C-AllowTcpForwarding\n\nTurning off forwarding via ssh ensures that an attacker who has gained access cannot then forward their traffic to some other target.\n\nFix text: add or correct the following line in "/etc/ssh/sshd_config":\n\nAllowTcpForwarding no\n\n######################\n\n' >> $LOG
+                  fi
+                  ;;
         V-38614)  if [ "$3" = "en" ]; then
                       log_msg $1 $2 'The SSH daemon must not allow authentication using an empty password.'
                   else
@@ -1913,10 +1933,10 @@ Check_content: Verify the cryptographic hash of system files and commands match 
              fi
              ;;
         password_crypt) log_msg $1 $2 'Check that any password that may exist in /etc/shadow is yescrypt hashed and salted'
-			if [ $2 -ne 0 ];then
-			    printf '\nCheck that any password that may exist in /etc/shadow is yescrypt hashed and salted.\n\n' >> $LOG
-			fi
-			;;
+                        if [ $2 -ne 0 ];then
+                            printf '\nCheck that any password that may exist in /etc/shadow is yescrypt hashed and salted.\n\n' >> $LOG
+                        fi
+                        ;;
         V-38684)  if [ "$3" = "en" ]; then
                       log_msg $1 $2 'The system must limit users to 2 simultaneous system logins, or a site-defined number, in accordance with operational requirements.'
                   else

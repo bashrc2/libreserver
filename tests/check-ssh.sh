@@ -222,4 +222,46 @@ case $1 in
             exit 1
         fi
         ;;
+    LoginGraceTime)
+        if grep LoginGraceTime /etc/ssh/sshd_config | grep -v "^#";then
+            SETVALUE=`grep LoginGraceTime /etc/ssh/sshd_config | grep -v "^#" | awk '{printf $2}'`
+            if [ "${SETVALUE}" != "1m" ];then
+		if [ "${SETVALUE}" != "2m" ];then
+                    exit 1
+		fi
+            fi
+        else
+            exit 1
+        fi
+        ;;
+    MaxAuthTries)
+        if grep MaxAuthTries /etc/ssh/sshd_config | grep -v "^#";then
+            SETVALUE=`grep MaxAuthTries /etc/ssh/sshd_config | grep -v "^#" | awk '{printf $2}'`
+            if [ "${SETVALUE}" != "6" ];then
+                exit 1
+            fi
+        else
+            exit 1
+        fi
+        ;;
+    MaxSessions)
+        if grep MaxSessions /etc/ssh/sshd_config | grep -v "^#";then
+            SETVALUE=`grep MaxSessions /etc/ssh/sshd_config | grep -v "^#" | awk '{printf $2}'`
+            if [ "${SETVALUE}" != "5" ];then
+                exit 1
+            fi
+        else
+            exit 1
+        fi
+        ;;
+    AllowTcpForwarding)
+        if grep AllowTcpForwarding /etc/ssh/sshd_config | grep -v "^#";then
+            SETVALUE=`grep AllowTcpForwarding /etc/ssh/sshd_config | grep -v "^#" | awk '{printf $2}'`
+            if [ "${SETVALUE}" != "no" ];then
+                exit 1
+            fi
+        else
+            exit 1
+        fi
+        ;;
 esac

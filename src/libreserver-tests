@@ -1,8 +1,8 @@
 #!/bin/bash
-#  _    _ _            ___                      
-# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
-# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # Run tests on the system
 #
@@ -235,16 +235,16 @@ function disallow_package {
     package_name=$1
 
     if [ "$VERBOSE" ]; then
-	echo "disallow_package $package_name"
+        echo "disallow_package $package_name"
     fi
 
     if dpkg-query -l "${package_name}" 2> /dev/null; then
-	echo $"Removing disallowed package: ${package_name}"
-	if [[ "${package_name}" == 'x11-common' ]]; then
-	    if dpkg-query -l "emacs-gtk" 2> /dev/null; then
-		$REMOVE_PACKAGES_PURGE emacs
-	    fi
-	fi
+        echo $"Removing disallowed package: ${package_name}"
+        if [[ "${package_name}" == 'x11-common' ]]; then
+            if dpkg-query -l "emacs-gtk" 2> /dev/null; then
+                $REMOVE_PACKAGES_PURGE emacs
+            fi
+        fi
         $REMOVE_PACKAGES_PURGE "${package_name}"
         $REMOVE_UNUSED_PACKAGES
     fi
@@ -252,22 +252,22 @@ function disallow_package {
 
 function remove_netcat {
     if [ "$VERBOSE" ]; then
-	echo 'remove_netcat'
+        echo 'remove_netcat'
     fi
     # shellcheck disable=SC2230
     netcat_command="$(which nc)"
     if [[ "$netcat_command" ]]; then
-	if [ -f "$netcat_command" ]; then
-	    # store the details for investigation
-	    ls -l "$netcat_command" > /root/.netcat
-	    file "$netcat_command" >> /root/.netcat
+        if [ -f "$netcat_command" ]; then
+            # store the details for investigation
+            ls -l "$netcat_command" > /root/.netcat
+            file "$netcat_command" >> /root/.netcat
             ${PROJECT_NAME}-notification -s "[${PROJECT_NAME}] netcat" -m "$(cat /root/.netcat)"
-	    $REMOVE_PACKAGES_PURGE netcat
+            $REMOVE_PACKAGES_PURGE netcat
             $REMOVE_UNUSED_PACKAGES
-	    if [ -f "$netcat_command" ]; then
-		rm -f "$netcat_command"
-	    fi
-	fi
+            if [ -f "$netcat_command" ]; then
+                rm -f "$netcat_command"
+            fi
+        fi
     fi
 }
 
@@ -307,7 +307,7 @@ function test_stig {
     ##RHEL-06-000001
     ##The system must use a separate file system for /tmp.
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000001"
+        echo "RHEL-06-000001"
     fi
     mount | grep "on /tmp " >/dev/null 2>&1 &
 
@@ -319,7 +319,7 @@ function test_stig {
     ##Vendor-provided cryptographic certificates must be installed to verify the integrity of system software.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000008"
+        echo "RHEL-06-000008"
     fi
     bash $STIG_TESTS_DIR/check-apt-key.sh >/dev/null 2>&1 &
 
@@ -343,7 +343,7 @@ function test_stig {
     ##There must be no .rhosts or hosts.equiv files on the system.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000019"
+        echo "RHEL-06-000019"
     fi
     bash $STIG_TESTS_DIR/check-rhosts.sh > /dev/null 2>&1 &
 
@@ -355,7 +355,7 @@ function test_stig {
     ##The system must prevent the root account from logging in from virtual consoles.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000027"
+        echo "RHEL-06-000027"
     fi
     bash $STIG_TESTS_DIR/check-consoles.sh virtual > /dev/null  2>&1 &
 
@@ -367,7 +367,7 @@ function test_stig {
     ##The system must prevent the root account from logging in from serial consoles.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000028"
+        echo "RHEL-06-000028"
     fi
     bash $STIG_TESTS_DIR/check-consoles.sh serial > /dev/null  2>&1 &
 
@@ -379,7 +379,7 @@ function test_stig {
     ##Default operating system accounts, other than root, must be locked.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000029"
+        echo "RHEL-06-000029"
     fi
     bash $STIG_TESTS_DIR/check-default-account.sh > /dev/null 2>&1 &
 
@@ -391,7 +391,7 @@ function test_stig {
     ##The /etc/passwd file must not contain password hashes.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000031"
+        echo "RHEL-06-000031"
     fi
     awk -F: '($2 != "x") {print; err=1} END {exit err}' /etc/passwd > /dev/null 2>&1 &
 
@@ -403,7 +403,7 @@ function test_stig {
     ##The root account must be the only account having a UID of 0.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000032"
+        echo "RHEL-06-000032"
     fi
     bash $STIG_TESTS_DIR/check-root-uid.sh > /dev/null 2>&1 &
 
@@ -415,7 +415,7 @@ function test_stig {
     ##The /etc/shadow file must be owned by root.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000033"
+        echo "RHEL-06-000033"
     fi
     # shellcheck disable=SC2012
     ls -l /etc/shadow | awk '{print $3}' | grep "^root$" > /dev/null 2>&1 &
@@ -428,7 +428,7 @@ function test_stig {
     ##The /etc/shadow file must be group-owned by root.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000034"
+        echo "RHEL-06-000034"
     fi
     # shellcheck disable=SC2012
     ls -l /etc/shadow | awk '{print $4}' | grep "^root$" > /dev/null 2>&1 &
@@ -441,7 +441,7 @@ function test_stig {
     ##The /etc/shadow file must have mode 0000.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000035"
+        echo "RHEL-06-000035"
     fi
     # shellcheck disable=SC2012
     ls -l /etc/shadow | awk '{print $1}' | grep "^----------$" > /dev/null 2>&1 &
@@ -454,7 +454,7 @@ function test_stig {
     ##The /etc/gshadow file must be owned by root.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000036"
+        echo "RHEL-06-000036"
     fi
     # shellcheck disable=SC2012
     ls -l /etc/gshadow | awk '{print $3}' | grep "^root$" > /dev/null 2>&1 &
@@ -467,7 +467,7 @@ function test_stig {
     ##The /etc/gshadow file must be group-owned by root.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000037"
+        echo "RHEL-06-000037"
     fi
     # shellcheck disable=SC2012
     ls -l /etc/gshadow | awk '{print $4}' | grep "^root$" > /dev/null 2>&1 &
@@ -480,7 +480,7 @@ function test_stig {
     ##The /etc/gshadow file must have mode 0000.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000038"
+        echo "RHEL-06-000038"
     fi
     # shellcheck disable=SC2012
     ls -l /etc/gshadow | awk '{print $1}' | grep "^----------$" > /dev/null 2>&1 &
@@ -493,7 +493,7 @@ function test_stig {
     ##The /etc/passwd file must be owned by root.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000039"
+        echo "RHEL-06-000039"
     fi
     # shellcheck disable=SC2012
     ls -l /etc/passwd | awk '{print $3}' | grep "^root$" > /dev/null 2>&1 &
@@ -506,7 +506,7 @@ function test_stig {
     ##The /etc/passwd file must be group-owned by root.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000040"
+        echo "RHEL-06-000040"
     fi
     # shellcheck disable=SC2012
     ls -l /etc/passwd | awk '{print $4}' | grep "^root$" > /dev/null 2>&1 &
@@ -519,7 +519,7 @@ function test_stig {
     ##The /etc/passwd file must have mode 0644 or less permissive.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000041"
+        echo "RHEL-06-000041"
     fi
     bash $STIG_TESTS_DIR/check-mode.sh /etc/passwd 644 > /dev/null 2>&1 &
 
@@ -531,7 +531,7 @@ function test_stig {
     ##The /etc/group file must be owned by root.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000042"
+        echo "RHEL-06-000042"
     fi
     # shellcheck disable=SC2012
     ls -l /etc/group | awk '{print $3}' | grep "^root$" > /dev/null 2>&1 &
@@ -544,7 +544,7 @@ function test_stig {
     ##The /etc/group file must be group-owned by root.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000043"
+        echo "RHEL-06-000043"
     fi
     # shellcheck disable=SC2012
     ls -l /etc/group | awk '{print $4}' | grep "^root$" > /dev/null 2>&1 &
@@ -557,7 +557,7 @@ function test_stig {
     ##The /etc/group file must have mode 0644 or less permissive.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000044"
+        echo "RHEL-06-000044"
     fi
     bash $STIG_TESTS_DIR/check-mode.sh "/etc/group" 644 > /dev/null 2>&1 &
 
@@ -569,7 +569,7 @@ function test_stig {
     ##Library files must have mode 0755 or less permissive.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000045"
+        echo "RHEL-06-000045"
     fi
     bash $STIG_TESTS_DIR/check-libs-mode.sh > /dev/null 2>&1 &
 
@@ -581,7 +581,7 @@ function test_stig {
     ##Library files must be owned by root.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000046"
+        echo "RHEL-06-000046"
     fi
     bash $STIG_TESTS_DIR/check-libs-owner.sh > /dev/null 2>&1 &
 
@@ -592,7 +592,7 @@ function test_stig {
     ##Check kernel address space layout randomization
 
     if [ "$VERBOSE" ]; then
-	echo "Check kernel address space layout randomization"
+        echo "Check kernel address space layout randomization"
     fi
     bash $STIG_TESTS_DIR/check-aslr.sh > /dev/null 2>&1 &
 
@@ -604,7 +604,7 @@ function test_stig {
     ##All system command files must have mode 755 or less permissive.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000047"
+        echo "RHEL-06-000047"
     fi
     bash $STIG_TESTS_DIR/check-cmd-mode.sh > /dev/null 2>&1 &
 
@@ -616,7 +616,7 @@ function test_stig {
     ##All system command files must be owned by root.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000048"
+        echo "RHEL-06-000048"
     fi
     bash $STIG_TESTS_DIR/check-cmd-owner.sh > /dev/null 2>&1 &
 
@@ -628,7 +628,7 @@ function test_stig {
     ##The system must disable accounts after ten consecutive unsuccessful logon attempts.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000061"
+        echo "RHEL-06-000061"
     fi
     bash $STIG_TESTS_DIR/check-password.sh /etc/pam.d/common-auth pam_faillock deny gt 10 > /dev/null 2>&1 &
 
@@ -637,7 +637,7 @@ function test_stig {
     ################
 
     if [ "$VERBOSE" ]; then
-	echo "prelink"
+        echo "prelink"
     fi
     bash $STIG_TESTS_DIR/check-prelink.sh > /dev/null 2>&1 &
     stig_spinner $!
@@ -645,7 +645,7 @@ function test_stig {
     ################
 
     if [ "$VERBOSE" ]; then
-	echo "talk"
+        echo "talk"
     fi
     bash $STIG_TESTS_DIR/check-talk.sh > /dev/null 2>&1 &
     stig_spinner $!
@@ -653,7 +653,7 @@ function test_stig {
     ################
 
     if [ "$VERBOSE" ]; then
-	echo "Network Information Service"
+        echo "Network Information Service"
     fi
     bash $STIG_TESTS_DIR/check-nis.sh > /dev/null 2>&1 &
     stig_spinner $!
@@ -661,7 +661,7 @@ function test_stig {
     ################
 
     if [ "$VERBOSE" ]; then
-	echo "Legacy Group Entries"
+        echo "Legacy Group Entries"
     fi
     bash $STIG_TESTS_DIR/check-groups.sh > /dev/null 2>&1 &
     stig_spinner $!
@@ -669,7 +669,7 @@ function test_stig {
     ################
 
     if [ "$VERBOSE" ]; then
-	echo "Check password encryption"
+        echo "Check password encryption"
     fi
     bash $STIG_TESTS_DIR/check-password-crypt.sh > /dev/null 2>&1 &
     stig_spinner $!
@@ -692,7 +692,7 @@ function test_stig {
     ##The system must use a FIPS 140-2 approved cryptographic hashing algorithm for generating account password hashes (login.defs).
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000063"
+        echo "RHEL-06-000063"
     fi
     sed -e '/^#/d' -e '/^[ \t][ \t]*#/d' -e 's/#.*$//' -e '/^$/d' /etc/login.defs | grep "ENCRYPT_METHOD.*SHA512" > /dev/null 2>&1 &
 
@@ -702,7 +702,7 @@ function test_stig {
 
     ## netcat must not be installed
     if [ "$VERBOSE" ]; then
-	echo "netcat must not be installed"
+        echo "netcat must not be installed"
     fi
     bash $STIG_TESTS_DIR/check-nc.sh > /dev/null 2>&1 &
 
@@ -714,7 +714,7 @@ function test_stig {
     ##The system must use a FIPS 140-2 approved cryptographic hashing algorithm for generating account password hashes (libuser.conf).
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000064"
+        echo "RHEL-06-000064"
     fi
     bash $STIG_TESTS_DIR/check-depends.sh > /dev/null 2>&1 &
 
@@ -726,7 +726,7 @@ function test_stig {
     ##The system must allow locking of the console screen in text mode.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000071"
+        echo "RHEL-06-000071"
     fi
     dpkg -s screen >/dev/null 2>&1 &
 
@@ -738,7 +738,7 @@ function test_stig {
     ##The system must implement virtual address space randomization.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000078"
+        echo "RHEL-06-000078"
     fi
     bash $STIG_TESTS_DIR/check-sysctl.sh kernel.randomize_va_space ne 2 >/dev/null 2>&1 &
 
@@ -750,7 +750,7 @@ function test_stig {
     ##The system must not send ICMPv4 redirects by default.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000080"
+        echo "RHEL-06-000080"
     fi
     bash $STIG_TESTS_DIR/check-sysctl.sh net.ipv4.conf.default.send_redirects ne 0 >/dev/null 2>&1 &
 
@@ -762,7 +762,7 @@ function test_stig {
     ##The system must not send ICMPv4 redirects from any interface.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000081"
+        echo "RHEL-06-000081"
     fi
     bash $STIG_TESTS_DIR/check-sysctl.sh net.ipv4.conf.all.send_redirects  ne 0 >/dev/null 2>&1 &
 
@@ -774,7 +774,7 @@ function test_stig {
     ##IP forwarding for IPv4 must not be enabled, unless the system is a router.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000082"
+        echo "RHEL-06-000082"
     fi
     bash $STIG_TESTS_DIR/check-sysctl.sh net.ipv4.ip_forward  ne 0 >/dev/null 2>&1 &
 
@@ -786,7 +786,7 @@ function test_stig {
     ##The system must not accept IPv4 source-routed packets on any interface.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000083"
+        echo "RHEL-06-000083"
     fi
     bash $STIG_TESTS_DIR/check-sysctl.sh net.ipv4.conf.all.accept_source_route ne 0 >/dev/null 2>&1 &
 
@@ -798,7 +798,7 @@ function test_stig {
     ##The system must not accept ICMPv4 redirect packets on any interface.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000084"
+        echo "RHEL-06-000084"
     fi
     bash $STIG_TESTS_DIR/check-sysctl.sh net.ipv4.conf.all.accept_redirects ne 0 >/dev/null 2>&1 &
 
@@ -810,7 +810,7 @@ function test_stig {
     ##The system must not accept ICMPv4 secure redirect packets on any interface.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000086"
+        echo "RHEL-06-000086"
     fi
     bash $STIG_TESTS_DIR/check-sysctl.sh net.ipv4.conf.all.secure_redirects ne 0 >/dev/null 2>&1 &
 
@@ -822,7 +822,7 @@ function test_stig {
     ##The system must not accept IPv4 source-routed packets by default.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000089"
+        echo "RHEL-06-000089"
     fi
     bash $STIG_TESTS_DIR/check-sysctl.sh  net.ipv4.conf.default.accept_source_route ne 0 >/dev/null 2>&1 &
 
@@ -834,7 +834,7 @@ function test_stig {
     ##The system must not accept ICMPv4 secure redirect packets by default.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000090"
+        echo "RHEL-06-000090"
     fi
     bash $STIG_TESTS_DIR/check-sysctl.sh  net.ipv4.conf.default.secure_redirects ne 0 >/dev/null 2>&1 &
 
@@ -846,7 +846,7 @@ function test_stig {
     ##The system must ignore ICMPv4 redirect messages by default.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000091"
+        echo "RHEL-06-000091"
     fi
     bash $STIG_TESTS_DIR/check-sysctl.sh  net.ipv4.conf.default.accept_redirects ne 0 >/dev/null 2>&1 &
 
@@ -858,7 +858,7 @@ function test_stig {
     ##The system must not respond to ICMPv4 sent to a broadcast address.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000092"
+        echo "RHEL-06-000092"
     fi
     bash $STIG_TESTS_DIR/check-sysctl.sh  net.ipv4.icmp_echo_ignore_broadcasts ne 1 >/dev/null 2>&1 &
 
@@ -870,7 +870,7 @@ function test_stig {
     ##The system must ignore ICMPv4 bogus error responses.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000093"
+        echo "RHEL-06-000093"
     fi
     bash $STIG_TESTS_DIR/check-sysctl.sh  net.ipv4.icmp_ignore_bogus_error_responses ne 1 >/dev/null 2>&1 &
 
@@ -882,7 +882,7 @@ function test_stig {
     ##The system must be configured to use TCP syncookies when experiencing a TCP SYN flood.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000095"
+        echo "RHEL-06-000095"
     fi
     bash $STIG_TESTS_DIR/check-sysctl.sh  net.ipv4.tcp_syncookies ne 1 >/dev/null 2>&1 &
 
@@ -894,7 +894,7 @@ function test_stig {
     ##The system must use a reverse-path filter for IPv4 network traffic when possible on all interfaces.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000096"
+        echo "RHEL-06-000096"
     fi
     bash $STIG_TESTS_DIR/check-sysctl.sh  net.ipv4.conf.all.rp_filter ne 1 >/dev/null 2>&1 &
 
@@ -906,7 +906,7 @@ function test_stig {
     ##The system must use a reverse-path filter for IPv4 network traffic when possible by default.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000097"
+        echo "RHEL-06-000097"
     fi
     bash $STIG_TESTS_DIR/check-sysctl.sh  net.ipv4.conf.default.rp_filter ne 1 >/dev/null 2>&1 &
 
@@ -919,7 +919,7 @@ function test_stig {
     ##If IPv6 is disabled, this is not applicable.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000099"
+        echo "RHEL-06-000099"
     fi
     if [ -a /proc/net/if_inet6 ];then
 
@@ -934,7 +934,7 @@ function test_stig {
     ##The systems local IPv4 firewall must implement a deny-all, allow-by-exception policy for inbound
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000120"
+        echo "RHEL-06-000120"
     fi
     grep "type filter hook input priority filter; policy drop;" /etc/firewall.conf >/dev/null 2>&1 &
 
@@ -946,7 +946,7 @@ function test_stig {
     ##System logs must be rotated daily.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000138"
+        echo "RHEL-06-000138"
     fi
     bash $STIG_TESTS_DIR/check-logrotate.sh >/dev/null 2>&1 &
 
@@ -958,7 +958,7 @@ function test_stig {
     ##The xinetd service must be disabled if no network services utilizing it are enabled.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000203"
+        echo "RHEL-06-000203"
     fi
     bash $STIG_TESTS_DIR/check-services.sh xinetd >/dev/null 2>&1 &
 
@@ -970,7 +970,7 @@ function test_stig {
     ##The xinetd service must be uninstalled if no network services utilizing it are enabled.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000204"
+        echo "RHEL-06-000204"
     fi
     bash $STIG_TESTS_DIR/check-packages.sh xinetd >/dev/null 2>&1 &
 
@@ -982,26 +982,26 @@ function test_stig {
     ##The telnet-server package must not be installed.
 
     if [ ! -d /etc/abermush ]; then
-	if [ "$VERBOSE" ]; then
-	    echo "RHEL-06-000206"
-	fi
-	bash $STIG_TESTS_DIR/check-packages.sh telnetd >/dev/null 2>&1 &
+        if [ "$VERBOSE" ]; then
+            echo "RHEL-06-000206"
+        fi
+        bash $STIG_TESTS_DIR/check-packages.sh telnetd >/dev/null 2>&1 &
 
-	stig_spinner $!
-	output "V-38587" $? ${SETLANG}
+        stig_spinner $!
+        output "V-38587" $? ${SETLANG}
     fi
     ################
 
     ##RHEL-06-000211
     ##The telnet daemon must not be running.
     if [ ! -d /etc/abermush ]; then
-	if [ "$VERBOSE" ]; then
-	    echo "RHEL-06-000211"
-	fi
-	bash $STIG_TESTS_DIR/check-services.sh telnetd >/dev/null 2>&1 &
+        if [ "$VERBOSE" ]; then
+            echo "RHEL-06-000211"
+        fi
+        bash $STIG_TESTS_DIR/check-services.sh telnetd >/dev/null 2>&1 &
 
-	stig_spinner $!
-	output "V-38589" $? ${SETLANG}
+        stig_spinner $!
+        output "V-38589" $? ${SETLANG}
     fi
     ################
 
@@ -1009,7 +1009,7 @@ function test_stig {
     ##The rsh-server package must not be installed.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000213"
+        echo "RHEL-06-000213"
     fi
     bash $STIG_TESTS_DIR/check-packages.sh rsh-server >/dev/null 2>&1 &
 
@@ -1021,7 +1021,7 @@ function test_stig {
     ##The rshd service must not be running.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000214"
+        echo "RHEL-06-000214"
     fi
     bash $STIG_TESTS_DIR/check-services.sh rshd >/dev/null 2>&1 &
 
@@ -1033,7 +1033,7 @@ function test_stig {
     ##The rexecd service must not be running.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000216"
+        echo "RHEL-06-000216"
     fi
     bash $STIG_TESTS_DIR/check-services.sh rexecd >/dev/null 2>&1 &
 
@@ -1045,7 +1045,7 @@ function test_stig {
     ##The rlogind service must not be running.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000218"
+        echo "RHEL-06-000218"
     fi
     bash $STIG_TESTS_DIR/check-services.sh rlogind >/dev/null 2>&1 &
 
@@ -1057,7 +1057,7 @@ function test_stig {
     ##The NIS(ypserv) package must not be installed.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000220"
+        echo "RHEL-06-000220"
     fi
     bash $STIG_TESTS_DIR/check-packages.sh nis >/dev/null 2>&1 &
 
@@ -1069,7 +1069,7 @@ function test_stig {
     ##The nis(ypbind) service must not be running.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000221"
+        echo "RHEL-06-000221"
     fi
     bash $STIG_TESTS_DIR/check-services.sh nis >/dev/null 2>&1 &
 
@@ -1081,7 +1081,7 @@ function test_stig {
     ##The cron service must be running.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000224"
+        echo "RHEL-06-000224"
     fi
     bash $STIG_TESTS_DIR/check-services.sh cron >/dev/null 2>&1 &
 
@@ -1091,7 +1091,7 @@ function test_stig {
 
     ##Check that openssh client and server are installed
     if [ "$VERBOSE" ]; then
-	echo "Check that openssh client and server are installed"
+        echo "Check that openssh client and server are installed"
     fi
     bash $STIG_TESTS_DIR/check-ssh.sh installed >/dev/null 2>&1 &
     stig_spinner $!
@@ -1102,7 +1102,7 @@ function test_stig {
     ##The SSH daemon must be configured to use only the SSHv2 protocol.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000227"
+        echo "RHEL-06-000227"
     fi
     bash $STIG_TESTS_DIR/check-ssh.sh Protocol >/dev/null 2>&1 &
 
@@ -1114,7 +1114,7 @@ function test_stig {
     ##The SSH daemon must set a timeout interval on idle sessions.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000230"
+        echo "RHEL-06-000230"
     fi
     sed -e '/^#/d' -e '/^[ \t][ \t]*#/d' -e 's/#.*$//' -e '/^$/d' /etc/ssh/sshd_config | grep "ClientAliveInterval" >/dev/null 2>&1 &
 
@@ -1126,7 +1126,7 @@ function test_stig {
     ##The SSH daemon must set a timeout count on idle sessions.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000231"
+        echo "RHEL-06-000231"
     fi
     sed -e '/^#/d' -e '/^[ \t][ \t]*#/d' -e 's/#.*$//' -e '/^$/d' /etc/ssh/sshd_config | grep "ClientAliveCountMax" >/dev/null 2>&1 &
 
@@ -1138,7 +1138,7 @@ function test_stig {
     ##The SSH daemon must ignore .rhosts files.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000234"
+        echo "RHEL-06-000234"
     fi
     bash $STIG_TESTS_DIR/check-ssh.sh rhosts >/dev/null 2>&1 &
 
@@ -1150,7 +1150,7 @@ function test_stig {
     ##The SSH daemon must not allow host-based authentication.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000236"
+        echo "RHEL-06-000236"
     fi
     bash $STIG_TESTS_DIR/check-ssh.sh hostauth >/dev/null 2>&1 &
 
@@ -1162,7 +1162,7 @@ function test_stig {
     ##The system must not permit root logins using remote access programs such as ssh.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000237"
+        echo "RHEL-06-000237"
     fi
     bash $STIG_TESTS_DIR/check-ssh.sh permitroot >/dev/null 2>&1 &
 
@@ -1170,11 +1170,55 @@ function test_stig {
     output "V-38613" $? ${SETLANG}
     ################
 
+    ##LoginGraceTime
+
+    if [ "$VERBOSE" ]; then
+        echo "C-LoginGraceTime"
+    fi
+    bash $STIG_TESTS_DIR/check-ssh.sh LoginGraceTime >/dev/null 2>&1 &
+
+    stig_spinner $!
+    output "V-21736" $? ${SETLANG}
+    ################
+
+    ##MaxAuthTries
+
+    if [ "$VERBOSE" ]; then
+        echo "C-MaxAuthTries"
+    fi
+    bash $STIG_TESTS_DIR/check-ssh.sh MaxAuthTries >/dev/null 2>&1 &
+
+    stig_spinner $!
+    output "V-25716" $? ${SETLANG}
+    ################
+
+    ##MaxSessions
+
+    if [ "$VERBOSE" ]; then
+        echo "C-MaxSessions"
+    fi
+    bash $STIG_TESTS_DIR/check-ssh.sh MaxSessions >/dev/null 2>&1 &
+
+    stig_spinner $!
+    output "V-29152" $? ${SETLANG}
+    ################
+
+    ##AllowTcpForwarding
+
+    if [ "$VERBOSE" ]; then
+        echo "C-AllowTcpForwarding"
+    fi
+    bash $STIG_TESTS_DIR/check-ssh.sh AllowTcpForwarding >/dev/null 2>&1 &
+
+    stig_spinner $!
+    output "V-22717" $? ${SETLANG}
+    ################
+
     ##RHEL-06-000239
     ##The SSH daemon must not allow authentication using an empty password.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000239"
+        echo "RHEL-06-000239"
     fi
     bash $STIG_TESTS_DIR/check-ssh.sh emptypassword >/dev/null 2>&1 &
 
@@ -1186,7 +1230,7 @@ function test_stig {
     ##The SSH daemon must not permit user environment settings.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000241"
+        echo "RHEL-06-000241"
     fi
     bash $STIG_TESTS_DIR/check-ssh.sh emptypasswordenvironment >/dev/null 2>&1 &
 
@@ -1196,7 +1240,7 @@ function test_stig {
 
     ## A FIPS 140-2 approved cryptographic algorithm must be used for SSH communications.
     if [ "$VERBOSE" ]; then
-	echo "A FIPS 140-2 approved cryptographic algorithm must be used for SSH communications."
+        echo "A FIPS 140-2 approved cryptographic algorithm must be used for SSH communications."
     fi
     bash $STIG_TESTS_DIR/check-ssh.sh ciphers >/dev/null 2>&1 &
     stig_spinner $!
@@ -1205,7 +1249,7 @@ function test_stig {
 
     ## The Standard Notice must be displayed immediately prior to, or as part of, remote access logon prompts.
     if [ "$VERBOSE" ]; then
-	echo "The Standard Notice must be displayed immediately prior to, or as part of, remote access logon prompts."
+        echo "The Standard Notice must be displayed immediately prior to, or as part of, remote access logon prompts."
     fi
     bash $STIG_TESTS_DIR/check-ssh.sh banner >/dev/null 2>&1 &
     stig_spinner $!
@@ -1214,7 +1258,7 @@ function test_stig {
 
     ## All networked systems must use SSH for confidentiality and integrity of transmitted and received information as well as information during preparation for transmission.
     if [ "$VERBOSE" ]; then
-	echo "All networked systems must use SSH for confidentiality and integrity of transmitted and received information as well as information during preparation for transmission."
+        echo "All networked systems must use SSH for confidentiality and integrity of transmitted and received information as well as information during preparation for transmission."
     fi
     bash $STIG_TESTS_DIR/check-ssh.sh sshd_status >/dev/null 2>&1 &
     stig_spinner $!
@@ -1223,7 +1267,7 @@ function test_stig {
 
     ## All network connections associated with SSH traffic must terminate at the end of the session or after 10 minutes of inactivity, except to fulfill documented and validated mission requirements.
     if [ "$VERBOSE" ]; then
-	echo "All network connections associated with SSH traffic must terminate at the end of the session or after 10 minutes of inactivity, except to fulfill documented and validated mission requirements."
+        echo "All network connections associated with SSH traffic must terminate at the end of the session or after 10 minutes of inactivity, except to fulfill documented and validated mission requirements."
     fi
     bash $STIG_TESTS_DIR/check-ssh.sh ClientAliveInterval >/dev/null 2>&1 &
     stig_spinner $!
@@ -1232,7 +1276,7 @@ function test_stig {
 
     ## The SSH daemon must not allow authentication using RSA rhosts authentication.
     if [ "$VERBOSE" ]; then
-	echo "The SSH daemon must not allow authentication using RSA rhosts authentication."
+        echo "The SSH daemon must not allow authentication using RSA rhosts authentication."
     fi
     bash $STIG_TESTS_DIR/check-ssh.sh RhostsRSAAuthentication >/dev/null 2>&1 &
     stig_spinner $!
@@ -1241,7 +1285,7 @@ function test_stig {
 
     ## All network connections associated with SSH traffic must terminate after a period of inactivity.
     if [ "$VERBOSE" ]; then
-	echo "All network connections associated with SSH traffic must terminate after a period of inactivity."
+        echo "All network connections associated with SSH traffic must terminate after a period of inactivity."
     fi
     bash $STIG_TESTS_DIR/check-ssh.sh ClientAliveCountMax >/dev/null 2>&1 &
     stig_spinner $!
@@ -1250,7 +1294,7 @@ function test_stig {
 
     ## The SSH daemon must not allow authentication using rhosts authentication.
     if [ "$VERBOSE" ]; then
-	echo "The SSH daemon must not allow authentication using rhosts authentication."
+        echo "The SSH daemon must not allow authentication using rhosts authentication."
     fi
     bash $STIG_TESTS_DIR/check-ssh.sh IgnoreRhosts >/dev/null 2>&1 &
     stig_spinner $!
@@ -1259,7 +1303,7 @@ function test_stig {
 
     ## The system must display the date and time of the last successful account logon upon an SSH logon.
     if [ "$VERBOSE" ]; then
-	echo "The system must display the date and time of the last successful account logon upon an SSH logon."
+        echo "The system must display the date and time of the last successful account logon upon an SSH logon."
     fi
     bash $STIG_TESTS_DIR/check-ssh.sh PrintLastLog >/dev/null 2>&1 &
     stig_spinner $!
@@ -1268,7 +1312,7 @@ function test_stig {
 
     ## The system must not permit direct logons to the root account using remote access via SSH.
     if [ "$VERBOSE" ]; then
-	echo "The system must not permit direct logons to the root account using remote access via SSH."
+        echo "The system must not permit direct logons to the root account using remote access via SSH."
     fi
     bash $STIG_TESTS_DIR/check-ssh.sh permitroot >/dev/null 2>&1 &
     stig_spinner $!
@@ -1277,7 +1321,7 @@ function test_stig {
 
     ## The SSH daemon must not allow authentication using known hosts authentication.
     if [ "$VERBOSE" ]; then
-	echo "The SSH daemon must not allow authentication using known hosts authentication."
+        echo "The SSH daemon must not allow authentication using known hosts authentication."
     fi
     bash $STIG_TESTS_DIR/check-ssh.sh IgnoreUserKnownHosts >/dev/null 2>&1 &
     stig_spinner $!
@@ -1286,7 +1330,7 @@ function test_stig {
 
     ## The SSH daemon must be configured to only use the SSHv2 protocol.
     if [ "$VERBOSE" ]; then
-	echo "The SSH daemon must be configured to only use the SSHv2 protocol."
+        echo "The SSH daemon must be configured to only use the SSHv2 protocol."
     fi
     bash $STIG_TESTS_DIR/check-ssh.sh Protocol >/dev/null 2>&1 &
     stig_spinner $!
@@ -1295,7 +1339,7 @@ function test_stig {
 
     ## The SSH daemon must be configured to only use Message Authentication Codes (MACs) employing FIPS 140-2 approved cryptographic hash algorithms.
     if [ "$VERBOSE" ]; then
-	echo "The SSH daemon must be configured to only use Message Authentication Codes (MACs) employing FIPS 140-2 approved cryptographic hash algorithms."
+        echo "The SSH daemon must be configured to only use Message Authentication Codes (MACs) employing FIPS 140-2 approved cryptographic hash algorithms."
     fi
     bash $STIG_TESTS_DIR/check-ssh.sh macs >/dev/null 2>&1 &
     stig_spinner $!
@@ -1304,7 +1348,7 @@ function test_stig {
 
     ## The SSH public host key files must have mode 0644 or less permissive.
     if [ "$VERBOSE" ]; then
-	echo "The SSH public host key files must have mode 0644 or less permissive."
+        echo "The SSH public host key files must have mode 0644 or less permissive."
     fi
     bash $STIG_TESTS_DIR/check-ssh.sh pubkeypermissive >/dev/null 2>&1 &
     stig_spinner $!
@@ -1313,7 +1357,7 @@ function test_stig {
 
     ## The SSH private host key files must have mode 0600 or less permissive.
     if [ "$VERBOSE" ]; then
-	echo "The SSH private host key files must have mode 0600 or less permissive."
+        echo "The SSH private host key files must have mode 0600 or less permissive."
     fi
     bash $STIG_TESTS_DIR/check-ssh.sh hostkeypermissive >/dev/null 2>&1 &
     stig_spinner $!
@@ -1322,7 +1366,7 @@ function test_stig {
 
     ## The SSH daemon must not permit Generic Security Service Application Program Interface (GSSAPI) authentication unless needed.
     if [ "$VERBOSE" ]; then
-	echo "The SSH daemon must not permit Generic Security Service Application Program Interface (GSSAPI) authentication unless needed."
+        echo "The SSH daemon must not permit Generic Security Service Application Program Interface (GSSAPI) authentication unless needed."
     fi
     bash $STIG_TESTS_DIR/check-ssh.sh GSSAPIAuthentication >/dev/null 2>&1 &
     stig_spinner $!
@@ -1331,7 +1375,7 @@ function test_stig {
 
     ## The SSH daemon must not permit Kerberos authentication unless needed.
     if [ "$VERBOSE" ]; then
-	echo "The SSH daemon must not permit Kerberos authentication unless needed."
+        echo "The SSH daemon must not permit Kerberos authentication unless needed."
     fi
     bash $STIG_TESTS_DIR/check-ssh.sh KerberosAuthentication >/dev/null 2>&1 &
     stig_spinner $!
@@ -1340,7 +1384,7 @@ function test_stig {
 
     ## The SSH daemon must perform strict mode checking of home directory configuration files.
     if [ "$VERBOSE" ]; then
-	echo "The SSH daemon must perform strict mode checking of home directory configuration files."
+        echo "The SSH daemon must perform strict mode checking of home directory configuration files."
     fi
     bash $STIG_TESTS_DIR/check-ssh.sh StrictModes >/dev/null 2>&1 &
     stig_spinner $!
@@ -1349,7 +1393,7 @@ function test_stig {
 
     ## The SSH daemon must use privilege separation.
     if [ "$VERBOSE" ]; then
-	echo "The SSH daemon must use privilege separation."
+        echo "The SSH daemon must use privilege separation."
     fi
     bash $STIG_TESTS_DIR/check-ssh.sh UsePrivilegeSeparation >/dev/null 2>&1 &
     stig_spinner $!
@@ -1358,7 +1402,7 @@ function test_stig {
 
     ## The SSH daemon must not allow compression or must only allow compression after successful authentication.
     if [ "$VERBOSE" ]; then
-	echo "The SSH daemon must not allow compression or must only allow compression after successful authentication."
+        echo "The SSH daemon must not allow compression or must only allow compression after successful authentication."
     fi
     bash $STIG_TESTS_DIR/check-ssh.sh Compression >/dev/null 2>&1 &
     stig_spinner $!
@@ -1367,7 +1411,7 @@ function test_stig {
 
     ## Dont allow remote X connections.
     if [ "$VERBOSE" ]; then
-	echo "Dont allow remote X connections."
+        echo "Dont allow remote X connections."
     fi
     bash $STIG_TESTS_DIR/check-ssh.sh X11Forwarding >/dev/null 2>&1 &
     stig_spinner $!
@@ -1376,7 +1420,7 @@ function test_stig {
 
     ## Dont allow agent forwarding.
     if [ "$VERBOSE" ]; then
-	echo "Dont allow agent forwarding."
+        echo "Dont allow agent forwarding."
     fi
     bash $STIG_TESTS_DIR/check-ssh.sh AllowAgentForwarding >/dev/null 2>&1 &
     stig_spinner $!
@@ -1385,7 +1429,7 @@ function test_stig {
 
     ## Check that pam_python is not installed
     if [ "$VERBOSE" ]; then
-	echo "Check that pam_python is not installed"
+        echo "Check that pam_python is not installed"
     fi
     bash $STIG_TESTS_DIR/check-ssh.sh pam_python >/dev/null 2>&1 &
     stig_spinner $!
@@ -1396,7 +1440,7 @@ function test_stig {
     ##The system clock must be synchronized continuously, or at least daily.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000247"
+        echo "RHEL-06-000247"
     fi
     bash $STIG_TESTS_DIR/check-services.sh ntp >/dev/null 2>&1 &
 
@@ -1408,7 +1452,7 @@ function test_stig {
     ##The system clock must be synchronized to an authoritative time source.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000248"
+        echo "RHEL-06-000248"
     fi
     bash $STIG_TESTS_DIR/check-ntp-sources.sh >/dev/null 2>&1 &
 
@@ -1438,7 +1482,7 @@ function test_stig {
     ##The openldap-servers package must not be installed unless required.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000256"
+        echo "RHEL-06-000256"
     fi
     bash $STIG_TESTS_DIR/check-packages.sh sldap>/dev/null 2>&1 &
 
@@ -1478,7 +1522,7 @@ function test_stig {
     ##The atd service must be disabled.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000262"
+        echo "RHEL-06-000262"
     fi
     bash $STIG_TESTS_DIR/check-services.sh atd >/dev/null 2>&1 &
 
@@ -1489,7 +1533,7 @@ function test_stig {
     ##RHEL-06-000271
     ##The noexec option must be added to removable media partitions.
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000271"
+        echo "RHEL-06-000271"
     fi
     if [ "$(grep -Hv ^0$ /sys/block/*/removable | sed s/removable:.*$/device\\/uevent/ | xargs grep -H ^DRIVER=sd | sed s/device.uevent.*$/size/ | xargs grep -Hv ^0$ | cut -d / -f 4 | wc -l)" -gt 0 ];then
         bash $STIG_TESTS_DIR/check-removable.sh >/dev/null 2>&1 &
@@ -1503,7 +1547,7 @@ function test_stig {
     ##The system must use SMB client signing for connecting to samba servers using smbclient.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000272"
+        echo "RHEL-06-000272"
     fi
     bash $STIG_TESTS_DIR/check-depends.sh smb-signing >/dev/null 2>&1 &
 
@@ -1515,7 +1559,7 @@ function test_stig {
     ##The system must use SMB client signing for connecting to samba servers using mount.cifs.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000273"
+        echo "RHEL-06-000273"
     fi
     bash $STIG_TESTS_DIR/check-depends.sh smb-sec >/dev/null 2>&1 &
 
@@ -1527,7 +1571,7 @@ function test_stig {
     ##There must be no world-writable files on the system.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000282"
+        echo "RHEL-06-000282"
     fi
     bash $STIG_TESTS_DIR/check-world-writable.sh >/dev/null 2>&1 &
 
@@ -1539,7 +1583,7 @@ function test_stig {
     ##The x86 Ctrl-Alt-Delete key sequence must be disabled.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000286"
+        echo "RHEL-06-000286"
     fi
     bash $STIG_TESTS_DIR/check-ctrl-alt-del.sh >/dev/null 2>&1 &
 
@@ -1551,7 +1595,7 @@ function test_stig {
     ##The sendmail package must be removed.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000288"
+        echo "RHEL-06-000288"
     fi
     bash $STIG_TESTS_DIR/check-packages.sh sendmail >/dev/null 2>&1 &
 
@@ -1563,7 +1607,7 @@ function test_stig {
     ##X Windows must not be enabled unless required.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000290"
+        echo "RHEL-06-000290"
     fi
     bash $STIG_TESTS_DIR/check-services.sh x11-common >/dev/null 2>&1 &
 
@@ -1602,7 +1646,7 @@ function test_stig {
     ##Process core dumps must be disabled unless needed.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000308"
+        echo "RHEL-06-000308"
     fi
     bash $STIG_TESTS_DIR/check-limits.sh core-dumps > /dev/null 2>&1 &
 
@@ -1614,7 +1658,7 @@ function test_stig {
     ##The system must limit users to 2 simultaneous system logins, or a site-defined number, in accordance with operational requirements.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000319"
+        echo "RHEL-06-000319"
     fi
     bash $STIG_TESTS_DIR/check-limits.sh maxlogins > /dev/null 2>&1 &
 
@@ -1630,14 +1674,14 @@ function test_stig {
     # output "V-86479r2_rule" $?
 
     if [ "$VERBOSE" ]; then
-	echo "check-password-fail-delay"
+        echo "check-password-fail-delay"
     fi
     bash $STIG_TESTS_DIR/check-password-fail-delay.sh 3 >/dev/null 2>&1 &
     stig_spinner $!
     output "V-86575r1_rule" $?
 
     if [ "$VERBOSE" ]; then
-	echo "check-world-writable-dir-gowner"
+        echo "check-world-writable-dir-gowner"
     fi
     bash $STIG_TESTS_DIR/check-world-writable-dir-gowner.sh >/dev/null 2>&1 &
     stig_spinner $!
@@ -1649,7 +1693,7 @@ function test_stig {
     ##The systems local firewall must implement a deny-all, allow-by-exception policy for forwarded packets.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000320"
+        echo "RHEL-06-000320"
     fi
     grep "type filter hook forward priority filter; policy drop;" /etc/firewall.conf >/dev/null 2>&1 &
 
@@ -1661,7 +1705,7 @@ function test_stig {
     ##The Bluetooth service must be disabled.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000331"
+        echo "RHEL-06-000331"
     fi
     bash $STIG_TESTS_DIR/check-services.sh bluetooth >/dev/null 2>&1 &
 
@@ -1673,7 +1717,7 @@ function test_stig {
     ##The sticky bit must be set on all public directories.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000336"
+        echo "RHEL-06-000336"
     fi
     bash $STIG_TESTS_DIR/check-sticky-bit.sh >/dev/null 2>&1 &
 
@@ -1685,7 +1729,7 @@ function test_stig {
     ##All public directories must be owned by a system account.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000337"
+        echo "RHEL-06-000337"
     fi
     bash $STIG_TESTS_DIR/check-public-dir-owned.sh >/dev/null 2>&1 &
 
@@ -1698,7 +1742,7 @@ function test_stig {
     ##For more detial :http://stackoverflow.com/questions/10220531/how-to-set-system-wide-umask
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000345"
+        echo "RHEL-06-000345"
     fi
     sed -e '/^#/d' -e '/^[ \t][ \t]*#/d' -e 's/#.*$//' -e '/^$/d' /etc/login.defs  | grep -i "umask.*077" >/dev/null 2>&1 &
 
@@ -1710,7 +1754,7 @@ function test_stig {
     ##There must be no .netrc files on the system.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000347"
+        echo "RHEL-06-000347"
     fi
     bash $STIG_TESTS_DIR/check-netrc.sh >/dev/null 2>&1 &
 
@@ -1722,7 +1766,7 @@ function test_stig {
     ##The operating system, upon successful logon/access, must display to the user the number of unsuccessful logon/access attempts since the last successful logon/access.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000372"
+        echo "RHEL-06-000372"
     fi
     sed -e '/^#/d' -e '/^[ \t][ \t]*#/d' -e 's/#.*$//' -e '/^$/d' /etc/pam.d/common-session | grep -i "pam_lastlog.so.*showfailed" > /dev/null 2>&1 &
 
@@ -1734,7 +1778,7 @@ function test_stig {
     ##The operating system, upon successful logon, must display to the user the date and time of the last logon or access via ssh.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000507"
+        echo "RHEL-06-000507"
     fi
     sed -e '/^#/d' -e '/^[ \t][ \t]*#/d' -e 's/#.*$//' -e '/^$/d' /etc/ssh/sshd_config | grep -i "^PrintLastLog.*yes" > /dev/null 2>&1 &
 
@@ -1746,7 +1790,7 @@ function test_stig {
     ##The package management tool must cryptographically verify the authenticity of all software packages during installation.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000514"
+        echo "RHEL-06-000514"
     fi
     bash $STIG_TESTS_DIR/check-apt-gpg.sh > /dev/null 2>&1 &
 
@@ -1758,7 +1802,7 @@ function test_stig {
     ##Automated file system mounting tools must not be enabled unless needed.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000526"
+        echo "RHEL-06-000526"
     fi
     bash $STIG_TESTS_DIR/check-services.sh autofs >/dev/null 2>&1 &
 
@@ -1770,7 +1814,7 @@ function test_stig {
     ##The noexec option must be added to the /tmp partition.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000528"
+        echo "RHEL-06-000528"
     fi
     sed -e '/^#/d' -e '/^[ \t][ \t]*#/d' -e 's/#.*$//' -e '/^$/d' /etc/fstab | grep "/tmp.*noexec" >/dev/null 2>&1 &
 
@@ -1782,7 +1826,7 @@ function test_stig {
     ##The sudo command must require authentication.
 
     if [ "$VERBOSE" ]; then
-	echo "RHEL-06-000529"
+        echo "RHEL-06-000529"
     fi
     bash $STIG_TESTS_DIR/check-sudo.sh >/dev/null 2>&1 &
 
@@ -1821,9 +1865,9 @@ do
             ;;
         --verbose)
             shift
-	    if [[ "$1" != 'no' ]]; then
-		VERBOSE='yes'
-	    fi
+            if [[ "$1" != 'no' ]]; then
+                VERBOSE='yes'
+            fi
             ;;
         -a|--static)
             echo $'Running static analysis tests'
