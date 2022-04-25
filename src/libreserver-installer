@@ -93,6 +93,7 @@ MUTED_WORDS=/root/${PROJECT_NAME}-firewall-words.cfg
 local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
 
 webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+ssh_sessions_count_filename=/root/.ssh_sessions_count
 restore_app_file="$webadmin_install_dir/.restore_app.txt"
 static_ip_address_file="$webadmin_install_dir/.static_ip_address.txt"
 protocol_file="$webadmin_install_dir/.communitynetwork_protocol.txt"
@@ -205,6 +206,24 @@ function reverse_shell_detect {
                 ${PROJECT_NAME}-notification -s "${PROJECT_NAME}" -m "netcat server detected: ${processDetails}"
             fi
         fi
+    fi
+}
+
+function check_ssh_sessions {
+    max_ssh_sessions=3
+    ssh_sessions_count=$(netstat -nt | grep :2222 | grep "ESTABLISHED" | wc -l)
+    if [ $ssh_sessions_count -le $max_ssh_sessions ]; then
+        # normal number of ssh connections
+        if [ -f ${ssh_sessions_count_filename} ]; then
+            rm ${ssh_sessions_count_filename}
+        fi
+        return
+    fi
+    # unusual number of ssh connections
+    if [ ! -f ${ssh_sessions_count_filename} ]; then
+        echo -n "${ssh_sessions_count}" > ${ssh_sessions_count_filename}
+        translated_max_ssh=$(web_admin_translate_text "ssh connections too high")
+        ${PROJECT_NAME}-notification -s "${PROJECT_NAME}" -m "$translated_max_ssh"
     fi
 }
 
@@ -4839,6 +4858,7 @@ function check_nginx_initial_failure {
 }
 
 function installer_main_loop {
+    check_ssh_sessions
     reverse_shell_detect
     check_number_of_connections
     check_resolvconf
@@ -4946,6 +4966,11 @@ if [ $manual_install_completed ]; then
 fi
 
 stop_dhcpcd
+
+# remove ssh sessions count file
+if [ -f "$ssh_sessions_count_filename" ]; then
+    rm "$ssh_sessions_count_filename"
+fi
 
 while true
 do
