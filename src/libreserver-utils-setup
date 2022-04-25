@@ -640,6 +640,9 @@ function lockdown_permissions {
     if [ -d /root/.npm ]; then
         chmod -R 700 /root/.npm
     fi
+    if [ -d /root/.cargo ]; then
+        chmod -R 700 /root/.cargo
+    fi
 
     # All commands owned by root
     if [ -d /root/.cache/yarn ]; then
