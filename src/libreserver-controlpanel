@@ -1965,7 +1965,7 @@ function menu_top_level {
            19 $"Restart the system")
 
         # shellcheck disable=SC2068
-        selection=$(dialog --backtitle $"LibreServer Administrator Control Panel" --title $"Administrator Control Panel" --menu $"Choose an operation, or ESC to exit:" 25 60 25 "${W[@]}" 3>&2 2>&1 1>&3)
+        selection=$(dialog --backtitle $"LibreServer Administrator Control Panel" --title $"Administrator Control Panel" --menu $"Choose an operation, or ESC to exit:" 26 60 26 "${W[@]}" 3>&2 2>&1 1>&3)
 
         if [ ! "$selection" ]; then
             break
