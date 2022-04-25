@@ -57,6 +57,16 @@ function configure_ssh {
     if ! grep -q 'HostbasedAuthentication' /etc/ssh/sshd_config; then
         echo 'HostbasedAuthentication no' >> /etc/ssh/sshd_config
     fi
+
+    sed -i 's|#LoginGraceTime.*|LoginGraceTime 1m|g' /etc/ssh/sshd_config
+    sed -i 's|LoginGraceTime.*|LoginGraceTime 1m|g' /etc/ssh/sshd_config
+    sed -i 's|#MaxAuthTries.*|MaxAuthTries 6|g' /etc/ssh/sshd_config
+    sed -i 's|MaxAuthTries.*|MaxAuthTries 6|g' /etc/ssh/sshd_config
+    sed -i 's|#MaxSessions.*|MaxSessions 5|g' /etc/ssh/sshd_config
+    sed -i 's|MaxSessions.*|MaxSessions 5|g' /etc/ssh/sshd_config
+    sed -i 's|#AllowTcpForwarding.*|AllowTcpForwarding no|g' /etc/ssh/sshd_config
+    sed -i 's|AllowTcpForwarding.*|AllowTcpForwarding no|g' /etc/ssh/sshd_config
+
     sed -i 's|#HostbasedAuthentication.*|HostbasedAuthentication no|g' /etc/ssh/sshd_config
     sed -i 's|HostbasedAuthentication.*|HostbasedAuthentication no|g' /etc/ssh/sshd_config
     sed -i 's|#PrintLastLog.*|PrintLastLog yes|g' /etc/ssh/sshd_config
