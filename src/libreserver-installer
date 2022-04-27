@@ -92,6 +92,9 @@ MUTED_WORDS=/root/${PROJECT_NAME}-firewall-words.cfg
 
 local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
 
+# counter the number of consecutive observations of a high ssh session count
+ssh_sessions_high_count=0
+
 webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
 ssh_sessions_count_filename=/root/.ssh_sessions_count
 restore_app_file="$webadmin_install_dir/.restore_app.txt"
@@ -217,13 +220,19 @@ function check_ssh_sessions {
         if [ -f ${ssh_sessions_count_filename} ]; then
             rm ${ssh_sessions_count_filename}
         fi
+        ssh_sessions_high_count=0
         return
     fi
-    # unusual number of ssh connections
-    if [ ! -f ${ssh_sessions_count_filename} ]; then
-        echo -n "${ssh_sessions_count}" > ${ssh_sessions_count_filename}
-        translated_max_ssh=$(web_admin_translate_text "ssh connections too high")
-        ${PROJECT_NAME}-notification -s "${PROJECT_NAME}" -m "$translated_max_ssh"
+    ssh_sessions_high_count=$((ssh_sessions_high_count+1))
+    # a high count must be observed for a length of time in order to avoid
+    # notifying about temporary blips
+    if [ $ssh_sessions_high_count -gt 5 ]; then
+        # unusual number of ssh connections
+        if [ ! -f ${ssh_sessions_count_filename} ]; then
+            echo -n "${ssh_sessions_count}" > ${ssh_sessions_count_filename}
+            translated_max_ssh=$(web_admin_translate_text "ssh connections too high")
+            ${PROJECT_NAME}-notification -s "${PROJECT_NAME}" -m "$translated_max_ssh"
+        fi
     fi
 }
 
