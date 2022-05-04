@@ -325,6 +325,7 @@ function remove_friendica {
 
 function install_friendica {
     if [ ! "$FRIENDICA_DOMAIN_NAME" ]; then
+        echo $'No domain name was given for friendica'
         return
     fi
 
