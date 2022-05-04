@@ -30,7 +30,7 @@ APP_CATEGORY=social
 
 IN_DEFAULT_INSTALL=0
 SHOW_ON_ABOUT=1
-NOT_ON_ONION=1
+NOT_ON_ONION=0
 REQUIRES_APP=
 
 FRIENDICA_DOMAIN_NAME=
@@ -519,7 +519,6 @@ function install_friendica {
           echo '    index index.php;';
           echo '    charset utf-8;';
           echo '    access_log /dev/null;';
-          echo '    add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
           echo '';
           echo '    # rewrite to front controller as default rule';
           echo '    location / {'; } > "/etc/nginx/sites-available/$FRIENDICA_DOMAIN_NAME"
