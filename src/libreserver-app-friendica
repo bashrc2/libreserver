@@ -250,9 +250,12 @@ function upgrade_friendica {
 
     friendica_create_config
 
+    cd "${FRIENDICA_PATH}" || return
+    echo "yes" | php composer.phar --no-dev i
+
     chmod 1755 "$FRIENDICA_PATH/store/[data]/smarty3"
     chmod 1755 "$FRIENDICA_PATH/view/tpl"
-    chown -R www-data:www-data "$FRIENDICA_PATH/store"
+    chown -R www-data:www-data "$FRIENDICA_PATH"
     chmod 1755 "$FRIENDICA_PATH/view/tpl/smarty3"
     chmod 755 "$FRIENDICA_PATH/config/local.config.php"
 }
@@ -643,6 +646,11 @@ function install_friendica {
     increment_app_install_progress
 
     systemctl restart nginx
+
+    install_composer
+    cd "${FRIENDICA_PATH}" || exit 71
+    echo "yes" | php composer.phar --no-dev i
+    chown -R www-data:www-data "$FRIENDICA_PATH"
 
     increment_app_install_progress
 
