@@ -328,10 +328,6 @@ function install_friendica {
         return
     fi
 
-    if [[ "$ONION_ONLY" != "no" ]]; then
-        return
-    fi
-
     increment_app_install_progress
 
     FRIENDICA_PATH="/var/www/$FRIENDICA_DOMAIN_NAME/htdocs"
