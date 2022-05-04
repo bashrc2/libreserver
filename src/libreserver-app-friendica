@@ -488,7 +488,6 @@ function install_friendica {
           echo '        # With php-fpm:';
           echo "        fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
           echo '        include fastcgi_params;';
-          echo '        fastcgi_read_timeout 30;';
           echo '        fastcgi_index index.php;';
           echo "        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;";
           echo '        fastcgi_read_timeout 300;';
@@ -556,7 +555,6 @@ function install_friendica {
           echo '        # With php-fpm:';
           echo "        fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
           echo '        include fastcgi_params;';
-          echo '        fastcgi_read_timeout 30;';
           echo '        fastcgi_index index.php;';
           echo "        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;";
           echo '        fastcgi_read_timeout 300;';
