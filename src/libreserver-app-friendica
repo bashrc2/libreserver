@@ -1,8 +1,8 @@
 #!/bin/bash
-#  _    _ _            ___                      
-# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
-# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # Friendica application
 #
@@ -354,7 +354,19 @@ function install_friendica {
 
     increment_app_install_progress
 
-    INSTALL_PACKAGES php-common php-cli php-curl php-gd php-mysql php-mcrypt git
+    INSTALL_PACKAGES bzip2 wget php-common php-cli php-curl php-gd php-mysql git
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES libpng-dev libjpeg62-turbo-dev libtool libmagick++-dev libmemcached-dev
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES libgraphicsmagick1-dev libfreetype6-dev libwebp-dev librsvg2-2
+
+    increment_app_install_progress
+
+    INSTALL_PACKAGES libzip-dev libldap2-dev
 
     increment_app_install_progress
 
@@ -427,7 +439,7 @@ function install_friendica {
           echo '    #listen [::]:443 ssl;';
           echo "    root $FRIENDICA_PATH;";
           echo "    server_name $FRIENDICA_DOMAIN_NAME;";
-	  echo '    server_tokens off;';
+          echo '    server_tokens off;';
           echo "    error_log /dev/null;";
           echo '    index index.php;';
           echo '    charset utf-8;';
@@ -437,9 +449,9 @@ function install_friendica {
         function_check nginx_security_options
         nginx_security_options "$FRIENDICA_DOMAIN_NAME"
         nginx_robots "$FRIENDICA_DOMAIN_NAME"
-	if [ "${FRIENDICA_ONION_HOSTNAME}" ]; then
-	    echo "    add_header Onion-Location http://${FRIENDICA_ONION_HOSTNAME}\$request_uri;" >> "/etc/nginx/sites-available/$FRIENDICA_DOMAIN_NAME"
-	fi
+        if [ "${FRIENDICA_ONION_HOSTNAME}" ]; then
+            echo "    add_header Onion-Location http://${FRIENDICA_ONION_HOSTNAME}\$request_uri;" >> "/etc/nginx/sites-available/$FRIENDICA_DOMAIN_NAME"
+        fi
         { echo '    add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
           echo '';
           echo '    # rewrite to front controller as default rule';
@@ -504,12 +516,12 @@ function install_friendica {
           echo '    port_in_redirect off;';
           echo "    root $FRIENDICA_PATH;";
           echo "    server_name $FRIENDICA_ONION_HOSTNAME;";
-	  echo '    server_tokens off;';
+          echo '    server_tokens off;';
           echo "    error_log /dev/null;";
           echo '    index index.php;';
           echo '    charset utf-8;';
           echo '    access_log /dev/null;';
-	  echo '    add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
+          echo '    add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
           echo '';
           echo '    # rewrite to front controller as default rule';
           echo '    location / {'; } > "/etc/nginx/sites-available/$FRIENDICA_DOMAIN_NAME"
