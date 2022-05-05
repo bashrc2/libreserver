@@ -24,12 +24,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VARIANTS='full full-vim full-micro'
+VARIANTS=''
 
 APP_CATEGORY=social
 
 IN_DEFAULT_INSTALL=0
 SHOW_ON_ABOUT=1
+NOT_ON_ONION=1
 REQUIRES_APP=
 
 FRIENDICA_DOMAIN_NAME=
@@ -251,7 +252,7 @@ function upgrade_friendica {
     friendica_create_config
 
     cd "${FRIENDICA_PATH}" || return
-    echo "yes" | php composer.phar --no-dev i
+    echo "yes" | php ./bin/composer.phar --no-dev i
 
     chmod 1755 "$FRIENDICA_PATH/store/[data]/smarty3"
     chmod 1755 "$FRIENDICA_PATH/view/tpl"
@@ -330,6 +331,11 @@ function install_friendica {
     if [ ! "$FRIENDICA_DOMAIN_NAME" ]; then
         echo $'No domain name was given for friendica'
         return
+    fi
+
+    if [[ "$ONION_ONLY" != "no" ]]; then
+        echo $"Friendica won't work on an onion address"
+        exit 52
     fi
 
     increment_app_install_progress
@@ -455,7 +461,7 @@ function install_friendica {
           echo '    location / {'; } >> "/etc/nginx/sites-available/$FRIENDICA_DOMAIN_NAME"
         function_check nginx_limits
         nginx_limits "$FRIENDICA_DOMAIN_NAME"
-        { echo "        rewrite ^/(.*) /index.php?q=\$uri&\$args last;";
+        { echo "        try_files \$uri /index.php?pagename=\$uri&\$args;";
           echo '    }';
           echo '';
           echo '    # statically serve these file types when possible';
@@ -464,7 +470,7 @@ function install_friendica {
           echo '    # added .htm for advanced source code editor library';
           echo '    location ~* \.(jpg|jpeg|gif|png|ico|css|js|htm|html|ttf|woff|svg)$ {';
           echo '        expires 30d;';
-          echo "        try_files \$uri /index.php?q=\$uri&\$args;";
+          echo "        try_files \$uri /index.php?pagename=\$uri&\$args;";
           echo '    }';
           echo '';
           echo '    # block these file types';
@@ -522,7 +528,7 @@ function install_friendica {
           echo '    location / {'; } > "/etc/nginx/sites-available/$FRIENDICA_DOMAIN_NAME"
         nginx_limits "$FRIENDICA_DOMAIN_NAME"
         nginx_security_options "$FRIENDICA_DOMAIN_NAME"
-        { echo "        rewrite ^/(.*) /index.php?q=\$uri&\$args last;";
+        { echo "        try_files \$uri /index.php?pagename=\$uri&\$args;";
           echo '    }';
           echo '';
           echo '    # statically serve these file types when possible';
@@ -531,7 +537,7 @@ function install_friendica {
           echo '    # added .htm for advanced source code editor library';
           echo '    location ~* \.(jpg|jpeg|gif|png|ico|css|js|htm|html|ttf|woff|svg)$ {';
           echo '        expires 30d;';
-          echo "        try_files \$uri /index.php?q=\$uri&\$args;";
+          echo "        try_files \$uri /index.php?pagename=\$uri&\$args;";
           echo '    }';
           echo '';
           echo '    # block these file types';
@@ -649,7 +655,7 @@ function install_friendica {
 
     install_composer
     cd "${FRIENDICA_PATH}" || exit 71
-    echo "yes" | php composer.phar --no-dev i
+    echo "yes" | php ./bin/composer.phar --no-dev i
     chown -R www-data:www-data "$FRIENDICA_PATH"
 
     increment_app_install_progress
