@@ -1535,11 +1535,23 @@ function test_stig {
     if [ "$VERBOSE" ]; then
         echo "RHEL-06-000271"
     fi
-    if [ "$(grep -Hv ^0$ /sys/block/*/removable | sed s/removable:.*$/device\\/uevent/ | xargs grep -H ^DRIVER=sd | sed s/device.uevent.*$/size/ | xargs grep -Hv ^0$ | cut -d / -f 4 | wc -l)" -gt 0 ];then
-        bash $STIG_TESTS_DIR/check-removable.sh >/dev/null 2>&1 &
+    device_count=$(grep -Hv ^0$ /sys/block/*/removable | sed s/removable:.*$/device\\/uevent/ | xargs grep -H ^DRIVER=sd | sed s/device.uevent.*$/size/ | xargs grep -Hv ^0$ | cut -d / -f 4 | wc -l)
+    if [ "$device_count" -gt 0 ];then
+        unexpected_removables=
+        if [ "$device_count" -eq 1 ];then
+            # we expect rpi to be running from a usb drive
+            if ! grep -q "raspbian" /etc/apt/sources.list; then
+                unexpected_removables=1
+            fi
+        else
+            unexpected_removables=1
+        fi
+        if [ $unexpected_removables ]; then
+            bash $STIG_TESTS_DIR/check-removable.sh >/dev/null 2>&1 &
 
-        stig_spinner $!
-        output "V-38655" $? ${SETLANG}
+            stig_spinner $!
+            output "V-38655" $? ${SETLANG}
+        fi
     fi
     ################
 
