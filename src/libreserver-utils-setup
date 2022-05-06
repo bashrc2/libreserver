@@ -693,6 +693,9 @@ function lockdown_permissions {
             chown -R prosody:prosody /usr/lib/prosody
         fi
     fi
+    if [ -d /lib/prosody ]; then
+        chown -R root:root /lib/prosody
+    fi
     if [ -d /usr/lib64 ]; then
         chown -R root:root /usr/lib64/* 2> /dev/null
     fi

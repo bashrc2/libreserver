@@ -1105,6 +1105,7 @@ function upgrade_xmpp {
     xmpp_i2p_bridge
     xmpp_i2p_virtualhost
     prosody_add_module "i2p"
+    chown -R root:root /lib/prosody
 
     if [ $xmpp_restart ]; then
         cp -r "$INSTALL_DIR/prosody-modules/"* ${XMPP_DIRECTORY}/prosody-modules/
@@ -2029,6 +2030,8 @@ function install_xmpp {
     increment_app_install_progress
 
     bridge_irc_to_xmpp
+
+    chown -R root:root /lib/prosody
 
     APP_INSTALLED=1
 }
