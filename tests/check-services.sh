@@ -68,6 +68,7 @@ case $1 in
         ;;
         bluetooth)
             if service --status-all | grep "+.*bluetooth";then
+		systemctl stop bluetooth
                 /usr/sbin/rmmod -f bnep
                 /usr/sbin/rmmod -f bluetooth
                 if [ -f /etc/default/bluetooth ]; then
