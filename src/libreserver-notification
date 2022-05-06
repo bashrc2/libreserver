@@ -477,17 +477,22 @@ if [ -d /etc/prosody ]; then
                         echo "jid = \"notification@${local_domain}\"" > "${sendxmpp_config}"
                         echo "password = \"${notification_user_password}\"" >> "${sendxmpp_config}"
                         echo "Created ${sendxmpp_config}"
+		    else
+			sendxmpp_config=/root/.sendxmpprc
+			{ echo "username: notification";
+			  echo "jserver: {local_domain}";
+			  echo "password: ${notification_user_password}"; } > "${sendxmpp_config}"
                     fi
                     # send the message
                     echo "$MESSAGE" | ${sendxmpp_binary} "${ADMIN_EMAIL_ADDRESS}"
                     sleep 2
                     echo "xmpp message sent to ${ADMIN_EMAIL_ADDRESS}"
                     # remove the sendxmpp configuration file
-                    #if [ "${sendxmpp_config}" ]; then
-                    #    if [ -f "${sendxmpp_config}" ]; then
-                    #        rm "${sendxmpp_config}"
-                    #    fi
-                    #fi
+                    if [ "${sendxmpp_config}" ]; then
+                        if [ -f "${sendxmpp_config}" ]; then
+                            rm "${sendxmpp_config}"
+                        fi
+                    fi
 
                     #curl http://localhost:5280/rest --user "notification:${notification_user_password}" -H 'Content-Type: application/json' --data-binary "{ \"body\" : \"${MESSAGE}\", \"\kind\" : \"message\", \"to\" : \"${ADMIN_USERNAME}@${local_domain}\", \"type\" : \"headline\" }"
 
