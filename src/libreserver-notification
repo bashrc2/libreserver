@@ -432,26 +432,8 @@ if [ "$SUBJECT" ]; then
 fi
 
 if [ -d /etc/prosody ]; then
-    sendxmpp_config=
+    sendxmpp_config=/root/.sendxmpprc
     sendxmpp_binary=/usr/bin/sendxmpp
-    if [ -f /root/.cargo/bin/sendxmpp ]; then
-        if [ ! -f /root/.cabal/bin/hsendxmpp ]; then
-            sendxmpp_binary=/root/.cargo/bin/sendxmpp
-            if [ ! -d /etc/sendxmpp ]; then
-                mkdir /etc/sendxmpp
-            fi
-            sendxmpp_config=/etc/sendxmpp/sendxmpp.toml
-            echo "Sending xmpp message via sendxmpp-rs"
-        fi
-    else
-        if [ -f /etc/sendxmpp/sendxmpp.toml ]; then
-            rm /etc/sendxmpp/sendxmpp.toml
-        fi
-    fi
-    if [ -f /root/.cabal/bin/hsendxmpp ]; then
-        sendxmpp_binary=/root/.cabal/bin/hsendxmpp
-        echo "Sending xmpp message via hsendxmpp"
-    fi
     if [ -f /root/.config/sendxmpp.toml ]; then
         rm /root/.config/sendxmpp.toml
     fi
@@ -473,19 +455,12 @@ if [ -d /etc/prosody ]; then
                     # kill any existing send process
                     kill_sendxmpp_process
                     # create the sendxmpp configuration file
-                    if [ "${sendxmpp_config}" ]; then
-                        echo "jid = \"notification@${local_domain}\"" > "${sendxmpp_config}"
-                        echo "password = \"${notification_user_password}\"" >> "${sendxmpp_config}"
-                        echo "Created ${sendxmpp_config}"
-		    else
-			sendxmpp_config=/root/.sendxmpprc
-			{ echo "username: notification";
-			  echo "jserver: ${local_domain}";
-			  echo "password: ${notification_user_password}"; } > "${sendxmpp_config}"
-                    fi
+		    { echo "username: notification";
+		      echo "jserver: ${local_domain}";
+		      echo "password: ${notification_user_password}"; } > "${sendxmpp_config}"
                     # send the message
 		    chmod 700 "${sendxmpp_config}"
-                    echo "$MESSAGE" | ${sendxmpp_binary} -n "${ADMIN_EMAIL_ADDRESS}" > ~/.sendxmpp.log
+                    echo "$MESSAGE" | ${sendxmpp_binary} -n "${ADMIN_EMAIL_ADDRESS}"
                     sleep 2
                     echo "xmpp message sent to ${ADMIN_EMAIL_ADDRESS}"
                     # remove the sendxmpp configuration file
