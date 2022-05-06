@@ -624,6 +624,9 @@ function disable_ctrl_alt_del {
 }
 
 function lockdown_permissions {
+    if [ -f /etc/sudoers.d/010_pi-nopasswd ]; then
+	rm /etc/sudoers.d/010_pi-nopasswd
+    fi
     if grep -q 'NOPASSWD' /etc/sudoers; then
         sed -i '/NOPASSWD/d' /etc/sudoers
     fi
