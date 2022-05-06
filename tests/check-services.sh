@@ -67,9 +67,33 @@ case $1 in
                 fi
         ;;
         bluetooth)
-                if service --status-all | grep "+.*bluetooth";then
-                        exit 1
+            if service --status-all | grep "+.*bluetooth";then
+                bnep_exists=$(lsmod | grep bnep)
+                if [[ "$bnep_exists" == "bnep"* ]]; then
+                    /usr/sbin/rmmod -f bnep
                 fi
+                bluetooth_exists=$(lsmod | grep bluetooth)
+                if [[ "$bluetooth_exists" == "bluetooth"* ]]; then
+                    /usr/sbin/rmmod -f bluetooth
+                fi
+                if [ -f /etc/default/bluetooth ]; then
+                    if grep -q "BLUETOOTH_ENABLED=" /etc/default/bluetooth; then
+                        sed -i 's|BLUETOOTH_ENABLED=.*|BLUETOOTH_ENABLED=0|g' /etc/default/bluetooth
+                    else
+                        echo "BLUETOOTH_ENABLED=0" >> /etc/default/bluetooth
+                    fi
+                fi
+                if ! grep -q 'blacklist bnep' /etc/modprobe.d/bluetooth.conf; then
+                    echo 'blacklist bnep' >> /etc/modprobe.d/bluetooth.conf
+                fi
+                if ! grep -q 'blacklist btusb' /etc/modprobe.d/bluetooth.conf; then
+                    echo 'blacklist btusb' >> /etc/modprobe.d/bluetooth.conf
+                fi
+                if ! grep -q 'blacklist bluetooth' /etc/modprobe.d/bluetooth.conf; then
+                    echo 'blacklist bluetooth' >> /etc/modprobe.d/bluetooth.conf
+                fi
+                exit 1
+            fi
         ;;
         autofs)
                 if service --status-all | grep "+.*autofs";then
