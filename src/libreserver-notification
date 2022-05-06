@@ -480,7 +480,7 @@ if [ -d /etc/prosody ]; then
 		    else
 			sendxmpp_config=/root/.sendxmpprc
 			{ echo "username: notification";
-			  echo "jserver: {local_domain}";
+			  echo "jserver: ${local_domain}";
 			  echo "password: ${notification_user_password}"; } > "${sendxmpp_config}"
                     fi
                     # send the message
