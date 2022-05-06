@@ -457,14 +457,14 @@ if [ -d /etc/prosody ]; then
     fi
     if [ -f "${sendxmpp_binary}" ]; then
         notify_by_xmpp=
-        if [ -f "$notification_method_filename" ]; then
-            if grep -q 'xmpp' "$notification_method_filename"; then
+        if [ -f "${notification_method_filename}" ]; then
+            if grep -q 'xmpp' "${notification_method_filename}"; then
                 notify_by_xmpp=1
             fi
         fi
         if [ $notify_by_xmpp ]; then
             notification_user_password=$(openssl rand -base64 32 | tr -dc A-Za-z0-9 | head -c 30 ; echo -n '')
-            if prosodyctl register "notification" "$local_domain" "$notification_user_password"; then
+            if prosodyctl register "notification" "${local_domain}" "${notification_user_password}"; then
                 if [[ "$SUBJECT" == *' Tor '* ]]; then
                     MESSAGE="$SUBJECT"
                 fi
@@ -485,7 +485,7 @@ if [ -d /etc/prosody ]; then
                     fi
                     # send the message
 		    chmod 700 "${sendxmpp_config}"
-                    echo "$MESSAGE" | ${sendxmpp_binary} "${ADMIN_EMAIL_ADDRESS}"
+                    echo "$MESSAGE" | ${sendxmpp_binary} -v -t "${ADMIN_EMAIL_ADDRESS}" > ~/.sendxmpp.log
                     sleep 2
                     echo "xmpp message sent to ${ADMIN_EMAIL_ADDRESS}"
                     # remove the sendxmpp configuration file
@@ -500,7 +500,7 @@ if [ -d /etc/prosody ]; then
                     #curl -k http://localhost:5280/rest -u notification:${notification_user_password} -H "Content-Type: text/xml" -d "<iq to=\"${ADMIN_USERNAME}@${local_domain}\" type=\"set\" id=\"3de1a1e3-ef91-4017-a5aa-aaba0a82eb94-1\" from=\"notification@${local_domain}\"><pubsub xmlns=\"http://jabber.org/protocol/pubsub\"><publish node=\"${SUBJECT}\"><item>${MESSAGE}</item></publish></pubsub></iq>"
                 fi
             fi
-            prosodyctl deluser "notification@$local_domain"
+            prosodyctl deluser "notification@${local_domain}"
         fi
     fi
 fi
