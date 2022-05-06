@@ -625,9 +625,11 @@ function disable_ctrl_alt_del {
 
 function lockdown_permissions {
     if [ -f /etc/sudoers.d/010_pi-nopasswd ]; then
-	rm /etc/sudoers.d/010_pi-nopasswd
+        echo $'Removing rpi nopasswd sudo setting'
+        rm /etc/sudoers.d/010_pi-nopasswd
     fi
     if grep -q 'NOPASSWD' /etc/sudoers; then
+        echo $'Removing nopasswd sudo setting'
         sed -i '/NOPASSWD/d' /etc/sudoers
     fi
     if [ -d /usr/lib/u-boot ]; then
