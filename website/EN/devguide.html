@@ -27,12 +27,12 @@ LibreServer consists almost entirely of bash scripts, with some html, css and ph
 <h2>Creating the Raspbian image</h2>
 
 <p>
-  Download the <a href="https://www.raspberrypi.com/software/operating-systems">Raspberry Pi OS Lite</a>, then copy it to a USB drive:
+  Download the <a href="https://www.raspberrypi.com/software/operating-systems">Raspberry Pi OS Lite (64bit)</a>, then copy it to a USB drive:
 </p>
 
 <pre>
-  unzip *-raspios-bullseye-armhf-lite.zip
-  sudo dd bs=512 if=*-raspios-bullseye-armhf-lite.img of=/dev/sdX conv=fdatasync,sync,noerror status=progress
+  unxz *-raspios-bullseye-arm64-lite.img.xz
+  sudo dd bs=512 if=*-raspios-bullseye-arm64-lite.img of=/dev/sdX conv=fdatasync,sync,noerror status=progress
 </pre>
 
 <p>
