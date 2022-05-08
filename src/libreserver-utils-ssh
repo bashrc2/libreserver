@@ -34,7 +34,7 @@ SSH_HOST_KEY_ALGORITHMS="ssh-ed25519-cert-v01@openssh.com,ssh-rsa-cert-v01@opens
 
 function lockdown_ssh {
     if [ ! -f /etc/ssh/sshd_config.backup ]; then
-	cp /etc/ssh/sshd_config /etc/ssh/sshd_config.backup
+        cp /etc/ssh/sshd_config /etc/ssh/sshd_config.backup
     fi
 
     if ! grep -q 'RhostsRSAAuthentication' /etc/ssh/sshd_config; then
@@ -221,12 +221,12 @@ function lockdown_ssh {
         echo 'HostKey /etc/ssh/ssh_host_ed25519_key' >> /etc/ssh/sshd_config
     else
         sed -i 's| HostKey .*|HostKey /etc/ssh/ssh_host_ed25519_key|g' /etc/ssh/sshd_config
-	if ! grep -q "#HostKey /etc/ssh/ssh_host_dsa_key" /etc/ssh/sshd_config; then
+        if ! grep -q "#HostKey /etc/ssh/ssh_host_dsa_key" /etc/ssh/sshd_config; then
             sed -i 's|HostKey /etc/ssh/ssh_host_dsa_key|#HostKey /etc/ssh/ssh_host_dsa_key|g' /etc/ssh/sshd_config
-	fi
-	if ! grep -q "#HostKey /etc/ssh/ssh_host_ecdsa_key" /etc/ssh/sshd_config; then
+        fi
+        if ! grep -q "#HostKey /etc/ssh/ssh_host_ecdsa_key" /etc/ssh/sshd_config; then
             sed -i 's|HostKey /etc/ssh/ssh_host_ecdsa_key|#HostKey /etc/ssh/ssh_host_ecdsa_key|g' /etc/ssh/sshd_config
-	fi
+        fi
         sed -i 's|##HostKey /etc/ssh/ssh_host_ed25519_key|HostKey /etc/ssh/ssh_host_ed25519_key|g' /etc/ssh/sshd_config
         sed -i 's|#HostKey /etc/ssh/ssh_host_ed25519_key|HostKey /etc/ssh/ssh_host_ed25519_key|g' /etc/ssh/sshd_config
         sed -i 's|HostKey .*|HostKey /etc/ssh/ssh_host_ed25519_key|g' /etc/ssh/sshd_config
@@ -303,6 +303,16 @@ function lockdown_ssh {
         sed -i 's|##PasswordAuthentication|PasswordAuthentication|g' /etc/ssh/sshd_config
         sed -i 's|#PasswordAuthentication|PasswordAuthentication|g' /etc/ssh/sshd_config
         sed -i 's|PasswordAuthentication.*|PasswordAuthentication no|g' /etc/ssh/sshd_config
+    fi
+
+    #PermitUserEnvironment no
+    if ! grep -q 'PermitUserEnvironment' /etc/ssh/sshd_config; then
+        echo 'PermitUserEnvironment no' >> /etc/ssh/sshd_config
+    else
+        sed -i 's| PermitUserEnvironment.*|PermitUserEnvironment no|g' /etc/ssh/sshd_config
+        sed -i 's|##PermitUserEnvironment|PermitUserEnvironment|g' /etc/ssh/sshd_config
+        sed -i 's|#PermitUserEnvironment|PermitUserEnvironment|g' /etc/ssh/sshd_config
+        sed -i 's|PermitUserEnvironment.*|PermitUserEnvironment no|g' /etc/ssh/sshd_config
     fi
 
     # avoid duplicate lines
