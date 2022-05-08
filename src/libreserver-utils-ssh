@@ -300,6 +300,9 @@ function lockdown_ssh {
         sed -i 's|#PasswordAuthentication|PasswordAuthentication|g' /etc/ssh/sshd_config
         sed -i 's|PasswordAuthentication.*|PasswordAuthentication no|g' /etc/ssh/sshd_config
     fi
+
+    # avoid duplicate lines
+    cat /etc/ssh/sshd_config | uniq -u > /etc/ssh/sshd_config
 }
 
 function configure_ssh {
