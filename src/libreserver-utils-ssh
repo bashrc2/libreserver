@@ -306,7 +306,7 @@ function lockdown_ssh {
     fi
 
     # avoid duplicate lines
-    cat /etc/ssh/sshd_config | uniq -u > /etc/ssh/sshd_config.new
+    sort /etc/ssh/sshd_config | uniq -u > /etc/ssh/sshd_config.new
     if [ -f /etc/ssh/sshd_config.new ]; then
 	mv /etc/ssh/sshd_config.new /etc/ssh/sshd_config
     fi
