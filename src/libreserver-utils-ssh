@@ -36,6 +36,8 @@ function lockdown_ssh {
     if ! grep -q 'RhostsRSAAuthentication' /etc/ssh/sshd_config; then
         echo 'RhostsRSAAuthentication yes' >> /etc/ssh/sshd_config
     else
+        sed -i 's| RhostsRSAAuthentication.*|RhostsRSAAuthentication yes|g' /etc/ssh/sshd_config
+        sed -i 's|##RhostsRSAAuthentication.*|RhostsRSAAuthentication yes|g' /etc/ssh/sshd_config
         sed -i 's|#RhostsRSAAuthentication.*|RhostsRSAAuthentication yes|g' /etc/ssh/sshd_config
         sed -i 's|RhostsRSAAuthentication.*|RhostsRSAAuthentication yes|g' /etc/ssh/sshd_config
     fi
@@ -43,6 +45,8 @@ function lockdown_ssh {
     if ! grep -q 'AllowAgentForwarding' /etc/ssh/sshd_config; then
         echo 'AllowAgentForwarding no' >> /etc/ssh/sshd_config
     else
+        sed -i 's| AllowAgentForwarding.*|AllowAgentForwarding no|g' /etc/ssh/sshd_config
+        sed -i 's|##AllowAgentForwarding|AllowAgentForwarding|g' /etc/ssh/sshd_config
         sed -i 's|#AllowAgentForwarding|AllowAgentForwarding|g' /etc/ssh/sshd_config
         sed -i 's|AllowAgentForwarding.*|AllowAgentForwarding no|g' /etc/ssh/sshd_config
     fi
@@ -50,6 +54,8 @@ function lockdown_ssh {
     if ! grep -q 'StrictModes' /etc/ssh/sshd_config; then
         echo 'StrictModes yes' >> /etc/ssh/sshd_config
     else
+        sed -i 's| StrictModes.*|StrictModes yes|g' /etc/ssh/sshd_config
+        sed -i 's|##StrictModes.*|StrictModes yes|g' /etc/ssh/sshd_config
         sed -i 's|#StrictModes.*|StrictModes yes|g' /etc/ssh/sshd_config
         sed -i 's|StrictModes.*|StrictModes yes|g' /etc/ssh/sshd_config
     fi
@@ -57,6 +63,8 @@ function lockdown_ssh {
     if ! grep -q 'KerberosAuthentication' /etc/ssh/sshd_config; then
         echo 'KerberosAuthentication no' >> /etc/ssh/sshd_config
     else
+        sed -i 's| KerberosAuthentication.*|KerberosAuthentication no|g' /etc/ssh/sshd_config
+        sed -i 's|##KerberosAuthentication.*|KerberosAuthentication no|g' /etc/ssh/sshd_config
         sed -i 's|#KerberosAuthentication.*|KerberosAuthentication no|g' /etc/ssh/sshd_config
         sed -i 's|KerberosAuthentication.*|KerberosAuthentication no|g' /etc/ssh/sshd_config
     fi
@@ -64,6 +72,8 @@ function lockdown_ssh {
     if ! grep -q 'GSSAPIAuthentication' /etc/ssh/sshd_config; then
         echo 'GSSAPIAuthentication no' >> /etc/ssh/sshd_config
     else
+        sed -i 's| GSSAPIAuthentication.*|GSSAPIAuthentication no|g' /etc/ssh/sshd_config
+        sed -i 's|##GSSAPIAuthentication.*|GSSAPIAuthentication no|g' /etc/ssh/sshd_config
         sed -i 's|#GSSAPIAuthentication.*|GSSAPIAuthentication no|g' /etc/ssh/sshd_config
         sed -i 's|GSSAPIAuthentication.*|GSSAPIAuthentication no|g' /etc/ssh/sshd_config
     fi
@@ -71,6 +81,8 @@ function lockdown_ssh {
     if ! grep -q 'IgnoreUserKnownHosts' /etc/ssh/sshd_config; then
         echo 'IgnoreUserKnownHosts yes' >> /etc/ssh/sshd_config
     else
+        sed -i 's| IgnoreUserKnownHosts.*|IgnoreUserKnownHosts yes|g' /etc/ssh/sshd_config
+        sed -i 's|##IgnoreUserKnownHosts.*|IgnoreUserKnownHosts yes|g' /etc/ssh/sshd_config
         sed -i 's|#IgnoreUserKnownHosts.*|IgnoreUserKnownHosts yes|g' /etc/ssh/sshd_config
         sed -i 's|IgnoreUserKnownHosts.*|IgnoreUserKnownHosts yes|g' /etc/ssh/sshd_config
     fi
@@ -78,6 +90,8 @@ function lockdown_ssh {
     if ! grep -q 'Compression ' /etc/ssh/sshd_config; then
         echo 'Compression delayed' >> /etc/ssh/sshd_config
     else
+        sed -i 's| Compression.*|Compression delayed|g' /etc/ssh/sshd_config
+        sed -i 's|##Compression.*|Compression delayed|g' /etc/ssh/sshd_config
         sed -i 's|#Compression.*|Compression delayed|g' /etc/ssh/sshd_config
         sed -i 's|Compression.*|Compression delayed|g' /etc/ssh/sshd_config
     fi
@@ -85,6 +99,8 @@ function lockdown_ssh {
     if ! grep -q 'HostbasedAuthentication' /etc/ssh/sshd_config; then
         echo 'HostbasedAuthentication no' >> /etc/ssh/sshd_config
     else
+        sed -i 's| HostbasedAuthentication.*|HostbasedAuthentication no|g' /etc/ssh/sshd_config
+        sed -i 's|##HostbasedAuthentication.*|HostbasedAuthentication no|g' /etc/ssh/sshd_config
         sed -i 's|#HostbasedAuthentication.*|HostbasedAuthentication no|g' /etc/ssh/sshd_config
         sed -i 's|HostbasedAuthentication.*|HostbasedAuthentication no|g' /etc/ssh/sshd_config
     fi
@@ -92,6 +108,8 @@ function lockdown_ssh {
     if ! grep -q 'LoginGraceTime' /etc/ssh/sshd_config; then
         echo 'LoginGraceTime 1m' >> /etc/ssh/sshd_config
     else
+        sed -i 's| LoginGraceTime.*|LoginGraceTime 1m|g' /etc/ssh/sshd_config
+        sed -i 's|##LoginGraceTime.*|LoginGraceTime 1m|g' /etc/ssh/sshd_config
         sed -i 's|#LoginGraceTime.*|LoginGraceTime 1m|g' /etc/ssh/sshd_config
         sed -i 's|LoginGraceTime.*|LoginGraceTime 1m|g' /etc/ssh/sshd_config
     fi
@@ -99,6 +117,8 @@ function lockdown_ssh {
     if ! grep -q 'MaxAuthTries' /etc/ssh/sshd_config; then
         echo 'MaxAuthTries 6' >> /etc/ssh/sshd_config
     else
+        sed -i 's| MaxAuthTries.*|MaxAuthTries 6|g' /etc/ssh/sshd_config
+        sed -i 's|##MaxAuthTries.*|MaxAuthTries 6|g' /etc/ssh/sshd_config
         sed -i 's|#MaxAuthTries.*|MaxAuthTries 6|g' /etc/ssh/sshd_config
         sed -i 's|MaxAuthTries.*|MaxAuthTries 6|g' /etc/ssh/sshd_config
     fi
@@ -106,6 +126,8 @@ function lockdown_ssh {
     if ! grep -q 'MaxSessions' /etc/ssh/sshd_config; then
         echo 'MaxSessions 5' >> /etc/ssh/sshd_config
     else
+        sed -i 's| MaxSessions.*|MaxSessions 5|g' /etc/ssh/sshd_config
+        sed -i 's|##MaxSessions.*|MaxSessions 5|g' /etc/ssh/sshd_config
         sed -i 's|#MaxSessions.*|MaxSessions 5|g' /etc/ssh/sshd_config
         sed -i 's|MaxSessions.*|MaxSessions 5|g' /etc/ssh/sshd_config
     fi
@@ -113,6 +135,8 @@ function lockdown_ssh {
     if ! grep -q 'AllowTcpForwarding' /etc/ssh/sshd_config; then
         echo 'AllowTcpForwarding no' >> /etc/ssh/sshd_config
     else
+        sed -i 's| AllowTcpForwarding.*|AllowTcpForwarding no|g' /etc/ssh/sshd_config
+        sed -i 's|##AllowTcpForwarding.*|AllowTcpForwarding no|g' /etc/ssh/sshd_config
         sed -i 's|#AllowTcpForwarding.*|AllowTcpForwarding no|g' /etc/ssh/sshd_config
         sed -i 's|AllowTcpForwarding.*|AllowTcpForwarding no|g' /etc/ssh/sshd_config
     fi
@@ -120,6 +144,8 @@ function lockdown_ssh {
     if ! grep -q 'PrintLastLog' /etc/ssh/sshd_config; then
         echo 'PrintLastLog yes' >> /etc/ssh/sshd_config
     else
+        sed -i 's| PrintLastLog.*|PrintLastLog yes|g' /etc/ssh/sshd_config
+        sed -i 's|##PrintLastLog.*|PrintLastLog yes|g' /etc/ssh/sshd_config
         sed -i 's|#PrintLastLog.*|PrintLastLog yes|g' /etc/ssh/sshd_config
         sed -i 's|PrintLastLog.*|PrintLastLog yes|g' /etc/ssh/sshd_config
     fi
@@ -127,6 +153,8 @@ function lockdown_ssh {
     if ! grep -q 'IgnoreRhosts' /etc/ssh/sshd_config; then
         echo 'IgnoreRhosts yes' >> /etc/ssh/sshd_config
     else
+        sed -i 's| IgnoreRhosts.*|IgnoreRhosts yes|g' /etc/ssh/sshd_config
+        sed -i 's|##IgnoreRhosts.*|IgnoreRhosts yes|g' /etc/ssh/sshd_config
         sed -i 's|#IgnoreRhosts.*|IgnoreRhosts yes|g' /etc/ssh/sshd_config
         sed -i 's|IgnoreRhosts.*|IgnoreRhosts yes|g' /etc/ssh/sshd_config
     fi
@@ -134,13 +162,17 @@ function lockdown_ssh {
     if ! grep -q 'Port ' /etc/ssh/sshd_config; then
         echo 'Port ${SSH_PORT}' >> /etc/ssh/sshd_config
     else
-        sed -i "s/Port .*/Port ${SSH_PORT}/g" /etc/ssh/sshd_config
+        sed -i "s/ Port .*/Port ${SSH_PORT}/g" /etc/ssh/sshd_config
+        sed -i "s/##Port ${SSH_PORT}/Port ${SSH_PORT}/g" /etc/ssh/sshd_config
         sed -i "s/#Port ${SSH_PORT}/Port ${SSH_PORT}/g" /etc/ssh/sshd_config
+        sed -i "s/Port .*/Port ${SSH_PORT}/g" /etc/ssh/sshd_config
     fi
 
     if ! grep -q 'PermitEmptyPasswords' /etc/ssh/sshd_config; then
         echo 'PermitEmptyPasswords no' >> /etc/ssh/sshd_config
     else
+        sed -i 's| PermitEmptyPasswords.*|PermitEmptyPasswords no|g' /etc/ssh/sshd_config
+        sed -i 's|##PermitEmptyPasswords.*|PermitEmptyPasswords no|g' /etc/ssh/sshd_config
         sed -i 's|#PermitEmptyPasswords.*|PermitEmptyPasswords no|g' /etc/ssh/sshd_config
         sed -i 's|PermitEmptyPasswords.*|PermitEmptyPasswords no|g' /etc/ssh/sshd_config
     fi
@@ -148,6 +180,8 @@ function lockdown_ssh {
     if ! grep -q 'PermitRootLogin' /etc/ssh/sshd_config; then
         echo 'PermitRootLogin no' >> /etc/ssh/sshd_config
     else
+        sed -i 's/ PermitRootLogin.*/PermitRootLogin no/g' /etc/ssh/sshd_config
+        sed -i 's/##PermitRootLogin no/PermitRootLogin no/g' /etc/ssh/sshd_config
         sed -i 's/#PermitRootLogin no/PermitRootLogin no/g' /etc/ssh/sshd_config
         sed -i 's/PermitRootLogin.*/PermitRootLogin no/g' /etc/ssh/sshd_config
     fi
@@ -155,6 +189,8 @@ function lockdown_ssh {
     if ! grep -q 'X11Forwarding' /etc/ssh/sshd_config; then
         echo 'X11Forwarding no' >> /etc/ssh/sshd_config
     else
+        sed -i 's/ X11Forwarding.*/X11Forwarding no/g' /etc/ssh/sshd_config
+        sed -i 's/##X11Forwarding no/X11Forwarding no/g' /etc/ssh/sshd_config
         sed -i 's/#X11Forwarding no/X11Forwarding no/g' /etc/ssh/sshd_config
         sed -i 's/X11Forwarding.*/X11Forwarding no/g' /etc/ssh/sshd_config
     fi
@@ -162,6 +198,8 @@ function lockdown_ssh {
     if ! grep -q 'ServerKeyBits' /etc/ssh/sshd_config; then
         echo 'ServerKeyBits 2048' >> /etc/ssh/sshd_config
     else
+        sed -i 's/ ServerKeyBits.*/ServerKeyBits 2048/g' /etc/ssh/sshd_config
+        sed -i 's/##ServerKeyBits 2048/ServerKeyBits 2048/g' /etc/ssh/sshd_config
         sed -i 's/#ServerKeyBits 2048/ServerKeyBits 2048/g' /etc/ssh/sshd_config
         sed -i 's/ServerKeyBits.*/ServerKeyBits 2048/g' /etc/ssh/sshd_config
     fi
@@ -169,6 +207,8 @@ function lockdown_ssh {
     if ! grep -q 'TCPKeepAlive' /etc/ssh/sshd_config; then
         echo 'TCPKeepAlive no' >> /etc/ssh/sshd_config
     else
+        sed -i 's/ TCPKeepAlive.*/TCPKeepAlive no/g' /etc/ssh/sshd_config
+        sed -i 's/##TCPKeepAlive no/TCPKeepAlive no/g' /etc/ssh/sshd_config
         sed -i 's/#TCPKeepAlive no/TCPKeepAlive no/g' /etc/ssh/sshd_config
         sed -i 's/TCPKeepAlive.*/TCPKeepAlive no/g' /etc/ssh/sshd_config
     fi
@@ -176,18 +216,26 @@ function lockdown_ssh {
     if ! grep -q 'HostKey ' /etc/ssh/sshd_config; then
         echo 'HostKey /etc/ssh/ssh_host_ed25519_key' >> /etc/ssh/sshd_config
     else
+        sed -i 's| HostKey .*|HostKey /etc/ssh/ssh_host_ed25519_key|g' /etc/ssh/sshd_config
         sed -i 's|HostKey /etc/ssh/ssh_host_dsa_key|#HostKey /etc/ssh/ssh_host_dsa_key|g' /etc/ssh/sshd_config
         sed -i 's|HostKey /etc/ssh/ssh_host_ecdsa_key|#HostKey /etc/ssh/ssh_host_ecdsa_key|g' /etc/ssh/sshd_config
+        sed -i 's|##HostKey /etc/ssh/ssh_host_ed25519_key|HostKey /etc/ssh/ssh_host_ed25519_key|g' /etc/ssh/sshd_config
         sed -i 's|#HostKey /etc/ssh/ssh_host_ed25519_key|HostKey /etc/ssh/ssh_host_ed25519_key|g' /etc/ssh/sshd_config
+        sed -i 's|HostKey .*|HostKey /etc/ssh/ssh_host_ed25519_key|g' /etc/ssh/sshd_config
     fi
 
     if ! grep -q 'DebianBanner' /etc/ssh/sshd_config; then
         echo 'DebianBanner no' >> /etc/ssh/sshd_config
     else
+        sed -i 's| DebianBanner.*|DebianBanner no|g' /etc/ssh/sshd_config
+        sed -i 's|##DebianBanner.*|DebianBanner no|g' /etc/ssh/sshd_config
+        sed -i 's|#DebianBanner.*|DebianBanner no|g' /etc/ssh/sshd_config
         sed -i 's|DebianBanner.*|DebianBanner no|g' /etc/ssh/sshd_config
     fi
 
     if grep -q 'ClientAliveInterval' /etc/ssh/sshd_config; then
+        sed -i 's/ ClientAliveInterval.*/ClientAliveInterval 60/g' /etc/ssh/sshd_config
+        sed -i 's/##ClientAliveInterval 60/ClientAliveInterval 60/g' /etc/ssh/sshd_config
         sed -i 's/#ClientAliveInterval 60/ClientAliveInterval 60/g' /etc/ssh/sshd_config
         sed -i 's/ClientAliveInterval.*/ClientAliveInterval 60/g' /etc/ssh/sshd_config
     else
@@ -195,6 +243,8 @@ function lockdown_ssh {
     fi
 
     if grep -q 'ClientAliveCountMax' /etc/ssh/sshd_config; then
+        sed -i 's/ ClientAliveCountMax.*/ClientAliveCountMax 3/g' /etc/ssh/sshd_config
+        sed -i 's/##ClientAliveCountMax 3/ClientAliveCountMax 3/g' /etc/ssh/sshd_config
         sed -i 's/#ClientAliveCountMax 3/ClientAliveCountMax 3/g' /etc/ssh/sshd_config
         sed -i 's/ClientAliveCountMax.*/ClientAliveCountMax 3/g' /etc/ssh/sshd_config
     else
@@ -202,6 +252,8 @@ function lockdown_ssh {
     fi
 
     if grep -q 'Ciphers' /etc/ssh/sshd_config; then
+        sed -i "s| Ciphers.*|Ciphers ${SSH_CIPHERS}|g" /etc/ssh/sshd_config
+        sed -i "s|##Ciphers $SSH_CIPHERS|Ciphers ${SSH_CIPHERS}|g" /etc/ssh/sshd_config
         sed -i "s|#Ciphers $SSH_CIPHERS|Ciphers ${SSH_CIPHERS}|g" /etc/ssh/sshd_config
         sed -i "s|Ciphers.*|Ciphers ${SSH_CIPHERS}|g" /etc/ssh/sshd_config
     else
@@ -209,6 +261,8 @@ function lockdown_ssh {
     fi
 
     if grep -q 'MACs' /etc/ssh/sshd_config; then
+        sed -i "s| MACs.*|MACs ${SSH_MACS}|g" /etc/ssh/sshd_config
+        sed -i "s|##MACs $SSH_MACS|MACs ${SSH_MACS}|g" /etc/ssh/sshd_config
         sed -i "s|#MACs $SSH_MACS|MACs ${SSH_MACS}|g" /etc/ssh/sshd_config
         sed -i "s|MACs.*|MACs ${SSH_MACS}|g" /etc/ssh/sshd_config
     else
@@ -216,6 +270,8 @@ function lockdown_ssh {
     fi
 
     if grep -q 'KexAlgorithms' /etc/ssh/sshd_config; then
+        sed -i "s| KexAlgorithms.*|KexAlgorithms ${SSH_KEX}|g" /etc/ssh/sshd_config
+        sed -i "s|##KexAlgorithms $SSH_KEX|KexAlgorithms ${SSH_KEX}|g" /etc/ssh/sshd_config
         sed -i "s|#KexAlgorithms $SSH_KEX|KexAlgorithms ${SSH_KEX}|g" /etc/ssh/sshd_config
         sed -i "s|KexAlgorithms.*|KexAlgorithms ${SSH_KEX}|g" /etc/ssh/sshd_config
     else
@@ -225,6 +281,8 @@ function lockdown_ssh {
     if ! grep -q 'UsePrivilegeSeparation' /etc/ssh/sshd_config; then
         echo 'UsePrivilegeSeparation sandbox' >> /etc/ssh/sshd_config
     else
+        sed -i 's| UsePrivilegeSeparation .*|UsePrivilegeSeparation sandbox|g' /etc/ssh/sshd_config
+        sed -i 's|##UsePrivilegeSeparation .*|UsePrivilegeSeparation sandbox|g' /etc/ssh/sshd_config
         sed -i 's|#UsePrivilegeSeparation .*|UsePrivilegeSeparation sandbox|g' /etc/ssh/sshd_config
         sed -i 's|UsePrivilegeSeparation .*|UsePrivilegeSeparation sandbox|g' /etc/ssh/sshd_config
     fi
@@ -233,6 +291,8 @@ function lockdown_ssh {
     if ! grep -q 'PasswordAuthentication' /etc/ssh/sshd_config; then
         echo 'PasswordAuthentication no' >> /etc/ssh/sshd_config
     else
+        sed -i 's| PasswordAuthentication.*|PasswordAuthentication no|g' /etc/ssh/sshd_config
+        sed -i 's|##PasswordAuthentication|PasswordAuthentication|g' /etc/ssh/sshd_config
         sed -i 's|#PasswordAuthentication|PasswordAuthentication|g' /etc/ssh/sshd_config
         sed -i 's|PasswordAuthentication.*|PasswordAuthentication no|g' /etc/ssh/sshd_config
     fi
