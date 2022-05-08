@@ -318,8 +318,8 @@ function lockdown_ssh {
         echo 'PermitTunnel no' >> /etc/ssh/sshd_config
     else
         sed -i 's| PermitTunnel.*|PermitTunnel no|g' /etc/ssh/sshd_config
-        sed -i 's|##PermitTunnel|PermitTunnel no|g' /etc/ssh/sshd_config
-        sed -i 's|#PermitTunnel|PermitTunnel no|g' /etc/ssh/sshd_config
+        sed -i 's|##PermitTunnel|PermitTunnel|g' /etc/ssh/sshd_config
+        sed -i 's|#PermitTunnel|PermitTunnel|g' /etc/ssh/sshd_config
         sed -i 's|PermitTunnel.*|PermitTunnel no|g' /etc/ssh/sshd_config
     fi
 
