@@ -33,6 +33,10 @@ SSH_KEX="curve25519-sha256@libssh.org,diffie-hellman-group-exchange-sha256,diffi
 SSH_HOST_KEY_ALGORITHMS="ssh-ed25519-cert-v01@openssh.com,ssh-rsa-cert-v01@openssh.com,ssh-rsa-cert-v00@openssh.com,ssh-ed25519,ssh-rsa"
 
 function lockdown_ssh {
+    if [ ! -f /etc/ssh/sshd_config.backup ]; then
+	cp /etc/ssh/sshd_config /etc/ssh/sshd_config.backup
+    fi
+
     if ! grep -q 'RhostsRSAAuthentication' /etc/ssh/sshd_config; then
         echo 'RhostsRSAAuthentication yes' >> /etc/ssh/sshd_config
     else
