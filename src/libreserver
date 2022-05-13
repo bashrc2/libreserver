@@ -53,7 +53,7 @@ else
         installing_on_debian=
     fi
     if ! grep -q 'debian' /etc/apt/sources.list; then
-        if ! grep -q 'raspbian' /etc/apt/sources.list; then
+        if ! grep -q 'Raspberry' /proc/device-tree/model; then
             installing_on_debian=
         else
             installing_on_debian=1

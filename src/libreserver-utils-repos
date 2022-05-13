@@ -52,7 +52,7 @@ function image_create_tor_repo_sources {
 }
 
 function raspbian_add_backports {
-    if ! grep -q "raspbian" /etc/apt/sources.list; then
+    if ! grep -q 'Raspberry' /proc/device-tree/model; then
         return
     fi
     if ! grep -q "${DEBIAN_VERSION}-backports" /etc/apt/sources.list; then
@@ -85,7 +85,7 @@ function create_tor_repo_sources {
 
     if [ -f /etc/apt/sources.list ]; then
         # if this is raspbian then skip the replacement and hope for the best
-        if grep -q "raspbian" /etc/apt/sources.list; then
+	if grep -q 'Raspberry' /proc/device-tree/model; then
             # raspbian_add_backports
             $UPDATE_PACKAGES
             INSTALL_PACKAGES apt-transport-tor
@@ -120,7 +120,7 @@ function create_repo_sources {
 
     if [ -f /etc/apt/sources.list ]; then
         # if this is raspbian then skip the replacement and hope for the best
-        if grep -q "raspbian" /etc/apt/sources.list; then
+	if grep -q 'Raspberry' /proc/device-tree/model; then
             # raspbian_add_backports
             $UPDATE_PACKAGES
             INSTALL_PACKAGES apt-transport-https

@@ -1541,13 +1541,11 @@ function test_stig {
         unexpected_removables=
         if [ "$device_count" -eq 1 ];then
             # we expect rpi to be running from a usb drive
-            if ! grep -q "raspbian" /etc/apt/sources.list; then
+	    if ! grep -q 'Raspberry' /proc/device-tree/model; then
                 unexpected_removables=1
             fi
         else
-            if ! grep -q "raspbian" /etc/apt/sources.list; then
-                unexpected_removables=1
-            fi
+            unexpected_removables=1
         fi
         if [ $unexpected_removables ]; then
             bash $STIG_TESTS_DIR/check-removable.sh >/dev/null 2>&1 &

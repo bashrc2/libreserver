@@ -62,7 +62,7 @@ function addremove_check_disk_space {
     test_drive=/dev/sda2
 
     # if this is raspbian running from usb drive
-    if grep -q 'raspbian' /etc/apt/sources.list; then
+    if grep -q 'Raspberry' /proc/device-tree/model; then
         # no microSD connected
         if [ ! -f /dev/mmcblk0p1 ]; then
             test_drive=/dev/root

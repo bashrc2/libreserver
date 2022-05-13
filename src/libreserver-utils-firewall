@@ -115,7 +115,7 @@ function block_microsoft_on_raspbian {
     # See https://www.cyberciti.biz/linux-news/
     # heads-up-microsoft-repo-secretly-installed-on-all-
     # raspberry-pis-linux-os/
-    if ! grep -q 'raspbian' /etc/apt/sources.list; then
+    if ! grep -q 'Raspberry' /proc/device-tree/model; then
         return
     fi
     if ! grep -q 'packages.microsoft.com' /etc/hosts; then
