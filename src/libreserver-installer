@@ -147,12 +147,12 @@ bridgeslist_file="$webadmin_install_dir/.bridgeslist.txt"
 INSTALL_DIR=/root/build
 webadmin_user='admin'
 webadmin_temp_password_file=/root/.temp_webadmin_password
-installer_script=/root/.libreserver_installer.sh
-distro_factory_reset_script=/root/.libreserver_distro_factory_reset.sh
-install_app_script=/root/.libreserver_install_app.sh
-changing_domain_script=/root/.libreserver_change_domain.sh
-currently_installing_app_domain=/root/.libreserver_currently_installing_app_domain
-currently_installing_app_name=/root/.libreserver_currently_installing_app_name
+installer_script=/root/.${PROJECT_NAME}_installer.sh
+distro_factory_reset_script=/root/.${PROJECT_NAME}_distro_factory_reset.sh
+install_app_script=/root/.${PROJECT_NAME}_install_app.sh
+changing_domain_script=/root/.${PROJECT_NAME}_change_domain.sh
+currently_installing_app_domain=/root/.${PROJECT_NAME}_currently_installing_app_domain
+currently_installing_app_name=/root/.${PROJECT_NAME}_currently_installing_app_name
 
 # Used to initiate automatic backups
 webadmin_prev_hour=99
@@ -1405,7 +1405,7 @@ function check_for_changed_email_domain {
         if [ ! -f /usr/local/bin/myqr ]; then
             echo -n "${qrcode_email}" | qrencode -t PNG -o "$email_qrcode_image"
         else
-            myqr "${qrcode_email}" -p /root/libreserver/img/android-app/xmpp.png -c -v 8 -n "$email_qrcode_image"
+            myqr "${qrcode_email}" -p /root/${PROJECT_NAME}/img/android-app/xmpp.png -c -v 8 -n "$email_qrcode_image"
         fi
     done
 }
@@ -1709,7 +1709,7 @@ function check_for_existing_processes {
       echo '    fi';
       echo '}';
       echo '';
-      echo 'exit_if_process_is_running libreserver_installer.sh';
+      echo "exit_if_process_is_running ${PROJECT_NAME}_installer.sh";
       echo 'exit_if_process_is_running webadmin_factory_reset.sh';
       echo 'exit_if_process_is_running webadmin_appsettings.sh';
       echo 'exit_if_process_is_running webadmin_upgrade.sh';
@@ -1947,10 +1947,10 @@ function after_setup_has_finished {
     increment_install_progress
 
     # remove default user
-    if [ -d /home/libreserver ]; then
-        userdel -r libreserver
-        if [ -d /home/libreserver ]; then
-            rm -rf /home/libreserver
+    if [ -d /home/${PROJECT_NAME} ]; then
+        userdel -r ${PROJECT_NAME}
+        if [ -d /home/${PROJECT_NAME} ]; then
+            rm -rf /home/${PROJECT_NAME}
         fi
     fi
 
@@ -2623,7 +2623,7 @@ function backup_and_restore_keys {
 
 function is_valid_user {
     USRNAME="$1"
-    if [[ "$USRNAME" != "turtl" && "$USRNAME" != "znc" && "$USRNAME" != "pihole" && "$USRNAME" != "libreserver" && "$USRNAME" != "go" && "$USRNAME" != "gogs" && "$USRNAME" != "gemini" && "$USRNAME" != "git" && "$USRNAME" != "sync" && "$USRNAME" != "pi" ]]; then
+    if [[ "$USRNAME" != "turtl" && "$USRNAME" != "znc" && "$USRNAME" != "pihole" && "$USRNAME" != "${PROJECT_NAME}" && "$USRNAME" != "go" && "$USRNAME" != "gogs" && "$USRNAME" != "gemini" && "$USRNAME" != "git" && "$USRNAME" != "sync" && "$USRNAME" != "pi" ]]; then
         echo "1"
     else
         echo "0"
@@ -3153,7 +3153,7 @@ function update_icecast {
                         chown -R liquidsoapuser:icecast $ICECAST_DIR
                         chown -R liquidsoapuser:icecast $ICECAST_JINGLES
 
-                        icecast_import_subject=$'[LibreServer] Playlist imported'
+                        icecast_import_subject=$"[${PROJECT_NAME}] Playlist imported"
                         icecast_import_msg=$'Playlist was imported from USB drive'
 
                         start_icecast
@@ -4071,7 +4071,7 @@ function create_scuttlebot_invite {
             if [ ! -f /usr/local/bin/myqr ]; then
                 echo -n "$invite_string" | qrencode -t PNG -o "$webadmin_install_dir/app_qrcode_scuttlebot.png"
             else
-                myqr "$invite_string" -p /root/libreserver/img/android-app/scuttlebot.png -c -n "$webadmin_install_dir/app_qrcode_scuttlebot.png"
+                myqr "$invite_string" -p /root/${PROJECT_NAME}/img/android-app/scuttlebot.png -c -n "$webadmin_install_dir/app_qrcode_scuttlebot.png"
             fi
             echo -n "$invite_string" > /etc/scuttlebot/.current_invite.txt
         fi
@@ -5014,7 +5014,7 @@ do
 
                 # do initial stig tests
                 if [ ! -f /root/.initial_stig_tests ]; then
-                    /usr/local/bin/libreserver-tests --stig fix
+                    /usr/local/bin/${PROJECT_NAME}-tests --stig fix
                     touch /root/.initial_stig_tests
                 fi
             fi
