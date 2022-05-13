@@ -175,6 +175,7 @@ backup_keys_file="$webadmin_install_dir/.start_backup_keys"
 restore_file="$webadmin_install_dir/.start_restore"
 restore_keys_file="$webadmin_install_dir/.start_restore_keys"
 format_file="$webadmin_install_dir/.start_format"
+appslist_filename="$webadmin_install_dir/apps.html"
 
 # These files contain the percentage progress
 backup_progress_file=/root/.backup_progress.txt
@@ -1334,8 +1335,6 @@ function web_admin_create_add_apps {
 }
 
 function web_admin_create_installed_apps {
-    appslist_filename="$webadmin_install_dir/apps.html"
-
     appslist_template_filename="$webadmin_install_dir/apps_template.html"
     icons_dir="$webadmin_install_dir/icons"
     pending_removes="$webadmin_install_dir/pending_removes.txt"
@@ -4991,7 +4990,7 @@ do
         check_nginx_initial_failure
         web_admin_setup_login
         if [ -d "$webadmin_install_dir" ]; then
-            if [ -f "$setup_file" ]; then
+            if [ -f "$setup_file" || ! -f ${appslist_filename} ]; then
                 update_progress_bar
                 before_setup_runs
                 check_install_command_state
@@ -5000,6 +4999,16 @@ do
             else
                 if [ $install_state -eq $INSTALL_STATE_COMMAND_SUCCESS ]; then
                     installer_main_loop
+                fi
+                # create screens after first install
+                if [ ! -f "$appslist_filename" ]; then
+                    web_admin_create_installed_apps
+                fi
+                if [ ! -f "$webadmin_install_dir/users.html" ]; then
+                    web_admin_create_users
+                fi
+                if [ ! -f "$webadmin_install_dir/apps_add.html" ]; then
+                    web_admin_create_add_apps
                 fi
             fi
         fi
