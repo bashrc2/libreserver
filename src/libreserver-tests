@@ -1545,7 +1545,9 @@ function test_stig {
                 unexpected_removables=1
             fi
         else
-            unexpected_removables=1
+            if ! grep -q "raspbian" /etc/apt/sources.list; then
+                unexpected_removables=1
+            fi
         fi
         if [ $unexpected_removables ]; then
             bash $STIG_TESTS_DIR/check-removable.sh >/dev/null 2>&1 &
