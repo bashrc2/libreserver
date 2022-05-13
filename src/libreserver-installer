@@ -5014,6 +5014,7 @@ do
 
                 # do initial stig tests
                 if [ ! -f /root/.initial_stig_tests ]; then
+                    awk -i inplace '!seen[$0]++' /etc/ssh/sshd_config
                     /usr/local/bin/${PROJECT_NAME}-tests --stig fix
                     touch /root/.initial_stig_tests
                 fi
