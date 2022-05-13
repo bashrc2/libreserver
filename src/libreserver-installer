@@ -4990,7 +4990,7 @@ do
         check_nginx_initial_failure
         web_admin_setup_login
         if [ -d "$webadmin_install_dir" ]; then
-            if [ -f "$setup_file" || ! -f ${appslist_filename} ]; then
+            if [ -f "$setup_file" ]; then
                 update_progress_bar
                 before_setup_runs
                 check_install_command_state
