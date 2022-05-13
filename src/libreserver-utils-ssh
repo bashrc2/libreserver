@@ -324,7 +324,11 @@ function lockdown_ssh {
     fi
 
     # avoid duplicate lines
-    awk -i inplace '!seen[$0]++' /etc/ssh/sshd_config
+    /usr/bin/awk '!seen[$0]++' /etc/ssh/sshd_config > /etc/ssh/sshd_config.new
+    if [ -f /etc/ssh/sshd_config.new ]; then
+        cp /etc/ssh/sshd_config.new /etc/ssh/sshd_config
+        rm /etc/ssh/sshd_config.new
+    fi
 }
 
 function configure_ssh {
