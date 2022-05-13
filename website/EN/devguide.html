@@ -36,11 +36,13 @@ LibreServer consists almost entirely of bash scripts, with some html, css and ph
 </pre>
 
 <p>
-  Mount the rootfs on the USB drive, then add some scripts.
+  Mount the boot and rootfs partitions on the USB drive, then add some scripts.
 </p>
 
 <pre>
   sudo su
+  cd /media/yourusername/boot
+  touch ssh
   cd /media/yourusername/rootfs
   nano etc/profile.d/libreserver.sh
 </pre>
