@@ -5000,6 +5000,7 @@ do
                 if [ $install_state -eq $INSTALL_STATE_COMMAND_SUCCESS ]; then
                     installer_main_loop
                 fi
+
                 # create screens after first install
                 if [ ! -f "$appslist_filename" ]; then
                     web_admin_create_installed_apps
@@ -5009,6 +5010,12 @@ do
                 fi
                 if [ ! -f "$webadmin_install_dir/apps_add.html" ]; then
                     web_admin_create_add_apps
+                fi
+
+                # do initial stig tests
+                if [ ! -f /root/.initial_stig_tests ]; then
+                    /usr/local/bin/libreserver-tests --stig fix
+                    touch /root/.initial_stig_tests
                 fi
             fi
         fi
