@@ -1,8 +1,8 @@
 #!/bin/bash
-#  _    _ _            ___                      
-# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
-# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # Performs a factory reset
 #
@@ -428,6 +428,12 @@ fi
 if [ -d /root/dkim ]; then
     echo "Removing DKIM backup keys" >> "$webadmin_install_dir/log.txt"
     rm -rf /root/dkim
+fi
+
+if [ -f /etc/machine-id ]; then
+    echo "Removing machine-id" >> "$webadmin_install_dir/log.txt"
+    rm /etc/machine-id
+    touch /etc/machine-id
 fi
 
 # reset letsencrypt to remove any certs
