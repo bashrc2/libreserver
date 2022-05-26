@@ -215,7 +215,7 @@ Out of fashion but still working computer hardware tends to be cheap and readily
 
 ## Can I add more members to the system?
 
-Yes. LibreServer can support a small number of members, for a "friends and family" type of household installation. This gives them access to an email account, XMPP, VoIP, NextCloud and possibly other apps which have been installed.
+Yes. LibreServer can support a small number of members, for a "friends and family" type of household installation. This gives them access to an email account, XMPP, VoIP, Nextcloud and possibly other apps which have been installed.
 
 It's simple to add new members via the web interface, which on the local network can be accessed via http://libreserver/admin, or via its onion address remotely.
 

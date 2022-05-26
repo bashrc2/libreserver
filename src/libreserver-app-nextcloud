@@ -252,7 +252,7 @@ function install_interactive_nextcloud {
         ONION_ONLY='no'
     fi
 
-    dialog --title $"Enable NextCloud server side encryption" \
+    dialog --title $"Enable Nextcloud server side encryption" \
            --backtitle $"LibreServer Configuration" \
            --yesno $"\\nDo you want to enable server side encryption. On ARM or older x86 systems, especially without HRNG, this may make performance excessively slow?" 10 60
     sel=$?
@@ -271,8 +271,8 @@ function install_interactive_nextcloud {
         do
             data=$(mktemp 2>/dev/null)
             dialog --backtitle $"LibreServer Configuration" \
-                   --title $"NextCloud Configuration" \
-                   --form $"\\nPlease enter your NextCloud details.\\n\\nIMPORTANT: This should be a domain name which is supported by Let's Encrypt:" 13 65 2 \
+                   --title $"Nextcloud Configuration" \
+                   --form $"\\nPlease enter your Nextcloud details.\\n\\nIMPORTANT: This should be a domain name which is supported by Let's Encrypt:" 13 65 2 \
                    $"Domain:" 1 1 "$(grep 'NEXTCLOUD_DOMAIN_NAME' temp.cfg | awk -F '=' '{print $2}')" 1 15 40 40 \
                    2> "$data"
             sel=$?
@@ -833,7 +833,7 @@ function install_nextcloud_base {
     sed -i 's|limit_conn conn_limit_per_ip.*|limit_conn conn_limit_per_ip 100;|g' "${nextcloud_nginx_site}"
     sed -i 's|limit_req zone=.*|limit_req zone=req_limit_per_ip burst=100 nodelay;|g' "${nextcloud_nginx_site}"
 
-    # NextCloud doesn't like content-security-policy at all
+    # Nextcloud doesn't like content-security-policy at all
     sed -i '/Content-Security-Policy/d' "${nextcloud_nginx_site}"
 
     increment_app_install_progress

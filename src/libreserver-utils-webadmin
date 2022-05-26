@@ -506,7 +506,7 @@ function web_admin_create_users {
             notification_method_filename="/home/${USERNAME}/.notify"
             notification_selected=
             if [ $can_notify_by_nextcloud ]; then
-                sed -i '/option value="email"/a <option value="nextcloud">NextCloud</option>' "$userfile"
+                sed -i '/option value="email"/a <option value="nextcloud">Nextcloud</option>' "$userfile"
                 if [ -f "$notification_method_filename" ]; then
                     if grep -q 'nextcloud' "$notification_method_filename"; then
                         sed -i 's|value="nextcloud">|value="nextcloud" selected>|g' "$userfile"
