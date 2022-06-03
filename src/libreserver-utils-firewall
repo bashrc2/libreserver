@@ -124,16 +124,16 @@ function block_microsoft_on_raspbian {
     apt-mark hold raspberrypi-sys-mods
     MALICIOUS_GPG_KEY=/etc/apt/trusted.gpg.d/microsoft.gpg
     if [ -f "${MALICIOUS_GPG_KEY}" ]; then
-	if [ -s "${MALICIOUS_GPG_KEY}" ]; then	
+  if [ -s "${MALICIOUS_GPG_KEY}" ]; then
             echo "microsoft.gpg found. Removing it by clearing the contents of the file."
             chattr -i "${MALICIOUS_GPG_KEY}"
             rm -vf "${MALICIOUS_GPG_KEY}"
             touch "${MALICIOUS_GPG_KEY}"
             chattr +i "${MALICIOUS_GPG_KEY}"
             lsattr "${MALICIOUS_GPG_KEY}"
-	else
-	    echo "Malicious microsoft gpg key neutralized"
-	fi
+  else
+      echo "Malicious microsoft gpg key neutralized"
+  fi
     fi
 }
 
@@ -264,6 +264,7 @@ function configure_firewall_base {
       echo '        tcp flags & (syn|rst) == (syn|rst) drop';
       echo '        tcp flags & (fin|syn|rst|psh|ack|urg) < (fin) drop';
       echo '        tcp flags & (fin|syn|rst|psh|ack|urg) == (fin|psh|urg) drop';
+      echo '        tcp flags syn tcp option maxseg size 1-536 counter drop';
       echo '        ip frag-off & 8191 != 0 counter packets 0 bytes 0 drop';
       echo '';
       echo '        ip saddr @blackhole counter packets 0 bytes 0 drop comment "portscan"';
