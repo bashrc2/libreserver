@@ -6,6 +6,11 @@
 #
 # Turtl notes server
 #
+# The server app works, but the desktop and android clients have hardcoded
+# root certificates which don't work with lets encrypt. There is a hacky
+# workaround with certbot, but it doesn't seem like a good idea to support
+# that. Until the clients are updated this app will be deprecated.
+#
 # License
 # =======
 #
@@ -24,7 +29,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VARIANTS='full full-vim full-micro'
+VARIANTS=''
 
 APP_CATEGORY=publishing
 
