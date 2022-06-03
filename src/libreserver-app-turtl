@@ -42,7 +42,7 @@ TURTL_DOMAIN_NAME=
 TURTL_CODE=
 TURTL_ONION_PORT=9473
 TURTL_REPO="https://github.com/turtl/server"
-TURTL_COMMIT='4faa272e8a274582327ef3f2dcb18caf2124eeff'
+TURTL_COMMIT='0e59ee0a47fc5937600999d14ceb1aca6392aec8'
 TURTL_PORT_INTERNAL=8181
 
 # These parameters are used by the FreedomBox mobile app and web UI
