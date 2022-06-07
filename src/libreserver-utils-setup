@@ -757,6 +757,7 @@ function lockdown_permissions {
     chown -f root:root /etc/motd /etc/issue* 2> /dev/null
     chmod -f 0444 /etc/motd /etc/issue* 2> /dev/null
     chmod -R 644 /etc/torrc.d
+    chown root:root /dev/null
     lockdown_ssh
 }
 
