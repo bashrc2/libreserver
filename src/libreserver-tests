@@ -1541,8 +1541,10 @@ function test_stig {
         unexpected_removables=
         if [ "$device_count" -eq 1 ];then
             # we expect rpi to be running from a usb drive
-	    if ! grep -q 'Raspberry' /proc/device-tree/model; then
-                unexpected_removables=1
+            if [ -f /proc/device-tree/model ]; then
+	              if ! grep -q 'Raspberry' /proc/device-tree/model; then
+                    unexpected_removables=1
+                fi
             fi
         else
             unexpected_removables=1

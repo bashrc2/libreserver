@@ -1,8 +1,8 @@
 #!/bin/bash
-#  _    _ _            ___                      
-# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
-# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # Add or remove apps. Called from addremove command.
 #
@@ -62,17 +62,19 @@ function addremove_check_disk_space {
     test_drive=/dev/sda2
 
     # if this is raspbian running from usb drive
-    if grep -q 'Raspberry' /proc/device-tree/model; then
-        # no microSD connected
-        if [ ! -f /dev/mmcblk0p1 ]; then
-            test_drive=/dev/root
-            backup_drive=/dev/sdb1
-            if grep -q "USB_DRIVE=" "${CONFIGURATION_FILE}"; then
-                if ! grep -q "USB_DRIVE=${backup_drive}" "${CONFIGURATION_FILE}"; then
-                    sed -i "s|USB_DRIVE=.*|USB_DRIVE=${backup_drive}|g" "${CONFIGURATION_FILE}"
+    if [ -f /proc/device-tree/model ]; then
+        if grep -q 'Raspberry' /proc/device-tree/model; then
+            # no microSD connected
+            if [ ! -f /dev/mmcblk0p1 ]; then
+                test_drive=/dev/root
+                backup_drive=/dev/sdb1
+                if grep -q "USB_DRIVE=" "${CONFIGURATION_FILE}"; then
+                    if ! grep -q "USB_DRIVE=${backup_drive}" "${CONFIGURATION_FILE}"; then
+                        sed -i "s|USB_DRIVE=.*|USB_DRIVE=${backup_drive}|g" "${CONFIGURATION_FILE}"
+                    fi
+                else
+                    echo "USB_DRIVE=${backup_drive}" >> "${CONFIGURATION_FILE}"
                 fi
-            else
-                echo "USB_DRIVE=${backup_drive}" >> "${CONFIGURATION_FILE}"
             fi
         fi
     fi

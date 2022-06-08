@@ -1,8 +1,8 @@
 #!/bin/bash
-#  _    _ _            ___                      
-# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
-# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # Functions to set repositories
 #
@@ -52,8 +52,10 @@ function image_create_tor_repo_sources {
 }
 
 function raspbian_add_backports {
-    if ! grep -q 'Raspberry' /proc/device-tree/model; then
-        return
+    if [ -f /proc/device-tree/model ]; then
+        if ! grep -q 'Raspberry' /proc/device-tree/model; then
+            return
+        fi
     fi
     if ! grep -q "${DEBIAN_VERSION}-backports" /etc/apt/sources.list; then
         echo "deb http://${DEBIAN_REPO}/debian ${DEBIAN_VERSION}-backports main contrib" >> /etc/apt/sources.list
@@ -85,12 +87,14 @@ function create_tor_repo_sources {
 
     if [ -f /etc/apt/sources.list ]; then
         # if this is raspbian then skip the replacement and hope for the best
-	if grep -q 'Raspberry' /proc/device-tree/model; then
-            # raspbian_add_backports
-            $UPDATE_PACKAGES
-            INSTALL_PACKAGES apt-transport-tor
-            mark_completed "${FUNCNAME[0]}"
-            return
+        if [ -f /proc/device-tree/model ]; then
+            if grep -q 'Raspberry' /proc/device-tree/model; then
+                # raspbian_add_backports
+                $UPDATE_PACKAGES
+                INSTALL_PACKAGES apt-transport-tor
+                mark_completed "${FUNCNAME[0]}"
+                return
+            fi
         fi
     fi
 
@@ -102,10 +106,10 @@ function create_tor_repo_sources {
 
 function create_repo_sources {
     if grep -q "security.debian.org/ " /etc/apt/sources.list; then
-	sed -i "s|security.debian.org/ .*|deb.debian.org/debian-security ${DEBIAN_VERSION}-security main contrib|g" /etc/apt/sources.list
+  sed -i "s|security.debian.org/ .*|deb.debian.org/debian-security ${DEBIAN_VERSION}-security main contrib|g" /etc/apt/sources.list
     fi
     if grep -q "# deb https://deb.debian.org/debian-security" /etc/apt/sources.list; then
-	sed -i "s|# deb https://deb.debian.org/debian-security|deb https://deb.debian.org/debian-security|g" /etc/apt/sources.list
+  sed -i "s|# deb https://deb.debian.org/debian-security|deb https://deb.debian.org/debian-security|g" /etc/apt/sources.list
     fi
     #if [[ "$ONION_ONLY" != 'no' ]]; then
     #    create_tor_repo_sources
@@ -120,18 +124,20 @@ function create_repo_sources {
 
     if [ -f /etc/apt/sources.list ]; then
         # if this is raspbian then skip the replacement and hope for the best
-	if grep -q 'Raspberry' /proc/device-tree/model; then
-            # raspbian_add_backports
-            $UPDATE_PACKAGES
-            INSTALL_PACKAGES apt-transport-https
-            mark_completed "${FUNCNAME[0]}"
-            return
+        if [ -f /proc/device-tree/model ]; then
+            if grep -q 'Raspberry' /proc/device-tree/model; then
+                # raspbian_add_backports
+                $UPDATE_PACKAGES
+                INSTALL_PACKAGES apt-transport-https
+                mark_completed "${FUNCNAME[0]}"
+                return
+            fi
         fi
     fi
-    
+
     if [ ! -f /etc/apt/sources.list.old ]; then
-	# keep a copy of the original sources
-	cp /etc/apt/sources.list /etc/apt/sources.list.old
+  # keep a copy of the original sources
+  cp /etc/apt/sources.list /etc/apt/sources.list.old
     fi
     { echo "deb http://${DEBIAN_REPO}/debian/ ${DEBIAN_VERSION} main contrib";
       echo "deb-src http://${DEBIAN_REPO}/debian/ ${DEBIAN_VERSION} main contrib";

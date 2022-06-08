@@ -1791,17 +1791,19 @@ function performance_benchmarks {
     test_drive=/dev/sda2
 
     # if this is raspbian running from usb drive
-    if grep -q 'Raspberry' /proc/device-tree/model; then
-        # no microSD connected
-        if [ ! -f /dev/mmcblk0p1 ]; then
-            test_drive=/dev/root
-            backup_drive=/dev/sdb1
-            if grep -q "USB_DRIVE=" "${CONFIGURATION_FILE}"; then
-                if ! grep -q "USB_DRIVE=${backup_drive}" "${CONFIGURATION_FILE}"; then
-                    sed -i "s|USB_DRIVE=.*|USB_DRIVE=${backup_drive}|g" "${CONFIGURATION_FILE}"
+    if [ -f /proc/device-tree/model ]; then
+        if grep -q 'Raspberry' /proc/device-tree/model; then
+            # no microSD connected
+            if [ ! -f /dev/mmcblk0p1 ]; then
+                test_drive=/dev/root
+                backup_drive=/dev/sdb1
+                if grep -q "USB_DRIVE=" "${CONFIGURATION_FILE}"; then
+                    if ! grep -q "USB_DRIVE=${backup_drive}" "${CONFIGURATION_FILE}"; then
+                        sed -i "s|USB_DRIVE=.*|USB_DRIVE=${backup_drive}|g" "${CONFIGURATION_FILE}"
+                    fi
+                else
+                    echo "USB_DRIVE=${backup_drive}" >> "${CONFIGURATION_FILE}"
                 fi
-            else
-                echo "USB_DRIVE=${backup_drive}" >> "${CONFIGURATION_FILE}"
             fi
         fi
     fi

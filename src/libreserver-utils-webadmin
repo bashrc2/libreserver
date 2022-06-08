@@ -1618,18 +1618,20 @@ function webadmin_update_system_monitor {
     io_test_drive=
 
     # if this is raspbian running from usb drive
-    if grep -q 'Raspberry' /proc/device-tree/model; then
-        # no microSD connected
-        if [ ! -f /dev/mmcblk0p1 ]; then
-            test_drive=/dev/root
-            io_test_drive=/dev/sda1
-            backup_drive=/dev/sdb1
-            if grep -q "USB_DRIVE=" "${CONFIGURATION_FILE}"; then
-                if ! grep -q "USB_DRIVE=${backup_drive}" "${CONFIGURATION_FILE}"; then
-                    sed -i "s|USB_DRIVE=.*|USB_DRIVE=${backup_drive}|g" "${CONFIGURATION_FILE}"
+    if [ -f /proc/device-tree/model ]; then
+        if grep -q 'Raspberry' /proc/device-tree/model; then
+            # no microSD connected
+            if [ ! -f /dev/mmcblk0p1 ]; then
+                test_drive=/dev/root
+                io_test_drive=/dev/sda1
+                backup_drive=/dev/sdb1
+                if grep -q "USB_DRIVE=" "${CONFIGURATION_FILE}"; then
+                    if ! grep -q "USB_DRIVE=${backup_drive}" "${CONFIGURATION_FILE}"; then
+                        sed -i "s|USB_DRIVE=.*|USB_DRIVE=${backup_drive}|g" "${CONFIGURATION_FILE}"
+                    fi
+                else
+                    echo "USB_DRIVE=${backup_drive}" >> "${CONFIGURATION_FILE}"
                 fi
-            else
-                echo "USB_DRIVE=${backup_drive}" >> "${CONFIGURATION_FILE}"
             fi
         fi
     fi
@@ -2327,7 +2329,7 @@ function install_web_admin_webmail {
     cp -r "/root/${PROJECT_NAME}/webadmin/EN/fonts" "/var/www/${local_hostname}/htdocs/mail/themes/css/"
 
     cp "/root/${PROJECT_NAME}/webadmin/images/logo_webmail.png" "/var/www/${local_hostname}/htdocs/mail/images/sm_logo.png"
-    
+
     replace_str='SquirrelMail version %s'
     replace_str_new="http://$(cat /var/lib/tor/hidden_service_webadmin/hostname)/mail"
 
