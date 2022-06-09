@@ -50,7 +50,7 @@ CRYPTPAD_BOWER_VERSION='1.8.12'
 
 cryptpad_variables=(ONION_ONLY
                     CRYPTPAD_DOMAIN_NAME
-		    MY_EMAIL_ADDRESS)
+        MY_EMAIL_ADDRESS)
 
 function cryptpad_setting_registration {
     allow_registrations="$1"
@@ -152,6 +152,11 @@ function cryptpad_generate_api_config {
 function upgrade_cryptpad {
     cryptpad_turn_off_signups
     cryptpad_evict_inactive_data
+
+    if grep -q "/api/(config|broadcast)" /etc/nginx/sites-available/cryptpad; then
+        sed -i 's|/api/(config|broadcast)|/api/|g' /etc/nginx/sites-available/cryptpad
+        systemctl restart nginx
+    fi
 
     CURR_CRYPTPAD_COMMIT=$(get_completion_param "cryptpad commit")
     if [[ "$CURR_CRYPTPAD_COMMIT" == "$CRYPTPAD_COMMIT" ]]; then
@@ -327,7 +332,7 @@ function cryptpad_create_config {
       echo "    logFeedback: false,";
       echo "    verbose: false,";
       echo '};'; } > "$cryptpad_prefix${CRYPTPAD_DIR}/config/config.js"
-    
+
     if [[ "$cryptpad_install_type" != "mesh" ]]; then
         chown cryptpad:cryptpad "$cryptpad_prefix${CRYPTPAD_DIR}/config/config.js"
     else
@@ -460,7 +465,7 @@ function install_cryptpad_main {
       echo "      try_files /customize/\$uri /customize.dist/\$uri;";
       echo '  }';
       echo '';
-      echo '  location ~ ^/api/(config|broadcast).*$ {';
+      echo '  location ~ ^/api/.*$ {';
       echo "      proxy_pass http://localhost:${CRYPTPAD_PORT};";
       echo "      proxy_set_header X-Real-IP \$remote_addr;";
       echo "      proxy_set_header Host \$host;";
