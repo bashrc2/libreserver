@@ -395,7 +395,7 @@ function install_cryptpad_main {
       echo '  error_page 404 /customize.dist/404.html;';
       echo '';
       echo "  set \$main_domain \"${CRYPTPAD_ONION_HOSTNAME}\";";
-      echo "    set \$sandbox_domain \"${CRYPTPAD_ONION_HOSTNAME}\";";
+      echo "  set \$sandbox_domain \"${CRYPTPAD_ONION_HOSTNAME}\";";
       echo '';
       echo "  set \$api_domain \"${CRYPTPAD_ONION_HOSTNAME}\";";
       echo "  set \$files_domain \"${CRYPTPAD_ONION_HOSTNAME}\";";
