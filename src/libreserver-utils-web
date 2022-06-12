@@ -1189,7 +1189,7 @@ function create_default_web_site {
               echo '  listen 443 ssl;';
               echo '  #listen [::]:443 ssl;';
               echo "  server_name $curr_default_domain_name;";
-	      echo '  server_tokens off;';
+	            echo '  server_tokens off;';
               echo '';
               echo '  # Security'; } >> "$nginx_site"
             function_check nginx_ssl
@@ -1227,7 +1227,7 @@ function create_default_web_site {
         { echo 'server {';
           echo "    listen 127.0.0.1:$DEFAULT_DOMAIN_ONION_PORT default_server;";
           echo "    server_name $curr_default_domain_name;";
-	  echo '    server_tokens off;';
+	        echo '    server_tokens off;';
           echo ''; } >> "$nginx_site"
         function_check nginx_security_options
         nginx_security_options "$curr_default_domain_name"
