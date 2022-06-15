@@ -908,6 +908,17 @@ function setup_powerline {
     fi
 }
 
+function harden_turbo {
+    # https://lwn.net/Articles/897914/
+    if [ -f /sys/devices/system/cpu/intel_pstate/no_turbo ]; then
+        echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo
+        if [ ! -f /etc/udev/rules.d/cpu.rules ]; then
+            echo "KERNEL==\"cpu\", SUBSYSTEM==\"event_source\", ACTION==\"add\", RUN+=\"/bin/sh -c 'echo 1 | tee /sys/devices/system/cpu/intel_pstate/no_turbo'\"" > /etc/udev/rules.d/cpu.rules
+            udevadm control --reload-rules
+        fi
+    fi
+}
+
 function harden_bpf {
     # https://www.zerodayinitiative.com/advisories/ZDI-20-350
     # https://lwn.net/Articles/660331
@@ -1273,6 +1284,9 @@ function setup_utils {
 
     function_check harden_bpf
     harden_bpf
+
+    function_check harden_turbo
+    harden_turbo
 
     function_check sack_panic_mitigation
     sack_panic_mitigation
