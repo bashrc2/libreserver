@@ -68,6 +68,10 @@ gemini_variables=(ONION_ONLY
                   MY_USERNAME)
 
 function install_gemini_client {
+    if [ ! -d "$INSTALL_DIR" ]; then
+        mkdir -p "$INSTALL_DIR"
+    fi
+
     if [ -d "$INSTALL_DIR/leo" ]; then
         cd "$INSTALL_DIR/leo" || return
         echo 'Upgrading gemini client'
