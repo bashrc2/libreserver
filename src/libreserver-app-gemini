@@ -60,10 +60,34 @@ GEMINI_MOBILE_APP_URL=
 # Any ports which should be added to the firewall, separated by commas
 GEMINI_FIREWALL_PORTS="${GEMINI_PORT}"
 
+GEMINI_CLIENT_REPO='https://github.com/bashrc2/leo'
+
 gemini_variables=(ONION_ONLY
                   DEFAULT_DOMAIN_NAME
                   DDNS_PROVIDER
                   MY_USERNAME)
+
+function install_gemini_client {
+    if [ -d "$INSTALL_DIR/leo" ]; then
+        cd "$INSTALL_DIR/leo" || return
+        echo 'Upgrading gemini client'
+        git stash
+        git pull
+        cp "$INSTALL_DIR/leo/leo" "/usr/bin/leo"
+        chmod +x "/usr/bin/leo"
+        return
+    fi
+
+    echo 'Installing gemini client'
+    function_check git_clone
+    git_clone "$GEMINI_CLIENT_REPO" "$INSTALL_DIR"
+    if [ ! -d "$INSTALL_DIR/leo" ]; then
+        echo 'Unable to clone gemini client repo'
+        return
+    fi
+    cp "$INSTALL_DIR/leo/leo" "/usr/bin/leo"
+    chmod +x "/usr/bin/leo"
+}
 
 function convert_blog_to_gemini {
     remove_gemini_blog_cron=
@@ -153,6 +177,7 @@ function upgrade_distro_gemini {
 }
 
 function upgrade_gemini {
+    install_gemini_client
     convert_blog_to_gemini
     cd "/home/gemini" || return
     GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/gemini PATH=$PATH:/home/gemini:/home/go/go${GO_VERSION}/bin go get -u -v $GEMINI_PATH
@@ -407,6 +432,8 @@ function install_gemini {
     increment_app_install_progress
 
     convert_blog_to_gemini
+
+    install_gemini_client
 
     APP_INSTALLED=1
 }
