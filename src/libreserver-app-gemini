@@ -61,11 +61,20 @@ GEMINI_MOBILE_APP_URL=
 GEMINI_FIREWALL_PORTS="${GEMINI_PORT}"
 
 GEMINI_CLIENT_REPO='https://github.com/bashrc2/leo'
+DEFAULT_GEMINI_URL='gemini.circumlunar.space'
 
 gemini_variables=(ONION_ONLY
                   DEFAULT_DOMAIN_NAME
                   DDNS_PROVIDER
                   MY_USERNAME)
+
+function run_client_gemini {
+    if [ ! -f /usr/bin/leo ]; then
+        return
+    fi
+    clear
+    torify /usr/bin/leo --url gemini://${DEFAULT_GEMINI_URL}
+}
 
 function install_gemini_client {
     if [ ! -d "$INSTALL_DIR" ]; then
