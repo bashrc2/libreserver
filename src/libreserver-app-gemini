@@ -93,7 +93,7 @@ function install_gemini_client {
 
     echo 'Installing gemini client'
     function_check git_clone
-    git_clone "$GEMINI_CLIENT_REPO" "$INSTALL_DIR"
+    git_clone "$GEMINI_CLIENT_REPO" "$INSTALL_DIR/leo"
     if [ ! -d "$INSTALL_DIR/leo" ]; then
         echo 'Unable to clone gemini client repo'
         return
