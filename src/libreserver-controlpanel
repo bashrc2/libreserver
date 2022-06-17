@@ -277,7 +277,11 @@ function show_domains {
                         icann_address='-'
                     fi
                 fi
-                onion_address=$(get_app_onion_address "$app_name")
+                curr_app_name="$app_name"
+                if [[ "${curr_app_name}" == 'gemini' ]]; then
+                    curr_app_name="email"
+                fi
+                onion_address=$(get_app_onion_address "${curr_app_name}")
                 if [ ${#onion_address} -eq 0 ]; then
                     onion_address="-"
                 fi
