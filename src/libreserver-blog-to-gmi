@@ -240,7 +240,7 @@ def get_atom_feed(rss_str: str, gemini_domain: str) -> str:
 
         result += '  <entry>\n'
         result += '    <title>' + title + '</title>\n'
-        result += '    <link>' + link + '</link>\n'
+        result += '    <link rel="alternate" href="' + link + '"/>\n'
         result += '    <id>' + link + '</id>\n'
         result += '    <updated>' + pub_date + '</updated>\n'
         result += '  </entry>\n'
