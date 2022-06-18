@@ -332,3 +332,16 @@ with open('/var/www/' + args.blogdomain + '/htdocs/rss.txt', "w",
 indexStr = get_blog_index(RSS_STR2, args.geminidomain)
 with open(args.geminidir + '/blog/index.gmi', "w", encoding='utf-8') as fout:
     fout.write(indexStr)
+
+# add blog index to the main gemini site index
+main_index_file = args.geminidir + '/index.gmi'
+if os.path.isfile(main_index_file):
+    INDEX_CONTENT = ''
+    with open(main_index_file, 'r', encoding='utf-8') as fp_index:
+        INDEX_CONTENT = fp_index.read()
+    if 'blog/index.gmi' not in INDEX_CONTENT:
+        if not INDEX_CONTENT.endswith('\n'):
+            INDEX_CONTENT += '\n'
+        INDEX_CONTENT += '=> ' + args.geminidomain + '/blog/index.gmi Blog\n'
+        with open(main_index_file, 'w+', encoding='utf-8') as fp_index:
+            fp_index.write(INDEX_CONTENT)
