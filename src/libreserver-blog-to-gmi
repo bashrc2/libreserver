@@ -210,6 +210,36 @@ def get_rss3_feed(rss_str: str) -> str:
     return result
 
 
+def get_atom_feed(rss_str: str) -> str:
+    result = '<?xml version="1.0" encoding="utf-8"?>\n'
+    result += '<feed xmlns="http://www.w3.org/2005/Atom">\n'
+    titles = rss_str.split('<title>')
+    for line in titles:
+        if '<link>' not in line:
+            continue
+        if '</title>' not in line:
+            continue
+        if '</pubDate>' not in line:
+            continue
+        title = line.split('</title>')[0]
+        link = line.split('<link>')[1]
+        link = link.split('</link>')[0]
+        pub_date = line.split('<pubDate>')[1]
+        pub_date = pub_date.split('</pubDate>')[0]
+        guid = line.split('<guid')[1]
+        guid = guid.split('>')[1]
+        guid = guid.split('<')[0]
+
+        result += '<entry>\n'
+        result += '  <title>' + title + '</title>\n'
+        result += '  <link>' + link + '</link>\n'
+        result += '  <id>' + guid + '</id>\n'
+        result += '  <published>' + pub_date + '</published>\n'
+        result += '</entry>\n'
+    result += '</feed>\n'
+    return result
+
+
 parser = argparse.ArgumentParser(description='Bludit to Gemini converter')
 parser.add_argument('-g', '--geminidir', dest='geminidir', type=str,
                     default='/var/gemini',
@@ -257,6 +287,11 @@ with open(args.geminidir + '/rss.xml', "w", encoding='utf-8') as fout:
 rss3 = get_rss3_feed(RSS_STR2)
 with open(args.geminidir + '/rss.txt', "w", encoding='utf-8') as fout:
     fout.write(rss3)
+
+# write gemini atom feed
+ATOM_STR = get_atom_feed(RSS_STR2)
+with open(args.geminidir + '/atom.xml', "w", encoding='utf-8') as fout:
+    fout.write(ATOM_STR)
 
 # write Bludit RSS 3.0 feed
 if not args.blogdomain.endswith('.onion'):
