@@ -296,7 +296,8 @@ with open(rss_filename, "r", encoding='utf-8') as rssFile:
         # replace the blog onion address with the gemini onion address
         blog_onion_address = RSS_STR2.split('<link>http://', 1)[1]
         if '.onion' in blog_onion_address:
-            blog_onion_address = blog_onion_address.split('.onion')[0]
+            blog_onion_address = \
+                blog_onion_address.split('.onion')[0] + '.onion'
             RSS_STR2 = RSS_STR2.replace(blog_onion_address, args.geminidomain)
         RSS_STR2 = RSS_STR2.replace('.onion/', '.onion/blog/')
         RSS_STR2 = RSS_STR2.replace('<link>https://', '<link>gemini://')
@@ -329,9 +330,9 @@ with open('/var/www/' + args.blogdomain + '/htdocs/rss.txt', "w",
     fout.write(rss3)
 
 # create the index
-indexStr = get_blog_index(RSS_STR2, args.geminidomain)
+INDEX_STR = get_blog_index(RSS_STR2, args.geminidomain)
 with open(args.geminidir + '/blog/index.gmi', "w", encoding='utf-8') as fout:
-    fout.write(indexStr)
+    fout.write(INDEX_STR)
 
 # add blog index to the main gemini site index
 main_index_file = args.geminidir + '/index.gmi'
