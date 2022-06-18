@@ -474,6 +474,9 @@ function install_bludit {
     fi
     { echo "<?php defined('BLUDIT') or die('Bludit CMS.'); ?>";
       echo '{"numberOfItems":5,"position":0}'; } > "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs/bl-content/databases/plugins/rss/db.php"
+    if [ ! -d "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs/bl-content/workspaces/rss" ]; then
+        mkdir -p "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs/bl-content/workspaces/rss"
+    fi
     chown -R www-data:www-data "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs"
 
     convert_blog_to_gemini
