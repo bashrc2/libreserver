@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-#  _    _ _            ___                      
-# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
-# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # Script to convert bludit blog entries into gemini format
 #
@@ -30,130 +30,132 @@ import argparse
 from shutil import copyfile
 
 
-def getTextOnly(markdownStr: str) -> str:
+def get_text_only(markdown_str: str) -> str:
     ctr = 1
     result = ''
     state = 0
-    for ch in markdownStr:
-        if ch == '[':
+    for char in markdown_str:
+        if char == '[':
             state = 1
-        elif state == 1 and ch == ']':
+        elif state == 1 and char == ']':
             state = 2
-        elif state == 2 and ch == '(':
-            state = 3 
-        elif state == 3 and ch == ')':
+        elif state == 2 and char == '(':
+            state = 3
+        elif state == 3 and char == ')':
             result += ' [' + str(ctr) + ']'
             ctr += 1
             state = 0
         else:
             if state != 3:
-                result += ch
+                result += char
     result = result.replace('**', '')
     return result.strip()
 
 
-def getLinks(markdownStr: str) -> str:
-    linkStr = ''
-    result=[]
-    links = markdownStr.split('](')
+def get_links(markdown_str: str) -> str:
+    link_str = ''
+    result = []
+    links = markdown_str.split('](')
     for lnk in links:
         if ')' in lnk:
             url = lnk.split(')')[0]
             result.append(url)
 
     ctr = 0
-    links = markdownStr.split('[')
+    links = markdown_str.split('[')
     for lnk in links:
         if '](' in lnk:
-            linkName = lnk.split('](')[0]
-            linkStr += \
+            link_name = lnk.split('](')[0]
+            link_str += \
                 '=> ' + result[ctr] + \
                 ' [' + str(ctr + 1) + '] ' + \
-                linkName + '\n'
+                link_name + '\n'
             ctr += 1
-    return linkStr
+    return link_str
 
 
-def removeImageLinks(markdownStr: str) -> str:
-    if '<img src="' not in markdownStr:
-        return markdownStr
-    newMarkdownStr = markdownStr
-    images = markdownStr.split('<img src="')
-    for im in images:
-        if '>' in im:
-            url = '<img src="' + im.split('>')[0] + '>'
-            newMarkdownStr = newMarkdownStr.replace(url, '')
-    return newMarkdownStr.replace('  ', ' ')
+def remove_image_links(markdown_str: str) -> str:
+    if '<img src="' not in markdown_str:
+        return markdown_str
+    new_markdown_str = markdown_str
+    images = markdown_str.split('<img src="')
+    for im_str in images:
+        if '>' in im_str:
+            url = '<img src="' + im_str.split('>')[0] + '>'
+            new_markdown_str = new_markdown_str.replace(url, '')
+    return new_markdown_str.replace('  ', ' ')
 
 
-def getImages(markdownStr: str, blogdomain: str) -> str:
-    imgStr = ''
-    if not '<img src="' in markdownStr:
-        return imgStr
-    images = markdownStr.split('<img src="')
+def get_images(markdown_str: str, blogdomain: str) -> str:
+    img_str = ''
+    if '<img src="' not in markdown_str:
+        return img_str
+    images = markdown_str.split('<img src="')
 
     if not blogdomain.endswith('.onion'):
-        httpPrefix = 'https://'
+        http_prefix = 'https://'
     else:
-        httpPrefix = 'http://'
+        http_prefix = 'http://'
 
-    for im in images:
-        if '"' in im:
-            url = im.split('"')[0]
+    for im_str in images:
+        if '"' in im_str:
+            url = im_str.split('"')[0]
             if '/' not in url:
-                imgStr += \
-                    '=> ' + httpPrefix + blogdomain + \
+                img_str += \
+                    '=> ' + http_prefix + blogdomain + \
                     '/bl-content/uploads/' + url + '\n'
             else:
-                imgStr += '=> ' + url + '\n'
-    return imgStr
+                img_str += '=> ' + url + '\n'
+    return img_str
 
 
-def bluditToGmi(bluditDir: str, geminiDir: str, blogdomain: str) -> bool:
-    changed = False
-    blogsDir = bluditDir + '/bl-content/pages'
-    for subdir, dirs, files in os.walk(blogsDir):
-        for blogEntry in dirs:
-            blogEntryDir = os.path.join(blogsDir, blogEntry)
-            blogEntryFilename = blogEntryDir + '/index.txt'
-            if not os.path.isfile(blogEntryFilename):
+def bludit_to_gmi(bludit_dir: str, gemini_dir: str, blogdomain: str) -> bool:
+    blog_changed = False
+    blogs_dir = bludit_dir + '/bl-content/pages'
+    for _, dirs, _ in os.walk(blogs_dir):
+        for blog_entry in dirs:
+            blog_entry_dir = os.path.join(blogs_dir, blog_entry)
+            blog_entry_filename = blog_entry_dir + '/index.txt'
+            if not os.path.isfile(blog_entry_filename):
                 continue
-            markdownStr = ''
-            with open(blogEntryFilename, "r") as blogFile:
-                markdownStr = blogFile.read()
+            markdown_str = ''
+            with open(blog_entry_filename, "r",
+                      encoding='utf-8') as blog_file:
+                markdown_str = blog_file.read()
 
                 # convert markdown to gemini
-                gmiLinks = getLinks(markdownStr)
-                if gmiLinks:
-                    gmiLinks = '\n\n' + gmiLinks
-                images = getImages(markdownStr, blogdomain)
+                gmi_links = get_links(markdown_str)
+                if gmi_links:
+                    gmi_links = '\n\n' + gmi_links
+                images = get_images(markdown_str, blogdomain)
                 if images:
                     images = '\n\n' + images
-                    markdownStr = removeImageLinks(markdownStr)
-                gmiStr = \
-                    '# ' + blogEntry.replace('-', ' ') + '\n\n' + \
-                    getTextOnly(markdownStr) + gmiLinks + images
+                    markdown_str = remove_image_links(markdown_str)
+                gmi_str = \
+                    '# ' + blog_entry.replace('-', ' ') + '\n\n' + \
+                    get_text_only(markdown_str) + gmi_links + images
 
                 # gemini filename to save as
-                gmiFilename = geminiDir + '/' + blogEntry + '.gmi'
+                gmi_filename = gemini_dir + '/' + blog_entry + '.gmi'
 
                 # has the file changed ?
-                saveBlog = True
-                if os.path.isfile(gmiFilename):
-                    with open(gmiFilename, "r") as prevBlogFile:
-                        prevGmiStr = prevBlogFile.read()
-                        if prevGmiStr == gmiStr:
-                            saveBlog = False
-                if saveBlog:
+                save_blog = True
+                if os.path.isfile(gmi_filename):
+                    with open(gmi_filename, "r",
+                              encoding='utf-8') as prev_blog_file:
+                        prev_gmi_str = prev_blog_file.read()
+                        if prev_gmi_str == gmi_str:
+                            save_blog = False
+                if save_blog:
                     # only save if the file has changed
                     # This avoids excessive writes
-                    with open(gmiFilename, "w") as fout:
-                        fout.write(gmiStr)
-                        changed = True
-    return changed
+                    with open(gmi_filename, "w", encoding='utf-8') as fp_out:
+                        fp_out.write(gmi_str)
+                        blog_changed = True
+    return blog_changed
 
 
-def getBlogIndex(rssStr: str, geminidomain: str) -> str:
+def get_blog_index(rss_str: str, geminidomain: str) -> str:
     result = '``` title\n'
     result += ' ___ ___ _____| |___ ___\n'
     result += '| . | -_|     | | . | . |\n'
@@ -163,7 +165,7 @@ def getBlogIndex(rssStr: str, geminidomain: str) -> str:
 
     result += '=> gemini://' + geminidomain + '/rss.xml RSS 2\n'
     result += '=> gemini://' + geminidomain + '/rss.txt RSS 3\n\n'
-    titles = rssStr.split('<title>')
+    titles = rss_str.split('<title>')
     for line in titles:
         if '<link>' not in line:
             continue
@@ -174,17 +176,17 @@ def getBlogIndex(rssStr: str, geminidomain: str) -> str:
         title = line.split('</title>')[0]
         link = line.split('<link>')[1]
         link = link.split('</link>')[0]
-        pubDate = line.split('<pubDate>')[1]
-        pubDate = pubDate.split('</pubDate>')[0]
-        result += '=> ' + link + ' ' + pubDate + '   ' + title + '\n'
+        pub_date = line.split('<pubDate>')[1]
+        pub_date = pub_date.split('</pubDate>')[0]
+        result += '=> ' + link + ' ' + pub_date + '   ' + title + '\n'
     return result
 
 
-def getRSS3feed(rssStr: str) -> str:
+def get_rss3_feed(rss_str: str) -> str:
     """ See http://www.aaronsw.com/2002/rss30
     """
     result = ''
-    titles = rssStr.split('<title>')
+    titles = rss_str.split('<title>')
     for line in titles:
         if '<link>' not in line:
             continue
@@ -195,8 +197,8 @@ def getRSS3feed(rssStr: str) -> str:
         title = line.split('</title>')[0]
         link = line.split('<link>')[1]
         link = link.split('</link>')[0]
-        pubDate = line.split('<pubDate>')[1]
-        pubDate = pubDate.split('</pubDate>')[0]
+        pub_date = line.split('<pubDate>')[1]
+        pub_date = pub_date.split('</pubDate>')[0]
         guid = line.split('<guid')[1]
         guid = guid.split('>')[1]
         guid = guid.split('<')[0]
@@ -204,7 +206,7 @@ def getRSS3feed(rssStr: str) -> str:
         result += 'title: ' + title + '\n'
         result += 'link: ' + link + '\n'
         result += 'guid: ' + guid + '\n'
-        result += 'created: ' + pubDate + '\n\n' 
+        result += 'created: ' + pub_date + '\n\n'
     return result
 
 
@@ -222,35 +224,38 @@ parser.add_argument('-b', '--blogdomain', dest='blogdomain', type=str,
 args = parser.parse_args()
 
 if not args.geminidomain:
-    print('Please specify a domain on which gemini is installed with --geminidomain [domain]')
+    print('Please specify a domain on which gemini is installed with ' +
+          '--geminidomain [domain]')
     sys.exit()
 
 if not args.blogdomain:
-    print('Please specify a domain on which bludit is installed with --blogdomain [domain]')
+    print('Please specify a domain on which bludit is installed with ' +
+          '--blogdomain [domain]')
     sys.exit()
 
-bluditDir = '/var/www/' + args.blogdomain + '/htdocs'
-changed = bluditToGmi(bluditDir, args.geminidir + '/blog', args.blogdomain)
-if not changed:
+bludit_dir = '/var/www/' + args.blogdomain + '/htdocs'
+if not bludit_to_gmi(bludit_dir, args.geminidir + '/blog', args.blogdomain):
     sys.exit()
 
-rssFilename = bluditDir + '/bl-content/workspaces/rss/rss.xml'
-rssStr = ''
-with open(rssFilename, "r") as rssFile:
-    rssStr = rssFile.read()
-    rssStr = rssStr.replace('<link>https://' + args.blogdomain,
-                            '<link>gemini://' + args.geminidomain + '/blog')
-    rssStr = rssStr.replace('<link>http://' + args.blogdomain,
-                            '<link>gemini://' + args.geminidomain + '/blog')
-    rssStr = rssStr.replace('</link>', '.gmi</link>')
-    rssStr = rssStr.replace('/blog.gmi', '/blog')
+rss_filename = bludit_dir + '/bl-content/workspaces/rss/rss.xml'
+RSS_STR2 = ''
+with open(rss_filename, "r", encoding='utf-8') as rssFile:
+    RSS_STR2 = rssFile.read()
+    RSS_STR2 = RSS_STR2.replace('<link>https://' + args.blogdomain,
+                                '<link>gemini://' +
+                                args.geminidomain + '/blog')
+    RSS_STR2 = RSS_STR2.replace('<link>http://' + args.blogdomain,
+                                '<link>gemini://' +
+                                args.geminidomain + '/blog')
+    RSS_STR2 = RSS_STR2.replace('</link>', '.gmi</link>')
+    RSS_STR2 = RSS_STR2.replace('/blog.gmi', '/blog')
 
-with open(args.geminidir + '/rss.xml', "w") as fout:
-    fout.write(rssStr)
+with open(args.geminidir + '/rss.xml', "w", encoding='utf-8') as fout:
+    fout.write(RSS_STR2)
 
 # write gemini RSS 3.0 feed
-rss3 = getRSS3feed(rssStr)
-with open(args.geminidir + '/rss.txt', "w") as fout:
+rss3 = get_rss3_feed(RSS_STR2)
+with open(args.geminidir + '/rss.txt', "w", encoding='utf-8') as fout:
     fout.write(rss3)
 
 # write Bludit RSS 3.0 feed
@@ -260,10 +265,11 @@ else:
     rss3 = rss3.replace('gemini://', 'http://')
 rss3 = rss3.replace(args.geminidomain + '/blog', args.blogdomain)
 rss3 = rss3.replace('.gmi', '')
-with open('/var/www/' + args.blogdomain + '/htdocs/rss.txt', "w") as fout:
+with open('/var/www/' + args.blogdomain + '/htdocs/rss.txt', "w",
+          encoding='utf-8') as fout:
     fout.write(rss3)
 
 # create the index
-indexStr = getBlogIndex(rssStr, args.geminidomain)
-with open(args.geminidir + '/blog/index.gmi', "w") as fout:
+indexStr = get_blog_index(RSS_STR2, args.geminidomain)
+with open(args.geminidir + '/blog/index.gmi', "w", encoding='utf-8') as fout:
     fout.write(indexStr)
