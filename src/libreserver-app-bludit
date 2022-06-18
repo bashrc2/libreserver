@@ -184,7 +184,8 @@ function bludit_install_from_download {
 function upgrade_bludit {
     if grep -q "'tinymce', " "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs/install.php"; then
         # remove tinymce to default to markdown
-        sed -i "s|'tinymce', |'rss', |g" "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs/install.php"
+        sed -i "s|'tinymce', ||g" "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs/install.php"
+        sed -i "s|'canonical')|'canonical', 'rss')|g" "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs/install.php"
     fi
 
     convert_blog_to_gemini
@@ -467,7 +468,8 @@ function install_bludit {
 
     if grep -q "'tinymce', " "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs/install.php"; then
         # remove tinymce to default to markdown
-        sed -i "s|'tinymce', |'rss', |g" "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs/install.php"
+        sed -i "s|'tinymce', ||g" "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs/install.php"
+        sed -i "s|'canonical')|'canonical', 'rss')|g" "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs/install.php"
     fi
 
     convert_blog_to_gemini
