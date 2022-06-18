@@ -182,6 +182,11 @@ function bludit_install_from_download {
 }
 
 function upgrade_bludit {
+    if grep -q "'tinymce', " "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs/install.php"; then
+        # remove tinymce to default to markdown
+        sed -i "s|'tinymce', ||g" "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs/install.php"
+    fi
+
     convert_blog_to_gemini
 
     if [ ! "$BLUDIT_VERSION" ]; then
@@ -459,6 +464,11 @@ function install_bludit {
     set_completion_param "bludit domain" "$BLUDIT_DOMAIN_NAME"
 
     increment_app_install_progress
+
+    if grep -q "'tinymce', " "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs/install.php"; then
+        # remove tinymce to default to markdown
+        sed -i "s|'tinymce', ||g" "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs/install.php"
+    fi
 
     convert_blog_to_gemini
 
