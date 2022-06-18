@@ -286,18 +286,17 @@ if not os.path.isfile(rss_filename):
 RSS_STR2 = ''
 with open(rss_filename, "r", encoding='utf-8') as rssFile:
     RSS_STR2 = rssFile.read()
-    RSS_STR2 = RSS_STR2.replace('<link>https://' + args.blogdomain,
-                                '<link>gemini://' +
-                                args.geminidomain + '/blog')
-    RSS_STR2 = RSS_STR2.replace('<link>http://' + args.blogdomain,
-                                '<link>gemini://' +
-                                args.geminidomain + '/blog')
-    RSS_STR2 = RSS_STR2.replace('<link>https://' + args.geminidomain,
-                                '<link>gemini://' +
-                                args.geminidomain + '/blog')
-    RSS_STR2 = RSS_STR2.replace('<link>http://' + args.geminidomain,
-                                '<link>gemini://' +
-                                args.geminidomain + '/blog')
+    if '.onion/' not in RSS_STR2:
+        RSS_STR2 = RSS_STR2.replace('<link>https://' + args.blogdomain,
+                                    '<link>gemini://' +
+                                    args.geminidomain + '/blog')
+        RSS_STR2 = RSS_STR2.replace('<link>http://' + args.blogdomain,
+                                    '<link>gemini://' +
+                                    args.geminidomain + '/blog')
+    else:
+        RSS_STR2 = RSS_STR2.replace('.onion/', '.onion/blog/')
+        RSS_STR2 = RSS_STR2.replace('<link>https://', '<link>gemini://')
+        RSS_STR2 = RSS_STR2.replace('<link>http://', '<link>gemini://')
     RSS_STR2 = RSS_STR2.replace('</link>', '.gmi</link>')
     RSS_STR2 = RSS_STR2.replace('/blog.gmi', '/blog')
 
