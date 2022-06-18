@@ -213,6 +213,7 @@ def get_rss3_feed(rss_str: str) -> str:
 def get_atom_feed(rss_str: str) -> str:
     result = '<?xml version="1.0" encoding="utf-8"?>\n'
     result += '<feed xmlns="http://www.w3.org/2005/Atom">\n'
+    result += '  <title>LibreServer gemlog</title>\n'
     titles = rss_str.split('<title>')
     for line in titles:
         if '<link>' not in line:
@@ -230,12 +231,12 @@ def get_atom_feed(rss_str: str) -> str:
         guid = guid.split('>')[1]
         guid = guid.split('<')[0]
 
-        result += '<entry>\n'
-        result += '  <title>' + title + '</title>\n'
-        result += '  <link>' + link + '</link>\n'
-        result += '  <id>' + guid + '</id>\n'
-        result += '  <published>' + pub_date + '</published>\n'
-        result += '</entry>\n'
+        result += '  <entry>\n'
+        result += '    <title>' + title + '</title>\n'
+        result += '    <link>' + link + '</link>\n'
+        result += '    <id>' + guid + '</id>\n'
+        result += '    <published>' + pub_date + '</published>\n'
+        result += '  </entry>\n'
     result += '</feed>\n'
     return result
 
