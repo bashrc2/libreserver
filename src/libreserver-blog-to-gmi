@@ -342,6 +342,11 @@ if os.path.isfile(main_index_file):
     if 'blog/index.gmi' not in INDEX_CONTENT:
         if not INDEX_CONTENT.endswith('\n'):
             INDEX_CONTENT += '\n'
-        INDEX_CONTENT += '=> ' + args.geminidomain + '/blog/index.gmi Blog\n'
+        if args.geminidomain.endswith('.onion'):
+            INDEX_CONTENT += \
+                '=> http://' + args.geminidomain + '/blog/index.gmi Blog\n'
+        else:
+            INDEX_CONTENT += \
+                '=> https://' + args.geminidomain + '/blog/index.gmi Blog\n'
         with open(main_index_file, 'w+', encoding='utf-8') as fp_index:
             fp_index.write(INDEX_CONTENT)
