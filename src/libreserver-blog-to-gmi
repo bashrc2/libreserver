@@ -211,10 +211,15 @@ def get_rss3_feed(rss_str: str) -> str:
     return result
 
 
-def get_atom_feed(rss_str: str) -> str:
+def get_atom_feed(rss_str: str, gemini_domain: str) -> str:
     result = '<?xml version="1.0" encoding="utf-8"?>\n'
     result += '<feed xmlns="http://www.w3.org/2005/Atom">\n'
     result += '  <title>LibreServer gemlog</title>\n'
+    result += \
+        '  <link href="gemini://' + gemini_domain + \
+        '/atom.xml" rel="self" />\n'
+    result += \
+        '  <link href="gemini://' + gemini_domain + '/blog/index.gmi" />\n'
     titles = rss_str.split('<title>')
     for line in titles:
         if '<link>' not in line:
@@ -287,6 +292,12 @@ with open(rss_filename, "r", encoding='utf-8') as rssFile:
     RSS_STR2 = RSS_STR2.replace('<link>http://' + args.blogdomain,
                                 '<link>gemini://' +
                                 args.geminidomain + '/blog')
+    RSS_STR2 = RSS_STR2.replace('<link>https://' + args.geminidomain,
+                                '<link>gemini://' +
+                                args.geminidomain + '/blog')
+    RSS_STR2 = RSS_STR2.replace('<link>http://' + args.geminidomain,
+                                '<link>gemini://' +
+                                args.geminidomain + '/blog')
     RSS_STR2 = RSS_STR2.replace('</link>', '.gmi</link>')
     RSS_STR2 = RSS_STR2.replace('/blog.gmi', '/blog')
 
@@ -299,7 +310,7 @@ with open(args.geminidir + '/rss.txt', "w", encoding='utf-8') as fout:
     fout.write(rss3)
 
 # write gemini atom feed
-ATOM_STR = get_atom_feed(RSS_STR2)
+ATOM_STR = get_atom_feed(RSS_STR2, args.geminidomain)
 with open(args.geminidir + '/atom.xml', "w", encoding='utf-8') as fout:
     fout.write(ATOM_STR)
 
