@@ -269,6 +269,9 @@ if not bludit_to_gmi(bludit_dir, args.geminidir + '/blog', args.blogdomain):
     sys.exit()
 
 rss_filename = bludit_dir + '/bl-content/workspaces/rss/rss.xml'
+if not os.path.isfile(rss_filename):
+    # no existing rss feed
+    sys.exit()
 RSS_STR2 = ''
 with open(rss_filename, "r", encoding='utf-8') as rssFile:
     RSS_STR2 = rssFile.read()
