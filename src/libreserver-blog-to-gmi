@@ -216,6 +216,9 @@ def get_atom_feed(rss_str: str, gemini_domain: str) -> str:
     result = '<?xml version="1.0" encoding="utf-8"?>\n'
     result += '<feed xmlns="http://www.w3.org/2005/Atom">\n'
     result += '  <title>LibreServer gemlog</title>\n'
+    curr_date = datetime.datetime.utcnow()
+    curr_date_str = curr_date.strftime("%Y-%m-%dT%H:%M:%SZ")
+    result += '  <updated>' + curr_date_str + '</updated>\n'
     result += '  <id>gemini://' + gemini_domain + '/blog/"</id>\n'
     result += \
         '  <link href="gemini://' + gemini_domain + '/blog/" />\n'
