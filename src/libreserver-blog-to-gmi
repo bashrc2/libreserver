@@ -293,7 +293,12 @@ with open(rss_filename, "r", encoding='utf-8') as rssFile:
         RSS_STR2 = RSS_STR2.replace('<link>http://' + args.blogdomain,
                                     '<link>gemini://' +
                                     args.geminidomain + '/blog')
-    else:
+    elif '<link>http://' in RSS_STR2:
+        # replace the blog onion address with the gemini onion address
+        blog_onion_address = RSS_STR2.split('<link>http://', 1)[1]
+        if '.onion' in blog_onion_address:
+            blog_onion_address = blog_onion_address.split('.onion')[0]
+            RSS_STR2 = RSS_STR2.replace(blog_onion_address, args.geminidomain)
         RSS_STR2 = RSS_STR2.replace('.onion/', '.onion/blog/')
         RSS_STR2 = RSS_STR2.replace('<link>https://', '<link>gemini://')
         RSS_STR2 = RSS_STR2.replace('<link>http://', '<link>gemini://')
