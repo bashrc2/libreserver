@@ -239,14 +239,11 @@ def get_atom_feed(rss_str: str, gemini_domain: str) -> str:
         converted_pub_date = \
             datetime.datetime.strptime(pub_date, '%a, %d %b %Y %H:%M:%S %z')
         pub_date = converted_pub_date.strftime('%Y-%m-%dT%H:%M:%SZ')
-        guid = line.split('<guid')[1]
-        guid = guid.split('>')[1]
-        guid = guid.split('<')[0]
 
         result += '  <entry>\n'
         result += '    <title>' + title + '</title>\n'
         result += '    <link>' + link + '</link>\n'
-        result += '    <id>' + guid + '</id>\n'
+        result += '    <id>' + link + '</id>\n'
         result += '    <published>' + pub_date + '</published>\n'
         result += '  </entry>\n'
     result += '</feed>\n'
