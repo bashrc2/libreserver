@@ -148,6 +148,8 @@ def bludit_to_gmi(bludit_dir: str, gemini_dir: str, blogdomain: str) -> bool:
                         if prev_gmi_str == gmi_str:
                             save_blog = False
                 if save_blog:
+                    if not os.path.isdir(gemini_dir):
+                        os.mkdir(gemini_dir)
                     # only save if the file has changed
                     # This avoids excessive writes
                     with open(gmi_filename, "w", encoding='utf-8') as fp_out:
