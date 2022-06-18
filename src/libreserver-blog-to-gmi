@@ -216,11 +216,9 @@ def get_atom_feed(rss_str: str, gemini_domain: str) -> str:
     result = '<?xml version="1.0" encoding="utf-8"?>\n'
     result += '<feed xmlns="http://www.w3.org/2005/Atom">\n'
     result += '  <title>LibreServer gemlog</title>\n'
+    result += '  <id>gemini://' + gemini_domain + '/blog/"</id>\n'
     result += \
-        '  <link href="gemini://' + gemini_domain + \
-        '/atom.xml" rel="self" />\n'
-    result += \
-        '  <link href="gemini://' + gemini_domain + '/blog/index.gmi" />\n'
+        '  <link href="gemini://' + gemini_domain + '/blog/" />\n'
     titles = rss_str.split('<title>')
     for line in titles:
         if '<link>' not in line:
