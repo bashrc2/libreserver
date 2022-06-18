@@ -27,6 +27,7 @@
 import os
 import sys
 import argparse
+import datetime
 from shutil import copyfile
 
 
@@ -227,6 +228,11 @@ def get_atom_feed(rss_str: str) -> str:
         link = link.split('</link>')[0]
         pub_date = line.split('<pubDate>')[1]
         pub_date = pub_date.split('</pubDate>')[0]
+        # reformat the date.
+        # See https://datatracker.ietf.org/doc/html/rfc4287#section-3.3
+        converted_pub_date = \
+            datetime.datetime.strptime(pub_date, '%a, %d %b %Y %H:%M:%S %z')
+        pub_date = converted_pub_date.strftime('%Y-%m-%dT%H:%M:%SZ')
         guid = line.split('<guid')[1]
         guid = guid.split('>')[1]
         guid = guid.split('<')[0]
