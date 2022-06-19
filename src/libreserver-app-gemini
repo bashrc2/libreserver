@@ -85,6 +85,9 @@ function install_gemini_client {
     if [ ! -f /usr/bin/catimg ]; then
         INSTALL_PACKAGES catimg
     fi
+    if [ ! -f /usr/bin/nvlc ]; then
+        INSTALL_PACKAGES vlc
+    fi
 
     if [ -d "$INSTALL_DIR/leo" ]; then
         cd "$INSTALL_DIR/leo" || return
