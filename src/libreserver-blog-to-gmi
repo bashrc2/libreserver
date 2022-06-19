@@ -88,7 +88,10 @@ def remove_image_links(markdown_str: str) -> str:
 
 
 def get_images(bludit_dir: str, markdown_str: str,
-               blogdomain: str, gemini_domain: str) -> str:
+               blogdomain: str, blog_onion_address: str,
+               gemini_domain: str) -> str:
+    if blog_onion_address:
+        blogdomain = blog_onion_address
     img_str = ''
     if '<img src="' not in markdown_str:
         return img_str
@@ -162,7 +165,8 @@ def get_images(bludit_dir: str, markdown_str: str,
 
 
 def bludit_to_gmi(bludit_dir: str, gemini_dir: str,
-                  blogdomain: str, gemini_domain: str) -> bool:
+                  blogdomain: str, gemini_domain: str,
+                  blog_onion_address: str) -> bool:
     blog_changed = False
     blogs_dir = bludit_dir + '/bl-content/pages'
     for _, dirs, _ in os.walk(blogs_dir):
@@ -181,7 +185,8 @@ def bludit_to_gmi(bludit_dir: str, gemini_dir: str,
                 if gmi_links:
                     gmi_links = '\n\n' + gmi_links
                 images = get_images(bludit_dir, markdown_str,
-                                    blogdomain, gemini_domain)
+                                    blogdomain, blog_onion_address,
+                                    gemini_domain)
                 if images:
                     images = '\n\n' + images
                     markdown_str = remove_image_links(markdown_str)
@@ -330,15 +335,13 @@ if not args.blogdomain:
     sys.exit()
 
 BLUDIT_DIR = '/var/www/' + args.blogdomain + '/htdocs'
-if not bludit_to_gmi(BLUDIT_DIR, args.geminidir + '/blog',
-                     args.blogdomain, args.geminidomain):
-    sys.exit()
 
 rss_filename = BLUDIT_DIR + '/bl-content/workspaces/rss/rss.xml'
 if not os.path.isfile(rss_filename):
     # no existing rss feed
     sys.exit()
 RSS_STR2 = ''
+BLOG_ONION_ADDRESS = ''
 with open(rss_filename, "r", encoding='utf-8') as rssFile:
     RSS_STR2 = rssFile.read()
     if '.onion/' not in RSS_STR2:
@@ -350,16 +353,21 @@ with open(rss_filename, "r", encoding='utf-8') as rssFile:
                                     args.geminidomain + '/blog')
     elif '<link>http://' in RSS_STR2:
         # replace the blog onion address with the gemini onion address
-        blog_onion_address = RSS_STR2.split('<link>http://', 1)[1]
-        if '.onion' in blog_onion_address:
-            blog_onion_address = \
-                blog_onion_address.split('.onion')[0] + '.onion'
-            RSS_STR2 = RSS_STR2.replace(blog_onion_address, args.geminidomain)
+        BLOG_ONION_ADDRESS = RSS_STR2.split('<link>http://', 1)[1]
+        if '.onion' in BLOG_ONION_ADDRESS:
+            BLOG_ONION_ADDRESS = \
+                BLOG_ONION_ADDRESS.split('.onion')[0] + '.onion'
+            RSS_STR2 = RSS_STR2.replace(BLOG_ONION_ADDRESS, args.geminidomain)
         RSS_STR2 = RSS_STR2.replace('.onion/', '.onion/blog/')
         RSS_STR2 = RSS_STR2.replace('<link>https://', '<link>gemini://')
         RSS_STR2 = RSS_STR2.replace('<link>http://', '<link>gemini://')
     RSS_STR2 = RSS_STR2.replace('</link>', '.gmi</link>')
     RSS_STR2 = RSS_STR2.replace('/blog.gmi', '/blog')
+
+if not bludit_to_gmi(BLUDIT_DIR, args.geminidir + '/blog',
+                     args.blogdomain, args.geminidomain,
+                     BLOG_ONION_ADDRESS):
+    sys.exit()
 
 with open(args.geminidir + '/rss.xml', "w", encoding='utf-8') as fout:
     fout.write(RSS_STR2)
