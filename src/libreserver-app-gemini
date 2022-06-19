@@ -81,6 +81,11 @@ function install_gemini_client {
         mkdir -p "$INSTALL_DIR"
     fi
 
+    # for viewing images in the terminal
+    if [ ! -f /usr/bin/catimg ]; then
+        INSTALL_PACKAGES catimg
+    fi
+
     if [ -d "$INSTALL_DIR/leo" ]; then
         cd "$INSTALL_DIR/leo" || return
         echo 'Upgrading gemini client'
