@@ -130,9 +130,11 @@ def get_images(bludit_dir: str, markdown_str: str,
                 img_line = '=> ' + url + '\n'
                 if blogdomain + '/bl-content/uploads/' in url:
                     img_url = url.split('/bl-content/uploads/')[1]
+                    if '/' in img_url:
+                        img_name = img_url.split('/')[-1]
                     image_filename = \
                         bludit_dir + '/bl-content/uploads/' + img_url
-                    dest_filename = gemini_blog_images_dir + '/' + img_url
+                    dest_filename = gemini_blog_images_dir + '/' + img_name
                     if os.path.isfile(image_filename):
                         try:
                             copyfile(image_filename, dest_filename)
@@ -141,7 +143,7 @@ def get_images(bludit_dir: str, markdown_str: str,
                     if os.path.isfile(dest_filename):
                         img_line = \
                             '=> gemini://' + gemini_domain + \
-                            '/blog/images/' + img_url + '\n'
+                            '/blog/images/' + img_name + '\n'
             img_str += img_line
     return img_str
 
