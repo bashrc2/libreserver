@@ -99,32 +99,50 @@ def get_images(bludit_dir: str, markdown_str: str,
     else:
         http_prefix = 'http://'
 
+    gemini_blog_dir = '/var/gemini/blog'
+    if not os.path.isdir(gemini_blog_dir):
+        os.mkdir(gemini_blog_dir)
+
+    gemini_blog_images_dir = gemini_blog_dir + '/images'
+    if not os.path.isdir(gemini_blog_images_dir):
+        os.mkdir(gemini_blog_images_dir)
+
     for im_str in images:
         if '"' in im_str:
             url = im_str.split('"')[0]
             if '/' not in url:
                 image_filename = bludit_dir + '/bl-content/uploads/' + url
-                if not os.path.isfile(image_filename):
-                    img_str += \
-                        '=> ' + http_prefix + blogdomain + \
-                        '/bl-content/uploads/' + url + '\n'
-                else:
+                img_line = \
+                    '=> ' + http_prefix + blogdomain + \
+                    '/bl-content/uploads/' + url + '\n'
+                if os.path.isfile(image_filename):
                     # copy the image from bludit to /var/gemini/blog/images
-                    gemini_blog_images_dir = '/var/gemini/blog/images'
-                    if not os.path.isdir(gemini_blog_images_dir):
-                        os.mkdir(gemini_blog_images_dir)
                     dest_filename = gemini_blog_images_dir + '/' + url
-                    copyfile(image_filename, dest_filename)
+                    try:
+                        copyfile(image_filename, dest_filename)
+                    except OSError:
+                        pass
                     if os.path.isfile(dest_filename):
-                        img_str += \
+                        img_line = \
                             '=> gemini://' + gemini_domain + \
                             '/blog/images/' + url + '\n'
-                    else:
-                        img_str += \
-                            '=> ' + http_prefix + blogdomain + \
-                            '/bl-content/uploads/' + url + '\n'
             else:
-                img_str += '=> ' + url + '\n'
+                img_line = '=> ' + url + '\n'
+                if blogdomain + '/bl-content/uploads/' in url:
+                    img_url = url.split('/bl-content/uploads/')[1]
+                    image_filename = \
+                        bludit_dir + '/bl-content/uploads/' + img_url
+                    dest_filename = gemini_blog_images_dir + '/' + img_url
+                    if os.path.isfile(image_filename):
+                        try:
+                            copyfile(image_filename, dest_filename)
+                        except OSError:
+                            pass
+                    if os.path.isfile(dest_filename):
+                        img_line = \
+                            '=> gemini://' + gemini_domain + \
+                            '/blog/images/' + img_url + '\n'
+            img_str += img_line
     return img_str
 
 
