@@ -136,8 +136,14 @@ def get_images(bludit_dir: str, markdown_str: str,
                     image_filename = \
                         bludit_dir + '/bl-content/uploads/' + img_url
                     dest_filename = gemini_blog_images_dir + '/' + img_name
-                    print('image_filename: ' + image_filename)
-                    print('dest_filename: ' + dest_filename)
+                    with open('/var/gemini/log.txt', 'w+',
+                              encoding='utf-8') as fp_log:
+                        fp_log.write('image_filename: ' +
+                                     image_filename + '\n')
+                        fp_log.write('dest_filename: ' + dest_filename + '\n')
+                        fp_log.write('img_name: ' + img_name + '\n')
+                        fp_log.write('img_url: ' + img_url + '\n')
+                        fp_log.write('url: ' + url + '\n')
                     if os.path.isfile(image_filename):
                         try:
                             copyfile(image_filename, dest_filename)
