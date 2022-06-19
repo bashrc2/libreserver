@@ -438,8 +438,8 @@ function install_gemini {
       echo 'This is an example Gemini page.';
       echo '';
       echo '=> gemini://gemini.circumlunar.space Circumlunar Space';
-      echo '=> https://libreserver.org LibreServer site';
-      echo '=> https://blog.libreserver.org LibreServer Blog'; } > /var/gemini/index.gmi
+      echo '=> gemini://libreserver.org LibreServer site';
+      echo '=> gemini://libreserver.org/blog/index.gmi LibreServer Blog'; } > /var/gemini/index.gmi
     chown -R gemini:gemini "/var/gemini"
 
     increment_app_install_progress
