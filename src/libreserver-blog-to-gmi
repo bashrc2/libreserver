@@ -116,7 +116,7 @@ def get_images(bludit_dir: str, markdown_str: str,
             if '/' not in url:
                 img_line = \
                     '=> ' + http_prefix + blogdomain + \
-                    '/bl-content/uploads/' + url + '\n'
+                    '/bl-content/uploads/' + url + ' ' + url + '\n'
                 image_filename = bludit_dir + '/bl-content/uploads/' + url
                 if os.path.isfile(image_filename):
                     # copy the image from bludit to /var/gemini/blog/images
@@ -128,13 +128,10 @@ def get_images(bludit_dir: str, markdown_str: str,
                     if os.path.isfile(dest_filename):
                         img_line = \
                             '=> gemini://' + gemini_domain + \
-                            '/blog/images/' + url + '\n'
+                            '/blog/images/' + url + ' ' + url + '\n'
             else:
-                img_line = '=> ' + url + '\n'
-                with open('/var/gemini/log.txt', 'w+',
-                          encoding='utf-8') as fp_log:
-                    fp_log.write(blogdomain + '/bl-content/uploads/')
-                    fp_log.write('url: ' + url)
+                img_name = url.split('/')[-1]
+                img_line = '=> ' + url + ' ' + img_name + '\n'
                 if blogdomain + '/bl-content/uploads/' in url:
                     img_url = url.split('/bl-content/uploads/')[1]
                     img_name = img_url
@@ -143,14 +140,6 @@ def get_images(bludit_dir: str, markdown_str: str,
                     image_filename = \
                         bludit_dir + '/bl-content/uploads/' + img_url
                     dest_filename = gemini_blog_images_dir + '/' + img_name
-                    with open('/var/gemini/log2.txt', 'w+',
-                              encoding='utf-8') as fp_log:
-                        fp_log.write('image_filename: ' +
-                                     image_filename + '\n')
-                        fp_log.write('dest_filename: ' + dest_filename + '\n')
-                        fp_log.write('img_name: ' + img_name + '\n')
-                        fp_log.write('img_url: ' + img_url + '\n')
-                        fp_log.write('url: ' + url + '\n')
                     if os.path.isfile(image_filename):
                         try:
                             copyfile(image_filename, dest_filename)
@@ -159,7 +148,7 @@ def get_images(bludit_dir: str, markdown_str: str,
                     if os.path.isfile(dest_filename):
                         img_line = \
                             '=> gemini://' + gemini_domain + \
-                            '/blog/images/' + img_name + '\n'
+                            '/blog/images/' + img_name + ' ' + img_name + '\n'
             img_str += img_line
     return img_str
 
