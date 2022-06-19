@@ -87,7 +87,8 @@ def remove_image_links(markdown_str: str) -> str:
     return new_markdown_str.replace('  ', ' ')
 
 
-def get_images(markdown_str: str, blogdomain: str) -> str:
+def get_images(bludit_dir: str, markdown_str: str,
+               blogdomain: str, gemini_domain: str) -> str:
     img_str = ''
     if '<img src="' not in markdown_str:
         return img_str
@@ -102,15 +103,33 @@ def get_images(markdown_str: str, blogdomain: str) -> str:
         if '"' in im_str:
             url = im_str.split('"')[0]
             if '/' not in url:
-                img_str += \
-                    '=> ' + http_prefix + blogdomain + \
-                    '/bl-content/uploads/' + url + '\n'
+                image_filename = bludit_dir + '/bl-content/uploads/' + url
+                if not os.path.isfile(image_filename):
+                    img_str += \
+                        '=> ' + http_prefix + blogdomain + \
+                        '/bl-content/uploads/' + url + '\n'
+                else:
+                    # copy the image from bludit to /var/gemini/blog/images
+                    gemini_blog_images_dir = '/var/gemini/blog/images'
+                    if not os.path.isdir(gemini_blog_images_dir):
+                        os.mkdir(gemini_blog_images_dir)
+                    dest_filename = gemini_blog_images_dir + '/' + url
+                    copyfile(image_filename, dest_filename)
+                    if os.path.isfile(dest_filename):
+                        img_str += \
+                            '=> gemini://' + gemini_domain + \
+                            '/blog/images/' + url + '\n'
+                    else:
+                        img_str += \
+                            '=> ' + http_prefix + blogdomain + \
+                            '/bl-content/uploads/' + url + '\n'
             else:
                 img_str += '=> ' + url + '\n'
     return img_str
 
 
-def bludit_to_gmi(bludit_dir: str, gemini_dir: str, blogdomain: str) -> bool:
+def bludit_to_gmi(bludit_dir: str, gemini_dir: str,
+                  blogdomain: str, gemini_domain: str) -> bool:
     blog_changed = False
     blogs_dir = bludit_dir + '/bl-content/pages'
     for _, dirs, _ in os.walk(blogs_dir):
@@ -128,7 +147,8 @@ def bludit_to_gmi(bludit_dir: str, gemini_dir: str, blogdomain: str) -> bool:
                 gmi_links = get_links(markdown_str)
                 if gmi_links:
                     gmi_links = '\n\n' + gmi_links
-                images = get_images(markdown_str, blogdomain)
+                images = get_images(bludit_dir, markdown_str,
+                                    blogdomain, gemini_domain)
                 if images:
                     images = '\n\n' + images
                     markdown_str = remove_image_links(markdown_str)
@@ -276,11 +296,12 @@ if not args.blogdomain:
           '--blogdomain [domain]')
     sys.exit()
 
-bludit_dir = '/var/www/' + args.blogdomain + '/htdocs'
-if not bludit_to_gmi(bludit_dir, args.geminidir + '/blog', args.blogdomain):
+BLUDIT_DIR = '/var/www/' + args.blogdomain + '/htdocs'
+if not bludit_to_gmi(BLUDIT_DIR, args.geminidir + '/blog',
+                     args.blogdomain, args.geminidomain):
     sys.exit()
 
-rss_filename = bludit_dir + '/bl-content/workspaces/rss/rss.xml'
+rss_filename = BLUDIT_DIR + '/bl-content/workspaces/rss/rss.xml'
 if not os.path.isfile(rss_filename):
     # no existing rss feed
     sys.exit()
