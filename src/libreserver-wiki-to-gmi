@@ -258,7 +258,7 @@ if os.path.isfile(main_index_file):
     INDEX_CONTENT = ''
     with open(main_index_file, 'r', encoding='utf-8') as fp_index:
         INDEX_CONTENT = fp_index.read()
-    if args.geminidomain + '/wiki/index.gmi' not in INDEX_CONTENT:
+    if args.geminidomain + '/wiki/start.gmi' not in INDEX_CONTENT:
         if not INDEX_CONTENT.endswith('\n'):
             INDEX_CONTENT += '\n'
         INDEX_CONTENT += \
