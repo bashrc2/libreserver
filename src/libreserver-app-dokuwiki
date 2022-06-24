@@ -80,7 +80,7 @@ function convert_wiki_to_gemini {
             fi
         fi
         { echo '#!/bin/bash';
-          echo "/usr/bin/python3 /usr/local/bin/libreserver-wiki-to-gmi --geminidomain \$HOSTNAME --wikidomain $DOKUWIKI_DOMAIN_NAME ${wiki_onion_str}";
+          echo "/usr/bin/python3 /usr/local/bin/libreserver-wiki-to-gmi --geminidomain \$HOSTNAME --wikidomain ${DOKUWIKI_DOMAIN_NAME} ${wiki_onion_str}";
           echo 'chown -R gemini:gemini /var/gemini'; } > /etc/cron.hourly/gemini-wiki
         chmod +x /etc/cron.hourly/gemini-wiki
         /etc/cron.hourly/gemini-wiki
