@@ -1,0 +1,263 @@
+#!/usr/bin/env python3
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
+#
+# Script to convert wiki pages into gemini format
+#
+# License
+# =======
+#
+# Copyright (C) 2022 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import os
+import sys
+import argparse
+from shutil import copyfile
+
+
+def get_text_only(markdown_str: str) -> str:
+    if '[[' not in markdown_str:
+        return markdown_str
+    result = ''
+    sections = markdown_str.split('[[')
+    ctr = 0
+    for text in sections:
+        if ctr == 0:
+            result += text
+            ctr += 1
+            continue
+        if ']]' in text:
+            link_str = text.split(']]')[0]
+            if '|' in link_str:
+                result += link_str.split('|')[1]
+            else:
+                result += link_str
+        result += text.split(']]')[1]
+    return result.strip()
+
+
+def get_links(markdown_str: str) -> str:
+    link_str = ''
+    sections = markdown_str.split('[[')
+    ctr = 0
+    for text in sections:
+        if ctr == 0:
+            ctr += 1
+            continue
+        if ']]' in text:
+            curr_link = text.split(']]')[0]
+            link_str += '=> '
+            if '|' in curr_link:
+                url = curr_link.split('|')[0]
+                name = curr_link.split('|')[1]
+                link_str += url + ' ' + name
+            else:
+                link_str += curr_link.replace(' ', '_') + '.txt ' + curr_link
+            link_str += '\n'
+    return link_str
+
+
+def remove_image_links(markdown_str: str) -> str:
+    if '{{:' not in markdown_str:
+        return markdown_str
+    new_markdown_str = markdown_str
+    images = markdown_str.split('{{:')
+    ctr = 0
+    for im_str in images:
+        if ctr == 0:
+            ctr += 1
+            continue
+        if '}}' in im_str:
+            im_link = '{{:' + im_str.split('}}')[0] + '}}'
+            new_markdown_str = new_markdown_str.replace(im_link + '\n', '')
+            new_markdown_str = new_markdown_str.replace(im_link, '')
+    return new_markdown_str.replace('  ', ' ')
+
+
+def get_images(wiki_dir: str, markdown_str: str,
+               wikidomain: str, wiki_onion_address: str,
+               gemini_domain: str) -> str:
+    if wiki_onion_address:
+        wikidomain = wiki_onion_address
+    img_str = ''
+    if '{{:' not in markdown_str:
+        return img_str
+    images = markdown_str.split('{{:')
+
+    if not wikidomain.endswith('.onion'):
+        http_prefix = 'https://'
+    else:
+        http_prefix = 'http://'
+
+    gemini_wiki_dir = '/var/gemini/wiki'
+    if not os.path.isdir(gemini_wiki_dir):
+        os.mkdir(gemini_wiki_dir)
+
+    gemini_wiki_images_dir = gemini_wiki_dir + '/images'
+    if not os.path.isdir(gemini_wiki_images_dir):
+        os.mkdir(gemini_wiki_images_dir)
+
+    for im_str in images:
+        if '}}' not in im_str:
+            continue
+        im_text = im_str.split('}}')[0]
+        if '?' not in im_text:
+            continue
+        url = im_text.split('?')[0]
+        if '/' not in url:
+            img_line = \
+                '=> ' + http_prefix + wikidomain + \
+                '/data/media/' + url + ' ' + url + '\n'
+            image_filename = wiki_dir + '/data/media/' + url
+            if os.path.isfile(image_filename):
+                # copy the image from wiki to /var/gemini/wiki/images
+                dest_filename = gemini_wiki_images_dir + '/' + url
+                try:
+                    copyfile(image_filename, dest_filename)
+                except OSError:
+                    pass
+                if os.path.isfile(dest_filename):
+                    img_line = \
+                        '=> gemini://' + gemini_domain + \
+                        '/wiki/images/' + url + ' ' + url + '\n'
+        else:
+            img_name = url.split('/')[-1]
+            img_line = '=> ' + url + ' ' + img_name + '\n'
+            if wikidomain + '/data/media/' in url:
+                img_url = url.split('/data/media/')[1]
+                img_name = img_url
+                if '/' in img_url:
+                    img_name = img_url.split('/')[-1]
+                image_filename = \
+                    wiki_dir + '/data/media/' + img_url
+                dest_filename = gemini_wiki_images_dir + '/' + img_name
+                if os.path.isfile(image_filename):
+                    try:
+                        copyfile(image_filename, dest_filename)
+                    except OSError:
+                        pass
+                if os.path.isfile(dest_filename):
+                    img_line = \
+                        '=> gemini://' + gemini_domain + \
+                        '/wiki/images/' + img_name + ' ' + img_name + '\n'
+        img_str += img_line
+    return img_str
+
+
+def wiki_to_gmi(wiki_dir: str, gemini_dir: str,
+                wikidomain: str, gemini_domain: str,
+                wiki_onion_address: str) -> bool:
+    wiki_changed = False
+    wiki_pages = wiki_dir + '/data/pages'
+    for _, _, files in os.walk(wiki_pages):
+        for wiki_page_filename in files:
+            wiki_entry_filename = \
+                os.path.join(wiki_pages, wiki_page_filename)
+            if not os.path.isfile(wiki_entry_filename):
+                continue
+            markdown_str = ''
+            with open(wiki_entry_filename, "r",
+                      encoding='utf-8') as wiki_file:
+                markdown_str = wiki_file.read()
+
+                # convert markdown to gemini
+                gmi_links = get_links(markdown_str)
+                if gmi_links:
+                    gmi_links = '\n\n' + gmi_links
+                images = get_images(wiki_dir, markdown_str,
+                                    wikidomain, wiki_onion_address,
+                                    gemini_domain)
+                if images:
+                    images = '\n\n' + images
+                    markdown_str = remove_image_links(markdown_str)
+                gmi_str = \
+                    get_text_only(markdown_str) + gmi_links + images
+
+                # gemini filename to save as
+                gmi_filename = gemini_dir + '/' + wiki_page_filename + '.gmi'
+
+                # has the file changed ?
+                save_wiki = True
+                if os.path.isfile(gmi_filename):
+                    with open(gmi_filename, "r",
+                              encoding='utf-8') as prev_wiki_file:
+                        prev_gmi_str = prev_wiki_file.read()
+                        if prev_gmi_str == gmi_str:
+                            save_wiki = False
+                if save_wiki:
+                    if not os.path.isdir(gemini_dir):
+                        os.mkdir(gemini_dir)
+                    # only save if the file has changed
+                    # This avoids excessive writes
+                    with open(gmi_filename, "w", encoding='utf-8') as fp_out:
+                        fp_out.write(gmi_str)
+                        wiki_changed = True
+        break
+    return wiki_changed
+
+
+WIKI_ONION_ADDRESS = None
+
+parser = argparse.ArgumentParser(description='Wiki to Gemini converter')
+parser.add_argument('-g', '--geminidir', dest='geminidir', type=str,
+                    default='/var/gemini',
+                    help='Directory where gemini files exist')
+parser.add_argument('-d', '--geminidomain', dest='geminidomain', type=str,
+                    default=None,
+                    help='The domain on which gemini is installed')
+parser.add_argument('-b', '--wikidomain', dest='wikidomain', type=str,
+                    default=None,
+                    help='The domain on which wiki is installed')
+parser.add_argument('-o', '--onion', dest='wikionion', type=str,
+                    default=None,
+                    help='Onion address of the source wiki')
+
+args = parser.parse_args()
+if args.wikionion:
+    WIKI_ONION_ADDRESS = args.wikionion
+
+if not args.geminidomain:
+    print('Please specify a domain on which gemini is installed with ' +
+          '--geminidomain [domain]')
+    sys.exit()
+
+if not args.wikidomain:
+    print('Please specify a domain on which wiki is installed with ' +
+          '--wikidomain [domain]')
+    sys.exit()
+
+WIKI_DIR = '/var/www/' + args.wikidomain + '/htdocs'
+
+if not wiki_to_gmi(WIKI_DIR, args.geminidir + '/wiki',
+                   args.wikidomain, args.geminidomain,
+                   WIKI_ONION_ADDRESS):
+    sys.exit()
+
+# add wiki start page to the main gemini site index
+main_index_file = args.geminidir + '/index.gmi'
+if os.path.isfile(main_index_file):
+    INDEX_CONTENT = ''
+    with open(main_index_file, 'r', encoding='utf-8') as fp_index:
+        INDEX_CONTENT = fp_index.read()
+    if args.geminidomain + '/wiki/index.gmi' not in INDEX_CONTENT:
+        if not INDEX_CONTENT.endswith('\n'):
+            INDEX_CONTENT += '\n'
+        INDEX_CONTENT += \
+            '=> gemini://' + args.geminidomain + '/wiki/start.gmi Wiki\n'
+        with open(main_index_file, 'w+', encoding='utf-8') as fp_index:
+            fp_index.write(INDEX_CONTENT)

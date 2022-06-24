@@ -1,8 +1,8 @@
 #!/bin/bash
-#  _    _ _            ___                      
-# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
-# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # Dokuwiki application
 #
@@ -51,6 +51,40 @@ dokuwiki_variables=(ONION_ONLY
                     DOKUWIKI_DOMAIN_NAME
                     DOKUWIKI_CODE
                     DDNS_PROVIDER)
+
+function convert_wiki_to_gemini {
+    remove_gemini_wiki_cron=
+    if [ ! -d /var/gemini ]; then
+        remove_gemini_wiki_cron=1
+    fi
+    if ! grep -q "DOKUWIKI_DOMAIN_NAME=" "$CONFIGURATION_FILE"; then
+        remove_gemini_wiki_cron=1
+    fi
+    if [ $remove_gemini_wiki_cron ]; then
+        if [ -f /etc/cron.hourly/gemini-wiki ]; then
+            rm /etc/cron.hourly/gemini-wiki
+        fi
+        return
+    fi
+    if [ ! -d /var/gemini/wiki ]; then
+        mkdir /var/gemini/wiki
+        chown -R gemini:gemini /var/gemini
+    fi
+    read_config_param DOKUWIKI_DOMAIN_NAME
+    if [ "$DOKUWIKI_DOMAIN_NAME" ]; then
+        wiki_onion_str=
+        if [[ "$ONION_ONLY" != 'no' ]]; then
+            DOKUWIKI_ONION_HOSTNAME=$(cat /var/lib/tor/hidden_service_dokuwiki/hostname)
+            if [ "$DOKUWIKI_ONION_HOSTNAME" ]; then
+                wiki_onion_str="--wikionion $DOKUWIKI_ONION_HOSTNAME"
+            fi
+        { echo '#!/bin/bash';
+          echo "/usr/bin/python3 /usr/local/bin/libreserver-wiki-to-gmi --geminidomain \$HOSTNAME --wikidomain $DOKUWIKI_DOMAIN_NAME ${}wiki_onion_str}";
+          echo 'chown -R gemini:gemini /var/gemini'; } > /etc/cron.hourly/gemini-wiki
+        chmod +x /etc/cron.hourly/gemini-wiki
+        /etc/cron.hourly/gemini-wiki
+    fi
+}
 
 function upgrade_distro_dokuwiki {
     target_distro="$1"
@@ -131,6 +165,7 @@ function reconfigure_dokuwiki {
 }
 
 function upgrade_dokuwiki {
+    convert_wiki_to_gemini
     function_check set_repo_commit
     set_repo_commit "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs" "dokuwiki commit" "$DOKUWIKI_COMMIT" $DOKUWIKI_REPO
 }
@@ -220,6 +255,9 @@ function restore_remote_dokuwiki {
 }
 
 function remove_dokuwiki {
+    if [ -f /etc/cron.hourly/gemini-wiki ]; then
+        rm /etc/cron.hourly/gemini-wiki
+    fi
     if [ ${#DOKUWIKI_DOMAIN_NAME} -eq 0 ]; then
         return
     fi
@@ -349,7 +387,7 @@ function install_dokuwiki {
           echo '    #listen [::]:443 ssl;';
           echo "    root /var/www/$DOKUWIKI_DOMAIN_NAME/htdocs;";
           echo "    server_name $DOKUWIKI_DOMAIN_NAME;";
-	  echo '    server_tokens off;';
+    echo '    server_tokens off;';
           echo '    access_log /dev/null;';
           echo "    error_log /dev/null;";
           echo '    index index.php;';
@@ -361,7 +399,7 @@ function install_dokuwiki {
         nginx_security_options "$DOKUWIKI_DOMAIN_NAME"
         nginx_robots "$DOKUWIKI_DOMAIN_NAME"
         { echo '    add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
-	  echo "    add_header Onion-Location http://${DOKUWIKI_ONION_HOSTNAME}\$request_uri;";
+    echo "    add_header Onion-Location http://${DOKUWIKI_ONION_HOSTNAME}\$request_uri;";
           echo '';
           echo '    # rewrite to front controller as default rule';
           echo '    location / {'; } >> "/etc/nginx/sites-available/$DOKUWIKI_DOMAIN_NAME"
@@ -531,6 +569,10 @@ function install_dokuwiki {
     increment_app_install_progress
 
     "${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a dokuwiki -p "$DOKUWIKI_ADMIN_PASSWORD"
+
+    convert_wiki_to_gemini
+
+    increment_app_install_progress
 
     APP_INSTALLED=1
 }
