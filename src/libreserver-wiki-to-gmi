@@ -68,7 +68,7 @@ def get_links(markdown_str: str) -> str:
                 link_str += url + ' ' + name
             else:
                 link_str += \
-                    'wiki/' + curr_link.replace(' ', '_') + '.txt ' + \
+                    'wiki/' + curr_link.replace(' ', '_') + '.gmi ' + \
                     curr_link
             link_str += '\n'
     return link_str
