@@ -189,7 +189,9 @@ def wiki_to_gmi(wiki_dir: str, gemini_dir: str,
                     get_text_only(markdown_str) + gmi_links + images
 
                 # gemini filename to save as
-                gmi_filename = gemini_dir + '/' + wiki_page_filename + '.gmi'
+                gmi_filename = \
+                    gemini_dir + '/' + \
+                    wiki_page_filename.replace('.txt', '') + '.gmi'
 
                 # has the file changed ?
                 save_wiki = True
