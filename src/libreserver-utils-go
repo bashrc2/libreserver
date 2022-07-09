@@ -28,7 +28,7 @@
 # before getting to the version we want
 GO_INTERMEDIATE_VERSION=1.4.2
 
-GO_VERSION=1.16
+GO_VERSION=1.18.3
 
 GO_REPO="https://go.googlesource.com/go"
 GO_PACKAGE_MANAGER_REPO="https://github.com/gpmgo/gopm"
