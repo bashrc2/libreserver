@@ -552,6 +552,12 @@ function encrypt_all_email {
 }
 
 function email_client {
+    LYNX_CONFIG=/etc/lynx/lynx.cfg
+    if [ -f "$LYNX_CONFIG" ]; then
+        if grep -q "#ACCEPT_ALL_COOKIES:FALSE" "$LYNX_CONFIG"; then
+            sed -i 's|#ACCEPT_ALL_COOKIES:FALSE|ACCEPT_ALL_COOKIES:TRUE|g' "$LYNX_CONFIG"
+        fi
+    fi
     if [ ! -d /etc/exim4 ]; then
         return
     fi
@@ -563,6 +569,15 @@ function email_client {
     if [ ! -f /usr/bin/neomutt ]; then
         echo $"ERROR: Mutt does not appear to have installed. $CHECK_MESSAGE"
         exit 49
+    fi
+
+    if [ ! -f "$LYNX_CONFIG" ]; then
+        echo $"ERROR: Lynx browser configuration file not found. $CHECK_MESSAGE"
+        exit 48
+    fi
+
+    if grep -q "#ACCEPT_ALL_COOKIES:FALSE" "$LYNX_CONFIG"; then
+        sed -i 's|#ACCEPT_ALL_COOKIES:FALSE|ACCEPT_ALL_COOKIES:TRUE|g' "$LYNX_CONFIG"
     fi
 
     if [ ! -d "/home/$MY_USERNAME/.mutt" ]; then
