@@ -1,8 +1,8 @@
 #!/bin/bash
-#  _    _ _            ___                      
-# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
-# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # Go functions
 #
@@ -28,7 +28,7 @@
 # before getting to the version we want
 GO_INTERMEDIATE_VERSION=1.4.2
 
-GO_VERSION=1.18.3
+GO_VERSION=1.19
 
 GO_REPO="https://go.googlesource.com/go"
 GO_PACKAGE_MANAGER_REPO="https://github.com/gpmgo/gopm"
