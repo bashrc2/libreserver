@@ -238,6 +238,13 @@ function upgrade_golang {
         systemctl restart gogs
     fi
 
+    # alter the go version used by the gitea daemon
+    if [ -f /etc/systemd/system/gitea.service ]; then
+        sed -i "s|Environment=.*|Environment=\"USER=gitea\" \"HOME=/home/gitea\" \"GOPATH=/home/go/go${GO_VERSION}\"|g" /etc/systemd/system/gogs.service
+        systemctl daemon-reload
+        systemctl restart gitea
+    fi
+
     set_completion_param "${FUNCNAME[0]}" "$GO_VERSION"
 }
 

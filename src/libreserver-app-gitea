@@ -1,0 +1,1586 @@
+#!/bin/bash
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
+#
+# Gitea functions
+#
+# License
+# =======
+#
+# Copyright (C) 2014-2022 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VARIANTS='developer'
+
+APP_CATEGORY=organization
+
+IN_DEFAULT_INSTALL=0
+SHOW_ON_ABOUT=1
+REQUIRES_APP=
+
+GITEA_USERNAME='gitea'
+GITEA_VERSION='0.17.0'
+GITEA_DOWNLOAD='https://github.com/go-gitea/gitea/releases/download'
+
+GITEA_DOMAIN_NAME=
+GITEA_CODE=
+GITEA_ONION_PORT=8340
+GITEA_ADMIN_PASSWORD=
+GITEA_BIN=
+GITEA_PORT=3144
+
+GITEA_SHORT_DESCRIPTION=$'Git repo management'
+GITEA_DESCRIPTION=$'Git repo management'
+GITEA_MOBILE_APP_URL=
+
+gitea_os_type='linux'
+
+gitea_variables=(ONION_ONLY
+                 GITEA_DOMAIN_NAME
+                 GITEA_CODE
+                 MY_USERNAME
+                 DDNS_PROVIDER
+                 ARCHITECTURE)
+
+function upgrade_distro_gitea {
+    target_distro="$1"
+
+    if [[ "$target_distro" == 'bullseye' ]]; then
+        echo -n ''
+    fi
+}
+
+function gitea_setting_registration {
+    allow_registrations="$1"
+    gitea_ini_filename=/home/gitea/custom/conf/app.ini
+
+    if [[ "$allow_registrations" == '1' ]]; then
+        sed -i "s|DISABLE_REGISTRATION =.*|DISABLE_REGISTRATION = false|g" ${gitea_ini_filename}
+        sed -i "s|SHOW_REGISTRATION_BUTTON =.*|SHOW_REGISTRATION_BUTTON = true|g" ${gitea_ini_filename}
+        systemctl restart gitea
+    fi
+
+    if [[ "$allow_registrations" == '0' ]]; then
+        sed -i "s|DISABLE_REGISTRATION =.*|DISABLE_REGISTRATION = true|g" ${gitea_ini_filename}
+        sed -i "s|SHOW_REGISTRATION_BUTTON =.*|SHOW_REGISTRATION_BUTTON = false|g" ${gitea_ini_filename}
+        systemctl restart gitea
+    fi
+}
+
+function gitea_turn_off_registrations {
+    gitea_ini_filename=/home/gitea/custom/conf/app.ini
+    { echo '#!/bin/bash';
+      echo "if ! grep -q 'DISABLE_REGISTRATION = true' ${gitea_ini_filename}; then";
+      echo "  sed -i 's|DISABLE_REGISTRATION =.*|DISABLE_REGISTRATION = true|g' ${gitea_ini_filename}";
+      echo "  sed -i 's|SHOW_REGISTRATION_BUTTON =.*|SHOW_REGISTRATION_BUTTON = false|g' ${gitea_ini_filename}";
+      echo '  systemctl restart gitea';
+      echo 'fi'; } > /etc/cron.weekly/gitea-registrations
+    chmod +x /etc/cron.weekly/gitea-registrations
+}
+
+function logging_on_gitea {
+    echo -n ''
+}
+
+function logging_off_gitea {
+    echo -n ''
+}
+
+function change_password_gitea {
+    curr_username="$1"
+    new_user_password="$2"
+}
+
+function install_interactive_gitea {
+    if [[ $ONION_ONLY != "no" ]]; then
+        GITEA_DOMAIN_NAME='gitea.local'
+        write_config_param "GITEA_DOMAIN_NAME" "$GITEA_DOMAIN_NAME"
+    else
+        function_check interactive_site_details
+        interactive_site_details gitea
+    fi
+    APP_INSTALLED=1
+}
+
+function configure_interactive_gitea {
+    gitea_ini_filename=/home/gitea/custom/conf/app.ini
+    dialog --title $"Gitea" \
+           --backtitle $"LibreServer Control Panel" \
+           --defaultno \
+           --yesno $"\nAllow registration of new users?" 10 60
+    sel=$?
+    case $sel in
+        0)
+            sed -i "s|DISABLE_REGISTRATION =.*|DISABLE_REGISTRATION = false|g" ${gitea_ini_filename}
+            sed -i "s|SHOW_REGISTRATION_BUTTON =.*|SHOW_REGISTRATION_BUTTON = true|g" ${gitea_ini_filename}
+            ;;
+        1)
+            sed -i "s|DISABLE_REGISTRATION =.*|DISABLE_REGISTRATION = true|g" ${gitea_ini_filename}
+            sed -i "s|SHOW_REGISTRATION_BUTTON =.*|SHOW_REGISTRATION_BUTTON = false|g" ${gitea_ini_filename}
+            ;;
+        255) return;;
+    esac
+    systemctl restart gitea
+}
+
+function gitea_parameters {
+    if [[ ${ARCHITECTURE} == *"386" || ${ARCHITECTURE} == *"686" ]]; then
+        CURR_ARCH=386
+    fi
+    if [[ ${ARCHITECTURE} == *"amd64" || ${ARCHITECTURE} == "x86_64" ]]; then
+        CURR_ARCH=amd64
+    fi
+    if [[ ${ARCHITECTURE} == *"arm"* ]]; then
+        CURR_ARCH=arm-6
+    fi
+    if [[ ${ARCHITECTURE} == *"aarch"* ]]; then
+        CURR_ARCH=arm64
+    fi
+    if [ ! ${CURR_ARCH} ]; then
+        echo $'No architecture specified'
+        ARCHITECTURE=$(uname -m)
+        if [[ ${ARCHITECTURE} == "arm"* ]]; then
+            CURR_ARCH=arm-6
+            echo $"Using $CURR_ARCH"
+        fi
+	      if [[ ${ARCHITECTURE} == *"aarch"* ]]; then
+            CURR_ARCH=arm64
+            echo $"Using $CURR_ARCH"
+	      fi
+        if [[ ${ARCHITECTURE} == "amd"* || ${ARCHITECTURE} == "x86_64" ]]; then
+            CURR_ARCH=amd64
+            echo $"Using $CURR_ARCH"
+        fi
+        if [[ ${ARCHITECTURE} == *"386" || ${ARCHITECTURE} == *"686" ]]; then
+            CURR_ARCH=386
+            echo $"Using $CURR_ARCH"
+        fi
+    fi
+
+    GITEA_FILE=gitea_${GITEA_VERSION}-${gitea_os_type}-${CURR_ARCH}.tar.gz
+    GITEA_BIN="${GITEA_DOWNLOAD}/v${GITEA_VERSION}/${GITEA_FILE}"
+}
+
+function gitea_create_database {
+    if [ -f "${IMAGE_PASSWORD_FILE}" ]; then
+        GITEA_ADMIN_PASSWORD="$(printf "%s" "$(cat "$IMAGE_PASSWORD_FILE")")"
+    else
+        if [ ! "${GITEA_ADMIN_PASSWORD}" ]; then
+            GITEA_ADMIN_PASSWORD="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
+        fi
+    fi
+    if [ ! "$GITEA_ADMIN_PASSWORD" ]; then
+        return
+    fi
+
+    drop_database gitea
+
+    function_check create_database
+    create_database gitea "$GITEA_ADMIN_PASSWORD"
+}
+
+function reconfigure_gitea {
+    echo -n ''
+}
+
+function upgrade_gitea {
+    gitea_turn_off_registrations
+
+    if ! grep -q 'gitea version:' "$COMPLETION_FILE"; then
+        return
+    fi
+
+    GITEA_CONFIG_PATH=/home/${GITEA_USERNAME}/custom/conf
+    GITEA_CONFIG_FILE=$GITEA_CONFIG_PATH/app.ini
+
+    restart_gitea=
+    if grep -q "DB_TYPE = " "${GITEA_CONFIG_FILE}"; then
+	      sed -i 's|DB_TYPE = |TYPE = |g' "${GITEA_CONFIG_FILE}"
+	      restart_gitea=1
+    fi
+
+    if grep -q "PASSWD = " "${GITEA_CONFIG_FILE}"; then
+	      sed -i 's|PASSWD = |PASSWORD = |g' "${GITEA_CONFIG_FILE}"
+	      restart_gitea=1
+    fi
+
+    if grep -q "PROVIDER = file" "${GITEA_CONFIG_FILE}"; then
+	      sed -i 's|PROVIDER = file|PROVIDER = memory|g' "${GITEA_CONFIG_FILE}"
+	      restart_gitea=1
+    fi
+
+    # Change port number if necessary
+    if ! grep -q "HTTP_PORT = ${GITEA_PORT}" "${GITEA_CONFIG_FILE}"; then
+        sed -i "s|HTTP_PORT =.*|HTTP_PORT = ${GITEA_PORT}|g" "${GITEA_CONFIG_FILE}"
+        read_config_param GITEA_DOMAIN_NAME
+        sed -i "s|proxy_pass .*|proxy_pass http://localhost:${GITEA_PORT};|g" "/etc/nginx/sites-available/${GITEA_DOMAIN_NAME}"
+	      restart_gitea=1
+    fi
+
+    if [ $restart_gitea ]; then
+        systemctl restart gitea
+        systemctl restart nginx
+    fi
+
+    CURR_GITEA_VERSION=$(get_completion_param "gitea version")
+    echo "gitea current version: ${CURR_GITEA_VERSION}"
+    echo "gitea app version: ${GITEA_VERSION}"
+    if [[ "${CURR_GITEA_VERSION}" == "${GITEA_VERSION}" ]]; then
+        return
+    fi
+
+    cp "$GITEA_CONFIG_FILE" "$INSTALL_DIR/gitea_config.ini"
+
+    if [ -d "$INSTALL_DIR/gitea-repositories" ]; then
+        rm -rf "$INSTALL_DIR/gitea-repositories"
+    fi
+    if [ -d /home/${GITEA_USERNAME}/gitea-repositories ]; then
+        # shellcheck disable=SC2086
+        mv /home/${GITEA_USERNAME}/gitea-repositories $INSTALL_DIR
+    fi
+
+    gitea_parameters
+    echo "gitea binary upgrade: ${GITEA_BIN}"
+
+    if [ ! -d "${INSTALL_DIR}" ]; then
+        mkdir -p "${INSTALL_DIR}"
+    fi
+    cd "${INSTALL_DIR}" || exit 26
+    if [ -d "${INSTALL_DIR}/gitea" ]; then
+        rm -rf "${INSTALL_DIR}/gitea"
+    fi
+    GITEA_FILE=gitea_${GITEA_VERSION}-${gitea_os_type}-${CURR_ARCH}.tar.gz
+    if [ ! -f ${GITEA_FILE} ]; then
+        if [[ "$ONION_ONLY" == 'no' ]]; then
+            wget ${GITEA_BIN}
+        else
+            torsocks wget ${GITEA_BIN}
+            if [ ! -f ${GITEA_FILE} ]; then
+                wget ${GITEA_BIN}
+            fi
+        fi
+    fi
+    if [ ! -f ${GITEA_FILE} ]; then
+        GITEA_FILE=gitea_${GITEA_VERSION}-${gitea_os_type}-${CURR_ARCH}.zip
+        GITEA_BIN="${GITEA_DOWNLOAD}/v${GITEA_VERSION}/${GITEA_FILE}"
+        if [ ! -f ${GITEA_FILE} ]; then
+            if [[ "$ONION_ONLY" == 'no' ]]; then
+                wget ${GITEA_BIN}
+            else
+                torsocks wget ${GITEA_BIN}
+                if [ ! -f ${GITEA_FILE} ]; then
+                    wget ${GITEA_BIN}
+                fi
+            fi
+        fi
+        if [ ! -f ${GITEA_FILE} ]; then
+            exit 37
+        else
+            INSTALL_PACKAGES unzip
+            unzip -o ${GITEA_FILE}
+        fi
+    else
+        tar -xzf "${INSTALL_DIR}/${GITEA_FILE}"
+    fi
+    if [ ! -d "${INSTALL_DIR}/gitea" ]; then
+        exit 37
+    fi
+    rm -rf "/home/${GITEA_USERNAME:?}/"*
+    cp -r "${INSTALL_DIR}/gitea/"* "/home/${GITEA_USERNAME}"
+    if [ -f ${GITEA_FILE} ]; then
+        rm ${GITEA_FILE}
+    fi
+
+    if [ ! -d ${GITEA_CONFIG_PATH} ]; then
+        mkdir -p ${GITEA_CONFIG_PATH}
+    fi
+
+    cp "$INSTALL_DIR/gitea_config.ini" "$GITEA_CONFIG_FILE"
+    if [ ! -f $GITEA_CONFIG_FILE ]; then
+        echo $'Gitea ini file not upgraded'
+        exit 87
+    fi
+    rm "$INSTALL_DIR/gitea_config.ini"
+    if [ -d /home/${GITEA_USERNAME}/gitea-repositories ]; then
+        rm -rf /home/${GITEA_USERNAME}/gitea-repositories
+    fi
+    if [ -d "$INSTALL_DIR/gitea-repositories" ]; then
+        # shellcheck disable=SC2086
+        mv $INSTALL_DIR/gitea-repositories /home/${GITEA_USERNAME}/gitea-repositories
+    fi
+    chown -R "${GITEA_USERNAME}":"${GITEA_USERNAME}" "/home/${GITEA_USERNAME}"
+
+    sed -i "s|gitea version.*|gitea version:$GITEA_VERSION|g" "${COMPLETION_FILE}"
+    systemctl restart mariadb
+    systemctl restart gitea
+}
+
+function backup_local_gitea {
+    if ! grep -q "gitea domain" "${COMPLETION_FILE}"; then
+        return
+    fi
+
+    if [ ! -d "/home/${GITEA_USERNAME}/gitea-repositories" ]; then
+        return
+    fi
+
+    echo $"Backing up gitea"
+
+    function_check backup_database_to_usb
+    backup_database_to_usb gitea
+
+    function_check backup_directory_to_usb
+    backup_directory_to_usb "/home/${GITEA_USERNAME}/custom" gitea
+    backup_directory_to_usb "/home/${GITEA_USERNAME}/gitea-repositories" gitearepos
+    backup_directory_to_usb "/home/${GITEA_USERNAME}/.ssh" giteassh
+
+    echo $"Gitea backup complete"
+}
+
+function restore_local_gitea {
+    if ! grep -q "gitea domain" "${COMPLETION_FILE}"; then
+        return
+    fi
+
+    if [ ${#GITEA_DOMAIN_NAME} -gt 2 ]; then
+        function_check gitea_create_database
+        gitea_create_database
+
+        GITEA_CONFIG_PATH="/home/${GITEA_USERNAME}/custom/conf"
+        GITEA_CONFIG_FILE="${GITEA_CONFIG_PATH}/app.ini"
+
+        function_check restore_database
+        restore_database gitea "${GITEA_DOMAIN_NAME}"
+        temp_restore_dir=/root/tempgitea
+        if [ -d "${USB_MOUNT}/backup/gitea" ]; then
+            echo $"Restoring Gitea settings"
+            if [ ! -d $GITEA_CONFIG_PATH ]; then
+                mkdir -p $GITEA_CONFIG_PATH
+            fi
+            if [ -d "/root/tempgitea/home/${GITEA_USERNAME}/custom" ]; then
+                cp -r "/root/tempgitea/home/${GITEA_USERNAME}/custom/"* "/home/${GITEA_USERNAME}/custom/"
+            else
+                cp -r "/root/tempgitea/"* "/home/${GITEA_USERNAME}/custom/"
+            fi
+            # shellcheck disable=SC2181
+            if [ ! "$?" = "0" ]; then
+                function_check set_user_permissions
+                set_user_permissions
+                function_check backup_unmount_drive
+                backup_unmount_drive
+                exit 98
+            fi
+            echo $"Restoring Gitea repos"
+            function_check restore_directory_from_usb
+            restore_directory_from_usb "${temp_restore_dir}repos" gitearepos
+            if [ ! -d "/home/${GITEA_USERNAME}/gitea-repositories" ]; then
+                mkdir "/home/${GITEA_USERNAME}/gitea-repositories"
+            fi
+            if [ -d "${temp_restore_dir}repos/home/${GITEA_USERNAME}/gitea-repositories" ]; then
+                cp -r "${temp_restore_dir}repos/home/${GITEA_USERNAME}/gitea-repositories/"* "/home/${GITEA_USERNAME}/gitea-repositories/"
+            else
+                cp -r "${temp_restore_dir}repos/"* "/home/${GITEA_USERNAME}/gitea-repositories/"
+            fi
+            # shellcheck disable=SC2181
+            if [ ! "$?" = "0" ]; then
+                function_check set_user_permissions
+                set_user_permissions
+                function_check backup_unmount_drive
+                backup_unmount_drive
+                exit 67
+            fi
+            echo $"Restoring Gitea authorized_keys"
+            function_check restore_directory_from_usb
+            restore_directory_from_usb ${temp_restore_dir}ssh giteassh
+            if [ ! -d /home/${GITEA_USERNAME}/.ssh ]; then
+                mkdir /home/${GITEA_USERNAME}/.ssh
+            fi
+            if [ -d ${temp_restore_dir}ssh/home/${GITEA_USERNAME}/.ssh ]; then
+                cp -r ${temp_restore_dir}ssh/home/${GITEA_USERNAME}/.ssh/* /home/${GITEA_USERNAME}/.ssh/
+            else
+                cp -r ${temp_restore_dir}/* /home/${GITEA_USERNAME}/.ssh/
+            fi
+            # shellcheck disable=SC2181
+            if [ ! "$?" = "0" ]; then
+                function_check set_user_permissions
+                set_user_permissions
+                function_check backup_unmount_drive
+                backup_unmount_drive
+                exit 84
+            fi
+            rm -rf ${temp_restore_dir}
+            rm -rf ${temp_restore_dir}repos
+            rm -rf ${temp_restore_dir}ssh
+            chown -R ${GITEA_USERNAME}:${GITEA_USERNAME} /home/${GITEA_USERNAME}
+        fi
+
+        MARIADB_PASSWORD=$("${PROJECT_NAME}-pass" -u root -a mariadb)
+        sed -i "s|PASSWORD =.*|PASSWORD = $MARIADB_PASSWORD|g" ${GITEA_CONFIG_FILE}
+        MARIADB_PASSWORD=
+        systemctl restart gitea
+    fi
+}
+
+function backup_remote_gitea {
+    echo -n ''
+}
+
+function restore_remote_gitea {
+    echo -n ''
+}
+
+function remove_gitea {
+    if [ ${#GITEA_DOMAIN_NAME} -eq 0 ]; then
+        return
+    fi
+    systemctl stop gitea
+    systemctl disable gitea
+
+    if [ -f /etc/cron.weekly/gitea-registrations ]; then
+        rm /etc/cron.weekly/gitea-registrations
+    fi
+
+    nginx_dissite "${GITEA_DOMAIN_NAME}"
+    remove_certs "${GITEA_DOMAIN_NAME}"
+    if [ -d "/var/www/${GITEA_DOMAIN_NAME}" ]; then
+        rm -rf "/var/www/${GITEA_DOMAIN_NAME}"
+    fi
+    if [ -f "/etc/nginx/sites-available/${GITEA_DOMAIN_NAME}" ]; then
+        rm "/etc/nginx/sites-available/${GITEA_DOMAIN_NAME}"
+    fi
+    function_check drop_database
+    drop_database gitea
+    rm /etc/systemd/system/gitea.service
+    systemctl daemon-reload
+    rm -rf "/home/${GITEA_USERNAME:?}/"*
+    remove_onion_service gitea ${GITEA_ONION_PORT} 9418
+    remove_completion_param "install_gitea"
+    sed -i '/gitea /d' "$COMPLETION_FILE"
+    remove_backup_database_local gitea
+
+    groupdel -f gitea
+    userdel -r gitea
+
+    function_check remove_ddns_domain
+    remove_ddns_domain "$GITEA_DOMAIN_NAME"
+}
+
+function install_gitea {
+    if [ ! "$GITEA_DOMAIN_NAME" ]; then
+	      echo $"Missing gitea domain name"
+        return
+    fi
+
+    increment_app_install_progress
+
+    adduser --disabled-login --gecos 'Gitea' $GITEA_USERNAME
+
+    increment_app_install_progress
+
+    if [ ! -d /home/$GITEA_USERNAME ]; then
+        echo $"/home/$GITEA_USERNAME directory not created"
+        exit 78
+    fi
+
+    increment_app_install_progress
+
+    if ! grep -q "gitea:" /etc/group; then
+        groupadd gitea
+    fi
+
+    increment_app_install_progress
+
+    gitea_parameters
+
+    increment_app_install_progress
+
+    if [ ! -d "${INSTALL_DIR}" ]; then
+        mkdir -p "${INSTALL_DIR}"
+    fi
+    cd "${INSTALL_DIR}" || exit 246
+    if [ -d "$INSTALL_DIR/gitea" ]; then
+        rm -rf "$INSTALL_DIR/gitea"
+    fi
+    GITEA_FILE="gitea_${GITEA_VERSION}-${gitea_os_type}-${CURR_ARCH}.tar.gz"
+    if [ ! -f ${GITEA_FILE} ]; then
+        if [[ "$ONION_ONLY" == 'no' ]]; then
+            wget ${GITEA_BIN}
+        else
+            torsocks wget ${GITEA_BIN}
+            if [ ! -f ${GITEA_FILE} ]; then
+                wget ${GITEA_BIN}
+            fi
+        fi
+    fi
+    if [ ! -f ${GITEA_FILE} ]; then
+        GITEA_FILE="gitea_${GITEA_VERSION}-${gitea_os_type}-${CURR_ARCH}.zip"
+        GITEA_BIN="${GITEA_DOWNLOAD}/v${GITEA_VERSION}/${GITEA_FILE}"
+        if [[ "$ONION_ONLY" == 'no' ]]; then
+            wget ${GITEA_BIN}
+        else
+            torsocks wget ${GITEA_BIN}
+            if [ ! -f ${GITEA_FILE} ]; then
+                wget ${GITEA_BIN}
+            fi
+        fi
+        if [ ! -f ${GITEA_FILE} ]; then
+            exit 37
+        else
+            INSTALL_PACKAGES unzip
+            unzip -o ${GITEA_FILE}
+        fi
+    else
+        tar -xzf "${INSTALL_DIR}/${GITEA_FILE}"
+    fi
+    if [ ! -d "${INSTALL_DIR}/gitea" ]; then
+        exit 37
+    fi
+    rm -rf "/home/${GITEA_USERNAME:?}/"*
+    cp -r "${INSTALL_DIR}/gitea/"* "/home/${GITEA_USERNAME}"
+    if [ -f ${GITEA_FILE} ]; then
+        rm ${GITEA_FILE}
+    fi
+
+    if [ ! -f "/home/${GITEA_USERNAME}/gitea" ]; then
+        echo 'Gitea binary not installed'
+        exit 34
+    fi
+
+    increment_app_install_progress
+
+    { echo "export GOROOT=/home/go";
+      # shellcheck disable=SC2153
+      echo "export GOPATH=\${GOROOT}/go${GO_VERSION}/bin";
+      echo "export PATH=\$PATH:\$GOPATH"; } >> "/home/${GITEA_USERNAME}/.bashrc"
+    chown -R ${GITEA_USERNAME}:${GITEA_USERNAME} /home/${GITEA_USERNAME}
+
+    increment_app_install_progress
+
+    function_check install_mariadb
+    install_mariadb
+
+    increment_app_install_progress
+
+    function_check get_mariadb_password
+    get_mariadb_password
+
+    increment_app_install_progress
+
+    function_check gitea_create_database
+    gitea_create_database
+
+    increment_app_install_progress
+
+    if [ ! -f "/home/${GITEA_USERNAME}/scripts/mysql.sql" ]; then
+        echo $'MySql template for Gitea was not found'
+        exit 72
+    fi
+
+    chown -R ${GITEA_USERNAME}:${GITEA_USERNAME} /home/${GITEA_USERNAME}
+
+    increment_app_install_progress
+
+    { echo '[Unit]';
+      echo 'Description=Gitea (Go Git Service)';
+      echo 'After=syslog.target';
+      echo 'After=network.target';
+      echo 'After=mysqld.service';
+      echo '';
+      echo '[Service]';
+      echo '#LimitMEMLOCK=infinity';
+      echo '#LimitNOFILE=65535';
+      echo 'Type=simple';
+      echo 'User=gitea';
+      echo 'Group=gitea';
+      echo "WorkingDirectory=/home/${GITEA_USERNAME}";
+      echo "ExecStart=/home/${GITEA_USERNAME}/gitea web";
+      echo 'Restart=always';
+      echo 'RestartSec=10';
+      echo "Environment=\"USER=${GITEA_USERNAME}\" \"HOME=/home/${GITEA_USERNAME}\" \"GOPATH=/home/go/go${GO_VERSION}\"";
+      echo "Environment=GIT_CEILING_DIRECTORIES=/home/${GITEA_USERNAME}";
+      echo 'PrivateTmp=true';
+      echo 'PrivateDevices=false';
+      echo 'CapabilityBoundingSet=~CAP_SYS_ADMIN';
+      echo 'ProtectSystem=yes';
+      echo 'ProtectHome=no';
+      echo 'ProtectClock=yes';
+      echo 'ProtectHostname=yes';
+      echo 'PrivateUsers=yes';
+      echo 'ProtectKernelModules=yes';
+      echo 'ProtectKernelTunables=yes';
+      echo 'NoNewPrivileges=true';
+      echo '';
+      echo '[Install]';
+      echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/gitea.service
+
+    increment_app_install_progress
+
+    systemctl enable gitea
+    systemctl daemon-reload
+    systemctl start gitea
+
+    increment_app_install_progress
+
+    if [ ! -d "/var/www/${GITEA_DOMAIN_NAME}" ]; then
+        mkdir "/var/www/${GITEA_DOMAIN_NAME}"
+    fi
+    if [ -d "/var/www/${GITEA_DOMAIN_NAME}/htdocs" ]; then
+        rm -rf "/var/www/${GITEA_DOMAIN_NAME}/htdocs"
+    fi
+
+    GIT_ONION_HOSTNAME=$(cat /var/lib/tor/hidden_service_gitea/hostname)
+
+    increment_app_install_progress
+
+    if [[ "${ONION_ONLY}" == "no" ]]; then
+        function_check nginx_http_redirect
+        nginx_http_redirect "${GITEA_DOMAIN_NAME}"
+        { echo 'server {';
+          echo '    listen 443 ssl;';
+          echo '    #listen [::]:443 ssl;';
+          echo "    root /var/www/${GITEA_DOMAIN_NAME}/htdocs;";
+          echo "    server_name ${GITEA_DOMAIN_NAME};";
+	        echo '    server_tokens off;';
+          echo '    access_log /dev/null;';
+          echo "    error_log /dev/null;";
+          echo ''; } >> "/etc/nginx/sites-available/${GITEA_DOMAIN_NAME}"
+        function_check nginx_ssl
+        nginx_ssl "${GITEA_DOMAIN_NAME}"
+        function_check nginx_security_options
+        nginx_security_options "${GITEA_DOMAIN_NAME}"
+        nginx_robots "${GITEA_DOMAIN_NAME}"
+        { echo '    add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
+          echo "    add_header Onion-Location http://${GIT_ONION_HOSTNAME}\$request_uri;";
+          echo '';
+          echo '    location / {'; } >> "/etc/nginx/sites-available/${GITEA_DOMAIN_NAME}"
+        function_check nginx_limits
+        nginx_limits "${GITEA_DOMAIN_NAME}" '10G'
+        { echo "        proxy_pass http://localhost:${GITEA_PORT};";
+          echo '    }';
+          echo '';
+          echo '    fastcgi_buffers 64 4K;';
+          echo '';
+          echo '    error_page 403 /core/templates/403.php;';
+          echo '    error_page 404 /core/templates/404.php;';
+          echo '';
+          echo '    location = /robots.txt {';
+          echo '        allow all;';
+          echo '        log_not_found off;';
+          echo '        access_log /dev/null;';
+          echo '    }';
+          echo '}';
+          echo ''; } >> "/etc/nginx/sites-available/${GITEA_DOMAIN_NAME}"
+    else
+        echo -n '' > "/etc/nginx/sites-available/${GITEA_DOMAIN_NAME}"
+    fi
+    { echo 'server {';
+      echo "    listen 127.0.0.1:${GITEA_ONION_PORT} default_server;";
+      echo '    port_in_redirect off;';
+      echo "    root /var/www/$GITEA_DOMAIN_NAME/htdocs;";
+      echo "    server_name $GITEA_DOMAIN_NAME;";
+      echo '    server_tokens off;';
+      echo '    access_log /dev/null;';
+      echo "    error_log /dev/null;";
+      echo ''; } >> "/etc/nginx/sites-available/${GITEA_DOMAIN_NAME}"
+    function_check nginx_security_options
+    nginx_security_options "${GITEA_DOMAIN_NAME}"
+    { echo '    add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
+      echo '';
+      echo '    location / {'; } >> "/etc/nginx/sites-available/${GITEA_DOMAIN_NAME}"
+    function_check nginx_limits
+    nginx_limits "${GITEA_DOMAIN_NAME}" '10G'
+    { echo "        proxy_pass http://localhost:${GITEA_PORT};";
+      echo '    }';
+      echo '';
+      echo '    fastcgi_buffers 64 4K;';
+      echo '';
+      echo '    error_page 403 /core/templates/403.php;';
+      echo '    error_page 404 /core/templates/404.php;';
+      echo '';
+      echo '    location = /robots.txt {';
+      echo '        allow all;';
+      echo '        log_not_found off;';
+      echo '        access_log /dev/null;';
+      echo '    }';
+      echo '}'; } >> "/etc/nginx/sites-available/${GITEA_DOMAIN_NAME}"
+
+    function_check configure_php
+    configure_php
+
+    increment_app_install_progress
+
+    function_check create_site_certificate
+    create_site_certificate "${GITEA_DOMAIN_NAME}" 'yes'
+
+    increment_app_install_progress
+
+    nginx_ensite "${GITEA_DOMAIN_NAME}"
+
+    if [ ! -d /var/lib/tor ]; then
+        echo $'No Tor installation found. Gitea onion site cannot be configured.'
+        exit 87
+    fi
+    if ! grep -q "hidden_service_gitea" "$ONION_SERVICES_FILE"; then
+        { echo 'HiddenServiceDir /var/lib/tor/hidden_service_gitea/';
+          echo 'HiddenServiceVersion 3';
+          echo "HiddenServicePort 80 127.0.0.1:${GITEA_ONION_PORT}";
+          echo "HiddenServicePort 9418 127.0.0.1:9418"; } >> "$ONION_SERVICES_FILE"
+        echo $'Added onion site for Gitea'
+    fi
+
+    onion_update
+
+    increment_app_install_progress
+
+    function_check wait_for_onion_service
+    wait_for_onion_service 'gitea'
+
+    systemctl restart mariadb
+
+    increment_app_install_progress
+
+    # shellcheck disable=SC2086
+    systemctl restart php${PHP_VERSION}-fpm
+
+    increment_app_install_progress
+
+    systemctl restart nginx
+
+    set_completion_param "gitea domain" "$GITEA_DOMAIN_NAME"
+    set_completion_param "gitea onion domain" "$GIT_ONION_HOSTNAME"
+
+    function_check add_ddns_domain
+    add_ddns_domain "${GITEA_DOMAIN_NAME}"
+
+    # obtain the secret key
+    GITEA_SECRET_KEY="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
+    "${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a gitea -p "*"
+
+    # create the configuration
+    GITEA_CONFIG_PATH="/home/${GITEA_USERNAME}/custom/conf"
+    if [ ! -d ${GITEA_CONFIG_PATH} ]; then
+        mkdir -p ${GITEA_CONFIG_PATH}
+    fi
+    GITEA_CONFIG_FILE=${GITEA_CONFIG_PATH}/app.ini
+    # see https://github.com/go-gitea/gitea/blob/main/custom/conf/app.example.ini
+
+    { echo "APP_NAME = ; ${PROJECT_NAME}";
+      echo "RUN_USER = $GITEA_USERNAME";
+      echo 'RUN_MODE = prod';
+      echo "";
+      echo '[server]'; } >> ${GITEA_CONFIG_FILE}
+    if [[ ${ONION_ONLY} == 'no' ]]; then
+        echo "DOMAIN = ${GITEA_DOMAIN_NAME}" >> ${GITEA_CONFIG_FILE}
+        echo "LOCAL_ROOT_URL = https://$GITEA_DOMAIN_NAME/" >> ${GITEA_CONFIG_FILE}
+    else
+        echo "DOMAIN = ${GIT_ONION_HOSTNAME}" >> ${GITEA_CONFIG_FILE}
+        echo "LOCAL_ROOT_URL = http://$GITEA_DOMAIN_NAME/" >> ${GITEA_CONFIG_FILE}
+    fi
+    { echo "HTTP_PORT = ${GITEA_PORT}";
+      echo "SSH_PORT = $SSH_PORT";
+      echo 'SSH_DOMAIN = %(DOMAIN)s';
+      echo "CERT_FILE = /etc/ssl/certs/${GITEA_DOMAIN_NAME}.pem";
+      echo "KEY_FILE = /etc/ssl/private/${GITEA_DOMAIN_NAME}.key";
+      echo 'DISABLE_ROUTER_LOG = true';
+      echo 'UNIX_SOCKET_PERMISSION = 666';
+      echo ";PROTOCOL = http";
+      echo ";DOMAIN = localhost";
+      echo ";ROOT_URL = %(PROTOCOL)s://%(DOMAIN)s:%(HTTP_PORT)s/";
+      echo ";STATIC_URL_PREFIX =";
+      echo ";HTTP_ADDR = 0.0.0.0";
+      echo ";REDIRECT_OTHER_PORT = false";
+      echo ";PORT_TO_REDIRECT = 80";
+      echo ";SSL_MIN_VERSION=TLSv1.2";
+      echo ";SSL_MAX_VERSION=";
+      echo ";SSL_CURVE_PREFERENCES=X25519,P256";
+      echo ";SSL_CIPHER_SUITES=;";
+      echo ";PER_WRITE_TIMEOUT = 30s";
+      echo ";PER_WRITE_PER_KB_TIMEOUT = 30s";
+      echo ";LOCAL_ROOT_URL = %(PROTOCOL)s://%(HTTP_ADDR)s:%(HTTP_PORT)s/";
+      echo ";DISABLE_SSH = false";
+      echo ";START_SSH_SERVER = false";
+      echo ";BUILTIN_SSH_SERVER_USER = %(RUN_USER)s";
+      echo ";SSH_USER = %(BUILTIN_SSH_SERVER_USER)s";
+      echo ";SSH_LISTEN_HOST =";
+      echo ";SSH_LISTEN_PORT = %(SSH_PORT)s";
+      echo ";SSH_ROOT_PATH =";
+      echo ";SSH_CREATE_AUTHORIZED_KEYS_FILE = true";
+      echo ";SSH_CREATE_AUTHORIZED_PRINCIPALS_FILE = true";
+      echo ";SSH_SERVER_CIPHERS = chacha20-poly1305@openssh.com, aes128-ctr, aes192-ctr, aes256-ctr, aes128-gcm@openssh.com, aes256-gcm@openssh.com";
+      echo ";SSH_SERVER_KEY_EXCHANGES = curve25519-sha256, ecdh-sha2-nistp256, ecdh-sha2-nistp384, ecdh-sha2-nistp521, diffie-hellman-group14-sha256, diffie-hellman-group14-sha1";
+      echo ";SSH_SERVER_MACS = hmac-sha2-256-etm@openssh.com, hmac-sha2-256, hmac-sha1";
+      echo ";SSH_SERVER_HOST_KEYS=ssh/gitea.rsa, ssh/gogs.rsa";
+      echo ";SSH_KEY_TEST_PATH =";
+      echo ";SSH_KEYGEN_PATH = ssh-keygen";
+      echo ";SSH_AUTHORIZED_KEYS_BACKUP = true";
+      echo ";SSH_AUTHORIZED_PRINCIPALS_ALLOW = email, username";
+      echo ";SSH_AUTHORIZED_PRINCIPALS_BACKUP = true";
+      echo ";SSH_TRUSTED_USER_CA_KEYS =";
+      echo ";SSH_TRUSTED_USER_CA_KEYS_FILENAME =";
+      echo ";SSH_EXPOSE_ANONYMOUS = false";
+      echo ";SSH_PER_WRITE_TIMEOUT = 30s";
+      echo ";SSH_PER_WRITE_PER_KB_TIMEOUT = 30s";
+      echo ";MINIMUM_KEY_SIZE_CHECK = false";
+      echo ";OFFLINE_MODE = false";
+      echo ";ENABLE_ACME = false";
+      echo ";ACME_URL =";
+      echo ";ACME_ACCEPTTOS = false";
+      echo ";ACME_CA_ROOT =";
+      echo ";ACME_EMAIL =";
+      echo ";ACME_DIRECTORY = https";
+      echo ";STATIC_ROOT_PATH =";
+      echo ";APP_DATA_PATH = data";
+      echo ";ENABLE_GZIP = false";
+      echo ";ENABLE_PPROF = false";
+      echo ";PPROF_DATA_PATH = data/tmp/pprof";
+      echo ";LANDING_PAGE = home";
+      echo ";LFS_START_SERVER = false";
+      echo "LFS_JWT_SECRET =";
+      echo ";LFS_HTTP_AUTH_EXPIRY = 20m";
+      echo ";LFS_MAX_FILE_SIZE = 0";
+      echo ";LFS_LOCKS_PAGING_NUM = 50";
+      echo ";ALLOW_GRACEFUL_RESTARTS = true";
+      echo ";GRACEFUL_HAMMER_TIME = 60s";
+      echo ";STARTUP_TIMEOUT = 0";
+      echo ";STATIC_CACHE_TIME = 6h";
+      echo "";
+      echo "[database]";
+      echo "DB_TYPE = mysql";
+      echo 'HOST = 127.0.0.1:3306';
+      echo "NAME = gitea";
+      echo "USER = root";
+      echo "PASSWD = $MARIADB_PASSWORD";
+      echo ";CHARSET = utf8mb4 ;either utf8 or utf8mb4, default is utf8mb4.";
+      echo 'SSL_MODE = disable';
+      echo ";ITERATE_BUFFER_SIZE = 50";
+      echo "LOG_SQL = false ; if unset defaults to true";
+      echo ";DB_RETRIES = 10";
+      echo ";DB_RETRY_BACKOFF = 3s";
+      echo "MAX_IDLE_CONNS = 30";
+      echo ";CONN_MAX_LIFETIME = 3s";
+      echo "MAX_OPEN_CONNS = 30";
+      echo "";
+      echo "[security]";
+      echo "INSTALL_LOCK = true";
+      echo "SECRET_KEY = ${GITEA_SECRET_KEY}";
+      echo "INTERNAL_TOKEN=";
+      echo ";INTERNAL_TOKEN_URI = ;e.g. /etc/gitea/internal_token";
+      echo "LOGIN_REMEMBER_DAYS = 7";
+      echo "COOKIE_USERNAME = gitea_awesome";
+      echo "COOKIE_REMEMBER_NAME = gitea_incredible";
+      echo ";REVERSE_PROXY_AUTHENTICATION_USER = X-WEBAUTH-USER";
+      echo ";REVERSE_PROXY_AUTHENTICATION_EMAIL = X-WEBAUTH-EMAIL";
+      echo ";REVERSE_PROXY_LIMIT = 1";
+      echo ";REVERSE_PROXY_TRUSTED_PROXIES = 127.0.0.0/8,::1/128";
+      echo ";MIN_PASSWORD_LENGTH = 6";
+      echo ";IMPORT_LOCAL_PATHS = false";
+      echo ";DISABLE_GIT_HOOKS = true";
+      echo ";DISABLE_WEBHOOKS = false";
+      echo ";ONLY_ALLOW_PUSH_IF_GITEA_ENVIRONMENT_SET = true";
+      echo ";PASSWORD_COMPLEXITY = off";
+      echo ";PASSWORD_HASH_ALGO = pbkdf2";
+      echo ";CSRF_COOKIE_HTTP_ONLY = true";
+      echo ";PASSWORD_CHECK_PWN = false";
+      echo ";SUCCESSFUL_TOKENS_CACHE_SIZE = 20";
+      echo "";
+      echo "[camo]";
+      echo ";ENABLED = false";
+      echo ";SERVER_URL =";
+      echo ";HMAC_KEY =";
+      echo ";ALLWAYS = false";
+      echo "";
+      echo "[oauth2]";
+      echo "ENABLE = true";
+      echo ";JWT_SIGNING_ALGORITHM = RS256";
+      echo ";JWT_SIGNING_PRIVATE_KEY_FILE = jwt/private.pem";
+      echo ";JWT_SECRET =";
+      echo ";ACCESS_TOKEN_EXPIRATION_TIME = 3600";
+      echo ";REFRESH_TOKEN_EXPIRATION_TIME = 730";
+      echo ";INVALIDATE_REFRESH_TOKENS = false";
+      echo ";MAX_TOKEN_LENGTH = 32767";
+      echo "";
+      echo "[log]";
+      echo ";ROOT_PATH =";
+      echo "MODE = file";
+      echo "LEVEL = Info";
+      echo ";DISABLE_ROUTER_LOG=false";
+      echo "ROUTER = console";
+      echo "";
+      echo ";ENABLE_ACCESS_LOG = false";
+      echo ";ACCESS = file";
+      echo ";ACCESS_LOG_TEMPLATE = {{.Ctx.RemoteAddr}} - {{.Identity}} {{.Start.Format \"[02/Jan/2006:15:04:05 -0700]\" }} \"{{.Ctx.Req.Method}} {{.Ctx.Req.URL.RequestURI}} {{.Ctx.Req.Proto}}\" {{.ResponseWriter.Status}} {{.ResponseWriter.Size}} \"{{.Ctx.Req.Referer}}\" \"{{.Ctx.Req.UserAgent}}\"";
+      echo ";ENABLE_SSH_LOG = false";
+      echo ";STACKTRACE_LEVEL = None";
+      echo ";BUFFER_LEN = 10000";
+      echo "";
+      echo ";LEVEL=";
+      echo ";FLAGS = stdflags";
+      echo ";EXPRESSION =";
+      echo ";PREFIX =";
+      echo ";COLORIZE = false";
+      echo ";STDERR = false";
+      echo ";LEVEL =";
+      echo ";FILE_NAME =";
+      echo ";LOG_ROTATE = true";
+      echo ";MAX_SIZE_SHIFT = 28";
+      echo ";DAILY_ROTATE = true";
+      echo ";MAX_DAYS = 7";
+      echo ";COMPRESS = true";
+      echo ";COMPRESSION_LEVEL = -1";
+      echo ";LEVEL =";
+      echo ";RECONNECT_ON_MSG = false";
+      echo ";RECONNECT = false";
+      echo ";PROTOCOL = tcp";
+      echo ";ADDR =";
+      echo ";LEVEL =";
+      echo ";SUBJECT = Diagnostic message from server";
+      echo ";HOST =";
+      echo ";USER =";
+      echo ";PASSWD =";
+      echo ";RECEIVERS =";
+      echo "";
+      echo "[git]";
+      echo ";PATH =";
+      echo ";HOME_PATH = %(APP_DATA_PATH)/home";
+      echo ";DISABLE_DIFF_HIGHLIGHT = false";
+      echo ";MAX_GIT_DIFF_LINES = 1000";
+      echo ";MAX_GIT_DIFF_LINE_CHARACTERS = 5000";
+      echo ";MAX_GIT_DIFF_FILES = 100";
+      echo ";COMMITS_RANGE_SIZE = 50";
+      echo ";BRANCHES_RANGE_SIZE = 20";
+      echo ";GC_ARGS =";
+      echo ";LARGE_OBJECT_THRESHOLD = 1048576";
+      echo ";DISABLE_CORE_PROTECT_NTFS=false";
+      echo ";DISABLE_PARTIAL_CLONE = false";
+      echo "";
+      echo "[service]";
+      echo ";ACTIVE_CODE_LIVE_MINUTES = 180";
+      echo ";RESET_PASSWD_CODE_LIVE_MINUTES = 180";
+      echo ";REGISTER_EMAIL_CONFIRM = false";
+      echo ";REGISTER_MANUAL_CONFIRM = false";
+      echo ";EMAIL_DOMAIN_WHITELIST =";
+      echo ";EMAIL_DOMAIN_BLOCKLIST =";
+      echo "DISABLE_REGISTRATION = false";
+      echo ";ALLOW_ONLY_INTERNAL_REGISTRATION = false";
+      echo ";ALLOW_ONLY_EXTERNAL_REGISTRATION = false";
+      echo "REQUIRE_SIGNIN_VIEW = false";
+      echo ";ENABLE_NOTIFY_MAIL = false";
+      echo ";ENABLE_BASIC_AUTHENTICATION = true";
+      echo ";ENABLE_REVERSE_PROXY_AUTHENTICATION = false";
+      echo ";ENABLE_REVERSE_PROXY_AUTO_REGISTRATION = false";
+      echo ";ENABLE_REVERSE_PROXY_EMAIL = false";
+      echo ";ENABLE_CAPTCHA = false";
+      echo ";CAPTCHA_TYPE = image";
+      echo ";RECAPTCHA_SECRET =";
+      echo ";RECAPTCHA_SITEKEY =";
+      echo ";HCAPTCHA_SECRET =";
+      echo ";HCAPTCHA_SITEKEY =";
+      echo ";RECAPTCHA_URL =";
+      echo ";DEFAULT_KEEP_EMAIL_PRIVATE = false";
+      echo ";DEFAULT_ALLOW_CREATE_ORGANIZATION = true";
+      echo ";DEFAULT_USER_IS_RESTRICTED = false";
+      echo ";DEFAULT_USER_VISIBILITY = public";
+      echo ";ALLOWED_USER_VISIBILITY_MODES = public,limited,private";
+      echo ";DEFAULT_ORG_VISIBILITY = public";
+      echo ";DEFAULT_ORG_MEMBER_VISIBLE = false";
+      echo ";DEFAULT_ENABLE_DEPENDENCIES = true";
+      echo ";ALLOW_CROSS_REPOSITORY_DEPENDENCIES = true";
+      echo ";ENABLE_USER_HEATMAP = true";
+      echo ";ENABLE_TIMETRACKING = true";
+      echo ";DEFAULT_ENABLE_TIMETRACKING = true";
+      echo ";DEFAULT_ALLOW_ONLY_CONTRIBUTORS_TO_TRACK_TIME = true";
+      echo ";NO_REPLY_ADDRESS = ; noreply.<DOMAIN>";
+      echo "SHOW_REGISTRATION_BUTTON = true";
+      echo ";SHOW_MILESTONES_DASHBOARD_PAGE = true";
+      echo ";AUTO_WATCH_NEW_REPOS = true";
+      echo ";AUTO_WATCH_ON_CHANGES = false";
+      echo ";USER_DELETE_WITH_COMMENTS_MAX_TIME = 0";
+      echo ";VALID_SITE_URL_SCHEMES=http,https";
+      echo "";
+      echo "[repository]";
+      echo "ROOT = /home/$GITEA_USERNAME/gitea-repositories";
+      echo "SCRIPT_TYPE = bash";
+      echo ";DETECTED_CHARSETS_ORDER = UTF-8, UTF-16BE, UTF-16LE, UTF-32BE, UTF-32LE, ISO-8859, windows-1252, ISO-8859, windows-1250, ISO-8859, ISO-8859, ISO-8859, windows-1253, ISO-8859, windows-1255, ISO-8859, windows-1251, windows-1256, KOI8-R, ISO-8859, windows-1254, Shift_JIS, GB18030, EUC-JP, EUC-KR, Big5, ISO-2022, ISO-2022, ISO-2022, IBM424_rtl, IBM424_ltr, IBM420_rtl, IBM420_ltr";
+      echo ";ANSI_CHARSET =";
+      echo "FORCE_PRIVATE = false";
+      echo ";DEFAULT_PRIVATE = last";
+      echo ";DEFAULT_PUSH_CREATE_PRIVATE = true";
+      echo "MAX_CREATION_LIMIT = -1";
+      echo ";MIRROR_QUEUE_LENGTH = 1000";
+      echo ";PULL_REQUEST_QUEUE_LENGTH = 1000";
+      echo 'PREFERRED_LICENSES = GNU Affero General Public License v3.0, GNU General Public License v3.0';
+      echo "DISABLE_HTTP_GIT = false";
+      echo ";ACCESS_CONTROL_ALLOW_ORIGIN =";
+      echo ";USE_COMPAT_SSH_URI = false";
+      echo ";DISABLED_REPO_UNITS =";
+      echo ";DEFAULT_REPO_UNITS = repo.code,repo.releases,repo.issues,repo.pulls,repo.wiki,repo.projects";
+      echo ";PREFIX_ARCHIVE_FILES = true";
+      echo ";DISABLE_MIGRATIONS = false";
+      echo ";DISABLE_STARS = false";
+      echo ";DEFAULT_BRANCH = main";
+      echo ";ALLOW_ADOPTION_OF_UNADOPTED_REPOSITORIES = false";
+      echo ";ALLOW_DELETION_OF_UNADOPTED_REPOSITORIES = false";
+      echo ";DISABLE_DOWNLOAD_SOURCE_ARCHIVES = false";
+      echo "";
+      echo "[repository.editor]";
+      echo "LINE_WRAP_EXTENSIONS = .txt,.md,.markdown,.mdown,.mkd,";
+      echo "PREVIEWABLE_FILE_MODES = markdown";
+      echo "";
+      echo ";[repository.local]";
+      echo ";LOCAL_COPY_PATH = tmp/local-repo";
+      echo "";
+      echo "[repository.upload]";
+      echo "ENABLED = true";
+      echo "TEMP_PATH = data/tmp/uploads";
+      echo 'ALLOWED_TYPES = "image/jpeg|image/png|image/gif"';
+      echo "FILE_MAX_SIZE = 3";
+      echo "MAX_FILES = 5";
+      echo "";
+      echo ";[repository.pull-request]";
+      echo ";WORK_IN_PROGRESS_PREFIXES = WIP:,[WIP]";
+      echo ";CLOSE_KEYWORDS = close,closes,closed,fix,fixes,fixed,resolve,resolves,resolved";
+      echo ";REOPEN_KEYWORDS = reopen,reopens,reopened";
+      echo ";DEFAULT_MERGE_STYLE = merge";
+      echo ";DEFAULT_MERGE_MESSAGE_COMMITS_LIMIT = 50";
+      echo ";DEFAULT_MERGE_MESSAGE_SIZE = 5120";
+      echo ";DEFAULT_MERGE_MESSAGE_ALL_AUTHORS = false";
+      echo ";DEFAULT_MERGE_MESSAGE_MAX_APPROVERS = 10";
+      echo ";DEFAULT_MERGE_MESSAGE_OFFICIAL_APPROVERS_ONLY = true";
+      echo ";ADD_CO_COMMITTER_TRAILERS = true";
+      echo "";
+      echo ";[repository.issue]";
+      echo ";LOCK_REASONS = Too heated,Off-topic,Resolved,Spam";
+      echo "";
+      echo ";[repository.release]";
+      echo ";ALLOWED_TYPES =";
+      echo ";DEFAULT_PAGING_NUM = 10";
+      echo "";
+      echo ";[repository.signing]";
+      echo ";SIGNING_KEY = default";
+      echo ";SIGNING_NAME =";
+      echo ";SIGNING_EMAIL =";
+      echo ";DEFAULT_TRUST_MODEL = collaborator";
+      echo ";INITIAL_COMMIT = always";
+      echo ";CRUD_ACTIONS = pubkey, twofa, parentsigned";
+      echo ";WIKI = never";
+      echo ";MERGES = pubkey, twofa, basesigned, commitssigned";
+      echo "";
+      echo ";[repository.mimetype_mapping]";
+      echo ";.apk=application/vnd.android.package-archive";
+      echo "";
+      echo ";[project]";
+      echo ";PROJECT_BOARD_BASIC_KANBAN_TYPE = To Do, In Progress, Done";
+      echo ";PROJECT_BOARD_BUG_TRIAGE_TYPE = Needs Triage, High Priority, Low Priority, Closed";
+      echo "";
+      echo ";[cors]";
+      echo ";ENABLED = false";
+      echo ";SCHEME = http";
+      echo ";ALLOW_DOMAIN = *";
+      echo ";ALLOW_SUBDOMAIN = false";
+      echo ";METHODS = GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS";
+      echo ";MAX_AGE = 10m";
+      echo ";ALLOW_CREDENTIALS = false";
+      echo ";X_FRAME_OPTIONS = SAMEORIGIN";
+      echo "";
+      echo "[ui]";
+      echo "EXPLORE_PAGING_NUM = 10";
+      echo "ISSUE_PAGING_NUM = 10";
+      echo "FEED_MAX_COMMIT_NUM = 5";
+      echo ";FEED_PAGING_NUM = 20";
+      echo ";SITEMAP_PAGING_NUM = 20";
+      echo ";GRAPH_MAX_COMMIT_NUM = 100";
+      echo ";CODE_COMMENT_LINES = 4";
+      echo 'THEME_COLOR_META_TAG = `#6cc644`';
+      echo "MAX_DISPLAY_FILE_SIZE = 8388608";
+      echo ";SHOW_USER_EMAIL = true";
+      echo ";DEFAULT_THEME = auto";
+      echo ";THEMES = auto,gitea,arc-green";
+      echo ";REACTIONS = +1, -1, laugh, hooray, confused, heart, rocket, eyes";
+      echo ";CUSTOM_EMOJIS = gitea, codeberg, gitlab, git, github, gogs";
+      echo ";DEFAULT_SHOW_FULL_NAME = false";
+      echo ";SEARCH_REPO_DESCRIPTION = true";
+      echo ";USE_SERVICE_WORKER = false";
+      echo "";
+      echo ";[ui.admin]";
+      echo ";USER_PAGING_NUM = 50";
+      echo ";REPO_PAGING_NUM = 50";
+      echo ";NOTICE_PAGING_NUM = 25";
+      echo ";ORG_PAGING_NUM = 50";
+      echo "";
+      echo ";[ui.user]";
+      echo ";REPO_PAGING_NUM = 15";
+      echo "";
+      echo ";[ui.meta]";
+      echo ";AUTHOR = Gitea - Git with a cup of tea";
+      echo ";DESCRIPTION = Gitea (Git with a cup of tea) is a painless self-hosted Git service written in Go";
+      echo ";KEYWORDS = go,git,self-hosted,gitea";
+      echo "";
+      echo ";[ui.notification]";
+      echo ";MIN_TIMEOUT = 10s";
+      echo ";MAX_TIMEOUT = 60s";
+      echo ";TIMEOUT_STEP = 10s";
+      echo ";EVENT_SOURCE_UPDATE_TIME = 10s";
+      echo "";
+      echo ";[ui.svg]";
+      echo ";ENABLE_RENDER = true";
+      echo "";
+      echo ";[ui.csv]";
+      echo ";MAX_FILE_SIZE = 524288";
+      echo "";
+      echo ";[markdown]";
+      echo ";ENABLE_HARD_LINE_BREAK_IN_COMMENTS = true";
+      echo ";ENABLE_HARD_LINE_BREAK_IN_DOCUMENTS = false";
+      echo ";CUSTOM_URL_SCHEMES =";
+      echo ";FILE_EXTENSIONS = .md,.markdown,.mdown,.mkd";
+      echo "";
+      echo ";[ssh.minimum_key_sizes]";
+      echo ";ED25519 = 256";
+      echo ";ECDSA = 256";
+      echo ";RSA = 2047 ; we allow 2047 here because an otherwise valid 2048 bit RSA key can be reported as having 2047 bit length";
+      echo ";DSA = -1 ; set to 1024 to switch on";
+      echo "";
+      echo ";[indexer]";
+      echo ";ISSUE_INDEXER_TYPE = bleve";
+      echo ";ISSUE_INDEXER_PATH = indexers/issues.bleve";
+      echo ";ISSUE_INDEXER_CONN_STR = http://elastic:changeme@localhost:9200";
+      echo ";ISSUE_INDEXER_NAME = gitea_issues";
+      echo ";STARTUP_TIMEOUT = 30s";
+      echo ';ISSUE_INDEXER_QUEUE_TYPE = levelqueue; **DEPRECATED** use settings in `[queue.issue_indexer]`.';
+      echo ';ISSUE_INDEXER_QUEUE_DIR = queues/common; **DEPRECATED** use settings in `[queue.issue_indexer]`.';
+      echo ';ISSUE_INDEXER_QUEUE_CONN_STR = "addrs=127.0.0.1:6379 db=0"; **DEPRECATED** use settings in `[queue.issue_indexer]`.';
+      echo ';ISSUE_INDEXER_QUEUE_BATCH_NUMBER = 20; **DEPRECATED** use settings in `[queue.issue_indexer]`.';
+      echo "";
+      echo ";REPO_INDEXER_ENABLED = false";
+      echo ";REPO_INDEXER_TYPE = bleve";
+      echo ";REPO_INDEXER_PATH = indexers/repos.bleve";
+      echo ";REPO_INDEXER_CONN_STR =";
+      echo ";REPO_INDEXER_NAME = gitea_codes";
+      echo ";REPO_INDEXER_INCLUDE =";
+      echo ";REPO_INDEXER_EXCLUDE =";
+      echo ';UPDATE_BUFFER_LEN = 20; **DEPRECATED** use settings in `[queue.issue_indexer]`.';
+      echo ";MAX_FILE_SIZE = 1048576";
+      echo "";
+      echo ";[queue]";
+      echo ";TYPE = persistable-channel";
+      echo ";DATADIR = queues/";
+      echo ";LENGTH = 20";
+      echo ";BATCH_LENGTH = 20";
+      echo ';CONN_STR = "addrs=127.0.0.1:6379 db=0"';
+      echo ';QUEUE_NAME = "_queue"';
+      echo ';SET_NAME = "_unique"';
+      echo ";WRAP_IF_NECESSARY = true";
+      echo ";MAX_ATTEMPTS = 10";
+      echo ";TIMEOUT = 15m30s";
+      echo ";WORKERS = 0";
+      echo ";MAX_WORKERS = 10";
+      echo ";BLOCK_TIMEOUT = 1s";
+      echo ";BOOST_TIMEOUT = 5m";
+      echo ";BOOST_WORKERS = 1";
+      echo "";
+      echo ";[admin]";
+      echo ";DISABLE_REGULAR_ORG_CREATION = false";
+      echo ";DEFAULT_EMAIL_NOTIFICATIONS = enabled";
+      echo "";
+      echo ";[openid]";
+      echo ";ENABLE_OPENID_SIGNIN = true";
+      echo ";WHITELISTED_URIS =";
+      echo ";BLACKLISTED_URIS =";
+      echo "";
+      echo ";[oauth2_client]";
+      echo ";REGISTER_EMAIL_CONFIRM =";
+      echo ";OPENID_CONNECT_SCOPES =";
+      echo ";ENABLE_AUTO_REGISTRATION = false";
+      echo ";USERNAME = nickname";
+      echo ";UPDATE_AVATAR = false";
+      echo ";ACCOUNT_LINKING = login";
+      echo "";
+      echo "[webhook]";
+      echo ";QUEUE_LENGTH = 1000";
+      echo "DELIVER_TIMEOUT = 30";
+      echo ";ALLOWED_HOST_LIST = external";
+      echo "SKIP_TLS_VERIFY = false";
+      echo "PAGING_NUM = 10";
+      echo ";PROXY_URL =";
+      echo ";PROXY_HOSTS =";
+      echo "";
+      echo ";[mailer]";
+      echo ";ENABLED = false";
+      echo ";SEND_BUFFER_LEN = 100";
+      echo ";SUBJECT_PREFIX =";
+      echo ";PROTOCOL =";
+      echo ";SMTP_ADDR =";
+      echo ";SMTP_PORT =";
+      echo ";ENABLE_HELO = true";
+      echo ";HELO_HOSTNAME =";
+      echo ";FORCE_TRUST_SERVER_CERT = false";
+      echo ";USE_CLIENT_CERT = false";
+      echo ";CLIENT_CERT_FILE = custom/mailer/cert.pem";
+      echo ";CLIENT_KEY_FILE = custom/mailer/key.pem";
+      echo ";FROM =";
+      echo ";ENVELOPE_FROM =";
+      echo ";USER =";
+      echo ";PASSWD =";
+      echo ";SEND_AS_PLAIN_TEXT = false";
+      echo ";SENDMAIL_PATH = sendmail";
+      echo ";SENDMAIL_ARGS =";
+      echo ";SENDMAIL_TIMEOUT = 5m";
+      echo ";SENDMAIL_CONVERT_CRLF = true";
+      echo "";
+      echo "[cache]";
+      echo ";ENABLED = true";
+      echo "ADAPTER = memory";
+      echo "INTERVAL = 60";
+      echo ";HOST =";
+      echo ";ITEM_TTL = 16h";
+      echo "";
+      echo ";[cache.last_commit]";
+      echo ";ENABLED = true";
+      echo ";ITEM_TTL = 8760h";
+      echo ";COMMITS_COUNT = 1000";
+      echo "";
+      echo "[session]";
+      echo "PROVIDER = memory";
+      echo "PROVIDER_CONFIG = data/sessions";
+      echo "COOKIE_NAME = ${PROJECT_NAME}_gitea";
+      echo 'COOKIE_SECURE = false';
+      echo "GC_INTERVAL_TIME = 3600";
+      echo "SESSION_LIFE_TIME = 86400";
+      echo ";SAME_SITE=lax";
+      echo "";
+      echo "[picture]";
+      echo "AVATAR_UPLOAD_PATH = data/avatars";
+      echo "REPOSITORY_AVATAR_UPLOAD_PATH = data/repo-avatars";
+      echo ";REPOSITORY_AVATAR_FALLBACK = none";
+      echo ";REPOSITORY_AVATAR_FALLBACK_IMAGE = /img/repo_default.png";
+      echo ";AVATAR_MAX_WIDTH = 4096";
+      echo ";AVATAR_MAX_HEIGHT = 3072";
+      echo ";AVATAR_RENDERED_SIZE_FACTOR = 3";
+      echo ";AVATAR_MAX_FILE_SIZE = 1048576";
+      echo "GRAVATAR_SOURCE = gravatar";
+      echo "DISABLE_GRAVATAR = true";
+      echo "ENABLE_FEDERATED_AVATAR = true";
+      echo "";
+      echo ";[attachment]";
+      echo ";ENABLED = true";
+      echo ";ALLOWED_TYPES = .csv,.docx,.fodg,.fodp,.fods,.fodt,.gif,.gz,.jpeg,.jpg,.log,.md,.mov,.mp4,.odf,.odg,.odp,.ods,.odt,.pdf,.png,.pptx,.svg,.tgz,.txt,.webm,.xls,.xlsx,.zip";
+      echo ";MAX_SIZE = 4";
+      echo ";MAX_FILES = 5";
+      echo ";STORAGE_TYPE = local";
+      echo ";SERVE_DIRECT = false";
+      echo ";PATH = data/attachments";
+      echo ";MINIO_ENDPOINT = localhost:9000";
+      echo ";MINIO_ACCESS_KEY_ID =";
+      echo ";MINIO_SECRET_ACCESS_KEY =";
+      echo ";MINIO_BUCKET = gitea";
+      echo ";MINIO_LOCATION = us-east-1";
+      echo ";MINIO_BASE_PATH = attachments/";
+      echo ";MINIO_USE_SSL = false";
+      echo "";
+      echo ";[time]";
+      echo ";FORMAT =";
+      echo ";DEFAULT_UI_LOCATION =";
+      echo "";
+      echo ";[cron]";
+      echo ";ENABLED = false";
+      echo ";RUN_AT_START = false";
+      echo "";
+      echo ";[cron.archive_cleanup]";
+      echo ";ENABLED = true";
+      echo ";RUN_AT_START = true";
+      echo ";NOTICE_ON_SUCCESS = false";
+      echo ";SCHEDULE = @midnight";
+      echo ";OLDER_THAN = 24h";
+      echo "";
+      echo ";[cron.update_mirrors]";
+      echo ";SCHEDULE = @every 10m";
+      echo ";ENABLED = true";
+      echo ";RUN_AT_START = false";
+      echo ";NOTICE_ON_SUCCESS = false";
+      echo ";PULL_LIMIT=50";
+      echo ";PUSH_LIMIT=50";
+      echo "";
+      echo ";[cron.repo_health_check]";
+      echo ";ENABLED = true";
+      echo ";RUN_AT_START = false";
+      echo ";NOTICE_ON_SUCCESS = false";
+      echo ";TIMEOUT = 60s";
+      echo ";ARGS =";
+      echo "";
+      echo ";[cron.check_repo_stats]";
+      echo ";ENABLED = true";
+      echo ";RUN_AT_START = true";
+      echo ";NOTICE_ON_SUCCESS = false";
+      echo ";SCHEDULE = @midnight";
+      echo "";
+      echo ";[cron.update_migration_poster_id]";
+      echo ";ENABLED = true";
+      echo ";RUN_AT_START = true";
+      echo ";NOTICE_ON_SUCCESS = false";
+      echo ";SCHEDULE = @midnight";
+      echo "";
+      echo ";[cron.sync_external_users]";
+      echo ";ENABLED = true";
+      echo ";RUN_AT_START = false";
+      echo ";NOTICE_ON_SUCCESS = false";
+      echo ";SCHEDULE = @midnight";
+      echo ";UPDATE_EXISTING = true";
+      echo "";
+      echo ";[cron.deleted_branches_cleanup]";
+      echo ";ENABLED = true";
+      echo ";RUN_AT_START = true";
+      echo ";NOTICE_ON_SUCCESS = false";
+      echo ";SCHEDULE = @midnight";
+      echo ";OLDER_THAN = 24h";
+      echo "";
+      echo ";[cron.cleanup_hook_task_table]";
+      echo ";ENABLED = true";
+      echo ";RUN_AT_START = false";
+      echo ";SCHEDULE = @midnight";
+      echo ";CLEANUP_TYPE = OlderThan";
+      echo ";OLDER_THAN = 168h";
+      echo ";NUMBER_TO_KEEP = 10";
+      echo "";
+      echo ";[cron.cleanup_packages]";
+      echo ";ENABLED = true";
+      echo ";RUN_AT_START = true";
+      echo ";NOTICE_ON_SUCCESS = false";
+      echo ";SCHEDULE = @midnight";
+      echo ";OLDER_THAN = 24h";
+      echo "";
+      echo ";[cron.delete_inactive_accounts]";
+      echo ";ENABLED = false";
+      echo ";RUN_AT_START = false";
+      echo ";NOTICE_ON_SUCCESS = false";
+      echo ";SCHEDULE = @annually";
+      echo ";OLDER_THAN = 168h";
+      echo "";
+      echo ";[cron.delete_repo_archives]";
+      echo ";ENABLED = false";
+      echo ";RUN_AT_START = false";
+      echo ";NOTICE_ON_SUCCESS = false";
+      echo ";SCHEDULE = @annually;";
+      echo "";
+      echo ";[cron.git_gc_repos]";
+      echo ";ENABLED = false";
+      echo ";RUN_AT_START = false";
+      echo ";NOTICE_ON_SUCCESS = false";
+      echo ";SCHEDULE = @every 72h";
+      echo ";TIMEOUT = 60s";
+      echo ";ARGS =";
+      echo "";
+      echo ";[cron.resync_all_sshkeys]";
+      echo ";ENABLED = false";
+      echo ";RUN_AT_START = false";
+      echo ";NOTICE_ON_SUCCESS = false";
+      echo ";SCHEDULE = @every 72h";
+      echo "";
+      echo ";[cron.resync_all_hooks]";
+      echo ";ENABLED = false";
+      echo ";RUN_AT_START = false";
+      echo ";NOTICE_ON_SUCCESS = false";
+      echo ";SCHEDULE = @every 72h";
+      echo "";
+      echo ";[cron.reinit_missing_repos]";
+      echo ";ENABLED = false";
+      echo ";RUN_AT_START = false";
+      echo ";NOTICE_ON_SUCCESS = false";
+      echo ";SCHEDULE = @every 72h";
+      echo "";
+      echo ";[cron.delete_missing_repos]";
+      echo ";ENABLED = false";
+      echo ";RUN_AT_START = false";
+      echo ";NOTICE_ON_SUCCESS = false";
+      echo ";SCHEDULE = @every 72h";
+      echo "";
+      echo ";[cron.delete_generated_repository_avatars]";
+      echo ";ENABLED = false";
+      echo ";RUN_AT_START = false";
+      echo ";NOTICE_ON_SUCCESS = false";
+      echo ";SCHEDULE = @every 72h";
+      echo "";
+      echo ";[cron.delete_old_actions]";
+      echo ";ENABLED = false";
+      echo ";RUN_AT_START = false";
+      echo ";NOTICE_ON_SUCCESS = false";
+      echo ";SCHEDULE = @every 168h";
+      echo ";OLDER_THAN = 8760h";
+      echo "";
+      echo ";[cron.update_checker]";
+      echo ";ENABLED = false";
+      echo ";RUN_AT_START = false";
+      echo ";ENABLE_SUCCESS_NOTICE = false";
+      echo ";SCHEDULE = @every 168h";
+      echo ";HTTP_ENDPOINT = https://dl.gitea.io/gitea/version.json";
+      echo "";
+      echo ";[cron.delete_old_system_notices]";
+      echo ";ENABLED = false";
+      echo ";RUN_AT_START = false";
+      echo ";NO_SUCCESS_NOTICE = false";
+      echo ";SCHEDULE = @every 168h";
+      echo ";OLDER_THAN = 8760h";
+      echo "";
+      echo "[git.timeout]";
+      echo ";DEFAULT = 360";
+      echo "MIGRATE = 600";
+      echo "MIRROR = 300";
+      echo "CLONE = 300";
+      echo "PULL = 300";
+      echo "GC = 60";
+      echo "";
+      echo "[mirror]";
+      echo ";ENABLED = true";
+      echo ";DISABLE_NEW_PULL = false";
+      echo ";DISABLE_NEW_PUSH = false";
+      echo "DEFAULT_INTERVAL = 8h";
+      echo ";MIN_INTERVAL = 10m";
+      echo "";
+      echo ";[api]";
+      echo ";ENABLE_SWAGGER = true";
+      echo ";MAX_RESPONSE_ITEMS = 50";
+      echo ";DEFAULT_PAGING_NUM = 30";
+      echo ";DEFAULT_GIT_TREES_PER_PAGE = 1000";
+      echo ";DEFAULT_MAX_BLOB_SIZE = 10485760";
+      echo "";
+      echo ";[i18n]";
+      echo ";LANGS = en-US,zh-CN,zh-HK,zh-TW,de-DE,fr-FR,nl-NL,lv-LV,ru-RU,uk-UA,ja-JP,es-ES,pt-BR,pt-PT,pl-PL,bg-BG,it-IT,fi-FI,tr-TR,cs-CZ,sv-SE,ko-KR,el-GR,fa-IR,hu-HU,id-ID,ml-IN";
+      echo ";NAMES = English,简体中文,繁體中文（香港）,繁體中文（台灣）,Deutsch,Français,Nederlands,Latviešu,Русский,Українська,日本語,Español,Português do Brasil,Português de Portugal,Polski,Български,Italiano,Suomi,Türkçe,Čeština,Српски,Svenska,한국어,Ελληνικά,فارسی,Magyar nyelv,Bahasa Indonesia,മലയാളം";
+      echo "";
+      echo ";[highlight.mapping]";
+      echo "";
+      echo "[other]";
+      echo "SHOW_FOOTER_BRANDING = false";
+      echo "SHOW_FOOTER_VERSION = false";
+      echo "SHOW_FOOTER_TEMPLATE_LOAD_TIME = false";
+      echo "";
+      echo ";[markup]";
+      echo ";MERMAID_MAX_SOURCE_CHARACTERS = 5000";
+      echo "";
+      echo ";[markup.sanitizer.1]";
+      echo ";ELEMENT = span";
+      echo ";ALLOW_ATTR = class";
+      echo ';REGEXP = ^(info|warning|error)$';
+      echo ";[markup.asciidoc]";
+      echo ";ENABLED = false";
+      echo ";FILE_EXTENSIONS = .adoc,.asciidoc";
+      echo ';RENDER_COMMAND = "asciidoc --out-file=- -"';
+      echo ";IS_INPUT_FILE = false";
+      echo ";RENDER_CONTENT_MODE=sanitized";
+      echo "";
+      echo ";[metrics]";
+      echo ";ENABLED = false";
+      echo ";TOKEN =";
+      echo ";ENABLED_ISSUE_BY_LABEL = false";
+      echo ";ENABLED_ISSUE_BY_REPOSITORY = false";
+      echo "";
+      echo ";[task]";
+      echo ";QUEUE_TYPE = channel";
+      echo ";QUEUE_LENGTH = 1000";
+      echo ';QUEUE_CONN_STR = "addrs=127.0.0.1:6379 db=0"';
+      echo "";
+      echo ";[migrations]";
+      echo ";MAX_ATTEMPTS = 3";
+      echo ";RETRY_BACKOFF = 3";
+      echo ";ALLOWED_DOMAINS =";
+      echo ";BLOCKED_DOMAINS =";
+      echo ";ALLOW_LOCALNETWORKS = false";
+      echo "";
+      echo ";[federation]";
+      echo ";ENABLED = false";
+      echo ";SHARE_USER_STATISTICS = true";
+      echo ";MAX_SIZE = 4";
+      echo ";ALGORITHMS = rsa-sha256, rsa-sha512, ed25519";
+      echo ";DIGEST_ALGORITHM = SHA-256";
+      echo ";GET_HEADERS = (request-target), Date";
+      echo ";POST_HEADERS = (request-target), Date, Digest";
+      echo "";
+      echo ";[packages]";
+      echo ";ENABLED = true";
+      echo ";CHUNKED_UPLOAD_PATH = tmp/package-upload";
+      echo "";
+      echo ";[storage]";
+      echo ";STORAGE_TYPE = local";
+      echo "";
+      echo ";[storage.repo-archive]";
+      echo ";STORAGE_TYPE = local";
+      echo "";
+      echo ";[lfs]";
+      echo ";STORAGE_TYPE = local";
+      echo ";PATH = data/lfs";
+      echo "";
+      echo ";[storage.packages]";
+      echo ";STORAGE_TYPE = local";
+      echo "";
+      echo ";[storage.my_minio]";
+      echo ";STORAGE_TYPE = minio";
+      echo ";MINIO_ENDPOINT = localhost:9000";
+      echo ";MINIO_ACCESS_KEY_ID =";
+      echo ";MINIO_SECRET_ACCESS_KEY =";
+      echo ";MINIO_BUCKET = gitea";
+      echo ";MINIO_LOCATION = us-east-1";
+      echo ";MINIO_USE_SSL = false";
+      echo "";
+      echo ";[proxy]";
+      echo ";PROXY_ENABLED = false";
+      echo ";PROXY_URL =";
+      echo ";PROXY_HOSTS ="; } >> ${GITEA_CONFIG_FILE}
+
+    chmod 750 ${GITEA_CONFIG_FILE}
+    chown -R "${GITEA_USERNAME}":"${GITEA_USERNAME}" "/home/${GITEA_USERNAME}"
+
+    increment_app_install_progress
+
+    systemctl restart gitea
+
+    sleep 6
+
+    increment_app_install_progress
+
+    if [ ! -f "/home/${GITEA_USERNAME}/scripts/mysql.sql" ]; then
+        echo "/home/${GITEA_USERNAME}/scripts/mysql.sql not found"
+        exit 83
+    fi
+
+    function_check initialise_database
+    initialise_database gitea "/home/${GITEA_USERNAME}/scripts/mysql.sql"
+
+    gitea_turn_off_registrations
+
+    increment_app_install_progress
+
+    systemctl restart gitea
+
+    increment_app_install_progress
+
+    if ! grep -q "gitea domain:" "${COMPLETION_FILE}"; then
+        echo "gitea domain:${GITEA_DOMAIN_NAME}" >> "${COMPLETION_FILE}"
+    else
+        sed -i "s|gitea domain.*|gitea domain:${GITEA_DOMAIN_NAME}|g" "${COMPLETION_FILE}"
+    fi
+
+    function_check configure_firewall_for_git
+    configure_firewall_for_git
+
+    if ! grep -q "gitea version:" "${COMPLETION_FILE}"; then
+        echo "gitea version:${GITEA_VERSION}" >> "${COMPLETION_FILE}"
+    else
+        sed -i "s|gitea version.*|gitea version:${GITEA_VERSION}|g" "${COMPLETION_FILE}"
+    fi
+
+    APP_INSTALLED=1
+}
+
+# NOTE: deliberately no exit 0

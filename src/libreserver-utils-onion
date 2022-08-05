@@ -264,6 +264,7 @@ function set_default_onion_domains {
     DOKUWIKI_DOMAIN_NAME='dokuwiki.local'
     DEFAULT_DOMAIN_NAME="${LOCAL_NAME}.local"
     GOGS_DOMAIN_NAME='gogs.local'
+    GITEA_DOMAIN_NAME='gitea.local'
 }
 
 function create_avahi_onion_domains {
