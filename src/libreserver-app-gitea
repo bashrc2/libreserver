@@ -33,7 +33,7 @@ SHOW_ON_ABOUT=1
 REQUIRES_APP=
 
 GITEA_USERNAME='gitea'
-GITEA_VERSION='0.17.0'
+GITEA_VERSION='1.17.0'
 GITEA_DOWNLOAD='https://github.com/go-gitea/gitea/releases/download'
 
 GITEA_DOMAIN_NAME=
@@ -157,10 +157,10 @@ function gitea_parameters {
             CURR_ARCH=arm-6
             echo $"Using $CURR_ARCH"
         fi
-	      if [[ ${ARCHITECTURE} == *"aarch"* ]]; then
+        if [[ ${ARCHITECTURE} == *"aarch"* ]]; then
             CURR_ARCH=arm64
             echo $"Using $CURR_ARCH"
-	      fi
+        fi
         if [[ ${ARCHITECTURE} == "amd"* || ${ARCHITECTURE} == "x86_64" ]]; then
             CURR_ARCH=amd64
             echo $"Using $CURR_ARCH"
@@ -171,7 +171,7 @@ function gitea_parameters {
         fi
     fi
 
-    GITEA_FILE=gitea_${GITEA_VERSION}-${gitea_os_type}-${CURR_ARCH}.tar.gz
+    GITEA_FILE=gitea-${GITEA_VERSION}-${gitea_os_type}-${CURR_ARCH}.xz
     GITEA_BIN="${GITEA_DOWNLOAD}/v${GITEA_VERSION}/${GITEA_FILE}"
 }
 
@@ -209,18 +209,18 @@ function upgrade_gitea {
 
     restart_gitea=
     if grep -q "DB_TYPE = " "${GITEA_CONFIG_FILE}"; then
-	      sed -i 's|DB_TYPE = |TYPE = |g' "${GITEA_CONFIG_FILE}"
-	      restart_gitea=1
+        sed -i 's|DB_TYPE = |TYPE = |g' "${GITEA_CONFIG_FILE}"
+        restart_gitea=1
     fi
 
     if grep -q "PASSWD = " "${GITEA_CONFIG_FILE}"; then
-	      sed -i 's|PASSWD = |PASSWORD = |g' "${GITEA_CONFIG_FILE}"
-	      restart_gitea=1
+        sed -i 's|PASSWD = |PASSWORD = |g' "${GITEA_CONFIG_FILE}"
+        restart_gitea=1
     fi
 
     if grep -q "PROVIDER = file" "${GITEA_CONFIG_FILE}"; then
-	      sed -i 's|PROVIDER = file|PROVIDER = memory|g' "${GITEA_CONFIG_FILE}"
-	      restart_gitea=1
+        sed -i 's|PROVIDER = file|PROVIDER = memory|g' "${GITEA_CONFIG_FILE}"
+        restart_gitea=1
     fi
 
     # Change port number if necessary
@@ -228,7 +228,7 @@ function upgrade_gitea {
         sed -i "s|HTTP_PORT =.*|HTTP_PORT = ${GITEA_PORT}|g" "${GITEA_CONFIG_FILE}"
         read_config_param GITEA_DOMAIN_NAME
         sed -i "s|proxy_pass .*|proxy_pass http://localhost:${GITEA_PORT};|g" "/etc/nginx/sites-available/${GITEA_DOMAIN_NAME}"
-	      restart_gitea=1
+        restart_gitea=1
     fi
 
     if [ $restart_gitea ]; then
@@ -263,7 +263,7 @@ function upgrade_gitea {
     if [ -d "${INSTALL_DIR}/gitea" ]; then
         rm -rf "${INSTALL_DIR}/gitea"
     fi
-    GITEA_FILE=gitea_${GITEA_VERSION}-${gitea_os_type}-${CURR_ARCH}.tar.gz
+    GITEA_FILE=gitea-${GITEA_VERSION}-${gitea_os_type}-${CURR_ARCH}.xz
     if [ ! -f ${GITEA_FILE} ]; then
         if [[ "$ONION_ONLY" == 'no' ]]; then
             wget ${GITEA_BIN}
@@ -274,28 +274,11 @@ function upgrade_gitea {
             fi
         fi
     fi
-    if [ ! -f ${GITEA_FILE} ]; then
-        GITEA_FILE=gitea_${GITEA_VERSION}-${gitea_os_type}-${CURR_ARCH}.zip
-        GITEA_BIN="${GITEA_DOWNLOAD}/v${GITEA_VERSION}/${GITEA_FILE}"
-        if [ ! -f ${GITEA_FILE} ]; then
-            if [[ "$ONION_ONLY" == 'no' ]]; then
-                wget ${GITEA_BIN}
-            else
-                torsocks wget ${GITEA_BIN}
-                if [ ! -f ${GITEA_FILE} ]; then
-                    wget ${GITEA_BIN}
-                fi
-            fi
-        fi
-        if [ ! -f ${GITEA_FILE} ]; then
-            exit 37
-        else
-            INSTALL_PACKAGES unzip
-            unzip -o ${GITEA_FILE}
-        fi
-    else
-        tar -xzf "${INSTALL_DIR}/${GITEA_FILE}"
+    if [ ! -f "${INSTALL_DIR}/${GITEA_FILE}" ]; then
+        echo "Unable to download ${GITEA_FILE}"
+        exit 62
     fi
+    unxz "${INSTALL_DIR}/${GITEA_FILE}"
     if [ ! -d "${INSTALL_DIR}/gitea" ]; then
         exit 37
     fi
@@ -481,9 +464,11 @@ function remove_gitea {
 
 function install_gitea {
     if [ ! "$GITEA_DOMAIN_NAME" ]; then
-	      echo $"Missing gitea domain name"
+        echo $"Missing gitea domain name"
         return
     fi
+
+    INSTALL_PACKAGES unxz
 
     increment_app_install_progress
 
@@ -515,7 +500,7 @@ function install_gitea {
     if [ -d "$INSTALL_DIR/gitea" ]; then
         rm -rf "$INSTALL_DIR/gitea"
     fi
-    GITEA_FILE="gitea_${GITEA_VERSION}-${gitea_os_type}-${CURR_ARCH}.tar.gz"
+    GITEA_FILE="gitea-${GITEA_VERSION}-${gitea_os_type}-${CURR_ARCH}.xz"
     if [ ! -f ${GITEA_FILE} ]; then
         if [[ "$ONION_ONLY" == 'no' ]]; then
             wget ${GITEA_BIN}
@@ -527,24 +512,10 @@ function install_gitea {
         fi
     fi
     if [ ! -f ${GITEA_FILE} ]; then
-        GITEA_FILE="gitea_${GITEA_VERSION}-${gitea_os_type}-${CURR_ARCH}.zip"
-        GITEA_BIN="${GITEA_DOWNLOAD}/v${GITEA_VERSION}/${GITEA_FILE}"
-        if [[ "$ONION_ONLY" == 'no' ]]; then
-            wget ${GITEA_BIN}
-        else
-            torsocks wget ${GITEA_BIN}
-            if [ ! -f ${GITEA_FILE} ]; then
-                wget ${GITEA_BIN}
-            fi
-        fi
-        if [ ! -f ${GITEA_FILE} ]; then
-            exit 37
-        else
-            INSTALL_PACKAGES unzip
-            unzip -o ${GITEA_FILE}
-        fi
+        echo "Unable to download ${GITEA_FILE}"
+        exit 62
     else
-        tar -xzf "${INSTALL_DIR}/${GITEA_FILE}"
+        unxz "${INSTALL_DIR}/${GITEA_FILE}"
     fi
     if [ ! -d "${INSTALL_DIR}/gitea" ]; then
         exit 37
@@ -654,7 +625,7 @@ function install_gitea {
           echo '    #listen [::]:443 ssl;';
           echo "    root /var/www/${GITEA_DOMAIN_NAME}/htdocs;";
           echo "    server_name ${GITEA_DOMAIN_NAME};";
-	        echo '    server_tokens off;';
+          echo '    server_tokens off;';
           echo '    access_log /dev/null;';
           echo "    error_log /dev/null;";
           echo ''; } >> "/etc/nginx/sites-available/${GITEA_DOMAIN_NAME}"
