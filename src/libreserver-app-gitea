@@ -318,6 +318,7 @@ function upgrade_gitea {
     rm -rf "/home/${GITEA_USERNAME:?}/"*
     cp -r "${INSTALL_DIR}/${GITEA_FILE_BASE_SRC}"/* "/home/${GITEA_USERNAME}"
     cp "${INSTALL_DIR}/${GITEA_FILE_BASE}" "/home/${GITEA_USERNAME}/gitea"
+    chmod +x "/home/${GITEA_USERNAME}/gitea"
     if [ -f "${INSTALL_DIR}/${GITEA_FILE_BASE}" ]; then
         rm "${INSTALL_DIR}/${GITEA_FILE_BASE}"
     fi
@@ -590,6 +591,7 @@ function install_gitea {
     rm -rf "/home/${GITEA_USERNAME:?}/"*
     cp -r "${INSTALL_DIR}/${GITEA_FILE_BASE_SRC}"/* "/home/${GITEA_USERNAME}"
     cp "${INSTALL_DIR}/${GITEA_FILE_BASE}" "/home/${GITEA_USERNAME}/gitea"
+    chmod +x "/home/${GITEA_USERNAME}/gitea"
     if [ -f "${INSTALL_DIR}/${GITEA_FILE_BASE}" ]; then
         rm "${INSTALL_DIR}/${GITEA_FILE_BASE}"
     fi
