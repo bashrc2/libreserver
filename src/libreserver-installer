@@ -2623,7 +2623,7 @@ function backup_and_restore_keys {
 
 function is_valid_user {
     USRNAME="$1"
-    if [[ "$USRNAME" != "turtl" && "$USRNAME" != "znc" && "$USRNAME" != "pihole" && "$USRNAME" != "${PROJECT_NAME}" && "$USRNAME" != "go" && "$USRNAME" != "gogs" && "$USRNAME" != "gitea" && "$USRNAME" != "gemini" && "$USRNAME" != "git" && "$USRNAME" != "sync" && "$USRNAME" != "pi" ]]; then
+    if [[ "$USRNAME" != "turtl" && "$USRNAME" != "znc" && "$USRNAME" != "pihole" && "$USRNAME" != "${PROJECT_NAME}" && "$USRNAME" != "go" && "$USRNAME" != "gitea" && "$USRNAME" != "gemini" && "$USRNAME" != "git" && "$USRNAME" != "sync" && "$USRNAME" != "pi" ]]; then
         echo "1"
     else
         echo "0"

@@ -1187,7 +1187,7 @@ function spam_filtering {
     { echo '#!/bin/bash';
       echo 'for d in /home/*/ ; do';
       echo "    USERNAME=\$(echo \"\$d\" | awk -F '/' '{print \$3}')";
-      echo "    if [[ \$USERNAME != \"git\" && $USERNAME != \"go\" && \$USERNAME != \"gogs\" && \$USERNAME != \"gitea\" && \$USERNAME != \"sync\" ]]; then";
+      echo "    if [[ \$USERNAME != \"git\" && $USERNAME != \"go\" && \$USERNAME != \"gitea\" && \$USERNAME != \"sync\" ]]; then";
       echo "        MAILDIR=/home/\$USERNAME/Maildir/.learn-spam";
       echo "        if [ ! -d \"\$MAILDIR\" ]; then";
       echo '           exit';
@@ -1209,7 +1209,7 @@ function spam_filtering {
     { echo '#!/bin/bash';
       echo 'for d in /home/*/ ; do';
       echo "    USERNAME=\$(echo \"\$d\" | awk -F '/' '{print \$3}')";
-      echo "    if [[ \$USERNAME != \"git\" && \$USERNAME != \"go\" && \$USERNAME != \"gogs\" && \$USERNAME != \"gitea\" && \$USERNAME != \"sync\" ]]; then";
+      echo "    if [[ \$USERNAME != \"git\" && \$USERNAME != \"go\" && \$USERNAME != \"gitea\" && \$USERNAME != \"sync\" ]]; then";
       echo "        MAILDIR=/home/\$USERNAME/Maildir/.learn-ham";
       echo "        if [ ! -d \"\$MAILDIR\" ]; then";
       echo '            exit';

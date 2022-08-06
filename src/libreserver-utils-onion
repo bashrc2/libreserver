@@ -263,7 +263,6 @@ function set_default_onion_domains {
     BLUDIT_DOMAIN_NAME='bludit.local'
     DOKUWIKI_DOMAIN_NAME='dokuwiki.local'
     DEFAULT_DOMAIN_NAME="${LOCAL_NAME}.local"
-    GOGS_DOMAIN_NAME='gogs.local'
     GITEA_DOMAIN_NAME='gitea.local'
 }
 
@@ -278,9 +277,9 @@ function create_avahi_onion_domains {
         function_check create_avahi_service
         create_avahi_service 'blog' 'http' 'tcp' "$HTMLY_ONION_PORT"
     fi
-    if [ "$GOGS_DOMAIN_NAME" ]; then
+    if [ "$GITEA_DOMAIN_NAME" ]; then
         function_check create_avahi_service
-        create_avahi_service 'git' 'http' 'tcp' "$GOGS_ONION_PORT"
+        create_avahi_service 'gitea' 'http' 'tcp' "$GITEA_ONION_PORT"
     fi
     if [ "$DOKUWIKI_DOMAIN_NAME" ]; then
         function_check create_avahi_service

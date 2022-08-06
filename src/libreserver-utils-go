@@ -231,16 +231,9 @@ function upgrade_golang {
     rootdir=
     mesh_upgrade_golang
 
-    # alter the go version used by the gogs daemon
-    if [ -f /etc/systemd/system/gogs.service ]; then
-        sed -i "s|Environment=.*|Environment=\"USER=gogs\" \"HOME=/home/gogs\" \"GOPATH=/home/go/go${GO_VERSION}\"|g" /etc/systemd/system/gogs.service
-        systemctl daemon-reload
-        systemctl restart gogs
-    fi
-
     # alter the go version used by the gitea daemon
     if [ -f /etc/systemd/system/gitea.service ]; then
-        sed -i "s|Environment=.*|Environment=\"USER=gitea\" \"HOME=/home/gitea\" \"GOPATH=/home/go/go${GO_VERSION}\"|g" /etc/systemd/system/gogs.service
+        sed -i "s|Environment=.*|Environment=\"USER=gitea\" \"HOME=/home/gitea\" \"GOPATH=/home/go/go${GO_VERSION}\"|g" /etc/systemd/system/gitea.service
         systemctl daemon-reload
         systemctl restart gitea
     fi
