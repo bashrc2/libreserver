@@ -263,7 +263,8 @@ function upgrade_gitea {
     if [ -d "${INSTALL_DIR}/gitea" ]; then
         rm -rf "${INSTALL_DIR}/gitea"
     fi
-    GITEA_FILE=gitea-${GITEA_VERSION}-${gitea_os_type}-${CURR_ARCH}.xz
+    GITEA_FILE_BASE=gitea-${GITEA_VERSION}-${gitea_os_type}-${CURR_ARCH}
+    GITEA_FILE=${GITEA_FILE_BASE}.xz
     if [ ! -f ${GITEA_FILE} ]; then
         if [[ "$ONION_ONLY" == 'no' ]]; then
             wget ${GITEA_BIN}
@@ -277,6 +278,9 @@ function upgrade_gitea {
     if [ ! -f "${INSTALL_DIR}/${GITEA_FILE}" ]; then
         echo "Unable to download ${GITEA_FILE}"
         exit 62
+    fi
+    if [ -f "${INSTALL_DIR}/${GITEA_FILE_BASE}" ]; then
+        rm "${INSTALL_DIR}/${GITEA_FILE_BASE}"
     fi
     unxz "${INSTALL_DIR}/${GITEA_FILE}"
     if [ ! -d "${INSTALL_DIR}/gitea" ]; then
@@ -500,7 +504,8 @@ function install_gitea {
     if [ -d "$INSTALL_DIR/gitea" ]; then
         rm -rf "$INSTALL_DIR/gitea"
     fi
-    GITEA_FILE="gitea-${GITEA_VERSION}-${gitea_os_type}-${CURR_ARCH}.xz"
+    GITEA_FILE_BASE="gitea-${GITEA_VERSION}-${gitea_os_type}-${CURR_ARCH}"
+    GITEA_FILE="${GITEA_FILE_BASE}.xz"
     if [ ! -f ${GITEA_FILE} ]; then
         if [[ "$ONION_ONLY" == 'no' ]]; then
             wget ${GITEA_BIN}
@@ -515,6 +520,9 @@ function install_gitea {
         echo "Unable to download ${GITEA_FILE}"
         exit 62
     else
+        if [ -f "${INSTALL_DIR}/${GITEA_FILE_BASE}" ]; then
+            rm "${INSTALL_DIR}/${GITEA_FILE_BASE}"
+        fi
         unxz "${INSTALL_DIR}/${GITEA_FILE}"
     fi
     if [ ! -d "${INSTALL_DIR}/gitea" ]; then
