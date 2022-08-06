@@ -468,7 +468,7 @@ function install_gitea {
         return
     fi
 
-    INSTALL_PACKAGES unxz
+    INSTALL_PACKAGES xz-utils
 
     increment_app_install_progress
 
