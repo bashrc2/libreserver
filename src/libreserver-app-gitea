@@ -830,9 +830,11 @@ function install_gitea {
     if [[ ${ONION_ONLY} == 'no' ]]; then
         echo "DOMAIN = ${GITEA_DOMAIN_NAME}" >> ${GITEA_CONFIG_FILE}
         echo "LOCAL_ROOT_URL = https://$GITEA_DOMAIN_NAME/" >> ${GITEA_CONFIG_FILE}
+        echo "ROOT_URL = https://$GITEA_DOMAIN_NAME/" >> ${GITEA_CONFIG_FILE}
     else
         echo "DOMAIN = ${GIT_ONION_HOSTNAME}" >> ${GITEA_CONFIG_FILE}
-        echo "LOCAL_ROOT_URL = http://$GITEA_DOMAIN_NAME/" >> ${GITEA_CONFIG_FILE}
+        echo "LOCAL_ROOT_URL = http://${GIT_ONION_HOSTNAME}/" >> ${GITEA_CONFIG_FILE}
+        echo "ROOT_URL = http://${GIT_ONION_HOSTNAME}/" >> ${GITEA_CONFIG_FILE}
     fi
     { echo "HTTP_PORT = ${GITEA_PORT}";
       echo "SSH_PORT = $SSH_PORT";
@@ -843,7 +845,6 @@ function install_gitea {
       echo 'UNIX_SOCKET_PERMISSION = 666';
       echo ";PROTOCOL = http";
       echo ";DOMAIN = localhost";
-      echo ";ROOT_URL = %(PROTOCOL)s://%(DOMAIN)s:%(HTTP_PORT)s/";
       echo ";STATIC_URL_PREFIX =";
       echo ";HTTP_ADDR = 0.0.0.0";
       echo ";REDIRECT_OTHER_PORT = false";
