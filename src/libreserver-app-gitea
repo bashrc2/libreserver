@@ -41,6 +41,7 @@ GITEA_CODE=
 GITEA_ONION_PORT=8340
 GITEA_ADMIN_PASSWORD=
 GITEA_BIN=
+GITEA_SRC=
 GITEA_PORT=3144
 
 GITEA_SHORT_DESCRIPTION=$'Git repo management'
@@ -173,6 +174,8 @@ function gitea_parameters {
 
     GITEA_FILE=gitea-${GITEA_VERSION}-${gitea_os_type}-${CURR_ARCH}.xz
     GITEA_BIN="${GITEA_DOWNLOAD}/v${GITEA_VERSION}/${GITEA_FILE}"
+    GITEA_FILE_SRC=gitea-src-${GITEA_VERSION}.tar.gz
+    GITEA_SRC="${GITEA_DOWNLOAD}/v${GITEA_VERSION}/${GITEA_FILE_SRC}"
 }
 
 function gitea_create_database {
@@ -263,6 +266,8 @@ function upgrade_gitea {
     if [ -d "${INSTALL_DIR}/gitea" ]; then
         rm -rf "${INSTALL_DIR}/gitea"
     fi
+
+    # download binary
     GITEA_FILE_BASE=gitea-${GITEA_VERSION}-${gitea_os_type}-${CURR_ARCH}
     GITEA_FILE=${GITEA_FILE_BASE}.xz
     if [ ! -f ${GITEA_FILE} ]; then
@@ -286,10 +291,38 @@ function upgrade_gitea {
     if [ ! -f "${INSTALL_DIR}/${GITEA_FILE_BASE}" ]; then
         exit 37
     fi
+
+    # download source
+    GITEA_FILE_BASE_SRC=gitea-src-${GITEA_VERSION}
+    GITEA_FILE_SRC=${GITEA_FILE_BASE_SRC}.tar.gz
+    if [ ! -f ${GITEA_FILE_SRC} ]; then
+        if [[ "$ONION_ONLY" == 'no' ]]; then
+            wget ${GITEA_SRC}
+        else
+            torsocks wget ${GITEA_SRC}
+            if [ ! -f ${GITEA_FILE_SRC} ]; then
+                wget ${GITEA_SRC}
+            fi
+        fi
+    fi
+    if [ ! -f "${INSTALL_DIR}/${GITEA_FILE_SRC}" ]; then
+        echo "Unable to download source ${GITEA_FILE_SRC}"
+        exit 62
+    fi
+    tar -xzf "${INSTALL_DIR}/${GITEA_FILE_SRC}"
+    if [ ! -d "${INSTALL_DIR}/${GITEA_FILE_BASE_SRC}" ]; then
+        echo "source directory not found ${INSTALL_DIR}/${GITEA_FILE_BASE_SRC}"
+        exit 37
+    fi
+
     rm -rf "/home/${GITEA_USERNAME:?}/"*
+    cp -r "${INSTALL_DIR}/${GITEA_FILE_BASE_SRC}"/* "/home/${GITEA_USERNAME}"
     cp "${INSTALL_DIR}/${GITEA_FILE_BASE}" "/home/${GITEA_USERNAME}/gitea"
     if [ -f "${INSTALL_DIR}/${GITEA_FILE_BASE}" ]; then
         rm "${INSTALL_DIR}/${GITEA_FILE_BASE}"
+    fi
+    if [ -d "${INSTALL_DIR}/${GITEA_FILE_BASE_SRC}" ]; then
+        rm -rf "${INSTALL_DIR}/${GITEA_FILE_BASE_SRC}"
     fi
 
     if [ ! -d ${GITEA_CONFIG_PATH} ]; then
@@ -504,6 +537,8 @@ function install_gitea {
     if [ -d "$INSTALL_DIR/gitea" ]; then
         rm -rf "$INSTALL_DIR/gitea"
     fi
+
+    # download binary
     GITEA_FILE_BASE="gitea-${GITEA_VERSION}-${gitea_os_type}-${CURR_ARCH}"
     GITEA_FILE="${GITEA_FILE_BASE}.xz"
     if [ ! -f ${GITEA_FILE} ]; then
@@ -528,10 +563,38 @@ function install_gitea {
     if [ ! -f "${INSTALL_DIR}/${GITEA_FILE_BASE}" ]; then
         exit 37
     fi
+
+    # download source
+    GITEA_FILE_BASE_SRC=gitea-src-${GITEA_VERSION}
+    GITEA_FILE_SRC=${GITEA_FILE_BASE_SRC}.tar.gz
+    if [ ! -f ${GITEA_FILE_SRC} ]; then
+        if [[ "$ONION_ONLY" == 'no' ]]; then
+            wget ${GITEA_SRC}
+        else
+            torsocks wget ${GITEA_SRC}
+            if [ ! -f ${GITEA_FILE_SRC} ]; then
+                wget ${GITEA_SRC}
+            fi
+        fi
+    fi
+    if [ ! -f "${INSTALL_DIR}/${GITEA_FILE_SRC}" ]; then
+        echo "Unable to download source ${GITEA_FILE_SRC}"
+        exit 62
+    fi
+    tar -xzf "${INSTALL_DIR}/${GITEA_FILE_SRC}"
+    if [ ! -d "${INSTALL_DIR}/${GITEA_FILE_BASE_SRC}" ]; then
+        echo "source directory not found ${INSTALL_DIR}/${GITEA_FILE_BASE_SRC}"
+        exit 37
+    fi
+
     rm -rf "/home/${GITEA_USERNAME:?}/"*
+    cp -r "${INSTALL_DIR}/${GITEA_FILE_BASE_SRC}"/* "/home/${GITEA_USERNAME}"
     cp "${INSTALL_DIR}/${GITEA_FILE_BASE}" "/home/${GITEA_USERNAME}/gitea"
     if [ -f "${INSTALL_DIR}/${GITEA_FILE_BASE}" ]; then
         rm "${INSTALL_DIR}/${GITEA_FILE_BASE}"
+    fi
+    if [ -d "${INSTALL_DIR}/${GITEA_FILE_BASE_SRC}" ]; then
+        rm -rf "${INSTALL_DIR}/${GITEA_FILE_BASE_SRC}"
     fi
 
     if [ ! -f "/home/${GITEA_USERNAME}/gitea" ]; then
@@ -564,7 +627,7 @@ function install_gitea {
 
     increment_app_install_progress
 
-    if [ ! -f "/home/${GITEA_USERNAME}/scripts/mysql.sql" ]; then
+    if [ ! -f "/home/${GITEA_USERNAME}/contrib/mysql.sql" ]; then
         echo $'MySql template for Gitea was not found'
         exit 72
     fi
@@ -1528,13 +1591,13 @@ function install_gitea {
 
     increment_app_install_progress
 
-    if [ ! -f "/home/${GITEA_USERNAME}/scripts/mysql.sql" ]; then
-        echo "/home/${GITEA_USERNAME}/scripts/mysql.sql not found"
+    if [ ! -f "/home/${GITEA_USERNAME}/contrib/mysql.sql" ]; then
+        echo "/home/${GITEA_USERNAME}/contrib/mysql.sql not found"
         exit 83
     fi
 
     function_check initialise_database
-    initialise_database gitea "/home/${GITEA_USERNAME}/scripts/mysql.sql"
+    initialise_database gitea "/home/${GITEA_USERNAME}/contrib/mysql.sql"
 
     gitea_turn_off_registrations
 
