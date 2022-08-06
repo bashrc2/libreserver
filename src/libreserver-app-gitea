@@ -283,13 +283,13 @@ function upgrade_gitea {
         rm "${INSTALL_DIR}/${GITEA_FILE_BASE}"
     fi
     unxz "${INSTALL_DIR}/${GITEA_FILE}"
-    if [ ! -d "${INSTALL_DIR}/gitea" ]; then
+    if [ ! -f "${INSTALL_DIR}/${GITEA_FILE_BASE}" ]; then
         exit 37
     fi
     rm -rf "/home/${GITEA_USERNAME:?}/"*
-    cp -r "${INSTALL_DIR}/gitea/"* "/home/${GITEA_USERNAME}"
-    if [ -f ${GITEA_FILE} ]; then
-        rm ${GITEA_FILE}
+    cp "${INSTALL_DIR}/${GITEA_FILE_BASE}" "/home/${GITEA_USERNAME}/gitea"
+    if [ -f "${INSTALL_DIR}/${GITEA_FILE_BASE}" ]; then
+        rm "${INSTALL_DIR}/${GITEA_FILE_BASE}"
     fi
 
     if [ ! -d ${GITEA_CONFIG_PATH} ]; then
@@ -525,13 +525,13 @@ function install_gitea {
         fi
         unxz "${INSTALL_DIR}/${GITEA_FILE}"
     fi
-    if [ ! -d "${INSTALL_DIR}/gitea" ]; then
+    if [ ! -f "${INSTALL_DIR}/${GITEA_FILE_BASE}" ]; then
         exit 37
     fi
     rm -rf "/home/${GITEA_USERNAME:?}/"*
-    cp -r "${INSTALL_DIR}/gitea/"* "/home/${GITEA_USERNAME}"
-    if [ -f ${GITEA_FILE} ]; then
-        rm ${GITEA_FILE}
+    cp "${INSTALL_DIR}/${GITEA_FILE_BASE}" "/home/${GITEA_USERNAME}/gitea"
+    if [ -f "${INSTALL_DIR}/${GITEA_FILE_BASE}" ]; then
+        rm "${INSTALL_DIR}/${GITEA_FILE_BASE}"
     fi
 
     if [ ! -f "/home/${GITEA_USERNAME}/gitea" ]; then
