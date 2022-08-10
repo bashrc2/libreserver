@@ -1,8 +1,8 @@
 #!/bin/bash
-#  _    _ _            ___                      
-# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
-# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # i2p functions
 #
@@ -65,52 +65,52 @@ function open_i2p_listen_port {
     fi
     i2p_port_opened=
     if grep -q '# port =' "${rootdir}/etc/i2pd/i2pd.conf"; then
-	if ! grep -q "port = $I2P_LISTEN_PORT" "${rootdir}/etc/i2pd/i2pd.conf"; then
+        if ! grep -q "port = $I2P_LISTEN_PORT" "${rootdir}/etc/i2pd/i2pd.conf"; then
             sed -i "0,/# port =.*/s//port = $I2P_LISTEN_PORT" "${rootdir}/etc/i2pd/i2pd.conf"
             i2p_port_opened=1
-	fi
+        fi
     else
         if grep -q '#port =' "${rootdir}/etc/i2pd/i2pd.conf"; then
-	    if ! grep -q "port = $I2P_LISTEN_PORT" "${rootdir}/etc/i2pd/i2pd.conf"; then
-		sed -i "0,/#port =.*/s//port = $I2P_LISTEN_PORT" "${rootdir}/etc/i2pd/i2pd.conf"
-		i2p_port_opened=1
-	    fi
+            if ! grep -q "port = $I2P_LISTEN_PORT" "${rootdir}/etc/i2pd/i2pd.conf"; then
+                sed -i "0,/#port =.*/s//port = $I2P_LISTEN_PORT" "${rootdir}/etc/i2pd/i2pd.conf"
+                i2p_port_opened=1
+            fi
         fi
     fi
     if [ $i2p_port_opened ]; then
         firewall_add i2p $I2P_LISTEN_PORT
-	if [ ! "$rootdir" ]; then
+        if [ ! "$rootdir" ]; then
             systemctl restart i2pd
-	fi
+        fi
     fi
 }
 
 function i2p_modify_daemon {
     if grep -q '/var/run' "${rootdir}/lib/systemd/system/i2pd.service"; then
-	sed -i 's|/var/run|/run|g' "${rootdir}/lib/systemd/system/i2pd.service"
-	if [ ! "$rootdir" ]; then
-	    systemctl daemon-reload
-	    systemctl restart i2pd
-	fi
+        sed -i 's|/var/run|/run|g' "${rootdir}/lib/systemd/system/i2pd.service"
+        if [ ! "$rootdir" ]; then
+            systemctl daemon-reload
+            systemctl restart i2pd
+        fi
     fi
 }
 
 function install_i2p {
     i2p_domain_script
     if [ -d "$rootdir/var/lib/i2pd" ]; then
-	i2p_modify_daemon
-	open_i2p_listen_port
-	return
+        i2p_modify_daemon
+        open_i2p_listen_port
+        return
     fi
     if [ ! "$rootdir" ]; then
-	INSTALL_PACKAGES i2pd
+        INSTALL_PACKAGES i2pd
     else
-	# shellcheck disable=SC2086
-	chroot "$rootdir" INSTALL_PACKAGES i2pd
+        # shellcheck disable=SC2086
+        chroot "$rootdir" INSTALL_PACKAGES i2pd
     fi
 
     if [ ! -f "${rootdir}/etc/i2pd/i2pd.conf" ]; then
-	exit 82
+        exit 82
     fi
 
     i2p_modify_daemon
@@ -119,15 +119,15 @@ function install_i2p {
     # i2p needs ipv6 to be enabled
     enable_ipv6
     if [ ! "${rootdir}" ]; then
-	/sbin/sysctl -p -q
-	if [ -d /etc/nginx ]; then
-	    nginx -s reload
-	fi
-	systemctl enable i2pd
-	systemctl restart i2pd
+        /sbin/sysctl -p -q
+        if [ -d /etc/nginx ]; then
+            nginx -s reload
+        fi
+        systemctl enable i2pd
+        systemctl restart i2pd
     else
-	chroot "$rootdir" systemctl enable i2pd
-	chroot "$rootdir" systemctl restart i2pd
+        chroot "$rootdir" systemctl enable i2pd
+        chroot "$rootdir" systemctl restart i2pd
     fi
 }
 
@@ -153,7 +153,7 @@ function remove_i2p {
 function add_i2p_service {
     i2p_service_name="$1"
     if [ -f "/var/lib/i2pd/tunnels.d/${i2p_service_name}" ]; then
-	return
+        return
     fi
     i2p_service_port_from=$2
     i2p_service_port_to=$3
@@ -161,23 +161,23 @@ function add_i2p_service {
     install_i2p
 
     if [ ! -d /var/lib/i2pd/tunnels.d ]; then
-	mkdir /var/lib/i2pd/tunnels.d
+        mkdir /var/lib/i2pd/tunnels.d
     fi
 
     # shellcheck disable=SC2086
     if [ ${i2p_service_port_from} -eq 80 ]; then
-	{ echo "[${i2p_service_name}]";
-	  echo 'type = http';
-	  echo 'host = 127.0.0.1';
-	  echo "port = ${i2p_service_port_to}";
-	  echo "keys = ${i2p_service_name}.dat"; } > "/var/lib/i2pd/tunnels.d/${i2p_service_name}"
+        { echo "[${i2p_service_name}]";
+          echo 'type = http';
+          echo 'host = 127.0.0.1';
+          echo "port = ${i2p_service_port_to}";
+          echo "keys = ${i2p_service_name}.dat"; } > "/var/lib/i2pd/tunnels.d/${i2p_service_name}"
     else
-	{ echo "[${i2p_service_name}]";
-	  echo 'type = server';
-	  echo 'host = 127.0.0.1';
-	  echo "port = ${i2p_service_port_from}";
-	  echo "inport = ${i2p_service_port_to}";
-	  echo "keys = ${i2p_service_name}.dat"; } > "/var/lib/i2pd/tunnels.d/${i2p_service_name}"
+        { echo "[${i2p_service_name}]";
+          echo 'type = server';
+          echo 'host = 127.0.0.1';
+          echo "port = ${i2p_service_port_from}";
+          echo "inport = ${i2p_service_port_to}";
+          echo "keys = ${i2p_service_name}.dat"; } > "/var/lib/i2pd/tunnels.d/${i2p_service_name}"
     fi
     chown -R i2pd:i2pd /var/lib/i2pd/tunnels.d
     chmod 644 /var/lib/i2pd/tunnels.d/*
@@ -188,8 +188,8 @@ function remove_i2p_service {
     i2p_service_name="$1"
 
     if [ -f "/var/lib/i2pd/tunnels.d/${i2p_service_name}" ]; then
-	rm "/var/lib/i2pd/tunnels.d/${i2p_service_name}"
-	systemctl restart i2pd
+        rm "/var/lib/i2pd/tunnels.d/${i2p_service_name}"
+        systemctl restart i2pd
     fi
 }
 
