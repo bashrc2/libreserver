@@ -267,11 +267,11 @@ function install_ipfs_go {
 
     INSTALL_PACKAGES golang libpam0g-dev fuse
 
-    if [ ! -d /home/gitea ]; then
+    if [ ! -d /home/ipfs ]; then
         # add a gitea user account
-        adduser --disabled-login --gecos 'Gitea' gitea
-        if [ ! -d /home/gitea ]; then
-            echo $"/home/gitea directory not created"
+        adduser --disabled-login --gecos 'ipfs' ipfs
+        if [ ! -d /home/ipfs ]; then
+            echo $"/home/ipfs directory not created"
             exit 73
         fi
 

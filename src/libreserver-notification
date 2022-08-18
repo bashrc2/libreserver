@@ -35,6 +35,10 @@ local_domain=$HOSTNAME
 notification_debug=
 sensitive_notification=
 
+# files used for ntfy.sh
+ntfy_topic_file=/root/.ntfy_topic
+ntfy_url_file=/root/.ntfy_url
+
 if grep -q 'ONION_ONLY=yes' $CONFIGURATION_FILE; then
     local_domain=$(cat /var/lib/tor/hidden_service_email/hostname)
 fi
@@ -431,6 +435,26 @@ if [ "$SUBJECT" ]; then
     fi
 fi
 
+# see https://ntfy.sh
+if [ -f "$MESSAGE" ]; then
+    if [ -f "$ntfy_topic_file" ]; then
+        ntfy_topic=$(cat "$ntfy_topic_file")
+        if [ "$ntfy_topic" ]; then
+            if [ -f "$ntfy_url_file" ]; then
+                ntfy_url=$(cat "$ntfy_url_file")
+            else
+                ntfy_url="ntfy.sh"
+            fi
+            curl \
+                -H "Title: LibreServer" \
+                -H "Priority: urgent" \
+                -H "Tags: warning,skull" \
+                -d "${MESSAGE}" \
+                "${ntfy_url}/${ntfy_topic}"
+        fi
+    fi
+fi
+
 if [ -d /etc/prosody ]; then
     sendxmpp_config=/root/.sendxmpprc
     sendxmpp_binary=/usr/bin/sendxmpp
@@ -455,11 +479,11 @@ if [ -d /etc/prosody ]; then
                     # kill any existing send process
                     kill_sendxmpp_process
                     # create the sendxmpp configuration file
-		    { echo "username: notification";
-		      echo "jserver: ${local_domain}";
-		      echo "password: ${notification_user_password}"; } > "${sendxmpp_config}"
+        { echo "username: notification";
+          echo "jserver: ${local_domain}";
+          echo "password: ${notification_user_password}"; } > "${sendxmpp_config}"
                     # send the message
-		    chmod 700 "${sendxmpp_config}"
+        chmod 700 "${sendxmpp_config}"
                     echo "$MESSAGE" | ${sendxmpp_binary} -n "${ADMIN_EMAIL_ADDRESS}"
                     sleep 2
                     echo "xmpp message sent to ${ADMIN_EMAIL_ADDRESS}"
