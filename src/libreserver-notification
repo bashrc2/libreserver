@@ -35,10 +35,6 @@ local_domain=$HOSTNAME
 notification_debug=
 sensitive_notification=
 
-# files used for ntfy.sh
-ntfy_topic_file=/root/.ntfy_topic
-ntfy_url_file=/root/.ntfy_url
-
 if grep -q 'ONION_ONLY=yes' $CONFIGURATION_FILE; then
     local_domain=$(cat /var/lib/tor/hidden_service_email/hostname)
 fi
@@ -436,6 +432,14 @@ if [ "$SUBJECT" ]; then
 fi
 
 # see https://ntfy.sh
+# files used for ntfy.sh
+if [[ "$ADMIN_USERNAME" == 'admin' ]]; then
+    ntfy_topic_file=/root/.ntfy_topic
+    ntfy_url_file=/root/.ntfy_url
+else
+    ntfy_topic_file=/home/${ADMIN_USERNAME}/.ntfy_topic
+    ntfy_url_file=/home/${ADMIN_USERNAME}/.ntfy_url
+fi
 if [ -f "$MESSAGE" ]; then
     if [ -f "$ntfy_topic_file" ]; then
         ntfy_topic=$(cat "$ntfy_topic_file")
