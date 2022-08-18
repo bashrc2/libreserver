@@ -452,7 +452,7 @@ if [ -f "$MESSAGE" ]; then
             ${curl_command} \
                 -H "Title: LibreServer" \
                 -H "Priority: urgent" \
-                -H "Tags: warning,skull" \
+                -H "Tags: loudspeaker" \
                 -d "${MESSAGE}" \
                 "${ntfy_url}/${ntfy_topic}"
         fi
