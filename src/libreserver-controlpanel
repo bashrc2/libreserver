@@ -1961,7 +1961,7 @@ function system_notifications {
     data=$(mktemp 2>/dev/null)
     dialog --backtitle $"LibreServer Notifications" \
            --title $"ntfy.sh" \
-           --form "\nEnter your nfty site and topic details.\n" 8 60 3 \
+           --form "\nEnter your ntfy site and topic details.\n" 8 60 3 \
            $"URL:" 1 1 "${ntfy_url}" 1 8 45 1000 \
            $"Topic:" 2 1 "${ntfy_topic}" 2 8 45 1000 \
            2> "$data"
