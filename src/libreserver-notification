@@ -451,7 +451,7 @@ if [ -f "$MESSAGE" ]; then
             fi
             ${curl_command} \
                 -H "Title: ${SUBJECT}" \
-                -H "Priority: urgent" \
+                -H "Priority: default" \
                 -H "Tags: loudspeaker" \
                 -d "${MESSAGE}" \
                 "${ntfy_url}/${ntfy_topic}"
