@@ -445,7 +445,11 @@ if [ -f "$MESSAGE" ]; then
             else
                 ntfy_url="ntfy.sh"
             fi
-            curl \
+            curl_command='curl'
+            if [[ "$ONION_ONLY" != 'no' ]]; then
+                curl_command='torsocks curl'
+            fi
+            ${curl_command} \
                 -H "Title: LibreServer" \
                 -H "Priority: urgent" \
                 -H "Tags: warning,skull" \
