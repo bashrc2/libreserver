@@ -825,6 +825,50 @@ function run_email_client {
     fi
 }
 
+function user_notifications {
+    ntfy_url_file=/home/${USER}/.ntfy_url
+    ntfy_url="ntfy.sh"
+    if [ -f "${ntfy_url_file}" ]; then
+        ntfy_url=$(cat "$ntfy_url_file")
+    fi
+    ntfy_topic_file=/home/${USER}/.ntfy_topic
+    ntfy_topic=""
+    if [ -f "${ntfy_topic_file}" ]; then
+        ntfy_topic=$(cat "$ntfy_topic_file")
+    fi
+    data=$(mktemp 2>/dev/null)
+    dialog --backtitle $"LibreServer Notifications" \
+           --title $"ntfy.sh" \
+           --form "\nEnter your ntfy site and topic details.\n" 8 60 3 \
+           $"URL:" 1 1 "${ntfy_url}" 1 8 45 1000 \
+           $"Topic:" 2 1 "${ntfy_topic}" 2 8 45 1000 \
+           2> "$data"
+    sel=$?
+    case $sel in
+        1) rm -f "$data"
+           return;;
+        255) rm -f "$data"
+             return;;
+    esac
+    new_ntfy_url=$(sed -n 1p < "$data")
+    new_ntfy_topic=$(sed -n 2p < "$data")
+    rm -f "$data"
+    if [ "$new_ntfy_url" ]; then
+        echo -n "$new_ntfy_url" > "$ntfy_url_file"
+    else
+        if [ -f "${ntfy_url_file}" ]; then
+            rm "${ntfy_url_file}"
+        fi
+    fi
+    if [ "$new_ntfy_topic" ]; then
+        echo -n "$new_ntfy_topic" > "$ntfy_topic_file"
+    else
+        if [ -f "${ntfy_topic_file}" ]; then
+            rm "${ntfy_topic_file}"
+        fi
+    fi
+}
+
 function menu_top_level {
     while true
     do
@@ -833,13 +877,14 @@ function menu_top_level {
            3 $"Change Email Filtering/Blocking Rules"
            4 $"Set Email avatar image"
            5 $"Run an App"
-           6 $"Browse the Web"
-           7 $"My Encryption Keys"
-           8 $"Administrator controls"
-           9 $"Exit to the command line")
+           6 $"Notifications"
+           7 $"Browse the Web"
+           8 $"My Encryption Keys"
+           9 $"Administrator controls"
+           10 $"Exit to the command line")
 
         # shellcheck disable=SC2068
-        selection=$(dialog --backtitle $"LibreServer User Control Panel" --title $"User Control Panel" --menu $"Choose an operation, or ESC to log out:" 20 60 12 "${W[@]}" 3>&2 2>&1 1>&3)
+        selection=$(dialog --backtitle $"LibreServer User Control Panel" --title $"User Control Panel" --menu $"Choose an operation, or ESC to log out:" 20 60 13 "${W[@]}" 3>&2 2>&1 1>&3)
         if [ ! "$selection" ]; then
             kill -HUP "$(pgrep -s 0 -o)"
         fi
@@ -850,10 +895,11 @@ function menu_top_level {
             3) menu_email;;
             4) mutt_set_avatar;;
             5) menu_run_client_app;;
-            6) torify elinks -no-home;;
-            7) menu_encryption_keys;;
-            8) menu_admin;;
-            9) break;;
+            6) user_notifications;;
+            7) torify elinks -no-home;;
+            8) menu_encryption_keys;;
+            9) menu_admin;;
+            10) break;;
         esac
     done
 }
