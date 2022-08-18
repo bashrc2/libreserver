@@ -432,7 +432,6 @@ if [ "$SUBJECT" ]; then
 fi
 
 # see https://ntfy.sh
-# files used for ntfy.sh
 if [[ "$ADMIN_USERNAME" == 'admin' ]]; then
     ntfy_topic_file=/root/.ntfy_topic
     ntfy_url_file=/root/.ntfy_url
@@ -453,12 +452,10 @@ if [ -f "$MESSAGE" ]; then
             if [[ "$ONION_ONLY" != 'no' ]]; then
                 curl_command='torsocks curl'
             fi
-            ${curl_command} \
-                -H "Title: ${SUBJECT}" \
-                -H "Priority: default" \
-                -H "Tags: loudspeaker" \
-                -d "${MESSAGE}" \
-                "${ntfy_url}/${ntfy_topic}"
+            if [ ! "$SUBJECT" ]; then
+                SUBJECT="$PROJECT_NAME"
+            fi
+            ${curl_command} -H "Title: ${SUBJECT}" -H "Priority: default" -H "Tags: loudspeaker" -d "${MESSAGE}" "${ntfy_url}/${ntfy_topic}"
         fi
     fi
 fi
