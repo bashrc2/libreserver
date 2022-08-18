@@ -439,7 +439,7 @@ else
     ntfy_topic_file=/home/${ADMIN_USERNAME}/.ntfy_topic
     ntfy_url_file=/home/${ADMIN_USERNAME}/.ntfy_url
 fi
-if [ -f "$MESSAGE" ]; then
+if [ "$MESSAGE" ]; then
     if [ -f "$ntfy_topic_file" ]; then
         ntfy_topic=$(cat "$ntfy_topic_file")
         if [ "$ntfy_topic" ]; then
