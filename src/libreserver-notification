@@ -431,48 +431,56 @@ if [ "$SUBJECT" ]; then
     fi
 fi
 
-# see https://ntfy.sh
-if [[ "$ADMIN_USERNAME" == 'admin' ]]; then
-    ntfy_topic_file=/root/.ntfy_topic
-    ntfy_url_file=/root/.ntfy_url
-else
-    ntfy_topic_file=/home/${ADMIN_USERNAME}/.ntfy_topic
-    ntfy_url_file=/home/${ADMIN_USERNAME}/.ntfy_url
+notify_by_ntfy=
+if [ -f "${notification_method_filename}" ]; then
+    if grep -q 'ntfy' "${notification_method_filename}"; then
+        notify_by_ntfy=1
+    fi
 fi
+if [ $notify_by_ntfy ]; then
+    # see https://ntfy.sh
+    if [[ "$ADMIN_USERNAME" == 'admin' ]]; then
+        ntfy_topic_file=/root/.ntfy_topic
+        ntfy_url_file=/root/.ntfy_url
+    else
+        ntfy_topic_file=/home/${ADMIN_USERNAME}/.ntfy_topic
+        ntfy_url_file=/home/${ADMIN_USERNAME}/.ntfy_url
+    fi
 
-if [[ "$SUBJECT" == "Epicyon" ]]; then
-    # get ntfy settings from the account directory
-    epicyonInstallDir=/etc/epicyon
-    epicyon_config_file=${epicyonInstallDir}/config.json
-    if [ -f "${epicyon_config_file}" ]; then
-        epicyon_domain=$(cat "$epicyon_config_file" | awk -F '"domain": "' '{print $2}' | awk -F '"' '{print $1}')
-        if [ "${epicyon_domain}" ]; then
-            epicyon_account_dir="${epicyonInstallDir}/accounts/${USERNAME}@${epicyon_domain}"
-            if [ -d "${epicyon_account_dir}" ]; then
-                ntfy_url_file=${epicyon_account_dir}/.ntfy_url
-                ntfy_topic_file=${epicyon_account_dir}/.ntfy_topic
+    if [[ "$SUBJECT" == "Epicyon" ]]; then
+        # get ntfy settings from the account directory
+        epicyonInstallDir=/etc/epicyon
+        epicyon_config_file=${epicyonInstallDir}/config.json
+        if [ -f "${epicyon_config_file}" ]; then
+            epicyon_domain=$(cat "$epicyon_config_file" | awk -F '"domain": "' '{print $2}' | awk -F '"' '{print $1}')
+            if [ "${epicyon_domain}" ]; then
+                epicyon_account_dir="${epicyonInstallDir}/accounts/${USERNAME}@${epicyon_domain}"
+                if [ -d "${epicyon_account_dir}" ]; then
+                    ntfy_url_file=${epicyon_account_dir}/.ntfy_url
+                    ntfy_topic_file=${epicyon_account_dir}/.ntfy_topic
+                fi
             fi
         fi
     fi
-fi
 
-if [ "$MESSAGE" ]; then
-    if [ -f "$ntfy_topic_file" ]; then
-        ntfy_topic=$(cat "$ntfy_topic_file")
-        if [ "$ntfy_topic" ]; then
-            if [ -f "$ntfy_url_file" ]; then
-                ntfy_url=$(cat "$ntfy_url_file")
-            else
-                ntfy_url="ntfy.sh"
+    if [ "$MESSAGE" ]; then
+        if [ -f "$ntfy_topic_file" ]; then
+            ntfy_topic=$(cat "$ntfy_topic_file")
+            if [ "$ntfy_topic" ]; then
+                if [ -f "$ntfy_url_file" ]; then
+                    ntfy_url=$(cat "$ntfy_url_file")
+                else
+                    ntfy_url="ntfy.sh"
+                fi
+                curl_command='curl'
+                if [[ "$ONION_ONLY" != 'no' ]]; then
+                    curl_command='torsocks curl'
+                fi
+                if [ ! "$SUBJECT" ]; then
+                    SUBJECT="$PROJECT_NAME"
+                fi
+                ${curl_command} -H "Title: ${SUBJECT}" -H "Priority: default" -H "Tags: loudspeaker" -d "${MESSAGE}" "${ntfy_url}/${ntfy_topic}"
             fi
-            curl_command='curl'
-            if [[ "$ONION_ONLY" != 'no' ]]; then
-                curl_command='torsocks curl'
-            fi
-            if [ ! "$SUBJECT" ]; then
-                SUBJECT="$PROJECT_NAME"
-            fi
-            ${curl_command} -H "Title: ${SUBJECT}" -H "Priority: default" -H "Tags: loudspeaker" -d "${MESSAGE}" "${ntfy_url}/${ntfy_topic}"
         fi
     fi
 fi
