@@ -743,8 +743,8 @@ function check_number_of_connections {
                     skip_warning=1
                 fi
             fi
+            echo "$port80" > "$last_http_high_warning"
             if [ ! $skip_warning ]; then
-                echo "$port80" > "$last_http_high_warning"
                 translated_max_connections=$(web_admin_translate_text "Number of connections on HTTP port is high")
                 ${PROJECT_NAME}-notification -s "${PROJECT_NAME}" -m "$translated_max_connections"
                 echo "\n" > "$last_http_warning"
@@ -780,8 +780,8 @@ function check_number_of_connections {
                     skip_warning=1
                 fi
             fi
+            echo "$port443" > "$last_https_high_warning"
             if [ ! $skip_warning ]; then
-                echo "$port443" > "$last_https_high_warning"
                 translated_max_connections=$(web_admin_translate_text "Number of connections on HTTPS port is high")
                 ${PROJECT_NAME}-notification -s "${PROJECT_NAME}" -m "$translated_max_connections"
                 echo "\n" > "$last_https_warning"
