@@ -4545,7 +4545,7 @@ function update_system_monitor {
 
         # if this is raspbian running from usb drive
         if [ -f /proc/device-tree/model ]; then
-	          if grep -q 'Raspberry' /proc/device-tree/model; then
+            if grep -q 'Raspberry' /proc/device-tree/model; then
                 # no microSD connected
                 if [ ! -f /dev/mmcblk0p1 ]; then
                     test_drive=/dev/root
