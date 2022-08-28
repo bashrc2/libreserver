@@ -717,8 +717,9 @@ function check_number_of_connections {
     connectionsThreshold=280
 
     prevPort80=0
-    if [ -f /tmp/.connections_80.txt ]; then
-        prevPort80=$(cat /tmp/.connections_80.txt)
+    last_http_high_warning=/tmp/.connections_80.txt
+    if [ -f "$last_http_high_warning" ]; then
+        prevPort80=$(cat "$last_http_high_warning")
     fi
     # shellcheck disable=SC2126
     port80=$(netstat -anp | grep :80 | grep ESTABLISHED | wc -l)
@@ -733,16 +734,29 @@ function check_number_of_connections {
     # shellcheck disable=SC2086
     if [ $prevPort80 -lt $connectionsThreshold ]; then
         if [ $port80 -gt $connectionsThreshold ]; then
-            echo "$port80" > /tmp/.connections_80.txt
-            translated_max_connections=$(web_admin_translate_text "Number of connections on HTTP port is high")
-            ${PROJECT_NAME}-notification -s "${PROJECT_NAME}" -m "$translated_max_connections"
+            skip_warning=
+            last_http_warning=/tmp/.warn_80.txt
+            if [ -f "$last_http_warning" ]; then
+                # don't warn too frequently
+                time_diff=$(($(date +%s) - $(date +%s -r "$last_http_warning")))
+                if [ $time_diff -lt 3600 ]; then
+                    skip_warning=1
+                fi
+            fi
+            if [ ! $skip_warning ]; then
+                echo "$port80" > "$last_http_high_warning"
+                translated_max_connections=$(web_admin_translate_text "Number of connections on HTTP port is high")
+                ${PROJECT_NAME}-notification -s "${PROJECT_NAME}" -m "$translated_max_connections"
+                echo "\n" > "$last_http_warning"
+            fi
             return
         fi
     fi
 
     prevPort443=0
-    if [ -f /tmp/.connections_443.txt ]; then
-        prevPort443=$(cat /tmp/.connections_443.txt)
+    last_https_high_warning=/tmp/.connections_443.txt
+    if [ -f "$last_https_high_warning" ]; then
+        prevPort443=$(cat "$last_https_high_warning")
     fi
     # shellcheck disable=SC2126
     port443=$(netstat -anp | grep :443 | grep ESTABLISHED | wc -l)
@@ -757,9 +771,21 @@ function check_number_of_connections {
     # shellcheck disable=SC2086
     if [ $prevPort443 -lt $connectionsThreshold ]; then
         if [ $port443 -gt $connectionsThreshold ]; then
-            echo "$port443" > /tmp/.connections_443.txt
-            translated_max_connections=$(web_admin_translate_text "Number of connections on HTTPS port is high")
-            ${PROJECT_NAME}-notification -s "${PROJECT_NAME}" -m "$translated_max_connections"
+            skip_warning=
+            last_https_warning=/tmp/.warn_443.txt
+            if [ -f "$last_https_warning" ]; then
+                # don't warn too frequently
+                time_diff=$(($(date +%s) - $(date +%s -r "$last_https_warning")))
+                if [ $time_diff -lt 3600 ]; then
+                    skip_warning=1
+                fi
+            fi
+            if [ ! $skip_warning ]; then
+                echo "$port443" > "$last_https_high_warning"
+                translated_max_connections=$(web_admin_translate_text "Number of connections on HTTPS port is high")
+                ${PROJECT_NAME}-notification -s "${PROJECT_NAME}" -m "$translated_max_connections"
+                echo "\n" > "$last_https_warning"
+            fi
             return
         fi
     fi
