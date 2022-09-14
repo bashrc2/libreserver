@@ -479,7 +479,7 @@ if [ $notify_by_ntfy ]; then
                 if [ ! "$SUBJECT" ]; then
                     SUBJECT="$PROJECT_NAME"
                 fi
-                ${curl_command} -H "Title: ${SUBJECT}" -H "Priority: default" -H "Tags: loudspeaker" -d "${MESSAGE}" "${ntfy_url}/${ntfy_topic}"
+                ${curl_command} -H "Title: ${SUBJECT}" -H "Priority: default" -H "Tags: loudspeaker" -d "${MESSAGE}" "${ntfy_url}/${ntfy_topic}" &> /dev/null
             fi
         fi
     fi
