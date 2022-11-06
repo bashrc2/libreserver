@@ -156,6 +156,20 @@ function block_firefox_telemetry {
     save_firewall_settings
 }
 
+function block_scanners {
+    if ! grep -q 'ncsc.gov.uk' /etc/hosts; then
+        echo '127.0.0.1  ncsc.gov.uk' >> /etc/hosts
+    fi
+    if ! grep -q "18.171.7.246" /etc/firewall.conf; then
+        /usr/sbin/nft add rule inet filter INPUT ip saddr "18.171.7.246" counter drop comment \"scanner\"
+        save_firewall_settings
+    fi
+    if ! grep -q "35.177.10.231" /etc/firewall.conf; then
+        /usr/sbin/nft add rule inet filter INPUT ip saddr "35.177.10.231" counter drop comment \"scanner\"
+        save_firewall_settings
+    fi
+}
+
 function firewall_block_bad_ip_ranges {
     if [ "$INSTALLING_MESH" ]; then
         return

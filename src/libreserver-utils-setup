@@ -819,6 +819,9 @@ function setup_firewall {
     function_check block_firefox_telemetry
     block_firefox_telemetry
 
+    function_check block_scanners
+    block_scanners
+
     function_check configure_firewall_ping
     configure_firewall_ping
 
