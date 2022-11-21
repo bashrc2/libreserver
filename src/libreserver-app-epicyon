@@ -519,8 +519,8 @@ function install_epicyon {
     if [[ "$ONION_ONLY" == "no" ]]; then
         nginx_http_redirect "$EPICYON_DOMAIN_NAME" "index index.html"
         { echo 'server {';
-          echo '  listen 443 ssl;';
-          echo '  #listen [::]:443 ssl;';
+          echo '  listen 443 ssl http2;';
+          echo '  #listen [::]:443 ssl http2;';
           echo "  server_name $EPICYON_DOMAIN_NAME;";
           echo '  server_tokens off;';
           echo ''; } >> "$epicyon_nginx_site"
