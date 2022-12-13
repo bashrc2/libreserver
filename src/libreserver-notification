@@ -182,7 +182,7 @@ function epicyon_notifications {
                 epicyonMovedTo=$(cat "$epicyonMovedFile" | awk -F ' ' '{print $2}')
                 epicyonMovedUrl=$(cat "$epicyonMovedFile" | awk -F ' ' '{print $3}')
                 epicyonMovedLink="<a href=\"${epicyonMovedUrl}\">${epicyonMovedTo}</a>"
-                epicyonMovedFileContent=$("$(echo "$epicyonMovedFrom")" "$(echo "$epicyonMovedMessage")" "$(echo "$epicyonMovedLink")")
+                epicyonMovedFileContent=$($(echo "$epicyonMovedFrom")" "$(echo "$epicyonMovedMessage")" "$(echo "$epicyonMovedLink"))
                 if [[ "$epicyonMovedFileContent" == *':'* ]]; then
                     epicyonMovedMessage="Epicyon: $epicyonMovedFileContent"
                 fi
