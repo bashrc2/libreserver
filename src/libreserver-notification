@@ -184,9 +184,9 @@ function epicyon_notifications {
                 epicyonMovedLink="<a href=\"${epicyonMovedUrl}\">${epicyonMovedTo}</a>"
                 epicyonMovedFileContent=$($(echo "$epicyonMovedFrom")" "$(echo "$epicyonMovedMessage")" "$(echo "$epicyonMovedLink"))
                 if [[ "$epicyonMovedFileContent" == *':'* ]]; then
-                    epicyonMovedMessage="Epicyon: $epicyonMovedFileContent"
+                    epicyonMovedFileContent="Epicyon: $epicyonMovedFileContent"
                 fi
-                "${PROJECT_NAME}-notification" -u "$USERNAME" -s "Epicyon" -m "$epicyonMovedMessage" --sensitive yes
+                "${PROJECT_NAME}-notification" -u "$USERNAME" -s "Epicyon" -m "$epicyonMovedFileContent" --sensitive yes
                 echo "##sent##" > "$epicyonMovedFile"
                 chown epicyon:epicyon "$epicyonMovedFile"
             fi
