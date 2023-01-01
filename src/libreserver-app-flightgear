@@ -1,8 +1,8 @@
 #!/bin/bash
-#  _    _ _            ___                      
-# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
-# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # flightgear game
 # https://fgms.freeflightsim.org/install_guide.html
@@ -10,7 +10,7 @@
 # License
 # =======
 #
-# Copyright (C) 2019-2022 Bob Mottram <bob@libreserver.org>
+# Copyright (C) 2019-2023 Bob Mottram <bob@libreserver.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -217,7 +217,7 @@ function install_flightgear {
     increment_app_install_progress
 
     INSTALL_PACKAGES cmake
-    
+
     increment_app_install_progress
 
     git_clone "$FLIGHTGEAR_REPO" "$INSTALL_DIR/fgms-src"
@@ -246,7 +246,7 @@ function install_flightgear {
 
     if [ ! -d $FLIGHTGEAR_DIR ]; then
 	mkdir $FLIGHTGEAR_DIR
-    fi    
+    fi
 
     increment_app_install_progress
 
@@ -273,9 +273,9 @@ function install_flightgear {
       echo 'blacklist = 123.123.123.123';
       echo 'blacklist = 12.12.12.12'; } > "$FLIGHTGEAR_DIR/fgms.conf"
     chown -R fgms:fgms "$FLIGHTGEAR_DIR"
-    
+
     increment_app_install_progress
-    
+
     firewall_add flightgear ${FLIGHTGEAR_PORT}
 
     increment_app_install_progress
@@ -308,7 +308,7 @@ function install_flightgear {
     increment_app_install_progress
 
     set_completion_param "flightgear commit" "$FLIGHTGEAR_COMMIT"
-    
+
     APP_INSTALLED=1
 }
 

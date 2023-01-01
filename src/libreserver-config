@@ -1,8 +1,8 @@
 #!/bin/bash
-#  _    _ _            ___                      
-# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
-# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # Interactively creates a configuration file for use with the main
 # libreserver command
@@ -10,7 +10,7 @@
 # License
 # =======
 #
-# Copyright (C) 2015-2022 Bob Mottram <bob@libreserver.org>
+# Copyright (C) 2015-2023 Bob Mottram <bob@libreserver.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -673,7 +673,7 @@ function interactive_config {
     fi
 
     setup_create_groups
-    
+
     if [[ "$MENUCONFIG_NONINTERACTIVE" == 'no' ]]; then
         dialog --title $"LibreServer" --msgbox "$INITIAL_MESSAGE" 15 65
 
@@ -706,7 +706,7 @@ function interactive_config {
         dialog --title $"LibreServer" --msgbox "$PASSWORD_MESSAGE" 10 78
 	clear
     fi
-    
+
     choose_username
     choose_full_name
     choose_rng

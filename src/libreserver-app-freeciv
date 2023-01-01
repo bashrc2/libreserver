@@ -1,8 +1,8 @@
 #!/bin/bash
-#  _    _ _            ___                      
-# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
-# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # freeciv game
 #
@@ -12,7 +12,7 @@
 # License
 # =======
 #
-# Copyright (C) 2019-2022 Bob Mottram <bob@libreserver.org>
+# Copyright (C) 2019-2023 Bob Mottram <bob@libreserver.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -116,7 +116,7 @@ function restore_local_freeciv {
             else
                 cp -r $temp_restore_dir/* $FREECIV_DIR/
             fi
-	    chown -R freeciv:freeciv "$FREECIV_DIR"	    
+	    chown -R freeciv:freeciv "$FREECIV_DIR"
             # shellcheck disable=SC2181
             if [ ! "$?" = "0" ]; then
                 rm -rf $temp_restore_dir
@@ -177,7 +177,7 @@ function install_freeciv {
     if [ ! -d "$FREECIV_DIR/saves" ]; then
 	mkdir "$FREECIV_DIR/saves"
     fi
-   
+
     increment_app_install_progress
 
     if [ -d /var/www/freeciv ]; then
@@ -191,19 +191,19 @@ function install_freeciv {
 
     increment_app_install_progress
 
-    INSTALL_PACKAGES freeciv-server    
+    INSTALL_PACKAGES freeciv-server
 
     if [ ! -f /usr/games/freeciv-server ]; then
         echo $'Unable to install /usr/games/freeciv-server'
         exit 32
-    fi    
+    fi
 
     increment_app_install_progress
 
     FREECIV_ONION_HOSTNAME=$(add_onion_service freeciv ${FREECIV_PORT} ${FREECIV_PORT})
-    
+
     increment_app_install_progress
-    
+
     firewall_add freeciv ${FREECIV_PORT}
 
     chown -R freeciv:freeciv "$FREECIV_DIR"
