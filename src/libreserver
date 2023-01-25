@@ -182,7 +182,7 @@ if [[ "$command_options" == "menuconfig"* ]]; then
     fi
     rm "$interactive_file"
 else
-    while [ $# -gt 1 ]
+    while [ $# -gt 0 ]
     do
         key="$1"
 
