@@ -33,7 +33,7 @@ SHOW_ON_ABOUT=1
 # whether to show the domain name in the web UI
 SHOW_DOMAIN_IN_WEBADMIN=1
 
-# whether to show https://domain or just teh domain on its own on app screen
+# whether to show https://domain or just the domain on its own on app screen
 SHOW_DOMAIN_ONLY=0
 
 # whether this app will be included in the hson API for the FreedomBox android app

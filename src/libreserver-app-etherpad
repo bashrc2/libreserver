@@ -687,7 +687,7 @@ function install_etherpad {
       echo '  }';
       echo '}'; } >> "$etherpad_nginx_site"
 
-    # remove content security policy which prevents teh pad from running
+    # remove content security policy which prevents the pad from running
     sed -i '/Content-Security-Policy/d' "$etherpad_nginx_site"
 
     increment_app_install_progress

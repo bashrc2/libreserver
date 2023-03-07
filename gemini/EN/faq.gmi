@@ -360,7 +360,7 @@ The model for doing backups is that you should be able to buy a USB drive from a
 
 Using LUKS requires you to specially format the USB drive, using a tool like Gparted. Most people are not going to do this, and so if the backup required LUKS then most people would not do backups and the whole system then becomes non-viable because there will always come a time when you need to restore from backup.
 
-Instead of using LUKS, backups are written to the drive already encrypted with a backups GPG key, and the backups key is then symmetrically encrypted with a passphrase and written to the backup drive. This passphrase is what's asked for in teh web interface. It provides a similar level of data protection to LUKS, provided that you choose a good passphrase.
+Instead of using LUKS, backups are written to the drive already encrypted with a backups GPG key, and the backups key is then symmetrically encrypted with a passphrase and written to the backup drive. This passphrase is what's asked for in the web interface. It provides a similar level of data protection to LUKS, provided that you choose a good passphrase.
 
 ## Why does my email keep getting rejected as spam by Gmail/etc?
 
