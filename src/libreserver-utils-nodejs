@@ -28,7 +28,7 @@
 VARIANTS='mesh'
 
 # This should be the major version number, passed to the snap channel
-NODEJS_VERSION='14'
+NODEJS_VERSION='18'
 
 # This file keeps track of the apps needing nodejs
 # so that it can be removed if tere are no apps which need it
