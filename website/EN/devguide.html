@@ -88,7 +88,7 @@ install_libreserver_message
 </pre>
 
 <p>
-  Add the following:
+    Add the following:
 </p>
 
 <pre>
@@ -109,7 +109,8 @@ install_libreserver()
         rm -rf ${LIBREROOT}
     fi
     echo -e "\nInstalling packages needed for LibreServer."
-    sudo apt install -y git build-essential dialog
+    echo "apt install -y git build-essential dialog"
+    apt install -y git build-essential dialog
     echo -e "\nCloning LibreServer repo."
     git clone https://gitlab.com/bashrc2/libreserver ${LIBREROOT}
     if [ ! -d ${LIBREROOT} ]; then

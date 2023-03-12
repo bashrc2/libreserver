@@ -1126,12 +1126,12 @@ function spam_filtering {
     fi
     INSTALL_PACKAGES exim4-daemon-heavy
     INSTALL_PACKAGES spamassassin
-    if [ ! -f /etc/default/spamassassin ]; then
+    if [ ! -f /etc/mail/spamassassin/local.cf ]; then
         echo 'Spamassassin was not installed'
         exit 72
     fi
+    update-rc.d spamassassin enable
     sa-update -v
-    sed -i 's/ENABLED=0/ENABLED=1/g' /etc/default/spamassassin
     sed -i 's/# spamd_address = 127.0.0.1 783/spamd_address = 127.0.0.1 783/g' /etc/exim4/exim4.conf.template
     # This configuration is based on https://wiki.debian.org/DebianSpamAssassin
     sed -i 's/local_parts = postmaster/local_parts = postmaster:abuse/g' /etc/exim4/conf.d/acl/30_exim4-config_check_rcpt
