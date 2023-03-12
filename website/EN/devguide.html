@@ -41,8 +41,8 @@ LibreServer consists almost entirely of bash scripts, with some html, css and ph
 
 <pre>
   sudo su
-  cd /media/yourusername/RASPIFIRMWARE
-  sed -i 's|#root_pw=.*|root_pw=libreserver|g' config.txt
+  cd /media/yourusername/RASPIFIRM
+  sed -i 's|#root_pw=.*|root_pw=libreserver|g' sysconf.txt
   touch ssh
 </pre>
 
@@ -75,15 +75,16 @@ install_libreserver_message()
         return
     fi
 }
-  
+
 install_libreserver_message
 </pre>
 
 <p>
-  Save and exit. Then add another script:
+    Save and exit. Then add another script:
 </p>
 
 <pre>
+  sed -i 's|#PermitRootLogin.*|PermitRootLogin yes|g' etc/ssh/sshd_config
   nano root/.bashrc
 </pre>
 
@@ -109,6 +110,7 @@ install_libreserver()
         rm -rf ${LIBREROOT}
     fi
     echo -e "\nInstalling packages needed for LibreServer."
+    apt update
     echo "apt install -y git build-essential dialog"
     apt install -y git build-essential dialog
     echo -e "\nCloning LibreServer repo."
