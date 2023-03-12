@@ -27,12 +27,12 @@ LibreServer consists almost entirely of bash scripts, with some html, css and ph
 <h2>Creating the Raspbian image</h2>
 
 <p>
-  Download the <a href="https://www.raspberrypi.com/software/operating-systems">Raspberry Pi OS Lite (64bit)</a>, then copy it to a USB drive:
+    Download the <a href="https://raspi.debian.net/tested-images">Raspberry Pi Debian image</a>, then copy it to a USB drive:
 </p>
 
 <pre>
-  unxz *-raspios-bookworm-arm64-lite.img.xz
-  sudo dd bs=512 if=*-raspios-bookworm-arm64-lite.img of=/dev/sdX conv=fdatasync,sync,noerror status=progress
+  unxz *_raspi_4_bookworm.img.xz
+  sudo dd bs=512 if=*_raspi_4_bookworm.img of=/dev/sdX conv=fdatasync,sync,noerror status=progress
 </pre>
 
 <p>
@@ -41,10 +41,9 @@ LibreServer consists almost entirely of bash scripts, with some html, css and ph
 
 <pre>
   sudo su
-  cd /media/yourusername/boot
+  cd /media/yourusername/RASPIFIRMWARE
+  sed -i 's|#root_pw=.*|root_pw=libreserver|g' config.txt
   touch ssh
-  librepass=$(echo 'libreserver' | openssl passwd -6 -stdin)
-  echo -n "admin:$librepass" > userconf.txt
 </pre>
 
 <p>
@@ -52,7 +51,7 @@ LibreServer consists almost entirely of bash scripts, with some html, css and ph
 </p>
 
 <pre>
-  cd /media/yourusername/rootfs
+  cd /media/yourusername/RASPIROOT
   nano etc/profile.d/libreserver.sh
 </pre>
 
@@ -110,7 +109,7 @@ install_libreserver()
         rm -rf ${LIBREROOT}
     fi
     echo -e "\nInstalling packages needed for LibreServer."
-    apt install -y git build-essential dialog
+    sudo apt install -y git build-essential dialog
     echo -e "\nCloning LibreServer repo."
     git clone https://gitlab.com/bashrc2/libreserver ${LIBREROOT}
     if [ ! -d ${LIBREROOT} ]; then
@@ -124,6 +123,7 @@ install_libreserver()
         /usr/sbin/adduser admin
     fi
     cd ${LIBREROOT} || return
+    git checkout bookworm
     make install
     echo ""
     while true; do
@@ -135,7 +135,7 @@ install_libreserver()
         esac
     done
 }
-    
+
 install_libreserver
 </pre>
 
