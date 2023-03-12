@@ -1526,7 +1526,7 @@ function wait_for_enough_entropy {
     do
         ENTROPY=$(cat /proc/sys/kernel/random/entropy_avail)
         # shellcheck disable=SC2086
-        if [ $ENTROPY -gt 500 ]; then
+        if [ $ENTROPY -gt 255 ]; then
             break
         fi
         sleep 2

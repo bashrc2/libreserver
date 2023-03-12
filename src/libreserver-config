@@ -677,34 +677,34 @@ function interactive_config {
     if [[ "$MENUCONFIG_NONINTERACTIVE" == 'no' ]]; then
         dialog --title $"LibreServer" --msgbox "$INITIAL_MESSAGE" 15 65
 
-	if [ ! -f "$IMAGE_PASSWORD_FILE" ]; then
-	    if [ ! -f /proc/sys/kernel/random/entropy_avail ]; then
-		echo $"Can't read the amount of entropy"
-		exit 8
-	    fi
-	    ENTROPY=$(cat /proc/sys/kernel/random/entropy_avail)
-	    if [ $ENTROPY -lt 500 ]; then
-		echo $'Not enough entropy'
-		exit 9
-	    fi
-	    clear
-	    INSTALL_PACKAGES diceware
-	    newpassword="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
-	    echo -n "${newpassword}" > "$IMAGE_PASSWORD_FILE"
-	else
-	    newpassword=$(cat "$IMAGE_PASSWORD_FILE")
-	fi
-	PASSWORD_MESSAGE=$"Your login password will be:\\n\\n${newpassword}\\n\\nWrite it down, or store it in a password manager."
-	# indicate that this is a manual install
-	# This prevents the password file from being overwritten later
-	if [ ! -f /root/.manualinstall ]; then
-	    touch /root/.manualinstall
-	fi
-	if [ -f /root/.doing_initial_upgrade.txt ]; then
-	    rm /root/.doing_initial_upgrade.txt
-	fi
+  if [ ! -f "$IMAGE_PASSWORD_FILE" ]; then
+      if [ ! -f /proc/sys/kernel/random/entropy_avail ]; then
+          echo $"Can't read the amount of entropy"
+          exit 8
+      fi
+      ENTROPY=$(cat /proc/sys/kernel/random/entropy_avail)
+      if [ $ENTROPY -lt 255 ]; then
+          echo $'Not enough entropy'
+          exit 9
+      fi
+      clear
+      INSTALL_PACKAGES diceware
+      newpassword="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
+      echo -n "${newpassword}" > "$IMAGE_PASSWORD_FILE"
+  else
+      newpassword=$(cat "$IMAGE_PASSWORD_FILE")
+  fi
+  PASSWORD_MESSAGE=$"Your login password will be:\\n\\n${newpassword}\\n\\nWrite it down, or store it in a password manager."
+  # indicate that this is a manual install
+  # This prevents the password file from being overwritten later
+  if [ ! -f /root/.manualinstall ]; then
+      touch /root/.manualinstall
+  fi
+  if [ -f /root/.doing_initial_upgrade.txt ]; then
+      rm /root/.doing_initial_upgrade.txt
+  fi
         dialog --title $"LibreServer" --msgbox "$PASSWORD_MESSAGE" 10 78
-	clear
+  clear
     fi
 
     choose_username
