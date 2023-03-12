@@ -1130,7 +1130,7 @@ function spam_filtering {
         echo 'Spamassassin was not installed'
         exit 72
     fi
-    update-rc.d spamassassin enable
+    systemctl enable spamd
     sa-update -v
     sed -i 's/# spamd_address = 127.0.0.1 783/spamd_address = 127.0.0.1 783/g' /etc/exim4/exim4.conf.template
     # This configuration is based on https://wiki.debian.org/DebianSpamAssassin
