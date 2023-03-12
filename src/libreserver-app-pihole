@@ -65,8 +65,8 @@ pihole_variables=(ONION_ONLY
 function upgrade_distro_pihole {
     target_distro="$1"
 
-    if [[ "$target_distro" == 'bullseye' ]]; then
-	echo -n ''
+    if [[ "$target_distro" == 'bookworm' ]]; then
+        echo -n ''
     fi
 }
 

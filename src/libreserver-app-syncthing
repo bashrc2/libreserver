@@ -61,8 +61,8 @@ syncthing_variables=(SYNCTHING_ID
 function upgrade_distro_syncthing {
     target_distro="$1"
 
-    if [[ "$target_distro" == 'bullseye' ]]; then
-	echo -n ''
+    if [[ "$target_distro" == 'bookworm' ]]; then
+        echo -n ''
     fi
 }
 

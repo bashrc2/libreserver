@@ -37,7 +37,7 @@ PROJECT_REPO=$DEFAULT_PROJECT_REPO
 # file used to store the number of ssh connections and warn if the count gets high
 ssh_sessions_count_filename=/root/.ssh_sessions_count
 
-CURRENT_BRANCH=bullseye
+CURRENT_BRANCH=bookworm
 
 UPGRADE_PARAM="$1"
 

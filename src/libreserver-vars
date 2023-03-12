@@ -68,7 +68,7 @@ ROUTE_THROUGH_TOR="no"
 # Whether this system is being installed within a docker container
 INSTALLED_WITHIN_DOCKER="no"
 
-DEBIAN_VERSION="bullseye"
+DEBIAN_VERSION="bookworm"
 
 # social key management
 ENABLE_SOCIAL_KEY_MANAGEMENT="no"

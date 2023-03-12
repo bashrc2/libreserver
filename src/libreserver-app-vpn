@@ -61,7 +61,7 @@ vpn_variables=(MY_EMAIL_ADDRESS
 function upgrade_distro_vpn {
     target_distro="$1"
 
-    if [[ "$target_distro" == 'bullseye' ]]; then
+    if [[ "$target_distro" == 'bookworm' ]]; then
         echo -n ''
     fi
 }

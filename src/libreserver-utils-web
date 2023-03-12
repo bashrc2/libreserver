@@ -1263,7 +1263,7 @@ function create_default_web_site {
 function install_composer {
     composer_options="$1"
 
-    # NOTE: SECURITY: on bullseye release see if this can be changed to https
+    # NOTE: SECURITY: on bookworm release see if this can be changed to https
     php -r "copy('http://getcomposer.org/installer', 'composer-setup.php');"
     if [ ! -f composer-setup.php ]; then
         echo $'install_composer: composer-setup.php not found'

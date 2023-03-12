@@ -21,7 +21,7 @@ LibreServer consists almost entirely of bash scripts, with some html, css and ph
 <h2>Source code</h2>
 <ul>
 <li><a href="https://gitlab.com/bashrc2/libreserver">Repository</a> also mirrored <a href="https://codeberg.org/bashrc/libreserver">here</a> and <a href="https://github.com/bashrc2/libreserver">here</a></li>
-<li><a href="https://libreserver.org/downloads/libreserver-bullseye-r1-src.tar.gz">Compressed archive</a></li>
+<li><a href="https://libreserver.org/downloads/libreserver-bookworm-r1-src.tar.gz">Compressed archive</a></li>
 </ul>
 
 <h2>Creating the Raspbian image</h2>
@@ -31,8 +31,8 @@ LibreServer consists almost entirely of bash scripts, with some html, css and ph
 </p>
 
 <pre>
-  unxz *-raspios-bullseye-arm64-lite.img.xz
-  sudo dd bs=512 if=*-raspios-bullseye-arm64-lite.img of=/dev/sdX conv=fdatasync,sync,noerror status=progress
+  unxz *-raspios-bookworm-arm64-lite.img.xz
+  sudo dd bs=512 if=*-raspios-bookworm-arm64-lite.img of=/dev/sdX conv=fdatasync,sync,noerror status=progress
 </pre>
 
 <p>
@@ -179,7 +179,7 @@ To copy it to a drive (eg. microSD or USB):
 </p>
 
 <pre>
-xzcat build/libreserver-bullseye-*-amd64.img.xz | \
+xzcat build/libreserver-bookworm-*-amd64.img.xz | \
   sudo dd bs=4096 of=/dev/sdg conv=fsync status=progress
 </pre>
 

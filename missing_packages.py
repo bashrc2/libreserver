@@ -34,7 +34,7 @@ if __name__=="__main__":
         print('No packages found within the current directory')
         sys.exit()
 
-    current_debian_version = 'bullseye (testing)'
+    current_debian_version = 'bookworm (testing)'
 
     filename = '/tmp/debian.txt'
     with open(packages_filename, "r") as f:
@@ -49,4 +49,4 @@ if __name__=="__main__":
                     if current_debian_version not in site:
                         print(package)
                 os.remove(filename)
-                
+

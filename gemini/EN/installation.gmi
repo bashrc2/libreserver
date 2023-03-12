@@ -29,7 +29,7 @@ Download the disk image for your server architecture.
 
 In a terminal, copy the image to your drive. This could be microSD, a USB stick or an SSD.
 
-  xzcat libreserver-bullseye-*-amd64.img.xz | sudo dd bs=4096 of=/dev/sdX conv=fsync status=progress
+  xzcat libreserver-bookworm-*-amd64.img.xz | sudo dd bs=4096 of=/dev/sdX conv=fsync status=progress
 
 Where sdX is the name of your drive.
 

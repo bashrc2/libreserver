@@ -58,8 +58,8 @@ rsync_variables=(ONION_ONLY
 function upgrade_distro_rsync {
     target_distro="$1"
 
-    if [[ "$target_distro" == 'bullseye' ]]; then
-	echo -n ''
+    if [[ "$target_distro" == 'bookworm' ]]; then
+        echo -n ''
     fi
 }
 
@@ -261,7 +261,7 @@ function remove_rsync {
 
     if grep -q "127.0.0.1:$RSYNC_PORT" "/etc/torrc.d/${PROJECT_NAME}"; then
         sed -i "/127.0.0.1:$RSYNC_PORT/d" "/etc/torrc.d/${PROJECT_NAME}"
-	restart_tor_daemon
+  restart_tor_daemon
     fi
 
     remove_app rsync
@@ -334,7 +334,7 @@ function install_rsync {
 
     if ! grep -q "127.0.0.1:$RSYNC_PORT" "/etc/torrc.d/${PROJECT_NAME}"; then
         sed -i "/127.0.0.1:$WEBADMIN_ONION_PORT/a HiddenServicePort $RSYNC_PORT 127.0.0.1:$RSYNC_PORT" "/etc/torrc.d/${PROJECT_NAME}"
-	restart_tor_daemon
+  restart_tor_daemon
     fi
 
     systemctl enable rsync

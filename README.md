@@ -1,4 +1,4 @@
-<img src="https://gitlab.com/bashrc2/libreserver/-/raw/bullseye/img/logo.png?raw=true" width="70%"/>
+<img src="https://gitlab.com/bashrc2/libreserver/-/raw/bookworm/img/logo.png?raw=true" width="70%"/>
 
 The internet today is too centralized. It's controlled by a few companies who don't give a damn about you or your community. Their abuses of power are many. But it doesn't have to be this way.
 

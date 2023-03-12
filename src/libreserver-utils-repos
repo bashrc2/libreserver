@@ -142,8 +142,8 @@ function create_repo_sources {
     { echo "deb http://${DEBIAN_REPO}/debian/ ${DEBIAN_VERSION} main contrib";
       echo "deb-src http://${DEBIAN_REPO}/debian/ ${DEBIAN_VERSION} main contrib";
       echo '';
-      echo "deb https://deb.debian.org/debian-security bullseye-security main contrib";
-      echo "deb-src https://deb.debian.org/debian-security bullseye-security main contrib";
+      echo "deb https://deb.debian.org/debian-security ${DEBIAN_VERSION}-security main contrib";
+      echo "deb-src https://deb.debian.org/debian-security ${DEBIAN_VERSION}-security main contrib";
       echo '';
       echo "deb http://${DEBIAN_REPO}/debian/ ${DEBIAN_VERSION}-updates main contrib";
       echo "deb-src http://${DEBIAN_REPO}/debian/ ${DEBIAN_VERSION}-updates main contrib";

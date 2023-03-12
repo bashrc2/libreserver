@@ -62,7 +62,7 @@ function mumble_update_settings_screen_password {
     local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
     webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
     if [ -f "${webadmin_install_dir}/settings_mumble.html" ]; then
-	sed -i "s|name=\"mumblePassword\".*|name=\"mumblePassword\" value=\"${mumblePassword}\">|g" "${webadmin_install_dir}/settings_mumble.html"
+  sed -i "s|name=\"mumblePassword\".*|name=\"mumblePassword\" value=\"${mumblePassword}\">|g" "${webadmin_install_dir}/settings_mumble.html"
     fi
 }
 
@@ -71,7 +71,7 @@ function mumble_setting_password {
     newPassword="$1"
 
     if [ ! "$newPassword" ]; then
-	return
+        return
     fi
 
     sed -i "s|serverpassword=.*|serverpassword=${newPassword}|g" /etc/mumble-server.ini
@@ -82,8 +82,8 @@ function mumble_setting_password {
 function upgrade_distro_mumble {
     target_distro="$1"
 
-    if [[ "$target_distro" == 'bullseye' ]]; then
-	echo -n ''
+    if [[ "$target_distro" == 'bookworm' ]]; then
+        echo -n ''
     fi
 }
 
@@ -246,11 +246,11 @@ function install_mumble {
     increment_app_install_progress
 
     if [ -d /var/lib/mumble-server ]; then
-	echo $'Removing previous mumble server install'
-	$REMOVE_PACKAGES mumble-server
-	if [ -d /var/lib/mumble-server ]; then
+  echo $'Removing previous mumble server install'
+  $REMOVE_PACKAGES mumble-server
+  if [ -d /var/lib/mumble-server ]; then
             rm -rf /var/lib/mumble-server
-	fi
+  fi
     fi
 
     INSTALL_PACKAGES mumble-server
@@ -294,30 +294,30 @@ function install_mumble {
     # Make an ssl cert for the server
     if [ ! -f "/etc/letsencrypt/live/${MUMBLE_DOMAIN_NAME}/fullchain.pem" ]; then
         if [ ! -f /etc/ssl/certs/mumble.dhparam ]; then
-	    echo $'Creating self-signed certificate for the mumble domain on onion address'
+      echo $'Creating self-signed certificate for the mumble domain on onion address'
             "${PROJECT_NAME}-addcert" -h mumble --dhkey "$DH_KEYLENGTH"
             function_check check_certificates
             check_certificates mumble
         fi
-	# Check that the cert was created
-	if [ ! -f /etc/ssl/certs/mumble.crt ]; then
+  # Check that the cert was created
+  if [ ! -f /etc/ssl/certs/mumble.crt ]; then
             echo $'mumble server certificate not created'
             exit 57
-	fi
-	if [ ! -f /etc/ssl/private/mumble.key ]; then
+  fi
+  if [ ! -f /etc/ssl/private/mumble.key ]; then
             echo $'mumble server key not created'
             exit 58
-	fi
+  fi
     fi
 
     increment_app_install_progress
 
     if [ ! -f "/etc/letsencrypt/live/${MUMBLE_DOMAIN_NAME}/fullchain.pem" ]; then
-	cp /etc/ssl/certs/mumble.* /var/lib/mumble-server
-	cp /etc/ssl/private/mumble.key /var/lib/mumble-server
-	if [ ! -f /var/lib/mumble-server/mumble.pem ]; then
+  cp /etc/ssl/certs/mumble.* /var/lib/mumble-server
+  cp /etc/ssl/private/mumble.key /var/lib/mumble-server
+  if [ ! -f /var/lib/mumble-server/mumble.pem ]; then
             mv /var/lib/mumble-server/mumble.crt /var/lib/mumble-server/mumble.pem
-	fi
+  fi
     fi
 
     increment_app_install_progress

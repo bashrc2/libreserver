@@ -41,7 +41,7 @@ function default_network_config {
     echo 'source /etc/network/interfaces.d/*' >> /etc/network/interfaces
 }
 
-# Debian bullseye has a problem where the formerly predictable wlan0 and eth0
+# Debian bookworm has a problem where the formerly predictable wlan0 and eth0
 # device names get assigned random names. This is a hacky workaround.
 # Also adding net.ifnames=0 to kernel options on bootloader may work.
 function enable_predictable_device_names {

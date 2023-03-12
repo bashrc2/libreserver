@@ -90,7 +90,7 @@ function convert_wiki_to_gemini {
 function upgrade_distro_dokuwiki {
     target_distro="$1"
 
-    if [[ "$target_distro" == 'bullseye' ]]; then
+    if [[ "$target_distro" == 'bookworm' ]]; then
         echo -n ''
     fi
 }

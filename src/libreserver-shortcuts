@@ -104,7 +104,7 @@ function INSTALL_PACKAGES_BACKPORTS {
 PYTHON_VERSION='3.9'
 
 # REINSTALL_PACKAGES="apt-get -yq ${CONFDEF_OPTION} install --reinstall"
-REINSTALL_PACKAGES_BACKPORTS="apt-get -yq -t bullseye-backports ${CONFDEF_OPTION} install --reinstall"
+REINSTALL_PACKAGES_BACKPORTS="apt-get -yq -t bookworm-backports ${CONFDEF_OPTION} install --reinstall"
 
 REMOVE_PACKAGES='apt-get -yq remove'
 REMOVE_PACKAGES_PURGE='apt-get -yq remove --purge'

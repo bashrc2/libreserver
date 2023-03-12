@@ -68,7 +68,7 @@ function chess_send_emails {
 function upgrade_distro_chess {
     target_distro="$1"
 
-    if [[ "$target_distro" == 'bullseye' ]]; then
+    if [[ "$target_distro" == 'bookworm' ]]; then
         echo -n ''
     fi
 }

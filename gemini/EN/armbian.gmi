@@ -45,13 +45,13 @@ apt update
 apt upgrade
 ```
 
-Then clone the LibreServer repository and checkout the bullseye development branch.
+Then clone the LibreServer repository and checkout the bookworm development branch.
 
 ``` command
 apt install -y git dialog build-essential
 git clone https://gitlab.com/bashrc2/libreserver
 cd libreserver
-git checkout bullseye
+git checkout bookworm
 ```
 
 Install the LibreServer commands:

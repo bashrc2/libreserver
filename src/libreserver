@@ -49,7 +49,7 @@ fi
 if [ ! -f /etc/apt/sources.list ]; then
     installing_on_debian=
 else
-    if ! grep -q 'bullseye' /etc/apt/sources.list; then
+    if ! grep -q 'bookworm' /etc/apt/sources.list; then
         installing_on_debian=
     fi
     if ! grep -q 'debian' /etc/apt/sources.list; then

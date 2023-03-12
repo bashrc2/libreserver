@@ -46,7 +46,7 @@ function remove_user_emacs {
 function upgrade_distro_emacs {
     target_distro="$1"
 
-    if [[ "$target_distro" == 'bullseye' ]]; then
+    if [[ "$target_distro" == 'bookworm' ]]; then
         echo -n ''
     fi
 }

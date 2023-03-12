@@ -59,7 +59,7 @@ etherpad_variables=(ONION_ONLY
 function upgrade_distro_etherpad {
     target_distro="$1"
 
-    if [[ "$target_distro" == 'bullseye' ]]; then
+    if [[ "$target_distro" == 'bookworm' ]]; then
         echo -n ''
     fi
 }
