@@ -24,7 +24,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-PHP_VERSION='7.4'
+PHP_VERSION='8.2'
 
 # default search engine for command line browser
 DEFAULT_SEARCH='https://searx.laquadrature.net'
