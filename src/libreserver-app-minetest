@@ -152,7 +152,7 @@ function remove_minetest {
 }
 
 function minetest_build_from_source {
-    INSTALL_PACKAGES libirrlicht-dev libgettextpo0 libfreetype6-dev cmake libbz2-dev libpng-dev libjpeg-dev libxxf86vm-dev libgl1-mesa-dev libsqlite3-dev libogg-dev libvorbis-dev libopenal-dev libcurl4-openssl-dev libluajit-5.1-dev liblua5.4-0-dev libleveldb-dev
+    INSTALL_PACKAGES libirrlicht-dev libgettextpo0 libfreetype6-dev cmake libbz2-dev libpng-dev libjpeg-dev libxxf86vm-dev libgl1-mesa-dev libsqlite3-dev libogg-dev libvorbis-dev libopenal-dev libcurl4-openssl-dev libluajit-5.1-dev liblua5.4-dev libleveldb-dev
 
     increment_app_install_progress
 

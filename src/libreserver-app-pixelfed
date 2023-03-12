@@ -553,7 +553,7 @@ function install_pixelfed {
 
     increment_app_install_progress
 
-    INSTALL_PACKAGES libjpeg62-turbo libpng16-16 libxpm4 libwebp6 libfreetype6-dev
+    INSTALL_PACKAGES libjpeg62-turbo libpng16-16 libxpm4 libwebp7 libfreetype6-dev
 
     increment_app_install_progress
 

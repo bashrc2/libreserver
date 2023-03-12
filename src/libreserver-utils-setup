@@ -1423,8 +1423,8 @@ function setup_utils {
     function_check mark_admin_user_account
     mark_admin_user_account
 
-    function_check enforce_good_passwords
-    enforce_good_passwords
+    # function_check enforce_good_passwords
+    # enforce_good_passwords
 
     function_check change_login_message
     change_login_message

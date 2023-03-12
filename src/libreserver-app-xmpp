@@ -1752,7 +1752,7 @@ function install_xmpp {
 
     increment_app_install_progress
 
-    # INSTALL_PACKAGES python3-xmpp
+    INSTALL_PACKAGES python3-aioxmpp
 
     increment_app_install_progress
 
