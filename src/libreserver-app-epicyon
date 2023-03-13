@@ -472,7 +472,7 @@ function install_epicyon {
         pip3 uninstall -y six
         REINSTALL_PACKAGES python3-six
     fi
-    INSTALL_PACKAGES python3-socks imagemagick python3-setuptools python3-cryptography python3-dateutil libimage-exiftool-perl python3-flake8 python3-pyqrcode python3-png python3-pyld python3-six wget
+    INSTALL_PACKAGES python3-socks imagemagick python3-setuptools python3-cryptography python3-dateutil libimage-exiftool-perl python3-flake8 python3-pyqrcode python3-png python3-pyld python3-six wget python3-requests
 
     increment_app_install_progress
 
