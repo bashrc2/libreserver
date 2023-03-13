@@ -1551,7 +1551,7 @@ disabled. The "nis" service can be disabled with the following commands:\n\n#upd
                       log_msg $1 $2 '系统时钟必须同步权威可信时间源。'
                   fi
                   if [ $2 -ne 0 ];then
-                      printf '\n######################\n\nSTIG-ID:RHEL-06-000248\n\nVulnerability Discussion: Synchronizing with an NTP server makes it possible to collate system logs from multiple sources or correlate computer events with real time events. Using a trusted NTP server provided by your organization is recommended.\n\nFix text: To specify a remote NTP server for time synchronization, edit the file "/etc/ntp.conf". Add or correct the following lines, substituting the IP or hostname of a remote NTP server for ntpserver.\n\nserver [ntpserver]\n\nThis instructs the NTP software to contact that remote server to obtain time data. \n\n######################\n\n' >> $LOG
+                      printf '\n######################\n\nSTIG-ID:RHEL-06-000248\n\nVulnerability Discussion: Synchronizing with an NTP server makes it possible to collate system logs from multiple sources or correlate computer events with real time events. Using a trusted NTP server provided by your organization is recommended.\n\nFix text: To specify a remote NTP server for time synchronization, edit the file "/etc/ntpsec/ntp.conf". Add or correct the following lines, substituting the IP or hostname of a remote NTP server for ntpserver.\n\nserver [ntpserver]\n\nThis instructs the NTP software to contact that remote server to obtain time data. \n\n######################\n\n' >> $LOG
                   fi
                   ;;
         V-38622)  if [ "$3" = "en" ]; then
