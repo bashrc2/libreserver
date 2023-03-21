@@ -247,8 +247,9 @@ function remove_user_irc {
     if [ -d "/home/${remove_username}/irclogs" ]; then
         rm -rf "/home/${remove_username}/irclogs"
     fi
-    /usr/local/bin/miniircd --state-dir=/var/jail/miniircd --del-account "${remove_username}"
-    chown -R miniirc:miniirc /var/jail/miniircd
+    /usr/local/bin/miniircd --state-dir=/var/miniircd --del-account "${remove_username}"
+    chown -R miniirc:miniirc /var/miniircd
+    chown -R miniirc:miniirc /etc/miniircd
 }
 
 function change_password_irc {
@@ -256,8 +257,9 @@ function change_password_irc {
     new_user_password="$2"
 
     "${PROJECT_NAME}-pass" -u "${curr_username}" -a irc -p "${new_user_password}"
-    /usr/local/bin/miniircd --state-dir=/var/jail/miniircd --set-password "${curr_username}":"${new_user_password}"
-    chown -R miniirc:miniirc /var/jail/miniircd
+    /usr/local/bin/miniircd --state-dir=/var/miniircd --set-password "${curr_username}":"${new_user_password}"
+    chown -R miniirc:miniirc /var/miniircd
+    chown -R miniirc:miniirc /etc/miniircd
 }
 
 function add_user_irc {
@@ -270,8 +272,9 @@ function add_user_irc {
 
     create_irssi_config "${new_username}" "${new_user_password}"
 
-    /usr/local/bin/miniircd --state-dir=/var/jail/miniircd --add-account "${new_username}":"${new_user_password}"
-    chown -R miniirc:miniirc /var/jail/miniircd
+    /usr/local/bin/miniircd --state-dir=/var/miniircd --add-account "${new_username}":"${new_user_password}"
+    chown -R miniirc:miniirc /var/miniircd
+    chown -R miniirc:miniirc /etc/miniircd
 
     echo '0'
 }
@@ -294,7 +297,7 @@ function upgrade_irc {
     bridge_irc_to_xmpp
 
     if [[ "$ONION_ONLY" == 'no' ]]; then
-        cat "/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/fullchain.pem" "/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/privkey.pem" > /var/jail/miniircd/miniircd.pem
+        cat "/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/fullchain.pem" "/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/privkey.pem" > /var/miniircd/miniircd.pem
     fi
 
     CURR_IRC_COMMIT=$(get_completion_param "irc commit")
@@ -337,8 +340,8 @@ function remove_irc {
     save_firewall_settings
     firewall_remove ${IRC_PORT} tcp
 
-    if [ -d /var/jail/miniircd ]; then
-        rm -rf /var/jail/miniircd
+    if [ -d /var/miniircd ]; then
+        rm -rf /var/miniircd
     fi
     if [ -d /etc/miniirc ]; then
         rm -rf /etc/miniirc
@@ -383,8 +386,8 @@ function install_irc_server {
     if [ -d /etc/miniirc ]; then
         rm -rf /etc/miniirc
     fi
-    if [ -d /var/jail/miniircd ]; then
-        rm -rf /var/jail/miniircd
+    if [ -d /var/miniircd ]; then
+        rm -rf /var/miniircd
     fi
 
     function_check git_clone
@@ -397,10 +400,10 @@ function install_irc_server {
 
     cp /etc/miniirc/miniircd /usr/local/bin/miniircd
     irc_welcome_message
-    make jail
+    make
 
-    if [ ! -d /var/jail/miniircd ]; then
-        mkdir -p /var/jail/miniircd
+    if [ ! -d /var/miniircd ]; then
+        mkdir -p /var/miniircd
     fi
 
     # shellcheck disable=SC2034
@@ -408,7 +411,7 @@ function install_irc_server {
 
     IRC_SSL_OPTION=
     if [[ "$ONION_ONLY" == 'no' ]]; then
-        cat "/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/fullchain.pem" "/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/privkey.pem" > /var/jail/miniircd/miniircd.pem
+        cat "/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/fullchain.pem" "/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/privkey.pem" > /var/miniircd/miniircd.pem
     else
         "${PROJECT_NAME}-addcert" -h "${IRC_ONION_HOSTNAME}" --dhkey "${DH_KEYLENGTH}"
         if [ ! -f "/etc/ssl/certs/${IRC_ONION_HOSTNAME}.crt" ]; then
@@ -419,7 +422,7 @@ function install_irc_server {
             echo "irc TLS cert not found /etc/ssl/private/${IRC_ONION_HOSTNAME}.key"
             exit 71
         fi
-        cat "/etc/ssl/certs/${IRC_ONION_HOSTNAME}.crt" "/etc/ssl/private/${IRC_ONION_HOSTNAME}.key" > /var/jail/miniircd/miniircd.pem
+        cat "/etc/ssl/certs/${IRC_ONION_HOSTNAME}.crt" "/etc/ssl/private/${IRC_ONION_HOSTNAME}.key" > /var/miniircd/miniircd.pem
     fi
     IRC_SSL_OPTION='--ssl-pem-file=/miniircd.pem'
 
@@ -431,10 +434,10 @@ function install_irc_server {
       echo 'After=network.target';
       echo '';
       echo '[Service]';
-      echo 'User=root';
-      echo 'Group=root';
+      echo 'User=miniirc';
+      echo 'Group=miniirc';
       echo "WorkingDirectory=/etc/miniirc";
-      echo "ExecStart=/usr/local/bin/miniircd --state-dir=/ --setuid=miniirc ${IRC_SSL_OPTION} --registered-only --new-registrations 0 --chroot=/var/jail/miniircd";
+      echo "ExecStart=/usr/local/bin/miniircd --state-dir=/var/miniircd --registered-only --new-registrations 0";
       echo 'Environment=PATH=/usr/bin:/usr/local/bin';
       echo 'Environment=LC_ALL=C.UTF-8';
       echo "Environment=GIT_CEILING_DIRECTORIES=/etc/miniirc";
@@ -453,7 +456,8 @@ function install_irc_server {
       echo '[Install]';
       echo 'WantedBy=multi-user.target'; } > "$rootdir/etc/systemd/system/irc.service"
     chroot "$rootdir" systemctl enable irc.service
-    chown -R miniirc:miniirc /var/jail
+    chown -R miniirc:miniirc /var/miniircd
+    chown -R miniirc:miniirc /etc/miniircd
     chroot "$rootdir" systemctl restart irc.service
 
     function_check configure_firewall_for_irc
