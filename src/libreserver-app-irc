@@ -179,18 +179,26 @@ function create_irssi_config {
       echo '    chatnet = "LiberaChat";';
       echo '    port = "6697";';
       echo '    autoconnect = "no";';
-      echo '  },';
-      echo '  {';
-      echo '    address = "irc.oftc.net";';
-      echo '    chatnet = "OFTC";';
-      echo '    port = "6667";';
-      echo '    autoconnect = "no";';
-      echo '  },';
-      echo '  {';
+      echo '  },'; } > "/home/${new_username}/.irssi/config"
+    if [[ ${ONION_ONLY} != 'no' ]]; then
+        { echo '  {';
+          echo '    address = "oftcnet6xg6roj6d7id4y4cu6dchysacqj2ldgea73qzdagufflqxrid.onion";';
+          echo '    chatnet = "OFTC";';
+          echo '    port = "6697";';
+          echo '    autoconnect = "no";';
+          echo '  },'; } >> "/home/${new_username}/.irssi/config"
+    else
+        { echo '  {';
+          echo '    address = "irc.oftc.net";';
+          echo '    chatnet = "OFTC";';
+          echo '    port = "6667";';
+          echo '    autoconnect = "no";';
+          echo '  },'; } >> "/home/${new_username}/.irssi/config"
+    { echo '  {';
       echo "    address = \"127.0.0.1\";";
       echo '    ssl_verify = "no";';
       echo '    use_ssl = "yes";';
-      echo "    port = \"${IRC_PORT}\";"; } > "/home/${new_username}/.irssi/config"
+      echo "    port = \"${IRC_PORT}\";"; } >> "/home/${new_username}/.irssi/config"
     if [[ ${ONION_ONLY} != 'no' ]]; then
         IRC_ONION_HOSTNAME=$(grep "irc onion domain" "${COMPLETION_FILE}" | head -n 1 | awk -F ':' '{print $2}')
     fi
