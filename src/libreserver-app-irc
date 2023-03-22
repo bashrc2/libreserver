@@ -194,6 +194,7 @@ function create_irssi_config {
           echo '    port = "6667";';
           echo '    autoconnect = "no";';
           echo '  },'; } >> "/home/${new_username}/.irssi/config"
+    fi
     { echo '  {';
       echo "    address = \"127.0.0.1\";";
       echo '    ssl_verify = "no";';
