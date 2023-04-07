@@ -1440,7 +1440,7 @@ function install_matrix {
             libjpeg62-turbo-dev libldap-common \
             libldap2-dev libsasl2-dev \
             libsqlite3-dev libssl-dev \
-            libssl1.1 libtool libxml2 \
+            libssl3 libtool libxml2 \
             libxml2-dev libxslt1-dev libxslt1.1 \
             make rustc \
             python3 python3-dev \
