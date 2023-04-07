@@ -310,7 +310,7 @@ function install_etesync {
             curl file gcc git libevent-2.1-7 \
             libevent-dev libffi-dev libffi8 \
             libgnutls28-dev libjpeg62-turbo \
-            libjpeg62-turbo-dev libldap-2.4-2 \
+            libjpeg62-turbo-dev libldap-common \
             libldap2-dev libsasl2-dev \
             libsqlite3-dev libssl-dev \
             libssl1.1 libtool libxml2 \
