@@ -590,8 +590,8 @@ function matrix_generate_homeserver_file {
       echo 'source /etc/matrix/env/bin/activate';
       echo -n "python3 -m synapse.app.homeserver ";
       echo -n "--config-path \"${filepath}\" ";
-      echo -n '--generate-config ';
       echo -n "--keys-directory ${MATRIX_DATA_DIR} ";
+      echo -n '--generate-keys ';
       echo -n "--report-stats ${REPORT_STATS} ";
       echo "--server-name \"${domain}\"";
       echo 'deactivate'; } > /usr/bin/install-homeserver
