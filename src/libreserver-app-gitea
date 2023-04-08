@@ -33,7 +33,7 @@ SHOW_ON_ABOUT=1
 REQUIRES_APP=
 
 GITEA_USERNAME='gitea'
-GITEA_VERSION='1.17.0'
+GITEA_VERSION='1.19.0'
 GITEA_DOWNLOAD='https://github.com/go-gitea/gitea/releases/download'
 
 GITEA_DOMAIN_NAME=
