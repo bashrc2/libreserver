@@ -163,6 +163,7 @@ function matrix_configure_homeserver_yaml {
       echo "$turnuris";
       echo 'enable_registration: True';
       echo 'enable_registration_captcha: False';
+      echo 'enable_registration_without_verification: True';
       echo "registration_shared_secret: \"$(create_random_string 30)$(create_random_string 30)\"";
       echo "macaroon_secret_key: \"$(create_random_string 30)$(create_random_string 30)\"";
       echo "form_secret: \"$(create_random_string 30)$(create_random_string 30)\"";
