@@ -32,7 +32,11 @@ function INSTALL_PACKAGES {
         install_max_tries=3
         while [ $install_tries -lt $install_max_tries ]; do
             echo "Installing package $arg"
-            apt-get -yq ${CONFDEF_OPTION} install $arg
+            if [ ! $USE_SUDO ]; then
+                apt-get -yq ${CONFDEF_OPTION} install $arg
+            else
+                sudo apt-get -yq ${CONFDEF_OPTION} install $arg
+            fi
             if dpkg-query -W --showformat='${Status}\n' $arg 2> /dev/null; then
                 break
             fi

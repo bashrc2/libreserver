@@ -93,6 +93,7 @@ function global_rate_limit {
 function refresh_gpg_keys {
     if [ ! -f /usr/bin/gpg ]; then
         if [ ! -f /usr/bin/pacman ]; then
+            USE_SUDO=1
             INSTALL_PACKAGES gnupg
         else
             sudo pacman -S --noconfirm gnupg
@@ -124,8 +125,9 @@ function configure_ssh_client {
     if [ -f /usr/bin/pacman ]; then
         sudo pacman --noconfirm -S openbsd-netcat
     else
+        USE_SUDO=1
         # shellcheck disable=SC2086
-        sudo INSTALL_PACKAGES tor connect-proxy vim-common
+        INSTALL_PACKAGES tor connect-proxy vim-common
     fi
 
     #sudo sed -i 's/#   PasswordAuthentication.*/   PasswordAuthentication no/g' /etc/ssh/ssh_config
@@ -215,8 +217,9 @@ function show_help {
 function setup_client_app_irc {
     echo $'Setting up hexchat'
     if [ ! -f /usr/bin/pacman ]; then
+        USE_SUDO=1
         # shellcheck disable=SC2086
-        sudo INSTALL_PACKAGES tor hexchat tor
+        INSTALL_PACKAGES tor hexchat tor
     else
         sudo pacman -S --noconfirm hexchat tor
     fi
@@ -278,8 +281,9 @@ function remove_known_hosts_entries {
 function setup_avahi_client {
     echo $'Configuring Avahi'
     if [ ! -f /usr/bin/pacman ]; then
+        USE_SUDO=1
         # shellcheck disable=SC2086
-        sudo INSTALL_PACKAGES avahi-utils avahi-dnsconfd
+        INSTALL_PACKAGES avahi-utils avahi-dnsconfd
     else
         sudo pacman -S --noconfirm avahi nss-mdns
         sudo sed -i 's|hosts:.*|hosts: files mdns_minimal [NOTFOUND=return] dns myhostname|g' /etc/nsswitch.conf

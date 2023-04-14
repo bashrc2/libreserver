@@ -1,8 +1,8 @@
 #!/bin/bash
-#  _    _ _            ___                      
-# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
-# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # Installs mesh applications. This avoids duplicated functions
 # within libreserver and libreserver-image-customize and also
@@ -184,14 +184,14 @@ function enable_tox_repo {
 function mesh_tox_client_qtox {
     enable_tox_repo
     # shellcheck disable=SC2086
-    sudo INSTALL_PACKAGES qtox
+    INSTALL_PACKAGES qtox
     echo "qTox Installed."
 }
 
 function mesh_tox_client_toxic_from_repo {
     enable_tox_repo
     # shellcheck disable=SC2086
-    sudo INSTALL_PACKAGES toxic
+    INSTALL_PACKAGES toxic
     echo "Toxic Installed."
 }
 
