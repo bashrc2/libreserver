@@ -183,6 +183,7 @@ function enable_tox_repo {
 
 function mesh_tox_client_qtox {
     enable_tox_repo
+    USE_SUDO=1
     # shellcheck disable=SC2086
     INSTALL_PACKAGES qtox
     echo "qTox Installed."
@@ -190,6 +191,7 @@ function mesh_tox_client_qtox {
 
 function mesh_tox_client_toxic_from_repo {
     enable_tox_repo
+    USE_SUDO=1
     # shellcheck disable=SC2086
     INSTALL_PACKAGES toxic
     echo "Toxic Installed."
