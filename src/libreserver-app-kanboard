@@ -384,9 +384,15 @@ function install_kanboard {
     chmod a+w "/var/www/$KANBOARD_DOMAIN_NAME/htdocs/data"
     chown -R www-data:www-data "/var/www/$KANBOARD_DOMAIN_NAME/htdocs"
 
-    if [ ! -f "/var/www/${KANBOARD_DOMAIN_NAME}/htdocs/app/Schema/Sql/mysql.sql" ]; then
+    kanboard_database_schema="/var/www/${KANBOARD_DOMAIN_NAME}/htdocs/app/Schema/Sql/mysql.sql"
+    if [ ! -f "${kanboard_database_schema}" ]; then
         echo $'kanboard sql file not found'
         exit 63
+    fi
+
+    # add a missing database field
+    if ! grep -q "per_swimlane_task_limits" ${kanboard_database_schema}; then
+        sed -i "/predefined_email_subjects/a \`per_swimlane_task_limits\` int(11) DEFAULT '0'," ${kanboard_database_schema}
     fi
 
     function_check kanboard_create_database
