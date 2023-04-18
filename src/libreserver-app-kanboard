@@ -36,7 +36,7 @@ KANBOARD_DOMAIN_NAME=
 KANBOARD_CODE=
 KANBOARD_ONION_PORT=8121
 KANBOARD_REPO="https://github.com/kanboard/kanboard"
-KANBOARD_COMMIT='e06c6656bc156aad0092ab29e6dad12ff542e880'
+KANBOARD_COMMIT='8a77a7851ca8552816d52b42897adb4b3807d416'
 KANBOARD_ADMIN_PASSWORD=
 
 KANBOARD_SHORT_DESCRIPTION=$'Simple kanban'
@@ -388,13 +388,6 @@ function install_kanboard {
     if [ ! -f "${kanboard_database_schema}" ]; then
         echo $'kanboard sql file not found'
         exit 63
-    fi
-
-    # add a missing database field
-    if ! grep -q "per_swimlane_task_limits" ${kanboard_database_schema}; then
-        sed -i "/predefined_email_subjects/a \`enable_global_tags\` tinyint(1) DEFAULT '1' NOT NULL," ${kanboard_database_schema}
-        sed -i "/predefined_email_subjects/a \`task_limit\` int(11) DEFAULT '0'," ${kanboard_database_schema}
-        sed -i "/predefined_email_subjects/a \`per_swimlane_task_limits\` tinyint(1) DEFAULT '0' NOT NULL," ${kanboard_database_schema}
     fi
 
     function_check kanboard_create_database
