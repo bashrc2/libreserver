@@ -707,7 +707,7 @@ function lockdown_permissions {
 
     # sudo permissions
     chmod 4755 /usr/bin/sudo
-    chmod 4755 /usr/lib/sudo/sudoers.so
+    chmod 4755 /usr/libexec/sudo/sudoers.so
     chown root:root /etc/sudoers
 
     # permissions on email commands
