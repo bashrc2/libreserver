@@ -80,8 +80,10 @@ function pixelfed_remove_bad_links {
     sed -i '/googleapi/d' vendor/laravel/ui/src/Auth/bootstrap-stubs/layouts/app.stub
     sed -i '/googleapi/d' vendor/laravel/framework/src/Illuminate/Auth/Console/stubs/make/views/layouts/app.stub
     sed -i '/googleapi/d' vendor/laravel/framework/src/Illuminate/Foundation/Exceptions/views/minimal.blade.php
-    sed -i '/googleapi/d' vendor/laravel/framework/src/Illuminate/Foundation/Exceptions/views/illustrated-layout.blade.php
     sed -i '/googleapi/d' vendor/laravel/framework/src/Illuminate/Foundation/Exceptions/views/layout.blade.php
+
+    # TODO check this
+    sed -i '/googleapi/d' vendor/laravel/framework/src/Illuminate/Foundation/Exceptions/views/illustrated-layout.blade.php
 
     chown -R www-data:www-data "/var/www/$PIXELFED_DOMAIN_NAME/htdocs"
 }
