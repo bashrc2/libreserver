@@ -392,7 +392,9 @@ function install_kanboard {
 
     # add a missing database field
     if ! grep -q "per_swimlane_task_limits" ${kanboard_database_schema}; then
-        sed -i "/predefined_email_subjects/a \`per_swimlane_task_limits\` int(11) DEFAULT '0'," ${kanboard_database_schema}
+        sed -i "/predefined_email_subjects/a \`enable_global_tags\` bit DEFAULT '1' NOT NULL," ${kanboard_database_schema}
+        sed -i "/predefined_email_subjects/a \`task_limit\` int DEFAULT '0'," ${kanboard_database_schema}
+        sed -i "/predefined_email_subjects/a \`per_swimlane_task_limits\` bit DEFAULT '0' NOT NULL," ${kanboard_database_schema}
     fi
 
     function_check kanboard_create_database
