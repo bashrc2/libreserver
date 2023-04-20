@@ -167,6 +167,9 @@ function configure_interactive_etesync {
 }
 
 function upgrade_etesync {
+    if [ -f /usr/bin/change-password-etesync ]; then
+        rm /usr/bin/change-password-etesync
+    fi
     CURR_ETESYNC_COMMIT=$(get_completion_param "etesync commit")
     if [[ "$CURR_ETESYNC_COMMIT" == "$ETESYNC_COMMIT" ]]; then
         return
@@ -311,6 +314,18 @@ function remove_etesync {
     fi
     if [ -f /usr/bin/install-etesync ]; then
         rm /usr/bin/install-etesync
+    fi
+    if [ -f /usr/bin/upgrade-etesync ]; then
+        rm /usr/bin/upgrade-etesync
+    fi
+    if [ -f /usr/bin/add-user-etesync ]; then
+        rm /usr/bin/add-user-etesync
+    fi
+    if [ -f /usr/bin/remove-user-etesync ]; then
+        rm /usr/bin/remove-user-etesync
+    fi
+    if [ -f /usr/bin/change-password-etesync ]; then
+        rm /usr/bin/change-password-etesync
     fi
 
     if [ -d "/var/www/$ETESYNC_DOMAIN_NAME" ]; then
