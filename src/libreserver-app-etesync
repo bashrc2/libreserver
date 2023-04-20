@@ -345,6 +345,34 @@ function remove_etesync {
     remove_ddns_domain "$ETESYNC_DOMAIN_NAME"
 }
 
+function etesync_create_ini {
+    if [[ "$ONION_ONLY" == "no" ]]; then
+        etesync_hostname="$ETESYNC_DOMAIN_NAME"
+    else
+        etesync_hostname="$ETESYNC_ONION_HOSTNAME"
+    fi
+
+    { echo '[global]';
+      echo 'secret_file = secret.txt';
+      echo 'debug = false';
+      echo ';Set the paths where data will be stored at';
+      echo "static_root = ${ETESYNC_DATA_PATH}/static";
+      echo "media_root = ${ETESYNC_DATA_PATH}/media";
+      echo '';
+      echo ";Advanced options, only uncomment if you know what you're doing:";
+      echo ";static_url = /static/";
+      echo ";media_url = /user-media/";
+      echo ";language_code = en-us";
+      echo ";time_zone = UTC";
+      echo '';
+      echo '[allowed_hosts]';
+      echo "allowed_host1 = ${etesync_hostname}";
+      echo '';
+      echo '[database]';
+      echo 'engine = django.db.backends.sqlite3';
+      echo 'name = db.sqlite3'; } > /etc/etesync/etebase-server.ini
+}
+
 function install_etesync {
     if [ ! "$ETESYNC_DOMAIN_NAME" ]; then
         echo $'No domain name was given for etesync'
@@ -600,7 +628,9 @@ function install_etesync {
 
     increment_app_install_progress
 
+    etesync_create_ini
     chown -R etesync:etesync "$ETESYNC_DATA_PATH"
+    chown -R etesync:etesync "$ETESYNC_PATH"
 
     etesync_temp_filename=/usr/bin/add-superuser-etesync
     { echo '#!/bin/bash';
