@@ -84,7 +84,7 @@ function remove_user_etesync {
       echo "cd ${ETESYNC_PATH} || exit 1";
       echo 'virtualenv -p python3 .venv';
       echo 'source .venv/bin/activate';
-      echo "echo \"from django.contrib.auth.models import User; u = User.objects.get(username='$remove_username'); u.delete();\" | python3 manage.py shell";
+      echo "echo \"from django.contrib.auth import get_user_model; User = get_user_model(); u = User.objects.get(username='$remove_username'); u.delete();\" | python3 manage.py shell";
       echo "\"${PROJECT_NAME}-pass\" -u \"$remove_username\" --rmapp etesync";
       echo 'deactivate'; } > $etesync_temp_filename
     chmod +x $etesync_temp_filename
@@ -101,7 +101,7 @@ function add_user_etesync {
       echo "cd ${ETESYNC_PATH} || exit 1";
       echo 'virtualenv -p python3 .venv';
       echo 'source .venv/bin/activate';
-      echo "echo \"from django.contrib.auth.models import User; u = User.objects.create_user('$new_username', '${new_username}@\$(hostname)', '$new_user_password'); u.save();\" | python3 manage.py shell";
+      echo "echo \"from django.contrib.auth import get_user_model; User = get_user_model(); u = User.objects.create_user('$new_username', '${new_username}@\$(hostname)', '$new_user_password'); u.save();\" | python3 manage.py shell";
       echo "\"${PROJECT_NAME}-pass\" -u \"$new_username\" -a etesync -p \"$new_user_password\"";
       echo 'deactivate'; } > $etesync_temp_filename
     chmod +x $etesync_temp_filename
@@ -132,7 +132,7 @@ function change_password_etesync {
       echo "cd ${ETESYNC_PATH} || exit 1";
       echo 'virtualenv -p python3 .venv';
       echo 'source .venv/bin/activate';
-      echo "echo \"from django.contrib.auth.models import User; u = User.objects.get(username='$curr_username'); u.set_password('$new_user_password'); u.save();\" | python3 manage.py shell";
+      echo "echo \"from django.contrib.auth import get_user_model; User = get_user_model(); u = User.objects.get(username='$curr_username'); u.set_password('$new_user_password'); u.save();\" | python3 manage.py shell";
       echo "\"${PROJECT_NAME}-pass\" -u \"$curr_username\" -a etesync -p \"$new_user_password\"";
       echo 'deactivate'; } > $etesync_temp_filename
     chmod +x $etesync_temp_filename
@@ -589,7 +589,7 @@ function install_etesync {
       echo "cd ${ETESYNC_PATH} || exit 1";
       echo 'virtualenv -p python3 .venv';
       echo 'source .venv/bin/activate';
-      echo "echo \"from django.contrib.auth.models import User; User.objects.create_superuser('$MY_USERNAME', '$MY_EMAIL_ADDRESS', '$ETESYNC_ADMIN_PASSWORD')\" | python3 manage.py shell";
+      echo "echo \"from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('$MY_USERNAME', '$MY_EMAIL_ADDRESS', '$ETESYNC_ADMIN_PASSWORD')\" | python3 manage.py shell";
       echo "\"${PROJECT_NAME}-pass\" -u \"$MY_USERNAME\" -a etesync -p \"$ETESYNC_ADMIN_PASSWORD\"";
       echo 'deactivate'; } > $etesync_temp_filename
     chmod +x $etesync_temp_filename
