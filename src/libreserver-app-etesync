@@ -79,22 +79,33 @@ function logging_off_etesync {
 function remove_user_etesync {
     remove_username="$1"
 
-    cd "${ETESYNC_PATH}" || exit 72
-
-    echo "from django.contrib.auth.models import User; u = User.objects.get(username='$remove_username'); u.delete();" | python3 manage.py shell
-
-    "${PROJECT_NAME}-pass" -u "$remove_username" --rmapp etesync
+    etesync_temp_filename=/usr/bin/remove-user-etesync
+    { echo '#!/bin/bash';
+      echo "cd ${ETESYNC_PATH} || exit 1";
+      echo 'virtualenv -p python3 .venv';
+      echo 'source .venv/bin/activate';
+      echo "echo \"from django.contrib.auth.models import User; u = User.objects.get(username='$remove_username'); u.delete();\" | python3 manage.py shell";
+      echo "\"${PROJECT_NAME}-pass\" -u \"$remove_username\" --rmapp etesync";
+      echo 'deactivate'; } > $etesync_temp_filename
+    chmod +x $etesync_temp_filename
+    /bin/bash $etesync_temp_filename
+    rm $etesync_temp_filename
 }
 
 function add_user_etesync {
     new_username="$1"
     new_user_password="$2"
 
-    cd "${ETESYNC_PATH}" || exit 53
-
-    echo "from django.contrib.auth.models import User; u = User.objects.create_user('$new_username', '${new_username}@$(hostname)', '$new_user_password'); u.save();" | python3 manage.py shell
-
-    "${PROJECT_NAME}-pass" -u "$new_username" -a etesync -p "$new_user_password"
+    etesync_temp_filename=/usr/bin/add-user-etesync
+    { echo '#!/bin/bash';
+      echo "cd ${ETESYNC_PATH} || exit 1";
+      echo 'virtualenv -p python3 .venv';
+      echo 'source .venv/bin/activate';
+      echo "echo \"from django.contrib.auth.models import User; u = User.objects.create_user('$new_username', '${new_username}@\$(hostname)', '$new_user_password'); u.save();\" | python3 manage.py shell";
+      echo "\"${PROJECT_NAME}-pass\" -u \"$new_username\" -a etesync -p \"$new_user_password\"";
+      echo 'deactivate'; } > $etesync_temp_filename
+    chmod +x $etesync_temp_filename
+    /bin/bash $etesync_temp_filename
     echo '0'
 }
 
@@ -116,11 +127,17 @@ function change_password_etesync {
     curr_username="$1"
     new_user_password="$2"
 
-    cd "${ETESYNC_PATH}" || exit 34
-
-    echo "from django.contrib.auth.models import User; u = User.objects.get(username='$curr_username'); u.set_password('$new_user_password'); u.save();" | python3 manage.py shell
-
-    "${PROJECT_NAME}-pass" -u "$curr_username" -a etesync -p "$new_user_password"
+    etesync_temp_filename=/usr/bin/change-password-etesync
+    { echo '#!/bin/bash';
+      echo "cd ${ETESYNC_PATH} || exit 1";
+      echo 'virtualenv -p python3 .venv';
+      echo 'source .venv/bin/activate';
+      echo "echo \"from django.contrib.auth.models import User; u = User.objects.get(username='$curr_username'); u.set_password('$new_user_password'); u.save();\" | python3 manage.py shell";
+      echo "\"${PROJECT_NAME}-pass\" -u \"$curr_username\" -a etesync -p \"$new_user_password\"";
+      echo 'deactivate'; } > $etesync_temp_filename
+    chmod +x $etesync_temp_filename
+    /bin/bash $etesync_temp_filename
+    rm $etesync_temp_filename
 }
 
 function reconfigure_etesync {
@@ -161,9 +178,18 @@ function upgrade_etesync {
 
     # update to the next commit
     set_repo_commit "${ETESYNC_PATH}" "etesync commit" "$ETESYNC_COMMIT" "$ETESYNC_REPO"
-    cd "${ETESYNC_PATH}" || exit 36
-    pip3 install -U -r requirements.txt uwsgi
-    python3 manage.py migrate
+
+    etesync_temp_filename=/usr/bin/upgrade-etesync
+    { echo '#!/bin/bash';
+      echo "cd ${ETESYNC_PATH} || exit 1";
+      echo 'virtualenv -p python3 .venv';
+      echo 'source .venv/bin/activate';
+      echo "pip3 install -U -r requirements.txt uwsgi";
+      echo "python3 manage.py migrate";
+      echo 'deactivate'; } > $etesync_temp_filename
+    chmod +x $etesync_temp_filename
+    /bin/bash $etesync_temp_filename
+
     chown -R etesync:etesync "${ETESYNC_PATH}"
     chown -R www-data:www-data "/var/www/$ETESYNC_DOMAIN_NAME/htdocs"
     systemctl restart etesync
@@ -404,7 +430,7 @@ function install_etesync {
       echo 'source .venv/bin/activate';
       echo 'pip3 install -r requirements.txt uwsgi';
       echo 'python3 manage.py migrate';
-      echo 'python3 manage.py collectstatic';
+      echo 'python3 manage.py collectstatic --no-input';
       echo 'deactivate'; } > /usr/bin/install-etesync
     chmod +x /usr/bin/install-etesync
     /bin/bash /usr/bin/install-etesync
@@ -537,18 +563,30 @@ function install_etesync {
 
     cd "${ETESYNC_PATH}" || exit 34
 
-    python3 "${ETESYNC_PATH}/manage.py" collectstatic --no-input
     chown -R www-data:www-data "/var/www/$ETESYNC_DOMAIN_NAME/htdocs"
 
     increment_app_install_progress
 
     chown -R etesync:etesync "$ETESYNC_DATA_PATH"
 
-    echo "from django.contrib.auth.models import User; User.objects.create_superuser('$MY_USERNAME', '$MY_EMAIL_ADDRESS', '$ETESYNC_ADMIN_PASSWORD')" | python3 manage.py shell
+    etesync_temp_filename=/usr/bin/add-superuser-etesync
+    { echo '#!/bin/bash';
+      echo "cd ${ETESYNC_PATH} || exit 1";
+      echo 'virtualenv -p python3 .venv';
+      echo 'source .venv/bin/activate';
+      echo "echo \"from django.contrib.auth.models import User; User.objects.create_superuser('$MY_USERNAME', '$MY_EMAIL_ADDRESS', '$ETESYNC_ADMIN_PASSWORD')\" | python3 manage.py shell";
+      echo "\"${PROJECT_NAME}-pass\" -u \"$MY_USERNAME\" -a etesync -p \"$ETESYNC_ADMIN_PASSWORD\"";
+      echo 'deactivate'; } > $etesync_temp_filename
+    chmod +x $etesync_temp_filename
+    if ! /bin/bash $etesync_temp_filename; then
+        rm $etesync_temp_filename
+        echo 'Unable to create superuser'
+        exit 43
+    fi
+    rm $etesync_temp_filename
 
     increment_app_install_progress
 
-    "${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a etesync -p "$ETESYNC_ADMIN_PASSWORD"
     set_completion_param "etesync domain" "$ETESYNC_DOMAIN_NAME"
 
     APP_INSTALLED=1
