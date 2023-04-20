@@ -474,6 +474,7 @@ function install_etesync {
       echo 'pip3 install -r requirements.txt uwsgi';
       echo 'python3 manage.py migrate';
       echo 'python3 manage.py collectstatic --no-input';
+      echo 'pip3 install uvicorn[standard]';
       echo 'deactivate'; } > /usr/bin/install-etesync
     chmod +x /usr/bin/install-etesync
     /bin/bash /usr/bin/install-etesync
@@ -567,7 +568,7 @@ function install_etesync {
       echo "cd ${ETESYNC_PATH} || exit 46";
       echo 'virtualenv -p python3 .venv';
       echo 'source .venv/bin/activate';
-      echo "python3 ${ETESYNC_PATH}/manage.py runserver localhost:${ETESYNC_PORT_INTERNAL}";
+      echo "uvicorn etebase_server.asgi:application --port $ETESYNC_PORT_INTERNAL --host 0.0.0.0'";
       echo 'deactivate'; } > /usr/bin/run-etesync
     chmod +x /usr/bin/run-etesync
 
