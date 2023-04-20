@@ -45,7 +45,7 @@ ETESYNC_PATH=/etc/etesync
 ETESYNC_DATA_PATH=/etesync_data
 ETESYNC_ONION_PORT=9860
 ETESYNC_REPO="https://github.com/etesync/server-skeleton"
-ETESYNC_COMMIT='8f50a69b39bef7f421590e3de26b822df0ceaf6e'
+ETESYNC_COMMIT='55d3fb7e8ec10e55725721c7300bb25f8e49eac8'
 ETESYNC_PORT_INTERNAL=8292
 
 # These parameters are used by the FreedomBox mobile app and web UI
