@@ -5,7 +5,7 @@
 # |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # etesync server
-# https://github.com/victor-rds/docker-etesync/blob/master/Dockerfile_debian.template
+# https://github.com/victor-rds/docker-etebase/blob/229629f4c5f5c3a3c3517f62f9433d3402749f21/tags/base/Dockerfile
 #
 # License
 # =======
@@ -459,7 +459,7 @@ function install_etesync {
           echo '    listen 443 ssl;';
           echo '    #listen [::]:443 ssl;';
           echo "    server_name $ETESYNC_DOMAIN_NAME;";
-	  echo '    server_tokens off;';
+    echo '    server_tokens off;';
           echo '';
           echo '    access_log /dev/null;';
           echo '    error_log /dev/null;';
@@ -469,6 +469,15 @@ function install_etesync {
           echo '    client_max_body_size 75M;';
           echo '    location / {';
           echo "        proxy_pass  http://localhost:${ETESYNC_PORT_INTERNAL};";
+          echo "        proxy_http_version 1.1;";
+          echo "        proxy_set_header Upgrade $http_upgrade;";
+          echo "        proxy_set_header Connection \"upgrade\";";
+          echo '';
+          echo "        proxy_redirect off;";
+          echo "        proxy_set_header Host $host;";
+          echo "        proxy_set_header X-Real-IP \$remote_addr;";
+          echo "        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;";
+          echo "        proxy_set_header X-Forwarded-Host \$server_name;";
           echo '    }';
           echo '';
           echo '    location /static {';
@@ -483,8 +492,8 @@ function install_etesync {
         nginx_robots "$ETESYNC_DOMAIN_NAME"
 
         { echo '  add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
-	  echo "    add_header Onion-Location http://${ETESYNC_ONION_HOSTNAME}\$request_uri;";
-          echo '}'; } >> "$etesync_nginx_site"
+    echo "    add_header Onion-Location http://${ETESYNC_ONION_HOSTNAME}\$request_uri;";
+    echo '}'; } >> "$etesync_nginx_site"
     else
         echo -n '' > "$etesync_nginx_site"
     fi
@@ -501,6 +510,15 @@ function install_etesync {
       echo '    client_max_body_size 75M;';
       echo '    location / {';
       echo "        proxy_pass  http://localhost:${ETESYNC_PORT_INTERNAL};";
+      echo "        proxy_http_version 1.1;";
+      echo "        proxy_set_header Upgrade $http_upgrade;";
+      echo "        proxy_set_header Connection \"upgrade\";";
+      echo '';
+      echo "        proxy_redirect off;";
+      echo "        proxy_set_header Host $host;";
+      echo "        proxy_set_header X-Real-IP \$remote_addr;";
+      echo "        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;";
+      echo "        proxy_set_header X-Forwarded-Host \$server_name;";
       echo '    }';
       echo '';
       echo '    location /static {';
@@ -511,7 +529,7 @@ function install_etesync {
     increment_app_install_progress
 
     if ! grep -q "etesync:" /etc/group; then
-	groupadd -r etesync
+  groupadd -r etesync
     fi
     useradd -d "$ETESYNC_PATH" -r -M -s /bin/sh -g etesync etesync
 
