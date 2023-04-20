@@ -502,7 +502,7 @@ function install_etesync {
           echo "        proxy_set_header Connection \"upgrade\";";
           echo '';
           echo "        proxy_redirect off;";
-          echo "        proxy_set_header Host $host;";
+          echo "        proxy_set_header Host \$host;";
           echo "        proxy_set_header X-Real-IP \$remote_addr;";
           echo "        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;";
           echo "        proxy_set_header X-Forwarded-Host \$server_name;";
@@ -543,7 +543,7 @@ function install_etesync {
       echo "        proxy_set_header Connection \"upgrade\";";
       echo '';
       echo "        proxy_redirect off;";
-      echo "        proxy_set_header Host $host;";
+      echo "        proxy_set_header Host \$host;";
       echo "        proxy_set_header X-Real-IP \$remote_addr;";
       echo "        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;";
       echo "        proxy_set_header X-Forwarded-Host \$server_name;";
