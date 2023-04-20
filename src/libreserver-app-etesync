@@ -280,6 +280,12 @@ function remove_etesync {
         rm /etc/systemd/system/etesync.service
     fi
     userdel -r etesync
+    if [ -f /usr/bin/run-etesync ]; then
+        rm /usr/bin/run-etesync
+    fi
+    if [ -f /usr/bin/install-etesync ]; then
+        rm /usr/bin/install-etesync
+    fi
 
     if [ -d "/var/www/$ETESYNC_DOMAIN_NAME" ]; then
         rm -rf "/var/www/$ETESYNC_DOMAIN_NAME"
@@ -385,18 +391,25 @@ function install_etesync {
 
     sed -i "s|STATIC_ROOT =.*|STATIC_ROOT = os.environ.get('DJANGO_STATICS','/var/www/$ETESYNC_DOMAIN_NAME/htdocs/')|g" "${ETESYNC_PATH}/etesync_server/settings.py"
 
-    pip3 install -r requirements.txt uwsgi
-
-    increment_app_install_progress
-
-    python3 manage.py migrate
-
-    increment_app_install_progress
-
     # place to store data
     if [ ! -d "${ETESYNC_DATA_PATH}" ]; then
         mkdir "${ETESYNC_DATA_PATH}"
     fi
+
+    increment_app_install_progress
+
+    { echo '#!/bin/bash';
+      echo "cd ${ETESYNC_PATH} || exit 1";
+      echo 'virtualenv -p python3 .venv';
+      echo 'source .venv/bin/activate';
+      echo 'pip3 install -r requirements.txt uwsgi';
+      echo 'python3 manage.py migrate';
+      echo 'python3 manage.py collectstatic';
+      echo 'deactivate'; } > /usr/bin/install-etesync
+    chmod +x /usr/bin/install-etesync
+    /bin/bash /usr/bin/install-etesync
+
+    increment_app_install_progress
 
     etesync_nginx_site=/etc/nginx/sites-available/$ETESYNC_DOMAIN_NAME
     if [[ "$ONION_ONLY" == "no" ]]; then
@@ -463,6 +476,14 @@ function install_etesync {
 
     increment_app_install_progress
 
+    { echo '#!/bin/bash';
+      echo "cd ${ETESYNC_PATH} || exit 46";
+      echo 'virtualenv -p python3 .venv';
+      echo 'source .venv/bin/activate';
+      echo "python3 ${ETESYNC_PATH}/manage.py runserver localhost:${ETESYNC_PORT_INTERNAL}";
+      echo 'deactivate'; } > /usr/bin/run-etesync
+    chmod +x /usr/bin/run-etesync
+
     { echo '[Unit]';
       echo 'Description=etesync';
       echo 'After=network.target';
@@ -473,7 +494,7 @@ function install_etesync {
       echo 'User=etesync';
       echo 'Group=etesync';
       echo "WorkingDirectory=${ETESYNC_PATH}";
-      echo "ExecStart=/usr/bin/python3 ${ETESYNC_PATH}/manage.py runserver localhost:${ETESYNC_PORT_INTERNAL}";
+      echo "ExecStart=/usr/bin/run-etesync";
       echo 'Environment=USER=etesync';
       echo "Environment=ETESYNC_PATH=${ETESYNC_PATH}";
       echo "Environment=ENV DATA_PATH=${ETESYNC_DATA_PATH}";
@@ -510,9 +531,9 @@ function install_etesync {
 
     systemctl restart nginx
 
-    pip3 install psycopg2-binary
-
     increment_app_install_progress
+
+    rm /usr/bin/install-etesync
 
     cd "${ETESYNC_PATH}" || exit 34
 
