@@ -187,7 +187,7 @@ function upgrade_etesync {
       echo "cd ${ETESYNC_PATH} || exit 1";
       echo 'virtualenv -p python3 .venv';
       echo 'source .venv/bin/activate';
-      echo "pip3 install -U -r requirements.txt uwsgi";
+      echo "pip3 install -U -r requirements.txt";
       echo "python3 manage.py migrate";
       echo 'deactivate'; } > $etesync_temp_filename
     chmod +x $etesync_temp_filename
@@ -370,7 +370,7 @@ function etesync_create_ini {
       echo '';
       echo '[database]';
       echo 'engine = django.db.backends.sqlite3';
-      echo 'name = db.sqlite3'; } > /etc/etesync/etebase-server.ini
+      echo 'name = db.sqlite3'; } > "${ETESYNC_PATH}/etebase-server.ini"
 }
 
 function install_etesync {
@@ -568,7 +568,7 @@ function install_etesync {
       echo "cd ${ETESYNC_PATH} || exit 46";
       echo 'virtualenv -p python3 .venv';
       echo 'source .venv/bin/activate';
-      echo "uvicorn etebase_server.asgi:application --port $ETESYNC_PORT_INTERNAL --host 0.0.0.0'";
+      echo "uvicorn etebase_server.asgi:application --port ${ETESYNC_PORT_INTERNAL} --host 0.0.0.0";
       echo 'deactivate'; } > /usr/bin/run-etesync
     chmod +x /usr/bin/run-etesync
 
@@ -630,6 +630,8 @@ function install_etesync {
     increment_app_install_progress
 
     etesync_create_ini
+    mkdir "${ETESYNC_DATA_PATH}/static"
+    mkdir "${ETESYNC_DATA_PATH}/media"
     chown -R etesync:etesync "$ETESYNC_DATA_PATH"
     chown -R etesync:etesync "$ETESYNC_PATH"
 
