@@ -245,6 +245,8 @@ function install_mariadb {
 
     mariadb_create_root_user
 
+    sed -i 's|# port =.*|port = 3306|g' /etc/mysql/my.cnf
+    
     mark_completed "${FUNCNAME[0]}"
 }
 
