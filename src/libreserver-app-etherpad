@@ -534,6 +534,7 @@ function install_etherpad {
         else
             function_check git_clone
             git_clone "$ETHERPAD_REPO" "/var/www/$ETHERPAD_DOMAIN_NAME/htdocs"
+	    git config --global --add safe.directory "/var/www/$ETHERPAD_DOMAIN_NAME/htdocs"
         fi
 
         if [ ! -d "/var/www/$ETHERPAD_DOMAIN_NAME/htdocs" ]; then
