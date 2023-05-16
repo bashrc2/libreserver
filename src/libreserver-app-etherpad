@@ -510,8 +510,8 @@ function install_etherpad {
 
     increment_app_install_progress
 
-    INSTALL_PACKAGES gzip git curl python libssl-dev pkg-config \
-            build-essential python g++ make checkinstall \
+    INSTALL_PACKAGES gzip git curl python3 libssl-dev pkg-config \
+            build-essential g++ make checkinstall \
             python3-bcrypt python3-passlib
 
     increment_app_install_progress
