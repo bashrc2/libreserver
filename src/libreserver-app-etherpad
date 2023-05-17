@@ -111,6 +111,8 @@ function create_etherpad_settings {
     { echo '{';
       echo "  \"title\": \"${ETHERPAD_TITLE}\",";
       echo '  "favicon": "favicon.ico",';
+      echo '  "skinName": "colibris",';
+      echo '  "skinVariants": "super-light-toolbar super-light-editor light-background",';
 
       echo '  "ip": "127.0.0.1",';
       echo "  \"port\" : ${ETHERPAD_PORT},";
