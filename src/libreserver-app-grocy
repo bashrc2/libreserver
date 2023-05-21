@@ -52,7 +52,7 @@ GROCY_DOMAIN_NAME=
 GROCY_CODE=
 GROCY_ONION_PORT=9487
 GROCY_REPO="https://github.com/grocy/grocy"
-GROCY_COMMIT='f4874ed8d09c53f087df85881f6ae99121751f8b'
+GROCY_COMMIT='f427849e89c56df7aaf84681bd71e7cf1ed9c234'
 grocy_latest_url='https://releases.grocy.info/latest'
 
 # These parameters are used by the FreedomBox mobile app and web UI
