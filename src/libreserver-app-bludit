@@ -132,6 +132,7 @@ function bludit_install_from_download {
         exit 32
     fi
     # shellcheck disable=SC2001
+    bludit_download_path="/var/www/${BLUDIT_DOMAIN_NAME}"/bludit
     bludit_path="/var/www/${BLUDIT_DOMAIN_NAME}"/bludit-$(echo "$BLUDIT_VERSION" | sed 's|\.|-|g')
     if [ -d "$bludit_path" ]; then
         rm -rf "$bludit_path"
@@ -161,7 +162,10 @@ function bludit_install_from_download {
     fi
     # shellcheck disable=SC2001,SC2046
     unzip "${bludit_path}".zip
-    if [ ! -d "$bludit_path" ]; then
+    if [ -d "${bludit_download_path}" ]; then
+        mv "${bludit_download_path}" "${bludit_path}"
+    fi
+    if [ ! -d "${bludit_path}" ]; then
         echo $"Unable to download or extract bludit from $url"
         exit 26
     fi
