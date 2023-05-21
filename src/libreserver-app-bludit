@@ -161,6 +161,9 @@ function bludit_install_from_download {
         exit 25
     fi
     # shellcheck disable=SC2001,SC2046
+    if [ -d "${bludit_download_path}" ]; then
+        rm -rf "${bludit_download_path}"
+    fi
     unzip "${bludit_path}".zip
     if [ -d "${bludit_download_path}" ]; then
         mv "${bludit_download_path}" "${bludit_path}"
@@ -342,7 +345,7 @@ function install_bludit {
           echo '  listen 443 ssl;';
           echo '  #listen [::]:443 ssl;';
           echo "  server_name $BLUDIT_DOMAIN_NAME;";
-	  echo '  server_tokens off;';
+          echo '  server_tokens off;';
           echo ''; } >> "$bludit_nginx_site"
         nginx_compress "$BLUDIT_DOMAIN_NAME"
         echo '' >> "$bludit_nginx_site"
