@@ -36,7 +36,7 @@ AKAUNTING_DOMAIN_NAME=
 AKAUNTING_CODE=
 AKAUNTING_ONION_PORT=8341
 AKAUNTING_REPO="https://github.com/akaunting/akaunting"
-AKAUNTING_COMMIT='9429728281ad07f21b17dfb82a02fc2f1eaee07d'
+AKAUNTING_COMMIT='c9f2a7d68880e82e69bfb0e5e5b160e823f0531b'
 AKAUNTING_ADMIN_PASSWORD=
 
 AKAUNTING_BACKGROUND_IMAGE_URL=
@@ -527,6 +527,8 @@ function install_akaunting {
       echo '  }';
       echo '}'; } >> "$akaunting_nginx_site"
 
+    sed -i '/nosniff/d' "$akaunting_nginx_site"
+    
     function_check configure_php
     configure_php
 
