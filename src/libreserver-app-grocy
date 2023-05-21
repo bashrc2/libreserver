@@ -214,6 +214,7 @@ function upgrade_distro_grocy {
 
 function upgrade_grocy {
     grocy_remove_bad_links
+    # TODO
 }
 
 function backup_local_grocy {
