@@ -464,7 +464,6 @@ function install_akaunting {
           echo '    fastcgi_read_timeout 30;';
           echo "    fastcgi_split_path_info ^(.+\.php)(/.+)\$;";
           echo "    fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
-          echo '    fastcgi_index index.php;';
           echo "    fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;";
           echo '    include fastcgi_params;';
           echo '  }';
@@ -523,7 +522,6 @@ function install_akaunting {
       echo '    fastcgi_read_timeout 30;';
       echo "    fastcgi_split_path_info ^(.+\.php)(/.+)\$;";
       echo "    fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
-      echo '    fastcgi_index index.php;';
       echo "    fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;";
       echo '    include fastcgi_params;';
       echo '  }';
