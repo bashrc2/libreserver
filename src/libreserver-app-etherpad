@@ -90,145 +90,125 @@ function change_password_etherpad {
     fi
 }
 
-function etherpad_create_database {
-    if [ -f "$IMAGE_PASSWORD_FILE" ]; then
-        ETHERPAD_ADMIN_PASSWORD="$(printf "%s" "$(cat "$IMAGE_PASSWORD_FILE")")"
-    else
-        if [ ! "$ETHERPAD_ADMIN_PASSWORD" ]; then
-            ETHERPAD_ADMIN_PASSWORD="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
-        fi
-    fi
-    if [ ! "$ETHERPAD_ADMIN_PASSWORD" ]; then
-        return
-    fi
-
-    function_check create_database
-    create_database etherpad "$ETHERPAD_ADMIN_PASSWORD" "$MY_USERNAME"
-}
-
 function create_etherpad_settings {
     settings_file="/var/www/${ETHERPAD_DOMAIN_NAME}/htdocs/settings.json"
     { echo '{';
-      echo "  \"title\": \"${ETHERPAD_TITLE}\",";
-      echo '  "favicon": "favicon.ico",';
-      echo '  "skinName": "colibris",';
-      echo '  "skinVariants": "super-light-toolbar super-light-editor light-background",';
+      echo "   \"title\": \"${ETHERPAD_TITLE}\",";
+      echo '   "favicon": "favicon.ico",';
+      echo '   "skinName": "colibris",';
+      echo '   "skinVariants": "super-light-toolbar super-light-editor light-background",';
 
-      echo '  "ip": "127.0.0.1",';
-      echo "  \"port\" : ${ETHERPAD_PORT},";
+      echo '   "ip": "127.0.0.1",';
+      echo "   \"port\" : ${ETHERPAD_PORT},";
 
-      echo '  "showSettingsInAdminPage" : true,';
-      echo '   "dbType" : "mysql",';
+      echo '   "showSettingsInAdminPage" : true,';
+      echo '   "dbType" : "dirty",';
       echo '   "dbSettings" : {';
-      echo '                    "user"    : "root",';
-      echo '                    "host"    : "localhost",';
-      echo "                    \"password\": \"${MARIADB_PASSWORD}\",";
-      echo '                    "database": "etherpad",';
-      echo '                    "charset" : "utf8mb4"';
-      echo '                  },';
-
-      echo "  \"defaultPadText\" : \"${ETHERPAD_WELCOME_MESSAGE}\",";
-
-      echo '  "padOptions": {';
-      echo '    "noColors": false,';
-      echo '    "showControls": true,';
-      echo '    "showChat": true,';
-      echo '    "showLineNumbers": false,';
-      echo '    "useMonospaceFont": false,';
-      echo '    "userName": false,';
-      echo '    "userColor": true,';
-      echo '    "rtl": false,';
-      echo '    "alwaysShowChat": true,';
-      echo '    "chatAndUsers": true,';
-      echo '    "lang": "en-gb"';
-      echo '  },';
-
-      echo '  "padShortcutEnabled" : {';
-      echo '    "altF9":     true, /* focus on the File Menu and/or editbar */';
-      echo '    "altC":      true, /* focus on the Chat window */';
-      echo '    "cmdShift2": true, /* shows a gritter popup showing a line author */';
-      echo '    "delete":    true,';
-      echo '    "return":    true,';
-      echo '    "esc":       true, /* in mozilla versions 14-19 avoid reconnecting pad */';
-      echo '    "cmdS":      true, /* save a revision */';
-      echo '    "tab":       true, /* indent */';
-      echo '    "cmdZ":      true, /* undo/redo */';
-      echo '    "cmdY":      true, /* redo */';
-      echo '    "cmdI":      true, /* italic */';
-      echo '    "cmdB":      true, /* bold */';
-      echo '    "cmdU":      true, /* underline */';
-      echo '    "cmd5":      true, /* strike through */';
-      echo '    "cmdShiftL": true, /* unordered list */';
-      echo '    "cmdShiftN": true, /* ordered list */';
-      echo '    "cmdShift1": true, /* ordered list */';
-      echo '    "cmdShiftC": true, /* clear authorship */';
-      echo '    "cmdH":      true, /* backspace */';
-      echo '    "ctrlHome":  true, /* scroll to top of pad */';
-      echo '    "pageUp":    true,';
-      echo '    "pageDown":  true';
-      echo '  },';
-
-      echo '  "suppressErrorsInPadText" : true,';
-      echo '  "requireSession" : false,';
-      echo '  "editOnly" : false,';
-      echo '  "sessionNoPassword" : false,';
-      echo '  "minify" : true,';
-      echo '  "maxAge" : 21600, // 60 * 60 * 6 = 6 hours';
-      echo '  "abiword" : null,';
-      echo '  "soffice" : null,';
-      echo '  "tidyHtml" : null,';
-      echo '  "allowUnknownFileEnds" : false,';
-      echo '  "requireAuthentication" : true,';
-      echo '  "requireAuthorization" : true,';
-      echo '  "trustProxy" : true,';
-      echo '  "disableIPlogging" : true,';
-      echo '  "automaticReconnectionTimeout": 0,';
-
-      echo '  "scrollWhenFocusLineIsOutOfViewport": {';
-      echo '    "percentage": {';
-      echo '      "editionAboveViewport": 0,';
-      echo '      "editionBelowViewport": 0';
-      echo '    },';
-      echo '    "duration": 0,';
-      echo '    "scrollWhenCaretIsInTheLastLineOfViewport": false,';
-      echo '    "percentageToScrollWhenUserPressesArrowUp": 0';
-      echo '  },';
-
-      echo '  "users": {';
-      echo "    \"${MY_USERNAME}\": { \"password\": \"${ETHERPAD_ADMIN_PASSWORD}\", \"is_admin\": true }";
-      echo '  },';
-
-      echo '  "socketTransportProtocols" : ["xhr-polling", "jsonp-polling", "htmlfile"],';
-      echo '  "loadTest": false,';
-      echo '  "indentationOnNewLine": false,';
-
-      echo '   "importExportRateLimiting": {';
-      echo '     // duration of the rate limit window (milliseconds)';
-      echo '     "windowMs": 90000,';
-      echo '     // maximum number of requests per IP to allow during the rate limit window';
-      echo '     "max": 10';
+      echo '       "filename" : "dirty.db"';
       echo '   },';
 
-      echo '  "importMaxFileSize": 52428800, // 50 * 1024 * 1024';
+      echo "   \"defaultPadText\" : \"${ETHERPAD_WELCOME_MESSAGE}\",";
 
-      echo '  "toolbar": {';
-      echo '    "left": [';
-      echo '      ["bold", "italic", "underline", "strikethrough"],';
-      echo '      ["orderedlist", "unorderedlist", "indent", "outdent"],';
-      echo '      ["undo", "redo"],';
-      echo '      ["clearauthorship"]';
-      echo '    ],';
-      echo '    "right": [';
-      echo '      ["importexport", "timeslider", "savedrevision"],';
-      echo '      ["settings", "embed"],';
-      echo '      ["showusers"]';
-      echo '    ],';
-      echo '    "timeslider": [';
-      echo '      ["timeslider_export", "timeslider_returnToPad"]';
-      echo '    ]';
-      echo '  },';
-      echo '  "exposeVersion": false,';
-      echo '  "loglevel": "INFO"';
+      echo '   "padOptions": {';
+      echo '       "noColors": false,';
+      echo '       "showControls": true,';
+      echo '       "showChat": true,';
+      echo '       "showLineNumbers": false,';
+      echo '       "useMonospaceFont": false,';
+      echo '       "userName": false,';
+      echo '       "userColor": true,';
+      echo '       "rtl": false,';
+      echo '       "alwaysShowChat": true,';
+      echo '       "chatAndUsers": true,';
+      echo '       "lang": "en-gb"';
+      echo '   },';
+
+      echo '   "padShortcutEnabled" : {';
+      echo '       "altF9":     true, /* focus on the File Menu and/or editbar */';
+      echo '       "altC":      true, /* focus on the Chat window */';
+      echo '       "cmdShift2": true, /* shows a gritter popup showing a line author */';
+      echo '       "delete":    true,';
+      echo '       "return":    true,';
+      echo '       "esc":       true, /* in mozilla versions 14-19 avoid reconnecting pad */';
+      echo '       "cmdS":      true, /* save a revision */';
+      echo '       "tab":       true, /* indent */';
+      echo '       "cmdZ":      true, /* undo/redo */';
+      echo '       "cmdY":      true, /* redo */';
+      echo '       "cmdI":      true, /* italic */';
+      echo '       "cmdB":      true, /* bold */';
+      echo '       "cmdU":      true, /* underline */';
+      echo '       "cmd5":      true, /* strike through */';
+      echo '       "cmdShiftL": true, /* unordered list */';
+      echo '       "cmdShiftN": true, /* ordered list */';
+      echo '       "cmdShift1": true, /* ordered list */';
+      echo '       "cmdShiftC": true, /* clear authorship */';
+      echo '       "cmdH":      true, /* backspace */';
+      echo '       "ctrlHome":  true, /* scroll to top of pad */';
+      echo '       "pageUp":    true,';
+      echo '       "pageDown":  true';
+      echo '   },';
+
+      echo '   "suppressErrorsInPadText" : true,';
+      echo '   "requireSession" : false,';
+      echo '   "editOnly" : false,';
+      echo '   "sessionNoPassword" : false,';
+      echo '   "minify" : false,';
+      echo '   "maxAge" : 21600, // 60 * 60 * 6 = 6 hours';
+      echo '   "abiword" : null,';
+      echo '   "soffice" : null,';
+      echo '   "tidyHtml" : null,';
+      echo '   "allowUnknownFileEnds" : false,';
+      echo '   "requireAuthentication" : true,';
+      echo '   "requireAuthorization" : true,';
+      echo '   "trustProxy" : true,';
+      echo '   "disableIPlogging" : true,';
+      echo '   "automaticReconnectionTimeout": 0,';
+
+      echo '   "scrollWhenFocusLineIsOutOfViewport": {';
+      echo '       "percentage": {';
+      echo '           "editionAboveViewport": 0,';
+      echo '           "editionBelowViewport": 0';
+      echo '       },';
+      echo '       "duration": 0,';
+      echo '       "scrollWhenCaretIsInTheLastLineOfViewport": false,';
+      echo '       "percentageToScrollWhenUserPressesArrowUp": 0';
+      echo '   },';
+
+      echo '   "users": {';
+      echo "       \"${MY_USERNAME}\": { \"password\": \"${ETHERPAD_ADMIN_PASSWORD}\", \"is_admin\": true }";
+      echo '   },';
+
+      echo '   "socketTransportProtocols" : ["xhr-polling", "jsonp-polling", "htmlfile"],';
+      echo '   "loadTest": false,';
+      echo '   "indentationOnNewLine": false,';
+
+      echo '   "importExportRateLimiting": {';
+      echo '       // duration of the rate limit window (milliseconds)';
+      echo '       "windowMs": 90000,';
+      echo '       // maximum number of requests per IP to allow during the rate limit window';
+      echo '       "max": 10';
+      echo '   },';
+
+      echo '   "importMaxFileSize": 52428800, // 50 * 1024 * 1024';
+
+      echo '   "toolbar": {';
+      echo '       "left": [';
+      echo '           ["bold", "italic", "underline", "strikethrough"],';
+      echo '           ["orderedlist", "unorderedlist", "indent", "outdent"],';
+      echo '           ["undo", "redo"],';
+      echo '           ["clearauthorship"]';
+      echo '       ],';
+      echo '       "right": [';
+      echo '           ["importexport", "timeslider", "savedrevision"],';
+      echo '           ["settings", "embed"],';
+      echo '           ["showusers"]';
+      echo '       ],';
+      echo '       "timeslider": [';
+      echo '           ["timeslider_export", "timeslider_returnToPad"]';
+      echo '       ]';
+      echo '   },';
+      echo '   "exposeVersion": false,';
+      echo '   "loglevel": "INFO"';
       echo '}'; } > $settings_file
     chmod 600 $settings_file
 }
@@ -393,9 +373,6 @@ function backup_local_etherpad {
         function_check backup_directory_to_usb
         backup_directory_to_usb "$source_directory" "$dest_directory"
 
-        function_check backup_database_to_usb
-        backup_database_to_usb etherpad
-
         function_check restart_site
         restart_site
     fi
@@ -410,10 +387,6 @@ function restore_local_etherpad {
         temp_restore_dir=/root/tempetherpad
         #etherpad_dir="/var/www/${ETHERPAD_DOMAIN_NAME}/htdocs"
 
-        function_check etherpad_create_database
-        etherpad_create_database
-
-        restore_database etherpad "${ETHERPAD_DOMAIN_NAME}"
         if [ -d $temp_restore_dir ]; then
             rm -rf $temp_restore_dir
         fi
@@ -425,11 +398,6 @@ function restore_local_etherpad {
         if [ -f "/etc/ssl/private/${ETHERPAD_DOMAIN_NAME}.key" ]; then
             chown etherpad: "/etc/ssl/private/${ETHERPAD_DOMAIN_NAME}.key"
         fi
-
-        MARIADB_PASSWORD=$("${PROJECT_NAME}-pass" -u root -a mariadb)
-        settings_file="/var/www/${ETHERPAD_DOMAIN_NAME}/htdocs/settings.json"
-        sed -i "s|\"password\":.*|\"password\": \"${MARIADB_PASSWORD}\",|g" "$settings_file"
-        MARIADB_PASSWORD=
     fi
 }
 
@@ -462,14 +430,11 @@ function remove_etherpad {
     if [ -f "/etc/nginx/sites-available/$ETHERPAD_DOMAIN_NAME" ]; then
         rm "/etc/nginx/sites-available/$ETHERPAD_DOMAIN_NAME"
     fi
-    function_check drop_database
-    drop_database etherpad
     function_check remove_onion_service
     remove_onion_service etherpad ${ETHERPAD_ONION_PORT}
     remove_app etherpad
     remove_completion_param install_etherpad
     sed -i '/etherpad/d' "$COMPLETION_FILE"
-    remove_backup_database_local etherpad
     remove_nodejs etherpad
 
     groupdel -f etherpad
@@ -497,21 +462,6 @@ function install_etherpad {
 
     increment_app_install_progress
 
-    function_check install_mariadb
-    install_mariadb
-
-    increment_app_install_progress
-
-    function_check get_mariadb_password
-    get_mariadb_password
-
-    increment_app_install_progress
-
-    function_check repair_databases_script
-    repair_databases_script
-
-    increment_app_install_progress
-
     INSTALL_PACKAGES gzip git curl python3 libssl-dev pkg-config \
             build-essential g++ make checkinstall \
             python3-bcrypt python3-passlib
@@ -536,7 +486,7 @@ function install_etherpad {
         else
             function_check git_clone
             git_clone "$ETHERPAD_REPO" "/var/www/$ETHERPAD_DOMAIN_NAME/htdocs"
-	    git config --global --add safe.directory "/var/www/$ETHERPAD_DOMAIN_NAME/htdocs"
+            git config --global --add safe.directory "/var/www/$ETHERPAD_DOMAIN_NAME/htdocs"
         fi
 
         if [ ! -d "/var/www/$ETHERPAD_DOMAIN_NAME/htdocs" ]; then
@@ -553,11 +503,6 @@ function install_etherpad {
 
     chmod a+w "/var/www/$ETHERPAD_DOMAIN_NAME/htdocs"
     chown www-data:www-data "/var/www/$ETHERPAD_DOMAIN_NAME/htdocs"
-
-    increment_app_install_progress
-
-    function_check etherpad_create_database
-    etherpad_create_database
 
     increment_app_install_progress
 
@@ -612,7 +557,7 @@ function install_etherpad {
           echo '  listen 443 ssl;';
           echo '  #listen [::]:443 ssl;';
           echo "  server_name $ETHERPAD_DOMAIN_NAME;";
-	  echo '  server_tokens off;';
+          echo '  server_tokens off;';
           echo '';
           echo '  # Security'; } >> "$etherpad_nginx_site"
         function_check nginx_ssl
@@ -623,7 +568,7 @@ function install_etherpad {
         nginx_robots "$ETHERPAD_DOMAIN_NAME"
 
         { echo '  add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
-	  echo "  add_header Onion-Location http://${ETHERPAD_ONION_HOSTNAME}\$request_uri;";
+          echo "  add_header Onion-Location http://${ETHERPAD_ONION_HOSTNAME}\$request_uri;";
           echo '';
           echo '  # Logs';
           echo '  access_log /dev/null;';
@@ -636,16 +581,16 @@ function install_etherpad {
         function_check nginx_limits
         nginx_limits "$ETHERPAD_DOMAIN_NAME" '15m'
         { echo "    proxy_pass        http://localhost:${ETHERPAD_PORT}/;";
-	  echo "    proxy_set_header  Host \$host;";
-	  echo "    proxy_pass_header Server;";
-	  echo '    proxy_buffering off;';
-	  echo "    proxy_set_header X-Real-IP \$remote_addr;";
-	  echo "    proxy_set_header X-Forwarded-For \$remote_addr;";
-	  echo "    proxy_set_header X-Forwarded-Proto \$scheme;";
-	  echo "    proxy_set_header Host \$host;";
-	  echo '    proxy_http_version 1.1;';
-	  echo "    proxy_set_header Upgrade \$http_upgrade;";
-	  echo "    proxy_set_header Connection \$connection_upgrade;";
+          echo "    proxy_set_header  Host \$host;";
+          echo "    proxy_pass_header Server;";
+          echo '    proxy_buffering off;';
+          echo "    proxy_set_header X-Real-IP \$remote_addr;";
+          echo "    proxy_set_header X-Forwarded-For \$remote_addr;";
+          echo "    proxy_set_header X-Forwarded-Proto \$scheme;";
+          echo "    proxy_set_header Host \$host;";
+          echo '    proxy_http_version 1.1;';
+          echo "    proxy_set_header Upgrade \$http_upgrade;";
+          echo "    proxy_set_header Connection \$connection_upgrade;";
           echo '  }';
           echo '}'; } >> "$etherpad_nginx_site"
     else
@@ -692,6 +637,7 @@ function install_etherpad {
 
     # remove content security policy which prevents the pad from running
     sed -i '/Content-Security-Policy/d' "$etherpad_nginx_site"
+    sed -i 's|X-Frame-Options .*|X-Frame-Options SAMEORIGIN;|g' "$etherpad_nginx_site"
 
     increment_app_install_progress
 
@@ -715,18 +661,6 @@ function install_etherpad {
 
     increment_app_install_progress
 
-    # Ensure that the database gets backed up locally, if remote
-    # backups are not being used
-    function_check backup_databases_script_header
-    backup_databases_script_header
-
-    increment_app_install_progress
-
-    function_check backup_database_local
-    backup_database_local etherpad
-
-    increment_app_install_progress
-
     function_check nginx_ensite
     nginx_ensite "$ETHERPAD_DOMAIN_NAME"
 
@@ -738,8 +672,6 @@ function install_etherpad {
     increment_app_install_progress
 
     set_completion_param "etherpad domain" "$ETHERPAD_DOMAIN_NAME"
-
-    systemctl restart mariadb
 
     increment_app_install_progress
 
