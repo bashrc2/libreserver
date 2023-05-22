@@ -76,8 +76,9 @@ function configure_email_i2p {
     if [ ! -d /var/lib/i2pd/tunnels.d ]; then
         mkdir /var/lib/i2pd/tunnels.d
         chown -R i2pd:i2pd /var/lib/i2pd/tunnels.d
+        chown -R i2pd:i2pd /etc/i2pd
     fi
-    if [ -f /var/lib/i2pd/tunnels.d/email ]; then
+    if [ -f /var/lib/i2pd/tunnels.d/email.conf ]; then
         return
     fi
     I2P_SMTP_PORT=7659
@@ -93,9 +94,10 @@ function configure_email_i2p {
       echo 'type=server';
       echo 'host=127.0.0.1';
       echo 'port=25';
-      echo "keys=${PROJECT_NAME}.dat"; } > /var/lib/i2pd/tunnels.d/email
+      echo "keys=${PROJECT_NAME}.dat"; } > /var/lib/i2pd/tunnels.d/email.conf
 
     chmod 644 /var/lib/i2pd/tunnels.d/*
+    chmod 644 /etc/i2pd/tunnels.d/*
     systemctl restart i2pd
 
     if ! grep -q '\*.i2p' /etc/exim4/conf.d/router/200_exim4-config_primary; then

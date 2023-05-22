@@ -116,7 +116,7 @@ function xmpp_i2p_virtualhost {
     if [ ! -d /var/lib/i2pd ]; then
         return
     fi
-    if [ ! -f /var/lib/i2pd/tunnels.d/xmpp ]; then
+    if [ ! -f /var/lib/i2pd/tunnels.d/xmpp.conf ]; then
         xmpp_i2p_bridge
     fi
     filename="/etc/prosody/prosody.cfg.lua"
@@ -154,8 +154,9 @@ function xmpp_i2p_bridge {
     if [ ! -d /var/lib/i2pd/tunnels.d ]; then
         mkdir /var/lib/i2pd/tunnels.d
         chown -R i2pd:i2pd /var/lib/i2pd/tunnels.d
+        chown -R i2pd:i2pd /etc/i2pd
     fi
-    if [ -f /var/lib/i2pd/tunnels.d/xmpp ]; then
+    if [ -f /var/lib/i2pd/tunnels.d/xmpp.conf ]; then
         if [ -d ${XMPP_DIRECTORY}/prosody-modules/mod_i2p ]; then
             return
         fi
@@ -172,7 +173,7 @@ function xmpp_i2p_bridge {
       echo 'host=127.0.0.1';
       echo 'port=5222';
       echo 'inport=5222';
-      echo "keys=${PROJECT_NAME}.dat"; } > /var/lib/i2pd/tunnels.d/xmpp
+      echo "keys=${PROJECT_NAME}.dat"; } > /var/lib/i2pd/tunnels.d/xmpp.conf
 
     if [ -f ${XMPP_DIRECTORY}/prosody-modules/mod_i2p ]; then
         rm ${XMPP_DIRECTORY}/prosody-modules/mod_i2p
@@ -188,7 +189,9 @@ function xmpp_i2p_bridge {
     fi
 
     chown -R i2pd:i2pd /var/lib/i2pd/tunnels.d
+    chown -R i2pd:i2pd /etc/i2pd
     chmod 644 /var/lib/i2pd/tunnels.d/*
+    chmod 644 /etc/i2pd/tunnels.d/*
     systemctl restart i2pd
     xmpp_restart=1
 }

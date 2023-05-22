@@ -131,9 +131,12 @@ function i2p_base_config {
 
     echo 'Setting i2p file permissions'
     chown -R i2pd:i2pd /run/i2pd
+    chown -R i2pd:i2pd /etc/i2pd
     chown -R i2pd:i2pd "$i2p_tunnels_dir"
     chmod 644 "$i2p_tunnels_dir"/*
+    chmod 644 /etc/i2pd/tunnels.d/*
     chmod 755 "$i2p_tunnels_dir"
+    chmod 755 /etc/i2pd/tunnels.d
 }
 
 function install_i2p {
@@ -195,7 +198,7 @@ function remove_i2p {
 
 function add_i2p_service {
     i2p_service_name="$1"
-    if [ -f "${i2p_tunnels_dir}/${i2p_service_name}" ]; then
+    if [ -f "${i2p_tunnels_dir}/${i2p_service_name}.conf" ]; then
         return
     fi
     i2p_service_port_from=$2
@@ -231,6 +234,8 @@ function add_i2p_service {
     chown -R i2pd:i2pd /etc/i2pd
     chmod 644 "${i2p_tunnels_dir}"/*
     chmod 644 /etc/i2pd/tunnels.d/*
+    chmod 755 "${i2p_tunnels_dir}"
+    chmod 755 /etc/i2pd/tunnels.d
     systemctl restart i2pd
 }
 
