@@ -212,7 +212,12 @@ function add_i2p_service {
         { echo "[${i2p_service_name}]";
           echo 'type = http';
           echo 'host = 127.0.0.1';
+	  echo 'inport = 80';
           echo "port = ${i2p_service_port_to}";
+	  echo 'inbound.length = 1';
+	  echo 'inbound.quantity = 5';
+	  echo 'outbound.length = 1';
+	  echo 'outbound.quantity = 5';
           echo "keys = ${i2p_service_name}.dat"; } > "${i2p_tunnels_dir}/${i2p_service_name}"
     else
         { echo "[${i2p_service_name}]";

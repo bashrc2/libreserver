@@ -51,6 +51,7 @@ REQUIRES_APP=
 EPICYON_DOMAIN_NAME=
 EPICYON_CODE=
 EPICYON_ONION_PORT=9552
+EPICYON_I2P_PORT=9553
 EPICYON_REPO="https://gitlab.com/bashrc2/epicyon"
 EPICYON_COMMIT='b1793ea22c4dfee8309b65a8037c0696433f59a9'
 EPICYON_PORT_INTERNAL=7156
@@ -441,6 +442,7 @@ function remove_epicyon {
         rm -rf /etc/epicyon
     fi
     remove_app epicyon
+    remove_i2p_service epicyon
     remove_completion_param install_epicyon
     sed -i '/epicyon/d' "$COMPLETION_FILE"
 
@@ -619,6 +621,56 @@ function install_epicyon {
       echo '  }';
       echo '}'; } >> "$epicyon_nginx_site"
 
+    add_i2p_service epicyon 80 $EPICYON_I2P_PORT
+    EPICYON_I2P_HOSTNAME=$(get_i2p_domain epicyon)
+    if [ "$EPICYON_I2P_HOSTNAME" ]; then
+        { echo 'server {';
+          echo "    listen 127.0.0.1:$EPICYON_I2P_PORT;";
+          echo "    #listen [::]:$EPICYON_I2P_PORT;";
+          echo "    server_name $EPICYON_I2P_HOSTNAME;";
+          echo '    server_tokens off;';
+          echo ''; } >> "$epicyon_nginx_site"
+        nginx_compress "$EPICYON_DOMAIN_NAME"
+        nginx_security_options "$EPICYON_DOMAIN_NAME"
+        { echo '';
+          echo '    access_log /dev/null;';
+          echo '    error_log /dev/null;';
+          echo '';
+          echo "    root /var/www/$EPICYON_DOMAIN_NAME/htdocs;";
+          echo '';
+          echo '  index index.html;';
+          echo '';
+          echo '  location /newsmirror {';
+          echo '    try_files $uri =404;';
+          echo '  }';
+          echo '';
+          echo '  keepalive_timeout 70;';
+          echo '  sendfile on;';
+          echo '';
+          echo '  location / {';
+          echo '    proxy_http_version 1.1;';
+          echo '    client_max_body_size 31M;';
+          echo "    proxy_set_header Host \$http_host;";
+          echo "    proxy_set_header X-Real-IP \$remote_addr;";
+          echo "    proxy_set_header X-Forward-For \$proxy_add_x_forwarded_for;";
+          echo '    proxy_set_header X-Forward-Proto http;';
+          echo '    proxy_set_header X-Nginx-Proxy true;';
+          echo '    proxy_temp_file_write_size 64k;';
+          echo '    proxy_connect_timeout 10080s;';
+          echo '    proxy_send_timeout 10080;';
+          echo '    proxy_read_timeout 10080;';
+          echo '    proxy_buffer_size 64k;';
+          echo '    proxy_buffers 16 32k;';
+          echo '    proxy_busy_buffers_size 64k;';
+          echo '    proxy_redirect off;';
+          echo '    proxy_request_buffering off;';
+          echo '    proxy_buffering off;';
+          echo "    proxy_pass http://localhost:$EPICYON_PORT_INTERNAL;";
+          echo '    tcp_nodelay on;';
+          echo '  }';
+          echo '}'; } >> "$epicyon_nginx_site"
+    fi
+
     increment_app_install_progress
 
     adduser --system --home="/etc/epicyon" --group epicyon
@@ -636,6 +688,11 @@ function install_epicyon {
         epicyonOnionDomain=''
     fi
 
+    EPICYON_I2P_OPTION=""
+    if [ "$EPICYON_I2P_HOSTNAME" ]; then
+        EPICYON_I2P_OPTION="--i2p_domain $EPICYON_I2P_HOSTNAME"
+    fi
+
     { echo '[Unit]';
       echo 'Description=epicyon';
       echo 'After=network.target';
@@ -647,7 +704,7 @@ function install_epicyon {
       echo 'Group=epicyon';
       echo 'WorkingDirectory=/etc/epicyon';
       # shellcheck disable=SC2230
-      echo "ExecStart=$(which python3) /etc/epicyon/epicyon.py --port $epicyon_port --proxy $EPICYON_PORT_INTERNAL --domain $epicyon_domain $epicyonOnionDomain --registration closed $EPICYON_TOR_OPTION";
+      echo "ExecStart=$(which python3) /etc/epicyon/epicyon.py --port $epicyon_port --proxy $EPICYON_PORT_INTERNAL --domain $epicyon_domain $epicyonOnionDomain --registration closed $EPICYON_I2P_OPTION $EPICYON_TOR_OPTION";
       echo 'Environment=USER=epicyon';
       echo 'Environment=PYTHONUNBUFFERED=true';
       echo 'Environment=GIT_CEILING_DIRECTORIES=/etc/epicyon';
