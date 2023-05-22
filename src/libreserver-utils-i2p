@@ -218,25 +218,27 @@ function add_i2p_service {
 	  echo 'inbound.quantity = 5';
 	  echo 'outbound.length = 1';
 	  echo 'outbound.quantity = 5';
-          echo "keys = ${i2p_service_name}.dat"; } > "${i2p_tunnels_dir}/${i2p_service_name}"
+          echo "keys = ${i2p_service_name}.dat"; } > "${i2p_tunnels_dir}/${i2p_service_name}.conf"
     else
         { echo "[${i2p_service_name}]";
           echo 'type = server';
           echo 'host = 127.0.0.1';
           echo "port = ${i2p_service_port_from}";
           echo "inport = ${i2p_service_port_to}";
-          echo "keys = ${i2p_service_name}.dat"; } > "${i2p_tunnels_dir}/${i2p_service_name}"
+          echo "keys = ${i2p_service_name}.dat"; } > "${i2p_tunnels_dir}/${i2p_service_name}.conf"
     fi
     chown -R i2pd:i2pd "${i2p_tunnels_dir}"
+    chown -R i2pd:i2pd /etc/i2pd
     chmod 644 "${i2p_tunnels_dir}"/*
+    chmod 644 /etc/i2pd/tunnels.d/*
     systemctl restart i2pd
 }
 
 function remove_i2p_service {
     i2p_service_name="$1"
 
-    if [ -f "${i2p_tunnels_dir}/${i2p_service_name}" ]; then
-        rm "${i2p_tunnels_dir}/${i2p_service_name}"
+    if [ -f "${i2p_tunnels_dir}/${i2p_service_name}.conf" ]; then
+        rm "${i2p_tunnels_dir}/${i2p_service_name}.conf"
         systemctl restart i2pd
     fi
 }
