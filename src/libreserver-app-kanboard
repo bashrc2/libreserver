@@ -35,6 +35,7 @@ REQUIRES_APP=
 KANBOARD_DOMAIN_NAME=
 KANBOARD_CODE=
 KANBOARD_ONION_PORT=8121
+KANBOARD_I2P_PORT=9562
 KANBOARD_REPO="https://github.com/kanboard/kanboard"
 KANBOARD_COMMIT='e06c6656bc156aad0092ab29e6dad12ff542e880'
 KANBOARD_ADMIN_PASSWORD=
@@ -304,6 +305,7 @@ function remove_kanboard {
     function_check remove_onion_service
     remove_onion_service kanboard ${KANBOARD_ONION_PORT}
     remove_app kanboard
+    remove_i2p_service kanboard
     remove_completion_param install_kanboard
     sed -i '/kanboard/d' "$COMPLETION_FILE"
     remove_backup_database_local kanboard
@@ -417,7 +419,7 @@ function install_kanboard {
           echo '  listen 443 ssl;';
           echo '  #listen [::]:443 ssl;';
           echo "  server_name $KANBOARD_DOMAIN_NAME;";
-	  echo '  server_tokens off;';
+          echo '  server_tokens off;';
           echo '';
           echo '  # Security'; } >> "$kanboard_nginx_site"
         function_check nginx_ssl
@@ -428,7 +430,7 @@ function install_kanboard {
         nginx_robots "$KANBOARD_DOMAIN_NAME"
 
         { echo '  add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
-	  echo "  add_header Onion-Location http://${KANBOARD_ONION_HOSTNAME}\$request_uri;";
+          echo "  add_header Onion-Location http://${KANBOARD_ONION_HOSTNAME}\$request_uri;";
           echo '';
           echo '  # Logs';
           echo '  access_log /dev/null;';
@@ -543,6 +545,71 @@ function install_kanboard {
       echo '    text/css';
       echo '    text/plain;';
       echo '}'; } >> "$kanboard_nginx_site"
+
+    add_i2p_service kanboard 80 $KANBOARD_I2P_PORT
+    KANBOARD_I2P_HOSTNAME=$(get_i2p_domain kanboard)
+    if [ "$KANBOARD_I2P_HOSTNAME" ]; then
+        { echo 'server {';
+          echo "    listen 127.0.0.1:$KANBOARD_I2P_PORT;";
+          echo '    port_in_redirect off;';
+          echo "    server_name $KANBOARD_I2P_HOSTNAME;";
+          echo '    server_tokens off;';
+          echo ''; } >> "$kanboard_nginx_site"
+        echo '' >> "$kanboard_nginx_site"
+        function_check nginx_security_options
+        nginx_security_options "$KANBOARD_DOMAIN_NAME"
+        { echo '';
+          echo '  # Logs';
+          echo '  access_log /dev/null;';
+          echo '  error_log /dev/null;';
+          echo '';
+          echo '  # Root';
+          echo "  root /var/www/$KANBOARD_DOMAIN_NAME/htdocs;";
+          echo '';
+          echo '  # Index';
+          echo '  index index.php;';
+          echo '';
+          echo '  # PHP';
+          echo '  location ~ \.php {';
+          echo '    include snippets/fastcgi-php.conf;';
+          echo "    fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
+          echo '    fastcgi_read_timeout 30;';
+          echo '  }';
+          echo '';
+          echo '  location / {';
+          echo '    client_max_body_size 32M;';
+          echo "    try_files \$uri \$uri/ /index.php\$is_args\$args;";
+          echo '  }';
+          echo '';
+          echo '  location ~* ^.+\.(log|sqlite)$ {';
+          echo '    return 404;';
+          echo '  }';
+          echo '';
+          echo '  location ~ /\.ht {';
+          echo '    return 404;';
+          echo '  }';
+          echo '';
+          echo '  location ~* ^.+\.(ico|jpg|gif|png|css|js|svg|eot|ttf|woff|woff2|otf)$ {';
+          echo '    log_not_found off;';
+          echo '    expires 7d;';
+          echo '    etag on;';
+          echo '  }';
+          echo '';
+          echo '  gzip on;';
+          echo '  gzip_comp_level 3;';
+          echo '  gzip_disable "msie6";';
+          echo '  gzip_vary on;';
+          echo '  gzip_types';
+          echo '    text/javascript';
+          echo '    application/javascript';
+          echo '    application/json';
+          echo '    text/xml';
+          echo '    application/xml';
+          echo '    application/rss+xml';
+          echo '    text/css';
+          echo '    text/plain;';
+          echo '}'; } >> "$kanboard_nginx_site"
+    fi
 
     function_check configure_php
     configure_php
