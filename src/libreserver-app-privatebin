@@ -35,6 +35,7 @@ REQUIRES_APP=
 PRIVATEBIN_DOMAIN_NAME=
 PRIVATEBIN_CODE=
 PRIVATEBIN_ONION_PORT=8150
+PRIVATEBIN_I2P_PORT=9566
 PRIVATEBIN_REPO="https://github.com/PrivateBin/PrivateBin"
 PRIVATEBIN_COMMIT='c2c0980c572324bbecbdef07f3d480ec2da62b42'
 PRIVATEBIN_ADMIN_PASSWORD=
@@ -241,6 +242,7 @@ function remove_privatebin {
         sed -i "/privatebin/d" /etc/crontab
     fi
     remove_app privatebin
+    remove_i2p_service privatebin
     remove_completion_param install_privatebin
     sed -i '/privatebin/d' "$COMPLETION_FILE"
 
@@ -321,7 +323,7 @@ function install_privatebin {
           echo '  listen 443 ssl;';
           echo '  #listen [::]:443 ssl;';
           echo "  server_name $PRIVATEBIN_DOMAIN_NAME;";
-	  echo '  server_tokens off;';
+          echo '  server_tokens off;';
           echo ''; } >> "$privatebin_nginx_site"
         function_check nginx_compress
         nginx_compress "$PRIVATEBIN_DOMAIN_NAME"
@@ -405,6 +407,49 @@ function install_privatebin {
       echo '    deny all;';
       echo '  }';
       echo '}'; } >> "$privatebin_nginx_site"
+
+    add_i2p_service privatebin 80 $PRIVATEBIN_I2P_PORT
+    PRIVATEBIN_I2P_HOSTNAME=$(get_i2p_domain privatebin)
+    if [ "$PRIVATEBIN_I2P_HOSTNAME" ]; then
+        { echo 'server {';
+          echo "    listen 127.0.0.1:$PRIVATEBIN_I2P_PORT;";
+          echo '    port_in_redirect off;';
+          echo "    server_name $PRIVATEBIN_I2P_HOSTNAME;";
+          echo '    server_tokens off;';
+          echo ''; } >> "$privatebin_nginx_site"
+        function_check nginx_compress
+        nginx_compress "$PRIVATEBIN_DOMAIN_NAME"
+        echo '' >> "$privatebin_nginx_site"
+        function_check nginx_security_options
+        nginx_security_options "$PRIVATEBIN_DOMAIN_NAME"
+        { echo '';
+          echo '  # Logs';
+          echo '  access_log /dev/null;';
+          echo '  error_log /dev/null;';
+          echo '';
+          echo "  root /var/www/$PRIVATEBIN_DOMAIN_NAME/htdocs;";
+          echo '';
+          echo '  index index.php;';
+          echo '';
+          echo '  location ~ \.php {';
+          echo '    include snippets/fastcgi-php.conf;';
+          echo "    fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
+          echo '    fastcgi_read_timeout 30;';
+          echo '  }';
+          echo '';
+          echo '  # Location';
+          echo '  location / {'; } >> "$privatebin_nginx_site"
+        function_check nginx_limits
+        nginx_limits "$PRIVATEBIN_DOMAIN_NAME" '15m'
+        { echo "    try_files \$uri \$uri/ @privatebin;";
+          echo '  }';
+          echo '';
+          echo '  # Restrict access that is unnecessary anyway';
+          echo '  location ~ /\.(ht|git) {';
+          echo '    deny all;';
+          echo '  }';
+          echo '}'; } >> "$privatebin_nginx_site"
+    fi
 
     function_check configure_php
     configure_php
