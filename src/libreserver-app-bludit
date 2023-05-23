@@ -302,6 +302,7 @@ function remove_bludit {
         sed -i "/bludit/d" /etc/crontab
     fi
     remove_app bludit
+    remove_i2p_service bludit
     remove_completion_param install_bludit
     sed -i '/bludit/d' "$COMPLETION_FILE"
 
