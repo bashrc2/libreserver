@@ -36,6 +36,7 @@ MINIMUM_RAM_MB=900
 ETHERPAD_DOMAIN_NAME=
 ETHERPAD_CODE=
 ETHERPAD_ONION_PORT=8101
+ETHERPAD_I2P_PORT=9558
 ETHERPAD_PORT=9001
 ETHERPAD_REPO="https://github.com/ether/etherpad-lite"
 ETHERPAD_COMMIT='ad4ffb98a7f4e6e31ad1dcaec6ffdf46804bf698'
@@ -433,6 +434,7 @@ function remove_etherpad {
     function_check remove_onion_service
     remove_onion_service etherpad ${ETHERPAD_ONION_PORT}
     remove_app etherpad
+    remove_i2p_service etherpad
     remove_completion_param install_etherpad
     sed -i '/etherpad/d' "$COMPLETION_FILE"
     remove_nodejs etherpad
@@ -634,6 +636,44 @@ function install_etherpad {
       echo "    proxy_set_header Connection \$connection_upgrade;";
       echo '  }';
       echo '}'; } >> "$etherpad_nginx_site"
+
+    add_i2p_service etherpad 80 $ETHERPAD_I2P_PORT
+    ETHERPAD_I2P_HOSTNAME=$(get_i2p_domain etherpad)
+    if [ "$ETHERPAD_I2P_HOSTNAME" ]; then
+        { echo '';
+          echo 'server {';
+          echo "    listen 127.0.0.1:$ETHERPAD_I2P_PORT;";
+          echo '    port_in_redirect off;';
+          echo "    server_name $ETHERPAD_I2P_HOSTNAME;";
+          echo '    server_tokens off;';
+          echo ''; } >> "$etherpad_nginx_site"
+        function_check nginx_security_options
+        nginx_security_options "$ETHERPAD_DOMAIN_NAME"
+        { echo '';
+          echo '  # Logs';
+          echo '  access_log /dev/null;';
+          echo '  error_log /dev/null;';
+          echo '';
+          echo '  # Root';
+          echo "  root /var/www/$ETHERPAD_DOMAIN_NAME/htdocs;";
+          echo '';
+          echo '  location / {'; } >> "$etherpad_nginx_site"
+        function_check nginx_limits
+        nginx_limits "$ETHERPAD_DOMAIN_NAME" '15m'
+        { echo "    proxy_pass        http://localhost:${ETHERPAD_PORT}/;";
+          echo "    proxy_set_header  Host \$host;";
+          echo "    proxy_pass_header Server;";
+          echo '    proxy_buffering off;';
+          echo "    proxy_set_header X-Real-IP \$remote_addr;";
+          echo "    proxy_set_header X-Forwarded-For \$remote_addr;";
+          echo "    proxy_set_header X-Forwarded-Proto \$scheme;";
+          echo "    proxy_set_header Host \$host;";
+          echo '    proxy_http_version 1.1;';
+          echo "    proxy_set_header Upgrade \$http_upgrade;";
+          echo "    proxy_set_header Connection \$connection_upgrade;";
+          echo '  }';
+          echo '}'; } >> "$etherpad_nginx_site"
+    fi
 
     # remove content security policy which prevents the pad from running
     sed -i '/Content-Security-Policy/d' "$etherpad_nginx_site"
