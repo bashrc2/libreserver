@@ -35,6 +35,7 @@ APP_CATEGORY=media
 PIXELFED_DOMAIN_NAME=
 PIXELFED_CODE=
 PIXELFED_ONION_PORT=8361
+PIXELFED_I2P_PORT=9565
 PIXELFED_REPO="https://github.com/dansup/pixelfed"
 PIXELFED_COMMIT='d47f2f965ce5d73955f58a0c229d79f46a6a30d3'
 PIXELFED_ADMIN_PASSWORD=
@@ -508,6 +509,7 @@ function remove_pixelfed {
         sed -i "/pixelfed/d" /etc/crontab
     fi
     remove_app pixelfed
+    remove_i2p_service pixelfed
     remove_completion_param install_pixelfed
     sed -i '/pixelfed/d' "$COMPLETION_FILE"
 
@@ -762,7 +764,7 @@ function install_pixelfed {
           echo '  listen 443 ssl;';
           echo '  #listen [::]:443 ssl;';
           echo "  server_name $PIXELFED_DOMAIN_NAME;";
-	  echo '  server_tokens off;';
+          echo '  server_tokens off;';
           echo ''; } >> "$pixelfed_nginx_site"
         function_check nginx_compress
         nginx_compress "$PIXELFED_DOMAIN_NAME"
@@ -850,6 +852,51 @@ function install_pixelfed {
       echo '    deny all;';
       echo '  }';
       echo '}'; } >> "$pixelfed_nginx_site"
+
+    add_i2p_service pixelfed 80 $PIXELFED_I2P_PORT
+    PIXELFED_I2P_HOSTNAME=$(get_i2p_domain pixelfed)
+    if [ "$PIXELFED_I2P_HOSTNAME" ]; then
+        { echo 'server {';
+          echo "    listen 127.0.0.1:$PIXELFED_I2P_PORT;";
+          echo '    port_in_redirect off;';
+          echo "    server_name $PIXELFED_I2P_HOSTNAME;";
+          echo '    server_tokens off;';
+          echo ''; } >> "$pixelfed_nginx_site"
+        function_check nginx_compress
+        nginx_compress "$PIXELFED_DOMAIN_NAME"
+        echo '' >> "$pixelfed_nginx_site"
+        function_check nginx_security_options
+        nginx_security_options "$PIXELFED_DOMAIN_NAME"
+        { echo '';
+          echo '  access_log /dev/null;';
+          echo '  error_log /dev/null;';
+          echo '';
+          echo "  root /var/www/$PIXELFED_DOMAIN_NAME/htdocs/public;";
+          echo '';
+          echo '  index index.php;';
+          echo '';
+          echo '  location ~ \.php {';
+          echo '    fastcgi_split_path_info ^(.+\.php)(/.+)$;';
+          echo '    include snippets/fastcgi-php.conf;';
+          echo "    fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
+          echo '    fastcgi_read_timeout 30;';
+          echo '  }';
+          echo '';
+          echo '  location / {'; } >> "$pixelfed_nginx_site"
+        function_check nginx_limits
+        nginx_limits "$PIXELFED_DOMAIN_NAME" '15m'
+        { echo "    try_files \$uri \$uri/ @pixelfed;";
+          echo '  }';
+          echo '';
+          echo '  location @pixelfed {';
+          echo "    rewrite ^(.*)\$ /index.php?p=\$1 last;";
+          echo '  }';
+          echo '';
+          echo '  location ~ /\.(ht|git|env|log) {';
+          echo '    deny all;';
+          echo '  }';
+          echo '}'; } >> "$pixelfed_nginx_site"
+    fi
 
     # doesn't like having a CSP
     sed -i '/Content-Security-Policy/d' "$pixelfed_nginx_site"
