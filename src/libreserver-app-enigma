@@ -8,7 +8,7 @@
 # License
 # =======
 #
-# Copyright (C) 2021 Bob Mottram <bob@libreserver.org>
+# Copyright (C) 2021-2023 Bob Mottram <bob@libreserver.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -52,6 +52,7 @@ REQUIRES_APP=
 ENIGMA_DOMAIN_NAME=
 ENIGMA_CODE=
 ENIGMA_ONION_PORT=9507
+ENIGMA_I2P_PORT=9557
 
 # These parameters are used by the FreedomBox mobile app and web UI
 ENIGMA_SHORT_DESCRIPTION="Encrypted communication across less trustworthy channels"
@@ -240,6 +241,7 @@ function remove_enigma {
     fi
     remove_onion_service enigma "${ENIGMA_ONION_PORT}"
     remove_app enigma
+    remove_i2p_service enigma
     remove_completion_param install_enigma
     sed -i '/enigma/d' "$COMPLETION_FILE"
 
@@ -276,7 +278,7 @@ function install_enigma {
     if [ ! -f "${ALLPASS_FILENAME}" ]; then
         if [ -f /etc/nginx/.webadminpasswd ]; then
             cp /etc/nginx/.webadminpasswd "${ALLPASS_FILENAME}"
-	    chmod 644 "${ALLPASS_FILENAME}"
+            chmod 644 "${ALLPASS_FILENAME}"
         fi
     fi
 
@@ -338,6 +340,34 @@ function install_enigma {
       echo "    error_page 405 = $uri;";
       echo '  }';
       echo '}'; } >> "$enigma_nginx_site"
+
+    add_i2p_service enigma 80 $ENIGMA_I2P_PORT
+    ENIGMA_I2P_HOSTNAME=$(get_i2p_domain enigma)
+    if [ "$ENIGMA_I2P_HOSTNAME" ]; then
+        { echo 'server {';
+          echo "    listen 127.0.0.1:$ENIGMA_I2P_PORT;";
+          echo "    server_name $ENIGMA_I2P_HOSTNAME;";
+          echo "    server_tokens off;";
+          echo ''; } >> "$enigma_nginx_site"
+        nginx_compress "$ENIGMA_DOMAIN_NAME"
+        echo '' >> "$enigma_nginx_site"
+        nginx_security_options "$ENIGMA_DOMAIN_NAME"
+        { echo '';
+          echo '  access_log /dev/null;';
+          echo '  error_log /dev/null;';
+          echo '';
+          echo "  root /var/www/$ENIGMA_DOMAIN_NAME/htdocs;";
+          echo '';
+          echo '  # Location';
+          echo '  location / {'; } >> "$enigma_nginx_site"
+        nginx_limits "$ENIGMA_DOMAIN_NAME" '15m'
+        { echo "    index index.html;";
+          echo "    auth_basic \"${ENIGMA_LOGIN_TEXT}\";";
+          echo "    auth_basic_user_file ${ALLPASS_FILENAME};";
+          echo "    error_page 405 = $uri;";
+          echo '  }';
+          echo '}'; } >> "$enigma_nginx_site"
+    fi
 
     increment_app_install_progress
 
