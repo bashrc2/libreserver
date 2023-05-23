@@ -1010,6 +1010,7 @@ function web_admin_create_installed_apps_category {
                             fi
                         fi
                         onion_domain_name=
+                        i2p_domain_name=$(get_i2p_domain ${onion_app_name})
                         if [ -f "/var/lib/tor/hidden_service_${onion_app_name}/hostname" ]; then
                             onion_domain_name=$(cat "/var/lib/tor/hidden_service_${onion_app_name}/hostname")
                         fi
