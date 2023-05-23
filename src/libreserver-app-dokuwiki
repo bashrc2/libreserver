@@ -35,6 +35,7 @@ REQUIRES_APP=
 DOKUWIKI_DOMAIN_NAME=
 DOKUWIKI_CODE=
 DOKUWIKI_ONION_PORT=8089
+DOKUWIKI_I2P_PORT=9556
 DOKUWIKI_ADMIN_PASSWORD=
 DOKUWIKI_TITLE="${PROJECT_NAME} Dokuwiki"
 
@@ -281,6 +282,7 @@ function remove_dokuwiki {
     if [ -d /usr/share/dokuwiki ]; then
         rm -rf /usr/share/dokuwiki
     fi
+    remove_i2p_service dokuwiki
     remove_completion_param "install_dokuwiki"
     remove_completion_param "dokuwiki domain"
     sed -i '/dokuwiki/d' "$COMPLETION_FILE"
@@ -543,6 +545,87 @@ function install_dokuwiki {
       echo '      deny  all;';
       echo '    }';
       echo '}'; } >> "/etc/nginx/sites-available/$DOKUWIKI_DOMAIN_NAME"
+
+    add_i2p_service dokuwiki 80 $DOKUWIKI_I2P_PORT
+    DOKUWIKI_I2P_HOSTNAME=$(get_i2p_domain dokuwiki)
+    if [ "$DOKUWIKI_I2P_HOSTNAME" ]; then
+        { echo 'server {';
+          echo "    listen 127.0.0.1:${DOKUWIKI_I2P_PORT} default_server;";
+          echo '    port_in_redirect off;';
+          echo "    root /var/www/$DOKUWIKI_DOMAIN_NAME/htdocs;";
+          echo "    server_name $DOKUWIKI_ONION_HOSTNAME;";
+          echo '    server_tokens off;';
+          echo '    access_log /dev/null;';
+          echo "    error_log /dev/null;";
+          echo '    index index.php;';
+          echo '    charset utf-8;';
+          echo '    proxy_read_timeout 86400s;'; } >> "/etc/nginx/sites-available/$DOKUWIKI_DOMAIN_NAME"
+        function_check nginx_security_options
+        nginx_security_options "$DOKUWIKI_DOMAIN_NAME"
+        { echo '    add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
+          echo '';
+          echo '    # rewrite to front controller as default rule';
+          echo '    location / {'; } >> "/etc/nginx/sites-available/$DOKUWIKI_DOMAIN_NAME"
+        function_check nginx_limits
+        nginx_limits "$DOKUWIKI_DOMAIN_NAME"
+        { echo "        rewrite ^/(.*) /index.php?q=\$uri&\$args last;";
+          echo '    }';
+          echo '';
+          echo '    # statically serve these file types when possible';
+          echo '    # otherwise fall back to front controller';
+          echo '    # allow browser to cache them';
+          echo '    # added .htm for advanced source code editor library';
+          echo '    location ~* \.(jpg|jpeg|gif|png|ico|css|js|htm|html|ttf|woff|svg)$ {';
+          echo '        expires 30d;';
+          echo "        try_files \$uri /index.php?q=\$uri&\$args;";
+          echo '    }';
+          echo '';
+          echo '    # block these file types';
+          echo '    location ~* \.(tpl|md|tgz|log|out)$ {';
+          echo '        deny all;';
+          echo '    }';
+          echo '';
+          echo '    # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000';
+          echo '    # or a unix socket';
+          echo '    location ~* \.php$ {'; } >> "/etc/nginx/sites-available/$DOKUWIKI_DOMAIN_NAME"
+        function_check nginx_limits
+        nginx_limits "$DOKUWIKI_DOMAIN_NAME"
+        { echo '        # Zero-day exploit defense.';
+          echo '        # http://forum.nginx.org/read.php?2,88845,page=3';
+          echo "        # Won't work properly (404 error) if the file is not stored on this";
+          echo "        # server, which is entirely possible with php-fpm/php-fcgi.";
+          echo "        # Comment the 'try_files' line out if you set up php-fpm/php-fcgi on";
+          echo "        # another machine. And then cross your fingers that you won't get hacked.";
+          echo "        try_files \$uri \$uri/ /index.php;";
+          echo '        # NOTE: You should have "cgi.fix_pathinfo = 0;" in php.ini';
+          echo '        fastcgi_split_path_info ^(.+\.php)(/.+)$;';
+          echo '        # With php-cgi alone:';
+          echo '        # fastcgi_pass 127.0.0.1:9000;';
+          echo '        # With php-fpm:';
+          echo "        fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
+          echo '        fastcgi_read_timeout 30;';
+          echo '        include fastcgi_params;';
+          echo '        fastcgi_index index.php;';
+          echo "        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;";
+          echo '    }';
+          echo '';
+          echo '    # deny access to all dot files';
+          echo '    location ~ /\. {';
+          echo '        deny all;';
+          echo '    }';
+          echo '';
+          echo '    #deny access to store';
+          echo '    location ~ /store {';
+          echo '        deny all;';
+          echo '    }';
+          echo '    location ~ /(data|conf|bin|inc)/ {';
+          echo '      deny all;';
+          echo '    }';
+          echo '    location ~ /\.ht {';
+          echo '      deny  all;';
+          echo '    }';
+          echo '}'; } >> "/etc/nginx/sites-available/$DOKUWIKI_DOMAIN_NAME"
+    fi
 
     increment_app_install_progress
 
