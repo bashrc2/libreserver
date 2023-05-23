@@ -33,6 +33,7 @@ REQUIRES_APP=
 BLUDIT_DOMAIN_NAME=
 BLUDIT_CODE=
 BLUDIT_ONION_PORT=9844
+BLUDIT_I2P_PORT=9555
 BLUDIT_VERSION='3.14.1'
 BLUDIT_DOWNLOAD='https://www.bludit.com/releases'
 
@@ -401,6 +402,7 @@ function install_bludit {
     fi
     { echo 'server {';
       echo "    listen 127.0.0.1:$BLUDIT_ONION_PORT default_server;";
+      echo "    #listen [::]:$BLUDIT_ONION_PORT;";
       echo '    port_in_redirect off;';
       echo "    server_name $BLUDIT_ONION_HOSTNAME;";
       echo '    server_tokens off;';
@@ -448,6 +450,61 @@ function install_bludit {
       echo '  location ^~ /bl-content/pages/ { deny all; }';
       echo '  location ^~ /bl-content/databases/ { deny all; } ';
       echo '}'; } >> "$bludit_nginx_site"
+
+    add_i2p_service bludit 80 $BLUDIT_I2P_PORT
+    BLUDIT_I2P_HOSTNAME=$(get_i2p_domain bludit)
+    if [ "$BLUDIT_I2P_HOSTNAME" ]; then
+        { echo 'server {';
+          echo "    listen 127.0.0.1:$BLUDIT_I2P_PORT;";
+          echo "    #listen [::]:$BLUDIT_I2P_PORT;";
+          echo '    port_in_redirect off;';
+          echo "    server_name $BLUDIT_I2P_HOSTNAME;";
+          echo '    server_tokens off;';
+          echo ''; } >> "$bludit_nginx_site"
+        nginx_compress "$BLUDIT_DOMAIN_NAME"
+        echo '' >> "$bludit_nginx_site"
+        nginx_security_options "$BLUDIT_DOMAIN_NAME"
+        { echo '';
+          echo '  # Logs';
+          echo '  access_log /dev/null;';
+          echo '  error_log /dev/null;';
+          echo '';
+          echo "  if (!-e \$request_filename) {";
+          echo "    set \$test P;";
+          echo '  }';
+          echo "  if (\$uri !~ ^/(plesk-stat|webstat|webstat-ssl|ftpstat|anon_ftpstat|awstats-icon|internal-nginx-static-location)) {";
+          echo "    set \$test \"\${test}C\";";
+          echo '  }';
+          echo "  if (\$test = PC) {";
+          echo "    rewrite ^/(.*)\$ /index.php?\$1;";
+          echo '  }';
+          echo '';
+          echo '  # Root';
+          echo "  root /var/www/$BLUDIT_DOMAIN_NAME/htdocs;";
+          echo '';
+          echo '  location ~ \.(jpg|jpeg|gif|png|css|js|ico|svg|eot|ttf|woff|woff2|otf)$ {';
+          echo '    access_log        off;';
+          echo '    expires           30d;';
+          echo '  }';
+          echo '';
+          echo '  index index.php;';
+          echo '  location ~ \.php {';
+          echo '    include snippets/fastcgi-php.conf;';
+          echo "    fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
+          echo '    fastcgi_read_timeout 30;';
+          echo '  }';
+          echo '';
+          echo '  # Location';
+          echo '  location / {'; } >> "$bludit_nginx_site"
+        nginx_limits "$BLUDIT_DOMAIN_NAME" '15m'
+        { echo "    try_files \$uri \$uri/ index.php?\$args;";
+          echo '  }';
+          echo '';
+          echo '  location ^~ /bl-content/tmp/ { deny all; }';
+          echo '  location ^~ /bl-content/pages/ { deny all; }';
+          echo '  location ^~ /bl-content/databases/ { deny all; } ';
+          echo '}'; } >> "$bludit_nginx_site"
+    fi
 
     configure_php
 
