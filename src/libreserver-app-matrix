@@ -47,6 +47,7 @@ MATRIX_CODE=
 MATRIX_DATA_DIR='/var/lib/matrix'
 MATRIX_HTTP_PORT=8448
 MATRIX_PORT=8009
+MATRIX_I2P_PORT=8209
 MATRIX_ONION_PORT=8109
 MATRIX_REPO="https://github.com/matrix-org/synapse"
 MATRIX_COMMIT='80bb098d8775cc2ad1bf5abd150913577e643481'
@@ -550,6 +551,64 @@ function create_matrix_nginx_config {
       echo '    proxy_buffer_size 32k;';
       echo '  }';
       echo '}'; } >> "$matrix_nginx_site"
+
+    add_i2p_service matrix 80 $MATRIX_I2P_PORT
+    MATRIX_I2P_HOSTNAME=$(get_i2p_domain matrix)
+    if [ "$MATRIX_I2P_HOSTNAME" ]; then
+        { echo 'server {';
+          echo "    listen 127.0.0.1:$MATRIX_I2P_PORT default_server;";
+          echo '    port_in_redirect off;';
+          echo "    server_name $MATRIX_I2P_HOSTNAME;";
+          echo '    server_tokens off;';
+          echo ''; } >> $matrix_nginx_site
+        # function_check nginx_security_options
+        # nginx_security_options "$MATRIX_DOMAIN_NAME"
+        { echo '';
+          echo '  # Logs';
+          echo '  access_log /dev/null;';
+          echo '  error_log /dev/null;';
+          echo '';
+          echo "  root ${MATRIX_DATA_DIR}/media_store;";
+          echo '';
+          echo '  location ~* ^(\/_matrix|\/_synapse\/client) {';
+          echo "    proxy_pass http://localhost:${MATRIX_PORT};";
+          echo "    proxy_set_header Host \$http_host;";
+          echo "    proxy_set_header X-Real-IP \$remote_addr;";
+          echo "    proxy_set_header X-Forwarded-For \$remote_addr;";
+          echo "    proxy_set_header X-Forwarded-Proto \$scheme;";
+          echo '    port_in_redirect    off;';
+          echo '    proxy_redirect      off;';
+          echo '    proxy_connect_timeout 360;';
+          echo '    proxy_read_timeout 600;';
+          echo '    proxy_send_timeout 600;';
+          echo '    proxy_buffering    off;';
+          echo '    proxy_buffers 8 16k;';
+          echo '    proxy_buffer_size 32k;';
+          echo '  }';
+          echo '';
+          echo '  location /.well-known/matrix/ {';
+          echo "    add_header Access-Control-Allow-Origin \"*\";";
+          echo '    add_header Content-Type application/json;';
+          echo "    return 200 '{\"m.server\": \"${matrix_server_baseurl}\", \"m.homeserver\": {\"base_url\": \"${matrix_baseurl}\"}}';";
+          echo '  }';
+          echo '';
+          echo '  location / {';
+          echo "    proxy_pass http://localhost:${MATRIX_PORT};";
+          echo "    proxy_set_header Host \$http_host;";
+          echo "    proxy_set_header X-Real-IP \$remote_addr;";
+          echo "    proxy_set_header X-Forwarded-For \$remote_addr;";
+          echo "    proxy_set_header X-Forwarded-Proto \$scheme;";
+          echo '    port_in_redirect    off;';
+          echo '    proxy_redirect      off;';
+          echo '    proxy_connect_timeout 360;';
+          echo '    proxy_read_timeout 600;';
+          echo '    proxy_send_timeout 600;';
+          echo '    proxy_buffering    off;';
+          echo '    proxy_buffers 8 16k;';
+          echo '    proxy_buffer_size 32k;';
+          echo '  }';
+          echo '}'; } >> "$matrix_nginx_site"
+    fi
 
     if [ ! -d "/var/www/$MATRIX_DOMAIN_NAME" ]; then
         mkdir -p "/var/www/$MATRIX_DOMAIN_NAME/htdocs"
@@ -1159,6 +1218,7 @@ function remove_matrix {
     userdel -r matrix
 
     remove_onion_service matrix ${MATRIX_ONION_PORT} ${MATRIX_HTTP_PORT}
+    remove_i2p_service matrix
 
     #sed -i "/# Matrix Server/,/# End of Matrix Server/d" /etc/nginx/sites-available/${MATRIX_DOMAIN_NAME}
     systemctl restart nginx
