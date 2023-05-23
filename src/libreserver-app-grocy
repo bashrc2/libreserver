@@ -51,6 +51,7 @@ REQUIRES_APP=
 GROCY_DOMAIN_NAME=
 GROCY_CODE=
 GROCY_ONION_PORT=9487
+GROCY_I2P_PORT=9560
 GROCY_REPO="https://github.com/grocy/grocy"
 GROCY_COMMIT='f427849e89c56df7aaf84681bd71e7cf1ed9c234'
 grocy_latest_url='https://releases.grocy.info/latest'
@@ -285,6 +286,7 @@ function remove_grocy {
         sed -i "/grocy/d" /etc/crontab
     fi
     remove_app grocy
+    remove_i2p_service grocy
     remove_completion_param install_grocy
     sed -i '/grocy/d' "$COMPLETION_FILE"
 
@@ -401,7 +403,7 @@ function install_grocy {
           echo '  listen 443 ssl;';
           echo '  #listen [::]:443 ssl;';
           echo "  server_name $GROCY_DOMAIN_NAME;";
-	  echo '  server_tokens off;';
+          echo '  server_tokens off;';
           echo ''; } >> "$grocy_nginx_site"
         nginx_compress "$GROCY_DOMAIN_NAME"
         echo '' >> "$grocy_nginx_site"
@@ -464,6 +466,39 @@ function install_grocy {
     { echo "    try_files \$uri /index.php;";
       echo '  }';
       echo '}'; } >> "$grocy_nginx_site"
+
+    add_i2p_service grocy 80 $GROCY_I2P_PORT
+    GROCY_I2P_HOSTNAME=$(get_i2p_domain grocy)
+    if [ "$GROCY_I2P_HOSTNAME" ]; then
+        { echo 'server {';
+          echo "    listen 127.0.0.1:$GROCY_I2P_PORT default_server;";
+          echo "    server_name $GROCY_I2P_HOSTNAME;";
+          echo '    server_tokens off;';
+          echo ''; } >> "$grocy_nginx_site"
+        nginx_compress "$GROCY_DOMAIN_NAME"
+        echo '' >> "$grocy_nginx_site"
+        nginx_security_options "$GROCY_DOMAIN_NAME"
+        { echo '';
+          echo '    access_log /dev/null;';
+          echo '    error_log /dev/null;';
+          echo '';
+          echo "    root /var/www/$GROCY_DOMAIN_NAME/htdocs/public;";
+          echo '';
+          echo '  index index.php;';
+          echo '  location ~ \.php {';
+          echo '    include snippets/fastcgi-php.conf;';
+          echo "    fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
+          echo '    fastcgi_read_timeout 30;';
+          echo '    fastcgi_param HTTPS off;';
+          echo '  }';
+          echo '';
+          echo '  # Location';
+          echo '  location / {'; } >> "$grocy_nginx_site"
+        nginx_limits "$GROCY_DOMAIN_NAME" '15m'
+        { echo "    try_files \$uri /index.php;";
+          echo '  }';
+          echo '}'; } >> "$grocy_nginx_site"
+    fi
 
     configure_php
 
