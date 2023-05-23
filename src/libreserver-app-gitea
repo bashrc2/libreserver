@@ -39,6 +39,7 @@ GITEA_DOWNLOAD='https://github.com/go-gitea/gitea/releases/download'
 GITEA_DOMAIN_NAME=
 GITEA_CODE=
 GITEA_ONION_PORT=8340
+GITEA_I2P_PORT=9559
 GITEA_ADMIN_PASSWORD=
 GITEA_BIN=
 GITEA_SRC=
@@ -492,6 +493,7 @@ function remove_gitea {
     remove_completion_param "install_gitea"
     sed -i '/gitea /d' "$COMPLETION_FILE"
     remove_backup_database_local gitea
+    remove_i2p_service gitea
 
     groupdel -f gitea
     userdel -r gitea
@@ -761,6 +763,41 @@ function install_gitea {
       echo '        access_log /dev/null;';
       echo '    }';
       echo '}'; } >> "/etc/nginx/sites-available/${GITEA_DOMAIN_NAME}"
+
+    add_i2p_service gitea 80 $GITEA_I2P_PORT
+    GITEA_I2P_HOSTNAME=$(get_i2p_domain gitea)
+    if [ "$GITEA_I2P_HOSTNAME" ]; then
+        { echo 'server {';
+          echo "    listen 127.0.0.1:${GITEA_I2P_PORT};";
+          echo '    port_in_redirect off;';
+          echo "    root /var/www/$GITEA_DOMAIN_NAME/htdocs;";
+          echo "    server_name $GITEA_I2P_HOSTNAME;";
+          echo '    server_tokens off;';
+          echo '    access_log /dev/null;';
+          echo "    error_log /dev/null;";
+          echo ''; } >> "/etc/nginx/sites-available/${GITEA_DOMAIN_NAME}"
+        function_check nginx_security_options
+        nginx_security_options "${GITEA_DOMAIN_NAME}"
+        { echo '    add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
+          echo '';
+          echo '    location / {'; } >> "/etc/nginx/sites-available/${GITEA_DOMAIN_NAME}"
+        function_check nginx_limits
+        nginx_limits "${GITEA_DOMAIN_NAME}" '10G'
+        { echo "        proxy_pass http://localhost:${GITEA_PORT};";
+          echo '    }';
+          echo '';
+          echo '    fastcgi_buffers 64 4K;';
+          echo '';
+          echo '    error_page 403 /core/templates/403.php;';
+          echo '    error_page 404 /core/templates/404.php;';
+          echo '';
+          echo '    location = /robots.txt {';
+          echo '        allow all;';
+          echo '        log_not_found off;';
+          echo '        access_log /dev/null;';
+          echo '    }';
+          echo '}'; } >> "/etc/nginx/sites-available/${GITEA_DOMAIN_NAME}"
+    fi
 
     function_check configure_php
     configure_php
