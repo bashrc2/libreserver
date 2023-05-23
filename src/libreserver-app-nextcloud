@@ -40,6 +40,7 @@ NEXTCLOUD_DOWNLOAD_URL="https://download.nextcloud.com/server/releases/${NEXTCLO
 NEXTCLOUD_DOMAIN_NAME=
 NEXTCLOUD_CODE=
 NEXTCLOUD_ONION_PORT=8112
+NEXTCLOUD_I2P_PORT=9564
 NEXTCLOUD_ADMIN_PASSWORD=
 NEXTCLOUD_SERVER_SIDE_ENCRYPTION=1
 
@@ -553,6 +554,7 @@ function remove_nextcloud {
     function_check remove_onion_service
     remove_onion_service nextcloud ${NEXTCLOUD_ONION_PORT}
     remove_app nextcloud
+    remove_i2p_service nextcloud
     remove_completion_param install_nextcloud
     sed -i '/nextcloud/d' "$COMPLETION_FILE"
     remove_backup_database_local nextcloud
@@ -829,6 +831,74 @@ function install_nextcloud_base {
       echo '';
       echo '  location /.well-known/acme-challenge { }';
       echo '}'; } >> "${nextcloud_nginx_site}"
+
+    add_i2p_service nextcloud 80 $NEXTCLOUD_I2P_PORT
+    NEXTCLOUD_I2P_HOSTNAME=$(get_i2p_domain nextcloud)
+    if [ "$NEXTCLOUD_I2P_HOSTNAME" ]; then
+        { echo 'server {';
+          echo "    listen 127.0.0.1:${NEXTCLOUD_I2P_PORT};";
+          echo '    port_in_redirect off;';
+          echo "    server_name ${NEXTCLOUD_I2P_HOSTNAME};";
+          echo '    server_tokens off;';
+          echo ''; } >> "${nextcloud_nginx_site}"
+        function_check nginx_security_options
+        nginx_security_options "${NEXTCLOUD_DOMAIN_NAME}"
+        { echo '';
+          echo '  # Logs';
+          echo '  access_log /dev/null;';
+          echo '  error_log /dev/null;';
+          echo '';
+          echo '  # Root';
+          echo "  root ${NEXTCLOUD_WWW};";
+          echo '';
+          echo '  # Index';
+          echo '  index index.php;';
+          echo '';
+
+          # By default nextcloud advertises highly specific version information
+          # on status.php, which can obviously be used by adversaries.
+          # Blocking status.php prevents this information leak
+          echo '  #location = /status.php {';
+          echo '  #  return 404;';
+          echo '  #}';
+          echo '';
+
+          echo '  # PHP';
+          echo '  location ~ \.php {';
+          echo '    client_max_body_size 1G;';
+          echo '    client_body_buffer_size 128k;';
+          echo '    include snippets/fastcgi-php.conf;';
+          echo "    fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
+          echo '    fastcgi_read_timeout 60;';
+          echo '  }';
+          echo '';
+          echo '  # Location';
+          echo '  location / {'; } >> "${nextcloud_nginx_site}"
+        function_check nginx_limits
+        nginx_limits "${NEXTCLOUD_DOMAIN_NAME}" '1G'
+        { echo "    try_files \$uri \$uri/ @nextcloud;";
+          echo '  }';
+          echo '';
+          echo '  # Fancy URLs';
+          echo '  location @nextcloud {';
+          echo "    rewrite ^(.*)\$ /index.php?p=\$1 last;";
+          echo '  }';
+          echo '';
+          echo '  # Restrict access that is unnecessary anyway';
+          echo '  location ~ /\.(ht|git) {';
+          echo '    deny all;';
+          echo '  }';
+          echo '';
+          echo '  location = /.well-known/carddav {';
+          echo "    return 301 \$scheme://\$host/remote.php/dav;";
+          echo '  }';
+          echo '  location = /.well-known/caldav {';
+          echo "    return 301 \$scheme://\$host/remote.php/dav;";
+          echo '  }';
+          echo '';
+          echo '  location /.well-known/acme-challenge { }';
+          echo '}'; } >> "${nextcloud_nginx_site}"
+    fi
 
     sed -i 's| DENY;| SAMEORIGIN;|g' "${nextcloud_nginx_site}"
     sed -i 's|limit_conn conn_limit_per_ip.*|limit_conn conn_limit_per_ip 100;|g' "${nextcloud_nginx_site}"
