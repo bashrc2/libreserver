@@ -30,6 +30,7 @@ function git_clone {
 
     echo "git clone $repo_url $destination_dir"
     git clone --recursive "$repo_url" "$destination_dir"
+    git config --global --add safe.directory "$destination_dir"
 }
 
 function git_pull {
