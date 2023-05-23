@@ -37,6 +37,7 @@ ELEMENT_VERSION='1.11.28'
 ELEMENT_FILENAME="element-v${ELEMENT_VERSION}"
 ELEMENT_DOWNLOAD_URL="https://github.com/vector-im/element-web/releases/download/v${ELEMENT_VERSION}"
 ELEMENT_ONION_PORT=8118
+ELEMENT_I2P_PORT=6563
 ELEMENT_ONION_HOSTNAME=
 ELEMENT_DOMAIN_NAME=
 ELEMENT_CODE=
@@ -291,6 +292,7 @@ function remove_element {
         rm -rf /var/www/${ELEMENT_DOMAIN_NAME}
     fi
 
+    remove_i2p_service element
     remove_completion_param install_element
     sed -i '/element /d' "$COMPLETION_FILE"
 }
@@ -440,7 +442,7 @@ function install_element {
           echo '  listen 443 ssl http2;';
           echo '  listen [::]:443 ssl http2;';
           echo "  server_name ${ELEMENT_DOMAIN_NAME};";
-	  echo '  server_tokens off;';
+          echo '  server_tokens off;';
           echo '';
           echo '  # Security'; } >> $element_nginx_site
         function_check nginx_ssl
@@ -494,6 +496,34 @@ function install_element {
     nginx_limits "${ELEMENT_DOMAIN_NAME}" '15m'
     echo '  }' >> "$element_nginx_site"
     echo '}' >> "$element_nginx_site"
+
+    add_i2p_service element 80 $ELEMENT_I2P_PORT
+    ELEMENT_I2P_HOSTNAME=$(get_i2p_domain element)
+    if [ "$ELEMENT_I2P_HOSTNAME" ]; then
+        { echo 'server {';
+          echo "    listen 127.0.0.1:$ELEMENT_I2P_PORT default_server;";
+          echo '    port_in_redirect off;';
+          echo "    server_name $ELEMENT_I2P_HOSTNAME;";
+          echo '    server_tokens off;';
+          echo ''; } >> $element_nginx_site
+        function_check nginx_security_options
+        nginx_security_options "${ELEMENT_DOMAIN_NAME}"
+        { echo '';
+          echo '  # Logs';
+          echo '  access_log /dev/null;';
+          echo '  error_log /dev/null;';
+          echo '';
+          echo '  # Root';
+          echo "  root /var/www/${ELEMENT_DOMAIN_NAME}/htdocs;";
+          echo '';
+          echo '  index index.html;';
+          echo '';
+          echo '  location / {'; } >> $element_nginx_site
+        function_check nginx_limits
+        nginx_limits "${ELEMENT_DOMAIN_NAME}" '15m'
+        echo '  }' >> "$element_nginx_site"
+        echo '}' >> "$element_nginx_site"
+    fi
 
     sed -i '/Content-Security-Policy/d' "$element_nginx_site"
     sed -i 's| DENY;| SAMEORIGIN;|g' "$element_nginx_site"
