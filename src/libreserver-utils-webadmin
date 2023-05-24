@@ -1192,6 +1192,7 @@ function web_admin_create_installed_apps_category {
                         fi
                         if grep -q 'SHOW_DOMAIN_IN_WEBADMIN=0' "$app_filename"; then
                             sed -i '/ONIONURL/d' "$filename"
+                            sed -i '/I2PURL/d' "$filename"
                             # Show DNS IP address for pi-hole
                             if [[ "$app_name" == 'pihole' ]]; then
                                 sed -i "s|\"APPURL\"|\"\"|g" "$filename"
@@ -1210,6 +1211,22 @@ function web_admin_create_installed_apps_category {
                         fi
                         sed -i "s|HOSTNAME|$(hostname)|g" "$filename"
                         sed -i "s|APPNAME|${app_name}|g" "$filename"
+                        if [[ "${i2p_domain_name}" == *'.'* ]]; then
+                            if [[ "$app_name" != 'rsync' ]]; then
+                                if ! grep -q 'SHOW_DOMAIN_ONLY=1' "$app_filename"; then
+                                    sed -i "s|I2PURL|http://${i2p_domain_name}|g" "$filename"
+                                else
+                                    if ! grep -q 'SHOW_TELNET_PORT=' "$app_filename"; then
+                                        sed -i "s|I2PURL|${i2p_domain_name}|g" "$filename"
+                                    else
+                                        telnet_port=$(grep 'SHOW_TELNET_PORT=' "$app_filename" | awk -F '=' '{$print 2}')
+                                        sed -i "s|I2PURL|telnet ${i2p_domain_name} ${telnet_port}|g" "$filename"
+                                    fi
+                                fi
+                            else
+                                sed -i "s|I2PURL|${domain_name}|g" "$filename"
+                            fi
+                        fi
                         if [[ "${onion_domain_name}" == *'.'* ]]; then
                             if [[ "$app_name" != 'rsync' ]]; then
                                 if ! grep -q 'SHOW_DOMAIN_ONLY=1' "$app_filename"; then
@@ -1244,9 +1261,11 @@ function web_admin_create_installed_apps_category {
                                     sed -i "s|ONIONURL|${syncthing_id}|g" "$filename"
                                 else
                                     sed -i '/ONIONURL/d' "$filename"
+                                    sed -i '/I2PURL/d' "$filename"
                                 fi
                             else
                                 sed -i '/ONIONURL/d' "$filename"
+                                sed -i '/I2PURL/d' "$filename"
                             fi
                         fi
 
