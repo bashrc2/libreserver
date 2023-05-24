@@ -44,6 +44,7 @@ ETESYNC_CODE=
 ETESYNC_PATH=/etc/etesync
 ETESYNC_DATA_PATH=/etesync_data
 ETESYNC_ONION_PORT=9860
+ETESYNC_I2P_PORT=6568
 ETESYNC_REPO="https://github.com/etesync/server-skeleton"
 ETESYNC_COMMIT='55d3fb7e8ec10e55725721c7300bb25f8e49eac8'
 ETESYNC_PORT_INTERNAL=8292
@@ -339,6 +340,7 @@ function remove_etesync {
         sed -i "/etesync/d" /etc/crontab
     fi
     remove_app etesync
+    remove_i2p_service eyesync
     remove_completion_param install_etesync
     sed -i '/etesync/d' "$COMPLETION_FILE"
 
@@ -554,6 +556,39 @@ function install_etesync {
       echo "        alias /var/www/$ETESYNC_DOMAIN_NAME/htdocs;";
       echo '    }';
       echo '}'; } >> "$etesync_nginx_site"
+
+    add_i2p_service etesync 80 $ETESYNC_I2P_PORT
+    ETESYNC_I2P_HOSTNAME=$(get_i2p_domain etesync)
+    if [ "$ETESYNC_I2P_HOSTNAME" ]; then
+        { echo 'server {';
+          echo "    listen 127.0.0.1:$ETESYNC_I2P_PORT default_server;";
+          echo "    server_name $ETESYNC_I2P_HOSTNAME;";
+          echo '    server_tokens off;';
+          echo '';
+          echo '    access_log /dev/null;';
+          echo '    error_log /dev/null;';
+          echo '';
+          echo '    charset     utf-8;';
+          echo '';
+          echo '    client_max_body_size 75M;';
+          echo '    location / {';
+          echo "        proxy_pass  http://localhost:${ETESYNC_PORT_INTERNAL};";
+          echo "        proxy_http_version 1.1;";
+          echo "        proxy_set_header Upgrade \$http_upgrade;";
+          echo "        proxy_set_header Connection \"upgrade\";";
+          echo '';
+          echo "        proxy_redirect off;";
+          echo "        proxy_set_header Host \$host;";
+          echo "        proxy_set_header X-Real-IP \$remote_addr;";
+          echo "        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;";
+          echo "        proxy_set_header X-Forwarded-Host \$server_name;";
+          echo '    }';
+          echo '';
+          echo '    location /static {';
+          echo "        alias /var/www/$ETESYNC_DOMAIN_NAME/htdocs;";
+          echo '    }';
+          echo '}'; } >> "$etesync_nginx_site"
+    fi
 
     increment_app_install_progress
 
