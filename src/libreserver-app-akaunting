@@ -37,6 +37,7 @@ APP_CATEGORY=organization
 AKAUNTING_DOMAIN_NAME=
 AKAUNTING_CODE=
 AKAUNTING_ONION_PORT=8341
+AKAUNTING_I2P_PORT=6567
 AKAUNTING_REPO="https://github.com/akaunting/akaunting"
 AKAUNTING_COMMIT='c9f2a7d68880e82e69bfb0e5e5b160e823f0531b'
 AKAUNTING_ADMIN_PASSWORD=
@@ -275,6 +276,7 @@ function remove_akaunting {
         sed -i "/akaunting/d" /etc/crontab
     fi
     remove_app akaunting
+    remove_i2p_service akaunting
     remove_completion_param install_akaunting
     sed -i '/akaunting/d' "$COMPLETION_FILE"
 
@@ -550,6 +552,65 @@ function install_akaunting {
       echo '    deny all;';
       echo '  }';
       echo '}'; } >> "$akaunting_nginx_site"
+
+    add_i2p_service akaunting 80 $AKAUNTING_I2P_PORT
+    AKAUNTING_I2P_HOSTNAME=$(get_i2p_domain akaunting)
+    if [ "$AKAUNTING_I2P_HOSTNAME" ]; then
+        { echo 'server {';
+          echo "    listen 127.0.0.1:$AKAUNTING_I2P_PORT default_server;";
+          echo '    port_in_redirect off;';
+          echo "    server_name $AKAUNTING_I2P_HOSTNAME;";
+          echo '    server_tokens off;';
+          echo ''; } >> "$akaunting_nginx_site"
+        function_check nginx_compress
+        nginx_compress "$AKAUNTING_DOMAIN_NAME"
+        echo '' >> "$akaunting_nginx_site"
+        function_check nginx_security_options
+        nginx_security_options "$AKAUNTING_DOMAIN_NAME"
+        { echo '';
+          echo '  access_log /dev/null;';
+          echo '  error_log /dev/null;';
+          echo '';
+          echo "  root /var/www/$AKAUNTING_DOMAIN_NAME/htdocs;";
+          echo '';
+          echo '  index index.html index.htm index.php;';
+          echo '';
+          echo '  location ~ \.(env|log) {';
+          echo '    deny all;';
+          echo '  }';
+          echo '';
+          echo '  location ~ \.php {';
+          echo '    include snippets/fastcgi-php.conf;';
+          echo '    fastcgi_read_timeout 30;';
+          echo "    fastcgi_split_path_info ^(.+\.php)(/.+)\$;";
+          echo "    fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
+          echo "    fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;";
+          echo '    include fastcgi_params;';
+          echo '  }';
+          echo '';
+          echo '  location / {'; } >> "$akaunting_nginx_site"
+        function_check nginx_limits
+        nginx_limits "$AKAUNTING_DOMAIN_NAME" '15m'
+        { echo "    try_files \$uri \$uri/ /index.php?\$query_string;";
+          echo '  }';
+          echo '';
+          echo '  location ~ ^/(^app$|bootstrap|config|database|overrides|resources|routes|storage|tests|artisan) {';
+          echo '    deny all;';
+          echo '  }';
+          echo '';
+          echo "  location ~ ^/(modules|vendor)\/(.*)\.((?!ico|gif|jpg|jpeg|png|js\b|css|less|sass|font|woff|woff2|eot|ttf|svg|xls|xlsx).)*\$ {";
+          echo '    deny all;';
+          echo '  }';
+          echo '';
+          echo '  location @akaunting {';
+          echo "    rewrite ^(.*)\$ /index.php?p=\$1 last;";
+          echo '  }';
+          echo '';
+          echo '  location ~ /\.(ht|git|env|log) {';
+          echo '    deny all;';
+          echo '  }';
+          echo '}'; } >> "$akaunting_nginx_site"
+    fi
 
     sed -i '/nosniff/d' "$akaunting_nginx_site"
     sed -i 's|X-Frame-Options .*|X-Frame-Options SAMEORIGIN;|g' "$akaunting_nginx_site"
