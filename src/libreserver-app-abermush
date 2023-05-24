@@ -39,6 +39,7 @@ ABERMUSH_REPO="https://gitlab.com/bashrc2/AberMUSH"
 ABERMUSH_COMMIT='48f4e829ba36577ae5ebc52bcea7f7c922414a69'
 
 ABERMUSH_PORT=35123
+ABERMUSH_I2P_PORT=6566
 ABERMUSH_WEBSOCKET_PORT=6221
 SHOW_TELNET_PORT=${ABERMUSH_PORT}
 
@@ -95,15 +96,15 @@ function upgrade_abermush {
 
     # remove previous saves
     if [ -f "${ABERMUSH_DIR}/universe.json" ]; then
-  rm "${ABERMUSH_DIR}/universe"*.json
+        rm "${ABERMUSH_DIR}/universe"*.json
     fi
 
     abermush_copy_to_htdocs
 
     if [[ "${ONION_ONLY}" == 'no' ]]; then
-  chown -R abermush:ssl-cert ${ABERMUSH_DIR}
+        chown -R abermush:ssl-cert ${ABERMUSH_DIR}
     else
-  chown -R abermush:abermush ${ABERMUSH_DIR}
+        chown -R abermush:abermush ${ABERMUSH_DIR}
     fi
     systemctl start abermush
 }
@@ -174,6 +175,7 @@ function remove_abermush {
     systemctl daemon-reload
 
     remove_app abermush
+    remove_i2p_service abermush
     remove_completion_param install_abermush
     sed -i '/abermush/d' "$COMPLETION_FILE"
 
@@ -201,16 +203,16 @@ function abermush_copy_to_htdocs {
     chmod 755 /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs
 
     if [[ "$ONION_ONLY" == 'no' ]]; then
-  sed -i "s|new WebSocket.*|new WebSocket(\"wss://${ABERMUSH_DOMAIN_NAME}/websocket/\");|g" /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs/index.html
+        sed -i "s|new WebSocket.*|new WebSocket(\"wss://${ABERMUSH_DOMAIN_NAME}/websocket/\");|g" /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs/index.html
     else
-  ABERMUSH_ONION_HOSTNAME=$(cat /var/lib/tor/hidden_service_abermush/hostname)
-  sed -i "s|new WebSocket.*|new WebSocket(\"ws://${ABERMUSH_ONION_HOSTNAME}/websocket/\");|g" /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs/index.html
+        ABERMUSH_ONION_HOSTNAME=$(cat /var/lib/tor/hidden_service_abermush/hostname)
+        sed -i "s|new WebSocket.*|new WebSocket(\"ws://${ABERMUSH_ONION_HOSTNAME}/websocket/\");|g" /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs/index.html
     fi
 }
 
 function install_abermush_website {
     if [ ! -d /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs ]; then
-  mkdir -p /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs
+        mkdir -p /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs
     fi
     chmod 755 /var/www/${ABERMUSH_DOMAIN_NAME}
     abermush_copy_to_htdocs
@@ -220,26 +222,26 @@ function install_abermush_website {
     if [[ ${ONION_ONLY} == "no" ]]; then
         function_check nginx_http_redirect
         nginx_http_redirect "${ABERMUSH_DOMAIN_NAME}"
-  { echo 'server {';
-    echo "    listen ${ABERMUSH_WEBSOCKET_PORT};";
-    echo "    #listen [::]:${ABERMUSH_WEBSOCKET_PORT};";
-    echo "    root /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs;";
-    echo '';
-    echo '    location / {';
-    echo "        proxy_pass         http://localhost:${ABERMUSH_WEBSOCKET_PORT};";
-    echo '        proxy_http_version 1.1;';
-    echo "        proxy_set_header   Upgrade \"websocket\";";
-    echo "        proxy_set_header   Connection \"upgrade\";";
-    echo "        proxy_set_header   Host \$host;";
-    echo '    }';
-    echo '}';
-    echo '';
+        { echo 'server {';
+          echo "    listen ${ABERMUSH_WEBSOCKET_PORT};";
+          echo "    #listen [::]:${ABERMUSH_WEBSOCKET_PORT};";
+          echo "    root /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs;";
+          echo '';
+          echo '    location / {';
+          echo "        proxy_pass         http://localhost:${ABERMUSH_WEBSOCKET_PORT};";
+          echo '        proxy_http_version 1.1;';
+          echo "        proxy_set_header   Upgrade \"websocket\";";
+          echo "        proxy_set_header   Connection \"upgrade\";";
+          echo "        proxy_set_header   Host \$host;";
+          echo '    }';
+          echo '}';
+          echo '';
           echo 'server {';
           echo '    listen 443 ssl;';
           echo '    #listen [::]:443 ssl;';
           echo "    root /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs;";
           echo "    server_name ${ABERMUSH_DOMAIN_NAME};";
-    echo '    server_tokens off;';
+          echo '    server_tokens off;';
           echo '    access_log /dev/null;';
           echo "    error_log /dev/null;";
           echo '    index index.html;';
@@ -250,37 +252,37 @@ function install_abermush_website {
         function_check nginx_security_options
         nginx_security_options "${ABERMUSH_DOMAIN_NAME}"
         { echo '    add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
-    echo "    add_header Onion-Location http://${ABERMUSH_ONION_HOSTNAME}\$request_uri;";
+          echo "    add_header Onion-Location http://${ABERMUSH_ONION_HOSTNAME}\$request_uri;";
           echo '';
-    echo '    location /websocket {';
-    echo "        proxy_pass         http://localhost:${ABERMUSH_WEBSOCKET_PORT};";
-    echo '        proxy_http_version 1.1;';
-    echo "        proxy_set_header   Upgrade \"websocket\";";
-    echo "        proxy_set_header   Connection \"upgrade\";";
-    echo "        proxy_set_header   Host \$host;";
-    echo '    }';
-    echo '';
-    echo '    location / {';
-    echo "        try_files \$uri \$uri/ =404;";
-    echo '    }';
-    echo '';
+          echo '    location /websocket {';
+          echo "        proxy_pass         http://localhost:${ABERMUSH_WEBSOCKET_PORT};";
+          echo '        proxy_http_version 1.1;';
+          echo "        proxy_set_header   Upgrade \"websocket\";";
+          echo "        proxy_set_header   Connection \"upgrade\";";
+          echo "        proxy_set_header   Host \$host;";
+          echo '    }';
+          echo '';
+          echo '    location / {';
+          echo "        try_files \$uri \$uri/ =404;";
+          echo '    }';
+          echo '';
           echo '}';
           echo ''; } >> "/etc/nginx/sites-available/${ABERMUSH_DOMAIN_NAME}"
     else
-  { echo 'server {';
-    echo "    listen ${ABERMUSH_WEBSOCKET_PORT};";
-    echo "    #listen [::]:${ABERMUSH_WEBSOCKET_PORT};";
-    echo "    root /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs;";
-    echo '';
-    echo '    location / {';
-    echo "        proxy_pass         http://localhost:${ABERMUSH_WEBSOCKET_PORT};";
-    echo '        proxy_http_version 1.1;';
-    echo "        proxy_set_header   Upgrade \"websocket\";";
-    echo "        proxy_set_header   Connection \"upgrade\";";
-    echo "        proxy_set_header   Host \$host;";
-    echo '    }';
-    echo '}';
-    echo ''; } > "/etc/nginx/sites-available/${ABERMUSH_DOMAIN_NAME}"
+        { echo 'server {';
+          echo "    listen ${ABERMUSH_WEBSOCKET_PORT};";
+          echo "    #listen [::]:${ABERMUSH_WEBSOCKET_PORT};";
+          echo "    root /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs;";
+          echo '';
+          echo '    location / {';
+          echo "        proxy_pass         http://localhost:${ABERMUSH_WEBSOCKET_PORT};";
+          echo '        proxy_http_version 1.1;';
+          echo "        proxy_set_header   Upgrade \"websocket\";";
+          echo "        proxy_set_header   Connection \"upgrade\";";
+          echo "        proxy_set_header   Host \$host;";
+          echo '    }';
+          echo '}';
+          echo ''; } > "/etc/nginx/sites-available/${ABERMUSH_DOMAIN_NAME}"
     fi
     { echo 'server {';
       echo "    listen 127.0.0.1:${ABERMUSH_ONION_PORT} default_server;";
@@ -307,6 +309,36 @@ function install_abermush_website {
       echo "        try_files \$uri \$uri/ =404;";
       echo '    }';
       echo '}'; } >> "/etc/nginx/sites-available/${ABERMUSH_DOMAIN_NAME}"
+
+    add_i2p_service abermush 80 $ABERMUSH_I2P_PORT
+    ABERMUSH_I2P_HOSTNAME=$(get_i2p_domain abermush)
+    if [ "$ABERMUSH_I2P_HOSTNAME" ]; then
+        { echo 'server {';
+          echo "    listen 127.0.0.1:${ABERMUSH_I2P_PORT} default_server;";
+          echo '    port_in_redirect off;';
+          echo "    root /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs;";
+          echo "    server_name ${ABERMUSH_I2P_HOSTNAME};";
+          echo '    server_tokens off;';
+          echo '    access_log /dev/null;';
+          echo "    error_log /dev/null;";
+          echo '    index index.html;';
+          echo '    charset utf-8;';
+          echo '    proxy_read_timeout 86400s;'; } >> "/etc/nginx/sites-available/${ABERMUSH_DOMAIN_NAME}"
+        function_check nginx_security_options
+        nginx_security_options "${ABERMUSH_DOMAIN_NAME}"
+        { echo '    location /websocket {';
+          echo "        proxy_pass         http://localhost:${ABERMUSH_WEBSOCKET_PORT};";
+          echo '        proxy_http_version 1.1;';
+          echo "        proxy_set_header   Upgrade \"websocket\";";
+          echo "        proxy_set_header   Connection \"upgrade\";";
+          echo "        proxy_set_header   Host \$host;";
+          echo '    }';
+          echo '';
+          echo '    location / {';
+          echo "        try_files \$uri \$uri/ =404;";
+          echo '    }';
+          echo '}'; } >> "/etc/nginx/sites-available/${ABERMUSH_DOMAIN_NAME}"
+    fi
 
     # set default-src to self
     sed -i "s|add_header Content-Security-Policy.*|add_header Content-Security-Policy \"default-src 'self'; script-src https: 'unsafe-inline'; style-src https: 'unsafe-inline'\";|g" "/etc/nginx/sites-available/${ABERMUSH_DOMAIN_NAME}"
@@ -399,9 +431,9 @@ function install_abermush {
     increment_app_install_progress
 
     if [[ "$ONION_ONLY" == 'no' ]]; then
-  chown -R abermush:ssl-cert ${ABERMUSH_DIR}
+        chown -R abermush:ssl-cert ${ABERMUSH_DIR}
     else
-  chown -R abermush:abermush ${ABERMUSH_DIR}
+        chown -R abermush:abermush ${ABERMUSH_DIR}
     fi
 
     increment_app_install_progress
@@ -414,7 +446,7 @@ function install_abermush {
 
     abermush_group=abermush
     if [[ "${ONION_ONLY}" == 'no' ]]; then
-  abermush_group='ssl-cert'
+        abermush_group='ssl-cert'
     fi
 
     { echo '[Unit]';
@@ -455,14 +487,14 @@ function install_abermush {
     increment_app_install_progress
 
     if [[ "${ONION_ONLY}" == 'no' ]]; then
-  usermod -g ssl-cert abermush
+        usermod -g ssl-cert abermush
     fi
     usermod -g www-data abermush
 
     if [[ "$ONION_ONLY" == 'no' ]]; then
-  chown -R abermush:ssl-cert ${ABERMUSH_DIR}
+        chown -R abermush:ssl-cert ${ABERMUSH_DIR}
     else
-  chown -R abermush:abermush ${ABERMUSH_DIR}
+        chown -R abermush:abermush ${ABERMUSH_DIR}
     fi
 
     systemctl restart abermush.service
