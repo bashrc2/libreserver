@@ -1355,6 +1355,18 @@ function install_matrix_venv {
     REINSTALL_PACKAGES python3-pip
 
     { echo '#!/bin/bash';
+      echo "RUST_INSTALL_DIR=\"${INSTALL_DIR}/rust\"";
+      echo "if [ -d \"\${RUST_INSTALL_DIR}\" ]; then";
+      echo "    rm -rf \"\${RUST_INSTALL_DIR}\"";
+      echo 'fi';
+      echo "mkdir -p \"\${RUST_INSTALL_DIR}\"";
+      echo "cd \"\${RUST_INSTALL_DIR}\" | exit 1";
+      echo "curl -sSfL 'https://sh.rustup.rs' -o rustup-init.sh";
+      echo 'chmod +x rustup-init.sh';
+      echo 'TMPDIR=~/build/rust ./rustup-init.sh -y --profile minimal';
+      echo 'rm rustup-init.sh';
+      echo '. /root/.cargo/env';
+      echo '';
       echo 'cd /etc/matrix | exit 1';
       echo 'virtualenv -p python3 /etc/matrix/env';
       echo 'source /etc/matrix/env/bin/activate';
@@ -1363,7 +1375,12 @@ function install_matrix_venv {
       echo 'pip3 install -U matrix-synapse';
       echo "pip3 install -U 'prometheus_client>=0.0.18,<0.8.0'";
       echo 'pip3 install -U jsonschema>=2.5.1';
-      echo 'pip3 install -U synapse.synapse_rust';
+      echo '';
+      echo 'rustup self uninstall -y';
+      echo "if [ -d \"\${RUST_INSTALL_DIR}\" ]; then";
+      echo "    rm -rf \"\${RUST_INSTALL_DIR}\"";
+      echo 'fi';
+      echo 'TMPDIR=/tmp';
       echo 'deactivate'; } > "$INSTALL_DIR/install_matrix"
     chmod +x "$INSTALL_DIR/install_matrix"
     /bin/bash "$INSTALL_DIR/install_matrix"
