@@ -1,9 +1,9 @@
 <?php
 
-//  _    _ _            ___                      
-// | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+//  _    _ _            ___
+// | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
 // | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
-// |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+// |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 //
 // This receives the yes/no confirmation when installing
 // an app and then begins the install
@@ -47,22 +47,25 @@ if (isset($_POST['installconfirmsubmit'])) {
 
             // Note that this value can be changed by install_web_admin
             $onion_only=false;
+            $i2p_only=false;
 
             $continue_install=true;
 
             if(! $onion_only) {
-                $no_domain = htmlspecialchars($_POST['no_domain']);
-                if ($no_domain === '0') {
-                    if(filter_string('install_domain')) {
-                        $install_domain = htmlspecialchars($_POST['install_domain']);
-                        if (strpos($install_domain, '.') === false) {
-                            // No domain was provided
+                if(! $i2p_only) {
+                    $no_domain = htmlspecialchars($_POST['no_domain']);
+                    if ($no_domain === '0') {
+                        if(filter_string('install_domain')) {
+                            $install_domain = htmlspecialchars($_POST['install_domain']);
+                            if (strpos($install_domain, '.') === false) {
+                                // No domain was provided
+                                $continue_install=false;
+                            }
+                        }
+                        else {
+                            // domain name was too long
                             $continue_install=false;
                         }
-                    }
-                    else {
-                        // domain name was too long
-                        $continue_install=false;
                     }
                 }
             }

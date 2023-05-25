@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+  <meta charset="utf-8">
+  <style>
+    @import url("libreserver.css");
+
+    * {
+        box-sizing: border-box;
+    }
+
+    .page-align {
+        vertical-align: middle;
+    }
+
+    .row {
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+        padding: 0 4px;
+    }
+
+    .column {
+        -ms-flex: 20%;
+        flex: 20%;
+        max-width: 20%;
+        padding: 0 4px;
+    }
+
+    .column img {
+        margin-top: 8px;
+        vertical-align: middle;
+        max-width: 60%;
+    }
+
+    @media screen and (min-width: 400px) {
+        .page-align {
+            margin-top: 4%;
+        }
+        .column {
+            -ms-flex: 20%;
+            flex: 20%;
+            max-width: 20%;
+        }
+    }
+
+    @media screen and (max-width: 500px) {
+        .page-align {
+            margin-top: 0%;
+        }
+        .column {
+            -ms-flex: 50%;
+            flex: 50%;
+            max-width: 50%;
+        }
+    }
+  </style>
+  <body>
+
+    <div class="page-align">
+    <div class="header">
+      <a href="index.html" title="Go Back"><img id="headerpic" class="img-responsive" src="images/logo.png" alt="Go Back"></a>
+
+      <p class="headertext" translate="yes">Settings</p>
+
+      <div class="row">
+        <div class="column">
+          <div>
+            <a href="./blocking.html" title="Domain/User Blocking">
+              <img src="images/blocking.png" style="width:100%" alt="Domain/User Blocking">
+              <center translate="yes">Domain/User Blocking</center>
+            </a>
+          </div>
+        </div>
+        <div class="column">
+          <div>
+            <a href="./system_monitor.html" title="System Monitor">
+              <img src="images/system_monitor.png" style="width:100%" alt="System Monitor">
+              <center translate="yes">System Monitor</center>
+            </a>
+          </div>
+        </div>
+        <div class="column">
+          <div>
+            <a href="./vpn.html" title="VPN">
+              <img src="images/vpn.png" style="width:100%" alt="VPN">
+              <center translate="yes">VPN</center>
+            </a>
+          </div>
+        </div>
+        <div class="column">
+          <div>
+            <a href="./language.html" title="Language">
+              <img src="images/language.png" style="width:100%" alt="Language">
+              <center translate="yes">Language</center>
+            </a>
+          </div>
+        </div>
+        <div class="column">
+          <div>
+            <a href="./theme.html" title="Theme">
+              <img src="images/theme.png" style="width:100%" alt="Theme">
+              <center translate="yes">Theme</center>
+            </a>
+          </div>
+        </div>
+        <div class="column">
+          <div>
+            <a href="./ssh.html" title="Secure Shell">
+              <img src="images/ssh.png" style="width:100%" alt="Secure Shell">
+              <center translate="yes">Secure Shell</center>
+            </a>
+          </div>
+        </div>
+        <div class="column">
+          <div>
+            <a href="network.html" title="Community Network">
+              <img src="images/network.png" style="width:100%" alt="Community Network">
+              <center translate="yes">Community Network</center>
+            </a>
+          </div>
+        </div>
+        <div class="column">
+          <div>
+            <a href="upgrade_confirm.html" title="Upgrade">
+              <img src="images/upgrade.png" style="width:100%" alt="Upgrade">
+              <center translate="yes">Upgrade</center>
+            </a>
+          </div>
+        </div>
+        <div class="column">
+          <div>
+            <a href="reset.html" title="Power">
+              <img src="images/reset.png" style="width:100%" alt="Power">
+              <center translate="yes">Power</center>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+
+  </body>
+</html>

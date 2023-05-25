@@ -96,10 +96,16 @@ function web_create_homepage {
     # copy the about screen for homepage
     cp "$webadmin_install_dir/homepage_about.html" "$homepage_about_filename"
 
-    # show onion address for homepage
+    # show onion/i2p address for homepage
     webadmin_onion_domain=$(cat /var/lib/tor/hidden_service_webadmin/hostname)
-    sed -i "s|WEBADMINONIONADDRESS|${webadmin_onion_domain}|g" "$homepage_about_filename"
-    homepage_create_qr_code "$webadmin_onion_domain"
+    webadmin_i2p_domain=$(get_i2p_domain webadmin)
+    if [[ "$I2P_ONLY" == 'yes' && "$webadmin_i2p_domain" == *".i2p" ]]; then
+	sed -i "s|WEBADMINONIONADDRESS|${webadmin_i2p_domain}|g" "$homepage_about_filename"
+	homepage_create_qr_code "$webadmin_i2p_domain"
+    else
+	sed -i "s|WEBADMINONIONADDRESS|${webadmin_onion_domain}|g" "$homepage_about_filename"
+	homepage_create_qr_code "$webadmin_onion_domain"
+    fi
 
     total_apps_ctr=0
     installed_apps_ctr=0
@@ -141,11 +147,13 @@ function web_create_homepage {
 
                     read_config_param "${app_name_upper}_DOMAIN_NAME"
                     read_config_param ONION_ONLY
+                    read_config_param I2P_ONLY
                     onion_app_name=${app_name}
                     if [[ "$onion_app_name" == 'xmpp' ]]; then
                         onion_app_name='email'
                     fi
-                    if [[ "$ONION_ONLY" == 'no' ]]; then
+		    i2p_app_name="${onion_app_name}"
+                    if [[ "$ONION_ONLY" == 'no' && "$I2P_ONLY" == 'no' ]]; then
                         if grep -q "INSTALLED_ON_DEFAULT_DOMAIN=1" "$app_filename"; then
                             read_config_param DEFAULT_DOMAIN_NAME
                             domain_name=$DEFAULT_DOMAIN_NAME
@@ -154,9 +162,16 @@ function web_create_homepage {
                             domain_name=${!test_domain_name}
                         fi
                     else
-                        domain_name=$(cat "/var/lib/tor/hidden_service_${onion_app_name}/hostname")
+			if [[ "$ONION_ONLY" != 'no' ]]; then
+                            domain_name=$(cat "/var/lib/tor/hidden_service_${onion_app_name}/hostname")
+			else
+			    if [[ "$I2P_ONLY" != 'no' ]]; then
+				domain_name=$(get_i2p_domain ${i2p_app_name})
+			    fi
+			fi
                     fi
                     onion_domain_name=
+		    i2p_domain_name=$(get_i2p_domain ${i2p_app_name})
                     if [ -f "/var/lib/tor/hidden_service_${onion_app_name}/hostname" ]; then
                         onion_domain_name=$(cat "/var/lib/tor/hidden_service_${onion_app_name}/hostname")
                     fi
@@ -164,7 +179,11 @@ function web_create_homepage {
                         if [[ "$domain_name" != *'.onion' ]]; then
                             domain_name="https://${domain_name}"
                         else
-                            domain_name="http://${onion_domain_name}"
+                            if [[ "$domain_name" != *'.i2p' ]]; then
+				domain_name="https://${i2p_domain_name}"
+			    else
+				domain_name="http://${onion_domain_name}"
+			    fi
                         fi
                     else
                         app_index=$((app_index+1))
@@ -176,6 +195,7 @@ function web_create_homepage {
                         if [ "$domain_port_number" ]; then
                             domain_name="http://${local_hostname}:${domain_port_number}"
                             onion_domain_name="${onion_domain_name}:${domain_port_number}"
+                            i2p_domain_name="${i2p_domain_name}:${domain_port_number}"
                         fi
                     fi
 

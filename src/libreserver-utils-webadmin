@@ -278,6 +278,10 @@ function web_admin_translate {
     cp "EN/${PROJECT_NAME}.css" .
     if [[ "$ONION_ONLY" != 'no' ]]; then
         cp EN/settings_onion.html settings.html
+    else
+        if [[ "$I2P_ONLY" != 'no' ]]; then
+            cp EN/settings_i2p.html settings.html
+        fi
     fi
 
     # remove any unused screens which just slows translations down
@@ -619,178 +623,180 @@ function web_admin_create_add_apps_category {
                 if ! grep -q "VARIANTS=''" "$add_app_filename"; then
                     if [[ $(enough_ram_for_app "$add_app_name") == "0" ]]; then
                         if [[ $(app_not_on_onion_only "$add_app_name") != "0" ]]; then
-                            if [[ $(app_not_on_arm "$add_app_name") != "0" ]]; then
-                                if [[ $(app_not_in_webadmin "$add_app_name") != "0" ]]; then
-                                    # is this app already installed?
-                                    app_index=0
-                                    app_is_installed=
-                                    # shellcheck disable=SC2068
-                                    for a in ${APPS_INSTALLED[@]}
-                                    do
-                                        installed_app_name=${APPS_INSTALLED_NAMES[$app_index]}
-                                        if [[ "$installed_app_name" == "$add_app_name" ]]; then
-                                            app_is_installed=1
-                                            break
+                            if [[ $(app_not_on_i2p_only "$add_app_name") != "0" ]]; then
+                                if [[ $(app_not_on_arm "$add_app_name") != "0" ]]; then
+                                    if [[ $(app_not_in_webadmin "$add_app_name") != "0" ]]; then
+                                        # is this app already installed?
+                                        app_index=0
+                                        app_is_installed=
+                                        # shellcheck disable=SC2068
+                                        for a in ${APPS_INSTALLED[@]}
+                                        do
+                                            installed_app_name=${APPS_INSTALLED_NAMES[$app_index]}
+                                            if [[ "$installed_app_name" == "$add_app_name" ]]; then
+                                                app_is_installed=1
+                                                break
+                                            fi
+
+                                            app_index=$((app_index+1))
+                                        done
+
+                                        # check if the app is pending installation
+                                        app_pending_install=
+                                        if [ -f "$pending_installs" ]; then
+                                            if grep -q "install_${add_app_name}" "$pending_installs"; then
+                                                app_is_installed=1
+                                                app_pending_install=1
+                                            fi
                                         fi
 
-                                        app_index=$((app_index+1))
-                                    done
+                                        if [ ! $app_is_installed ]; then
 
-                                    # check if the app is pending installation
-                                    app_pending_install=
-                                    if [ -f "$pending_installs" ]; then
-                                        if grep -q "install_${add_app_name}" "$pending_installs"; then
-                                            app_is_installed=1
-                                            app_pending_install=1
-                                        fi
-                                    fi
+                                            # does this app have a category?
+                                            if ! grep -q 'APP_CATEGORY=' "$add_app_filename"; then
+                                                if [[ "$category" != 'other' ]]; then
+                                                    app_index=$((app_index+1))
+                                                    continue
+                                                fi
+                                            fi
 
-                                    if [ ! $app_is_installed ]; then
-
-                                        # does this app have a category?
-                                        if ! grep -q 'APP_CATEGORY=' "$add_app_filename"; then
-                                            if [[ "$category" != 'other' ]]; then
+                                            # Does this app belong in the current category?
+                                            if ! grep -q "APP_CATEGORY=$category" "$add_app_filename"; then
                                                 app_index=$((app_index+1))
                                                 continue
                                             fi
-                                        fi
 
-                                        # Does this app belong in the current category?
-                                        if ! grep -q "APP_CATEGORY=$category" "$add_app_filename"; then
-                                            app_index=$((app_index+1))
-                                            continue
-                                        fi
-
-                                        if grep -q "VARIANTS=''" "$add_app_filename"; then
-                                            continue
-                                        fi
-                                        if grep -q 'VARIANTS=""' "$add_app_filename"; then
-                                            continue
-                                        fi
-
-                                        # get the icon for the app
-                                        icon_filename="/usr/share/${PROJECT_NAME}/android-app/${add_app_name}.png"
-                                        if [ -f "$icon_filename" ]; then
-                                            cp "$icon_filename" "$webadmin_install_dir/icons/${add_app_name}.png"
-                                        else
-                                            icon_filename=
-                                            continue
-                                        fi
-
-                                        # remove any qrcode images
-                                        if [ -f "$webadmin_install_dir/app_qrcode_${add_app_name}.png" ]; then
-                                            rm "$webadmin_install_dir/app_qrcode_${add_app_name}.png"
-                                        fi
-                                        if [ -f "$webadmin_install_dir/${add_app_name}_qrcode.png" ]; then
-                                            rm "$webadmin_install_dir/${add_app_name}_qrcode.png"
-                                        fi
-
-                                        app_name_upper=$(echo "$add_app_name" | awk '{print toupper($0)}')
-                                        SHORT_DESCRIPTION=
-                                        DESCRIPTION=
-
-                                        if ! grep -q "${app_name_upper}_SHORT_DESCRIPTION=" "$add_app_filename"; then
-                                            continue
-                                        fi
-                                        if grep -q "#${app_name_upper}_SHORT_DESCRIPTION=" "$add_app_filename"; then
-                                            continue
-                                        fi
-                                        SHORT_DESCRIPTION="$(grep "${app_name_upper}_SHORT_DESCRIPTION=" "$add_app_filename" | head -n 1 | sed 's|\$||g' | sed "s|'||g" | sed 's|\"||g' | awk -F '=' '{print $2}')"
-                                        translated_short_description=$(web_admin_translate_text "$SHORT_DESCRIPTION")
-                                        SHORT_DESCRIPTION="$translated_short_description"
-                                        app_title="${SHORT_DESCRIPTION}"
-
-                                        if grep -q "${app_name_upper}_DESCRIPTION=" "$add_app_filename"; then
-                                            DESCRIPTION="$(grep "${app_name_upper}_DESCRIPTION=" "$add_app_filename" | head -n 1 | sed 's|\$||g' | sed "s|'||g" | sed 's|\"||g' | awk -F '=' '{print $2}')"
-                                            translated_description=$(web_admin_translate_text "$DESCRIPTION")
-                                            DESCRIPTION="$translated_description"
-                                            app_title="${DESCRIPTION}"
-                                        fi
-
-                                        if [ $available_apps_ctr -eq 0 ]; then
-                                            echo '    <div class="row">' >> "$appslist_add_filename"
-                                        fi
-
-                                        filename_app="$webadmin_install_dir/app_${add_app_name}.html"
-                                        if [ -f "$filename_app" ]; then
-                                            rm "$filename_app"
-                                        fi
-
-                                        filename_app="$webadmin_install_dir/app_add_${add_app_name}.html"
-
-                                        if [ ! $app_pending_install ]; then
-                                            { echo '      <div class="column">';
-                                              echo '        <div>';
-                                              echo "          <a href=\"app_add_${add_app_name}.html\" title=\"${app_title}\">";
-                                              echo "            <img src=\"icons/${add_app_name}.png\" style=\"width:40%\" loading=\"lazy\">";
-                                              echo "            <center>${add_app_name}</center>";
-                                              echo '          </a>';
-                                              echo '        </div>';
-                                              echo '      </div>'; } >> "$appslist_add_filename"
-                                        else
-                                            { echo '      <div class="column">';
-                                              echo '        <div>';
-                                              echo "        <img src=\"icons/${add_app_name}.png\" style=\"width:40%\" loading=\"lazy\">";
-                                              echo "        <center class=\"installing\">${add_app_name}</center>";
-                                              echo '        </div>';
-                                              echo '      </div>'; } >> "$appslist_add_filename"
-                                        fi
-
-                                        cp "$app_add_template_filename" "$filename_app"
-
-                                        # Replace app variables
-                                        sed -i "s|HOSTNAME|$(hostname)|g" "$filename_app"
-                                        sed -i "s|APPNAME|${add_app_name}|g" "$filename_app"
-                                        sed -i "s|APPDESCRIPTION|${DESCRIPTION}|g" "$filename_app"
-
-                                        # special case for xmpp and gemini where it is the same as the default domain
-                                        if [[ "${add_app_name}" == 'xmpp' || "${add_app_name}" == 'gemini' ]]; then
-                                            if [[ "$ONION_ONLY" == 'no' ]]; then
-                                                sed -i "s|<p><label translate=\"yes\">Domain:.*|<input type=\"hidden\" name=\"install_domain\" value=\"$(hostname)\">|g" "$filename_app"
+                                            if grep -q "VARIANTS=''" "$add_app_filename"; then
+                                                continue
                                             fi
-                                        fi
+                                            if grep -q 'VARIANTS=""' "$add_app_filename"; then
+                                                continue
+                                            fi
 
-                                        app_add_remove_domain=
-                                        if [[ "$ONION_ONLY" != 'no' ]]; then
-                                            app_add_remove_domain=1
-                                        fi
-                                        webadmin_remove_domain=
-                                        if grep -q 'SHOW_DOMAIN_IN_WEBADMIN=0' "$add_app_filename"; then
-                                            webadmin_remove_domain=1
-                                        fi
-                                        if grep -q 'SHOW_DOMAIN_IN_ADD_WEBADMIN=0' "$add_app_filename"; then
-                                            webadmin_remove_domain=1
-                                        fi
-                                        if [ $webadmin_remove_domain ]; then
-                                            app_add_remove_domain=1
+                                            # get the icon for the app
+                                            icon_filename="/usr/share/${PROJECT_NAME}/android-app/${add_app_name}.png"
+                                            if [ -f "$icon_filename" ]; then
+                                                cp "$icon_filename" "$webadmin_install_dir/icons/${add_app_name}.png"
+                                            else
+                                                icon_filename=
+                                                continue
+                                            fi
+
+                                            # remove any qrcode images
+                                            if [ -f "$webadmin_install_dir/app_qrcode_${add_app_name}.png" ]; then
+                                                rm "$webadmin_install_dir/app_qrcode_${add_app_name}.png"
+                                            fi
+                                            if [ -f "$webadmin_install_dir/${add_app_name}_qrcode.png" ]; then
+                                                rm "$webadmin_install_dir/${add_app_name}_qrcode.png"
+                                            fi
+
+                                            app_name_upper=$(echo "$add_app_name" | awk '{print toupper($0)}')
+                                            SHORT_DESCRIPTION=
+                                            DESCRIPTION=
+
+                                            if ! grep -q "${app_name_upper}_SHORT_DESCRIPTION=" "$add_app_filename"; then
+                                                continue
+                                            fi
+                                            if grep -q "#${app_name_upper}_SHORT_DESCRIPTION=" "$add_app_filename"; then
+                                                continue
+                                            fi
+                                            SHORT_DESCRIPTION="$(grep "${app_name_upper}_SHORT_DESCRIPTION=" "$add_app_filename" | head -n 1 | sed 's|\$||g' | sed "s|'||g" | sed 's|\"||g' | awk -F '=' '{print $2}')"
+                                            translated_short_description=$(web_admin_translate_text "$SHORT_DESCRIPTION")
+                                            SHORT_DESCRIPTION="$translated_short_description"
+                                            app_title="${SHORT_DESCRIPTION}"
+
+                                            if grep -q "${app_name_upper}_DESCRIPTION=" "$add_app_filename"; then
+                                                DESCRIPTION="$(grep "${app_name_upper}_DESCRIPTION=" "$add_app_filename" | head -n 1 | sed 's|\$||g' | sed "s|'||g" | sed 's|\"||g' | awk -F '=' '{print $2}')"
+                                                translated_description=$(web_admin_translate_text "$DESCRIPTION")
+                                                DESCRIPTION="$translated_description"
+                                                app_title="${DESCRIPTION}"
+                                            fi
+
+                                            if [ $available_apps_ctr -eq 0 ]; then
+                                                echo '    <div class="row">' >> "$appslist_add_filename"
+                                            fi
+
+                                            filename_app="$webadmin_install_dir/app_${add_app_name}.html"
+                                            if [ -f "$filename_app" ]; then
+                                                rm "$filename_app"
+                                            fi
+
+                                            filename_app="$webadmin_install_dir/app_add_${add_app_name}.html"
+
+                                            if [ ! $app_pending_install ]; then
+                                                { echo '      <div class="column">';
+                                                  echo '        <div>';
+                                                  echo "          <a href=\"app_add_${add_app_name}.html\" title=\"${app_title}\">";
+                                                  echo "            <img src=\"icons/${add_app_name}.png\" style=\"width:40%\" loading=\"lazy\">";
+                                                  echo "            <center>${add_app_name}</center>";
+                                                  echo '          </a>';
+                                                  echo '        </div>';
+                                                  echo '      </div>'; } >> "$appslist_add_filename"
+                                            else
+                                                { echo '      <div class="column">';
+                                                  echo '        <div>';
+                                                  echo "        <img src=\"icons/${add_app_name}.png\" style=\"width:40%\" loading=\"lazy\">";
+                                                  echo "        <center class=\"installing\">${add_app_name}</center>";
+                                                  echo '        </div>';
+                                                  echo '      </div>'; } >> "$appslist_add_filename"
+                                            fi
+
+                                            cp "$app_add_template_filename" "$filename_app"
+
+                                            # Replace app variables
+                                            sed -i "s|HOSTNAME|$(hostname)|g" "$filename_app"
+                                            sed -i "s|APPNAME|${add_app_name}|g" "$filename_app"
+                                            sed -i "s|APPDESCRIPTION|${DESCRIPTION}|g" "$filename_app"
+
+                                            # special case for xmpp and gemini where it is the same as the default domain
+                                            if [[ "${add_app_name}" == 'xmpp' || "${add_app_name}" == 'gemini' ]]; then
+                                                if [[ "$ONION_ONLY" == 'no' && "$I2P_ONLY" == 'no' ]]; then
+                                                    sed -i "s|<p><label translate=\"yes\">Domain:.*|<input type=\"hidden\" name=\"install_domain\" value=\"$(hostname)\">|g" "$filename_app"
+                                                fi
+                                            fi
+
+                                            app_add_remove_domain=
+                                            if [[ "$ONION_ONLY" != 'no' || "$I2P_ONLY" != 'no' ]]; then
+                                                app_add_remove_domain=1
+                                            fi
+                                            webadmin_remove_domain=
+                                            if grep -q 'SHOW_DOMAIN_IN_WEBADMIN=0' "$add_app_filename"; then
+                                                webadmin_remove_domain=1
+                                            fi
+                                            if grep -q 'SHOW_DOMAIN_IN_ADD_WEBADMIN=0' "$add_app_filename"; then
+                                                webadmin_remove_domain=1
+                                            fi
+                                            if [ $webadmin_remove_domain ]; then
+                                                app_add_remove_domain=1
+                                                sed -i '/freedns_code/d' "$filename_app"
+                                                sed -i 's|"no_domain".*|"no_domain" value="1">|g' "$filename_app"
+                                            fi
+
+                                            # remove domain if necessary
+                                            if [ $app_add_remove_domain ]; then
+                                                if grep -q 'install_domain' "$filename_app"; then
+                                                    sed -i '/install_domain/d' "$filename_app"
+                                                fi
+                                                sed -i "/installappconfirm.php/a <input type=\"hidden\" name=\"install_domain\" value=\"${add_app_name}.$(hostname)\">" "$filename_app"
+                                            fi
+
+                                            # remove freedns if necessary
+                                            #if [[ "$DDNS_PROVIDER" != *"freedns"* ]]; then
+                                            #    if grep -q 'freedns_code' "$filename_app"; then
                                             sed -i '/freedns_code/d' "$filename_app"
-                                            sed -i 's|"no_domain".*|"no_domain" value="1">|g' "$filename_app"
-                                        fi
+                                            #    fi
+                                            #fi
 
-                                        # remove domain if necessary
-                                        if [ $app_add_remove_domain ]; then
-                                            if grep -q 'install_domain' "$filename_app"; then
-                                                sed -i '/install_domain/d' "$filename_app"
+                                            available_apps_ctr=$((available_apps_ctr+1))
+                                            add_apps_ctr=$((add_apps_ctr+1))
+
+                                            # four columns per row
+                                            if [ $available_apps_ctr -eq 4 ]; then
+                                                echo '    </div>' >> "$appslist_add_filename"
+                                                available_apps_ctr=0
                                             fi
-                                            sed -i "/installappconfirm.php/a <input type=\"hidden\" name=\"install_domain\" value=\"${add_app_name}.$(hostname)\">" "$filename_app"
+                                            files_checked="${files_checked}|${add_app_filename}|"
                                         fi
-
-                                        # remove freedns if necessary
-                                        #if [[ "$DDNS_PROVIDER" != *"freedns"* ]]; then
-                                        #    if grep -q 'freedns_code' "$filename_app"; then
-                                        sed -i '/freedns_code/d' "$filename_app"
-                                        #    fi
-                                        #fi
-
-                                        available_apps_ctr=$((available_apps_ctr+1))
-                                        add_apps_ctr=$((add_apps_ctr+1))
-
-                                        # four columns per row
-                                        if [ $available_apps_ctr -eq 4 ]; then
-                                            echo '    </div>' >> "$appslist_add_filename"
-                                            available_apps_ctr=0
-                                        fi
-                                        files_checked="${files_checked}|${add_app_filename}|"
                                     fi
                                 fi
                             fi
@@ -841,6 +847,7 @@ function web_admin_create_add_apps {
 
     read_config_param DDNS_PROVIDER
     read_config_param ONION_ONLY
+    read_config_param I2P_ONLY
     apps_add_template_filename="$webadmin_install_dir/apps_add_template.html"
     pending_installs="$webadmin_install_dir/pending_installs.txt"
     icons_dir="$webadmin_install_dir/icons"
@@ -966,11 +973,13 @@ function web_admin_create_installed_apps_category {
 
                         read_config_param "${app_name_upper}_DOMAIN_NAME"
                         read_config_param ONION_ONLY
+                        read_config_param I2P_ONLY
                         onion_app_name=${app_name}
                         if [[ "$onion_app_name" == 'xmpp' || "$onion_app_name" == 'gemini' ]]; then
                             onion_app_name='email'
                         fi
-                        if [[ "$ONION_ONLY" == 'no' ]]; then
+                        i2p_app_name="${onion_app_name}"
+                        if [[ "$ONION_ONLY" == 'no' && "$I2P_ONLY" == 'no' ]]; then
                             if grep -q "INSTALLED_ON_DEFAULT_DOMAIN=1" "$app_filename"; then
                                 read_config_param DEFAULT_DOMAIN_NAME
                                 domain_name=$DEFAULT_DOMAIN_NAME
@@ -979,7 +988,13 @@ function web_admin_create_installed_apps_category {
                                 domain_name=${!test_domain_name}
                             fi
                         else
-                            domain_name=$(cat "/var/lib/tor/hidden_service_${onion_app_name}/hostname")
+                            if [[ "$ONION_ONLY" != 'no' ]]; then
+                                domain_name=$(cat "/var/lib/tor/hidden_service_${onion_app_name}/hostname")
+                            else
+                                if [[ "$I2P_ONLY" != 'no' ]]; then
+                                    domain_name=$(get_i2p_domain ${i2p_app_name})
+                                fi
+                            fi
                         fi
                         if [[ "$app_name" == 'scuttlebot' ]]; then
                             read_config_param SCUTTLEBOT_INVITE
@@ -1171,6 +1186,13 @@ function web_admin_create_installed_apps_category {
                                 cp "$app_onion_help_screen" "$app_help_screen"
                             fi
                         fi
+                        if [[ "$I2P_ONLY" != 'no' ]]; then
+                            # special version of help screen for onion version
+                            app_i2p_help_screen="$webadmin_install_dir/help_${app_name}_i2p.html"
+                            if [ -f "$app_i2p_help_screen" ]; then
+                                cp "$app_i2p_help_screen" "$app_help_screen"
+                            fi
+                        fi
 
                         if [ ! -f "$app_help_screen" ]; then
                             # remove help button if there are no help screen for this app
@@ -1178,7 +1200,7 @@ function web_admin_create_installed_apps_category {
                         else
                             # On onion only we don't need to forward ports, so
                             # that text can be removed from the help screen
-                            if [[ "$ONION_ONLY" != 'no' ]]; then
+                            if [[ "$ONION_ONLY" != 'no' || "$I2P_ONLY" != 'no' ]]; then
                                 sed -i '/"portstext"/d' "$app_help_screen"
                                 sed -i '/"subheaderports"/d' "$app_help_screen"
                             fi
@@ -1269,7 +1291,7 @@ function web_admin_create_installed_apps_category {
                             fi
                         fi
 
-                        if [[ "$ONION_ONLY" != 'no' ]]; then
+                        if [[ "$ONION_ONLY" != 'no' || "$I2P_ONLY" != 'no' ]]; then
                             sed -i '/APPURL/d' "$filename"
                         else
                             if [[ "${domain_name}" != *'.local' ]]; then
@@ -1400,6 +1422,25 @@ function web_admin_onion_only {
     sed -i 's|setup_domain.html|setup_installing.html|g' "$rootdir$webadmin_install_dir/setupconfirm.php"
 }
 
+function web_admin_i2p_only {
+    # In onion only mode domain names or ddns codes
+    # don't need to be provided
+    web_admin_get_hostname
+
+    # shellcheck disable=SC2154
+    sed -i '/freedns_code/d' "$rootdir$webadmin_install_dir/app_add_template.html"
+    # shellcheck disable=SC2154
+    sed -i '/freedns_code/d' "$rootdir$webadmin_install_dir/add_app_confirm_template.html"
+
+    sed -i '/install_domain/d' "$rootdir$webadmin_install_dir/app_add_template.html"
+    sed -i '/install_domain/d' "$rootdir$webadmin_install_dir/add_app_confirm_template.html"
+
+    sed -i 's|i2p_only=false;|i2p_only=true;|g' "$rootdir$webadmin_install_dir/installapp.php"
+    sed -i 's|i2p_only=false;|i2p_only=true;|g' "$rootdir$webadmin_install_dir/installappconfirm.php"
+
+    sed -i 's|setup_domain.html|setup_installing.html|g' "$rootdir$webadmin_install_dir/setupconfirm.php"
+}
+
 function web_admin_reset {
     web_admin_get_hostname
 
@@ -1491,9 +1532,18 @@ function image_install_web_admin {
     else
         sed -i "s|ONION_ONLY=.*|ONION_ONLY=$ONION_ONLY|g" "$rootdir$CONFIGURATION_FILE"
     fi
+    if ! grep -q 'I2P_ONLY=' "$rootdir$CONFIGURATION_FILE"; then
+        echo "I2P_ONLY=$ONION_ONLY" >> "$rootdir$CONFIGURATION_FILE"
+    else
+        sed -i "s|I2P_ONLY=.*|I2P_ONLY=$I2P_ONLY|g" "$rootdir$CONFIGURATION_FILE"
+    fi
 
     if [[ "$ONION_ONLY" != 'no' ]]; then
         web_admin_onion_only
+    else
+        if [[ "$I2P_ONLY" != 'no' ]]; then
+            web_admin_i2p_only
+        fi
     fi
     touch "$rootdir$webadmin_install_dir/.setupscreenactive"
 
@@ -1591,8 +1641,13 @@ function regenerate_bridges {
 
     # onion version of the webadmin settings screen
     read_config_param ONION_ONLY
+    read_config_param I2P_ONLY
     if [[ "$ONION_ONLY" != 'no' ]]; then
         cp "$webadmin_install_dir/settings_onion.html" "$webadmin_install_dir/settings.html"
+    else
+        if [[ "$I2P_ONLY" != 'no' ]]; then
+            cp "$webadmin_install_dir/settings_i2p.html" "$webadmin_install_dir/settings.html"
+        fi
     fi
 
     if [ -f "$webadmin_install_dir/bridges_template.html" ]; then
@@ -2020,12 +2075,18 @@ function install_web_admin_webmail {
 
     read_config_param DEFAULT_LANGUAGE
     read_config_param ONION_ONLY
+    read_config_param I2P_ONLY
 
-    if [[ "$ONION_ONLY" == 'no' ]]; then
+    if [[ "$ONION_ONLY" == 'no' && "$I2P_ONLY" == 'no' ]]; then
         read_config_param DEFAULT_DOMAIN_NAME
         email_domain=$DEFAULT_DOMAIN_NAME
     else
-        email_domain=$(cat /var/lib/tor/hidden_service_email/hostname)
+        if [[ "$ONION_ONLY" != 'no' ]]; then
+            email_domain=$(cat /var/lib/tor/hidden_service_email/hostname)
+        fi
+        if [[ "$I2P_ONLY" != 'no' ]]; then
+            email_domain=$(get_i2p_domain email)
+        fi
     fi
 
     # select light or dark theme
@@ -2394,7 +2455,7 @@ function install_web_admin_webmail {
 
     web_admin_create_email_proxy_screen
 
-    if [[ "$ONION_ONLY" == 'no' ]]; then
+    if [[ "$ONION_ONLY" == 'no' && "$I2P_ONLY" == 'no' ]]; then
         # clearnet version goes to email proxy settings
         proxy_settings_str=$(web_admin_translate_text "Send email through a proxy")
         proxy_str="<a href=\"../../admin/email_proxy.html\" title=\"${proxy_settings_str}\">"
@@ -2408,7 +2469,7 @@ function install_web_admin_webmail {
             sed -i "s|<img src=|${proxy_str}<img src=|g" "/var/www/${local_hostname}/htdocs/mail/src/login.php"
         fi
     else
-        # onion only version goes back to index
+        # onion/i2p only version goes back to index
         link_title_str=$(web_admin_translate_text "Go Back")
         link_str="<a href=\"../../admin\" title=\"${link_title_str}\">"
         if grep -q '<a href="../../admin/email_proxy.html">' "/var/www/${local_hostname}/htdocs/mail/src/login.php"; then
@@ -2566,8 +2627,12 @@ function install_web_admin {
 
             # if this is an onion only install then modify some php scripts
             read_config_param ONION_ONLY
+            read_config_param I2P_ONLY
             if [[ "$ONION_ONLY" != 'no' ]]; then
                 web_admin_onion_only
+            fi
+            if [[ "$I2P_ONLY" != 'no' ]]; then
+                web_admin_i2p_only
             fi
 
             web_admin_installed=1

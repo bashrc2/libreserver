@@ -32,6 +32,9 @@ DEFAULT_SEARCH='https://searx.laquadrature.net'
 # onion port for the default domain
 DEFAULT_DOMAIN_ONION_PORT=8099
 
+# i2p port for the default domain
+DEFAULT_DOMAIN_I2P_PORT=8100
+
 # Whether Let's Encrypt is enabled for all sites
 LETSENCRYPT_ENABLED="yes"
 LETSENCRYPT_SERVER='https://acme-v02.api.letsencrypt.org/directory'
@@ -198,7 +201,7 @@ function check_certificates {
     if [ "$2" ]; then
         USE_LETSENCRYPT="$2"
     fi
-    if [[ $USE_LETSENCRYPT == 'no' || "$ONION_ONLY" != 'no' ]]; then
+    if [[ $USE_LETSENCRYPT == 'no' || "$ONION_ONLY" != 'no' || "$I2P_ONLY" != 'no' ]]; then
         if [ ! -f "/etc/ssl/private/${1}.key" ]; then
             echo $"Private certificate for ${CHECK_HOSTNAME} was not created"
             exit 63
@@ -296,7 +299,7 @@ function create_site_certificate {
         NO_SELF_SIGNED="$2"
     fi
 
-    if [[ $ONION_ONLY == "no" ]]; then
+    if [[ $ONION_ONLY == "no" && $I2P_ONLY == "no" ]]; then
         if [[ "$(cert_exists "${SITE_DOMAIN_NAME}")" == "0" ]]; then
             if [[ $LETSENCRYPT_ENABLED != "yes" ]]; then
                 create_self_signed_cert
@@ -315,7 +318,7 @@ function create_site_certificate {
 
 # script to automatically renew any Let's Encrypt certificates
 function letsencrypt_renewals {
-    if [[ $ONION_ONLY != "no" ]]; then
+    if [[ $ONION_ONLY != "no" || $I2P_ONLY != "no" ]]; then
         return
     fi
 
@@ -554,7 +557,7 @@ function install_dynamicdns {
         return
     fi
 
-    if [[ $ONION_ONLY != "no" ]]; then
+    if [[ $ONION_ONLY != "no" || $I2P_ONLY != "no" ]]; then
         return
     fi
 
@@ -978,21 +981,21 @@ function install_web_server {
     # install a script to easily enable and disable nginx virtual hosts
     NGINX_ENSITE_DIR=/root/${PROJECT_NAME}/image_build/nginx_ensite
     if [ -d ${NGINX_ENSITE_DIR} ]; then
-	cd "$NGINX_ENSITE_DIR" || exit 25
-	make install
+        cd "$NGINX_ENSITE_DIR" || exit 25
+        make install
     else
-	if [ ! -d "$INSTALL_DIR" ]; then
+        if [ ! -d "$INSTALL_DIR" ]; then
             mkdir "$INSTALL_DIR"
-	fi
-	cd "$INSTALL_DIR" || exit 27
-	function_check git_clone
-	git_clone "$NGINX_ENSITE_REPO" "$INSTALL_DIR/nginx_ensite"
-	cd "$INSTALL_DIR/nginx_ensite" || exit 24
-	git checkout "$NGINX_ENSITE_COMMIT" -b "$NGINX_ENSITE_COMMIT"
+        fi
+        cd "$INSTALL_DIR" || exit 27
+        function_check git_clone
+        git_clone "$NGINX_ENSITE_REPO" "$INSTALL_DIR/nginx_ensite"
+        cd "$INSTALL_DIR/nginx_ensite" || exit 24
+        git checkout "$NGINX_ENSITE_COMMIT" -b "$NGINX_ENSITE_COMMIT"
 
-	set_completion_param "nginx-ensite commit" "$NGINX_ENSITE_COMMIT"
+        set_completion_param "nginx-ensite commit" "$NGINX_ENSITE_COMMIT"
 
-	make install
+        make install
     fi
     nginx_dissite default
 
@@ -1034,7 +1037,7 @@ function configure_firewall_for_web_access {
         # docker does its own firewalling
         return
     fi
-    if [[ $ONION_ONLY != "no" ]]; then
+    if [[ $ONION_ONLY != "no" || $I2P_ONLY != "no" ]]; then
         return
     fi
     firewall_add HTTP 80 tcp
@@ -1044,7 +1047,7 @@ function configure_firewall_for_web_access {
 
 function update_default_domain {
     echo $'Updating default domain'
-    if [[ $ONION_ONLY == 'no' ]]; then
+    if [[ $ONION_ONLY == 'no' && $I2P_ONLY == 'no' ]]; then
         if [ -f /etc/mumble-server.ini ]; then
             if [ ! -f "/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/fullchain.pem" ]; then
                 if ! grep -q "mumble.pem" /etc/mumble-server.ini; then
@@ -1182,14 +1185,14 @@ function create_default_web_site {
 
         # add a config for the default domain
         nginx_site=/etc/nginx/sites-available/$DEFAULT_DOMAIN_NAME
-        if [[ $ONION_ONLY == "no" ]]; then
+        if [[ $ONION_ONLY == "no" && $I2P_ONLY == "no" ]]; then
             function_check nginx_http_redirect
             nginx_http_redirect "$curr_default_domain_name"
             { echo 'server {';
               echo '  listen 443 ssl;';
               echo '  #listen [::]:443 ssl;';
               echo "  server_name $curr_default_domain_name;";
-	            echo '  server_tokens off;';
+                    echo '  server_tokens off;';
               echo '';
               echo '  # Security'; } >> "$nginx_site"
             function_check nginx_ssl
@@ -1227,7 +1230,7 @@ function create_default_web_site {
         { echo 'server {';
           echo "    listen 127.0.0.1:$DEFAULT_DOMAIN_ONION_PORT default_server;";
           echo "    server_name $curr_default_domain_name;";
-	        echo '    server_tokens off;';
+                echo '    server_tokens off;';
           echo ''; } >> "$nginx_site"
         function_check nginx_security_options
         nginx_security_options "$curr_default_domain_name"
@@ -1250,6 +1253,37 @@ function create_default_web_site {
           echo '    deny all;';
           echo '  }';
           echo '}'; } >> "$nginx_site"
+
+        add_i2p_service default 80 $DEFAULT_I2P_PORT
+        DEFAULT_I2P_HOSTNAME=$(get_i2p_domain default)
+        if [ "$DEFAULT_I2P_HOSTNAME" ]; then
+            { echo 'server {';
+              echo "    listen 127.0.0.1:$DEFAULT_DOMAIN_I2P_PORT;";
+              echo "    server_name $DEFAULT_I2P_HOSTNAME;";
+              echo '    server_tokens off;';
+              echo ''; } >> "$nginx_site"
+            function_check nginx_security_options
+            nginx_security_options "$curr_default_domain_name"
+            { echo '';
+              echo '  # Logs';
+              echo '  access_log /dev/null;';
+              echo '  error_log /dev/null;';
+              echo '';
+              echo '  # Root';
+              echo "  root /var/www/$curr_default_domain_name/htdocs;";
+              echo '';
+              echo '  # Location';
+              echo '  location / {'; } >> "$nginx_site"
+            function_check nginx_limits
+            nginx_limits "$curr_default_domain_name" '15m'
+            { echo '  }';
+              echo '';
+              echo '  # Restrict access that is unnecessary anyway';
+              echo '  location ~ /\.(ht|git) {';
+              echo '    deny all;';
+              echo '  }';
+              echo '}'; } >> "$nginx_site"
+        fi
 
         if [ ! -f "/etc/ssl/certs/${curr_default_domain_name}.pem" ]; then
             function_check create_site_certificate
@@ -1353,10 +1387,10 @@ function email_install_tls {
 
         if ! grep -q "MAIN_TLS_CERTIFICATE = /etc/exim4/fullchain.pem" $tls_config_file; then
             if ! grep -q "MAIN_TLS_CERTIFICATE =" $tls_config_file; then
-		sed -i "/.ifdef MAIN_TLS_CERTKEY/i\\MAIN_TLS_CERTIFICATE = /etc/exim4/fullchain.pem" $tls_config_file
-	    else
-		sed -i 's|MAIN_TLS_CERTIFICATE =.*|MAIN_TLS_CERTIFICATE = /etc/exim4/fullchain.pem|g' $tls_config_file
-	    fi
+                sed -i "/.ifdef MAIN_TLS_CERTKEY/i\\MAIN_TLS_CERTIFICATE = /etc/exim4/fullchain.pem" $tls_config_file
+            else
+                sed -i 's|MAIN_TLS_CERTIFICATE =.*|MAIN_TLS_CERTIFICATE = /etc/exim4/fullchain.pem|g' $tls_config_file
+            fi
             email_config_changed=1
         fi
     fi
@@ -1369,10 +1403,10 @@ function email_install_tls {
 
         if ! grep -q "MAIN_TLS_PRIVATEKEY = /etc/exim4/privkey.pem" $tls_config_file; then
             if ! grep -q "MAIN_TLS_PRIVATEKEY =" $tls_config_file; then
-		sed -i "/.ifndef MAIN_TLS_PRIVATEKEY/i\\MAIN_TLS_PRIVATEKEY = /etc/exim4/privkey.pem" $tls_config_file
-	    else
-		sed -i 's|MAIN_TLS_PRIVATEKEY =.*|MAIN_TLS_PRIVATEKEY = /etc/exim4/privkey.pem|g' $tls_config_file
-	    fi
+                sed -i "/.ifndef MAIN_TLS_PRIVATEKEY/i\\MAIN_TLS_PRIVATEKEY = /etc/exim4/privkey.pem" $tls_config_file
+            else
+                sed -i 's|MAIN_TLS_PRIVATEKEY =.*|MAIN_TLS_PRIVATEKEY = /etc/exim4/privkey.pem|g' $tls_config_file
+            fi
             email_config_changed=1
         fi
     fi

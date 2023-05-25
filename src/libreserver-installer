@@ -1021,6 +1021,18 @@ function app_not_on_onion_only {
     echo "1"
 }
 
+function app_not_on_i2p_only {
+    app_name="$1"
+
+    if [[ "$I2P_ONLY" != 'no' ]]; then
+        if grep -q "NOT_ON_I2P=1" "/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-${app_name}"; then
+            echo "0"
+            return
+        fi
+    fi
+    echo "1"
+}
+
 function app_not_on_arm {
     app_name="$1"
 

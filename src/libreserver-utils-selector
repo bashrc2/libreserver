@@ -345,6 +345,20 @@ function app_not_on_onion_only {
     echo "1"
 }
 
+function app_not_on_i2p_only {
+    app_name="$1"
+
+    read_config_param I2P_ONLY
+
+    if [[ "$I2P_ONLY" != 'no' ]]; then
+        if grep -q "NOT_ON_I2P=1" "/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-${app_name}"; then
+            echo "0"
+            return
+        fi
+    fi
+    echo "1"
+}
+
 function app_not_on_arm {
     app_name="$1"
 
@@ -660,11 +674,11 @@ function add_users_after_install {
                 if [[ $(user_added_to_app "${USERNAME}" "${app_name}") == "0" ]]; then
                     #valstr=$"Login for user ${USERNAME}="
                     app_password=$("${PROJECT_NAME}-pass" -u "$USERNAME" -a login)
-		    if [ "${app_password}" ]; then
-			echo "add_users_after_install: ${app_name}/${USERNAME}"
-			"add_user_${app_name}" "${USERNAME}" "${app_password}"
-			echo "${app_name}_${USERNAME}" >> "$APP_USERS_FILE"
-		    fi
+                    if [ "${app_password}" ]; then
+                        echo "add_users_after_install: ${app_name}/${USERNAME}"
+                        "add_user_${app_name}" "${USERNAME}" "${app_password}"
+                        echo "${app_name}_${USERNAME}" >> "$APP_USERS_FILE"
+                    fi
                 fi
             fi
         fi

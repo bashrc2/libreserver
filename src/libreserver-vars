@@ -56,6 +56,9 @@ MINIMAL_INSTALL="yes"
 # Whether web sites will be .onion addresses only
 ONION_ONLY="no"
 
+# Whether web sites will be .i2p addresses only
+I2P_ONLY="no"
+
 # whether the system is being installed from a pre-created configuration file
 INSTALLING_FROM_CONFIGURATION_FILE="no"
 
