@@ -38,6 +38,7 @@ function git_pull {
         echo $'git_pull no repo specified'
     fi
 
+    git config --global --add safe.directory .
     git merge --abort
     git stash
     git remote set-url origin "$1"
