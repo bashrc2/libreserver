@@ -1363,6 +1363,7 @@ function install_matrix_venv {
       echo 'pip3 install -U matrix-synapse';
       echo "pip3 install -U 'prometheus_client>=0.0.18,<0.8.0'";
       echo 'pip3 install -U jsonschema>=2.5.1';
+      echo 'pip3 install -U synapse.synapse_rust';
       echo 'deactivate'; } > "$INSTALL_DIR/install_matrix"
     chmod +x "$INSTALL_DIR/install_matrix"
     /bin/bash "$INSTALL_DIR/install_matrix"
@@ -1469,7 +1470,7 @@ function install_matrix {
     fi
     export TMPDIR="$INSTALL_DIR/tmp"
 
-    $MATRIX_PIP install --upgrade pip==9.0.3
+    $MATRIX_PIP install --upgrade pip==23.1.2
     #    $MATRIX_PIP install --upgrade pip==19.0.2
 
     if [ -f /usr/local/bin/pip3 ]; then
