@@ -48,6 +48,7 @@ MATRIX_DATA_DIR='/var/lib/matrix'
 MATRIX_HTTP_PORT=8448
 MATRIX_PORT=8009
 MATRIX_ONION_PORT=8109
+MATRIX_RELEASE='1.84.0'
 MATRIX_REPO="https://github.com/matrix-org/synapse"
 MATRIX_COMMIT='5cae9158e67babe0553bc356802495a068222685'
 REPORT_STATS="no"
@@ -1373,7 +1374,7 @@ function install_matrix_venv {
       echo 'pip3 install -U pip virtualenv six packaging appdirs';
       echo "pip3 install -U 'poetry>1.2.0'";
       echo 'pip3 install -U setuptools';
-      echo 'pip3 install -U matrix-synapse';
+      echo "pip3 install -U 'matrix-synapse==${MATRIX_RELEASE}'";
       echo "pip3 install -U 'prometheus_client>=0.0.18,<0.8.0'";
       echo 'pip3 install -U jsonschema>=2.5.1';
       echo '';
