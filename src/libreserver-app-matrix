@@ -44,6 +44,7 @@ MATRIX_MINIMUM_RAM_MB=900
 MATRIX_DOMAIN_NAME=
 MATRIX_CODE=
 
+MATRIX_RUST_VERSION='1.63.0'
 MATRIX_DATA_DIR='/var/lib/matrix'
 MATRIX_HTTP_PORT=8448
 MATRIX_PORT=8009
@@ -288,6 +289,8 @@ function matrix_create_run_script {
 
       echo "alias python='/etc/matrix/env/bin/python3'";
       echo 'source /etc/matrix/env/bin/activate';
+      echo "PATH=${RUST_INSTALL_DIR}:\${PATH}";
+      echo 'rustc -V';
       echo '/etc/matrix/env/bin/python3 -m synapse.app.homeserver --config-path /var/lib/matrix/homeserver.yaml'; } > /etc/matrix/run-matrix
     chmod +x /etc/matrix/run-matrix
     chown matrix:matrix /etc/matrix/run-matrix
@@ -1355,22 +1358,20 @@ function matrix_update_element_config {
 function install_matrix_venv {
     REINSTALL_PACKAGES python3-pip
 
+    CURR_MATRIX_RUST_VERSION=$(get_completion_param "matrix rust version")
+    if [[ "${CURR_MATRIX_RUST_VERSION}" != "${MATRIX_RUST_VERSION}" ]]; then
+        if ! install_rust ${MATRIX_RUST_VERSION}; then
+            echo "Unable to install rust ${MATRIX_RUST_VERSION}"
+            return
+        fi
+        set_completion_param "matrix rust version" "${MATRIX_RUST_VERSION}"
+    fi
+
     { echo '#!/bin/bash';
-      echo "RUST_INSTALL_DIR=\"${INSTALL_DIR}/rust\"";
-      echo "if [ -d \"\${RUST_INSTALL_DIR}\" ]; then";
-      echo "    rm -rf \"\${RUST_INSTALL_DIR}\"";
-      echo 'fi';
-      echo "mkdir -p \"\${RUST_INSTALL_DIR}\"";
-      echo "cd \"\${RUST_INSTALL_DIR}\" | exit 1";
-      echo "curl -sSfL 'https://sh.rustup.rs' -o rustup-init.sh";
-      echo 'chmod +x rustup-init.sh';
-      echo 'TMPDIR=~/build/rust ./rustup-init.sh -y --profile minimal';
-      echo 'rm rustup-init.sh';
-      echo '. /root/.cargo/env';
-      echo '';
       echo 'cd /etc/matrix | exit 1';
       echo 'virtualenv -p python3 /etc/matrix/env';
       echo 'source /etc/matrix/env/bin/activate';
+      echo '';
       echo 'pip3 install -U pip virtualenv six packaging appdirs';
       echo "pip3 install -U 'poetry>1.2.0'";
       echo 'pip3 install -U setuptools';
@@ -1378,11 +1379,6 @@ function install_matrix_venv {
       echo "pip3 install -U 'prometheus_client>=0.4.0'";
       echo 'pip3 install -U jsonschema>=2.5.1';
       echo '';
-      echo 'rustup self uninstall -y';
-      echo "if [ -d \"\${RUST_INSTALL_DIR}\" ]; then";
-      echo "    rm -rf \"\${RUST_INSTALL_DIR}\"";
-      echo 'fi';
-      echo 'TMPDIR=/tmp';
       echo 'deactivate'; } > "$INSTALL_DIR/install_matrix"
     chmod +x "$INSTALL_DIR/install_matrix"
     /bin/bash "$INSTALL_DIR/install_matrix"

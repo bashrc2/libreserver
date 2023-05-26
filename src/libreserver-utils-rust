@@ -1,0 +1,49 @@
+#!/bin/bash
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
+#
+# rust language functions
+#
+# License
+# =======
+#
+# Copyright (C) 2023 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+function install_rust {
+    RUST_VERSION="$1"
+
+    if [ ! -d "${RUST_INSTALL_DIR}" ]; then
+        mkdir -p "${RUST_INSTALL_DIR}"
+    fi
+    cd "${RUST_INSTALL_DIR}"
+    curl -sSfL 'https://sh.rustup.rs' -o rustup-init.sh
+    if [ ! -f rustup-init.sh ]; then
+        echo 'Unable to download rustup-init.sh'
+        return 1
+    fi
+    chmod +x rustup-init.sh
+    if [ ! -d "${INSTALL_DIR}/rust" ]; then
+        mkdir -p "${INSTALL_DIR}/rust"
+    fi
+    TMPDIR="${INSTALL_DIR}/rust" ./rustup-init.sh -y --profile minimal --default-toolchain=${RUST_VERSION}
+    rm rustup-init.sh
+    TMPDIR=/tmp
+    rm -rf "${INSTALL_DIR}/rust"
+}
+
+# NOTE: deliberately no exit 0
