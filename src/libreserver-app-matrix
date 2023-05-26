@@ -289,7 +289,7 @@ function matrix_create_run_script {
 
       echo "alias python='/etc/matrix/env/bin/python3'";
       echo 'source /etc/matrix/env/bin/activate';
-      echo "PATH=$(find .rustup/toolchains -name bin|grep \"${MATRIX_RUST_VERSION}\"|sort|head -n 1):\$PATH";
+      echo "PATH=\$(find .rustup/toolchains -name bin|grep \"${MATRIX_RUST_VERSION}\"|sort|head -n 1):\$PATH";
       echo 'rustc -V';
       echo "PATH=${PATH}";
       echo '/etc/matrix/env/bin/python3 -m synapse.app.homeserver --config-path /var/lib/matrix/homeserver.yaml'; } > /etc/matrix/run-matrix
