@@ -289,9 +289,8 @@ function matrix_create_run_script {
 
       echo "alias python='/etc/matrix/env/bin/python3'";
       echo 'source /etc/matrix/env/bin/activate';
-      echo "PATH=$(find .rustup/toolchains -name bin|grep \"${MATRIX_RUST_VERSION}\"|sort|head -n 1):\$PATH";
+      echo "PATH=${RUST_INSTALL_DIR}:\${PATH}";
       echo 'rustc -V';
-      echo "PATH=${PATH}";
       echo '/etc/matrix/env/bin/python3 -m synapse.app.homeserver --config-path /var/lib/matrix/homeserver.yaml'; } > /etc/matrix/run-matrix
     chmod +x /etc/matrix/run-matrix
     chown matrix:matrix /etc/matrix/run-matrix
@@ -1365,17 +1364,8 @@ function install_matrix_venv {
             echo "Unable to install rust ${MATRIX_RUST_VERSION}"
             return
         fi
-        if [ -d /etc/matrix/.rustup ]; then
-            rm -rf /etc/matrix/.rustup
-        fi
         set_completion_param "matrix rust version" "${MATRIX_RUST_VERSION}"
     fi
-
-    if [ ! -d /etc/matrix/.rustup ]; then
-        mkdir /etc/matrix/.rustup
-    fi
-    cp -r /root/.rustup/* /etc/matrix/.rustup
-    chown -R matrix:matrix /etc/matrix/.rustup
 
     { echo '#!/bin/bash';
       echo 'cd /etc/matrix | exit 1';
