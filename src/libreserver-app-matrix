@@ -1374,14 +1374,20 @@ function install_matrix_venv {
     if [ ! -d /etc/matrix/.rustup ]; then
         mkdir /etc/matrix/.rustup
     fi
+    if [ ! -d /etc/matrix/.cargo ]; then
+        mkdir /etc/matrix/.cargo
+    fi
     cp -r /root/.rustup/* /etc/matrix/.rustup
     chown -R matrix:matrix /etc/matrix/.rustup
+    cp -r /root/.cargo/* /etc/matrix/.cargo
+    chown -R matrix:matrix /etc/matrix/.cargo
 
     { echo '#!/bin/bash';
       echo 'cd /etc/matrix | exit 1';
       echo 'virtualenv -p python3 /etc/matrix/env';
       echo 'source /etc/matrix/env/bin/activate';
       echo '';
+      echo '. .cargo/env';
       echo 'pip3 install -U pip virtualenv six packaging appdirs';
       echo "pip3 install -U 'poetry>1.2.0'";
       echo 'pip3 install -U setuptools';
