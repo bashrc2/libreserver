@@ -1388,7 +1388,6 @@ function install_matrix_venv {
       echo "pip3 install -U 'matrix-synapse==${MATRIX_RELEASE}'";
       echo "pip3 install -U 'prometheus_client>=0.4.0'";
       echo 'pip3 install -U jsonschema>=2.5.1';
-      echo 'pip3 install -U synapse';
       echo '';
       echo 'deactivate'; } > "$INSTALL_DIR/install_matrix"
     chmod +x "$INSTALL_DIR/install_matrix"
