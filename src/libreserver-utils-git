@@ -30,7 +30,6 @@ function git_clone {
 
     echo "git clone $repo_url $destination_dir"
     git clone --recursive "$repo_url" "$destination_dir"
-    git config --global --add safe.directory "$destination_dir"
 }
 
 function git_pull {
@@ -38,7 +37,6 @@ function git_pull {
         echo $'git_pull no repo specified'
     fi
 
-    git config --global --add safe.directory .
     git merge --abort
     git stash
     git remote set-url origin "$1"
