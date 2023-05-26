@@ -1371,9 +1371,8 @@ function install_matrix_venv {
       echo 'virtualenv -p python3 /etc/matrix/env';
       echo 'source /etc/matrix/env/bin/activate';
       echo 'pip3 install -U pip virtualenv six packaging appdirs';
-      echo "pip3 install -U 'poetry>1.2.0'";
       echo 'pip3 install -U setuptools';
-      echo 'pip3 install -U matrix-synapse[all]';
+      echo 'pip3 install -U matrix-synapse';
       echo "pip3 install -U 'prometheus_client>=0.0.18,<0.8.0'";
       echo 'pip3 install -U jsonschema>=2.5.1';
       echo '';
