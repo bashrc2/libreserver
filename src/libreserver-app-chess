@@ -239,7 +239,7 @@ function install_chess {
     fi
     ./configure --prefix=/var/games
     increment_app_install_progress
-    if [[ "$(uname -m)" == 'arm'* ]]; then
+    if [[ "$(uname -m)" == 'arm'* || "$(uname -m)" == 'aarch'* ]]; then
 	sed -i 's|-m32|-mbe32|g' Makefile
     fi
     increment_app_install_progress
