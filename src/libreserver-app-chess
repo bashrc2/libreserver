@@ -194,7 +194,7 @@ function install_chess {
         remove_chess
     fi
 
-    INSTALL_PACKAGES build-essential gcc-12-multilib
+    INSTALL_PACKAGES build-essential gcc-12-multilib-*
     INSTALL_PACKAGES telnet
     
     increment_app_install_progress
