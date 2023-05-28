@@ -73,7 +73,7 @@ function mesh_upgrade_golang_from_source {
 #!/bin/bash
 
 apt-get -yq ${CONFDEF_OPTION} install build-essential libc6-dev
-apt-get -yq ${CONFDEF_OPTION} install gcc-multilib g++-multilib make
+apt-get -yq ${CONFDEF_OPTION} install gcc-12-multilib make
 apt-get -yq ${CONFDEF_OPTION} install curl git mercurial binutils bison
 
 if [ -d /home/go/Maildir ]; then
