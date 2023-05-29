@@ -271,9 +271,15 @@ function create_email_onion_address {
 
 function update_email_onion_dns {
     if [ -f /etc/torrc.d/dns ]; then
-        if grep -q '#DNSListenAddress' /etc/torrc.d/dns; then
-            sed -i 's|#DNSListenAddress|DNSListenAddress|g' /etc/torrc.d/dns
+        if grep -q '#DNSPort' /etc/torrc.d/dns; then
+            sed -i 's|#DNSPort.*|DNSPort 127.0.0.1:5300|g' /etc/torrc.d/dns
             systemctl restart tor
+        fi
+        if ! grep -q 'DNSPort 127.0.0.1:5300' /etc/torrc.d/dns; then
+            if grep -q 'DNSPort' /etc/torrc.d/dns; then
+                sed -i 's|DNSPort.*|DNSPort 127.0.0.1:5300|g' /etc/torrc.d/dns
+                systemctl restart tor
+            fi
         fi
     fi
 }
@@ -341,8 +347,7 @@ function configure_email_onion {
       echo "  hosts_avoid_tls = *";
       echo "  socks_proxy = 127.0.0.1 port=9050"; } > /etc/exim4/conf.d/transport/050_exim4-config_onion_relay
 
-    { echo 'DNSPort 5300';
-      echo '#DNSListenAddress 127.0.0.1';
+    { echo 'DNSPort 127.0.0.1:5300';
       echo 'AutomapHostsOnResolve 1'; } > /etc/torrc.d/dns
 
     update-exim4.conf.template -r

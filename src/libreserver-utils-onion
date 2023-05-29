@@ -45,7 +45,7 @@ function tor_entry_node_watchdog {
     # daemon if needed
     # See https://www.reddit.com/r/TOR/comments/a1vyxt/closed_1_streams_for_service_scrubbedonion_for/
     if [ ! -f /var/lib/tor/hidden_service_webadmin/hostname ]; then
-	return
+        return
     fi
     webadmin_domain=$(cat /var/lib/tor/hidden_service_webadmin/hostname)
     { echo '#!/bin/bash';
@@ -114,12 +114,11 @@ function torrc_migrate {
         echo "%include /etc/torrc.d" >> /etc/tor/torrc
     fi
 
-    { echo 'DNSPort 5300';
-      echo 'DNSListenAddress 127.0.0.1';
+    { echo 'DNSPort 127.0.0.1:5300';
       echo 'AutomapHostsOnResolve 1'; } > /etc/torrc.d/dns
 
     sed -i '/DNSPort 5300/d' /etc/tor/torrc
-    sed -i '/DNSListenAddress 127.0.0./d' /etc/tor/torrc
+    sed -i '/DNSPort 127.0.0./d' /etc/tor/torrc
     sed -i '/AutomapHostsOnResolve 1/d' /etc/tor/torrc
 
     sed -i '/HiddenServiceDir/d' /etc/tor/torrc
