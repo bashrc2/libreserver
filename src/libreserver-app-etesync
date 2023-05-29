@@ -561,7 +561,7 @@ function install_etesync {
     ETESYNC_I2P_HOSTNAME=$(get_i2p_domain etesync)
     if [ "$ETESYNC_I2P_HOSTNAME" ]; then
         { echo 'server {';
-          echo "    listen 127.0.0.1:$ETESYNC_I2P_PORT default_server;";
+          echo "    listen 127.0.0.1:$ETESYNC_I2P_PORT;";
           echo "    server_name $ETESYNC_I2P_HOSTNAME;";
           echo '    server_tokens off;';
           echo '';

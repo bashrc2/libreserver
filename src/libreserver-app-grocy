@@ -471,7 +471,7 @@ function install_grocy {
     GROCY_I2P_HOSTNAME=$(get_i2p_domain grocy)
     if [ "$GROCY_I2P_HOSTNAME" ]; then
         { echo 'server {';
-          echo "    listen 127.0.0.1:$GROCY_I2P_PORT default_server;";
+          echo "    listen 127.0.0.1:$GROCY_I2P_PORT;";
           echo "    server_name $GROCY_I2P_HOSTNAME;";
           echo '    server_tokens off;';
           echo ''; } >> "$grocy_nginx_site"

@@ -557,7 +557,7 @@ function install_akaunting {
     AKAUNTING_I2P_HOSTNAME=$(get_i2p_domain akaunting)
     if [ "$AKAUNTING_I2P_HOSTNAME" ]; then
         { echo 'server {';
-          echo "    listen 127.0.0.1:$AKAUNTING_I2P_PORT default_server;";
+          echo "    listen 127.0.0.1:$AKAUNTING_I2P_PORT;";
           echo '    port_in_redirect off;';
           echo "    server_name $AKAUNTING_I2P_HOSTNAME;";
           echo '    server_tokens off;';

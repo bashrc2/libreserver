@@ -501,7 +501,7 @@ function install_element {
     ELEMENT_I2P_HOSTNAME=$(get_i2p_domain element)
     if [ "$ELEMENT_I2P_HOSTNAME" ]; then
         { echo 'server {';
-          echo "    listen 127.0.0.1:$ELEMENT_I2P_PORT default_server;";
+          echo "    listen 127.0.0.1:$ELEMENT_I2P_PORT;";
           echo '    port_in_redirect off;';
           echo "    server_name $ELEMENT_I2P_HOSTNAME;";
           echo '    server_tokens off;';
