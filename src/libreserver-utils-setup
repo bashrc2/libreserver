@@ -1251,7 +1251,16 @@ function setup_create_groups {
     fi
 }
 
+function install_syslog {
+    if [ ! -f /etc/systemd/system/syslog.service ]; then
+        INSTALL_PACKAGES rsyslog
+    fi
+}
+
 function setup_utils {
+    function_check install_syslog
+    install_syslog
+
     function_check setup_create_groups
     setup_create_groups
 
