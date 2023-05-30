@@ -671,6 +671,8 @@ function install_epicyon {
           echo '}'; } >> "$epicyon_nginx_site"
     fi
 
+    sed -i "s|Content-Security-Policy.*|Content-Security-Policy \"script-src 'unsafe-inline' 'self'; style-src https: 'unsafe-inline'\";|g" "$epicyon_nginx_site"
+
     increment_app_install_progress
 
     adduser --system --home="/etc/epicyon" --group epicyon
