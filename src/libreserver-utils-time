@@ -27,7 +27,7 @@
 function check_date {
     curr_date=$(date)
     if [[ $curr_date == *"1970"* ]]; then
-        INSTALL_PACKAGES ntp
+        INSTALL_PACKAGES ntpsec
     fi
 }
 

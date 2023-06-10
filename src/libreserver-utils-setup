@@ -313,7 +313,7 @@ function initial_setup {
     INSTALL_PACKAGES sudo git dialog build-essential avahi-daemon avahi-utils
     INSTALL_PACKAGES avahi-discover nftables dnsutils net-tools
     INSTALL_PACKAGES network-manager iputils-ping libnss-mdns libnss-myhostname
-    INSTALL_PACKAGES libnss-gw-name nano man ntp locales locales-all debconf
+    INSTALL_PACKAGES libnss-gw-name nano man ntpsec locales locales-all debconf
     #INSTALL_PACKAGES wireless-tools wpasupplicant hostapd
     INSTALL_PACKAGES usbutils zsh cpulimit screen
     INSTALL_PACKAGES pinentry-curses eatmydata iotop bc
