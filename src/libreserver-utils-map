@@ -77,8 +77,9 @@ function install_static_map {
       echo 'cd /etc/staticmap || exit 1';
       echo 'virtualenv -p python3 env';
       echo 'source /etc/staticmap/env/bin/activate';
-      echo "git clone \"$MAP_REPO\" staticmap";
-      echo 'if [ -d staticmap ]; then';
+      echo "git clone \"$MAP_REPO\" env/staticmap";
+      echo 'if [ -d env/staticmap ]; then';
+      echo '    cd env/staticmap';
       echo "    git checkout $MAP_COMMIT -b $MAP_COMMIT";
       echo '    if ! pip3 install -r requirements.txt; then';
       echo '        echo "WARN: Failed to install dependencies for staticmap"';
@@ -187,7 +188,7 @@ function create_map {
 
     regenerate_network_map
 
-    filename="/etc/staticmap/staticmap/generate_map.py"
+    filename="/etc/staticmap/env/staticmap/generate_map.py"
 
     local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
     webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
@@ -195,8 +196,6 @@ function create_map {
     markers_filename="$webadmin_install_dir/network_map_markers.txt"
 
     { echo 'from staticmap import StaticMap, CircleMarker, IconMarker, Line';
-      echo 'import requests';
-      echo 'import PIL';
       echo '';
       echo "m = StaticMap($MAP_WIDTH_PIXELS, $MAP_WIDTH_PIXELS, 10)";
       echo '';
@@ -236,7 +235,7 @@ function create_map {
       echo 'cd /etc/staticmap || return 1';
       echo 'virtualenv -p python3 env';
       echo 'source /etc/staticmap/env/bin/activate';
-      echo 'cd staticmap'
+      echo 'cd env/staticmap'
       echo 'python3 generate_map.py';
       echo 'deactivate'; } > /usr/bin/generate_map
     chmod +x /usr/bin/generate_map
