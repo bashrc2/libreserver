@@ -187,7 +187,7 @@ function create_map {
 
     regenerate_network_map
 
-    filename="/etc/staticmap/generate_map.py"
+    filename="/etc/staticmap/staticmap/generate_map.py"
 
     local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
     webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
