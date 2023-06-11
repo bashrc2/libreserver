@@ -82,7 +82,6 @@ function install_static_map {
       echo "    git checkout $MAP_COMMIT -b $MAP_COMMIT";
       echo '    if ! pip3 install -r requirements.txt; then';
       echo '        echo "WARN: Failed to install dependencies for staticmap"';
-      echo '        rm -rf /etc/staticmap';
       echo '        deactivate';
       echo '        exit 3';
       echo '    fi';
