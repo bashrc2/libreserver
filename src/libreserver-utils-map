@@ -195,6 +195,8 @@ function create_map {
     markers_filename="$webadmin_install_dir/network_map_markers.txt"
 
     { echo 'from staticmap import StaticMap, CircleMarker, IconMarker, Line';
+      echo 'import requests';
+      echo 'import PIL';
       echo '';
       echo "m = StaticMap($MAP_WIDTH_PIXELS, $MAP_WIDTH_PIXELS, 10)";
       echo '';
