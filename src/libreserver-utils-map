@@ -224,8 +224,14 @@ function create_map {
       echo 'image = m.render(zoom=zoom_level)';
       echo "image.save('$map_filename')"; } > "$filename"
 
-    cd /etc/staticmap || return
-    python3 generate_map.py
+    { echo '#!/bin/bash';
+      echo 'cd /etc/staticmap || return 1';
+      echo 'virtualenv -p python3 .venv';
+      echo 'python3 generate_map.py';
+      echo 'deactivate'; } > /usr/bin/generate_map
+    chmod +x /usr/bin/generate_map
+
+    /usr/bin/generate_map
 
     if [ -f "$map_filename" ]; then
         chown www-data:www-data "$map_filename"
