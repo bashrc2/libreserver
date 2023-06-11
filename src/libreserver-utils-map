@@ -75,7 +75,7 @@ function install_static_map {
 
     { echo '#!/bin/bash';
       echo 'cd /etc/staticmap || exit 1';
-      echo 'virtualenv -p python3 .venv';
+      echo 'virtualenv -p python3 env';
       echo 'source /etc/staticmap/env/bin/activate';
       echo "git clone \"$MAP_REPO\" staticmap";
       echo 'if [ -d staticmap ]; then';
@@ -232,7 +232,7 @@ function create_map {
 
     { echo '#!/bin/bash';
       echo 'cd /etc/staticmap || return 1';
-      echo 'virtualenv -p python3 .venv';
+      echo 'virtualenv -p python3 env';
       echo 'source /etc/staticmap/env/bin/activate';
       echo 'cd staticmap'
       echo 'python3 generate_map.py';
