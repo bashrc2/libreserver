@@ -129,6 +129,7 @@ if [[ "$command_options" == "menuconfig-full" ]]; then
 fi
 
 if [[ "$command_options" == "menuconfig-onion" ]]; then
+    echo $"onion version"
     MINIMAL_INSTALL="yes"
     ONION_ONLY="yes"
 fi
