@@ -63,19 +63,23 @@ function install_static_map {
 
     if [ "$rootdir" ]; then
         # shellcheck disable=SC2086
-        chroot "$rootdir" INSTALL_PACKAGES libjpeg-dev python3-pip python3-socks python3-stem python3-setuptools python3-wheel python3-dev python3-pil
+        chroot "$rootdir" INSTALL_PACKAGES libjpeg-dev python3-pip python3-socks python3-stem python3-setuptools python3-wheel python3-dev python3-requests python3-pil
     else
-        INSTALL_PACKAGES libjpeg-dev python3-pip python3-socks python3-stem python3-setuptools python3-wheel python3-dev python3-pil
+        INSTALL_PACKAGES libjpeg-dev python3-pip python3-socks python3-stem python3-setuptools python3-wheel python3-dev python3-requests python3-pil
     fi
 
     { echo '#!/bin/bash';
       echo "git clone \"$MAP_REPO\" /etc/staticmap";
       echo 'cd /etc/staticmap || exit 1';
       echo "git checkout $MAP_COMMIT -b $MAP_COMMIT";
+      echo 'virtualenv -p python3 .venv';
       echo 'if ! pip3 install -r requirements.txt; then';
+      echo '    deactivate';
       echo '    echo "WARN: Failed to install dependencies for staticmap"';
       echo '    rm -rf /etc/staticmap';
       echo '    exit 2';
+      echo 'else';
+      echo '    deactivate';
       echo 'fi'; } > "$rootdir/root/install_static_map.sh"
     chmod +x "$rootdir/root/install_static_map.sh"
 
