@@ -2400,7 +2400,7 @@ function install_web_admin_webmail {
       echo "\$check_referrer          = '';";
       echo "\$use_transparent_security_image = true;";
       echo "\$check_mail_mechanism  = 'meta';";
-      echo '\$sq_ignore_http_x_forwarded_headers = true;';
+      echo "\$sq_ignore_http_x_forwarded_headers = true;";
       echo '';
       echo "\$config_location_base    = '${sq_config_location_base}';";
       echo '';
