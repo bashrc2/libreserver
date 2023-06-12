@@ -2179,7 +2179,7 @@ function install_web_admin_webmail {
       echo ' * Created using the configure script, conf.pl';
       echo ' */';
       echo '';
-      echo "global \$version;";
+      echo "global \$config_version;";
       echo "\$config_version = '1.5.0';";
       echo "\$config_use_color = 2;";
       echo '';
@@ -2241,7 +2241,7 @@ function install_web_admin_webmail {
       echo "\$default_left_size        = '150';";
       echo "\$force_username_lowercase = false;";
       echo "\$default_use_priority     = true;";
-      echo "\$hide_sm_attributions     = false;";
+      echo "\$hide_sm_attributions     = true;";
       echo "\$default_use_mdn          = true;";
       echo "\$edit_identity            = true;";
       echo "\$edit_name                = true;";
@@ -2398,9 +2398,9 @@ function install_web_admin_webmail {
       echo "\$only_secure_cookies     = false;";
       echo "\$disable_security_tokens = false;";
       echo "\$check_referrer          = '';";
-      echo "\$browser_rendering_mode  = 'quirks';";
       echo "\$use_transparent_security_image = true;";
       echo "\$check_mail_mechanism  = 'meta';";
+      echo '\$sq_ignore_http_x_forwarded_headers = true;';
       echo '';
       echo "\$config_location_base    = '${sq_config_location_base}';";
       echo '';
@@ -2433,6 +2433,12 @@ function install_web_admin_webmail {
 
     replace_str='SquirrelMail version %s'
     replace_str_new="http://$(cat /var/lib/tor/hidden_service_webadmin/hostname)/mail"
+
+    # don't include port in result of get_location
+    sed -i "s|\$full_url =.*|\$full_url = (\$host ? \$proto . \$host : '');|g" "/var/www/${local_hostname}/htdocs/mail/functions/strings.php"
+
+    # remove frame-ancestors stuff
+    sed -i '/frame-ancestors/d' "/var/www/${local_hostname}/htdocs/mail/functions/page_header.php"
 
     sed -i "s|'<small>' . sprintf (_(\"http://.*|'<small>' . sprintf (_(\"$replace_str\"), \$version) . '<br />'.|g" "/var/www/${local_hostname}/htdocs/mail/functions/display_messages.php"
     sed -i "s|$replace_str|$replace_str_new|g" "/var/www/${local_hostname}/htdocs/mail/functions/display_messages.php"
