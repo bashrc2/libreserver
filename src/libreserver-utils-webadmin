@@ -2494,6 +2494,7 @@ function install_web_admin_webmail {
     replace_str='%s Login'
     replace_str_new=''
     sed -i "s|$replace_str|$replace_str_new|g" "/var/www/${local_hostname}/htdocs/mail/src/login.php"
+    chown -R www-data:www-data "/var/www/${local_hostname}/htdocs/mail"
 }
 
 function check_community_network {
