@@ -2055,9 +2055,12 @@ function install_web_admin_webmail {
     if [ ! -d "/var/www/${local_hostname}/htdocs/mail" ]; then
         cp "/root/${PROJECT_NAME}/image_build/squirrelmail.tar.gz" "$INSTALL_DIR"
         cd "$INSTALL_DIR" || return
+        if [ -d "$INSTALL_DIR/squirrelmail" ]; then
+            rm -rf "$INSTALL_DIR/squirrelmail"
+        fi
         tar -xzvf squirrelmail.tar.gz
-        if [ -d "$INSTALL_DIR/squirrelmail.stable/squirrelmail" ]; then
-            mv "$INSTALL_DIR/squirrelmail.stable/squirrelmail" "/var/www/${local_hostname}/htdocs/mail"
+        if [ -d "$INSTALL_DIR/squirrelmail" ]; then
+            mv "$INSTALL_DIR/squirrelmail" "/var/www/${local_hostname}/htdocs/mail"
         fi
     fi
     if [ ! -d "/var/www/${local_hostname}/htdocs/mail" ]; then
