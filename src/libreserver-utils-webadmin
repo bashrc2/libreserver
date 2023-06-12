@@ -2170,6 +2170,8 @@ function install_web_admin_webmail {
         webmail_language=$(echo "$DEFAULT_LANGUAGE" | awk -F '.' '{print $1}')
     fi
 
+    sq_config_location_base=''
+
     { echo '<?php';
       echo '';
       echo '/**';
@@ -2178,7 +2180,7 @@ function install_web_admin_webmail {
       echo ' */';
       echo '';
       echo "global \$version;";
-      echo "\$config_version = '1.4.0';";
+      echo "\$config_version = '1.5.0';";
       echo "\$config_use_color = 2;";
       echo '';
       echo "\$org_name      = \"${PROJECT_NAME}\";";
@@ -2400,7 +2402,7 @@ function install_web_admin_webmail {
       echo "\$use_transparent_security_image = true;";
       echo "\$check_mail_mechanism  = 'meta';";
       echo '';
-      echo "\$config_location_base    = '';";
+      echo "\$config_location_base    = '${sq_config_location_base}';";
       echo '';
       echo "@include SM_PATH . 'mail/config/config_local.php';"; } > "/var/www/${local_hostname}/htdocs/mail/config/config.php"
 
