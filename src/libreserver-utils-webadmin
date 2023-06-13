@@ -2440,13 +2440,6 @@ function install_web_admin_webmail {
     # remove frame-ancestors stuff
     sed -i '/frame-ancestors/d' "/var/www/${local_hostname}/htdocs/mail/functions/page_header.php"
 
-    sed -i "s|'<small>' . sprintf (_(\"http://.*|'<small>' . sprintf (_(\"$replace_str\"), \$version) . '<br />'.|g" "/var/www/${local_hostname}/htdocs/mail/functions/display_messages.php"
-    sed -i "s|$replace_str|$replace_str_new|g" "/var/www/${local_hostname}/htdocs/mail/functions/display_messages.php"
-    sed -i "s|$replace_str|$replace_str_new|g" "/var/www/${local_hostname}/htdocs/mail/src/login.php"
-
-    sed -i "s|'<small>' . sprintf (_(\"http://.*|'<small>' . sprintf (_(\"http:///mail\"), \$version) . '<br />' .\"\\\n\".|g" "/var/www/${local_hostname}/htdocs/mail/src/login.php"
-    sed -i "s|\"http:///mail\"|\"${replace_str_new}\"|g" "/var/www/${local_hostname}/htdocs/mail/src/login.php"
-
     if grep -q ".onion/mail" "/var/www/${local_hostname}/htdocs/mail/po/squirrelmail.pot"; then
         replace_line=$(grep ".onion/mail" "/var/www/${local_hostname}/htdocs/mail/po/squirrelmail.pot")
         email_onion_domain=$(cat /var/lib/tor/hidden_service_email/hostname)
@@ -2460,6 +2453,9 @@ function install_web_admin_webmail {
     sed -i "s|$replace_str|$replace_str_new|g" "/var/www/${local_hostname}/htdocs/mail/po/squirrelmail.pot"
     sed -i "s|. _(\"$replace_str\") |$replace_str_new|g" "/var/www/${local_hostname}/htdocs/mail/src/login.php"
     sed -i "s|$replace_str|$replace_str_new|g" "/var/www/${local_hostname}/htdocs/mail/src/login.php"
+
+    # link back to admin screen
+    sed -i "s|oTemplate->assign('logo_str'.*|oTemplate->assign('logo_str', '<a href=\"../../admin\">'.\$logo_str.'</a>', FALSE);|g" "/var/www/${local_hostname}/htdocs/mail/src/login.php"
 
     sed -i 's|". _("")||g' "/var/www/${local_hostname}/htdocs/mail/src/login.php"
     sed -i "s|. sprintf (_(\"\"), \$org_name)||g" "/var/www/${local_hostname}/htdocs/mail/src/login.php"
