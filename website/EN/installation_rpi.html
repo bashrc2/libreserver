@@ -1,0 +1,181 @@
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="libreserver.css" />
+    <link rel="manifest" href="manifest.json" />
+    <title>libreserver</title>
+  </head>
+  <body>
+    <br />
+    <a href="index.html"><img class="titleLogo" src='./images/logo.png' alt='LibreServer' /></a>
+    <div class="subtitle">Installation</div>
+    <div class="networkImage">
+      <img src="images/internet.png" />
+    </div>
+    <div class="projectDescription">
+
+      <p><i>
+          Also you can <a href="./armbian.html">install on Armbian</a>.
+      </i></p>
+
+      <h3>1. Download</h3>
+
+      <pre>
+wget https://raspi.debian.net/daily/raspi_4_bookworm.img.xz
+wget https://raspi.debian.net/daily/raspi_4_bookworm.img.xz.sha256</pre>
+
+      <p>Verify the download:</p>
+
+      <pre>
+sha256sum -c raspi_4_bookworm.img.xz.sha256</pre>
+
+      <h3>2. Copy to drive</h3>
+      <p>
+        Copy the image to your drive. This could be microSD, a USB stick or an SSD.
+      </p>
+
+      <pre>
+xzcat raspi_4_bookworm.img.xz | sudo dd of=/dev/sdX bs=64k oflag=dsync status=progress
+sync</pre>
+      <p>
+        Where <b>sdX</b> is the name of your drive.
+      </p>
+
+      <h3>3. Prepare the Debian image</h3>
+      <p>
+        You will need to prepare the image for remote login. Eject the drive then reconnect it and mount RASPIROOT. You will need to have set up an ssh key. To view your public key:
+      </p>
+
+      <pre>cat ~/.ssh/id_ed25519.pub</pre>
+
+      <p>Move to the root partition:</p>
+
+      <pre>
+sudo su
+cd /media/yourusername/RASPIROOT/</pre>
+
+      <p>And create an empty <i>ssh</i> file</p>
+
+      <pre>touch boot/ssh</pre>
+
+      <p>Allow remote root login, but <b>not</b> via a password</p>
+
+      <pre>
+sed -i 's|#PermitRootLogin|PermitRootLogin|g' etc/ssh/sshd_config
+sed -i 's|PermitRootLogin.*|PermitRootLogin yes|g' etc/ssh/sshd_config
+sed -i 's|#PasswordAuthentication|PasswordAuthentication|g' etc/ssh/sshd_config
+sed -i 's|PasswordAuthentication.*|PasswordAuthentication no|g' etc/ssh/sshd_config
+echo "your ssh public key" > root/.ssh/authorized_keys
+sync
+exit</pre>
+
+      <p>Now eject the drive</p>
+
+      <h3>4. Plug in</h3>
+      <p>
+        Connect everything up to your Raspberry Pi.
+      </p>
+
+      <ul>
+        <li>Ethernet cable between your internet router and the Raspberry Pi.</li>
+        <li>Plug the drive into the Raspberry Pi.</li>
+        <li>Connect a power supply to the Raspberry Pi.</li>
+      </ul>
+
+      <p>
+        If the Pi fails to boot then go back to step 2 and try writing to the drive again, or using a different drive. Sometimes copying the image to the drive is not always entirely reliable.
+      </p>
+
+      <h3>5. Locate on the network</h3>
+      <p>
+        Find you server's local IP address. It will usually start with 192.168.. A typical way to do this is to log in to your internet router and show the list of devices on your local network.
+      </p>
+
+      <h3>6. Log in</h3>
+      <p>
+        Log into the Pi using ssh.
+      </p>
+
+      <pre>ssh root@192.168.x.y</pre>
+
+      <p>
+        You will not need a password because ssh public key authentication is used instead.</p>
+
+      <h3>7. Clone the LibreServer repo</h3>
+
+      <p>
+        Update the system:
+      </p>
+
+      <pre>
+apt update
+apt upgrade</pre>
+
+      <p>
+        Then clone the LibreServer repository and checkout the bookworm development branch.
+      </p>
+
+      <pre>
+apt install -y git dialog build-essential
+cd
+git clone https://gitlab.com/bashrc2/libreserver
+cd libreserver
+git checkout bookworm</pre>
+
+      <p>
+        Install the LibreServer commands:
+      </p>
+
+      <pre>make install</pre>
+
+      <p>
+        Create an admin user:
+      </p>
+
+      <pre>adduser admin</pre>
+
+      <p>
+        Their name could just be "admin" and the other details, including the password, are unimportant. Whatever you set the password to it will be changed during the install process.
+      </p>
+
+      <h3>8. Start the install</h3>
+      <p>
+        To beging installing the clearnet version:
+      </p>
+
+      <pre>libreserver menuconfig</pre>
+
+      <p>
+        or for the onion version:
+      </p>
+
+      <pre>libreserver menuconfig-onion</pre>
+
+      <p>
+        You will be prompted to select a language and then be given a new password. Write this down or store it in a password manager.
+      </p>
+
+      <p>
+        If you are not installing the onion version then you will be also be asked for dynamic DNS and domain name. The domain name must be one which you own, and not a <i>free-as-in-gratis</i> subdomain.
+      </p>
+
+      <p>
+        Installation may take a long time - possibly up to a few hours - depending on your type of drive and internet bandwidth, but you can leave it running unattended. microSD cards and USB sticks are typically quite slow.
+      </p>
+
+      <p>At the end of the installation a password will be shown for the admin user. Write this down or add it to your password manager.</p>
+
+      <h3>9. Browse to admin</h3>
+      <p>
+        When installation is complete you can log into your server with a browser.
+      </p>
+
+      <pre>http://192.168.x.y/admin</pre>
+
+      <p>
+        Thee username is <b><b>admin</b></b> and the password is the one you wrote down or added to your password manager.
+      </p>
+
+    </div>
+  </body>
+</html>
