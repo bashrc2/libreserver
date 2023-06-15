@@ -15,50 +15,31 @@
     <div class="projectDescription">
 
       <p><i>
-	  For how to install on Armbian <a href="./armbian.html">see these instructions</a>.
+	  You can also install <a href="./armbian.html">on Armbian</a> or <a href="./installation_rpi.html">Raspberry Pi</a>.
       </i></p>
 
       <h3>1. Download</h3>
 
-      <p>For a raspberry pi version 4:</p>
+      <p>Obtain the <a href="https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-12.0.0-amd64-netinst.iso">Debian 12 netinstall</a>, or the full install if you prefer.</p>
 
       <pre>
-	wget https://raspi.debian.net/daily/raspi_4_bookworm.img.xz
-        wget https://raspi.debian.net/daily/raspi_4_bookworm.img.xz.sha256
-        sha256sum -c raspi_4_bookworm.img.xz.sha256</pre>
-
-      <p>Or for a typical laptop (amd64).</p>
-
-      <pre>
-	wget https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-12.0.0-amd64-netinst.iso</pre>
+wget https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-12.0.0-amd64-netinst.iso</pre>
 
       <h3>2. Copy to drive</h3>
       <p>
-	Copy the image to your drive. This could be microSD, a USB stick or an SSD. On a Raspberry Pi version 4:
+	Copy the image to a USB drive:
       </p>
 
       <pre>
-	xzcat raspi_4_bookworm.img.xz | sudo dd of=/dev/sdX bs=64k oflag=dsync status=progress</pre>
-      <p>
-	Where <b>sdX</b> is the name of your drive. Or for a typical laptop (amd64):
-      </p>
-
-      <pre>
-	sudo dd if=debian-12.0.0-amd64-netinst.iso of=/dev/sdX bs=64k oflag=dsync status=progress</pre>
+sudo dd if=debian-12.0.0-amd64-netinst.iso of=/dev/sdX bs=64k oflag=dsync status=progress</pre>
 
       <h3>3. Plug in</h3>
       <p>
-	Connect everything up.
+	Connect the USB drive to the x86 system (old laptop, etc) which you will be using as a server, then boot from it. Install Debian as you usually would, making sure to select the installation of an ssh server.
       </p>
 
-      <ul>
-	<li>Ethernet cable between your internet router and your server.</li>
-	<li>Plug in the drive.</li>
-	<li>Connect power supply.</li>
-      </ul>
-
       <p>
-	If your server fails to boot then go back to step 2 and try writing to the drive again, or using a different drive. Sometimes copying the image to the drive is not always entirely reliable.
+	If your x86 server fails to boot then go back to step 2 and try writing to the drive again, or using a different drive. Sometimes copying the image to the drive is not always entirely reliable.
       </p>
 
       <h3>4. Locate on the network</h3>
@@ -71,15 +52,46 @@
 	Log into your server using ssh.
       </p>
 
-      <pre>ssh admin@192.168.x.y</pre>
-
-      <p>
-	The initial password is <b><b>libreserver</b></b>. On first login you will be asked to change this and the server will log you out again. Log back in with your chosen password. Note that <i>the password that you entered is temporary</i> and will be thrown away when installation is complete.
-      </p>
+      <pre>ssh root@192.168.x.y</pre>
 
       <h3>6. Start the install</h3>
       <p>
-	Follow the instructions to begin the install. Typically this will be:
+	Update the system:
+      </p>
+
+      <pre>
+apt update
+apt upgrade</pre>
+
+      <p>
+	Then clone the LibreServer repository and checkout the bookworm development branch.
+      </p>
+
+      <pre>
+apt install -y git dialog build-essential
+cd
+git clone https://gitlab.com/bashrc2/libreserver
+cd libreserver
+git checkout bookworm</pre>
+
+      <p>
+	Install the LibreServer commands:
+      </p>
+
+      <pre>make install</pre>
+
+      <p>
+	Create an admin user:
+      </p>
+
+      <pre>adduser admin</pre>
+
+      <p>
+        Their name could just be "admin" and the other details, including the password, are unimportant. Whatever you set the password to it will be changed during the install process.
+      </p>
+
+      <p>
+	Now begin installing with:
       </p>
 
       <pre>sudo libreserver menuconfig</pre>
@@ -99,8 +111,10 @@
       </p>
 
       <p>
-	Installation may take a long time - possibly up to a few hours - depending on your type of drive and internet bandwidth, but you can leave it running unattended. microSD cards and USB sticks are typically quite slow (unless it's USB3 and your hardware has USB3 sockets).
+	Installation may take a long time - possibly up to a few hours - depending on your type of drive and internet bandwidth, but you can leave it running unattended.
       </p>
+
+      <p>At the end of the installation a password will be shown for the admin user. Write this down or add it to your password manager.</p>
 
       <h3>7. Browse to admin</h3>
       <p>
