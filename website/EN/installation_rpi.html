@@ -54,11 +54,11 @@ sync</pre>
 sudo su
 cd /media/yourusername/RASPIROOT/</pre>
 
-      <p>And create an empty <i>ssh</i> file</p>
+      <p>And create an empty <i>ssh</i> file.</p>
 
       <pre>touch boot/ssh</pre>
 
-      <p>Allow remote root login, but <b>not</b> via a password</p>
+      <p>Allow remote root login, but <b>not</b> via a password.</p>
 
       <pre>
 sed -i 's|#PermitRootLogin|PermitRootLogin|g' etc/ssh/sshd_config
@@ -69,7 +69,7 @@ echo "your ssh public key" > root/.ssh/authorized_keys
 sync
 exit</pre>
 
-      <p>Now eject the drive</p>
+      <p>Now eject the drive.</p>
 
       <h3>4. Plug in</h3>
       <p>
@@ -140,7 +140,7 @@ git checkout bookworm</pre>
 
       <h3>8. Start the install</h3>
       <p>
-        To beging installing the clearnet version:
+        To begin installing the clearnet version:
       </p>
 
       <pre>libreserver menuconfig</pre>
@@ -162,8 +162,6 @@ git checkout bookworm</pre>
       <p>
         Installation may take a long time - possibly up to a few hours - depending on your type of drive and internet bandwidth, but you can leave it running unattended. microSD cards and USB sticks are typically quite slow.
       </p>
-
-      <p>At the end of the installation a password will be shown for the admin user. Write this down or add it to your password manager.</p>
 
       <h3>9. Browse to admin</h3>
       <p>

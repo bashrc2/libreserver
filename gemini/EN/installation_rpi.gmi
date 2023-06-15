@@ -1,0 +1,140 @@
+=> installation.gmi ⯇ Go Back
+
+# Installing LibreServer on Rpi
+
+``` raspberry pi logo
+⠀⢀⣠⣤⣶⣶⣶⣤⣄⠀⠀⣀⣤⣶⣶⣶⣤⣄⡀⠀
+⠀⢸⣿⠁⠀⠀⠀⠀⠙⢷⡾⠋⠀⠀⠀⠀⠈⣿⡇⠀
+⠀⠘⢿⡆⠀⠀⠀⠢⣄⣼⣧⣠⠔⠀⠀⠀⢰⡿⠃⠀
+⠀⠀⠈⠻⣧⣤⣀⣤⣾⣿⣿⣷⣤⣀⣤⣼⠟⠁⠀⠀
+⠀⠀⣰⡾⠋⠉⣩⣟⠁⠀⠀⠈⣻⣍⠉⠙⢷⣆⠀⠀
+⠀⢀⣿⣀⣤⡾⠛⠛⠷⣶⣶⠾⠛⠛⢷⣤⣀⣿⡀⠀
+⣰⡟⠉⣿⡏⠀⠀⠀⠀⢹⡏⠀⠀⠀⠀⢹⣿⠉⢻⣆
+⣿⡇⠀⣿⣇⠀⠀⠀⣠⣿⣿⣄⠀⠀⠀⣸⣿⠀⢸⣿
+⠙⣷⣼⠟⠻⣿⣿⡿⠋⠁⠈⠙⢿⣿⣿⠟⠻⣧⣾⠋
+⠀⢸⣿⠀⠀⠈⢿⡇⠀⠀⠀⠀⢸⡿⠁⠀⠀⣿⡇⠀
+⠀⠀⠻⣧⣀⣀⣸⣿⣶⣤⣤⣶⣿⣇⣀⣀⣼⠟⠀⠀
+⠀⠀⠀⠈⠛⢿⣿⣿⡀⠀⠀⢀⣿⣿⡿⠛⠁⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠙⠻⠿⠿⠟⠋
+```
+
+=> armbian.gmi ► How to install on Armbian
+=> installation.gmi ► How to install on an x86 system
+
+## ⃟ Step 1: Download
+
+  wget https://raspi.debian.net/daily/raspi_4_bookworm.img.xz
+  wget https://raspi.debian.net/daily/raspi_4_bookworm.img.xz.sha256
+
+Verify the download:
+
+  sha256sum -c raspi_4_bookworm.img.xz.sha256
+
+## ⃟ Step 2: Copy to drive
+
+Copy the image to your drive. This could be microSD, a USB stick or an SSD.
+
+  xzcat raspi_4_bookworm.img.xz | sudo dd of=/dev/sdX bs=64k oflag=dsync status=progress
+  sync
+
+Where sdX is the name of your drive.
+
+## ⃟ Step 3: Prepare the Debian image
+
+You will need to prepare the image for remote login. Eject the drive then reconnect it and mount RASPIROOT. You will need to have set up an ssh key. To view your public key:
+
+  cat ~/.ssh/id_ed25519.pub
+
+Move to the root partition:
+
+  sudo su
+  cd /media/yourusername/RASPIROOT/
+
+And create an empty ssh file.
+
+  touch boot/ssh
+
+Allow remote root login, but not via a password.
+
+  sed -i 's|#PermitRootLogin|PermitRootLogin|g' etc/ssh/sshd_config
+  sed -i 's|PermitRootLogin.*|PermitRootLogin yes|g' etc/ssh/sshd_config
+  sed -i 's|#PasswordAuthentication|PasswordAuthentication|g' etc/ssh/sshd_config
+  sed -i 's|PasswordAuthentication.*|PasswordAuthentication no|g' etc/ssh/sshd_config
+  echo "your ssh public key" > root/.ssh/authorized_keys
+  sync
+  exit
+
+Now eject the drive.
+
+## ⃟ Step 4: Plug in
+
+Connect everything up to your Raspberry Pi.
+
+ * Ethernet cable between your internet router and the Raspberry Pi.
+ * Plug the drive into the Raspberry Pi.
+ * Connect a power supply to the Raspberry Pi.
+
+If the Pi fails to boot then go back to step 2 and try writing to the drive again, or using a different drive. Sometimes copying the image to the drive is not always entirely reliable.
+
+## ⃟ Step 5: Locate on the network
+
+Find you server's local IP address. It will usually start with 192.168.. A typical way to do this is to log in to your internet router and show the list of devices on your local network.
+
+## ⃟ Step 6: Log in
+
+Log into the Pi using ssh.
+
+  ssh root@192.168.x.y
+
+You will not need a password because ssh public key authentication is used instead.
+
+## ⃟ Step 7: Clone the LibreServer repo
+
+Update the system:
+
+  apt update
+  apt upgrade
+
+Then clone the LibreServer repository and checkout the bookworm development branch.
+
+  apt install -y git dialog build-essential
+  cd
+  git clone https://gitlab.com/bashrc2/libreserver
+  cd libreserver
+  git checkout bookworm
+
+Install the LibreServer commands:
+
+  make install
+
+Create an admin user:
+
+  adduser admin
+
+Their name could just be "admin" and the other details, including the password, are unimportant. Whatever you set the password to it will be changed during the install process.
+
+## ⃟ Step 8: Start the install
+
+To begin installing the clearnet version:
+
+  libreserver menuconfig
+
+or for the onion version:
+
+  libreserver menuconfig-onion
+
+You will be prompted to select a language and then be given a new password. Write this down or store it in a password manager.
+
+If you are not installing the onion version then you will be also be asked for dynamic DNS and domain name. The domain name must be one which you own, and not a free-as-in-gratis subdomain.
+
+Installation may take a long time - possibly up to a few hours - depending on your type of drive and internet bandwidth, but you can leave it running unattended. microSD cards and USB sticks are typically quite slow (unless it's USB3 and your hardware has USB3 sockets).
+
+## ⃟ Step 9: Browse to admin
+
+When installation is complete you can log into your server with a browser.
+
+  http://192.168.x.y/admin
+
+The username is admin and the password is the one you wrote down or added to your password manager.
+
+
