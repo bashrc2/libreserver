@@ -40,7 +40,7 @@ FLIGHTGEAR_DOMAIN_NAME=${HOSTNAME}
 FLIGHTGEAR_CODE=
 
 FLIGHTGEAR_REPO="https://git.code.sf.net/p/fgms/src"
-FLIGHTGEAR_COMMIT='6a17be9d64c3798b1038622ee7867c95773f2ea0'
+FLIGHTGEAR_COMMIT='518a62b0121de6e786b95be72b2afd857830bf4f'
 
 FLIGHTGEAR_PORT=5862
 
@@ -51,7 +51,7 @@ FLIGHTGEAR_DESCRIPTION=$'FlightGear MultiPlayer Server'
 FLIGHTGEAR_MOBILE_APP_URL=""
 
 flightgear_variables=(ONION_ONLY
-		      SYSTEM_TYPE
+					  SYSTEM_TYPE
                       MY_USERNAME)
 
 function upgrade_distro_flightgear {
@@ -64,10 +64,10 @@ function upgrade_distro_flightgear {
 
 function logging_on_flightgear {
     if [ ! -f "$FLIGHTGEAR_DIR/fgms.conf" ]; then
-	return
+		return
     fi
     if grep -q "${FLIGHTGEAR_DIR}/fgms.log" "$FLIGHTGEAR_DIR/fgms.conf"; then
-	return
+		return
     fi
     sed -i "s|server.logfile.*|server.logfile = ${FLIGHTGEAR_DIR}/fgms.log" "$FLIGHTGEAR_DIR/fgms.conf"
     systemctl restart fgms
@@ -75,10 +75,10 @@ function logging_on_flightgear {
 
 function logging_off_flightgear {
     if [ ! -f "$FLIGHTGEAR_DIR/fgms.conf" ]; then
-	return
+		return
     fi
     if grep -q '/dev/null' "$FLIGHTGEAR_DIR/fgms.conf"; then
-	return
+		return
     fi
     sed -i "s|server.logfile.*|server.logfile = /dev/null" "$FLIGHTGEAR_DIR/fgms.conf"
     systemctl restart fgms
@@ -96,19 +96,19 @@ function reconfigure_flightgear {
 function upgrade_flightgear {
     CURR_FLIGHTGEAR_COMMIT=$(get_completion_param "flightgear commit")
     if [[ "$CURR_FLIGHTGEAR_COMMIT" == "$FLIGHTGEAR_COMMIT" ]]; then
-	return
+		return
     fi
     function_check set_repo_commit
     set_repo_commit "$INSTALL_DIR/fgms-src" "flightgear commit" "$FLIGHTGEAR_COMMIT" $FLIGHTGEAR_REPO
     cd "$INSTALL_DIR/build_fgms" || exit 73
     cmake ../fgms-src
     if [ -f "$INSTALL_DIR/build_fgms/fgms" ]; then
-	rm "$INSTALL_DIR/build_fgms/fgms"
+		rm "$INSTALL_DIR/build_fgms/fgms"
     fi
     make
     if [ ! -f "$INSTALL_DIR/build_fgms/fgms" ]; then
-	echo "Failed to upgrade fgms to commit $FLIGHTGEAR_COMMIT"
-	return
+		echo "Failed to upgrade fgms to commit $FLIGHTGEAR_COMMIT"
+		return
     fi
     make install
     systemctl restart fgms
@@ -174,7 +174,7 @@ function remove_flightgear {
         rm -rf "$FLIGHTGEAR_DIR"
     fi
     if [ -f /usr/sbin/fgms ]; then
-	rm /usr/sbin/fgms
+		rm /usr/sbin/fgms
     fi
 
     remove_app flightgear
@@ -195,14 +195,14 @@ function install_flightgear {
     fi
 
     if ! grep -q "fgms:" /etc/group; then
-	groupadd fgms
+		groupadd fgms
     fi
     useradd -c "Flightgear Multiplayer" -d "$FLIGHTGEAR_DIR" -m -r -g fgms fgms
 
     increment_app_install_progress
 
     if [ ! -d /var/games ]; then
-	mkdir /var/games
+		mkdir /var/games
     fi
 
     if [ -d /var/www/flightgear ]; then
@@ -232,20 +232,20 @@ function install_flightgear {
     increment_app_install_progress
     make
     if [ ! -f "$INSTALL_DIR/build_fgms/fgms" ]; then
-	echo "Failed to build fgms"
-	exit 75
+		echo "Failed to build fgms"
+		exit 75
     fi
     increment_app_install_progress
     make install
     if [ ! -f /usr/sbin/fgms ]; then
-	echo 'Failed to install /usr/sbin/fgms'
-	exit 76
+		echo 'Failed to install /usr/sbin/fgms'
+		exit 76
     fi
 
     increment_app_install_progress
 
     if [ ! -d $FLIGHTGEAR_DIR ]; then
-	mkdir $FLIGHTGEAR_DIR
+		mkdir $FLIGHTGEAR_DIR
     fi
 
     increment_app_install_progress
