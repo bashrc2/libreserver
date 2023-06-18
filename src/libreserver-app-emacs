@@ -159,7 +159,7 @@ function remove_emacs {
 }
 
 function install_emacs {
-    INSTALL_PACKAGES emacs-nox ispell ibritish ifrench ispanish iitalian irussian iswedish inorwegian iirish ingerman iswiss iogerman idutch idanish ibrazilian ibulgarian ipolish iczech iestonian ilithuanian icatalan python3-jedi elpa-flycheck elpa-use-package pylint elpa-php-mode
+    INSTALL_PACKAGES emacs-nox ispell ibritish ifrench ispanish iitalian irussian iswedish inorwegian iirish ingerman iswiss iogerman idutch idanish ibrazilian ibulgarian ipolish iczech iestonian ilithuanian icatalan python3-jedi elpa-flycheck elpa-use-package pylint elpa-php-mode python3-flake8 elpa-diminish
     # INSTALL_PACKAGES elpa-jedi iukrainian
     update-alternatives --set editor /usr/bin/emacs
 
@@ -182,7 +182,14 @@ function install_emacs {
     #echo -n "(add-to-list 'load-path " > /home/$MY_USERNAME/.emacs
     #echo '"~/.emacs.d/")' >> /home/$MY_USERNAME/.emacs
     #echo '' >> /home/$MY_USERNAME/.emacs
-    { echo $';; ===== Remove trailing whitepace ======================================';
+    { echo ';;; libreserver --- emacs';
+      echo '';
+      echo ';;; Commentary:';
+      echo '';
+      echo '(custom-set-variables';
+      echo "  '(flycheck-checker-error-threshold 2000)";
+      echo "  '(package-selected-packages '(use-package flycheck diminish)))";
+      echo $';; ===== Remove trailing whitepace ======================================';
       echo '';
       echo ";;(add-hook 'before-save-hook 'delete-trailing-whitespace)";
       echo '';
@@ -271,13 +278,7 @@ function install_emacs {
       echo '(use-package flycheck';
       echo '  :ensure t';
       echo '  :init';
-      echo '  (global-flycheck-mode t))';
-      echo '';
-      echo '(use-package jedi';
-      echo '  :ensure t';
-      echo '  :init';
-      echo "  (add-hook 'python-mode-hook 'jedi:setup)";
-      echo "  (add-hook 'python-mode-hook 'jedi:ac-setup))"; } > "/home/$MY_USERNAME/.emacs"
+      echo '  (global-flycheck-mode t))'; } > "/home/$MY_USERNAME/.emacs"
     cp "/home/$MY_USERNAME/.emacs" /root/.emacs
     chown "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME/.emacs"
 
