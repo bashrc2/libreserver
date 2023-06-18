@@ -40,6 +40,7 @@ MUMBLE_CODE=
 MUMBLE_SERVER_PASSWORD=
 # Port on which mumble server listens
 MUMBLE_PORT=64738
+MUMBLE_I2P_PORT=6569
 MUMBLE_ONION_PORT=${MUMBLE_PORT}
 
 # Location of mumble database and configuration
@@ -228,6 +229,7 @@ function remove_mumble {
     fi
     function_check remove_onion_service
     remove_onion_service mumble ${MUMBLE_ONION_PORT}
+    remove_i2p_service mumble
     sed -i '/mumble/d' "$COMPLETION_FILE"
 }
 
@@ -383,6 +385,8 @@ function install_mumble {
     increment_app_install_progress
 
     configure_firewall_for_mumble
+
+    add_i2p_service mumble ${MUMBLE_PORT} ${MUMBLE_I2P_PORT}
 
     APP_INSTALLED=1
 }
