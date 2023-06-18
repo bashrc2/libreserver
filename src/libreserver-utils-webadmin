@@ -1248,6 +1248,8 @@ function web_admin_create_installed_apps_category {
                             else
                                 sed -i "s|I2PURL|${domain_name}|g" "$filename"
                             fi
+                        else
+                            sed -i "/I2PURL/d" "$filename"
                         fi
                         if [[ "${onion_domain_name}" == *'.'* ]]; then
                             if [[ "$app_name" != 'rsync' ]]; then
