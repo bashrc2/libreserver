@@ -50,7 +50,7 @@ CRYPTPAD_BOWER_VERSION='1.8.12'
 
 cryptpad_variables=(ONION_ONLY
                     CRYPTPAD_DOMAIN_NAME
-		    MY_EMAIL_ADDRESS)
+            MY_EMAIL_ADDRESS)
 
 function cryptpad_setting_registration {
     allow_registrations="$1"
@@ -297,8 +297,12 @@ function cryptpad_create_config {
         cryptpad_mydomain="http://${CRYPTPAD_ONION_HOSTNAME}"
     fi
 
+    cryptpad_unsafe_origin="http://localhost:${CRYPTPAD_PORT}"
+    if [[ "${ONION_ONLY}" != 'no' || "${I2P_ONLY}" != 'no' ]]; then
+        cryptpad_unsafe_origin="${cryptpad_mydomain}"
+    fi
     { echo 'module.exports = {';
-      echo "    httpUnsafeOrigin: 'http://localhost:${CRYPTPAD_PORT}',";
+      echo "    httpUnsafeOrigin: '${cryptpad_unsafe_origin}',";
       echo "    httpSafeOrigin: '${cryptpad_mydomain}',";
       echo "    httpPort: ${CRYPTPAD_PORT},";
       echo "    adminEmail: '${MY_EMAIL_ADDRESS}',";
@@ -327,7 +331,7 @@ function cryptpad_create_config {
       echo "    logFeedback: false,";
       echo "    verbose: false,";
       echo '};'; } > "$cryptpad_prefix${CRYPTPAD_DIR}/config/config.js"
-    
+
     if [[ "$cryptpad_install_type" != "mesh" ]]; then
         chown cryptpad:cryptpad "$cryptpad_prefix${CRYPTPAD_DIR}/config/config.js"
     else
