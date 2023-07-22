@@ -446,7 +446,7 @@ function install_irc_server {
       echo 'User=miniirc';
       echo 'Group=miniirc';
       echo "WorkingDirectory=/etc/miniirc";
-      echo "ExecStart=/etc/miniirc/miniircd.py --state-dir=/var/miniircd --registered-only --new-registrations 0";
+      echo "ExecStart=/etc/miniirc/miniircd --state-dir=/var/miniircd --registered-only --new-registrations 0";
       echo 'Environment=PATH=/usr/bin:/usr/local/bin';
       echo 'Environment=LC_ALL=C.UTF-8';
       echo 'Environment=USER=miniirc';
