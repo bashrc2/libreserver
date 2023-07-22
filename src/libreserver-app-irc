@@ -449,6 +449,8 @@ function install_irc_server {
       echo "ExecStart=/usr/local/bin/miniircd --state-dir=/var/miniircd --registered-only --new-registrations 0";
       echo 'Environment=PATH=/usr/bin:/usr/local/bin';
       echo 'Environment=LC_ALL=C.UTF-8';
+      echo 'Environment=USER=miniirc';
+      echo 'Environment=PYTHONUNBUFFERED=true';
       echo "Environment=GIT_CEILING_DIRECTORIES=/etc/miniirc";
       echo 'Restart=on-failure';
       echo 'PrivateTmp=true';
