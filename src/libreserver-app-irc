@@ -128,11 +128,15 @@ function change_default_domain_name_irc {
 }
 
 function logging_on_irc {
-    echo -n ''
+    sed -i 's|--state-dir=/var/miniircd|--state-dir=/var/miniircd --debug|g' /etc/systemd/system/irc.service
+    systemctl daemon-reload
+    systemctl restart irc
 }
 
 function logging_off_irc {
-    echo -n ''
+    sed -i 's| --debug||g' /etc/systemd/system/irc.service
+    systemctl daemon-reload
+    systemctl restart irc
 }
 
 function create_irssi_config {
