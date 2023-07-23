@@ -43,6 +43,8 @@ IRC_COMMIT='297eae7668f14ab88646add07fe6841e58aa1f09'
 IRC_SHORT_DESCRIPTION=$'Classic chat system'
 IRC_DESCRIPTION=$'The classic low bandwidth chat system'
 IRC_MOBILE_APP_URL='https://f-droid.org/packages/org.yaaic'
+IRC_DATA_DIR=/etc/miniirc/data
+IRC_SCRIPT=/etc/miniirc/miniircd
 
 IRC_FIREWALL_PORTS="${IRC_PORT}"
 
@@ -128,7 +130,7 @@ function change_default_domain_name_irc {
 }
 
 function logging_on_irc {
-    sed -i 's|--state-dir=/var/miniircd|--state-dir=/var/miniircd --debug|g' /etc/systemd/system/irc.service
+    sed -i "s|--state-dir=${IRC_DATA_DIR}|--state-dir=${IRC_DATA_DIR} --debug|g" /etc/systemd/system/irc.service
     systemctl daemon-reload
     systemctl restart irc
 }
@@ -260,8 +262,8 @@ function remove_user_irc {
     if [ -d "/home/${remove_username}/irclogs" ]; then
         rm -rf "/home/${remove_username}/irclogs"
     fi
-    /etc/miniirc/miniircd --state-dir=/var/miniircd --del-account "${remove_username}"
-    chown -R miniirc:miniirc /var/miniircd
+    ${IRC_SCRIPT} --state-dir=${IRC_DATA_DIR} --del-account "${remove_username}"
+    chown -R miniirc:miniirc ${IRC_DATA_DIR}
     chown -R miniirc:miniirc /etc/miniircd
 }
 
@@ -270,8 +272,8 @@ function change_password_irc {
     new_user_password="$2"
 
     "${PROJECT_NAME}-pass" -u "${curr_username}" -a irc -p "${new_user_password}"
-    /etc/miniirc/miniircd --state-dir=/var/miniircd --set-password "${curr_username}":"${new_user_password}"
-    chown -R miniirc:miniirc /var/miniircd
+    ${IRC_SCRIPT} --state-dir=${IRC_DATA_DIR} --set-password "${curr_username}":"${new_user_password}"
+    chown -R miniirc:miniirc ${IRC_DATA_DIR}
     chown -R miniirc:miniirc /etc/miniircd
 }
 
@@ -285,8 +287,8 @@ function add_user_irc {
 
     create_irssi_config "${new_username}" "${new_user_password}"
 
-    /etc/miniirc/miniircd --state-dir=/var/miniircd --add-account "${new_username}":"${new_user_password}"
-    chown -R miniirc:miniirc /var/miniircd
+    ${IRC_SCRIPT} --state-dir=${IRC_DATA_DIR} --add-account "${new_username}":"${new_user_password}"
+    chown -R miniirc:miniirc ${IRC_DATA_DIR}
     chown -R miniirc:miniirc /etc/miniircd
 
     echo '0'
@@ -310,7 +312,7 @@ function upgrade_irc {
     bridge_irc_to_xmpp
 
     if [[ "$ONION_ONLY" == 'no' ]]; then
-        cat "/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/fullchain.pem" "/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/privkey.pem" > /var/miniircd/miniircd.pem
+        cat "/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/fullchain.pem" "/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/privkey.pem" > ${IRC_DATA_DIR}/miniircd.pem
     fi
 
     CURR_IRC_COMMIT=$(get_completion_param "irc commit")
@@ -321,7 +323,7 @@ function upgrade_irc {
     function_check set_repo_commit
     set_repo_commit /etc/miniirc "irc commit" "$IRC_COMMIT" "$IRC_REPO"
 
-    cp /etc/miniirc/miniircd /usr/local/bin/miniircd
+    cp ${IRC_SCRIPT} /usr/local/bin/miniircd
     irc_welcome_message
 }
 
@@ -353,8 +355,8 @@ function remove_irc {
     save_firewall_settings
     firewall_remove ${IRC_PORT} tcp
 
-    if [ -d /var/miniircd ]; then
-        rm -rf /var/miniircd
+    if [ -d ${IRC_DATA_DIR} ]; then
+        rm -rf ${IRC_DATA_DIR}
     fi
     if [ -d /etc/miniirc ]; then
         rm -rf /etc/miniirc
@@ -399,8 +401,8 @@ function install_irc_server {
     if [ -d /etc/miniirc ]; then
         rm -rf /etc/miniirc
     fi
-    if [ -d /var/miniircd ]; then
-        rm -rf /var/miniircd
+    if [ -d ${IRC_DATA_DIR} ]; then
+        rm -rf ${IRC_DATA_DIR}
     fi
 
     function_check git_clone
@@ -411,12 +413,12 @@ function install_irc_server {
     git checkout "$IRC_COMMIT" -b "$IRC_COMMIT"
     set_completion_param "irc commit" "$IRC_COMMIT"
 
-    cp /etc/miniirc/miniircd /usr/local/bin/miniircd
+    cp ${IRC_SCRIPT} /usr/local/bin/miniircd
     irc_welcome_message
     make
 
-    if [ ! -d /var/miniircd ]; then
-        mkdir -p /var/miniircd
+    if [ ! -d ${IRC_DATA_DIR} ]; then
+        mkdir -p ${IRC_DATA_DIR}
     fi
 
     # shellcheck disable=SC2034
@@ -424,7 +426,7 @@ function install_irc_server {
 
     IRC_SSL_OPTION=
     if [[ "$ONION_ONLY" == 'no' ]]; then
-        cat "/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/fullchain.pem" "/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/privkey.pem" > /var/miniircd/miniircd.pem
+        cat "/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/fullchain.pem" "/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/privkey.pem" > ${IRC_DATA_DIR}/miniircd.pem
     else
         "${PROJECT_NAME}-addcert" -h "${IRC_ONION_HOSTNAME}" --dhkey "${DH_KEYLENGTH}"
         if [ ! -f "/etc/ssl/certs/${IRC_ONION_HOSTNAME}.crt" ]; then
@@ -435,7 +437,7 @@ function install_irc_server {
             echo "irc TLS cert not found /etc/ssl/private/${IRC_ONION_HOSTNAME}.key"
             exit 71
         fi
-        cat "/etc/ssl/certs/${IRC_ONION_HOSTNAME}.crt" "/etc/ssl/private/${IRC_ONION_HOSTNAME}.key" > /var/miniircd/miniircd.pem
+        cat "/etc/ssl/certs/${IRC_ONION_HOSTNAME}.crt" "/etc/ssl/private/${IRC_ONION_HOSTNAME}.key" > ${IRC_DATA_DIR}/miniircd.pem
     fi
     IRC_SSL_OPTION='--ssl-pem-file=/miniircd.pem'
 
@@ -450,7 +452,7 @@ function install_irc_server {
       echo 'User=miniirc';
       echo 'Group=miniirc';
       echo "WorkingDirectory=/etc/miniirc";
-      echo "ExecStart=/etc/miniirc/miniircd --state-dir=/var/miniircd --registered-only --new-registrations 0";
+      echo "ExecStart=${IRC_SCRIPT} --state-dir=${IRC_DATA_DIR} --registered-only --new-registrations 0";
       echo 'Environment=PATH=/usr/bin:/usr/local/bin';
       echo 'Environment=LC_ALL=C.UTF-8';
       echo 'Environment=USER=miniirc';
@@ -470,10 +472,10 @@ function install_irc_server {
       echo '';
       echo '[Install]';
       echo 'WantedBy=multi-user.target'; } > "$rootdir/etc/systemd/system/irc.service"
-    chroot "$rootdir" systemctl enable irc.service
-    chown -R miniirc:miniirc /var/miniircd
+    systemctl enable irc.service
+    chown -R miniirc:miniirc ${IRC_DATA_DIR}
     chown -R miniirc:miniirc /etc/miniircd
-    chroot "$rootdir" systemctl restart irc.service
+    systemctl restart irc.service
 
     function_check configure_firewall_for_irc
     configure_firewall_for_irc
