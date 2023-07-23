@@ -43,8 +43,9 @@ IRC_COMMIT='297eae7668f14ab88646add07fe6841e58aa1f09'
 IRC_SHORT_DESCRIPTION=$'Classic chat system'
 IRC_DESCRIPTION=$'The classic low bandwidth chat system'
 IRC_MOBILE_APP_URL='https://f-droid.org/packages/org.yaaic'
-IRC_DATA_DIR=/etc/miniirc/data
-IRC_SCRIPT=/etc/miniirc/miniircd
+IRC_DIR=/etc/miniirc
+IRC_DATA_DIR=${IRC_DIR}/data
+IRC_SCRIPT=${IRC_DIR}/miniircd
 
 IRC_FIREWALL_PORTS="${IRC_PORT}"
 
@@ -71,7 +72,7 @@ function bridge_irc_to_xmpp {
         remove_bridge_irc_to_xmpp
         return
     fi
-    if [ ! -d /etc/miniirc ]; then
+    if [ ! -d ${IRC_DIR} ]; then
         remove_bridge_irc_to_xmpp
         return
     fi
@@ -264,7 +265,7 @@ function remove_user_irc {
     fi
     ${IRC_SCRIPT} --state-dir=${IRC_DATA_DIR} --del-account "${remove_username}"
     chown -R miniirc:miniirc ${IRC_DATA_DIR}
-    chown -R miniirc:miniirc /etc/miniircd
+    chown -R miniirc:miniirc ${IRC_DIR}
 }
 
 function change_password_irc {
@@ -274,7 +275,7 @@ function change_password_irc {
     "${PROJECT_NAME}-pass" -u "${curr_username}" -a irc -p "${new_user_password}"
     ${IRC_SCRIPT} --state-dir=${IRC_DATA_DIR} --set-password "${curr_username}":"${new_user_password}"
     chown -R miniirc:miniirc ${IRC_DATA_DIR}
-    chown -R miniirc:miniirc /etc/miniircd
+    chown -R miniirc:miniirc ${IRC_DIR}
 }
 
 function add_user_irc {
@@ -289,7 +290,7 @@ function add_user_irc {
 
     ${IRC_SCRIPT} --state-dir=${IRC_DATA_DIR} --add-account "${new_username}":"${new_user_password}"
     chown -R miniirc:miniirc ${IRC_DATA_DIR}
-    chown -R miniirc:miniirc /etc/miniircd
+    chown -R miniirc:miniirc ${IRC_DIR}
 
     echo '0'
 }
@@ -321,7 +322,7 @@ function upgrade_irc {
     fi
 
     function_check set_repo_commit
-    set_repo_commit /etc/miniirc "irc commit" "$IRC_COMMIT" "$IRC_REPO"
+    set_repo_commit ${IRC_DIR} "irc commit" "$IRC_COMMIT" "$IRC_REPO"
 
     cp ${IRC_SCRIPT} /usr/local/bin/miniircd
     irc_welcome_message
@@ -358,8 +359,8 @@ function remove_irc {
     if [ -d ${IRC_DATA_DIR} ]; then
         rm -rf ${IRC_DATA_DIR}
     fi
-    if [ -d /etc/miniirc ]; then
-        rm -rf /etc/miniirc
+    if [ -d ${IRC_DIR} ]; then
+        rm -rf ${IRC_DIR}
     fi
 
     function_check remove_onion_service
@@ -372,7 +373,7 @@ function remove_irc {
 }
 
 function configure_firewall_for_irc {
-    if [ ! -d /etc/miniirc ]; then
+    if [ ! -d ${IRC_DIR} ]; then
         return
     fi
     if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
@@ -398,17 +399,17 @@ function install_irc_server {
         return
     fi
 
-    if [ -d /etc/miniirc ]; then
-        rm -rf /etc/miniirc
+    if [ -d ${IRC_DIR} ]; then
+        rm -rf ${IRC_DIR}
     fi
     if [ -d ${IRC_DATA_DIR} ]; then
         rm -rf ${IRC_DATA_DIR}
     fi
 
     function_check git_clone
-    git_clone "$IRC_REPO" /etc/miniirc
+    git_clone "$IRC_REPO" ${IRC_DIR}
 
-    cd /etc/miniirc || exit 76
+    cd ${IRC_DIR} || exit 76
 
     git checkout "$IRC_COMMIT" -b "$IRC_COMMIT"
     set_completion_param "irc commit" "$IRC_COMMIT"
@@ -441,7 +442,7 @@ function install_irc_server {
     fi
     IRC_SSL_OPTION='--ssl-pem-file=/miniircd.pem'
 
-    adduser --system --home="/etc/miniirc" --group miniirc
+    adduser --system --home="${IRC_DIR}" --group miniirc
 
     { echo '[Unit]';
       echo 'Description=miniircd server';
@@ -451,13 +452,13 @@ function install_irc_server {
       echo '[Service]';
       echo 'User=miniirc';
       echo 'Group=miniirc';
-      echo "WorkingDirectory=/etc/miniirc";
+      echo "WorkingDirectory=${IRC_DIR}";
       echo "ExecStart=${IRC_SCRIPT} --state-dir=${IRC_DATA_DIR} --registered-only --new-registrations 0";
       echo 'Environment=PATH=/usr/bin:/usr/local/bin';
       echo 'Environment=LC_ALL=C.UTF-8';
       echo 'Environment=USER=miniirc';
       echo 'Environment=PYTHONUNBUFFERED=true';
-      echo "Environment=GIT_CEILING_DIRECTORIES=/etc/miniirc";
+      echo "Environment=GIT_CEILING_DIRECTORIES=${IRC_DIR}";
       echo 'Restart=on-failure';
       echo 'PrivateTmp=true';
       echo 'PrivateDevices=false';
@@ -474,7 +475,7 @@ function install_irc_server {
       echo 'WantedBy=multi-user.target'; } > "$rootdir/etc/systemd/system/irc.service"
     systemctl enable irc.service
     chown -R miniirc:miniirc ${IRC_DATA_DIR}
-    chown -R miniirc:miniirc /etc/miniircd
+    chown -R miniirc:miniirc ${IRC_DIR}
     systemctl restart irc.service
 
     function_check configure_firewall_for_irc
