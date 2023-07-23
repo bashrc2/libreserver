@@ -34,6 +34,14 @@ ONION_SERVICES_FILE=/etc/torrc.d/${PROJECT_NAME}
 ONION_RATE_PER_SEC=42
 ONION_BURST_PER_SEC=87
 
+function tor_allow_outbound {
+    torsocks_conf=/etc/tor/torsocks.conf
+    if [ ! -f ${torsocks_conf} ]; then
+        return
+    fi
+    sed -i 's|#AllowOutboundLocalhost.*|AllowOutboundLocalhost 1|g' ${torsocks_conf}
+}
+
 function restart_tor_daemon {
     chmod -R 644 /etc/torrc.d
     rm /etc/torrc.d/*~ &> /dev/null
@@ -392,6 +400,7 @@ function install_tor {
         return
     fi
     if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        tor_allow_outbound
         return
     fi
 
@@ -416,6 +425,7 @@ function install_tor {
 
     # For torify
     INSTALL_PACKAGES torsocks
+    tor_allow_outbound
 
     if [ ! -d /etc/torrc.d ]; then
         mkdir /etc/torrc.d
