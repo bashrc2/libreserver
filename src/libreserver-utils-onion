@@ -33,6 +33,8 @@ ONION_SERVICES_FILE=/etc/torrc.d/${PROJECT_NAME}
 # DDoS defense
 ONION_RATE_PER_SEC=42
 ONION_BURST_PER_SEC=87
+ONION_POW_RATE_PER_SEC 250
+ONION_POW_BURST_PER_SEC 2500
 
 function tor_allow_outbound {
     torsocks_conf=/etc/tor/torsocks.conf
@@ -229,12 +231,15 @@ function add_onion_service {
         touch "$ONION_SERVICES_FILE"
     fi
     if ! grep -q "hidden_service_${onion_service_name}" "$ONION_SERVICES_FILE"; then
-        echo "HiddenServiceDir ${HIDDEN_SERVICE_PATH}${onion_service_name}/" >> "$ONION_SERVICES_FILE"
-        echo 'HiddenServiceVersion 3' >> "$ONION_SERVICES_FILE"
-        echo 'HiddenServiceEnableIntroDoSDefense 1' >> "$ONION_SERVICES_FILE"
-        echo "HiddenServiceEnableIntroDoSRatePerSec ${ONION_RATE_PER_SEC}" >> "$ONION_SERVICES_FILE"
-        echo "HiddenServiceEnableIntroDoSBurstPerSec ${ONION_BURST_PER_SEC}" >> "$ONION_SERVICES_FILE"
-        echo "HiddenServicePort ${onion_service_port_from} 127.0.0.1:${onion_service_port_to}" >> "$ONION_SERVICES_FILE"
+        { echo "HiddenServiceDir ${HIDDEN_SERVICE_PATH}${onion_service_name}/";
+          echo 'HiddenServiceVersion 3';
+          echo '#HiddenServicePoWDefensesEnabled 0';
+          echo "#HiddenServicePoWQueueRate ${ONION_POW_RATE_PER_SEC}";
+          echo "#HiddenServicePoWQueueBurst ${ONION_POW_BURST_PER_SEC}";
+          echo 'HiddenServiceEnableIntroDoSDefense 1';
+          echo "HiddenServiceEnableIntroDoSRatePerSec ${ONION_RATE_PER_SEC}";
+          echo "HiddenServiceEnableIntroDoSBurstPerSec ${ONION_BURST_PER_SEC}";
+          echo "HiddenServicePort ${onion_service_port_from} 127.0.0.1:${onion_service_port_to}"; } >> "$ONION_SERVICES_FILE"
         if [ ${#onion_stealth_name} -gt 0 ]; then
             echo "HiddenServiceAuthorizeClient stealth ${onion_stealth_name}" >> "$ONION_SERVICES_FILE"
         fi
