@@ -33,8 +33,8 @@ ONION_SERVICES_FILE=/etc/torrc.d/${PROJECT_NAME}
 # DDoS defense
 ONION_RATE_PER_SEC=42
 ONION_BURST_PER_SEC=87
-ONION_POW_RATE_PER_SEC 250
-ONION_POW_BURST_PER_SEC 2500
+ONION_POW_RATE_PER_SEC=250
+ONION_POW_BURST_PER_SEC=2500
 
 function tor_allow_outbound {
     torsocks_conf=/etc/tor/torsocks.conf
