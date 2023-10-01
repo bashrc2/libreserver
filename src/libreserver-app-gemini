@@ -61,7 +61,7 @@ GEMINI_MOBILE_APP_URL=
 GEMINI_FIREWALL_PORTS="${GEMINI_PORT}"
 
 GEMINI_CLIENT_REPO='https://github.com/bashrc2/leo'
-DEFAULT_GEMINI_URL='gemini.circumlunar.space'
+DEFAULT_GEMINI_URL='geminiprotocol.net'
 
 gemini_variables=(ONION_ONLY
                   DEFAULT_DOMAIN_NAME
@@ -445,7 +445,7 @@ function install_gemini {
       echo '';
       echo 'This is an example Gemini page.';
       echo '';
-      echo '=> gemini://gemini.circumlunar.space Circumlunar Space';
+      echo '=> gemini://geminiprotocol.net Gemini protocol';
       echo '=> gemini://libreserver.org LibreServer site';
       echo '=> gemini://libreserver.org/blog/index.gmi LibreServer Blog'; } > /var/gemini/index.gmi
     chown -R gemini:gemini "/var/gemini"
