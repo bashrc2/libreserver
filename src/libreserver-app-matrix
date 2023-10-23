@@ -1430,7 +1430,7 @@ function install_matrix_venv {
       echo 'pip3 install -U setuptools';
       echo "pip3 install -U 'prometheus_client>=0.0.18,<0.8.0'";
       echo 'pip3 install -U jsonschema>=2.5.1';
-      echo "pip3 install -U 'poetry-core>=1.2.0,<=1.5.0'";
+      echo "pip3 install -U 'poetry-core>=1.5.0'";
       echo "pip3 install -U 'setuptools_rust>=1.3,<=1.6.0'";
       echo "pip3 install -U matrix-synapse==${MATRIX_RELEASE}";
       echo 'deactivate'; } > "$INSTALL_DIR/install_matrix"
