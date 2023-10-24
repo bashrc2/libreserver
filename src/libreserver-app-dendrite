@@ -758,6 +758,7 @@ function install_dendrite {
     increment_app_install_progress
     GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go build -o bin/dendrite ./cmd/dendrite
     if [ ! -f bin/dendrite ]; then
+        echo "GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go build -o bin/dendrite ./cmd/dendrite"
         echo $'bin/dendrite was not compiled'
         exit 63
     fi
@@ -765,12 +766,14 @@ function install_dendrite {
     increment_app_install_progress
     GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go build -o bin/generate-keys ./cmd/generate-keys
     if [ ! -f bin/generate-keys ]; then
+        echo "GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go build -o bin/generate-keys ./cmd/generate-keys"
         echo $'bin/generate-keys was not compiled'
         exit 64
     fi
 
     GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go build -o bin/create-account ./cmd/create-account
     if [ ! -f bin/create-account ]; then
+        echo "GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go build -o bin/create-account ./cmd/create-account"
         echo $'bin/create-account was not compiled'
         return
     fi
