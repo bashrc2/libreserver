@@ -273,7 +273,7 @@ function change_default_domain_name_matrix {
 }
 
 function matrix_add_onion_federation {
-    if grep -q ":$MATRIX_HTTP_PORT" "/etc/torrc.d/${PROJECT_NAME}"; then
+    if grep -q ":${MATRIX_HTTP_PORT}" "/etc/torrc.d/${PROJECT_NAME}"; then
         return
     fi
 

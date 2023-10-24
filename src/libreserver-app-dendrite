@@ -1,0 +1,1063 @@
+#!/bin/bash
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
+#
+# https://pieterhollander.nl/post/dendrite-matrix-homeserver
+# https://github.com/matrix-org/dendrite/blob/main/Dockerfile
+#
+# License
+# =======
+#
+# Copyright (C) 2023 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VARIANTS='full full-vim full-micro chat'
+
+APP_CATEGORY=chat
+
+IN_DEFAULT_INSTALL=0
+INSTALLED_ON_DEFAULT_DOMAIN=1
+SHOW_ON_ABOUT=1
+
+# whether to show https://domain or just the domain on its own on app screen
+SHOW_DOMAIN_ONLY=0
+
+# whether this app will be included in the json API for the FreedomBox android app
+NOT_ON_API=1
+
+# Whether to show on http://libreserver/home
+NOT_ON_HOMEPAGE=1
+
+# show port number within the URL on app screens
+SHOW_URL_PORT=
+
+# Whether another app is required to be installed before this one
+REQUIRES_APP=
+
+DENDRITE_DOMAIN_NAME=
+DENDRITE_CODE=
+DENDRITE_ONION_PORT=8122
+DENDRITE_I2P_PORT=9567
+
+DENDRITE_HTTP_PORT=8448
+DENDRITE_PORT_INTERNAL=8008
+DENDRITE_OUTBOUND_PROXY_PORT=8080
+
+DENDRITE_DATABASE_FILENAME='/home/dendrite/dendrite.db'
+
+DENDRITE_DEBUG_LEVEL='info'
+
+# These parameters are used by the FreedomBox mobile app and web UI
+DENDRITE_SHORT_DESCRIPTION='Dendrite Server'
+DENDRITE_DESCRIPTION='Dendrite Server'
+DENDRITE_MOBILE_APP_URL=
+
+# Any ports which should be added to the firewall, separated by commas
+DENDRITE_FIREWALL_PORTS="${DENDRITE_HTTP_PORT}"
+DENDRITE_FIREWALL_MAX_CONNECTIONS=100
+
+DENDRITE_REPO='https://github.com/matrix-org/dendrite'
+DENDRITE_VERSION='v0.13.3'
+
+dendrite_user_added=
+
+dendrite_variables=(ONION_ONLY
+                    DEFAULT_DOMAIN_NAME
+                    DDNS_PROVIDER
+                    MY_USERNAME)
+
+function logging_on_dendrite {
+    DENDRITE_DEBUG_LEVEL='debug'
+    generate_dendrite_config
+    systemctl restart dendrite
+}
+
+function logging_off_dendrite {
+    DENDRITE_DEBUG_LEVEL='info'
+    generate_dendrite_config
+    systemctl restart dendrite
+}
+
+function dendrite_add_onion_federation {
+    if grep -q ":${DENDRITE_HTTP_PORT}" "/etc/torrc.d/${PROJECT_NAME}"; then
+        return
+    fi
+
+    sed -i "/:${DENDRITE_ONION_PORT}/a HiddenServicePort ${DENDRITE_HTTP_PORT} 127.0.0.1:${DENDRITE_HTTP_PORT}" "/etc/torrc.d/${PROJECT_NAME}"
+
+    restart_tor_daemon
+}
+
+function create_dendrite_user_removal_script {
+    read_config_param ONION_ONLY
+    read_config_param MY_USERNAME
+    read_config_param DENDRITE_DOMAIN_NAME
+
+    curl_command='curl'
+    homebase="https://${DENDRITE_DOMAIN_NAME}"
+    if [[ "${ONION_ONLY}" != 'no' ]]; then
+        curl_command='torsocks curl'
+        homebase="http://$(cat /var/lib/tor/hidden_service_dendrite/hostname)"
+    fi
+
+    dendrite_domain=${DENDRITE_DOMAIN_NAME}
+    if [[ "${ONION_ONLY}" != 'no' ]]; then
+        dendrite_domain=$(cat /var/lib/tor/hidden_service_dendrite/hostname)
+    fi
+
+    dendrite_remove_user=/usr/bin/dendrite-remove-user
+    { echo '#!/bin/bash';
+      echo "cd /home/dendrite || exit 1";
+      echo "remove_username=\$1";
+      echo "if [ ! \"\$remove_username\" ]; then";
+      echo '    exit 1';
+      echo 'fi';
+      echo "ADMIN=\"@${MY_USERNAME}:${DENDRITE_DOMAIN_NAME}\"";
+      echo 'BUSY="pragma busy_timeout=20000"';
+      echo "BUFFER=\$(sqlite3 ${DENDRITE_DATABASE_FILENAME} \"\$BUSY;select token from access_tokens where user_id like '\$ADMIN' order by id desc limit 1;\")";
+      echo "TOKEN=\$(echo \$BUFFER|awk '{print \$2}')";
+      echo 'set -x';
+      echo "${curl_command} -X POST \"${homebase}/_matrix/admin/v1/deactivate/%40\${remove_username}%3A${dendrite_domain}?access_token=\$TOKEN\" --data '{\"erase\": true}'"; } > ${dendrite_remove_user}
+
+    chmod +x ${dendrite_remove_user}
+}
+
+function create_dendrite_user_reactivation_script {
+    read_config_param ONION_ONLY
+    read_config_param MY_USERNAME
+    read_config_param DENDRITE_DOMAIN_NAME
+
+    curl_command='curl'
+    homebase="https://${DENDRITE_DOMAIN_NAME}"
+    if [[ "${ONION_ONLY}" != 'no' ]]; then
+        curl_command='torsocks curl'
+        homebase="http://$(cat /var/lib/tor/hidden_service_dendrite/hostname)"
+    fi
+
+    dendrite_domain=$DENDRITE_DOMAIN_NAME
+    if [[ "${ONION_ONLY}" != 'no' ]]; then
+        dendrite_domain=$(cat /var/lib/tor/hidden_service_dendrite/hostname)
+    fi
+
+    dendrite_reactivate_user=/usr/bin/dendrite-reactivate-user
+    { echo '#!/bin/bash';
+      echo "cd /home/dendrite || exit 1";
+      echo "reactivate_username=\$1";
+      echo "reactivate_password=\$2";
+      echo "reactivate_password=\${reactivate_password%\$'\n'}";
+      echo "if [ ! \"\$reactivate_username\" ]; then";
+      echo '    exit 1';
+      echo 'fi';
+      echo "ADMIN=\"@${MY_USERNAME}:${DENDRITE_DOMAIN_NAME}\"";
+      echo 'BUSY="pragma busy_timeout=20000"';
+      echo "BUFFER=\$(sqlite3 ${DENDRITE_DATABASE_FILENAME} \"\$BUSY;select token from access_tokens where user_id like '\$ADMIN' order by id desc limit 1;\")";
+      echo "TOKEN=\$(echo \$BUFFER|awk '{print \$2}')";
+      echo 'set -x';
+      echo "${curl_command} --header \"Authorization: Bearer \${TOKEN}\" -XPUT -d \"{\\\"deactivated\\\": false, \\\"password\\\": \\\"\${reactivate_password}\\\"}\" ${homebase}/_matrix/admin/v2/users/%40\${reactivate_username}%3A${dendrite_domain}"; } > ${dendrite_reactivate_user}
+
+    chmod +x ${dendrite_reactivate_user}
+}
+
+function remove_user_dendrite {
+    remove_username="$1"
+    create_dendrite_user_removal_script
+    $dendrite_remove_user "$remove_username"
+    "${PROJECT_NAME}-pass" -u "$remove_username" --rmapp dendrite
+}
+
+function add_user_dendrite {
+    new_username="$1"
+    new_user_password="$2"
+
+    dendrite_user_added=
+
+    create_dendrite_user_reactivation_script
+    $dendrite_reactivate_user "${new_username}" "${new_user_password}"
+
+    dendrite_disable_registration false
+
+    cd "/home/dendrite/dendrite" || return
+    if [[ "${new_username}" != "admin" ]]; then
+        echo "${new_user_password}" | ./bin/create-account  -config /etc/dendrite/dendrite.yaml -username ${new_username}
+    else
+        echo "${new_user_password}" | ./bin/create-account  -config /etc/dendrite/dendrite.yaml -username ${new_username} -admin
+    fi
+    "${PROJECT_NAME}-pass" -u "$new_username" -a dendrite -p "$new_user_password"
+    dendrite_disable_registration true
+    dendrite_user_added=1
+    echo '0'
+}
+
+function install_interactive_dendrite {
+    if [[ $ONION_ONLY != "no" ]]; then
+        DENDRITE_DOMAIN_NAME='dendrite.local'
+        write_config_param "DENDRITE_DOMAIN_NAME" "$DENDRITE_DOMAIN_NAME"
+    else
+        function_check interactive_site_details
+        interactive_site_details dendrite
+    fi
+    APP_INSTALLED=1
+}
+
+function change_password_dendrite {
+    curr_username="$1"
+    new_user_password="$2"
+
+    "${PROJECT_NAME}-pass" -u "$curr_username" -a dendrite -p "$new_user_password"
+}
+
+function reconfigure_dendrite {
+    # This is used if you need to switch identity. Dump old keys and generate new ones
+    echo -n ''
+}
+
+function upgrade_distro_dendrite {
+    # shellcheck disable=SC2034
+    target_distro="$1"
+    # include anything here needed to upgrade to the target distro
+}
+
+function upgrade_dendrite {
+    CURR_DENDRITE_VERSION=$(get_completion_param "dendrite version")
+    if [[ "${CURR_DENDRITE_VERSION}" == "${DENDRITE_VERSION}" ]]; then
+        return
+    fi
+
+    if grep -q "dendrite domain" "${COMPLETION_FILE}"; then
+        DENDRITE_DOMAIN_NAME=$(get_completion_param "dendrite domain")
+    fi
+
+    cd "/home/dendrite/dendrite" || return
+    git pull
+    git checkout ${DENDRITE_VERSION}
+    GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go build -o bin/dendrite-monolith-server-new ./cmd/dendrite-monolith-server
+    if [ ! -f bin/dendrite-monolith-server-new ]; then
+        echo $'bin/dendrite-monolith-server was not compiled'
+        return
+    fi
+    mv bin/dendrite-monolith-server-new bin/dendrite-monolith-server
+
+    GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go build -o bin/generate-keys-new ./cmd/generate-keys
+    if [ ! -f bin/generate-keys-new ]; then
+        echo $'bin/generate-keys was not compiled'
+        return
+    fi
+    mv bin/generate-keys-new bin/generate-keys
+
+    GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go build -o bin/create-account-new ./cmd/create-account
+    if [ ! -f bin/create-account-new ]; then
+        echo $'bin/create-account was not compiled'
+        return
+    fi
+    mv bin/create-account-new bin/create-account
+
+    cd "/home/dendrite" || return
+    chown -R dendrite:dendrite "/home/dendrite"
+    if ! grep -q "go${GO_VERSION}" /etc/systemd/system/dendrite.service; then
+        sed -i "s|Environment=.*|Environment=\"USER=dendrite\" \"HOME=/home/dendrite\" \"GOPATH=/home/go/go${GO_VERSION}\" \"GIT_CEILING_DIRECTORIES=/home/dendrite\"|g" /etc/systemd/system/dendrite.service
+        systemctl daemon-reload
+    fi
+    systemctl restart dendrite
+}
+
+function backup_local_dendrite {
+    systemctl stop dendrite
+
+    source_directory=/home/dendrite
+    cp -r /etc/dendrite /home/dendrite/etc
+    chown -R dendrite:dendrite /home/dendrite/etc
+    dest_directory=dendrite
+    backup_directory_to_usb "${source_directory}" ${dest_directory}
+    rm -rf /home/dendrite/etc
+    systemctl start dendrite
+}
+
+function restore_local_dendrite {
+    systemctl stop dendrite
+
+    temp_restore_dir=/root/tempdendrite
+
+    dendrite_dir=/home/dendrite
+
+    restore_directory_from_usb $temp_restore_dir dendrite
+    if [ -d $temp_restore_dir ]; then
+        if [ -d "$temp_restore_dir$dendrite_dir" ]; then
+            cp -rp "$temp_restore_dir$dendrite_dir"/* "$dendrite_dir"/
+        else
+            if [ ! -d "$dendrite_dir" ]; then
+                mkdir "$dendrite_dir"
+            fi
+            cp -rp "$temp_restore_dir"/* "$dendrite_dir"/
+        fi
+        cp -r /home/dendrite/etc/* /etc/dendrite/
+        chown -R dendrite:dendrite /etc/dendrite
+        chown -R dendrite:dendrite "$dendrite_dir"
+        rm -rf $temp_restore_dir
+    fi
+
+    systemctl start dendrite
+}
+
+function backup_remote_dendrite {
+    echo -n ''
+}
+
+function restore_remote_dendrite {
+    echo -n ''
+}
+
+function remove_dendrite {
+    if [[ "$ONION_ONLY" == 'no' ]]; then
+        firewall_remove ${DENDRITE_HTTP_PORT}
+        firewall_max_connections ${DENDRITE_PORT_INTERNAL} ${DENDRITE_FIREWALL_MAX_CONNECTIONS} remove
+    fi
+
+    nginx_dissite "$DENDRITE_DOMAIN_NAME"
+    remove_certs "$DENDRITE_DOMAIN_NAME"
+    remove_onion_service dendrite ${DENDRITE_ONION_PORT} ${DENDRITE_HTTP_PORT}
+
+    if [ -f /etc/systemd/system/dendrite.service ]; then
+        systemctl stop dendrite
+        systemctl disable dendrite
+        rm /etc/systemd/system/dendrite.service
+    fi
+    userdel -r dendrite
+    groupdel -f dendrite
+    if grep -q "dendrite" /etc/crontab; then
+        sed -i "/dendrite/d" /etc/crontab
+    fi
+    remove_app dendrite
+    remove_completion_param install_dendrite
+    sed -i '/dendrite/d' "$COMPLETION_FILE"
+
+    if [ -d /home/dendrite ]; then
+        rm -rf /home/dendrite
+    fi
+    if [ -d /etc/dendrite ]; then
+        rm -rf /etc/dendrite
+    fi
+    if [ -d /var/log/dendrite ]; then
+        rm -rf /var/log/dendrite
+    fi
+}
+
+function dendrite_disable_registration {
+    registration_state="$1"
+    if grep -q "registration_disabled: ${registration_state}" "/etc/dendrite/dendrite.yaml"; then
+        return
+    fi
+    sed -i "s|registration_disabled:.*|registration_disabled: ${registration_state}|g" "/etc/dendrite/dendrite.yaml"
+    grep "registration_disabled:.*" "/etc/dendrite/dendrite.yaml"
+    systemctl restart dendrite
+    if [[ "${registration_state}" == 'True' || "${registration_state}" == 'true' ]]; then
+        # allow time for the daemon to start back up
+        # before attempting to register new users
+        sleep 8
+    fi
+}
+
+function generate_dendrite_config {
+    # https://codeberg.org/gerald/dendrite-on-flyio/src/branch/main/dendrite-example.yaml
+
+    dendrite_http_prefix='https'
+    dendrite_domain="${DENDRITE_DOMAIN_NAME}"
+    disable_tls_validation='false'
+    if [[ $ONION_ONLY != "no" ]]; then
+        dendrite_http_prefix='http'
+        dendrite_domain=$(cat /var/lib/tor/hidden_service_dendrite/hostname)
+        disable_tls_validation='true'
+    fi
+
+    { echo "# The version of the configuration file.";
+      echo "version: 2";
+      echo "";
+      echo "# Global Matrix configuration. This configuration applies to all components.";
+      echo "global:";
+      echo "  # The domain name of this homeserver.";
+      echo "  server_name: ${dendrite_domain}";
+      echo "";
+      echo "  # The path to the signing private key file, used to sign requests and events.";
+      echo "  private_key: /etc/dendrite/matrix_key.pem";
+      echo "";
+      echo "  # The paths and expiry timestamps (as a UNIX timestamp in millisecond precision)";
+      echo "  # to old signing private keys that were formerly in use on this domain. These";
+      echo "  # keys will not be used for federation request or event signing, but will be";
+      echo "  # provided to any other homeserver that asks when trying to verify old events.";
+      echo "  old_private_keys:";
+      echo "  # - private_key: old_matrix_key.pem";
+      echo "  #   expired_at: 1601024554498";
+      echo "";
+      echo "  # How long a remote server can cache our server signing key before requesting it";
+      echo "  # again. Increasing this number will reduce the number of requests made by other";
+      echo "  # servers for our key but increases the period that a compromised key will be";
+      echo "  # considered valid by other homeservers.";
+      echo "  key_validity_period: 168h0m0s";
+      echo "";
+      echo "  database:";
+      echo "    connection_string: file://${DENDRITE_DATABASE_FILENAME}";
+      echo "    max_open_conns: 90";
+      echo "    max_idle_conns: 5";
+      echo "    conn_max_lifetime: -1";
+      echo "";
+      echo "  cache:";
+      echo "    max_size_estimated: 1gb";
+      echo "    max_age: 1h";
+      echo "";
+      echo "  well_known_server_name: \"${dendrite_domain}:443\"";
+      echo "  well_known_client_name: \"${dendrite_http_prefix}://${dendrite_domain}\"";
+      echo "  well_known_sliding_sync_proxy: \"\"";
+      echo "";
+      echo "  # Lists of domains that the server will trust as identity servers to verify third";
+      echo "  # party identifiers such as phone numbers and email addresses.";
+      echo "  trusted_third_party_id_servers:";
+      echo "  - matrix.org";
+      echo "  - vector.im";
+      echo "";
+      echo "  disable_federation: false";
+      echo "";
+      echo "  presence:";
+      echo "    enable_inbound: false";
+      echo "    enable_outbound: false";
+      echo "";
+      echo "  report_stats:";
+      echo "    enabled: false";
+      echo "    endpoint: https://panopticon.matrix.org/push";
+      echo "";
+      echo "  # Server notices allows server admins to send messages to all users on the server.";
+      echo "  server_notices:";
+      echo "    enabled: false";
+      echo "    # The local part, display name and avatar URL (as a mxc:// URL) for the user that";
+      echo "    # will send the server notices. These are visible to all users on the deployment.";
+      echo "    local_part: \"_server\"";
+      echo "    display_name: \"Server Alerts\"";
+      echo "    avatar_url: \"\"";
+      echo "    # The room name to be used when sending server notices. This room name will";
+      echo "    # appear in user clients.";
+      echo "    room_name: \"Server Alerts\"";
+      echo "";
+      echo "  # Configuration for NATS JetStream";
+      echo "  jetstream:";
+      echo "    # A list of NATS Server addresses to connect to. If none are specified, an";
+      echo "    # internal NATS server will be started automatically when running Dendrite in";
+      echo "    # monolith mode.";
+      echo "    addresses:";
+      echo "    # - localhost:4222";
+      echo "";
+      echo "    # Disable the validation of TLS certificates of NATS. This is";
+      echo "    # not recommended in production since it may allow NATS traffic";
+      echo "    # to be sent to an insecure endpoint.";
+      echo "    disable_tls_validation: false";
+      echo "";
+      echo "    # Persistent directory to store JetStream streams in. This directory should be";
+      echo "    # preserved across Dendrite restarts.";
+      echo "    storage_path: ./";
+      echo "";
+      echo "    # The prefix to use for stream names for this homeserver - really only useful";
+      echo "    # if you are running more than one Dendrite server on the same NATS deployment.";
+      echo "    topic_prefix: Dendrite";
+      echo "";
+      echo "  # Configuration for Prometheus metric collection.";
+      echo "  metrics:";
+      echo "    # Whether or not Prometheus metrics are enabled.";
+      echo "    enabled: false";
+      echo "";
+      echo "    # HTTP basic authentication to protect access to monitoring.";
+      echo "    basic_auth:";
+      echo "      username: metrics";
+      echo "      password: metrics";
+      echo "";
+      echo "  # Optional DNS cache. The DNS cache may reduce the load on DNS servers if there";
+      echo "  # is no local caching resolver available for use.";
+      echo "  dns_cache:";
+      echo "    enabled: false";
+      echo "    cache_size: 256";
+      echo "    cache_lifetime: "5m" # 5 minutes; https://pkg.go.dev/time@master#ParseDuration";
+      echo "";
+      echo "# Configuration for the Appservice API.";
+      echo "app_service_api:";
+      echo "  # Disable the validation of TLS certificates of appservices. This is";
+      echo "  # not recommended in production since it may allow appservice traffic";
+      echo "  # to be sent to an insecure endpoint.";
+      echo "  disable_tls_validation: ${disable_tls_validation}";
+      echo "";
+      echo "  # Appservice configuration files to load into this homeserver.";
+      echo "  config_files:";
+      echo "    #  - /path/to/appservice_registration.yaml";
+      echo "";
+      echo "# Configuration for the Client API.";
+      echo "client_api:";
+      echo "  # Prevents new users from being able to register on this homeserver, except when";
+      echo "  # using the registration shared secret below.";
+      echo "  registration_disabled: false";
+      echo "";
+      echo "  # Prevents new guest accounts from being created. Guest registration is also";
+      echo "  # disabled implicitly by setting 'registration_disabled' above.";
+      echo "  guests_disabled: true";
+      echo "";
+      echo "  # If set, allows registration by anyone who knows the shared secret, regardless";
+      echo "  # of whether registration is otherwise disabled.";
+      echo "  registration_shared_secret: \"\"";
+      echo "";
+      echo "  # Whether to require reCAPTCHA for registration. If you have enabled registration";
+      echo "  # then this is HIGHLY RECOMMENDED to reduce the risk of your homeserver being used";
+      echo "  # for coordinated spam attacks.";
+      echo "  enable_registration_captcha: false";
+      echo "";
+      echo "  # Settings for ReCAPTCHA.";
+      echo "  recaptcha_public_key: \"\"";
+      echo "  recaptcha_private_key: \"\"";
+      echo "  recaptcha_bypass_secret: \"\"";
+      echo "";
+      echo "  # To use hcaptcha.com instead of ReCAPTCHA, set the following parameters, otherwise just keep them empty.";
+      echo "  # recaptcha_siteverify_api: \"https://hcaptcha.com/siteverify\"";
+      echo "  # recaptcha_api_js_url: \"https://js.hcaptcha.com/1/api.js\"";
+      echo "  # recaptcha_form_field: \"h-captcha-response\"";
+      echo "  # recaptcha_sitekey_class: \"h-captcha\"";
+      echo "";
+      echo "  # TURN server information that this homeserver should send to clients.";
+      echo "  turn:";
+      echo "    turn_user_lifetime: \"5m\"";
+      echo "    turn_uris:";
+      echo "    #  - turn:turn.server.org?transport=udp";
+      echo "    #  - turn:turn.server.org?transport=tcp";
+      echo "    turn_shared_secret: \"\"";
+      echo "    # If your TURN server requires static credentials, then you will need to enter";
+      echo "    # them here instead of supplying a shared secret. Note that these credentials";
+      echo "    # will be visible to clients!";
+      echo "    # turn_username: \"\"";
+      echo "    # turn_password: \"\"";
+      echo "";
+      echo "  # Settings for rate-limited endpoints. Rate limiting kicks in after the threshold";
+      echo "  # number of \"slots\" have been taken by requests from a specific host. Each \"slot\"";
+      echo "  # will be released after the cooloff time in milliseconds. Server administrators";
+      echo "  # and appservice users are exempt from rate limiting by default.";
+      echo "  rate_limiting:";
+      echo "    enabled: true";
+      echo "    threshold: 20";
+      echo "    cooloff_ms: 500";
+      echo "    exempt_user_ids:";
+      echo "    #  - \"@user:domain.com\"";
+      echo "";
+      echo "# Configuration for the Federation API.";
+      echo "federation_api:";
+      echo "  # How many times we will try to resend a failed transaction to a specific server. The";
+      echo "  # backoff is 2**x seconds, so 1 = 2 seconds, 2 = 4 seconds, 3 = 8 seconds etc. Once";
+      echo "  # the max retries are exceeded, Dendrite will no longer try to send transactions to";
+      echo "  # that server until it comes back to life and connects to us again.";
+      echo "  send_max_retries: 16";
+      echo "";
+      echo "  # Disable the validation of TLS certificates of remote federated homeservers. Do not";
+      echo "  # enable this option in production as it presents a security risk!";
+      echo "  disable_tls_validation: ${disable_tls_validation}";
+      echo "";
+      echo "  # Disable HTTP keepalives, which also prevents connection reuse. Dendrite will typically";
+      echo "  # keep HTTP connections open to remote hosts for 5 minutes as they can be reused much";
+      echo "  # more quickly than opening new connections each time. Disabling keepalives will close";
+      echo "  # HTTP connections immediately after a successful request but may result in more CPU and";
+      echo "  # memory being used on TLS handshakes for each new connection instead.";
+      echo "  disable_http_keepalives: false";
+      echo "";
+      echo "  # Perspective keyservers to use as a backup when direct key fetches fail. This may";
+      echo "  # be required to satisfy key requests for servers that are no longer online when";
+      echo "  # joining some rooms.";
+      echo "  key_perspectives:";
+      echo "    - server_name: matrix.org";
+      echo "      keys:";
+      echo "        - key_id: ed25519:auto";
+      echo "          public_key: Noi6WqcDj0QmPxCNQqgezwTlBKrfqehY1u2FyWP9uYw";
+      echo "        - key_id: ed25519:a_RXGa";
+      echo "          public_key: l8Hft5qXKn1vfHrg3p4+W8gELQVo8N13JkluMfmn2sQ";
+      echo "";
+      echo "  # This option will control whether Dendrite will prefer to look up keys directly";
+      echo "  # or whether it should try perspective servers first, using direct fetches as a";
+      echo "  # last resort.";
+      echo "  prefer_direct_fetch: false";
+      echo "";
+      echo "# Configuration for the Media API.";
+      echo "media_api:";
+      echo "  # Storage path for uploaded media. May be relative or absolute.";
+      echo "  base_path: ./media_store";
+      echo "";
+      echo "  # The maximum allowed file size (in bytes) for media uploads to this homeserver";
+      echo "  # (0 = unlimited). If using a reverse proxy, ensure it allows requests at least";
+      echo "  #this large (e.g. the client_max_body_size setting in nginx).";
+      echo "  max_file_size_bytes: 10485760";
+      echo "";
+      echo "  # Whether to dynamically generate thumbnails if needed.";
+      echo "  dynamic_thumbnails: false";
+      echo "";
+      echo "  # The maximum number of simultaneous thumbnail generators to run.";
+      echo "  max_thumbnail_generators: 10";
+      echo "";
+      echo "  # A list of thumbnail sizes to be generated for media content.";
+      echo "  thumbnail_sizes:";
+      echo "  - width: 32";
+      echo "  height: 32";
+      echo "  method: crop";
+      echo "  - width: 96";
+      echo "  height: 96";
+      echo "  method: crop";
+      echo "  - width: 640";
+      echo "  height: 480";
+      echo "  method: scale";
+      echo "";
+      echo "# Configuration for enabling experimental MSCs on this homeserver.";
+      echo "mscs:";
+      echo "  mscs:";
+      echo "  #  - msc2836  # (Threading, see https://github.com/matrix-org/matrix-doc/pull/2836)";
+      echo "";
+      echo "# Configuration for the Sync API.";
+      echo "sync_api:";
+      echo "  # This option controls which HTTP header to inspect to find the real remote IP";
+      echo "  # address of the client. This is likely required if Dendrite is running behind";
+      echo "  # a reverse proxy server.";
+      echo "  # real_ip_header: X-Real-IP";
+      echo "";
+      echo "  # Configuration for the full-text search engine.";
+      echo "  search:";
+      echo "    # Whether or not search is enabled.";
+      echo "    enabled: false";
+      echo "";
+      echo "    # The path where the search index will be created in.";
+      echo "    index_path: \"./searchindex\"";
+      echo "";
+      echo "    # The language most likely to be used on the server - used when indexing, to";
+      echo "    # ensure the returned results match expectations. A full list of possible languages";
+      echo "    # can be found at https://github.com/blevesearch/bleve/tree/master/analysis/lang";
+      echo "    language: \"en\"";
+      echo "";
+      echo "# Configuration for the User API.";
+      echo "user_api:";
+      echo "  # The cost when hashing passwords on registration/login. Default: 10. Min: 4, Max: 31";
+      echo "  # See https://pkg.go.dev/golang.org/x/crypto/bcrypt for more information.";
+      echo "  # Setting this lower makes registration/login consume less CPU resources at the cost";
+      echo "  # of security should the database be compromised. Setting this higher makes registration/login";
+      echo "  # consume more CPU resources but makes it harder to brute force password hashes. This value";
+      echo "  # can be lowered if performing tests or on embedded Dendrite instances (e.g WASM builds).";
+      echo "  bcrypt_cost: 10";
+      echo "";
+      echo "  # The length of time that a token issued for a relying party from";
+      echo "  # /_matrix/client/r0/user/{userId}/openid/request_token endpoint";
+      echo "  # is considered to be valid in milliseconds.";
+      echo "  # The default lifetime is 3600000ms (60 minutes).";
+      echo "  # openid_token_lifetime_ms: 3600000";
+      echo "";
+      echo "  # Users who register on this homeserver will automatically be joined to the rooms listed under \"auto_join_rooms\" option.";
+      echo "  # By default, any room aliases included in this list will be created as a publicly joinable room";
+      echo "  # when the first user registers for the homeserver. If the room already exists,";
+      echo "  # make certain it is a publicly joinable room, i.e. the join rule of the room must be set to 'public'.";
+      echo "  # As Spaces are just rooms under the hood, Space aliases may also be used.";
+      echo "  auto_join_rooms:";
+      echo "  #  - \"#main:matrix.org\"";
+      echo "";
+      echo "# Configuration for Opentracing.";
+      echo "# See https://github.com/matrix-org/dendrite/tree/master/docs/tracing for information on";
+      echo "# how this works and how to set it up.";
+      echo "tracing:";
+      echo "  enabled: false";
+      echo "  jaeger:";
+      echo "    serviceName: \"\"";
+      echo "    disabled: false";
+      echo "    rpc_metrics: false";
+      echo "    tags: []";
+      echo "    sampler: null";
+      echo "    reporter: null";
+      echo "    headers: null";
+      echo "    baggage_restrictions: null";
+      echo "    throttler: null";
+      echo "";
+      echo "# Logging configuration, in addition to the standard logging that is sent to";
+      echo "# stdout by Dendrite.";
+      echo "logging:";
+      echo "  - type: std";
+      echo "    level: info";
+      echo "  - type: file";
+      echo "    level: ${DENDRITE_DEBUG_LEVEL}";
+      echo "    params:";
+      echo "      path: /var/log/dendrite"; } > /etc/dendrite/dendrite.yaml
+}
+
+function install_dendrite {
+    increment_app_install_progress
+
+    groupdel -f dendrite
+    userdel -r dendrite
+    if [ -d "/home/dendrite" ]; then
+        rm -rf "/home/dendrite"
+    fi
+    if [ -d "/etc/dendrite" ]; then
+        rm -rf "/etc/dendrite"
+    fi
+    if [ -d "/var/www/${DENDRITE_DOMAIN_NAME}/htdocs" ]; then
+        rm -rf "/var/www/${DENDRITE_DOMAIN_NAME}/htdocs"
+    fi
+    mkdir "/var/www/${DENDRITE_DOMAIN_NAME}"
+    if ! grep -q "dendrite:" /etc/group; then
+        groupadd dendrite
+    fi
+    useradd -c "dendrite account" -d "/home/dendrite" -m -r -g dendrite dendrite
+    # add this user to the go group
+    usermod -a -G go dendrite
+
+    if [ ! -d /home/dendrite ]; then
+        echo $'dendrite user account was not created'
+        exit 92
+    fi
+
+    increment_app_install_progress
+
+    if [ ! -f /home/dendrite/.bashrc ]; then
+        echo "No .bashrc found for dendrite user home directory"
+        exit 39
+    fi
+    # add go path setup for the dendrite user
+    if ! grep -q "GOPATH=" /home/dendrite/.bashrc; then
+        { echo "export GOROOT=/home/go/go${GO_VERSION}";
+          echo "export GOPATH=/home/dendrite";
+          echo "export PATH=\$PATH:\$GOPATH:/home/go/go${GO_VERSION}/bin"; } >> /home/dendrite/.bashrc
+    else
+        sed -i "s|GOPATH=.*|GOPATH=/home/dendrite|g" /home/dendrite/.bashrc
+    fi
+    chown -R dendrite:dendrite /home/dendrite
+
+    increment_app_install_progress
+
+    # get the source code
+    cd "/home/dendrite" || exit 24
+    function_check git_clone
+    git_clone "${DENDRITE_REPO}" "/home/dendrite/dendrite"
+    if [ ! -d "/home/dendrite/dendrite" ]; then
+        echo $'Unable to clone dendrite repo'
+        exit 89
+    fi
+    cd "/home/dendrite/dendrite" || exit 24
+    git checkout ${DENDRITE_VERSION}
+
+    increment_app_install_progress
+    GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go build -o bin/dendrite-monolith-server ./cmd/dendrite-monolith-server
+    if [ ! -f bin/dendrite-monolith-server ]; then
+        echo $'bin/dendrite-monolith-server was not compiled'
+        exit 63
+    fi
+
+    increment_app_install_progress
+    GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go build -o bin/generate-keys ./cmd/generate-keys
+    if [ ! -f bin/generate-keys ]; then
+        echo $'bin/generate-keys was not compiled'
+        exit 64
+    fi
+
+    GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go build -o bin/create-account ./cmd/create-account
+    if [ ! -f bin/create-account ]; then
+        echo $'bin/create-account was not compiled'
+        return
+    fi
+
+    cd "/home/dendrite" || exit 24
+    chown -R dendrite:dendrite "/home/dendrite"
+
+    mkdir /var/log/dendrite
+    chown -R dendrite:dendrite /var/log/dendrite
+
+    mkdir /etc/dendrite
+    /home/dendrite/dendrite/bin/generate-keys --private-key /etc/dendrite/matrix_key.pem
+
+    add_ddns_domain "$DENDRITE_DOMAIN_NAME"
+
+    increment_app_install_progress
+
+    DENDRITE_ONION_HOSTNAME=$(add_onion_service dendrite 80 "${DENDRITE_ONION_PORT}")
+
+    increment_app_install_progress
+
+    dendrite_http_prefix='https'
+    dendrite_domain="${DENDRITE_DOMAIN_NAME}"
+    if [[ $ONION_ONLY != "no" ]]; then
+        dendrite_http_prefix='http'
+        dendrite_domain=$(cat /var/lib/tor/hidden_service_dendrite/hostname)
+    fi
+
+    dendrite_nginx_site=/etc/nginx/sites-available/$DENDRITE_DOMAIN_NAME
+    if [[ "${ONION_ONLY}" == "no" ]]; then
+        nginx_http_redirect "${DENDRITE_DOMAIN_NAME}" "index index.html"
+        { echo 'server {';
+          echo '  listen 443 ssl http2;';
+          echo '  #listen [::]:443 ssl http2;';
+          echo "  server_name ${DENDRITE_DOMAIN_NAME};";
+          echo '  server_tokens off;';
+          echo ''; } >> "${dendrite_nginx_site}"
+        nginx_compress "${DENDRITE_DOMAIN_NAME}"
+        echo '  # Security' >> "${dendrite_nginx_site}"
+        nginx_ssl "${DENDRITE_DOMAIN_NAME}"
+
+#        nginx_security_options "${DENDRITE_DOMAIN_NAME}"
+
+        { echo '  add_header X-Robots-Tag "noindex";';
+          echo '  add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
+          echo "  add_header Onion-Location http://${DENDRITE_ONION_HOSTNAME}\$request_uri;";
+          echo '';
+          echo '  access_log /dev/null;';
+          echo '  error_log /dev/null;';
+          echo '';
+          echo "  root /var/www/${DENDRITE_DOMAIN_NAME}/htdocs;";
+          echo '';
+          echo '  index index.html;';
+          echo '';
+          echo '  keepalive_timeout 70;';
+          echo '  sendfile on;';
+          echo '';
+          echo "  proxy_set_header Host      \$host;";
+          echo "  proxy_set_header X-Real-IP \$remote_addr;";
+          echo "  proxy_read_timeout         600;";
+          echo '';
+          echo '  location /.well-known/matrix/server {';
+          echo '    default_type application/json;';
+          echo "    return 200 '{ \"m.server\": \"${DENDRITE_DOMAIN_NAME}:443\" }';";
+          echo '  }';
+          echo '';
+          echo '  location /.well-known/matrix/client {';
+          echo '    default_type application/json;';
+          echo "    return 200 '{ \"m.homeserver\": { \"base_url\": \"https://${DENDRITE_DOMAIN_NAME}\" } }';";
+          echo "    add_header \"Access-Control-Allow-Origin\" *;";
+          echo '  }';
+          echo '';
+          echo '  location /_matrix {';
+          echo '    proxy_http_version 1.1;';
+          echo '    client_max_body_size 31M;';
+          echo "    proxy_set_header Host \$http_host;";
+          echo "    proxy_set_header X-Real-IP \$remote_addr;";
+          echo "    proxy_set_header X-Forward-For \$proxy_add_x_forwarded_for;";
+          echo '    proxy_set_header X-Forward-Proto https;';
+          echo '    proxy_set_header X-Nginx-Proxy true;';
+          echo '    proxy_temp_file_write_size 64k;';
+          echo '    proxy_connect_timeout 10080s;';
+          echo '    proxy_send_timeout 10080;';
+          echo '    proxy_read_timeout 10080;';
+          echo '    proxy_buffer_size 64k;';
+          echo '    proxy_buffers 16 32k;';
+          echo '    proxy_busy_buffers_size 64k;';
+          echo '    proxy_redirect off;';
+          echo '    proxy_request_buffering off;';
+          echo '    proxy_buffering off;';
+          echo "    proxy_pass http://localhost:${DENDRITE_PORT_INTERNAL};";
+          echo '    tcp_nodelay on;';
+          echo '  }';
+          echo '}'; } >> "$dendrite_nginx_site"
+    else
+        echo '' > "$dendrite_nginx_site"
+    fi
+    { echo 'server {';
+      echo "    listen 127.0.0.1:${DENDRITE_ONION_PORT} default_server;";
+      echo "    #listen [::]:${DENDRITE_ONION_PORT} default_server;";
+      echo "    server_name ${DENDRITE_ONION_HOSTNAME};";
+      echo '    server_tokens off;';
+      echo ''; } >> "$dendrite_nginx_site"
+    nginx_compress "${DENDRITE_DOMAIN_NAME}"
+    nginx_security_options "${DENDRITE_DOMAIN_NAME}"
+    { echo '';
+      echo '    access_log /dev/null;';
+      echo '    error_log /dev/null;';
+      echo '';
+      echo "    root /var/www/${DENDRITE_DOMAIN_NAME}/htdocs;";
+      echo '';
+      echo '  index index.html;';
+      echo '';
+      echo '  keepalive_timeout 70;';
+      echo '  sendfile on;';
+      echo '';
+      echo "  proxy_set_header Host      \$host;";
+      echo "  proxy_set_header X-Real-IP \$remote_addr;";
+      echo "  proxy_read_timeout         600;";
+      echo '';
+      echo '  location /.well-known/matrix/server {';
+      echo '    default_type application/json;';
+      echo "    return 200 '{ \"m.server\": \"${DENDRITE_ONION_HOSTNAME}:80\" }';";
+      echo '  }';
+      echo '';
+      echo '  location /.well-known/matrix/client {';
+      echo '    default_type application/json;';
+      echo "    return 200 '{ \"m.homeserver\": { \"base_url\": \"http://${DENDRITE_ONION_HOSTNAME}\" } }';";
+      echo "    add_header \"Access-Control-Allow-Origin\" *;";
+      echo '  }';
+      echo '';
+      echo '  location /_matrix {';
+      echo '    proxy_http_version 1.1;';
+      echo '    client_max_body_size 31M;';
+      echo "    proxy_set_header Host \$http_host;";
+      echo "    proxy_set_header X-Real-IP \$remote_addr;";
+      echo "    proxy_set_header X-Forward-For \$proxy_add_x_forwarded_for;";
+      echo '    proxy_set_header X-Forward-Proto https;';
+      echo '    proxy_set_header X-Nginx-Proxy true;';
+      echo '    proxy_temp_file_write_size 64k;';
+      echo '    proxy_connect_timeout 10080s;';
+      echo '    proxy_send_timeout 10080;';
+      echo '    proxy_read_timeout 10080;';
+      echo '    proxy_buffer_size 64k;';
+      echo '    proxy_buffers 16 32k;';
+      echo '    proxy_busy_buffers_size 64k;';
+      echo '    proxy_redirect off;';
+      echo '    proxy_request_buffering off;';
+      echo '    proxy_buffering off;';
+      echo "    proxy_pass http://localhost:${DENDRITE_PORT_INTERNAL};";
+      echo '    tcp_nodelay on;';
+      echo '  }';
+      echo '}'; } >> "$dendrite_nginx_site"
+
+    add_i2p_service dendrite 80 ${DENDRITE_I2P_PORT}
+    DENDRITE_I2P_HOSTNAME=$(get_i2p_domain dendrite)
+    if [ "$DENDRITE_I2P_HOSTNAME" ]; then
+        { echo 'server {';
+          echo "    listen 127.0.0.1:${DENDRITE_I2P_PORT};";
+          echo "    #listen [::]:${DENDRITE_I2P_PORT};";
+          echo "    server_name ${DENDRITE_I2P_HOSTNAME};";
+          echo '    server_tokens off;';
+          echo ''; } >> "$dendrite_nginx_site"
+        nginx_compress "${DENDRITE_DOMAIN_NAME}"
+        nginx_security_options "${DENDRITE_DOMAIN_NAME}"
+        { echo '';
+          echo '    access_log /dev/null;';
+          echo '    error_log /dev/null;';
+          echo '';
+          echo "    root /var/www/${DENDRITE_DOMAIN_NAME}/htdocs;";
+          echo '';
+          echo '  index index.html;';
+          echo '';
+          echo '  keepalive_timeout 70;';
+          echo '  sendfile on;';
+          echo '';
+          echo "  proxy_set_header Host      \$host;";
+          echo "  proxy_set_header X-Real-IP \$remote_addr;";
+          echo "  proxy_read_timeout         600;";
+          echo '';
+          echo '  location /.well-known/matrix/server {';
+          echo '    default_type application/json;';
+          echo "    return 200 '{ \"m.server\": \"${DENDRITE_I2P_HOSTNAME}:80\" }';";
+          echo '  }';
+          echo '';
+          echo '  location /.well-known/matrix/client {';
+          echo '    default_type application/json;';
+          echo "    return 200 '{ \"m.homeserver\": { \"base_url\": \"http://${DENDRITE_I2P_HOSTNAME}\" } }';";
+          echo "    add_header \"Access-Control-Allow-Origin\" *;";
+          echo '  }';
+          echo '';
+          echo '  location /_matrix {';
+          echo '    proxy_http_version 1.1;';
+          echo '    client_max_body_size 31M;';
+          echo "    proxy_set_header Host \$http_host;";
+          echo "    proxy_set_header X-Real-IP \$remote_addr;";
+          echo "    proxy_set_header X-Forward-For \$proxy_add_x_forwarded_for;";
+          echo '    proxy_set_header X-Forward-Proto https;';
+          echo '    proxy_set_header X-Nginx-Proxy true;';
+          echo '    proxy_temp_file_write_size 64k;';
+          echo '    proxy_connect_timeout 10080s;';
+          echo '    proxy_send_timeout 10080;';
+          echo '    proxy_read_timeout 10080;';
+          echo '    proxy_buffer_size 64k;';
+          echo '    proxy_buffers 16 32k;';
+          echo '    proxy_busy_buffers_size 64k;';
+          echo '    proxy_redirect off;';
+          echo '    proxy_request_buffering off;';
+          echo '    proxy_buffering off;';
+          echo "    proxy_pass http://localhost:${DENDRITE_PORT_INTERNAL};";
+          echo '    tcp_nodelay on;';
+          echo '  }';
+          echo '}'; } >> "$dendrite_nginx_site"
+    fi
+
+    DENDRITE_DEBUG_LEVEL='info'
+    generate_dendrite_config
+
+    ln -s /etc/dendrite/dendrite.yaml /home/dendrite/dendrite/dendrite.yaml
+    chmod -R 700 /etc/dendrite
+    chown -R dendrite:dendrite /etc/dendrite
+
+    increment_app_install_progress
+
+    create_site_certificate "${DENDRITE_DOMAIN_NAME}" 'yes'
+
+    nginx_ensite "${DENDRITE_DOMAIN_NAME}"
+
+    systemctl restart nginx
+
+    increment_app_install_progress
+
+    { echo '[Unit]';
+      echo 'Description=Dendrite Server';
+      echo 'After=network.target';
+      echo '';
+      echo '[Service]';
+      echo 'Type=simple';
+      echo 'User=dendrite';
+      echo 'Group=dendrite';
+      echo 'WorkingDirectory=/home/dendrite';
+      echo 'ExecStart=/home/dendrite/dendrite/bin/dendrite-monolith-server';
+      echo "Environment=\"USER=dendrite\" \"HOME=/home/dendrite\" \"GOPATH=/home/go/go${GO_VERSION}\""
+      echo "Environment=GIT_CEILING_DIRECTORIES=/home/dendrite";
+      echo "Environment=GODEBUG=madvdontneed=1";
+      echo 'Restart=always';
+      echo 'RestartSec=10';
+      echo 'PrivateTmp=true';
+      echo 'PrivateDevices=false';
+      echo 'CapabilityBoundingSet=~CAP_SYS_ADMIN';
+      echo 'ProtectSystem=yes';
+      echo 'ProtectHome=no';
+      echo 'CPUQuota=10%';
+      echo 'BlockIOWeight=500';
+      echo 'CPUShares=500';
+      echo 'ProtectClock=yes';
+      echo 'ProtectHostname=yes';
+      echo 'PrivateUsers=yes';
+      echo 'ProtectKernelModules=yes';
+      echo 'ProtectKernelTunables=yes';
+      echo 'NoNewPrivileges=true';
+      echo '';
+      echo '[Install]';
+      echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/dendrite.service
+    systemctl enable dendrite
+    chown -R dendrite:dendrite "/home/dendrite"
+    systemctl start dendrite
+
+    increment_app_install_progress
+
+    dendrite_add_onion_federation
+
+    increment_app_install_progress
+    echo "Adding a dendrite user for ${MY_USERNAME}"
+    if [ ! "${DENDRITE_PASSWORD}" ]; then
+        if [ -f "${IMAGE_PASSWORD_FILE}" ]; then
+            DENDRITE_PASSWORD="$(printf "%s" "$(cat "$IMAGE_PASSWORD_FILE")")"
+        else
+            DENDRITE_PASSWORD="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
+        fi
+    fi
+    add_user_dendrite "${MY_USERNAME}" "${DENDRITE_PASSWORD}"
+    if [ ! ${dendrite_user_added} ]; then
+        echo $'Failed to add dendrite admin user';
+        exit 87
+    fi
+
+    increment_app_install_progress
+    if [[ "$ONION_ONLY" == 'no' ]]; then
+        firewall_add dendrite ${DENDRITE_HTTP_PORT}
+        firewall_max_connections ${DENDRITE_PORT_INTERNAL} ${DENDRITE_FIREWALL_MAX_CONNECTIONS}
+    fi
+
+    set_completion_param "dendrite version" "${DENDRITE_VERSION}"
+    APP_INSTALLED=1
+}
+
+# NOTE: deliberately there is no "exit 0"
