@@ -244,12 +244,12 @@ function upgrade_dendrite {
     cd "/home/dendrite/dendrite" || return
     git pull
     git checkout ${DENDRITE_VERSION}
-    GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go build -o bin/dendrite-monolith-server-new ./cmd/dendrite-monolith-server
-    if [ ! -f bin/dendrite-monolith-server-new ]; then
-        echo $'bin/dendrite-monolith-server was not compiled'
+    GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go build -o bin/dendrite-new ./cmd/dendrite
+    if [ ! -f bin/dendrite-new ]; then
+        echo $'bin/dendrite was not compiled'
         return
     fi
-    mv bin/dendrite-monolith-server-new bin/dendrite-monolith-server
+    mv bin/dendrite-new bin/dendrite
 
     GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go build -o bin/generate-keys-new ./cmd/generate-keys
     if [ ! -f bin/generate-keys-new ]; then
@@ -756,9 +756,9 @@ function install_dendrite {
     git checkout ${DENDRITE_VERSION}
 
     increment_app_install_progress
-    GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go build -o bin/dendrite-monolith-server ./cmd/dendrite-monolith-server
-    if [ ! -f bin/dendrite-monolith-server ]; then
-        echo $'bin/dendrite-monolith-server was not compiled'
+    GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go build -o bin/dendrite ./cmd/dendrite
+    if [ ! -f bin/dendrite ]; then
+        echo $'bin/dendrite was not compiled'
         exit 63
     fi
 
@@ -1012,7 +1012,7 @@ function install_dendrite {
       echo 'User=dendrite';
       echo 'Group=dendrite';
       echo 'WorkingDirectory=/home/dendrite';
-      echo 'ExecStart=/home/dendrite/dendrite/bin/dendrite-monolith-server';
+      echo 'ExecStart=/home/dendrite/dendrite/bin/dendrite';
       echo "Environment=\"USER=dendrite\" \"HOME=/home/dendrite\" \"GOPATH=/home/go/go${GO_VERSION}\""
       echo "Environment=GIT_CEILING_DIRECTORIES=/home/dendrite";
       echo "Environment=GODEBUG=madvdontneed=1";
