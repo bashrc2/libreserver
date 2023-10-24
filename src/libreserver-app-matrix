@@ -1444,6 +1444,10 @@ function install_matrix_venv {
 }
 
 function install_matrix {
+    if [ -d /home/dendrite ]; then
+        echo $'Matrix dendrite is already installed'
+        exit 43
+    fi
     matrix_is_installing=1
     increment_app_install_progress
 

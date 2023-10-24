@@ -692,6 +692,11 @@ function generate_dendrite_config {
 }
 
 function install_dendrite {
+    if [ -d /etc/matrix ]; then
+        echo $'Matrix synapse is already installed'
+        exit 43
+    fi
+
     increment_app_install_progress
 
     groupdel -f dendrite
