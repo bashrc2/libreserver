@@ -756,6 +756,7 @@ function install_dendrite {
     git checkout ${DENDRITE_VERSION}
 
     increment_app_install_progress
+    mkdir "/home/dendrite/dendrite/bin"
     GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go build -o bin/dendrite ./cmd/dendrite
     if [ ! -f bin/dendrite ]; then
         echo "GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go build -o bin/dendrite ./cmd/dendrite"
