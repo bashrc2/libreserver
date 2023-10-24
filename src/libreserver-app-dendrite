@@ -353,6 +353,9 @@ function remove_dendrite {
     if [ -d /var/log/dendrite ]; then
         rm -rf /var/log/dendrite
     fi
+    if [ -d "/var/www/${DENDRITE_DOMAIN_NAME}/htdocs" ]; then
+        rm -rf "/var/www/${DENDRITE_DOMAIN_NAME}/htdocs"
+    fi
 }
 
 function dendrite_disable_registration {
