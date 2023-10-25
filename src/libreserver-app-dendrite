@@ -29,6 +29,9 @@ VARIANTS='full full-vim full-micro chat'
 
 APP_CATEGORY=chat
 
+DENDRITE_PATH='github.com/matrix-org/dendrite'
+DENDRITE_SRC_DIR="/home/dendrite/src/github.com/matrix-org/dendrite"
+
 IN_DEFAULT_INSTALL=0
 INSTALLED_ON_DEFAULT_DOMAIN=1
 SHOW_ON_ABOUT=1
@@ -190,7 +193,7 @@ function add_user_dendrite {
 
     dendrite_disable_registration false
 
-    cd "/home/dendrite/dendrite" || return
+    cd "${DENDRITE_SRC_DIR}" || return
     if [[ "${new_username}" != "admin" ]]; then
         echo "${new_user_password}" | ./bin/create-account  -config /etc/dendrite/dendrite.yaml -username ${new_username}
     else
@@ -241,10 +244,13 @@ function upgrade_dendrite {
         DENDRITE_DOMAIN_NAME=$(get_completion_param "dendrite domain")
     fi
 
-    cd "/home/dendrite/dendrite" || return
-    git pull
-    git checkout ${DENDRITE_VERSION}
-    export GO111MODULE=off
+    cd "${DENDRITE_SRC_DIR}" || return
+    export GO111MODULE=on
+    export TMPDIR=/home/dendrite/tmp
+
+    # get the dependencies
+    GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go get -d ./...
+
     GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go build -o bin/dendrite-new ./cmd/dendrite
     if [ ! -f bin/dendrite-new ]; then
         echo $'bin/dendrite was not compiled'
@@ -277,6 +283,9 @@ function upgrade_dendrite {
 
 function backup_local_dendrite {
     systemctl stop dendrite
+
+    # remove temporary files
+    rm -rf /home/dendrite/tmp/*
 
     source_directory=/home/dendrite
     cp -r /etc/dendrite /home/dendrite/etc
@@ -737,6 +746,7 @@ function install_dendrite {
     if ! grep -q "GOPATH=" /home/dendrite/.bashrc; then
         { echo "export GOROOT=/home/go/go${GO_VERSION}";
           echo "export GOPATH=/home/dendrite";
+          echo "export GO111MODULE=on";
           echo "export PATH=\$PATH:\$GOPATH:/home/go/go${GO_VERSION}/bin"; } >> /home/dendrite/.bashrc
     else
         sed -i "s|GOPATH=.*|GOPATH=/home/dendrite|g" /home/dendrite/.bashrc
@@ -747,18 +757,24 @@ function install_dendrite {
 
     # get the source code
     cd "/home/dendrite" || exit 24
-    function_check git_clone
-    git_clone "${DENDRITE_REPO}" "/home/dendrite/dendrite"
-    if [ ! -d "/home/dendrite/dendrite" ]; then
-        echo $'Unable to clone dendrite repo'
-        exit 89
+
+    export GO111MODULE=on
+    mkdir /home/dendrite/tmp
+    export TMPDIR=/home/dendrite/tmp
+
+    # get dendrite source
+    GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go get -u -v ${DENDRITE_PATH}
+    if [ ! -d "${DENDRITE_SRC_DIR}" ]; then
+        echo $"Unable to get ${DENDRITE_PATH}"
+        exit 40
     fi
-    cd "/home/dendrite/dendrite" || exit 24
-    git checkout ${DENDRITE_VERSION}
+    cd "${DENDRITE_SRC_DIR}" || exit 25
+
+    # get the dependencies
+    GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go get -d ./...
 
     increment_app_install_progress
-    mkdir "/home/dendrite/dendrite/bin"
-    export GO111MODULE=off
+
     GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go build -o bin/dendrite ./cmd/dendrite
     if [ ! -f bin/dendrite ]; then
         echo "GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go build -o bin/dendrite ./cmd/dendrite"
@@ -767,12 +783,15 @@ function install_dendrite {
     fi
 
     increment_app_install_progress
+
     GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go build -o bin/generate-keys ./cmd/generate-keys
     if [ ! -f bin/generate-keys ]; then
         echo "GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go build -o bin/generate-keys ./cmd/generate-keys"
         echo $'bin/generate-keys was not compiled'
         exit 64
     fi
+
+    increment_app_install_progress
 
     GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go build -o bin/create-account ./cmd/create-account
     if [ ! -f bin/create-account ]; then
@@ -788,7 +807,7 @@ function install_dendrite {
     chown -R dendrite:dendrite /var/log/dendrite
 
     mkdir /etc/dendrite
-    /home/dendrite/dendrite/bin/generate-keys --private-key /etc/dendrite/matrix_key.pem
+    ${DENDRITE_SRC_DIR}/bin/generate-keys --private-key /etc/dendrite/matrix_key.pem
 
     add_ddns_domain "$DENDRITE_DOMAIN_NAME"
 
@@ -995,7 +1014,7 @@ function install_dendrite {
     DENDRITE_DEBUG_LEVEL='info'
     generate_dendrite_config
 
-    ln -s /etc/dendrite/dendrite.yaml /home/dendrite/dendrite/dendrite.yaml
+    ln -s /etc/dendrite/dendrite.yaml ${DENDRITE_SRC_DIR}/dendrite.yaml
     chmod -R 700 /etc/dendrite
     chown -R dendrite:dendrite /etc/dendrite
 
@@ -1018,7 +1037,7 @@ function install_dendrite {
       echo 'User=dendrite';
       echo 'Group=dendrite';
       echo 'WorkingDirectory=/home/dendrite';
-      echo 'ExecStart=/home/dendrite/dendrite/bin/dendrite';
+      echo "ExecStart=${DENDRITE_SRC_DIR}/bin/dendrite";
       echo "Environment=\"USER=dendrite\" \"HOME=/home/dendrite\" \"GOPATH=/home/go/go${GO_VERSION}\""
       echo "Environment=GIT_CEILING_DIRECTORIES=/home/dendrite";
       echo "Environment=GODEBUG=madvdontneed=1";
