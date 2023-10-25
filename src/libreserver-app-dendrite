@@ -31,6 +31,7 @@ APP_CATEGORY=chat
 
 DENDRITE_PATH='github.com/matrix-org/dendrite'
 DENDRITE_SRC_DIR="/home/dendrite/src/github.com/matrix-org/dendrite"
+DENDRITE_DATA_DIR=/opt/dendrite
 
 IN_DEFAULT_INSTALL=0
 INSTALLED_ON_DEFAULT_DOMAIN=1
@@ -195,9 +196,9 @@ function add_user_dendrite {
 
     cd "${DENDRITE_SRC_DIR}" || return
     if [[ "${new_username}" != "admin" ]]; then
-        echo "${new_user_password}" | ./bin/create-account  -config /etc/dendrite/dendrite.yaml -username ${new_username}
+        echo "${new_user_password}" | ./bin/create-account  -config ${DENDRITE_DATA_DIR}/dendrite.yaml -username ${new_username}
     else
-        echo "${new_user_password}" | ./bin/create-account  -config /etc/dendrite/dendrite.yaml -username ${new_username} -admin
+        echo "${new_user_password}" | ./bin/create-account  -config ${DENDRITE_DATA_DIR}/dendrite.yaml -username ${new_username} -admin
     fi
     "${PROJECT_NAME}-pass" -u "$new_username" -a dendrite -p "$new_user_password"
     dendrite_disable_registration true
@@ -295,11 +296,11 @@ function backup_local_dendrite {
     rm -rf /home/dendrite/tmp/*
 
     source_directory=/home/dendrite
-    cp -r /etc/dendrite /home/dendrite/etc
-    chown -R dendrite:dendrite /home/dendrite/etc
+    cp -r ${DENDRITE_DATA_DIR} /home/dendrite/opt
+    chown -R dendrite:dendrite /home/dendrite/opt
     dest_directory=dendrite
     backup_directory_to_usb "${source_directory}" ${dest_directory}
-    rm -rf /home/dendrite/etc
+    rm -rf /home/dendrite/opt
     systemctl start dendrite
 }
 
@@ -320,8 +321,8 @@ function restore_local_dendrite {
             fi
             cp -rp "$temp_restore_dir"/* "$dendrite_dir"/
         fi
-        cp -r /home/dendrite/etc/* /etc/dendrite/
-        chown -R dendrite:dendrite /etc/dendrite
+        cp -r /home/dendrite/opt/* ${DENDRITE_DATA_DIR}/
+        chown -R dendrite:dendrite ${DENDRITE_DATA_DIR}
         chown -R dendrite:dendrite "$dendrite_dir"
         rm -rf $temp_restore_dir
     fi
@@ -364,8 +365,8 @@ function remove_dendrite {
     if [ -d /home/dendrite ]; then
         rm -rf /home/dendrite
     fi
-    if [ -d /etc/dendrite ]; then
-        rm -rf /etc/dendrite
+    if [ -d ${DENDRITE_DATA_DIR} ]; then
+        rm -rf ${DENDRITE_DATA_DIR}
     fi
     if [ -d /var/log/dendrite ]; then
         rm -rf /var/log/dendrite
@@ -377,11 +378,11 @@ function remove_dendrite {
 
 function dendrite_disable_registration {
     registration_state="$1"
-    if grep -q "registration_disabled: ${registration_state}" "/etc/dendrite/dendrite.yaml"; then
+    if grep -q "registration_disabled: ${registration_state}" "${DENDRITE_DATA_DIR}/dendrite.yaml"; then
         return
     fi
-    sed -i "s|registration_disabled:.*|registration_disabled: ${registration_state}|g" "/etc/dendrite/dendrite.yaml"
-    grep "registration_disabled:.*" "/etc/dendrite/dendrite.yaml"
+    sed -i "s|registration_disabled:.*|registration_disabled: ${registration_state}|g" "${DENDRITE_DATA_DIR}/dendrite.yaml"
+    grep "registration_disabled:.*" "${DENDRITE_DATA_DIR}/dendrite.yaml"
     systemctl restart dendrite
     if [[ "${registration_state}" == 'True' || "${registration_state}" == 'true' ]]; then
         # allow time for the daemon to start back up
@@ -411,7 +412,7 @@ function generate_dendrite_config {
       echo "  server_name: ${dendrite_domain}";
       echo "";
       echo "  # The path to the signing private key file, used to sign requests and events.";
-      echo "  private_key: /etc/dendrite/matrix_key.pem";
+      echo "  private_key: ${DENDRITE_DATA_DIR}/matrix_key.pem";
       echo "";
       echo "  # The paths and expiry timestamps (as a UNIX timestamp in millisecond precision)";
       echo "  # to old signing private keys that were formerly in use on this domain. These";
@@ -708,7 +709,7 @@ function generate_dendrite_config {
       echo "  - type: file";
       echo "    level: ${DENDRITE_DEBUG_LEVEL}";
       echo "    params:";
-      echo "      path: /var/log/dendrite"; } > /etc/dendrite/dendrite.yaml
+      echo "      path: /var/log/dendrite"; } > ${DENDRITE_DATA_DIR}/dendrite.yaml
 }
 
 function install_dendrite {
@@ -724,8 +725,8 @@ function install_dendrite {
     if [ -d "/home/dendrite" ]; then
         rm -rf "/home/dendrite"
     fi
-    if [ -d "/etc/dendrite" ]; then
-        rm -rf "/etc/dendrite"
+    if [ -d "${DENDRITE_DATA_DIR}" ]; then
+        rm -rf "${DENDRITE_DATA_DIR}"
     fi
     if [ -d "/var/www/${DENDRITE_DOMAIN_NAME}/htdocs" ]; then
         rm -rf "/var/www/${DENDRITE_DOMAIN_NAME}/htdocs"
@@ -818,8 +819,8 @@ function install_dendrite {
     mkdir /var/log/dendrite
     chown -R dendrite:dendrite /var/log/dendrite
 
-    mkdir /etc/dendrite
-    ${DENDRITE_SRC_DIR}/bin/generate-keys --private-key /etc/dendrite/matrix_key.pem
+    mkdir ${DENDRITE_DATA_DIR}
+    ${DENDRITE_SRC_DIR}/bin/generate-keys --private-key ${DENDRITE_DATA_DIR}/matrix_key.pem
 
     add_ddns_domain "$DENDRITE_DOMAIN_NAME"
 
@@ -1026,9 +1027,9 @@ function install_dendrite {
     DENDRITE_DEBUG_LEVEL='info'
     generate_dendrite_config
 
-    ln -s /etc/dendrite/dendrite.yaml ${DENDRITE_SRC_DIR}/dendrite.yaml
-    chmod -R 700 /etc/dendrite
-    chown -R dendrite:dendrite /etc/dendrite
+    ln -s ${DENDRITE_DATA_DIR}/dendrite.yaml ${DENDRITE_SRC_DIR}/dendrite.yaml
+    chmod -R 700 ${DENDRITE_DATA_DIR}
+    chown -R dendrite:dendrite ${DENDRITE_DATA_DIR}
 
     increment_app_install_progress
 
@@ -1048,12 +1049,13 @@ function install_dendrite {
       echo 'Type=simple';
       echo 'User=dendrite';
       echo 'Group=dendrite';
-      echo 'WorkingDirectory=/home/dendrite';
+      echo "WorkingDirectory=${DENDRITE_DATA_DIR}";
       echo "ExecStart=${DENDRITE_SRC_DIR}/bin/dendrite";
       echo "Environment=\"USER=dendrite\" \"HOME=/home/dendrite\" \"GOPATH=/home/go/go${GO_VERSION}\""
       echo "Environment=GIT_CEILING_DIRECTORIES=/home/dendrite";
       echo "Environment=GODEBUG=madvdontneed=1";
       echo 'Restart=always';
+      echo 'LimitNOFILE=65535';
       echo 'RestartSec=10';
       echo 'PrivateTmp=true';
       echo 'PrivateDevices=false';
