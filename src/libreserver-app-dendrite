@@ -248,8 +248,11 @@ function upgrade_dendrite {
     export GO111MODULE=on
     export TMPDIR=/home/dendrite/tmp
 
+    # set the version number
+    GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go mod edit -require ${DENDRITE_PATH}@${DENDRITE_VERSION}
+
     # get dendrite source
-    GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go get -u -v ${DENDRITE_PATH}@${DENDRITE_VERSION}
+    GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go get -u -v ${DENDRITE_PATH}
 
     # get the dependencies
     GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go get -d ./...
@@ -761,15 +764,18 @@ function install_dendrite {
     # get the source code
     cd "/home/dendrite" || exit 24
 
-    export GO111MODULE=on
     mkdir /home/dendrite/tmp
+    export GO111MODULE=on
     export TMPDIR=/home/dendrite/tmp
 
+    # set the version number
+    GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go mod edit -require ${DENDRITE_PATH}@${DENDRITE_VERSION}
+
     # get dendrite source
-    GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go get -u -v ${DENDRITE_PATH}@${DENDRITE_VERSION}
+    GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go get -u -v ${DENDRITE_PATH}
     if [ ! -d "${DENDRITE_SRC_DIR}" ]; then
         echo "GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go get -u -v ${DENDRITE_PATH}@${DENDRITE_VERSION}"
-        echo $"Unable to get ${DENDRITE_PATH}"
+        echo $"Unable to get ${DENDRITE_PATH} at ${DENDRITE_SRC_DIR}"
         exit 40
     fi
     cd "${DENDRITE_SRC_DIR}" || exit 25
