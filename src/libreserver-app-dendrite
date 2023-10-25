@@ -74,7 +74,7 @@ DENDRITE_FIREWALL_PORTS="${DENDRITE_HTTP_PORT}"
 DENDRITE_FIREWALL_MAX_CONNECTIONS=100
 
 DENDRITE_REPO='https://github.com/matrix-org/dendrite'
-DENDRITE_VERSION='v0.13.3'
+DENDRITE_VERSION='0.13.3'
 
 dendrite_user_added=
 
@@ -247,6 +247,9 @@ function upgrade_dendrite {
     cd "${DENDRITE_SRC_DIR}" || return
     export GO111MODULE=on
     export TMPDIR=/home/dendrite/tmp
+
+    # get dendrite source
+    GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go get -u -v ${DENDRITE_PATH}@${DENDRITE_VERSION}
 
     # get the dependencies
     GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go get -d ./...
@@ -763,7 +766,7 @@ function install_dendrite {
     export TMPDIR=/home/dendrite/tmp
 
     # get dendrite source
-    GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go get -u -v ${DENDRITE_PATH}
+    GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go get -u -v ${DENDRITE_PATH}@${DENDRITE_VERSION}
     if [ ! -d "${DENDRITE_SRC_DIR}" ]; then
         echo $"Unable to get ${DENDRITE_PATH}"
         exit 40
