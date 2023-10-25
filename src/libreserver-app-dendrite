@@ -768,6 +768,7 @@ function install_dendrite {
     # get dendrite source
     GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go get -u -v ${DENDRITE_PATH}@${DENDRITE_VERSION}
     if [ ! -d "${DENDRITE_SRC_DIR}" ]; then
+        echo "GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go get -u -v ${DENDRITE_PATH}@${DENDRITE_VERSION}"
         echo $"Unable to get ${DENDRITE_PATH}"
         exit 40
     fi
