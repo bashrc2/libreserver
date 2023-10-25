@@ -244,6 +244,7 @@ function upgrade_dendrite {
     cd "/home/dendrite/dendrite" || return
     git pull
     git checkout ${DENDRITE_VERSION}
+    export GO111MODULE=off
     GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go build -o bin/dendrite-new ./cmd/dendrite
     if [ ! -f bin/dendrite-new ]; then
         echo $'bin/dendrite was not compiled'
@@ -757,6 +758,7 @@ function install_dendrite {
 
     increment_app_install_progress
     mkdir "/home/dendrite/dendrite/bin"
+    export GO111MODULE=off
     GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go build -o bin/dendrite ./cmd/dendrite
     if [ ! -f bin/dendrite ]; then
         echo "GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/dendrite PATH=$PATH:/home/dendrite:/home/go/go${GO_VERSION}/bin go build -o bin/dendrite ./cmd/dendrite"
