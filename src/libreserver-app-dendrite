@@ -62,7 +62,7 @@ DENDRITE_HTTP_PORT=8448
 DENDRITE_PORT_INTERNAL=8008
 DENDRITE_OUTBOUND_PROXY_PORT=8080
 
-DENDRITE_DATABASE_FILENAME='/home/dendrite/dendrite.db'
+DENDRITE_DATABASE_FILENAME="${DENDRITE_DATA_DIR}/dendrite.db"
 
 DENDRITE_DEBUG_LEVEL='info'
 
@@ -126,7 +126,7 @@ function create_dendrite_user_removal_script {
 
     dendrite_remove_user=/usr/bin/dendrite-remove-user
     { echo '#!/bin/bash';
-      echo "cd /home/dendrite || exit 1";
+      echo "cd ${DENDRITE_DATA_DIR} || exit 1";
       echo "remove_username=\$1";
       echo "if [ ! \"\$remove_username\" ]; then";
       echo '    exit 1';
@@ -160,7 +160,7 @@ function create_dendrite_user_reactivation_script {
 
     dendrite_reactivate_user=/usr/bin/dendrite-reactivate-user
     { echo '#!/bin/bash';
-      echo "cd /home/dendrite || exit 1";
+      echo "cd ${DENDRITE_DATA_DIR} || exit 1";
       echo "reactivate_username=\$1";
       echo "reactivate_password=\$2";
       echo "reactivate_password=\${reactivate_password%\$'\n'}";
