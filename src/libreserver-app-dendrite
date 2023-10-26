@@ -32,7 +32,6 @@ APP_CATEGORY=chat
 DENDRITE_PATH='github.com/matrix-org/dendrite'
 DENDRITE_SRC_DIR="/home/dendrite/src/github.com/matrix-org/dendrite"
 DENDRITE_DATA_DIR=/opt/dendrite
-DENDRITE_BACKUP_DATA_DIR=/home/dendrite/opt
 
 IN_DEFAULT_INSTALL=0
 INSTALLED_ON_DEFAULT_DOMAIN=1
@@ -293,15 +292,9 @@ function upgrade_dendrite {
 function backup_local_dendrite {
     systemctl stop dendrite
 
-    # remove temporary files
-    rm -rf /home/dendrite/tmp/*
-
-    source_directory=/home/dendrite
-    cp -r ${DENDRITE_DATA_DIR} ${DENDRITE_BACKUP_DATA_DIR}
-    chown -R dendrite:dendrite ${DENDRITE_BACKUP_DATA_DIR}
+    source_directory=${DENDRITE_DATA_DIR}
     dest_directory=dendrite
     backup_directory_to_usb "${source_directory}" ${dest_directory}
-    rm -rf ${DENDRITE_BACKUP_DATA_DIR}
     systemctl start dendrite
 }
 
@@ -322,7 +315,6 @@ function restore_local_dendrite {
             fi
             cp -rp "$temp_restore_dir"/* "$dendrite_dir"/
         fi
-        cp -r ${DENDRITE_BACKUP_DATA_DIR}/* ${DENDRITE_DATA_DIR}/
         chown -R dendrite:dendrite ${DENDRITE_DATA_DIR}
         chown -R dendrite:dendrite "$dendrite_dir"
         rm -rf $temp_restore_dir
