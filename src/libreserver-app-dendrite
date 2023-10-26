@@ -1046,8 +1046,8 @@ function install_dendrite {
       echo 'Group=dendrite';
       echo "WorkingDirectory=${DENDRITE_DATA_DIR}";
       echo "ExecStart=${DENDRITE_SRC_DIR}/bin/dendrite -config ${DENDRITE_DATA_DIR}/dendrite.yaml";
-      echo "Environment=\"USER=dendrite\" \"HOME=/home/dendrite\" \"GOPATH=/home/go/go${GO_VERSION}\""
-      echo "Environment=GIT_CEILING_DIRECTORIES=/home/dendrite";
+      echo "Environment=\"USER=dendrite\" \"HOME=${DENDRITE_DATA_DIR}\" \"GOPATH=/home/go/go${GO_VERSION}\""
+      echo "Environment=GIT_CEILING_DIRECTORIES=${DENDRITE_DATA_DIR}";
       echo "Environment=GODEBUG=madvdontneed=1";
       echo 'Restart=always';
       echo 'LimitNOFILE=65535';
