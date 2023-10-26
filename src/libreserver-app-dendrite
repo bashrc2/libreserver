@@ -387,6 +387,7 @@ function dendrite_disable_registration {
 function generate_dendrite_config {
     # https://codeberg.org/gerald/dendrite-on-flyio/src/branch/main/dendrite-example.yaml
 
+    well_known_server_name_port=443
     dendrite_http_prefix='https'
     dendrite_domain="${DENDRITE_DOMAIN_NAME}"
     disable_tls_validation='false'
@@ -394,6 +395,7 @@ function generate_dendrite_config {
         dendrite_http_prefix='http'
         dendrite_domain=$(cat /var/lib/tor/hidden_service_dendrite/hostname)
         disable_tls_validation='true'
+        well_known_server_name_port=80
     fi
 
     { echo "# The version of the configuration file.";
@@ -431,7 +433,7 @@ function generate_dendrite_config {
       echo "    max_size_estimated: 1gb";
       echo "    max_age: 1h";
       echo "";
-      echo "  well_known_server_name: \"${dendrite_domain}:443\"";
+      echo "  well_known_server_name: \"${dendrite_domain}:${well_known_server_name_port}\"";
       echo "  well_known_client_name: \"${dendrite_http_prefix}://${dendrite_domain}\"";
       echo "  well_known_sliding_sync_proxy: \"\"";
       echo "";
