@@ -397,6 +397,7 @@ function generate_dendrite_config {
         disable_tls_validation='true'
         well_known_server_name_port=80
     fi
+    dendrite_connection_string="file://${DENDRITE_DATABASE_FILENAME}?sslmode=disable"
 
     { echo "# The version of the configuration file.";
       echo "version: 2";
@@ -424,7 +425,7 @@ function generate_dendrite_config {
       echo "  key_validity_period: 168h0m0s";
       echo "";
       echo "  database:";
-      echo "    connection_string: file://${DENDRITE_DATABASE_FILENAME}";
+      echo "    connection_string: ${dendrite_connection_string}";
       echo "    max_open_conns: 90";
       echo "    max_idle_conns: 5";
       echo "    conn_max_lifetime: -1";
