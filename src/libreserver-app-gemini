@@ -421,7 +421,7 @@ function install_gemini {
       echo 'ProtectHome=no';
       echo 'CPUQuota=10%';
       echo 'BlockIOWeight=500';
-      echo 'CPUShares=500';
+      echo 'CPUWeight=500';
       echo 'ProtectClock=yes';
       echo 'ProtectHostname=yes';
       echo 'PrivateUsers=yes';

@@ -190,10 +190,10 @@ function add_user_dendrite {
 
     dendrite_user_added=
 
+    dendrite_disable_registration false
+
     create_dendrite_user_reactivation_script
     $dendrite_reactivate_user "${new_username}" "${new_user_password}"
-
-    dendrite_disable_registration false
 
     cd "${DENDRITE_SRC_DIR}" || return
     if [[ "${new_username}" != "admin" ]]; then
@@ -1051,7 +1051,7 @@ function install_dendrite {
       echo 'User=dendrite';
       echo 'Group=dendrite';
       echo "WorkingDirectory=${DENDRITE_DATA_DIR}";
-      echo "ExecStart=${DENDRITE_SRC_DIR}/bin/dendrite";
+      echo "ExecStart=${DENDRITE_SRC_DIR}/bin/dendrite -config ${DENDRITE_DATA_DIR}/dendrite.yaml";
       echo "Environment=\"USER=dendrite\" \"HOME=/home/dendrite\" \"GOPATH=/home/go/go${GO_VERSION}\""
       echo "Environment=GIT_CEILING_DIRECTORIES=/home/dendrite";
       echo "Environment=GODEBUG=madvdontneed=1";
@@ -1065,7 +1065,7 @@ function install_dendrite {
       echo 'ProtectHome=no';
       echo 'CPUQuota=10%';
       echo 'BlockIOWeight=500';
-      echo 'CPUShares=500';
+      echo 'CPUWeight=500';
       echo 'ProtectClock=yes';
       echo 'ProtectHostname=yes';
       echo 'PrivateUsers=yes';
