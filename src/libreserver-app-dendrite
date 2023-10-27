@@ -399,6 +399,13 @@ function generate_dendrite_config {
     fi
     dendrite_connection_string="file://${DENDRITE_DATABASE_FILENAME}?sslmode=disable"
 
+    dendrite_registration_secret_filename=/opt/dendrite/registration
+    if [ ! -f "${dendrite_registration_secret_filename}" ]; then
+        dendrite_registration_secret="$(openssl rand -base64 32 | tr -dc A-Za-z0-9 | head -c 16 ; echo -n '')"
+    else
+        dendrite_registration_secret="$(cat ${dendrite_registration_secret_filename})"
+    fi
+
     { echo "# The version of the configuration file.";
       echo "version: 2";
       echo "";
@@ -527,7 +534,7 @@ function generate_dendrite_config {
       echo "";
       echo "  # If set, allows registration by anyone who knows the shared secret, regardless";
       echo "  # of whether registration is otherwise disabled.";
-      echo "  registration_shared_secret: \"\"";
+      echo "  registration_shared_secret: \"${dendrite_registration_secret}\"";
       echo "";
       echo "  # Whether to require reCAPTCHA for registration. If you have enabled registration";
       echo "  # then this is HIGHLY RECOMMENDED to reduce the risk of your homeserver being used";
