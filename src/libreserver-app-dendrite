@@ -1036,6 +1036,21 @@ function install_dendrite {
     systemctl restart nginx
 
     increment_app_install_progress
+    echo "Adding a dendrite user for ${MY_USERNAME}"
+    if [ ! "${DENDRITE_PASSWORD}" ]; then
+        if [ -f "${IMAGE_PASSWORD_FILE}" ]; then
+            DENDRITE_PASSWORD="$(printf "%s" "$(cat "$IMAGE_PASSWORD_FILE")")"
+        else
+            DENDRITE_PASSWORD="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
+        fi
+    fi
+    add_user_dendrite "${MY_USERNAME}" "${DENDRITE_PASSWORD}"
+    if [ ! ${dendrite_user_added} ]; then
+        echo $'Failed to add dendrite admin user';
+        exit 87
+    fi
+
+    increment_app_install_progress
 
     { echo '[Unit]';
       echo 'Description=Dendrite Server';
@@ -1072,26 +1087,17 @@ function install_dendrite {
       echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/dendrite.service
     systemctl enable dendrite
     chown -R dendrite:dendrite "/home/dendrite"
+    chown -R dendrite:dendrite "/opt/dendrite"
     systemctl start dendrite
 
     increment_app_install_progress
 
-    dendrite_add_onion_federation
+    sleep 10
+    chown -R dendrite:dendrite "/opt/dendrite"
 
     increment_app_install_progress
-    echo "Adding a dendrite user for ${MY_USERNAME}"
-    if [ ! "${DENDRITE_PASSWORD}" ]; then
-        if [ -f "${IMAGE_PASSWORD_FILE}" ]; then
-            DENDRITE_PASSWORD="$(printf "%s" "$(cat "$IMAGE_PASSWORD_FILE")")"
-        else
-            DENDRITE_PASSWORD="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
-        fi
-    fi
-    add_user_dendrite "${MY_USERNAME}" "${DENDRITE_PASSWORD}"
-    if [ ! ${dendrite_user_added} ]; then
-        echo $'Failed to add dendrite admin user';
-        exit 87
-    fi
+
+    dendrite_add_onion_federation
 
     increment_app_install_progress
     if [[ "$ONION_ONLY" == 'no' ]]; then
