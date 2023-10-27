@@ -402,6 +402,7 @@ function generate_dendrite_config {
     dendrite_registration_secret_filename=${DENDRITE_DATA_DIR}/registration
     if [ ! -f "${dendrite_registration_secret_filename}" ]; then
         dendrite_registration_secret="$(openssl rand -base64 32 | tr -dc A-Za-z0-9 | head -c 16 ; echo -n '')"
+        echo -n "${dendrite_registration_secret}" > "${dendrite_registration_secret_filename}"
     else
         dendrite_registration_secret="$(cat ${dendrite_registration_secret_filename})"
     fi
