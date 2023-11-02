@@ -275,9 +275,25 @@ function check_other_app_required {
     app_name="$1"
     apprequired=$(other_app_required "${app_name}")
     if [ "$apprequired" ]; then
-        if [[ $(app_is_installed "${apprequired}") != "1" ]]; then
-            echo $"${apprequired} needs to be installed before you can install ${app_name}"
-            exit 61
+        if [[ "${apprequired}" == *"|"* ]]; then
+            IFS='|' read -r -a array <<< "${apprequired}"
+            req_app_found=
+            for reqappname in "${array[@]}"
+            do
+                if [[ $(app_is_installed "${reqappname}") == "1" ]]; then
+                    req_app_found=1
+                    break
+                fi
+            done
+            if [ ! ${req_app_found} ]; then
+                echo $"${apprequired} needs to be installed before you can install ${app_name}"
+                exit 61
+            fi
+        else
+            if [[ $(app_is_installed "${apprequired}") != "1" ]]; then
+                echo $"${apprequired} needs to be installed before you can install ${app_name}"
+                exit 61
+            fi
         fi
     fi
 }
