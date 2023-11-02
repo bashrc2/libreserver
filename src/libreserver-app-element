@@ -320,13 +320,19 @@ function install_element {
 
     # check that matrix has been installed
     if [ ! "$MATRIX_DOMAIN_NAME" ]; then
-        exit 68
+        if [ ! "$CONDUIT_DOMAIN_NAME" ]; then
+            exit 68
+        fi
     fi
     if [[ "$MATRIX_DOMAIN_NAME" != *'.'* ]]; then
-        exit 25
+        if [[ "$CONDUIT_DOMAIN_NAME" != *'.'* ]]; then
+            exit 25
+        fi
     fi
     if [ ! -d /var/lib/matrix ]; then
-        exit 82
+        if [ ! -d '/var/lib/matrix-conduit' ]; then
+            exit 82
+        fi
     fi
 
     increment_app_install_progress
