@@ -276,10 +276,12 @@ function check_other_app_required {
     apprequired=$(other_app_required "${app_name}")
     if [ "$apprequired" ]; then
         if [[ "${apprequired}" == *"|"* ]]; then
-            IFS='|' read -r -a array <<< "${apprequired}"
+            IFS='|' read -r -a reqarray <<< "${apprequired}"
+            echo "Required apps ${reqarray[@]}"
             req_app_found=
-            for reqappname in "${array[@]}"
+            for reqappname in "${reqarray[@]}"
             do
+                echo "Checking required app ${reqappname}"
                 if [[ $(app_is_installed "${reqappname}") == "1" ]]; then
                     req_app_found=1
                     break
