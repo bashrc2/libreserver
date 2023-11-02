@@ -1,0 +1,682 @@
+#!/bin/bash
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
+#
+# License
+# =======
+#
+# Copyright (C) 2023 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VARIANTS='full full-vim full-micro chat'
+
+APP_CATEGORY=chat
+
+CONDUIT_DATA_DIR='/var/lib/matrix-conduit'
+
+IN_DEFAULT_INSTALL=0
+INSTALLED_ON_DEFAULT_DOMAIN=1
+SHOW_ON_ABOUT=1
+
+# whether to show https://domain or just the domain on its own on app screen
+SHOW_DOMAIN_ONLY=0
+
+# whether this app will be included in the json API for the FreedomBox android app
+NOT_ON_API=1
+
+# Whether to show on http://libreserver/home
+NOT_ON_HOMEPAGE=1
+
+# show port number within the URL on app screens
+SHOW_URL_PORT=
+
+# Whether another app is required to be installed before this one
+REQUIRES_APP=
+
+CONDUIT_CONFIG_FILENAME=/etc/matrix-conduit/conduit.toml
+
+CONDUIT_DOMAIN_NAME=
+CONDUIT_CODE=
+CONDUIT_ONION_PORT=8123
+CONDUIT_I2P_PORT=9568
+
+CONDUIT_HTTP_PORT=8448
+CONDUIT_PORT_INTERNAL=6167
+
+# These parameters are used by the FreedomBox mobile app and web UI
+CONDUIT_SHORT_DESCRIPTION='Conduit Matrix Server'
+CONDUIT_DESCRIPTION='Conduit Matrix Server'
+CONDUIT_MOBILE_APP_URL=
+
+# Any ports which should be added to the firewall, separated by commas
+CONDUIT_FIREWALL_PORTS="${CONDUIT_HTTP_PORT}"
+CONDUIT_FIREWALL_MAX_CONNECTIONS=200
+
+CONDUIT_BINARY_X86="https://gitlab.com/famedly/conduit/-/jobs/artifacts/master/raw/build-output/linux_amd64/conduit?job=docker:master"
+CONDUIT_BINARY_AARCH64="https://gitlab.com/famedly/conduit/-/jobs/artifacts/master/raw/build-output/linux_arm64/conduit?job=docker:master"
+CONDUIT_BINARY_ARM7="https://gitlab.com/famedly/conduit/-/jobs/artifacts/master/raw/build-output/linux_arm_v7/conduit?job=docker:master"
+
+CONDUIT_TRUSTED_SERVERS='["matrix.org"]'
+
+conduit_user_added=
+
+conduit_variables=(ONION_ONLY
+                   DEFAULT_DOMAIN_NAME
+                   DDNS_PROVIDER
+                   MY_USERNAME
+                   ARCHITECTURE)
+
+function logging_on_conduit {
+    sed -i 's|"log =.*|"log = \"debug,state_res=debug,rocket=off,_=off,sled=off\"|g' ${CONDUIT_CONFIG_FILENAME}
+    systemctl restart conduit
+}
+
+function logging_off_conduit {
+    sed -i 's|"log =.*|"log = \"warn,state_res=warn,rocket=off,_=off,sled=off\"|g' ${CONDUIT_CONFIG_FILENAME}
+    systemctl restart conduit
+}
+
+function conduit_add_onion_federation {
+    if grep -q ":${CONDUIT_HTTP_PORT}" "/etc/torrc.d/${PROJECT_NAME}"; then
+        return
+    fi
+
+    sed -i "/:${CONDUIT_ONION_PORT}/a HiddenServicePort ${CONDUIT_HTTP_PORT} 127.0.0.1:${CONDUIT_HTTP_PORT}" "/etc/torrc.d/${PROJECT_NAME}"
+
+    restart_tor_daemon
+}
+
+function create_conduit_user_removal_script {
+    read_config_param ONION_ONLY
+    read_config_param MY_USERNAME
+    read_config_param CONDUIT_DOMAIN_NAME
+
+    curl_command='curl'
+    homebase="https://${CONDUIT_DOMAIN_NAME}"
+    if [[ "${ONION_ONLY}" != 'no' ]]; then
+        curl_command='torsocks curl'
+        homebase="http://$(cat /var/lib/tor/hidden_service_conduit/hostname)"
+    fi
+
+    conduit_domain=${CONDUIT_DOMAIN_NAME}
+    if [[ "${ONION_ONLY}" != 'no' ]]; then
+        conduit_domain=$(cat /var/lib/tor/hidden_service_conduit/hostname)
+    fi
+
+    conduit_remove_user=/usr/bin/conduit-remove-user
+    { echo '#!/bin/bash';
+      echo "cd ${CONDUIT_DATA_DIR} || exit 1";
+      echo "remove_username=\$1";
+      echo "if [ ! \"\$remove_username\" ]; then";
+      echo '    exit 1';
+      echo 'fi';
+      echo "ADMIN=\"@${MY_USERNAME}:${CONDUIT_DOMAIN_NAME}\"";
+      echo "TOKEN=";
+      echo 'set -x';
+      echo "${curl_command} -X POST \"${homebase}/_matrix/admin/v1/deactivate/%40\${remove_username}%3A${conduit_domain}?access_token=\$TOKEN\" --data '{\"erase\": true}'"; } > ${conduit_remove_user}
+
+    chmod +x ${conduit_remove_user}
+}
+
+function remove_user_conduit {
+    remove_username="$1"
+    create_conduit_user_removal_script
+    $conduit_remove_user "$remove_username"
+    "${PROJECT_NAME}-pass" -u "$remove_username" --rmapp conduit
+}
+
+function add_user_conduit {
+    new_username="$1"
+    new_user_password="$2"
+
+    conduit_user_added=
+
+    "${PROJECT_NAME}-pass" -u "$new_username" -a conduit -p "$new_user_password"
+    conduit_user_added=1
+    echo '0'
+}
+
+function install_interactive_conduit {
+    if [[ $ONION_ONLY != "no" ]]; then
+        CONDUIT_DOMAIN_NAME='conduit.local'
+        write_config_param "CONDUIT_DOMAIN_NAME" "$CONDUIT_DOMAIN_NAME"
+    else
+        function_check interactive_site_details
+        interactive_site_details conduit
+    fi
+    APP_INSTALLED=1
+}
+
+function change_password_conduit {
+    curr_username="$1"
+    new_user_password="$2"
+
+    "${PROJECT_NAME}-pass" -u "$curr_username" -a conduit -p "$new_user_password"
+}
+
+function reconfigure_conduit {
+    # This is used if you need to switch identity. Dump old keys and generate new ones
+    echo -n ''
+}
+
+function upgrade_distro_conduit {
+    # shellcheck disable=SC2034
+    target_distro="$1"
+    # include anything here needed to upgrade to the target distro
+}
+
+function upgrade_conduit {
+    # choose the appropriate binary
+    CONDUIT_BINARY=${CONDUIT_BINARY_X86}
+    if [[ ${ARCHITECTURE} == *"aarch"* ]]; then
+        CONDUIT_BINARY=${CONDUIT_BINARY_AARCH64}
+    else
+        if [[ ${ARCHITECTURE} == *"arm"* ]]; then
+            CONDUIT_BINARY=${CONDUIT_BINARY_ARM7}
+        fi
+    fi
+    if [ -f /usr/local/bin/matrix-conduit-new ]; then
+        rm /usr/local/bin/matrix-conduit-new
+    fi
+    wget -O /usr/local/bin/matrix-conduit-new ${CONDUIT_BINARY}
+    if [ ! -f /usr/local/bin/matrix-conduit-new ]; then
+        echo $"Unable to upgrade matrix conduit binary ${CONDUIT_BINARY}"
+        return
+    fi
+    if ! cmp --silent -- "/usr/local/bin/matrix-conduit" "/usr/local/bin/matrix-conduit-new"; then
+        mv /usr/local/bin/matrix-conduit-new /usr/local/bin/matrix-conduit
+        chmod +x /usr/local/bin/matrix-conduit
+        systemctl restart conduit
+        echo $'conduit binary upgraded'
+    fi
+}
+
+function backup_local_conduit {
+    systemctl stop conduit
+
+    source_directory=${CONDUIT_DATA_DIR}
+    dest_directory=conduit
+    backup_directory_to_usb "${source_directory}" ${dest_directory}
+    systemctl start conduit
+}
+
+function restore_local_conduit {
+    systemctl stop conduit
+
+    temp_restore_dir=/root/tempconduit
+
+    conduit_dir=/home/conduit
+
+    restore_directory_from_usb $temp_restore_dir conduit
+    if [ -d $temp_restore_dir ]; then
+        if [ -d "$temp_restore_dir$conduit_dir" ]; then
+            cp -rp "$temp_restore_dir$conduit_dir"/* "$conduit_dir"/
+        else
+            if [ ! -d "$conduit_dir" ]; then
+                mkdir "$conduit_dir"
+            fi
+            cp -rp "$temp_restore_dir"/* "$conduit_dir"/
+        fi
+        chown -R conduit:conduit ${CONDUIT_DATA_DIR}
+        chown -R conduit:conduit "$conduit_dir"
+        rm -rf $temp_restore_dir
+    fi
+
+    systemctl start conduit
+}
+
+function backup_remote_conduit {
+    echo -n ''
+}
+
+function restore_remote_conduit {
+    echo -n ''
+}
+
+function remove_conduit {
+    if [[ "$ONION_ONLY" == 'no' ]]; then
+        firewall_remove ${CONDUIT_HTTP_PORT}
+        firewall_max_connections ${CONDUIT_PORT_INTERNAL} ${CONDUIT_FIREWALL_MAX_CONNECTIONS} remove
+    fi
+
+    nginx_dissite "$CONDUIT_DOMAIN_NAME"
+    remove_certs "$CONDUIT_DOMAIN_NAME"
+    remove_onion_service conduit ${CONDUIT_ONION_PORT} ${CONDUIT_HTTP_PORT}
+
+    if [ -f /etc/systemd/system/conduit.service ]; then
+        systemctl stop conduit
+        systemctl disable conduit
+        rm /etc/systemd/system/conduit.service
+    fi
+    userdel -r conduit
+    groupdel -f conduit
+    if grep -q "conduit" /etc/crontab; then
+        sed -i "/conduit/d" /etc/crontab
+    fi
+    remove_app conduit
+    remove_completion_param install_conduit
+    sed -i '/conduit/d' "$COMPLETION_FILE"
+    remove_i2p_service conduit
+
+    if [ -d /etc/conduit ]; then
+        rm -rf /etc/conduit
+    fi
+    if [ -d ${CONDUIT_DATA_DIR} ]; then
+        rm -rf ${CONDUIT_DATA_DIR}
+    fi
+    if [ -d "/var/www/${CONDUIT_DOMAIN_NAME}/htdocs" ]; then
+        rm -rf "/var/www/${CONDUIT_DOMAIN_NAME}/htdocs"
+    fi
+}
+
+function conduit_enable_registration {
+    registration_state="$1"
+    if grep -q "allow_registration = ${registration_state}" "${CONDUIT_CONFIG_FILENAME}"; then
+        return
+    fi
+    sed -i "s|allow_registration =.*|allow_registration = ${registration_state}|g" "${CONDUIT_CONFIG_FILENAME}"
+    grep "allow_registration =.*" "${CONDUIT_CONFIG_FILENAME}"
+    systemctl restart conduit
+    if [[ "${registration_state}" == 'True' || "${registration_state}" == 'true' ]]; then
+        # allow time for the daemon to start back up
+        # before attempting to register new users
+        sleep 8
+    fi
+}
+
+function install_conduit {
+    if [ -d /etc/matrix ]; then
+        echo $'Matrix synapse is already installed'
+        exit 43
+    fi
+    if [ -d /home/dendrite ]; then
+        echo $'Matrix dendrite is already installed'
+        exit 43
+    fi
+
+    INSTALL_PACKAGES dpkg dpkg-dev liblzma-dev rustc iproute2 wget
+
+    increment_app_install_progress
+
+    groupdel -f conduit
+    userdel -r conduit
+    if [ -d "/etc/matrix-conduit" ]; then
+        rm -rf "/etc/matrix-conduit"
+    fi
+    if [ -d "${CONDUIT_DATA_DIR}" ]; then
+        rm -rf "${CONDUIT_DATA_DIR}"
+    fi
+    if [ -d "/var/www/${CONDUIT_DOMAIN_NAME}/htdocs" ]; then
+        rm -rf "/var/www/${CONDUIT_DOMAIN_NAME}/htdocs"
+    fi
+    mkdir "/var/www/${CONDUIT_DOMAIN_NAME}"
+
+    groupadd -r -g 1000 conduit
+    adduser --system conduit --group --disabled-login --no-create-home
+
+    increment_app_install_progress
+
+    # choose the appropriate binary
+    CONDUIT_BINARY=${CONDUIT_BINARY_X86}
+    if [[ ${ARCHITECTURE} == *"aarch"* ]]; then
+        CONDUIT_BINARY=${CONDUIT_BINARY_AARCH64}
+    else
+        if [[ ${ARCHITECTURE} == *"arm"* ]]; then
+            CONDUIT_BINARY=${CONDUIT_BINARY_ARM7}
+        fi
+    fi
+    wget -O /usr/local/bin/matrix-conduit ${CONDUIT_BINARY}
+    if [ ! -f /usr/local/bin/matrix-conduit ]; then
+        echo $"Unable to install matrix conduit binary ${CONDUIT_BINARY}"
+        exit 39
+    fi
+
+    chmod +x /usr/local/bin/matrix-conduit
+
+    increment_app_install_progress
+    if [[ "$ONION_ONLY" == 'no' ]]; then
+        firewall_add conduit ${CONDUIT_HTTP_PORT}
+        firewall_max_connections ${CONDUIT_PORT_INTERNAL} ${CONDUIT_FIREWALL_MAX_CONNECTIONS}
+    fi
+
+    increment_app_install_progress
+
+    mkdir /etc/matrix-conduit
+    mkdir ${CONDUIT_DATA_DIR}
+
+    increment_app_install_progress
+
+    add_ddns_domain "$CONDUIT_DOMAIN_NAME"
+
+    increment_app_install_progress
+
+    CONDUIT_ONION_HOSTNAME=$(add_onion_service conduit 80 "${CONDUIT_ONION_PORT}")
+
+    increment_app_install_progress
+
+    conduit_domain=${CONDUIT_DOMAIN_NAME}
+    if [[ $ONION_ONLY != "no" ]]; then
+        conduit_domain=$(cat /var/lib/tor/hidden_service_conduit/hostname)
+    fi
+
+    { echo '[global]';
+      echo '# The server_name is the pretty name of this server. It is used as a suffix for user';
+      echo '# and room ids. Examples: matrix.org, conduit.rs';
+      echo '';
+      echo '# The Conduit server needs all /_matrix/ requests to be reachable at';
+      echo '# https://your.server.name/ on port 443 (client-server) and 8448 (federation).';
+      echo '';
+      echo "# If that's not possible for you, you can create /.well-known files to redirect';";
+      echo '# requests. See';
+      echo '# https://matrix.org/docs/spec/client_server/latest#get-well-known-matrix-client';
+      echo '# and';
+      echo '# https://matrix.org/docs/spec/server_server/r0.1.4#get-well-known-matrix-server';
+      echo '# for more information';
+      echo '';
+      echo "server_name = \"${conduit_domain}\"";
+      echo '';
+      echo '# This is the only directory where Conduit will save its data';
+      echo "database_path = \"${CONDUIT_DATA_DIR}/\"";
+      echo "database_backend = \"rocksdb\"";
+      echo '';
+      echo '# The port Conduit will be running on. You need to set up a reverse proxy in';
+      echo '# your web server (e.g. apache or nginx), so all requests to /_matrix on port';
+      echo '# 443 and 8448 will be forwarded to the Conduit instance running on this port';
+      echo "# Docker users: Don't change this, you'll need to map an external port to this.";
+      echo "port = ${CONDUIT_PORT_INTERNAL}";
+      echo '';
+      echo '# Max size for uploads';
+      echo 'max_request_size = 20_000_000 # in bytes';
+      echo '';
+      echo '# Enables registration. If set to false, no users can register on this server.';
+      echo 'allow_registration = true';
+      echo '';
+      echo 'allow_federation = true';
+      echo 'allow_check_for_updates = true';
+      echo '';
+      echo "# Server to get public keys from. You probably shouldn't change this";
+      echo "trusted_servers = ${CONDUIT_TRUSTED_SERVERS}";
+      echo '';
+      echo 'max_concurrent_requests = 100 # How many requests Conduit sends to other servers at the same time';
+      echo "log = \"warn,state_res=warn,rocket=off,_=off,sled=off\"";
+      echo '';
+      echo 'address = "127.0.0.1"'; } > "${CONDUIT_CONFIG_FILENAME}"
+
+    increment_app_install_progress
+
+    { echo '[Unit]';
+      echo 'Description=Conduit Matrix Server';
+      echo 'After=network.target';
+      echo '';
+      echo '[Service]';
+      echo 'Environment="CONDUIT_CONFIG=/etc/matrix-conduit/conduit.toml"';
+      echo 'User=conduit';
+      echo 'Group=conduit';
+      echo 'Restart=always';
+      echo 'ExecStart=/usr/local/bin/matrix-conduit';
+      echo 'RestartSec=10';
+      echo 'PrivateTmp=true';
+      echo 'PrivateDevices=false';
+      echo 'CapabilityBoundingSet=~CAP_SYS_ADMIN';
+      echo 'ProtectSystem=yes';
+      echo 'ProtectHome=no';
+      echo 'CPUQuota=10%';
+      echo 'BlockIOWeight=500';
+      echo 'CPUWeight=500';
+      echo 'ProtectClock=yes';
+      echo 'ProtectHostname=yes';
+      echo 'PrivateUsers=yes';
+      echo 'ProtectKernelModules=yes';
+      echo 'ProtectKernelTunables=yes';
+      echo 'NoNewPrivileges=true';
+      echo '';
+      echo '[Install]';
+      echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/conduit.service
+    systemctl enable conduit
+    chown -R root:root /etc/matrix-conduit
+    chmod 755 /etc/matrix-conduit
+    chown -R conduit:conduit "${CONDUIT_DATA_DIR}"
+    chmod 700 ${CONDUIT_DATA_DIR}/
+    systemctl start conduit
+
+    increment_app_install_progress
+
+    conduit_nginx_site=/etc/nginx/sites-available/${CONDUIT_DOMAIN_NAME}
+    if [[ "${ONION_ONLY}" == "no" ]]; then
+        nginx_http_redirect "${CONDUIT_DOMAIN_NAME}" "index index.html"
+        { echo 'server {';
+          echo '  listen 443 ssl http2;';
+          echo '  #listen [::]:443 ssl http2;';
+          echo "  server_name ${CONDUIT_DOMAIN_NAME};";
+          echo '  merge_slashes off;';
+          echo '  server_tokens off;';
+          echo ''; } >> "${conduit_nginx_site}"
+        nginx_compress "${CONDUIT_DOMAIN_NAME}"
+        echo '  # Security' >> "${conduit_nginx_site}"
+        nginx_ssl "${CONDUIT_DOMAIN_NAME}"
+
+#        nginx_security_options "${CONDUIT_DOMAIN_NAME}"
+
+        { echo '  add_header X-Robots-Tag "noindex";';
+          echo '  add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
+          echo "  add_header Onion-Location http://${CONDUIT_ONION_HOSTNAME}\$request_uri;";
+          echo '';
+          echo '  access_log /dev/null;';
+          echo '  error_log /dev/null;';
+          echo '';
+          echo "  root /var/www/${CONDUIT_DOMAIN_NAME}/htdocs;";
+          echo '';
+          echo '  index index.html;';
+          echo '';
+          echo '  keepalive_timeout 70;';
+          echo '  sendfile on;';
+          echo '';
+          echo "  proxy_set_header Host      \$host;";
+          echo "  proxy_set_header X-Real-IP \$remote_addr;";
+          echo "  proxy_read_timeout         600;";
+          echo '';
+          echo '  location /.well-known/matrix/server {';
+          echo '    default_type application/json;';
+          echo "    return 200 '{ \"m.server\": \"${CONDUIT_DOMAIN_NAME}:443\" }';";
+          echo '  }';
+          echo '';
+          echo '  location /.well-known/matrix/client {';
+          echo '    default_type application/json;';
+          echo "    return 200 '{ \"m.homeserver\": { \"base_url\": \"https://${CONDUIT_DOMAIN_NAME}\" } }';";
+          echo "    add_header \"Access-Control-Allow-Origin\" *;";
+          echo '  }';
+          echo '';
+          echo '  location /_matrix {';
+          echo '    proxy_http_version 1.1;';
+          echo '    client_max_body_size 31M;';
+          echo "    proxy_set_header Host \$http_host;";
+          echo "    proxy_set_header X-Real-IP \$remote_addr;";
+          echo "    proxy_set_header X-Forward-For \$proxy_add_x_forwarded_for;";
+          echo '    proxy_set_header X-Forward-Proto https;';
+          echo '    proxy_set_header X-Nginx-Proxy true;';
+          echo '    proxy_temp_file_write_size 64k;';
+          echo '    proxy_connect_timeout 10080s;';
+          echo '    proxy_send_timeout 10080;';
+          echo '    proxy_read_timeout 10080;';
+          echo '    proxy_buffer_size 64k;';
+          echo '    proxy_buffers 16 32k;';
+          echo '    proxy_busy_buffers_size 64k;';
+          echo '    proxy_redirect off;';
+          echo '    proxy_request_buffering off;';
+          echo '    proxy_buffering off;';
+          echo "    proxy_pass http://127.0.0.1:${CONDUIT_PORT_INTERNAL}\$request_uri;";
+          echo '    tcp_nodelay on;';
+          echo '  }';
+          echo '}'; } >> "$conduit_nginx_site"
+    else
+        echo '' > "$conduit_nginx_site"
+    fi
+    { echo 'server {';
+      echo "    listen 127.0.0.1:${CONDUIT_ONION_PORT} default_server;";
+      echo "    #listen [::]:${CONDUIT_ONION_PORT} default_server;";
+      echo "    server_name ${CONDUIT_ONION_HOSTNAME};";
+      echo '  merge_slashes off;';
+      echo '    server_tokens off;';
+      echo ''; } >> "$conduit_nginx_site"
+    nginx_compress "${CONDUIT_DOMAIN_NAME}"
+    nginx_security_options "${CONDUIT_DOMAIN_NAME}"
+    { echo '';
+      echo '  access_log /dev/null;';
+      echo '  error_log /dev/null;';
+      echo '';
+      echo "  root /var/www/${CONDUIT_DOMAIN_NAME}/htdocs;";
+      echo '';
+      echo '  index index.html;';
+      echo '';
+      echo '  keepalive_timeout 70;';
+      echo '  sendfile on;';
+      echo '';
+      echo "  proxy_set_header Host      \$host;";
+      echo "  proxy_set_header X-Real-IP \$remote_addr;";
+      echo "  proxy_read_timeout         600;";
+      echo '';
+      echo '  location /.well-known/matrix/server {';
+      echo '    default_type application/json;';
+      echo "    return 200 '{ \"m.server\": \"${CONDUIT_ONION_HOSTNAME}:443\" }';";
+      echo '  }';
+      echo '';
+      echo '  location /.well-known/matrix/client {';
+      echo '    default_type application/json;';
+      echo "    return 200 '{ \"m.homeserver\": { \"base_url\": \"http://${CONDUIT_ONION_HOSTNAME}\" } }';";
+      echo "    add_header \"Access-Control-Allow-Origin\" *;";
+      echo '  }';
+      echo '';
+      echo '  location /_matrix {';
+      echo '    proxy_http_version 1.1;';
+      echo '    client_max_body_size 31M;';
+      echo "    proxy_set_header Host \$http_host;";
+      echo "    proxy_set_header X-Real-IP \$remote_addr;";
+      echo "    proxy_set_header X-Forward-For \$proxy_add_x_forwarded_for;";
+      echo '    proxy_set_header X-Forward-Proto https;';
+      echo '    proxy_set_header X-Nginx-Proxy true;';
+      echo '    proxy_temp_file_write_size 64k;';
+      echo '    proxy_connect_timeout 10080s;';
+      echo '    proxy_send_timeout 10080;';
+      echo '    proxy_read_timeout 10080;';
+      echo '    proxy_buffer_size 64k;';
+      echo '    proxy_buffers 16 32k;';
+      echo '    proxy_busy_buffers_size 64k;';
+      echo '    proxy_redirect off;';
+      echo '    proxy_request_buffering off;';
+      echo '    proxy_buffering off;';
+      echo "    proxy_pass http://127.0.0.1:${CONDUIT_PORT_INTERNAL}\$request_uri;";
+      echo '    tcp_nodelay on;';
+      echo '  }';
+      echo '}'; } >> "$conduit_nginx_site"
+
+    add_i2p_service conduit 80 ${CONDUIT_I2P_PORT}
+    CONDUIT_I2P_HOSTNAME=$(get_i2p_domain conduit)
+    if [ "$CONDUIT_I2P_HOSTNAME" ]; then
+        { echo 'server {';
+          echo "    listen 127.0.0.1:${CONDUIT_I2P_PORT};";
+          echo "    #listen [::]:${CONDUIT_I2P_PORT};";
+          echo "    server_name ${CONDUIT_I2P_HOSTNAME};";
+          echo '    server_tokens off;';
+          echo ''; } >> "$conduit_nginx_site"
+        nginx_compress "${CONDUIT_DOMAIN_NAME}"
+        nginx_security_options "${CONDUIT_DOMAIN_NAME}"
+        { echo '';
+          echo '  access_log /dev/null;';
+          echo '  error_log /dev/null;';
+          echo '';
+          echo "  root /var/www/${CONDUIT_DOMAIN_NAME}/htdocs;";
+          echo '';
+          echo '  index index.html;';
+          echo '';
+          echo '  keepalive_timeout 70;';
+          echo '  sendfile on;';
+          echo '';
+          echo "  proxy_set_header Host      \$host;";
+          echo "  proxy_set_header X-Real-IP \$remote_addr;";
+          echo "  proxy_read_timeout         600;";
+          echo '';
+          echo '  location /.well-known/matrix/server {';
+          echo '    default_type application/json;';
+          echo "    return 200 '{ \"m.server\": \"${CONDUIT_I2P_HOSTNAME}:443\" }';";
+          echo '  }';
+          echo '';
+          echo '  location /.well-known/matrix/client {';
+          echo '    default_type application/json;';
+          echo "    return 200 '{ \"m.homeserver\": { \"base_url\": \"http://${CONDUIT_I2P_HOSTNAME}\" } }';";
+          echo "    add_header \"Access-Control-Allow-Origin\" *;";
+          echo '  }';
+          echo '';
+          echo '  location /_matrix {';
+          echo '    proxy_http_version 1.1;';
+          echo '    client_max_body_size 31M;';
+          echo "    proxy_set_header Host \$http_host;";
+          echo "    proxy_set_header X-Real-IP \$remote_addr;";
+          echo "    proxy_set_header X-Forward-For \$proxy_add_x_forwarded_for;";
+          echo '    proxy_set_header X-Forward-Proto https;';
+          echo '    proxy_set_header X-Nginx-Proxy true;';
+          echo '    proxy_temp_file_write_size 64k;';
+          echo '    proxy_connect_timeout 10080s;';
+          echo '    proxy_send_timeout 10080;';
+          echo '    proxy_read_timeout 10080;';
+          echo '    proxy_buffer_size 64k;';
+          echo '    proxy_buffers 16 32k;';
+          echo '    proxy_busy_buffers_size 64k;';
+          echo '    proxy_redirect off;';
+          echo '    proxy_request_buffering off;';
+          echo '    proxy_buffering off;';
+          echo "    proxy_pass http://127.0.0.1:${CONDUIT_PORT_INTERNAL}\$request_uri;";
+          echo '    tcp_nodelay on;';
+          echo '  }';
+          echo '}'; } >> "$conduit_nginx_site"
+    fi
+
+    increment_app_install_progress
+
+    create_site_certificate "${CONDUIT_DOMAIN_NAME}" 'yes'
+
+    nginx_ensite "${CONDUIT_DOMAIN_NAME}"
+
+    systemctl restart nginx
+
+    increment_app_install_progress
+    echo "Adding a conduit user for ${MY_USERNAME}"
+    if [ ! "${CONDUIT_PASSWORD}" ]; then
+        if [ -f "${IMAGE_PASSWORD_FILE}" ]; then
+            CONDUIT_PASSWORD="$(printf "%s" "$(cat "$IMAGE_PASSWORD_FILE")")"
+        else
+            CONDUIT_PASSWORD="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
+        fi
+    fi
+    add_user_conduit "${MY_USERNAME}" "${CONDUIT_PASSWORD}"
+    if [ ! ${conduit_user_added} ]; then
+        echo $'Failed to add conduit admin user';
+        exit 87
+    fi
+
+    increment_app_install_progress
+
+    conduit_add_onion_federation
+
+    increment_app_install_progress
+
+    conduit_enable_registration true
+
+    set_completion_param "conduit version" "${CONDUIT_VERSION}"
+    APP_INSTALLED=1
+}
+
+# NOTE: deliberately there is no "exit 0"

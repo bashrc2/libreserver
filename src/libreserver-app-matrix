@@ -1448,6 +1448,10 @@ function install_matrix {
         echo $'Matrix dendrite is already installed'
         exit 43
     fi
+    if [ -d /var/lib/matrix-conduit ]; then
+        echo $'Matrix conduit is already installed'
+        exit 43
+    fi
     matrix_is_installing=1
     increment_app_install_progress
 

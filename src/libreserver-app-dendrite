@@ -343,6 +343,7 @@ function remove_dendrite {
         systemctl disable dendrite
         rm /etc/systemd/system/dendrite.service
     fi
+    remove_i2p_service dendrite
     userdel -r dendrite
     groupdel -f dendrite
     if grep -q "dendrite" /etc/crontab; then
