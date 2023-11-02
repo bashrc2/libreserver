@@ -51,6 +51,7 @@ ELEMENT_DEFAULT_JITSI="jitsi.riot.im"
 element_variables=(MY_USERNAME
                    ELEMENT_DOMAIN_NAME
                    MATRIX_DOMAIN_NAME
+                   CONDUIT_DOMAIN_NAME
                    SYSTEM_TYPE
                    ONION_ONLY
                    DDNS_PROVIDER)
@@ -89,21 +90,30 @@ function upgrade_distro_element {
 }
 
 function element_set_default_homeserver {
-    if [ ! "$ELEMENT_DOMAIN_NAME" ]; then
+    if [ ! "${ELEMENT_DOMAIN_NAME}" ]; then
         read_config_param ELEMENT_DOMAIN_NAME
     fi
 
-    if [[ "$ONION_ONLY" == 'no' ]]; then
-        if [ ! "$MATRIX_DOMAIN_NAME" ]; then
-            read_config_param MATRIX_DOMAIN_NAME
+    if [[ "${ONION_ONLY}" == 'no' ]]; then
+        if [ -d /var/lib/matrix ]; then
+            if [ ! "${MATRIX_DOMAIN_NAME}" ]; then
+                read_config_param MATRIX_DOMAIN_NAME
+            fi
+        fi
+        homeserver_domain_name="${MATRIX_DOMAIN_NAME}"
+        if [ -d /var/lib/matrix-conduit ]; then
+            if [ ! "${CONDUIT_DOMAIN_NAME}" ]; then
+                read_config_param CONDUIT_DOMAIN_NAME
+            fi
+            homeserver_domain_name="${CONDUIT_DOMAIN_NAME}"
         fi
 
-        if [ -f "/var/www/$ELEMENT_DOMAIN_NAME/htdocs/config.json" ]; then
-            sed -i "s|\"m.homeserver\":.*|\"m.homeserver\": {\"base_url\": \"https://${MATRIX_DOMAIN_NAME}\",|g" "/var/www/$ELEMENT_DOMAIN_NAME/htdocs/config.json"
+        if [ -f "/var/www/${ELEMENT_DOMAIN_NAME}/htdocs/config.json" ]; then
+            sed -i "s|\"m.homeserver\":.*|\"m.homeserver\": {\"base_url\": \"https://${homeserver_domain_name}\",|g" "/var/www/$ELEMENT_DOMAIN_NAME/htdocs/config.json"
         fi
 
-        sed -i "s|https://matrix.org|https://$MATRIX_DOMAIN_NAME|g" /var/www/${ELEMENT_DOMAIN_NAME}/htdocs/bundles/*/*.js
-        sed -i "s|https://vector.im|https://$MATRIX_DOMAIN_NAME|g" /var/www/${ELEMENT_DOMAIN_NAME}/htdocs/bundles/*/*.js
+        sed -i "s|https://matrix.org|https://$homeserver_domain_name|g" /var/www/${ELEMENT_DOMAIN_NAME}/htdocs/bundles/*/*.js
+        sed -i "s|https://vector.im|https://$homeserver_domain_name|g" /var/www/${ELEMENT_DOMAIN_NAME}/htdocs/bundles/*/*.js
     else
         MATRIX_ONION_HOSTNAME=$(cat /var/lib/tor/hidden_service_matrix/hostname)
         if [ -f "/var/www/$ELEMENT_DOMAIN_NAME/htdocs/config.json" ]; then
@@ -250,9 +260,16 @@ function upgrade_element {
     read_config_param ONION_ONLY
     element_set_default_homeserver
 
-    read_config_param MATRIX_DOMAIN_NAME
+    if [ -d /var/lib/matrix ]; then
+        read_config_param MATRIX_DOMAIN_NAME
+    fi
+    homeserver_domain_name=${MATRIX_DOMAIN_NAME}
+    if [ -d /var/lib/matrix-conduit ]; then
+        read_config_param CONDUIT_DOMAIN_NAME
+        homeserver_domain_name=${CONDUIT_DOMAIN_NAME}
+    fi
     element_config_file="/var/www/${ELEMENT_DOMAIN_NAME}/htdocs/config.json"
-    element_domain="${MATRIX_DOMAIN_NAME}"
+    element_domain="${homeserver_domain_name}"
     http_prefix='https'
     if [[ "$ONION_ONLY" != 'no' ]]; then
         http_prefix='http'
@@ -365,11 +382,19 @@ function install_element {
 
     increment_app_install_progress
 
+    homeserver_domain_name="${MATRIX_DOMAIN_NAME}"
+    if [ -d /var/lib/matrix-conduit ]; then
+        if [ ! "${CONDUIT_DOMAIN_NAME}" ]; then
+            read_config_param CONDUIT_DOMAIN_NAME
+        fi
+        homeserver_domain_name="${CONDUIT_DOMAIN_NAME}"
+    fi
+
     if [[ "$ONION_ONLY" == "no" ]]; then
         element_config_file="config.json"
         { echo '{';
           echo "    \"default_server_config\": {";
-          echo "        \"m.homeserver\": {\"base_url\": \"https://${MATRIX_DOMAIN_NAME}\",";
+          echo "        \"m.homeserver\": {\"base_url\": \"https://${homeserver_domain_name}\",";
           echo "            \"server_name\": \"${PROJECT_NAME}\"";
           echo '        }';
           echo '    },';
@@ -393,11 +418,11 @@ function install_element {
           echo '        "breadcrumbs": true';
           echo '    },';
           echo '    "enable_presence_by_hs_url": {';
-          echo "        \"https://${MATRIX_DOMAIN_NAME}\": false";
+          echo "        \"https://${homeserver_domain_name}\": false";
           echo '    },';
           echo '    "roomDirectory": {';
           echo '        "servers": [';
-          echo "            \"${MATRIX_DOMAIN_NAME}\",";
+          echo "            \"${homeserver_domain_name}\",";
           echo '            "matrix.org"';
           echo '        ]';
           echo '    }';
