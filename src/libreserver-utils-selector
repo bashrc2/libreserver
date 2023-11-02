@@ -276,6 +276,8 @@ function check_other_app_required {
     apprequired=$(other_app_required "${app_name}")
     if [ "$apprequired" ]; then
         if [[ "${apprequired}" == *"|"* ]]; then
+            apprequired=$(echo -n "${apprequired}" | sed -i "s|'||g")
+            apprequired=$(echo -n "${apprequired}" | sed -i 's|"||g')
             IFS='|' read -r -a reqarray <<< "${apprequired}"
             echo "Required apps ${reqarray[@]}"
             req_app_found=
