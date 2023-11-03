@@ -71,8 +71,8 @@ function matrix_server_message {
     notifications_username="$2"
     message="$3"
 
-    MATRIX_DATA_DIR='/var/lib/matrix'
-    homeserver_config="${MATRIX_DATA_DIR}/homeserver.yaml"
+    CONDUIT_DATA_DIR='/var/lib/matrix-conduit'
+    homeserver_config='/etc/matrix-conduit/conduit.toml'
 
     # shellcheck disable=SC2002
     MATRIX_DOMAIN_NAME=$(cat "$homeserver_config" | grep "server_name:" | head -n 1 | awk -F '"' '{print $2}')
@@ -98,11 +98,13 @@ function matrix_server_message {
     # get the token for the matrix admin user
     MATRIXADMIN="@${admin_username}:$MATRIX_DOMAIN_NAME"
     MATRIXUSER="@${notifications_username}:$MATRIX_DOMAIN_NAME"
-    cd "$MATRIX_DATA_DIR" || return
-    TOKEN=$(sqlite3 homeserver.db "select token from access_tokens where user_id like '$MATRIXADMIN' order by id desc limit 1;")
+    cd "$CONDUIT_DATA_DIR" || return
+    # TODO
+    TOKEN=
     if [ ! "$TOKEN" ]; then
         admin_username="${notifications_username}"
-        TOKEN=$(sqlite3 homeserver.db "select token from access_tokens where user_id like '$MATRIXUSER' order by id desc limit 1;")
+        # TODO
+        TOKEN=
         if [ ! "$TOKEN" ]; then
             echo "No matrix token for $MATRIXADMIN"
             return
@@ -553,7 +555,7 @@ if [ -d /etc/prosody ]; then
     fi
 fi
 
-if [ -d /etc/matrix ]; then
+if [ -d /etc/matrix-conduit ]; then
     notify_by_matrix=1
     if [ -f "$notification_method_filename" ]; then
         notify_by_matrix=

@@ -429,7 +429,7 @@ function web_admin_create_users {
         can_notify_by_xmpp=
     fi
     can_notify_by_matrix=
-    if [ -d /etc/matrix ]; then
+    if [ -d /etc/matrix-conduit ]; then
         can_notify_by_matrix=1
     fi
     can_notify_by_nextcloud=

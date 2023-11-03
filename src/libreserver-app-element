@@ -95,12 +95,7 @@ function element_set_default_homeserver {
     fi
 
     if [[ "${ONION_ONLY}" == 'no' ]]; then
-        if [ -d /var/lib/matrix ]; then
-            if [ ! "${MATRIX_DOMAIN_NAME}" ]; then
-                read_config_param MATRIX_DOMAIN_NAME
-            fi
-        fi
-        homeserver_domain_name="${MATRIX_DOMAIN_NAME}"
+        homeserver_domain_name="${CONDUIT_DOMAIN_NAME}"
         if [ -d /var/lib/matrix-conduit ]; then
             if [ ! "${CONDUIT_DOMAIN_NAME}" ]; then
                 read_config_param CONDUIT_DOMAIN_NAME
@@ -264,10 +259,7 @@ function upgrade_element {
     read_config_param ONION_ONLY
     element_set_default_homeserver
 
-    if [ -d /var/lib/matrix ]; then
-        read_config_param MATRIX_DOMAIN_NAME
-    fi
-    homeserver_domain_name=${MATRIX_DOMAIN_NAME}
+    homeserver_domain_name=${CONDUIT_DOMAIN_NAME}
     if [ -d /var/lib/matrix-conduit ]; then
         read_config_param CONDUIT_DOMAIN_NAME
         homeserver_domain_name=${CONDUIT_DOMAIN_NAME}
@@ -350,10 +342,8 @@ function install_element {
             exit 25
         fi
     fi
-    if [ ! -d /var/lib/matrix ]; then
-        if [ ! -d '/var/lib/matrix-conduit' ]; then
-            exit 82
-        fi
+    if [ ! -d '/var/lib/matrix-conduit' ]; then
+        exit 82
     fi
 
     increment_app_install_progress

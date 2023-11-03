@@ -296,8 +296,8 @@ fi
 if [ -d /var/www/radicale ]; then
     systemctl restart radicale
 fi
-if [ -d /etc/matrix ]; then
-    systemctl restart matrix
+if [ -d /etc/matrix-conduit ]; then
+    systemctl restart conduit
 fi
 if [ -d /etc/postgresql ]; then
     systemctl restart postgresql
