@@ -128,7 +128,7 @@ function android_update_apps {
                             domain_name="http://${!test_domain_name}"
                         fi
                     fi
-                    if [[ "$domain_name" && "$app_name" != 'matrix' ]]; then
+                    if [[ "$domain_name" && "$app_name" != 'conduit' ]]; then
                         { echo '        {';
                           echo "          \"name\": \"${app_name}\",";
                           echo "          \"platforms\": [";
@@ -139,7 +139,7 @@ function android_update_apps {
                     fi
 
                     if [ "$MOBILE_APP_URL" ]; then
-                        if [[ "$domain_name" && "$app_name" != 'matrix' ]]; then
+                        if [[ "$domain_name" && "$app_name" != 'conduit' ]]; then
                             echo ',' >> "$plinth_api"
                         else
                             { echo '        {';
