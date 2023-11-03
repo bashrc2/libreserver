@@ -75,8 +75,8 @@ function matrix_server_message {
     homeserver_config='/etc/matrix-conduit/conduit.toml'
 
     # shellcheck disable=SC2002
-    MATRIX_DOMAIN_NAME=$(cat "$homeserver_config" | grep "server_name:" | head -n 1 | awk -F '"' '{print $2}')
-    if [ ! "$MATRIX_DOMAIN_NAME" ]; then
+    CONDUIT_DOMAIN_NAME=$(cat "${homeserver_config}" | grep "server_name =" | head -n 1 | awk -F '"' '{print $2}')
+    if [ ! "$CONDUIT_DOMAIN_NAME" ]; then
         return
     fi
 
@@ -89,15 +89,15 @@ function matrix_server_message {
 
     # get the curl command and domain to send to
     curl_command='curl'
-    homebase="https://$MATRIX_DOMAIN_NAME"
+    homebase="https://$CONDUIT_DOMAIN_NAME"
     if [[ "$ONION_ONLY" != 'no' ]]; then
         curl_command='torsocks curl'
-        homebase="http://$(cat /var/lib/tor/hidden_service_matrix/hostname)"
+        homebase="http://$(cat /var/lib/tor/hidden_service_conduit/hostname)"
     fi
 
     # get the token for the matrix admin user
-    MATRIXADMIN="@${admin_username}:$MATRIX_DOMAIN_NAME"
-    MATRIXUSER="@${notifications_username}:$MATRIX_DOMAIN_NAME"
+    MATRIXADMIN="@${admin_username}:$CONDUIT_DOMAIN_NAME"
+    MATRIXUSER="@${notifications_username}:$CONDUIT_DOMAIN_NAME"
     cd "$CONDUIT_DATA_DIR" || return
     # TODO
     TOKEN=

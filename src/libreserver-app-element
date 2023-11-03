@@ -50,7 +50,6 @@ ELEMENT_DEFAULT_JITSI="jitsi.riot.im"
 
 element_variables=(MY_USERNAME
                    ELEMENT_DOMAIN_NAME
-                   MATRIX_DOMAIN_NAME
                    CONDUIT_DOMAIN_NAME
                    SYSTEM_TYPE
                    ONION_ONLY
@@ -110,16 +109,12 @@ function element_set_default_homeserver {
         sed -i "s|https://matrix.org|https://${homeserver_domain_name}|g" /var/www/${ELEMENT_DOMAIN_NAME}/htdocs/bundles/*/*.js
         sed -i "s|https://vector.im|https://${homeserver_domain_name}|g" /var/www/${ELEMENT_DOMAIN_NAME}/htdocs/bundles/*/*.js
     else
-        if [ -d /var/lib/matrix-conduit ]; then
-            HOMESERVER_ONION_HOSTNAME=$(cat /var/lib/tor/hidden_service_conduit/hostname)
-        else
-            HOMESERVER_ONION_HOSTNAME=$(cat /var/lib/tor/hidden_service_matrix/hostname)
-        fi
+        HOMESERVER_ONION_HOSTNAME=$(cat /var/lib/tor/hidden_service_conduit/hostname)
         if [ -f "/var/www/${ELEMENT_DOMAIN_NAME}/htdocs/config.json" ]; then
             sed -i "s|\"m.homeserver\":.*|\"m.homeserver\": {\"base_url\": \"http://${HOMESERVER_ONION_HOSTNAME}\",|g" "/var/www/$ELEMENT_DOMAIN_NAME/htdocs/config.json"
         fi
 
-        if [[ -f /var/lib/tor/hidden_service_matrix/hostname || -f /var/lib/tor/hidden_service_conduit/hostname ]]; then
+        if [ -f /var/lib/tor/hidden_service_conduit/hostname ]; then
             sed -i "s|http://matrix.org|http://${HOMESERVER_ONION_HOSTNAME}|g" /var/www/${ELEMENT_DOMAIN_NAME}/htdocs/bundles/*/*.js
             sed -i "s|http://vector.im|http://${HOMESERVER_ONION_HOSTNAME}|g" /var/www/${ELEMENT_DOMAIN_NAME}/htdocs/bundles/*/*.js
         fi
@@ -269,7 +264,7 @@ function upgrade_element {
     http_prefix='https'
     if [[ "$ONION_ONLY" != 'no' ]]; then
         http_prefix='http'
-        element_domain=$(cat /var/lib/tor/hidden_service_matrix/hostname)
+        element_domain=$(cat /var/lib/tor/hidden_service_conduit/hostname)
     fi
 
     sed -i "s|\"m.homeserver\":.*|\"m.homeserver\": {\"base_url\": \"${http_prefix}://${element_domain}\",|g" "$element_config_file"
@@ -332,15 +327,11 @@ function install_element {
     check_ram_availability $MATRIX_MINIMUM_RAM_MB
 
     # check that matrix has been installed
-    if [ ! "$MATRIX_DOMAIN_NAME" ]; then
-        if [ ! "$CONDUIT_DOMAIN_NAME" ]; then
-            exit 68
-        fi
+    if [ ! "$CONDUIT_DOMAIN_NAME" ]; then
+        exit 68
     fi
-    if [[ "$MATRIX_DOMAIN_NAME" != *'.'* ]]; then
-        if [[ "$CONDUIT_DOMAIN_NAME" != *'.'* ]]; then
-            exit 25
-        fi
+    if [[ "$CONDUIT_DOMAIN_NAME" != *'.'* ]]; then
+        exit 25
     fi
     if [ ! -d '/var/lib/matrix-conduit' ]; then
         exit 82
@@ -375,11 +366,11 @@ function install_element {
     cd "/var/www/${ELEMENT_DOMAIN_NAME}/htdocs" || exit 46
 
     ELEMENT_ONION_HOSTNAME=$(add_onion_service element 80 ${ELEMENT_ONION_PORT})
-    MATRIX_ONION_DOMAIN_NAME=$(cat /var/lib/tor/hidden_service_matrix/hostname)
+    MATRIX_ONION_DOMAIN_NAME=$(cat /var/lib/tor/hidden_service_conduit/hostname)
 
     increment_app_install_progress
 
-    homeserver_domain_name="${MATRIX_DOMAIN_NAME}"
+    homeserver_domain_name="${CONDUIT_DOMAIN_NAME}"
     if [ -d /var/lib/matrix-conduit ]; then
         MATRIX_ONION_DOMAIN_NAME=$(cat /var/lib/tor/hidden_service_conduit/hostname)
         if [ ! "${CONDUIT_DOMAIN_NAME}" ]; then
