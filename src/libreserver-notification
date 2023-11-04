@@ -106,7 +106,7 @@ function matrix_server_message {
         # TODO
         TOKEN=
         if [ ! "$TOKEN" ]; then
-            echo "No matrix token for $MATRIXADMIN"
+#            echo "No matrix token for $MATRIXADMIN"
             return
         fi
     fi
