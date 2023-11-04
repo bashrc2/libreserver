@@ -556,9 +556,8 @@ if [ -d /etc/prosody ]; then
 fi
 
 if [ -d /etc/matrix-conduit ]; then
-    notify_by_matrix=0
+    notify_by_matrix=
     if [ -f "$notification_method_filename" ]; then
-        notify_by_matrix=
         if grep -q 'matrix' "$notification_method_filename"; then
             notify_by_matrix=1
         fi
