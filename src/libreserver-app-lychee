@@ -90,22 +90,6 @@ function logging_off_lychee {
     echo -n ''
 }
 
-function lychee_create_database {
-    if [ -f "${IMAGE_PASSWORD_FILE}" ]; then
-        LYCHEE_ADMIN_PASSWORD="$(printf "%s" "$(cat "$IMAGE_PASSWORD_FILE")")"
-    else
-        if [ ! "${LYCHEE_ADMIN_PASSWORD}" ]; then
-            LYCHEE_ADMIN_PASSWORD="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
-        fi
-    fi
-    if [ ! "$LYCHEE_ADMIN_PASSWORD" ]; then
-        return
-    fi
-
-    function_check create_database
-    create_database lychee "$LYCHEE_ADMIN_PASSWORD"
-}
-
 function remove_user_lychee {
     #remove_username="$1"
     echo -n ''
@@ -195,9 +179,6 @@ function backup_local_lychee {
 
     lychee_path="/var/www/${LYCHEE_DOMAIN_NAME}/htdocs"
     if [ -d "$lychee_path" ]; then
-        function_check backup_database_to_usb
-        backup_database_to_usb lychee
-
         backup_directory_to_usb "$lychee_path" lychee
         restart_site
     fi
@@ -210,19 +191,6 @@ function restore_local_lychee {
     fi
     if [ "$LYCHEE_DOMAIN_NAME" ]; then
         suspend_site "${LYCHEE_DOMAIN_NAME}"
-
-        function_check lychee_create_database
-        lychee_create_database
-
-        function_check restore_database
-        restore_database lychee "${LYCHEE_DOMAIN_NAME}"
-
-        if [ -f "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/storage/config.php" ]; then
-            MARIADB_PASSWORD=$("${PROJECT_NAME}-pass" -u root -a mariadb)
-            sed -i "s|dbPassword.*|dbPassword = '$MARIADB_PASSWORD';|g" "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/storage/config.php"
-            MARIADB_PASSWORD=
-        fi
-
         restart_site
         chown -R lychee: "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/"
     fi
@@ -501,49 +469,6 @@ function install_lychee_from_repo {
     set_completion_param "lychee commit" "$LYCHEE_COMMIT"
 }
 
-function lychee_create_admin_user {
-    if [ ! "$LYCHEE_ADMIN_PASSWORD" ]; then
-        echo $'No lychee database password'
-        exit 62
-    fi
-    cd "/var/www/${LYCHEE_DOMAIN_NAME}/htdocs/php/database" || exit 27
-    lychee_identifier=$(php -r "echo md5(microtime(true));")
-    username_encrypted=$(lychee_hashed_string "$MY_USERNAME")
-    password_encrypted=$(lychee_hashed_string "$LYCHEE_ADMIN_PASSWORD")
-    rm /root/.lychee_string.php
-
-    sed -i 's|?|lychee_log|g' log_table.sql
-    initialise_database lychee log_table.sql
-    sed -i 's|?|lychee_photos|g' photos_table.sql
-    initialise_database lychee photos_table.sql
-    cp settings_content.sql settings_content2.sql
-    sed -i 's|?|lychee_settings|g' settings_table.sql
-    sed -i 's|?|lychee_settings|g' settings_content2.sql
-    sed -i "s|'version',''|'version','${LYCHEE_VERSION}'|g" settings_content2.sql
-    sed -i "s|'username',''|'username','${username_encrypted}'|g" settings_content2.sql
-    sed -i "s|'password',''|'password','${password_encrypted}'|g" settings_content2.sql
-    sed -i "s|'identifier',''|'identifier','${lychee_identifier}'|g" settings_content2.sql
-    initialise_database lychee settings_table.sql
-    run_query_with_output lychee "$(cat settings_content2.sql)"
-    rm settings_content2.sql
-    sed -i 's|?|lychee_albums|g' albums_table.sql
-    initialise_database lychee albums_table.sql
-}
-
-function lychee_create_config {
-    MARIADB_PASSWORD=$("${PROJECT_NAME}-pass" -u root -a mariadb)
-    { echo '<?php';
-      echo '';
-      echo '// Database configuration';
-      echo "\$dbHost = 'localhost'; // Host of the database";
-      echo "\$dbUser = 'root'; // Username of the database";
-      echo "\$dbPassword = '$MARIADB_PASSWORD'; // Password of the database";
-      echo "\$dbName = 'lychee'; // Database name";
-      echo "\$dbTablePrefix = ''; // Table prefix";
-      echo '';
-      echo '?>'; } > "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/storage/config.php"
-}
-
 function install_lychee {
     if [ ! $ONION_ONLY ]; then
         ONION_ONLY='no'
@@ -624,29 +549,6 @@ function install_lychee {
     function_check nginx_ensite
     nginx_ensite "$LYCHEE_DOMAIN_NAME"
 
-    function_check install_mariadb
-    install_mariadb
-
-    increment_app_install_progress
-
-    function_check get_mariadb_password
-    get_mariadb_password
-
-    function_check lychee_create_database
-    lychee_create_database
-
-    increment_app_install_progress
-
-    function_check lychee_create_config
-    lychee_create_config
-
-    function_check lychee_create_admin_user
-    lychee_create_admin_user
-
-    increment_app_install_progress
-
-    systemctl restart mariadb
-
     increment_app_install_progress
 
     chown -R www-data:www-data "/var/www/${LYCHEE_DOMAIN_NAME}/htdocs"
@@ -664,15 +566,7 @@ function install_lychee {
     function_check add_ddns_domain
     add_ddns_domain "$LYCHEE_DOMAIN_NAME"
 
-    # Ensure that the database gets backed up locally, if remote
-    # backups are not being used
-    function_check backup_databases_script_header
-    backup_databases_script_header
-
     increment_app_install_progress
-
-    function_check backup_database_local
-    backup_database_local lychee
 
     set_completion_param "lychee domain" "$LYCHEE_DOMAIN_NAME"
     APP_INSTALLED=1
