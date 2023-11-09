@@ -156,22 +156,7 @@ function reconfigure_lychee {
     echo -n ''
 }
 
-function upgrade_lychee {
-    CURR_LYCHEE_COMMIT=$(get_completion_param "lychee commit")
-    if [[ "${CURR_LYCHEE_COMMIT}" == "${LYCHEE_COMMIT}" ]]; then
-        return
-    fi
-
-    read_config_param "LYCHEE_DOMAIN_NAME"
-
-    function_check set_repo_commit
-    set_repo_commit /var/www/$LYCHEE_DOMAIN_NAME/htdocs "lychee commit" "${LYCHEE_COMMIT}" $LYCHEE_REPO
-
-    cd "/var/www/${LYCHEE_DOMAIN_NAME}/htdocs" || return
-    install_composer
-    export COMPOSER_ALLOW_SUPERUSER=1
-    echo "yes" | php composer.phar install --no-dev --prefer-dist --ignore-platform-req=ext-bcmath
-
+function lychee_set_permissions {
     chown -R www-data:www-data "/var/www/${LYCHEE_DOMAIN_NAME}/htdocs"
     chmod -R 750 "/var/www/${LYCHEE_DOMAIN_NAME}/htdocs/public/uploads"/
     chmod -R 750 "/var/www/${LYCHEE_DOMAIN_NAME}/htdocs/public/storage"/
@@ -188,15 +173,35 @@ function upgrade_lychee {
     chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/storage/.gitignore"
 }
 
+function upgrade_lychee {
+    CURR_LYCHEE_COMMIT=$(get_completion_param "lychee commit")
+    if [[ "${CURR_LYCHEE_COMMIT}" == "${LYCHEE_COMMIT}" ]]; then
+        return
+    fi
+
+    read_config_param "LYCHEE_DOMAIN_NAME"
+
+    function_check set_repo_commit
+    set_repo_commit /var/www/$LYCHEE_DOMAIN_NAME/htdocs "lychee commit" "${LYCHEE_COMMIT}" $LYCHEE_REPO
+
+    cd "/var/www/${LYCHEE_DOMAIN_NAME}/htdocs" || return
+    install_composer
+    export COMPOSER_ALLOW_SUPERUSER=1
+    echo "yes" | php composer.phar install --no-dev --prefer-dist --ignore-platform-req=ext-bcmath
+    lychee_set_permissions
+}
+
 function backup_local_lychee {
     LYCHEE_DOMAIN_NAME='lychee.local'
     if grep -q "lychee domain" "$COMPLETION_FILE"; then
         LYCHEE_DOMAIN_NAME=$(get_completion_param "lychee domain")
     fi
 
-    lychee_path="/var/www/${LYCHEE_DOMAIN_NAME}/htdocs"
-    if [ -d "$lychee_path" ]; then
-        backup_directory_to_usb "$lychee_path" lychee
+    source_directory="/var/www/${LYCHEE_DOMAIN_NAME}/htdocs"
+    if [ -d "${source_directory}" ]; then
+        suspend_site "${LYCHEE_DOMAIN_NAME}"
+        dest_directory=lychee
+        backup_directory_to_usb "${source_directory}" ${dest_directory}
         restart_site
     fi
 }
@@ -208,8 +213,11 @@ function restore_local_lychee {
     fi
     if [ "$LYCHEE_DOMAIN_NAME" ]; then
         suspend_site "${LYCHEE_DOMAIN_NAME}"
+        temp_restore_dir=/root/templychee
+        lychee_dir="/var/www/${LYCHEE_DOMAIN_NAME}/htdocs"
+        restore_directory_from_usb $temp_restore_dir lychee
+        lychee_set_permissions
         restart_site
-        chown -R lychee: "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/"
     fi
 }
 
@@ -526,29 +534,14 @@ function install_lychee {
 
     increment_app_install_progress
 
-    chmod -R 1777 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/"
-    chmod -R 1777 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/storage/"
-    chown -R www-data:www-data "/var/www/$LYCHEE_DOMAIN_NAME/htdocs"
+    lychee_set_permissions
 
-    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/original/index.html"
-    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/medium/index.html"
-    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/medium2x/index.html"
-    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/small/index.html"
-    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/small2x/index.html"
-    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/import/index.html"
-    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/thumb/index.html"
-    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/thumb2x/index.html"
-    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/tracks/index.html"
-    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/storage/.gitignore"
+    increment_app_install_progress
 
     function_check nginx_ensite
     nginx_ensite "$LYCHEE_DOMAIN_NAME"
 
     increment_app_install_progress
-
-    chown -R www-data:www-data "/var/www/${LYCHEE_DOMAIN_NAME}/htdocs"
-    chmod -R 750 "/var/www/${LYCHEE_DOMAIN_NAME}/htdocs/public/uploads"/
-    chmod -R 750 "/var/www/${LYCHEE_DOMAIN_NAME}/htdocs/public/storage"/
 
     # shellcheck disable=SC2086
     systemctl restart php${PHP_VERSION}-fpm
