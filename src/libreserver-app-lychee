@@ -183,8 +183,8 @@ function upgrade_lychee {
     function_check set_repo_commit
     set_repo_commit /var/www/$LYCHEE_DOMAIN_NAME/htdocs "lychee commit" "$LYCHEE_COMMIT" $LYCHEE_REPO
     chown -R www-data:www-data "/var/www/${LYCHEE_DOMAIN_NAME}/htdocs"
-    chmod -R 750 "/var/www/${LYCHEE_DOMAIN_NAME}/htdocs/uploads"/
-    chmod -R 750 "/var/www/${LYCHEE_DOMAIN_NAME}/htdocs/data"/
+    chmod -R 750 "/var/www/${LYCHEE_DOMAIN_NAME}/htdocs/public/uploads"/
+    chmod -R 750 "/var/www/${LYCHEE_DOMAIN_NAME}/htdocs/public/storage"/
 }
 
 function backup_local_lychee {
@@ -217,9 +217,9 @@ function restore_local_lychee {
         function_check restore_database
         restore_database lychee "${LYCHEE_DOMAIN_NAME}"
 
-        if [ -f "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/data/config.php" ]; then
+        if [ -f "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/storage/config.php" ]; then
             MARIADB_PASSWORD=$("${PROJECT_NAME}-pass" -u root -a mariadb)
-            sed -i "s|dbPassword.*|dbPassword = '$MARIADB_PASSWORD';|g" "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/data/config.php"
+            sed -i "s|dbPassword.*|dbPassword = '$MARIADB_PASSWORD';|g" "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/storage/config.php"
             MARIADB_PASSWORD=
         fi
 
@@ -273,7 +273,7 @@ function install_lychee_website {
     { echo 'server {';
       echo '    listen 443 ssl;';
       echo '    #listen [::]:443 ssl;';
-      echo "    root /var/www/$LYCHEE_DOMAIN_NAME/htdocs;";
+      echo "    root /var/www/$LYCHEE_DOMAIN_NAME/htdocs/public;";
       echo "    server_name $LYCHEE_DOMAIN_NAME;";
       echo '    server_tokens off;';
       echo '    access_log /dev/null;';
@@ -340,7 +340,7 @@ function install_lychee_website_onion {
     { echo 'server {';
       echo "    listen 127.0.0.1:${LYCHEE_ONION_PORT} default_server;";
       echo '    port_in_redirect off;';
-      echo "    root /var/www/$LYCHEE_DOMAIN_NAME/htdocs;";
+      echo "    root /var/www/$LYCHEE_DOMAIN_NAME/htdocs/public;";
       echo "    server_name $LYCHEE_ONION_HOSTNAME;";
       echo '    server_tokens off;';
       echo '    access_log /dev/null;';
@@ -415,7 +415,7 @@ function install_lychee_website_i2p {
     { echo 'server {';
       echo "    listen 127.0.0.1:${LYCHEE_I2P_PORT} default_server;";
       echo '    port_in_redirect off;';
-      echo "    root /var/www/$LYCHEE_DOMAIN_NAME/htdocs;";
+      echo "    root /var/www/$LYCHEE_DOMAIN_NAME/htdocs/public;";
       echo "    server_name $LYCHEE_I2P_HOSTNAME;";
       echo '    server_tokens off;';
       echo '    access_log /dev/null;';
@@ -541,7 +541,7 @@ function lychee_create_config {
       echo "\$dbName = 'lychee'; // Database name";
       echo "\$dbTablePrefix = ''; // Table prefix";
       echo '';
-      echo '?>'; } > "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/data/config.php"
+      echo '?>'; } > "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/storage/config.php"
 }
 
 function install_lychee {
@@ -588,10 +588,20 @@ function install_lychee {
     function_check install_lychee_website_onion
     install_lychee_website_onion
 
+    increment_app_install_progress
+
     function_check install_lychee_website_i2p
     install_lychee_website_i2p
 
     increment_app_install_progress
+
+    cd "/var/www/$LYCHEE_DOMAIN_NAME/htdocs" || exit 62
+    install_composer
+    echo "yes" | php composer.phar install --no-dev
+
+    increment_app_install_progress
+
+    cp "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/.env.example" "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/.env"
 
     function_check create_site_certificate
     create_site_certificate "$LYCHEE_DOMAIN_NAME" 'yes'
@@ -601,15 +611,15 @@ function install_lychee {
 
     increment_app_install_progress
 
-    chmod -R 1777 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/uploads/"
-    chmod -R 1777 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/data/"
+    chmod -R 1777 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/"
+    chmod -R 1777 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/storage/"
     chown -R www-data:www-data "/var/www/$LYCHEE_DOMAIN_NAME/htdocs"
 
-    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/uploads/big/index.html"
-    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/uploads/medium/index.html"
-    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/uploads/import/index.html"
-    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/uploads/thumb/index.html"
-    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/data/.gitignore"
+    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/big/index.html"
+    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/medium/index.html"
+    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/import/index.html"
+    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/thumb/index.html"
+    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/storage/.gitignore"
 
     function_check nginx_ensite
     nginx_ensite "$LYCHEE_DOMAIN_NAME"
@@ -640,8 +650,8 @@ function install_lychee {
     increment_app_install_progress
 
     chown -R www-data:www-data "/var/www/${LYCHEE_DOMAIN_NAME}/htdocs"
-    chmod -R 750 "/var/www/${LYCHEE_DOMAIN_NAME}/htdocs/uploads"/
-    chmod -R 750 "/var/www/${LYCHEE_DOMAIN_NAME}/htdocs/data"/
+    chmod -R 750 "/var/www/${LYCHEE_DOMAIN_NAME}/htdocs/public/uploads"/
+    chmod -R 750 "/var/www/${LYCHEE_DOMAIN_NAME}/htdocs/public/storage"/
 
     # shellcheck disable=SC2086
     systemctl restart php${PHP_VERSION}-fpm
