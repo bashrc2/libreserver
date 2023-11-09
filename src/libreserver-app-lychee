@@ -539,7 +539,7 @@ function install_lychee {
     fi
 
     # switch image visibility to private
-    sed -i "s|APP_URL=# LYCHEE_IMAGE_VISIBILITY=.*|LYCHEE_IMAGE_VISIBILITY=private|g" "${lychee_env}"
+    sed -i "s|# LYCHEE_IMAGE_VISIBILITY=.*|LYCHEE_IMAGE_VISIBILITY=private|g" "${lychee_env}"
 
     function_check create_site_certificate
     create_site_certificate "${LYCHEE_DOMAIN_NAME}" 'yes'
