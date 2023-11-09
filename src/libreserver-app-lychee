@@ -561,7 +561,9 @@ function install_lychee {
     # shellcheck disable=SC2086
     INSTALL_PACKAGES php${PHP_VERSION}-mysql php${PHP_VERSION}-imagick
     # shellcheck disable=SC2086
-    INSTALL_PACKAGES php${PHP_VERSION}-mbstring php${PHP_VERSION}-json
+    INSTALL_PACKAGES php${PHP_VERSION}-mbstring
+    # shellcheck disable=SC2086
+    INSTALL_PACKAGES php-json
     # shellcheck disable=SC2086
     INSTALL_PACKAGES php${PHP_VERSION}-gd php${PHP_VERSION}-xml php${PHP_VERSION}-zip
 
