@@ -249,7 +249,7 @@ function install_lychee_website {
       echo '    server_tokens off;';
       echo '    access_log /dev/null;';
       echo "    error_log /dev/null;";
-      echo '    index index.html;';
+      echo '    index index.php;';
       echo '    charset utf-8;';
       echo '    proxy_read_timeout 86400s;'; } >> "/etc/nginx/sites-available/$LYCHEE_DOMAIN_NAME"
     function_check nginx_ssl
@@ -275,7 +275,7 @@ function install_lychee_website {
       echo "        # server, which is entirely possible with php-fpm/php-fcgi.";
       echo "        # Comment the 'try_files' line out if you set up php-fpm/php-fcgi on";
       echo "        # another machine. And then cross your fingers that you won't get hacked.";
-      echo "        try_files \$uri \$uri/ /index.html;";
+      echo "        try_files \$uri \$uri/ /index.php;";
       echo '        # NOTE: You should have "cgi.fix_pathinfo = 0;" in php.ini';
       echo '        fastcgi_split_path_info ^(.+\.php)(/.+)$;';
       echo '        # With php-cgi alone:';
@@ -284,7 +284,7 @@ function install_lychee_website {
       echo "        fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
       echo '        include fastcgi_params;';
       echo '        fastcgi_read_timeout 30;';
-      echo '        fastcgi_index index.html;';
+      echo '        fastcgi_index index.php;';
       echo "        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;";
       echo '    }';
       echo '';
@@ -316,7 +316,7 @@ function install_lychee_website_onion {
       echo '    server_tokens off;';
       echo '    access_log /dev/null;';
       echo "    error_log /dev/null;";
-      echo '    index index.html;';
+      echo '    index index.php;';
       echo '    charset utf-8;';
       echo '    proxy_read_timeout 86400s;'; } >> "/etc/nginx/sites-available/$LYCHEE_DOMAIN_NAME"
     function_check nginx_security_options
@@ -345,7 +345,7 @@ function install_lychee_website_onion {
       echo "        # server, which is entirely possible with php-fpm/php-fcgi.";
       echo "        # Comment the 'try_files' line out if you set up php-fpm/php-fcgi on";
       echo "        # another machine. And then cross your fingers that you won't get hacked.";
-      echo "        try_files \$uri \$uri/ /index.html;";
+      echo "        try_files \$uri \$uri/ /index.php;";
       echo '        # NOTE: You should have "cgi.fix_pathinfo = 0;" in php.ini';
       echo '        fastcgi_split_path_info ^(.+\.php)(/.+)$;';
       echo '        # With php-cgi alone:';
@@ -354,7 +354,7 @@ function install_lychee_website_onion {
       echo "        fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
       echo '        include fastcgi_params;';
       echo '        fastcgi_read_timeout 30;';
-      echo '        fastcgi_index index.html;';
+      echo '        fastcgi_index index.php;';
       echo "        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;";
       echo '    }';
       echo '';
@@ -391,7 +391,7 @@ function install_lychee_website_i2p {
       echo '    server_tokens off;';
       echo '    access_log /dev/null;';
       echo "    error_log /dev/null;";
-      echo '    index index.html;';
+      echo '    index index.php;';
       echo '    charset utf-8;';
       echo '    proxy_read_timeout 86400s;'; } >> "/etc/nginx/sites-available/$LYCHEE_DOMAIN_NAME"
     function_check nginx_security_options
@@ -420,7 +420,7 @@ function install_lychee_website_i2p {
       echo "        # server, which is entirely possible with php-fpm/php-fcgi.";
       echo "        # Comment the 'try_files' line out if you set up php-fpm/php-fcgi on";
       echo "        # another machine. And then cross your fingers that you won't get hacked.";
-      echo "        try_files \$uri \$uri/ /index.html;";
+      echo "        try_files \$uri \$uri/ /index.php;";
       echo '        # NOTE: You should have "cgi.fix_pathinfo = 0;" in php.ini';
       echo '        fastcgi_split_path_info ^(.+\.php)(/.+)$;';
       echo '        # With php-cgi alone:';
@@ -429,7 +429,7 @@ function install_lychee_website_i2p {
       echo "        fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
       echo '        include fastcgi_params;';
       echo '        fastcgi_read_timeout 30;';
-      echo '        fastcgi_index index.html;';
+      echo '        fastcgi_index index.php;';
       echo "        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;";
       echo '    }';
       echo '';
@@ -553,10 +553,10 @@ function install_lychee {
     chmod -R 1777 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/storage/"
     chown -R www-data:www-data "/var/www/$LYCHEE_DOMAIN_NAME/htdocs"
 
-    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/big/index.html"
-    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/medium/index.html"
-    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/import/index.html"
-    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/thumb/index.html"
+    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/big/index.php"
+    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/medium/index.php"
+    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/import/index.php"
+    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/thumb/index.php"
     chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/storage/.gitignore"
 
     function_check nginx_ensite
