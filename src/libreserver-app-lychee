@@ -524,10 +524,15 @@ function install_lychee {
 
     increment_app_install_progress
 
-    cp "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/.env.example" "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/.env"
-
+    lychee_env="/var/www/$LYCHEE_DOMAIN_NAME/htdocs/.env"
+    cp "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/.env.example" "${lychee_env}"
+    if [[ ${ONION_ONLY} == 'no' ]]; then
+        sed -i "s|APP_URL=.*|APP_URL=https://${LYCHEE_DOMAIN_NAME}|g" "${lychee_env}"
+    else
+        sed -i "s|APP_URL=.*|APP_URL=http://${LYCHEE_ONION_HOSTNAME}|g" "${lychee_env}"
+    fi
     function_check create_site_certificate
-    create_site_certificate "$LYCHEE_DOMAIN_NAME" 'yes'
+    create_site_certificate "${LYCHEE_DOMAIN_NAME}" 'yes'
 
     function_check configure_php
     configure_php
