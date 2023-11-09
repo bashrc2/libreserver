@@ -255,8 +255,8 @@ function install_lychee_website {
     { echo 'server {';
       echo '    listen 443 ssl;';
       echo '    #listen [::]:443 ssl;';
-      echo "    root /var/www/$LYCHEE_DOMAIN_NAME/htdocs/public;";
-      echo "    server_name $LYCHEE_DOMAIN_NAME;";
+      echo "    root /var/www/${LYCHEE_DOMAIN_NAME}/htdocs/public;";
+      echo "    server_name ${LYCHEE_DOMAIN_NAME};";
       echo '    server_tokens off;';
       echo '    access_log /dev/null;';
       echo "    error_log /dev/null;";
@@ -271,49 +271,40 @@ function install_lychee_website {
     { echo '    add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
       echo "    add_header Onion-Location http://${LYCHEE_ONION_HOSTNAME}\$request_uri;";
       echo '';
-      echo '    # rewrite to front controller as default rule';
-      echo '    location / {'; } >> "/etc/nginx/sites-available/$LYCHEE_DOMAIN_NAME"
-    function_check nginx_limits
-    nginx_limits "$LYCHEE_DOMAIN_NAME"
-    { echo '    }';
+      echo '    # If the request is not for a valid file (image, js, css, etc.), send to bootstrap';
+      echo "    if (!-e \$request_filename)";
+      echo '    {';
+      echo "        rewrite ^/(.*)\$ /index.php?/\$1 last;";
+      echo '        break;';
+      echo '    }';
       echo '';
-      echo '    # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000';
-      echo '    # or a unix socket';
-      echo '    location ~* \.php$ {';
-      echo '        # Zero-day exploit defense.';
-      echo '        # http://forum.nginx.org/read.php?2,88845,page=3';
-      echo "        # Won't work properly (404 error) if the file is not stored on this";
-      echo "        # server, which is entirely possible with php-fpm/php-fcgi.";
-      echo "        # Comment the 'try_files' line out if you set up php-fpm/php-fcgi on";
-      echo "        # another machine. And then cross your fingers that you won't get hacked.";
-      echo "        try_files \$uri \$uri/ /index.php;";
-      echo '        # NOTE: You should have "cgi.fix_pathinfo = 0;" in php.ini';
-      echo '        fastcgi_split_path_info ^(.+\.php)(/.+)$;';
-      echo '        # With php-cgi alone:';
-      echo '        # fastcgi_pass 127.0.0.1:9000;';
-      echo '        # With php-fpm:';
-      echo "        fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
-      echo '        include fastcgi_params;';
-      echo '        fastcgi_read_timeout 30;';
+      echo '    # Serve /index.php through PHP';
+      echo '    location = /index.php {';
+      echo "        fastcgi_split_path_info ^(.+?\.php)(/.*)\$;";
+      echo '';
+      echo '        # Mitigate https://httpoxy.org/ vulnerabilities';
+      echo '        fastcgi_param HTTP_PROXY "";';
+      echo '';
+      echo '        ######### Make sure this is the correct socket for your system';
+      echo "        fastcgi_pass unix:/run/php/php${PHP_VERSION}-fpm.sock;";
       echo '        fastcgi_index index.php;';
-      echo "        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;";
+      echo '        ######## You may need to replace $document_root with the absolute path to your public folder.';
+      echo '        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;';
+      echo '        fastcgi_param PHP_VALUE "post_max_size=100M';
+      echo '            max_execution_time=200';
+      echo '            upload_max_filesize=30M';
+      echo '            memory_limit=300M";';
+      echo '        fastcgi_param PATH /usr/local/bin:/usr/bin:/bin;';
+      echo '        include fastcgi_params;';
       echo '    }';
       echo '';
-      echo '    # deny access to all dot files';
-      echo '    location ~ /\. {';
-      echo '        deny all;';
+      echo '    # Deny access to other .php files, rather than exposing their contents';
+      echo "    location ~ [^/]\.php(/|\$) {";
+      echo '        return 403;';
       echo '    }';
       echo '';
-      echo '    #deny access to store';
-      echo '    location ~ /store {';
-      echo '        deny all;';
-      echo '    }';
-      echo '    location ~ /(storage|conf|bin|inc)/ {';
-      echo '      deny all;';
-      echo '    }';
-      echo '    location ~ /\.ht {';
-      echo '      deny  all;';
-      echo '    }';
+      echo '    # [Optional] Remove trailing slashes from requests (prevents SEO duplicate content issues)';
+      echo '    rewrite ^/(.+)/$ /$1 permanent;';
       echo '}';
       echo ''; } >> "/etc/nginx/sites-available/$LYCHEE_DOMAIN_NAME"
 }
@@ -322,8 +313,8 @@ function install_lychee_website_onion {
     { echo 'server {';
       echo "    listen 127.0.0.1:${LYCHEE_ONION_PORT} default_server;";
       echo '    port_in_redirect off;';
-      echo "    root /var/www/$LYCHEE_DOMAIN_NAME/htdocs/public;";
-      echo "    server_name $LYCHEE_ONION_HOSTNAME;";
+      echo "    root /var/www/${LYCHEE_DOMAIN_NAME}/htdocs/public;";
+      echo "    server_name ${LYCHEE_ONION_HOSTNAME};";
       echo '    server_tokens off;';
       echo '    access_log /dev/null;';
       echo "    error_log /dev/null;";
@@ -334,56 +325,40 @@ function install_lychee_website_onion {
     nginx_security_options "$LYCHEE_DOMAIN_NAME"
     { echo '    add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
       echo '';
-      echo '    # rewrite to front controller as default rule';
-      echo '    location / {'; } >> "/etc/nginx/sites-available/$LYCHEE_DOMAIN_NAME"
-    function_check nginx_limits
-    nginx_limits "$LYCHEE_DOMAIN_NAME"
-    { echo '    }';
-      echo '';
-      echo '    # block these file types';
-      echo '    location ~* \.(tpl|md|tgz|log|out)$ {';
-      echo '        deny all;';
+      echo '    # If the request is not for a valid file (image, js, css, etc.), send to bootstrap';
+      echo "    if (!-e \$request_filename)";
+      echo '    {';
+      echo "        rewrite ^/(.*)\$ /index.php?/\$1 last;";
+      echo '        break;';
       echo '    }';
       echo '';
-      echo '    # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000';
-      echo '    # or a unix socket';
-      echo '    location ~* \.php$ {'; } >> "/etc/nginx/sites-available/$LYCHEE_DOMAIN_NAME"
-    function_check nginx_limits
-    nginx_limits "$LYCHEE_DOMAIN_NAME"
-    { echo '        # Zero-day exploit defense.';
-      echo '        # http://forum.nginx.org/read.php?2,88845,page=3';
-      echo "        # Won't work properly (404 error) if the file is not stored on this";
-      echo "        # server, which is entirely possible with php-fpm/php-fcgi.";
-      echo "        # Comment the 'try_files' line out if you set up php-fpm/php-fcgi on";
-      echo "        # another machine. And then cross your fingers that you won't get hacked.";
-      echo "        try_files \$uri \$uri/ /index.php;";
-      echo '        # NOTE: You should have "cgi.fix_pathinfo = 0;" in php.ini';
-      echo '        fastcgi_split_path_info ^(.+\.php)(/.+)$;';
-      echo '        # With php-cgi alone:';
-      echo '        # fastcgi_pass 127.0.0.1:9000;';
-      echo '        # With php-fpm:';
-      echo "        fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
-      echo '        include fastcgi_params;';
-      echo '        fastcgi_read_timeout 30;';
+      echo '    # Serve /index.php through PHP';
+      echo '    location = /index.php {';
+      echo "        fastcgi_split_path_info ^(.+?\.php)(/.*)\$;";
+      echo '';
+      echo '        # Mitigate https://httpoxy.org/ vulnerabilities';
+      echo '        fastcgi_param HTTP_PROXY "";';
+      echo '';
+      echo '        ######### Make sure this is the correct socket for your system';
+      echo "        fastcgi_pass unix:/run/php/php${PHP_VERSION}-fpm.sock;";
       echo '        fastcgi_index index.php;';
-      echo "        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;";
+      echo '        ######## You may need to replace $document_root with the absolute path to your public folder.';
+      echo '        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;';
+      echo '        fastcgi_param PHP_VALUE "post_max_size=100M';
+      echo '            max_execution_time=200';
+      echo '            upload_max_filesize=30M';
+      echo '            memory_limit=300M";';
+      echo '        fastcgi_param PATH /usr/local/bin:/usr/bin:/bin;';
+      echo '        include fastcgi_params;';
       echo '    }';
       echo '';
-      echo '    # deny access to all dot files';
-      echo '    location ~ /\. {';
-      echo '        deny all;';
+      echo '    # Deny access to other .php files, rather than exposing their contents';
+      echo "    location ~ [^/]\.php(/|\$) {";
+      echo '        return 403;';
       echo '    }';
       echo '';
-      echo '    #deny access to store';
-      echo '    location ~ /store {';
-      echo '        deny all;';
-      echo '    }';
-      echo '    location ~ /(storage|conf|bin|inc)/ {';
-      echo '      deny all;';
-      echo '    }';
-      echo '    location ~ /\.ht {';
-      echo '      deny  all;';
-      echo '    }';
+      echo '    # [Optional] Remove trailing slashes from requests (prevents SEO duplicate content issues)';
+      echo '    rewrite ^/(.+)/$ /$1 permanent;';
       echo '}'; } >> "/etc/nginx/sites-available/$LYCHEE_DOMAIN_NAME"
 }
 
@@ -398,7 +373,7 @@ function install_lychee_website_i2p {
       echo "    listen 127.0.0.1:${LYCHEE_I2P_PORT} default_server;";
       echo '    port_in_redirect off;';
       echo "    root /var/www/$LYCHEE_DOMAIN_NAME/htdocs/public;";
-      echo "    server_name $LYCHEE_I2P_HOSTNAME;";
+      echo "    server_name ${LYCHEE_I2P_HOSTNAME};";
       echo '    server_tokens off;';
       echo '    access_log /dev/null;';
       echo "    error_log /dev/null;";
@@ -409,56 +384,40 @@ function install_lychee_website_i2p {
     nginx_security_options "$LYCHEE_DOMAIN_NAME"
     { echo '    add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
       echo '';
-      echo '    # rewrite to front controller as default rule';
-      echo '    location / {'; } >> "/etc/nginx/sites-available/$LYCHEE_DOMAIN_NAME"
-    function_check nginx_limits
-    nginx_limits "$LYCHEE_DOMAIN_NAME"
-    { echo '    }';
-      echo '';
-      echo '    # block these file types';
-      echo '    location ~* \.(tpl|md|tgz|log|out)$ {';
-      echo '        deny all;';
+      echo '    # If the request is not for a valid file (image, js, css, etc.), send to bootstrap';
+      echo "    if (!-e \$request_filename)";
+      echo '    {';
+      echo "        rewrite ^/(.*)\$ /index.php?/\$1 last;";
+      echo '        break;';
       echo '    }';
       echo '';
-      echo '    # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000';
-      echo '    # or a unix socket';
-      echo '    location ~* \.php$ {'; } >> "/etc/nginx/sites-available/$LYCHEE_DOMAIN_NAME"
-    function_check nginx_limits
-    nginx_limits "$LYCHEE_DOMAIN_NAME"
-    { echo '        # Zero-day exploit defense.';
-      echo '        # http://forum.nginx.org/read.php?2,88845,page=3';
-      echo "        # Won't work properly (404 error) if the file is not stored on this";
-      echo "        # server, which is entirely possible with php-fpm/php-fcgi.";
-      echo "        # Comment the 'try_files' line out if you set up php-fpm/php-fcgi on";
-      echo "        # another machine. And then cross your fingers that you won't get hacked.";
-      echo "        try_files \$uri \$uri/ /index.php;";
-      echo '        # NOTE: You should have "cgi.fix_pathinfo = 0;" in php.ini';
-      echo '        fastcgi_split_path_info ^(.+\.php)(/.+)$;';
-      echo '        # With php-cgi alone:';
-      echo '        # fastcgi_pass 127.0.0.1:9000;';
-      echo '        # With php-fpm:';
-      echo "        fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
-      echo '        include fastcgi_params;';
-      echo '        fastcgi_read_timeout 30;';
+      echo '    # Serve /index.php through PHP';
+      echo '    location = /index.php {';
+      echo "        fastcgi_split_path_info ^(.+?\.php)(/.*)\$;";
+      echo '';
+      echo '        # Mitigate https://httpoxy.org/ vulnerabilities';
+      echo '        fastcgi_param HTTP_PROXY "";';
+      echo '';
+      echo '        ######### Make sure this is the correct socket for your system';
+      echo "        fastcgi_pass unix:/run/php/php${PHP_VERSION}-fpm.sock;";
       echo '        fastcgi_index index.php;';
-      echo "        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;";
+      echo '        ######## You may need to replace $document_root with the absolute path to your public folder.';
+      echo '        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;';
+      echo '        fastcgi_param PHP_VALUE "post_max_size=100M';
+      echo '            max_execution_time=200';
+      echo '            upload_max_filesize=30M';
+      echo '            memory_limit=300M";';
+      echo '        fastcgi_param PATH /usr/local/bin:/usr/bin:/bin;';
+      echo '        include fastcgi_params;';
       echo '    }';
       echo '';
-      echo '    # deny access to all dot files';
-      echo '    location ~ /\. {';
-      echo '        deny all;';
+      echo '    # Deny access to other .php files, rather than exposing their contents';
+      echo "    location ~ [^/]\.php(/|\$) {";
+      echo '        return 403;';
       echo '    }';
       echo '';
-      echo '    #deny access to store';
-      echo '    location ~ /store {';
-      echo '        deny all;';
-      echo '    }';
-      echo '    location ~ /(storage|conf|bin|inc)/ {';
-      echo '      deny all;';
-      echo '    }';
-      echo '    location ~ /\.ht {';
-      echo '      deny  all;';
-      echo '    }';
+      echo '    # [Optional] Remove trailing slashes from requests (prevents SEO duplicate content issues)';
+      echo '    rewrite ^/(.+)/$ /$1 permanent;';
       echo '}'; } >> "/etc/nginx/sites-available/$LYCHEE_DOMAIN_NAME"
 }
 
