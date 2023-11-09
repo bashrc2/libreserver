@@ -522,6 +522,7 @@ function install_lychee {
 
     cd "/var/www/$LYCHEE_DOMAIN_NAME/htdocs" || exit 62
     install_composer
+    COMPOSER_ALLOW_SUPERUSER=1
     echo "yes" | php composer.phar install --no-dev
 
     increment_app_install_progress
