@@ -38,8 +38,6 @@ LYCHEE_ONION_PORT=8105
 LYCHEE_I2P_PORT=9563
 LYCHEE_REPO="https://github.com/LycheeOrg/Lychee"
 LYCHEE_COMMIT='c77346a1f985c1608e23ad163bb2f182c4fee998'
-# version from php/Modules/Database.php
-LYCHEE_VERSION='4.13.0'
 
 LYCHEE_SHORT_DESCRIPTION=$'Photo album'
 LYCHEE_DESCRIPTION=$'Photo album'
