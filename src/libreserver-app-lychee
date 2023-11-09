@@ -170,7 +170,7 @@ function upgrade_lychee {
     cd "/var/www/${LYCHEE_DOMAIN_NAME}/htdocs" || return
     install_composer
     export COMPOSER_ALLOW_SUPERUSER=1
-    echo "yes" | php composer.phar install --no-dev --prefer-dist
+    echo "yes" | php composer.phar install --no-dev --prefer-dist --ignore-platform-req=ext-bcmath
 
     chown -R www-data:www-data "/var/www/${LYCHEE_DOMAIN_NAME}/htdocs"
     chmod -R 750 "/var/www/${LYCHEE_DOMAIN_NAME}/htdocs/public/uploads"/
@@ -526,7 +526,7 @@ function install_lychee {
     cd "/var/www/$LYCHEE_DOMAIN_NAME/htdocs" || exit 62
     install_composer
     export COMPOSER_ALLOW_SUPERUSER=1
-    echo "yes" | php composer.phar install --no-dev --prefer-dist
+    echo "yes" | php composer.phar install --no-dev --prefer-dist --ignore-platform-req=ext-bcmath
 
     increment_app_install_progress
 
