@@ -463,6 +463,10 @@ function install_lychee {
     # shellcheck disable=SC2086
     INSTALL_PACKAGES php-json
     # shellcheck disable=SC2086
+    INSTALL_PACKAGES php${PHP_VERSION}-bcmath
+    # shellcheck disable=SC2086
+    INSTALL_PACKAGES php${PHP_VERSION}-sqlite3
+    # shellcheck disable=SC2086
     INSTALL_PACKAGES php${PHP_VERSION}-gd php${PHP_VERSION}-xml php${PHP_VERSION}-zip
 
     increment_app_install_progress
