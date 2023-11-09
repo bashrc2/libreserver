@@ -280,6 +280,7 @@ function install_lychee_website {
       echo '';
       echo '    # Serve /index.php through PHP';
       echo '    location = /index.php {';
+      echo '        client_max_body_size 30M;';
       echo "        fastcgi_split_path_info ^(.+?\.php)(/.*)\$;";
       echo '';
       echo '        # Mitigate https://httpoxy.org/ vulnerabilities';
@@ -334,6 +335,7 @@ function install_lychee_website_onion {
       echo '';
       echo '    # Serve /index.php through PHP';
       echo '    location = /index.php {';
+      echo '        client_max_body_size 30M;';
       echo "        fastcgi_split_path_info ^(.+?\.php)(/.*)\$;";
       echo '';
       echo '        # Mitigate https://httpoxy.org/ vulnerabilities';
@@ -393,6 +395,7 @@ function install_lychee_website_i2p {
       echo '';
       echo '    # Serve /index.php through PHP';
       echo '    location = /index.php {';
+      echo '        client_max_body_size 30M;';
       echo "        fastcgi_split_path_info ^(.+?\.php)(/.*)\$;";
       echo '';
       echo '        # Mitigate https://httpoxy.org/ vulnerabilities';
