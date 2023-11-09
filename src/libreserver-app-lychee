@@ -213,9 +213,6 @@ function remove_lychee {
     nginx_dissite "$LYCHEE_DOMAIN_NAME"
     remove_certs "${LYCHEE_DOMAIN_NAME}"
 
-    drop_database lychee
-    remove_backup_database_local lychee
-
     if [ -f "/etc/nginx/sites-available/$LYCHEE_DOMAIN_NAME" ]; then
         rm -f "/etc/nginx/sites-available/$LYCHEE_DOMAIN_NAME"
     fi
