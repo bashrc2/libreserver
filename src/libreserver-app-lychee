@@ -175,6 +175,17 @@ function upgrade_lychee {
     chown -R www-data:www-data "/var/www/${LYCHEE_DOMAIN_NAME}/htdocs"
     chmod -R 750 "/var/www/${LYCHEE_DOMAIN_NAME}/htdocs/public/uploads"/
     chmod -R 750 "/var/www/${LYCHEE_DOMAIN_NAME}/htdocs/public/storage"/
+
+    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/original/index.html"
+    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/medium/index.html"
+    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/medium2x/index.html"
+    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/small/index.html"
+    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/small2x/index.html"
+    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/import/index.html"
+    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/thumb/index.html"
+    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/thumb2x/index.html"
+    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/tracks/index.html"
+    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/storage/.gitignore"
 }
 
 function backup_local_lychee {
@@ -553,10 +564,15 @@ function install_lychee {
     chmod -R 1777 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/storage/"
     chown -R www-data:www-data "/var/www/$LYCHEE_DOMAIN_NAME/htdocs"
 
-    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/big/index.php"
-    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/medium/index.php"
-    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/import/index.php"
-    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/thumb/index.php"
+    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/original/index.html"
+    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/medium/index.html"
+    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/medium2x/index.html"
+    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/small/index.html"
+    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/small2x/index.html"
+    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/import/index.html"
+    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/thumb/index.html"
+    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/thumb2x/index.html"
+    chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/uploads/tracks/index.html"
     chmod 755 "/var/www/$LYCHEE_DOMAIN_NAME/htdocs/public/storage/.gitignore"
 
     function_check nginx_ensite
