@@ -113,17 +113,3 @@ else
        echo bad
        exit 1
 fi
-
-#---------------------------------------------------------------------------
-#"Debian Archive Automatic Signing Key (9/stretch) <ftpmaster@debian.org>"
-
-STRETCHARCHIVEKEY="E1CF 20DD FFE4 B89E 8026  58F1 E0B1 1894 F66A EC98"
-CHECKTMP=$(gpg --with-fingerprint --no-default-keyring --list-keys --keyring /etc/apt/trusted.gpg.d/debian-archive-stretch-automatic.gpg | grep -B 1 "Debian Archive Automatic Signing Key (9/stretch) <ftpmaster@debian.org>" | head -n1 | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
-
-if [ "$CHECKTMP" == "$STRETCHARCHIVEKEY" ];then
-       echo Good
-       :
-else
-       echo bad
-       exit 1
-fi
