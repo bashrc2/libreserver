@@ -4,7 +4,7 @@
 #---------------------------------------------------------------------------
 #"Debian Archive Automatic Signing Key (12/bookworm) <ftpmaster@debian.org>"
 
-BOOKWORMARCHIVEKEY="B8B8 0B5B 623E AB6A D877 5C45 B7C5 D7D6 3509 47F8"
+BOOKWORMARCHIVEKEY="B8B8 0B5B 623E AB6A D877  5C45 B7C5 D7D6 3509 47F8"
 CHECKTMP=$(apt-key list | grep -B 1 "Debian Archive Automatic Signing Key (12/bookworm) <ftpmaster@debian.org>" | head -n1 | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
 
 if [ "$CHECKTMP" == "$BOOKWORMARCHIVEKEY" ];then
@@ -18,7 +18,7 @@ fi
 #---------------------------------------------------------------------------
 #"Debian Security Archive Automatic Signing Key (12/bookworm) <ftpmaster@debian.org>"
 
-BOOKWORMSECURITYKEY="05AB 9034 0C0C 5E79 7F44 A8C8 254C F3B5 AEC0 A8F0"
+BOOKWORMSECURITYKEY="05AB 9034 0C0C 5E79 7F44  A8C8 254C F3B5 AEC0 A8F0"
 CHECKTMP=$(apt-key list | grep -B 1 "Debian Security Archive Automatic Signing Key (12/bookworm) <ftpmaster@debian.org>" | head -n1 | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
 
 if [ "$CHECKTMP" == "$BOOKWORMSECURITYKEY" ];then
