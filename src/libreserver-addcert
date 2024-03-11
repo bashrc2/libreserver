@@ -214,11 +214,11 @@ function add_cert_letsencrypt {
     fi
 
     if [ ! -f /usr/bin/certbot ]; then
-	REINSTALL_PACKAGES python3-pkg-resources python3-setuptools python3-openssl python3-cryptography
+	      REINSTALL_PACKAGES python3-pkg-resources python3-setuptools python3-openssl python3-cryptography
         INSTALL_PACKAGES certbot
-	if ! grep -q "ssl-cert:" /etc/group; then
+	      if ! grep -q "ssl-cert:" /etc/group; then
             groupadd ssl-cert
-	fi
+	      fi
         if [ ! -f /usr/bin/certbot ]; then
             echo $'LetsEncrypt certbot failed to install'
             exit 76
@@ -233,21 +233,21 @@ function add_cert_letsencrypt {
     chmod -R 777 /etc/letsencrypt
 
     if [ -f /var/log/letsencrypt_setup.log ]; then
-	rm /var/log/letsencrypt_setup.log
+	      rm /var/log/letsencrypt_setup.log
     fi
     REINSTALL_PACKAGES python3-pkg-resources python3-setuptools python3-openssl python3-cryptography
     echo "certbot certonly -v -n --server \"$LETSENCRYPT_SERVER\" --standalone -d \"$LETSENCRYPT_HOSTNAME\" --renew-by-default --agree-tos --email \"$MY_EMAIL_ADDRESS\""
     if ! certbot certonly -v -n --server "$LETSENCRYPT_SERVER" --standalone -d "$LETSENCRYPT_HOSTNAME" --renew-by-default --agree-tos --email "$MY_EMAIL_ADDRESS" > /var/log/letsencrypt_setup.log; then
         echo $"Failed to install letsencrypt for domain $LETSENCRYPT_HOSTNAME"
-	if [ -f /var/log/letsencrypt_setup.log ]; then
-	    cat /var/log/letsencrypt_setup.log
-	fi
+	      if [ -f /var/log/letsencrypt_setup.log ]; then
+	          cat /var/log/letsencrypt_setup.log
+	      fi
         echo $'Also see https://letsencrypt.status.io to check for any service outages'
         chgrp -R ssl-cert /etc/letsencrypt
         chmod -R 600 /etc/letsencrypt
         chmod -R g=rX /etc/letsencrypt
         chown -R root:ssl-cert /etc/letsencrypt
-	echo "Restarting nginx"
+	      echo "Restarting nginx"
         systemctl start nginx
         exit 63
     fi

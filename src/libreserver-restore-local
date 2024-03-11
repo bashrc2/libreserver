@@ -832,6 +832,9 @@ function restore_certs {
             return
         fi
     fi
+    ls $USB_MOUNT
+    ls $USB_MOUNT/backup
+    ls $USB_MOUNT/backup/ssl
     if [ -d $USB_MOUNT/backup/ssl ]; then
         echo $"Restoring certificates"
         mkdir /root/tempssl
