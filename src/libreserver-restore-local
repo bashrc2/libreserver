@@ -458,6 +458,9 @@ function restore_letsencrypt {
             return
         fi
     fi
+    ls $USB_MOUNT
+    ls $USB_MOUNT/backup
+    ls $USB_MOUNT/backup/letsencrypt
     if [ -d $USB_MOUNT/backup/letsencrypt ]; then
         echo $"Restoring Lets Encrypt settings"
         #restore_directory_from_usb / letsencrypt
@@ -832,9 +835,6 @@ function restore_certs {
             return
         fi
     fi
-    ls $USB_MOUNT
-    ls $USB_MOUNT/backup
-    ls $USB_MOUNT/backup/ssl
     if [ -d $USB_MOUNT/backup/ssl ]; then
         echo $"Restoring certificates"
         mkdir /root/tempssl
