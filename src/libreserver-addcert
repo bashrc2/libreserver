@@ -236,8 +236,8 @@ function add_cert_letsencrypt {
 	rm /var/log/letsencrypt_setup.log
     fi
     REINSTALL_PACKAGES python3-pkg-resources python3-setuptools python3-openssl python3-cryptography
-    echo "certbot certonly -n --server \"$LETSENCRYPT_SERVER\" --standalone -d \"$LETSENCRYPT_HOSTNAME\" --renew-by-default --agree-tos --email \"$MY_EMAIL_ADDRESS\""
-    if ! certbot certonly -n --server "$LETSENCRYPT_SERVER" --standalone -d "$LETSENCRYPT_HOSTNAME" --renew-by-default --agree-tos --email "$MY_EMAIL_ADDRESS" > /var/log/letsencrypt_setup.log; then
+    echo "certbot certonly -v -n --server \"$LETSENCRYPT_SERVER\" --standalone -d \"$LETSENCRYPT_HOSTNAME\" --renew-by-default --agree-tos --email \"$MY_EMAIL_ADDRESS\""
+    if ! certbot certonly -v -n --server "$LETSENCRYPT_SERVER" --standalone -d "$LETSENCRYPT_HOSTNAME" --renew-by-default --agree-tos --email "$MY_EMAIL_ADDRESS" > /var/log/letsencrypt_setup.log; then
         echo $"Failed to install letsencrypt for domain $LETSENCRYPT_HOSTNAME"
 	if [ -f /var/log/letsencrypt_setup.log ]; then
 	    cat /var/log/letsencrypt_setup.log
