@@ -29,6 +29,11 @@ PROJECT_NAME='libreserver'
 export TEXTDOMAIN=${PROJECT_NAME}-recoverkey
 export TEXTDOMAINDIR="/usr/share/locale"
 
+PROJECT_INSTALL_DIR=/usr/local/bin
+if [ -f /usr/bin/${PROJECT_NAME} ]; then
+    PROJECT_INSTALL_DIR=/usr/bin
+fi
+
 source "$PROJECT_INSTALL_DIR/${PROJECT_NAME}-vars"
 
 # include utils which allow function_check, go and drive mount
