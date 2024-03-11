@@ -1162,12 +1162,29 @@ function install_myqr {
     if [ -f /usr/local/bin/myqr ]; then
         return
     fi
-    INSTALL_PACKAGES python3-pip
-    pip3 install myqr
-    if [ ! -f /usr/local/bin/myqr ]; then
+
+    if [ ! -d /etc/myqr ]; then
+        mkdir /etc/myqr
+    fi
+
+    INSTALL_PACKAGES python3-pip python3-virtualenv
+
+    myqr_temp_filename=/usr/bin/install-myqr
+    { echo '#!/bin/bash';
+      echo "cd /etc/myqr || exit 1";
+      echo 'virtualenv -p python3 .venv';
+      echo 'source .venv/bin/activate';
+      echo "pip3 install -U myqr";
+      echo 'deactivate'; } > $myqr_temp_filename
+    chmod +x $myqr_temp_filename
+    /bin/bash $myqr_temp_filename
+
+    if [ ! -f /etc/myqr/.venv/bin/myqr ]; then
         echo $'Failed to install myqr'
         exit 36
     fi
+    cp /etc/myqr/.venv/bin/myqr /usr/local/bin/myqr
+    rm $myqr_temp_filename
 }
 
 function turn_off_monitor {
