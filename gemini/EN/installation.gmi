@@ -26,13 +26,13 @@
 
 Obtain the Debian 12 netinstall, or the full install if you prefer.
 
-  wget https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-12.0.0-amd64-netinst.iso
+  wget https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-12.5.0-amd64-netinst.iso
 
 ## ⃟ Step 2: Copy to drive
 
 Copy the image to a USB drive:
 
-  sudo dd if=debian-12.0.0-amd64-netinst.iso of=/dev/sdX bs=64k oflag=dsync status=progress
+  sudo dd if=debian-12.5.0-amd64-netinst.iso of=/dev/sdX bs=64k oflag=dsync status=progress
 
 ## ⃟ Step 3: Plug in
 
