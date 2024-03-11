@@ -1049,177 +1049,107 @@ fi
 get_restore_app "${restore_app_name}"
 increment_restore_progress
 
-echo "Test1"
-
 backup_mount_drive "${backup_device}" "${ADMIN_USERNAME}" "${restore_app_name}"
 increment_restore_progress
-
-echo "Test2"
 
 check_backup_exists
 increment_restore_progress
 
-echo "Test3"
-
 check_admin_user
 increment_restore_progress
-
-echo "Test4"
 
 gpg_agent_setup root
 increment_restore_progress
 
-echo "Test5"
-
 simple_restore_backup_keys
 increment_restore_progress
-
-echo "Test6"
 
 trust_backup_key
 increment_restore_progress
 
-echo "Test7"
-
 copy_gpg_keys
 increment_restore_progress
-
-echo "Test8"
 
 restore_blocklist
 increment_restore_progress
 
-echo "Test9"
-
 restore_vpn_peers
 increment_restore_progress
-
-echo "Test10"
 
 restore_dkim
 increment_restore_progress
 
-echo "Test11"
-
 restore_squirrelmail
 increment_restore_progress
-
-echo "Test12"
 
 restore_communitynetwork
 increment_restore_progress
 
-echo "Test13"
-
 restore_configfiles
 increment_restore_progress
-
-echo "Test14"
 
 same_admin_user
 increment_restore_progress
 
-echo "Test15"
-
 restore_passwordstore
 increment_restore_progress
-
-echo "Test16"
 
 restore_mariadb
 increment_restore_progress
 
-echo "Test17"
-
 restore_postgresql
 increment_restore_progress
-
-echo "Test18"
 
 restore_letsencrypt
 increment_restore_progress
 
-echo "Test19"
-
 restore_tor
 increment_restore_progress
-
-echo "Test20"
 
 restore_mutt_settings
 increment_restore_progress
 
-echo "Test21"
-
 restore_gpg
 increment_restore_progress
-
-echo "Test22"
 
 restore_procmail
 increment_restore_progress
 
-echo "Test23"
-
 restore_spamassassin
 increment_restore_progress
-
-echo "Test24"
 
 restore_user_ssh_keys
 increment_restore_progress
 
-echo "Test25"
-
 restore_user_config
 increment_restore_progress
-
-echo "Test26"
 
 restore_user_fin
 increment_restore_progress
 
-echo "Test27"
-
 restore_user_local
 increment_restore_progress
-
-echo "Test28"
 
 restore_certs
 increment_restore_progress
 
-echo "Test29"
-
 restore_personal_settings
 increment_restore_progress
-
-echo "Test30"
 
 restore_email
 increment_restore_progress
 
-echo "Test31"
-
 restore_apps local "$RESTORE_APP"
 increment_restore_progress
-
-echo "Test32"
 
 set_user_permissions
 increment_restore_progress
 
-echo "Test33"
-
 update_default_domain
 increment_restore_progress
 
-echo "Test34"
-
 backup_unmount_drive
 increment_restore_progress
-
-echo "Test35"
 
 # ensure that all TLS certificates are pinned
 #${PROJECT_NAME}-pin-cert all
