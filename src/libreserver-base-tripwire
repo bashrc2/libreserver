@@ -51,6 +51,10 @@ function install_tripwire {
 
     echo '*** Installing intrusion detection ***'
 
+    if [ -f /var/lib/dpkg/lock-frontend ]; then
+        rm /var/lib/dpkg/lock-frontend
+    fi
+
     debconf-set-selections <<< "tripwire tripwire/use-sitekey boolean false"
     debconf-set-selections <<< "tripwire tripwire/use-localkey boolean false"
 
