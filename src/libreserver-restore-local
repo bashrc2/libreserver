@@ -213,21 +213,25 @@ function restore_dkim {
 
     if [ -d $USB_MOUNT/backup/dkim ]; then
         echo $'Restoring DKIM keys'
-	      DKIM_BACKUP_DIR=/root/dkim
-        restore_directory_from_usb "${DKIM_BACKUP_DIR}" dkim
-        ls -la /root/dkim
+	      TEMP_DKIM_BACKUP_DIR=/root/tempdkim
+        restore_directory_from_usb "${TEMP_DKIM_BACKUP_DIR}" dkim
+        echo "$TEMP_DKIM_BACKUP_DIR"
+        ls -la $TEMP_DKIM_BACKUP_DIR
         echo "$USB_MOUNT/backup/dkim:"
         ls -la $USB_MOUNT/backup/dkim
-	      if [ -f "${DKIM_BACKUP_DIR}/dkim_privkey.pem" ]; then
-	          cp "${DKIM_BACKUP_DIR}/dkim_privkey.pem" /etc/exim4/dkim_privkey.pem
+	      if [ -f "${TEMP_DKIM_BACKUP_DIR}/dkim_privkey.pem" ]; then
+	          cp "${TEMP_DKIM_BACKUP_DIR}/dkim_privkey.pem" /etc/exim4/dkim_privkey.pem
 	      fi
-	      if [ -f "${DKIM_BACKUP_DIR}/dkim_dnskey.txt" ]; then
-	          cp "${DKIM_BACKUP_DIR}/dkim_dnskey.txt" /etc/exim4/dkim_dnskey.txt
+	      if [ -f "${TEMP_DKIM_BACKUP_DIR}/dkim_dnskey.txt" ]; then
+	          cp "${TEMP_DKIM_BACKUP_DIR}/dkim_dnskey.txt" /etc/exim4/dkim_dnskey.txt
 	          local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
 	          webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
-	          cp "${DKIM_BACKUP_DIR}/dkim_dnskey.txt" "${webadmin_install_dir}/dmarc.txt"
+	          cp "${TEMP_DKIM_BACKUP_DIR}/dkim_dnskey.txt" "${webadmin_install_dir}/dmarc.txt"
 	          chown www-data:www-data "${webadmin_install_dir}/dmarc.txt"
 	      fi
+#        if [ -d "$TEMP_DKIM_BACKUP_DIR" ]; then
+#            rm -rf "$TEMP_DKIM_BACKUP_DIR"
+#        fi
     fi
 }
 
