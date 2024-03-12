@@ -1731,18 +1731,6 @@ function install_xmpp {
 
     increment_app_install_progress
 
-    if [[ "$(cert_exists "chat.${DEFAULT_DOMAIN_NAME}" pem)" == "0" ]]; then
-        create_site_certificate "chat.${DEFAULT_DOMAIN_NAME}" 'yes'
-        if [[ "$ONION_ONLY" == 'no' ]]; then
-            if [[ "$(cert_exists "chat.${DEFAULT_DOMAIN_NAME}" pem)" == "0" ]]; then
-                echo $'LetsEncrypt cert could not be obtained for xmpp muc'
-                exit 56
-            fi
-        fi
-    fi
-
-    increment_app_install_progress
-
     INSTALL_PACKAGES lua-sec lua-bitop lua5.4 liblua5.4-dev
 
     increment_app_install_progress
@@ -2037,6 +2025,18 @@ function install_xmpp {
     bridge_irc_to_xmpp
 
     chown -R root:root /lib/prosody
+
+    increment_app_install_progress
+
+    if [[ "$(cert_exists "chat.${DEFAULT_DOMAIN_NAME}" pem)" == "0" ]]; then
+        create_site_certificate "chat.${DEFAULT_DOMAIN_NAME}" 'yes'
+        if [[ "$ONION_ONLY" == 'no' ]]; then
+            if [[ "$(cert_exists "chat.${DEFAULT_DOMAIN_NAME}" pem)" == "0" ]]; then
+                echo $'LetsEncrypt cert could not be obtained for xmpp muc'
+                exit 56
+            fi
+        fi
+    fi
 
     APP_INSTALLED=1
 }
