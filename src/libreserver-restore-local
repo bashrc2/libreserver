@@ -221,17 +221,43 @@ function restore_dkim {
         ls -la $USB_MOUNT/backup/dkim
 	      if [ -f "${TEMP_DKIM_BACKUP_DIR}/dkim_privkey.pem" ]; then
 	          cp "${TEMP_DKIM_BACKUP_DIR}/dkim_privkey.pem" /etc/exim4/dkim_privkey.pem
-	      fi
-	      if [ -f "${TEMP_DKIM_BACKUP_DIR}/dkim_dnskey.txt" ]; then
-	          cp "${TEMP_DKIM_BACKUP_DIR}/dkim_dnskey.txt" /etc/exim4/dkim_dnskey.txt
+            DKIM_PUBKEY=$(openssl rsa -in /etc/exim4dkim_privkey.pem -pubout -outform der 2>/dev/null | openssl base64 -A)
+            { echo 'Email Domain Keys Setup';
+              echo '=======================';
+              echo '';
+              echo "Add the following TXT records within your dynamic DNS provider's admin settings.";
+              echo 'Or on your domain registrar site if you are not using dynamic DNS.';
+              echo '';
+              echo 'SPF';
+              echo '---';
+              echo '';
+              echo 'Subdomain: Leave blank';
+              echo "Domain: ${HOSTNAME}";
+              echo "Destination: \"v=spf1 mx a:${HOSTNAME} [include:SMTP relay domain] -all\"";
+              echo '';
+              echo 'DKIM';
+              echo '----';
+              echo '';
+              echo 'Subdomain: libreserver._domainkey';
+              echo "Domain: ${HOSTNAME}";
+              echo "Destination: \"v=DKIM1; p=${DKIM_PUBKEY:0:${#DKIM_PUBKEY}/2}\" \"${DKIM_PUBKEY:${#DKIM_PUBKEY}/2}\"";
+              echo '';
+              echo 'DMARC';
+              echo '-----';
+              echo '';
+              echo 'Subdomain: _dmarc';
+              echo "Domain: ${HOSTNAME}";
+              echo "Destination: \"v=DMARC1; p=reject; adkim=r; aspf=r; fo=1; rua=mailto:admin@${HOSTNAME}\""; } > /etc/exim4/dkim_dnskey.txt
 	          local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
 	          webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
 	          cp "${TEMP_DKIM_BACKUP_DIR}/dkim_dnskey.txt" "${webadmin_install_dir}/dmarc.txt"
 	          chown www-data:www-data "${webadmin_install_dir}/dmarc.txt"
+        else
+            echo 'No backup DKIM key found'
 	      fi
-#        if [ -d "$TEMP_DKIM_BACKUP_DIR" ]; then
-#            rm -rf "$TEMP_DKIM_BACKUP_DIR"
-#        fi
+        if [ -d "$TEMP_DKIM_BACKUP_DIR" ]; then
+            rm -rf "$TEMP_DKIM_BACKUP_DIR"
+        fi
     fi
 }
 
