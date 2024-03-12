@@ -216,6 +216,8 @@ function restore_dkim {
 	      DKIM_BACKUP_DIR=/root/dkim
         restore_directory_from_usb "${DKIM_BACKUP_DIR}" dkim
         ls -la /root/dkim
+        echo "$USB_MOUNT/backup/dkim:"
+        ls -la $USB_MOUNT/backup/dkim
 	      if [ -f "${DKIM_BACKUP_DIR}/dkim_privkey.pem" ]; then
 	          cp "${DKIM_BACKUP_DIR}/dkim_privkey.pem" /etc/exim4/dkim_privkey.pem
 	      fi
