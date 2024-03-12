@@ -326,13 +326,13 @@ function backup_dkim {
     echo $"Backing up ${PROJECT_NAME} DKIM keys"
     DKIM_BACKUP_DIR=/root/dkim
     if [ ! -d "${DKIM_BACKUP_DIR}" ]; then
-	mkdir "${DKIM_BACKUP_DIR}"
+	      mkdir "${DKIM_BACKUP_DIR}"
     fi
     if [ ! -f /etc/exim4/dkim_privkey.pem ]; then
-	cp /etc/exim4/dkim_privkey.pem "${DKIM_BACKUP_DIR}/dkim_privkey.pem"
+	      cp /etc/exim4/dkim_privkey.pem "${DKIM_BACKUP_DIR}/dkim_privkey.pem"
     fi
     if [ ! -f /etc/exim4/dkim_dnskey.txt ]; then
-	cp /etc/exim4/dkim_dnskey.txt "${DKIM_BACKUP_DIR}/dkim_dnskey.txt"
+	      cp /etc/exim4/dkim_dnskey.txt "${DKIM_BACKUP_DIR}/dkim_dnskey.txt"
     fi
     backup_directory_to_usb "${DKIM_BACKUP_DIR}" dkim
 }
