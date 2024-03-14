@@ -696,7 +696,7 @@ if [[ "$app_php" == 'yes' ]]; then
 fi
 if [ "$app_go" ]; then
     echo ''
-    echo "    go get $app_go"
+    echo "    go install ${app_go}@latest"
     echo ''
     echo '    increment_app_install_progress'
     echo -n ''

@@ -201,7 +201,7 @@ function upgrade_gemini {
     install_gemini_client
     convert_blog_to_gemini
     cd "/home/gemini" || return
-    GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/gemini PATH=$PATH:/home/gemini:/home/go/go${GO_VERSION}/bin go get -u -v $GEMINI_PATH
+    GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/gemini PATH=$PATH:/home/gemini:/home/go/go${GO_VERSION}/bin go install ${GEMINI_PATH}@latest
     chown -R gemini:gemini /home/gemini
     if ! grep -q "go${GO_VERSION}" /etc/systemd/system/gemini.service; then
         sed -i "s|Environment=.*|Environment=\"USER=gemini\" \"HOME=/home/gemini\" \"GOPATH=/home/go/go${GO_VERSION}\" \"GIT_CEILING_DIRECTORIES=/home/gemini\"|g" /etc/systemd/system/gemini.service
@@ -344,7 +344,7 @@ function install_gemini {
 
     # get the source code
     cd "/home/gemini" || exit 24
-    GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/gemini PATH=$PATH:/home/gemini:/home/go/go${GO_VERSION}/bin go get -u -v $GEMINI_PATH
+    GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/gemini PATH=$PATH:/home/gemini:/home/go/go${GO_VERSION}/bin go install ${GEMINI_PATH}@latest
 
     increment_app_install_progress
 
