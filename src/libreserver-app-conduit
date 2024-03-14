@@ -353,6 +353,8 @@ function install_conduit {
         exit 39
     fi
 
+    echo "test 1: ${CONDUIT_DOMAIN_NAME}"
+
     chmod +x /usr/local/bin/matrix-conduit
 
     increment_app_install_progress
@@ -361,6 +363,8 @@ function install_conduit {
         firewall_max_connections ${CONDUIT_PORT_INTERNAL} ${CONDUIT_FIREWALL_MAX_CONNECTIONS}
     fi
 
+    echo "test 2: ${CONDUIT_DOMAIN_NAME}"
+
     increment_app_install_progress
 
     mkdir /etc/matrix-conduit
@@ -368,7 +372,8 @@ function install_conduit {
 
     increment_app_install_progress
 
-    add_ddns_domain "$CONDUIT_DOMAIN_NAME"
+    echo "test 3: ${CONDUIT_DOMAIN_NAME}"
+    add_ddns_domain "${CONDUIT_DOMAIN_NAME}"
 
     increment_app_install_progress
 
