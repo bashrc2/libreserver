@@ -370,7 +370,8 @@ function install_gemini {
             -pkeyopt ec_paramgen_curve:prime256v1 \
             -keyout "/home/gemini/molly.key" \
             -out "/home/gemini/molly.crt" \
-            -days 99999 -nodes -subj "/CN=${gemini_domain}"
+            -days 99999 -nodes -subj "/CN=${gemini_domain}" \
+            -addext "subjectAltName = DNS:${gemini_domain}"
 
     if [ ! -f "/home/gemini/molly.key" ]; then
         exit 82
