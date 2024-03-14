@@ -315,6 +315,8 @@ function install_conduit {
         echo "No conduit domain name specified"
     fi
 
+    echo "test 0: ${CONDUIT_DOMAIN_NAME}"
+
     INSTALL_PACKAGES dpkg dpkg-dev liblzma-dev rustc iproute2 wget
 
     increment_app_install_progress
