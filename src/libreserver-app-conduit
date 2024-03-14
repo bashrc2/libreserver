@@ -335,7 +335,7 @@ function install_conduit {
     fi
     mkdir "/var/www/${CONDUIT_DOMAIN_NAME}"
 
-    groupadd -r -g 1000 conduit
+    groupadd -r conduit
     adduser --system conduit --group --disabled-login --no-create-home
 
     increment_app_install_progress
@@ -685,6 +685,9 @@ function install_conduit {
     increment_app_install_progress
 
     conduit_enable_registration true
+
+    chown -R conduit:conduit "${CONDUIT_DATA_DIR}"
+    chmod 700 ${CONDUIT_DATA_DIR}/
 
     set_completion_param "conduit version" "${CONDUIT_VERSION}"
     APP_INSTALLED=1
