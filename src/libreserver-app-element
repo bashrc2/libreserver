@@ -96,7 +96,7 @@ function element_set_default_homeserver {
     if [[ "${ONION_ONLY}" == 'no' ]]; then
         homeserver_domain_name="${CONDUIT_DOMAIN_NAME}"
         if [ -d /var/lib/matrix-conduit ]; then
-            if [ ! "${CONDUIT_DOMAIN_NAME}" ]; then
+            if [[ ! "${CONDUIT_DOMAIN_NAME}" ]]; then
                 read_config_param CONDUIT_DOMAIN_NAME
             fi
             homeserver_domain_name="${CONDUIT_DOMAIN_NAME}"
@@ -256,7 +256,9 @@ function upgrade_element {
 
     homeserver_domain_name=${CONDUIT_DOMAIN_NAME}
     if [ -d /var/lib/matrix-conduit ]; then
-        read_config_param CONDUIT_DOMAIN_NAME
+        if [[ ! "${CONDUIT_DOMAIN_NAME}" ]]; then
+            read_config_param CONDUIT_DOMAIN_NAME
+        fi
         homeserver_domain_name=${CONDUIT_DOMAIN_NAME}
     fi
     element_config_file="/var/www/${ELEMENT_DOMAIN_NAME}/htdocs/config.json"

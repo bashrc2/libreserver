@@ -107,7 +107,9 @@ function conduit_add_onion_federation {
 function create_conduit_user_removal_script {
     read_config_param ONION_ONLY
     read_config_param MY_USERNAME
-    read_config_param CONDUIT_DOMAIN_NAME
+    if [[ ! "${CONDUIT_DOMAIN_NAME}" ]]; then
+        read_config_param CONDUIT_DOMAIN_NAME
+    fi
 
     curl_command='curl'
     homebase="https://${CONDUIT_DOMAIN_NAME}"
