@@ -8,6 +8,6 @@ LibreServer is a small server system which enables you to run your own internet 
 
 Reclaim the internet, one server at a time.
 
-Matrix room: **#conduit:matrix.libreserver.org**
+Matrix room: **#epicyon:conduit.libreserver.org**
 
 See [the website](https://libreserver.org) for installation instructions and other information.
