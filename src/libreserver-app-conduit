@@ -79,6 +79,8 @@ CONDUIT_TRUSTED_SERVERS='["matrix.org"]'
 conduit_user_added=
 
 conduit_variables=(ONION_ONLY
+                   CONDUIT_DOMAIN_NAME
+                   CONDUIT_CODE
                    DEFAULT_DOMAIN_NAME
                    DDNS_PROVIDER
                    MY_USERNAME
