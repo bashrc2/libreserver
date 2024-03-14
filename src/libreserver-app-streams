@@ -92,7 +92,7 @@ function install_interactive_streams {
     fi
 
     function_check interactive_site_details
-    interactive_site_details streams
+    interactive_site_details "streams" "STREAMS_DOMAIN_NAME" "STREAMS_CODE"
 
     APP_INSTALLED=1
 }

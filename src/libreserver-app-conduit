@@ -162,7 +162,7 @@ function install_interactive_conduit {
         write_config_param "CONDUIT_DOMAIN_NAME" "$CONDUIT_DOMAIN_NAME"
     else
         function_check interactive_site_details
-        interactive_site_details conduit
+        interactive_site_details "conduit" "CONDUIT_DOMAIN_NAME" "CONDUIT_CODE"
     fi
     APP_INSTALLED=1
 }
