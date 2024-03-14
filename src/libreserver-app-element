@@ -149,9 +149,13 @@ function element_remove_bad_links {
 }
 
 function install_interactive_element {
-    if [[ "$ONION_ONLY" != "no" ]]; then
+    if [[ "${ONION_ONLY}" != "no" ]]; then
         ELEMENT_DOMAIN_NAME='element.local'
     else
+        ELEM_DOMAIN_NAME="$(grep 'ELEMENT_DOMAIN_NAME' temp.cfg | awk -F '=' '{print $2}')"
+        if [[ ! "${ELEMENT_DOMAIN_NAME}" ]]; then
+            ELEM_DOMAIN_NAME="element.${DEFAULT_DOMAIN_NAME}"
+        fi
         ELEMENT_DETAILS_COMPLETE=
         while [ ! $ELEMENT_DETAILS_COMPLETE ]
         do
@@ -159,7 +163,7 @@ function install_interactive_element {
             dialog --backtitle $"LibreServer Configuration" \
                    --title $"Element Web user interface for Matrix" \
                    --form $"\\nPlease enter your details. The background image URL can be left blank.\\n\\nIMPORTANT: This should be a domain name which is supported by Let's Encrypt:" 13 65 2 \
-                   $"Domain:" 1 1 "$(grep 'ELEMENT_DOMAIN_NAME' temp.cfg | awk -F '=' '{print $2}')" 1 15 40 40 \
+                   $"Domain:" 1 1 "${ELEM_DOMAIN_NAME}" 1 15 40 40 \
                    2> "$data"
             sel=$?
             case $sel in
@@ -169,12 +173,12 @@ function install_interactive_element {
                      exit 1;;
             esac
             ELEMENT_DOMAIN_NAME=$(sed -n 1p < "$data")
-            if [ "$ELEMENT_DOMAIN_NAME" ]; then
-                TEST_DOMAIN_NAME=$ELEMENT_DOMAIN_NAME
+            if [ "${ELEMENT_DOMAIN_NAME}" ]; then
+                TEST_DOMAIN_NAME=${ELEMENT_DOMAIN_NAME}
                 validate_domain_name
-                if [[ "$TEST_DOMAIN_NAME" != "$ELEMENT_DOMAIN_NAME" ]]; then
+                if [[ "${TEST_DOMAIN_NAME}" != "${ELEMENT_DOMAIN_NAME}" ]]; then
                     ELEMENT_DOMAIN_NAME=
-                    dialog --title $"Domain name validation" --msgbox "$TEST_DOMAIN_NAME" 15 50
+                    dialog --title $"Domain name validation" --msgbox "${TEST_DOMAIN_NAME}" 15 50
                 fi
             fi
             if [ $ELEMENT_DOMAIN_NAME ]; then
@@ -183,7 +187,7 @@ function install_interactive_element {
             rm -f "$data"
         done
     fi
-    write_config_param "ELEMENT_DOMAIN_NAME" "$ELEMENT_DOMAIN_NAME"
+    write_config_param "ELEMENT_DOMAIN_NAME" "${ELEMENT_DOMAIN_NAME}"
     APP_INSTALLED=1
 }
 
