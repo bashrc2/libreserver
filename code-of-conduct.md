@@ -22,7 +22,7 @@ If you're discussing an issue or bug, try to stay on topic, especially in discus
 
 ## Public discussions
 
-For public discussions about the project use the Matrix room *#libreserver:matrix.libreserver.org* or the XMPP support conference at *support@chat.libreserver.org*. The XMPP conference might require an invite and you can get one via request from bob@libreserver.org, either via email or via XMPP with OMEMO.
+For public discussions about the project use the Matrix room *#libreserver:conduit.libreserver.org* or the XMPP support conference at *support@chat.libreserver.org*. The XMPP conference might require an invite and you can get one via request from bob@libreserver.org, either via email or via XMPP with OMEMO.
 
 ## No spamming
 
