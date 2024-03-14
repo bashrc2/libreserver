@@ -309,6 +309,10 @@ function install_conduit {
         exit 43
     fi
 
+    if [[ ! "${CONDUIT_DOMAIN_NAME}" ]]; then
+        echo "No conduit domain name specified"
+    fi
+
     INSTALL_PACKAGES dpkg dpkg-dev liblzma-dev rustc iproute2 wget
 
     increment_app_install_progress
