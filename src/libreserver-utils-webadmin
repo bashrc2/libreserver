@@ -2950,9 +2950,6 @@ function install_web_admin {
 
     rootdir=
 
-    # copy some extra images
-    cp "/root/${PROJECT_NAME}/img/turtl.jpg" "$webadmin_install_dir/images/"
-
     web_create_homepage
 
     echo "Web interface update of home page took $SECONDS seconds"
