@@ -400,9 +400,6 @@ function letsencrypt_renewals {
       echo '    if [ -d /etc/prosody ]; then';
       echo '        systemctl reload prosody';
       echo '    fi';
-      echo '    if [ -d /etc/miniirc ]; then';
-      echo '        systemctl restart miniirc';
-      echo '    fi';
       echo '';
       echo 'fi'; } > "$renewals_script"
     chmod +x "$renewals_script"
@@ -1114,24 +1111,6 @@ function update_default_domain {
             chown -R prosody:prosody /var/lib/prosody/prosody-modules
             chown -R prosody:prosody /usr/lib/prosody/modules
             systemctl reload prosody
-        fi
-
-        if [ -d /home/znc/.znc ]; then
-            echo $'znc found'
-            if [ -f "/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/fullchain.pem" ]; then
-                pkill znc
-                cat "/etc/ssl/certs/${DEFAULT_DOMAIN_NAME}.pem" "/etc/ssl/private/${DEFAULT_DOMAIN_NAME}.key" > /home/znc/.znc/znc.pem
-                chown znc:znc /home/znc/.znc/znc.pem
-                chmod 700 /home/znc/.znc/znc.pem
-
-                sed -i "s|CertFile =.*|CertFile = /etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/fullchain.pem|g" /etc/ngircd/ngircd.conf
-                sed -i "s|DHFile =.*|DHFile = /etc/ssl/certs/${DEFAULT_DOMAIN_NAME}.dhparam|g" /etc/ngircd/ngircd.conf
-                sed -i "s|KeyFile =.*|KeyFile = /etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/privkey.pem|g" /etc/ngircd/ngircd.conf
-                echo $'irc certificates updated'
-
-                systemctl restart ngircd
-                su -c 'znc' - znc
-            fi
         fi
 
         if [ ${#DEFAULT_DOMAIN_NAME} -gt 0 ]; then

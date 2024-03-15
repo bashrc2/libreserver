@@ -59,7 +59,6 @@ function upgrade_installation_from_previous_versions {
     # upgrade from previous versions
     sed -i 's|configure_email|install_email|g' "$COMPLETION_FILE"
     sed -i 's|install_dlna_server|install_dlna|g' "$COMPLETION_FILE"
-    sed -i 's|install_irc_server|install_irc|g' "$COMPLETION_FILE"
     sed -i 's|voip_turn|turn|g' "$COMPLETION_FILE"
     sed -i 's|install_voip|install_mumble|g' "$COMPLETION_FILE"
     sed -i 's|install_rss_reader|install_rss|g' "$COMPLETION_FILE"

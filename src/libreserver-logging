@@ -314,9 +314,6 @@ fi
 if [ -d /etc/epicyon ]; then
     systemctl restart epicyon
 fi
-if [ -d /etc/miniirc ]; then
-    systemctl restart irc
-fi
 
 fuser -k 80/tcp
 fuser -k 443/tcp

@@ -960,8 +960,6 @@ function xmpp_update_certs {
 }
 
 function upgrade_xmpp {
-    bridge_irc_to_xmpp
-
     # deprecated module
     if grep -q 'smacks_offline' /etc/prosody/prosody.cfg.lua; then
         sed -i '/smacks_offline/d' /etc/prosody/prosody.cfg.lua
@@ -1238,8 +1236,6 @@ function remove_xmpp {
     rm /etc/avahi/services/xmpp.service
     rm /etc/avahi/services/xmpp-server.service
     systemctl restart avahi-daemon
-
-    remove_bridge_irc_to_xmpp
 }
 
 function xmpp_contact_info {
@@ -2021,8 +2017,6 @@ function install_xmpp {
     systemctl restart prosody
 
     increment_app_install_progress
-
-    bridge_irc_to_xmpp
 
     chown -R root:root /lib/prosody
 

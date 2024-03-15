@@ -183,7 +183,7 @@ function choose_default_domain_name {
             data=$(mktemp 2>/dev/null)
 
             dialog --backtitle $"LibreServer Configuration" \
-                   --inputbox $"Which domain name should your email/XMPP/IRC/Mumble be associated with?" 10 45 \
+                   --inputbox $"Which domain name should your email/XMPP/Mumble be associated with?" 10 45 \
                    "$(grep 'DEFAULT_DOMAIN_NAME' temp.cfg | awk -F '=' '{print $2}')" 2> "$data"
             sel=$?
             case $sel in

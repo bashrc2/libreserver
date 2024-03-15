@@ -5,8 +5,7 @@
 # |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # This is an optional command for setting up a client machine
-# to then be able to log into a server. It installs a few packages
-# for things like IRC and twiddles crypto settings.
+# to then be able to log into a server.
 #
 # It may not be necessary to run this on client machines, and
 # is provided for some extra convenience on a Debian or Arch
@@ -214,60 +213,11 @@ function show_help {
     exit 0
 }
 
-function setup_client_app_irc {
-    echo $'Setting up hexchat'
-    if [ ! -f /usr/bin/pacman ]; then
-        USE_SUDO=1
-        # shellcheck disable=SC2086
-        INSTALL_PACKAGES tor hexchat tor
-    else
-        sudo pacman -S --noconfirm hexchat tor
-    fi
-    if [ ! -d "/home/$CURR_USER/.config/hexchat" ]; then
-        mkdir -p "/home/$CURR_USER/.config/hexchat"
-    fi
-    { echo 'net_proxy_host = 127.0.0.1';
-      echo 'net_proxy_port = 9050';
-      echo 'net_proxy_type = 3';
-      echo 'net_proxy_use = 0';
-
-      echo 'net_proxy_auth = 0';
-      echo 'net_proxy_pass = HexChat';
-      echo 'net_proxy_user = HexChat';
-
-      echo 'dcc_auto_chat = 0';
-      echo 'dcc_auto_resume = 0';
-      echo 'dcc_auto_send = 0';
-      echo 'irc_hide_version = 1';
-      echo 'identd = 0';
-
-      echo 'away_reason =';
-      echo 'irc_part_reason =';
-      echo 'irc_quit_reason =';
-
-      echo "irc_real_name = ${USER}";
-      echo "irc_user_name = ${USER}";
-      echo "irc_nick1 = ${USER}";
-      echo "irc_nick2 = ${USER}_";
-      echo "irc_nick3 = ${USER}__";
-
-      echo 'completion_suffix = :';
-
-      echo 'gui_slist_skip = 1'; } > "/home/$CURR_USER/.config/hexchat/hexchat.conf"
-
-    echo $'hexchat configured'
-}
-
 function setup_client_app {
     if [ ! $SETUP_CLIENT_APP_NAME ]; then
         return
     fi
 
-    case $SETUP_CLIENT_APP_NAME in
-        hexchat|xchat|irc)
-            setup_client_app_irc
-            ;;
-    esac
     exit 0
 }
 
