@@ -86,6 +86,20 @@ conduit_variables=(ONION_ONLY
                    MY_USERNAME
                    ARCHITECTURE)
 
+function conduit_setting_registration {
+    allow_registrations="$1"
+
+    if [[ "$allow_registrations" == '1' ]]; then
+        sed -i "s|allow_registration =.*|allow_registration = true|g" ${CONDUIT_CONFIG_FILENAME}
+        systemctl restart conduit
+    fi
+
+    if [[ "$allow_registrations" == '0' ]]; then
+        sed -i "s|allow_registration =.*|allow_registration = false|g" ${CONDUIT_CONFIG_FILENAME}
+        systemctl restart conduit
+    fi
+}
+
 function logging_on_conduit {
     sed -i 's|"log =.*|"log = \"debug,state_res=debug,rocket=off,_=off,sled=off\"|g' ${CONDUIT_CONFIG_FILENAME}
     systemctl restart conduit
