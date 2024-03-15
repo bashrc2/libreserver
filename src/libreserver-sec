@@ -1369,23 +1369,6 @@ function refresh_gpg_keys {
     exit 0
 }
 
-function htmly_hash {
-    # produces a hash corresponding to a htmly password
-    pass="$1"
-    HTMLYHASH_FILENAME=/usr/bin/htmlyhash
-
-    { echo '<?php';
-      echo "parse_str(implode(\"&\", array_slice(\$argv, 1)), \$_GET);";
-      echo "\$password = \$_GET[\"password\"];";
-      echo "\$hash = password_hash(\$password, PASSWORD_BCRYPT);";
-      echo "if (password_verify(\$password, \$hash)) {";
-      echo "  echo \$hash;";
-      echo '}';
-      echo '?>'; } > "$HTMLYHASH_FILENAME"
-
-    php $HTMLYHASH_FILENAME password="$pass"
-}
-
 function show_help {
     echo ''
     echo "${PROJECT_NAME}-sec"
@@ -1397,7 +1380,6 @@ function show_help {
     echo $'  -e --export               Export security settings to a file'
     echo $'  -i --import               Import security settings from a file'
     echo $'  -r --refresh              Refresh GPG keys for all users'
-    echo $'  -b --htmlyhash [password] Returns the hash of a password for a htmly blog'
     echo ''
     exit 0
 }
@@ -1426,12 +1408,6 @@ do
         -r|--refresh)
             shift
             refresh_gpg_keys
-            ;;
-        # get a hash of the given htmly password
-        -b|--htmlyhash)
-            shift
-            htmly_hash "$1"
-            exit 0
             ;;
         *)
             # unknown option

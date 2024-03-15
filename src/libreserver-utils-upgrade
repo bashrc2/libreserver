@@ -67,7 +67,7 @@ function upgrade_installation_from_previous_versions {
     sed -i 's|XMPP|xmpp|g' "$COMPLETION_FILE"
     sed -i 's|voip|mumble|g' "$COMPLETION_FILE"
     sed -i 's|VoIP|mumble|g' "$COMPLETION_FILE"
-    sed -i 's|Blog|htmly|g' "$COMPLETION_FILE"
+    sed -i 's|Blog|bludit|g' "$COMPLETION_FILE"
     sed -i 's|Hubzilla|hubzilla|g' "$COMPLETION_FILE"
     sed -i 's|Gitea|gitea|g' "$COMPLETION_FILE"
     sed -i 's|Wiki|dokuwiki|g' "$COMPLETION_FILE"
