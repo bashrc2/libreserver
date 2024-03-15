@@ -427,11 +427,6 @@ image_extra=
 if [ -f $notification_image_filename ]; then
     # extra option for mail command
     image_extra=" -A $notification_image_filename"
-
-    # If syncthing is installed then copy the image to the admin
-    if [ -d "/home/$ADMIN_USERNAME/Sync" ]; then
-        cp $notification_image_filename "/home/$ADMIN_USERNAME/Sync/usb_canary.jpg"
-    fi
 fi
 
 # This file sets the preferred notification methods

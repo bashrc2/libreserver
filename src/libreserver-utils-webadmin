@@ -1261,30 +1261,8 @@ function web_admin_create_installed_apps_category {
                                 sed -i "s|ONIONURL|${domain_name}|g" "$filename"
                             fi
                         else
-                            if [[ "$app_name" == 'syncthing' ]]; then
-                                # syncthing is treated as a special case
-                                # instead of showing a url or onion address we show the
-                                # syncthing ID
-                                sed -i "s|app_qrcode_${app_name}.png|${app_name}_qrcode.png|g" "$filename"
-                                read_config_param MY_USERNAME
-                                if [ -f "/home/$MY_USERNAME/.syncthing-server-id" ]; then
-                                    syncthing_id=$(cat "/home/$MY_USERNAME/.syncthing-server-id")
-                                    if [ ! -f "$webadmin_install_dir/${app_name}_qrcode.png" ]; then
-                                        if [ ! -f /usr/local/bin/myqr ]; then
-                                            echo -n "$syncthing_id" | qrencode -t PNG -o "$webadmin_install_dir/${app_name}_qrcode.png"
-                                        else
-                                            myqr "$syncthing_id" -p /root/libreserver/img/android-app/syncthing.png -c -v 8 -n "$webadmin_install_dir/${app_name}_qrcode.png"
-                                        fi
-                                    fi
-                                    sed -i "s|ONIONURL|${syncthing_id}|g" "$filename"
-                                else
-                                    sed -i '/ONIONURL/d' "$filename"
-                                    sed -i '/I2PURL/d' "$filename"
-                                fi
-                            else
-                                sed -i '/ONIONURL/d' "$filename"
-                                sed -i '/I2PURL/d' "$filename"
-                            fi
+                            sed -i '/ONIONURL/d' "$filename"
+                            sed -i '/I2PURL/d' "$filename"
                         fi
 
                         if [[ "$ONION_ONLY" != 'no' || "$I2P_ONLY" != 'no' ]]; then

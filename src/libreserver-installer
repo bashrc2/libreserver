@@ -119,7 +119,6 @@ dlna_file="$webadmin_install_dir/.dlna.txt"
 datlinks_file="$webadmin_install_dir/.datlinks.txt"
 settings_updates_file="$webadmin_install_dir/.settingsupdates.txt"
 ssh_file="$webadmin_install_dir/.ssh.txt"
-syncthing_file="$webadmin_install_dir/.syncthing.txt"
 appsettings_file="$webadmin_install_dir/.appsettings.txt"
 factoryreset_file="$webadmin_install_dir/.factoryreset.txt"
 factoryreset_file_distro="/root/.factoryresetdistro"
@@ -2972,18 +2971,6 @@ function regenerate_dns_over_tls {
     fi
 }
 
-function syncthing_update_settings_template {
-    # Creates the syncthing settings screen within webadmin
-    # shellcheck disable=SC2154
-    app_settings_screen_template="$webadmin_install_dir/settings_syncthing_template.html"
-    app_settings_screen="$webadmin_install_dir/settings_syncthing.html"
-    cp "$app_settings_screen_template" "$app_settings_screen"
-    syncthinglist=$(sed 's@[/\&]@\\&@g;s/$/\\/' "/home/$MY_USERNAME/.syncthingids"; echo .)
-    syncthinglist=${syncthinglist%.}
-    sed -i "s|SYNCTHINGIDS|$syncthinglist|g" "$app_settings_screen"
-    chown www-data:www-data "$app_settings_screen"
-}
-
 function datserver_update_settings_template {
     # Creates dat links list within the web UI
     # shellcheck disable=SC2154
@@ -3010,47 +2997,6 @@ function update_mumble_password {
     mumblePassword=$(grep 'serverpassword=' /etc/mumble-server.ini | awk -F '=' '{print $2}')
     if [ "$mumblePassword" ]; then
         sed -i "s|name=\"mumblePassword\".*|name=\"mumblePassword\" value=\"${mumblePassword}\">|g" "${webadmin_install_dir}/settings_mumble.html"
-    fi
-}
-
-function update_syncthing {
-    if [ -f "$syncthing_file" ]; then
-
-        MY_USERNAME=$(grep 'MY_USERNAME=' "$CONFIGURATION_FILE" | awk -F '=' '{print $2}')
-
-        syncthingids_new="/home/$MY_USERNAME/.syncthingids.webadmin"
-
-        if [ -f "$syncthingids_new" ]; then
-            rm "$syncthingids_new"
-        fi
-        touch "$syncthingids_new"
-
-        # add an extra line, otherwise the last line may not parse
-        echo "" >> "$syncthing_file"
-
-        syncthing_lines_ctr=0
-        while read -r line; do
-            if [ $syncthing_lines_ctr -gt 1024 ]; then
-                # This prevents someone copy-pasting a giant amount of text
-                # into the syncthing ids.
-                break
-            fi
-            syncthing_lines_ctr=$((syncthing_lines_ctr + 1))
-
-            if [ "$line" ]; then
-                # remove leading and trailing spaces
-                newline="$(echo -e "${line}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
-                echo "$newline" >> "$syncthingids_new"
-            fi
-        done < "$syncthing_file"
-
-        mv "/home/$MY_USERNAME/.syncthingids" "/home/$MY_USERNAME/.syncthingids.backup"
-        mv "$syncthingids_new" "/home/$MY_USERNAME/.syncthingids"
-        chown "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME/.syncthingids"
-        rm "$syncthing_file"
-        syncthing_update_settings_template
-        touch "/home/$MY_USERNAME/.syncthing-update"
-        chown "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME/.syncthing-update"
     fi
 }
 
@@ -4933,7 +4879,6 @@ function installer_main_loop {
     backup_and_restore_keys
     add_remove_users
     update_app_settings
-    update_syncthing
     update_mumble_password
     update_icecast
     update_dlna
