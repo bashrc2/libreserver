@@ -6,8 +6,6 @@
 #
 # Personal or small business accounts
 #
-# Broken javascript
-#
 # License
 # =======
 #
@@ -26,7 +24,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VARIANTS=''
+VARIANTS='full full-vim full-micro writer'
 
 IN_DEFAULT_INSTALL=0
 SHOW_ON_ABOUT=1
@@ -39,7 +37,7 @@ AKAUNTING_CODE=
 AKAUNTING_ONION_PORT=8341
 AKAUNTING_I2P_PORT=6567
 AKAUNTING_REPO="https://github.com/akaunting/akaunting"
-AKAUNTING_COMMIT='c9f2a7d68880e82e69bfb0e5e5b160e823f0531b'
+AKAUNTING_COMMIT='476612d6690ad175f36160cdfba8304e8705bb46'
 AKAUNTING_ADMIN_PASSWORD=
 
 AKAUNTING_BACKGROUND_IMAGE_URL=
