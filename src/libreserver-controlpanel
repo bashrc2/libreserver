@@ -1290,9 +1290,6 @@ Enter a static local IP address for this system.\\n\\nIt will typically be ${IPv
             echo ''
             echo $'If you logged in using the previous IP address then you may need to close this terminal and log in again on the new one.'
 
-            function_check pihole_change_ipv4
-            pihole_change_ipv4 "${NEW_STATIC_IP}"
-
             dialog --title $"Static local IP address" \
                    --backtitle $"LibreServer Control Panel" \
                    --yesno $"\\nFor the change to take effect your system will now need to reboot. Do this now?" 8 60

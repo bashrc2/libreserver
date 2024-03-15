@@ -1117,7 +1117,7 @@ function web_admin_create_installed_apps_category {
                         fi
 
                         # single icon, no qrcode
-                        if [[ "$app_name" == 'pihole' || "$app_name" == 'dlna' ]]; then
+                        if [[ "$app_name" == 'dlna' ]]; then
                             cp "$app2_template_filename" "$filename"
                         fi
 
@@ -1215,12 +1215,6 @@ function web_admin_create_installed_apps_category {
                         if grep -q 'SHOW_DOMAIN_IN_WEBADMIN=0' "$app_filename"; then
                             sed -i '/ONIONURL/d' "$filename"
                             sed -i '/I2PURL/d' "$filename"
-                            # Show DNS IP address for pi-hole
-                            if [[ "$app_name" == 'pihole' ]]; then
-                                sed -i "s|\"APPURL\"|\"\"|g" "$filename"
-                                sed -i '/.appurl/,/font-size:/s/font-size:.*/font-size: 150%;/' "$filename"
-                                sed -i "s|APPURL|DNS $(get_ipv4_address)|g" "$filename"
-                            fi
                             if [[ "$app_name" == 'dlna' ]]; then
                                 sed -i "s|\"APPURL\"|\"\"|g" "$filename"
                             fi

@@ -31,21 +31,11 @@ FFBREMEN_REPO="https://github.com/FreifunkBremen/ffhb-dns"
 function setup_mesh_ffbremen {
     if grep -q 'ffbremen' /etc/crontab; then
         if [ -d /etc/ffbremen ]; then
-            if [ -d /etc/pihole ]; then
-                systemctl stop dnsmasq
-                systemctl disable dnsmasq
-            fi
             cd /etc/ffbremen || return
             git stash
             git pull
             return
         fi
-    fi
-
-    if [ -d /etc/pihole ]; then
-        systemctl stop dnsmasq
-        systemctl disable dnsmasq
-	INSTALL_PACKAGES knot-resolver knot
     fi
 
     git clone $FFBREMEN_REPO /etc/ffbremen
@@ -85,16 +75,10 @@ function remove_mesh_ffbremen {
 
     rm -rf /etc/ffbremen
 
-    if [ -d /etc/pihole ]; then
-        $REMOVE_PACKAGES knot-resolver knot
-        systemctl enable dnsmasq
-        systemctl start dnsmasq
-    else
-        # restart knot daemons
-        systemctl restart knot
-        systemctl restart kresd.socket
-        systemctl restart system-kresd.slice
-    fi
+    # restart knot daemons
+    systemctl restart knot
+    systemctl restart kresd.socket
+    systemctl restart system-kresd.slice
 }
 
 # NOTE: deliberately no exit 0

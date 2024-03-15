@@ -116,10 +116,6 @@ function install_tripwire {
     if ! grep -q '!/etc/libreserver' /etc/tripwire/twpol.txt; then
         sed -i '\|/etc\t\t->.*|a\    !/etc/libreserver ;' /etc/tripwire/twpol.txt
     fi
-    # Ignore /etc/pihole
-    if ! grep -q '!/etc/pihole' /etc/tripwire/twpol.txt; then
-        sed -i '\|/etc\t\t->.*|a\    !/etc/pihole ;' /etc/tripwire/twpol.txt
-    fi
     # ignore tt-rss cache
     if ! grep -q '!/etc/share/tt-rss/cache' /etc/tripwire/twpol.txt; then
         sed -i '\|/etc\t\t->.*|a\    !/etc/share/tt-rss/cache ;' /etc/tripwire/twpol.txt

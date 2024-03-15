@@ -61,21 +61,11 @@ function update_mesh_nodes_nyc {
 function setup_mesh_nyc {
     if grep -q 'nycmesh' /etc/crontab; then
         if [ -d /etc/nycmesh ]; then
-            if [ -d /etc/pihole ]; then
-                systemctl stop dnsmasq
-                systemctl disable dnsmasq
-            fi
             cd /etc/nycmesh || return
             git stash
             git pull
             return
         fi
-    fi
-
-    if [ -d /etc/pihole ]; then
-        systemctl stop dnsmasq
-        systemctl disable dnsmasq
-        INSTALL_PACKAGES knot-resolver knot
     fi
 
     git clone $NYCMESH_REPO /etc/nycmesh
@@ -103,16 +93,10 @@ function remove_mesh_nyc {
 
     rm -rf /etc/nycmesh
 
-    if [ -d /etc/pihole ]; then
-        $REMOVE_PACKAGES knot-resolver knot
-        systemctl enable dnsmasq
-        systemctl start dnsmasq
-    else
-        # restart knot daemons
-        systemctl restart knot
-        systemctl restart kresd.socket
-        systemctl restart system-kresd.slice
-    fi
+    # restart knot daemons
+    systemctl restart knot
+    systemctl restart kresd.socket
+    systemctl restart system-kresd.slice
 }
 
 # NOTE: deliberately no exit 0
