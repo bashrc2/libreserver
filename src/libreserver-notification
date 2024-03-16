@@ -550,19 +550,19 @@ if [ -d /etc/prosody ]; then
     fi
 fi
 
-if [ -d /etc/matrix-conduit ]; then
-    notify_by_matrix=
-    if [ -f "$notification_method_filename" ]; then
-        if grep -q 'matrix' "$notification_method_filename"; then
-            notify_by_matrix=1
-        fi
-    fi
-    if [ $notify_by_matrix ]; then
-        # shellcheck disable=SC2002
-        server_admin=$(cat "/root/${PROJECT_NAME}-completed.txt" | grep "Admin user:" | awk -F ':' '{print $2}')
-        matrix_server_message "${server_admin}" "${ADMIN_USERNAME}" "${MESSAGE}"
-    fi
-fi
+#if [ -d /etc/matrix-conduit ]; then
+#    notify_by_matrix=
+#    if [ -f "$notification_method_filename" ]; then
+#        if grep -q 'matrix' "$notification_method_filename"; then
+#            notify_by_matrix=1
+#        fi
+#    fi
+#    if [ $notify_by_matrix ]; then
+#        # shellcheck disable=SC2002
+#        server_admin=$(cat "/root/${PROJECT_NAME}-completed.txt" | grep "Admin user:" | awk -F ':' '{print $2}')
+#        matrix_server_message "${server_admin}" "${ADMIN_USERNAME}" "${MESSAGE}"
+#    fi
+#fi
 
 if grep -q "NEXTCLOUD_DOMAIN_NAME=" "$CONFIGURATION_FILE"; then
     nextcloud_domain=$(grep "NEXTCLOUD_DOMAIN_NAME=" "$CONFIGURATION_FILE" | awk -F '=' '{print $2}')
