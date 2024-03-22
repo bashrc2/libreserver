@@ -667,7 +667,7 @@ function install_pixelfed {
       echo 'REDIS_PASSWORD=null';
       echo 'REDIS_PORT=6379';
       echo '';
-      echo 'MAIL_DRIVER=mail';
+      echo 'MAIL_DRIVER=smtp';
       echo 'MAIL_HOST=localhost';
       echo 'MAIL_PORT=25';
       echo 'MAIL_USERNAME=null';
