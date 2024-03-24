@@ -34,24 +34,24 @@ function image_install_mqtt {
 
 function install_mqtt {
     if [ -d /etc/mosquitto ]; then
-	if grep -q ":${MQTT_ONION_PORT}" "/etc/torrc.d/${PROJECT_NAME}"; then
-	    if grep -q 'listener' /etc/mosquitto/mosquitto.conf; then
-		return
-	    fi
-	fi
+        if grep -q ":${MQTT_ONION_PORT}" "/etc/torrc.d/${PROJECT_NAME}"; then
+            if grep -q 'listener' /etc/mosquitto/mosquitto.conf; then
+                return
+            fi
+        fi
     fi
     INSTALL_PACKAGES mosquitto mosquitto-clients
 
     if [ -f /etc/mosquitto/mosquitto.conf ]; then
-	if ! grep -q 'listener' /etc/mosquitto/mosquitto.conf; then
-	    echo "listener ${MQTT_PORT}" >> /etc/mosquitto/mosquitto.conf
-	    systemctl restart mosquitto
-	fi
+        if ! grep -q 'listener' /etc/mosquitto/mosquitto.conf; then
+            echo "listener ${MQTT_PORT}" >> /etc/mosquitto/mosquitto.conf
+            systemctl restart mosquitto
+        fi
     fi
 
     if ! grep -q ":${MQTT_ONION_PORT}" "/etc/torrc.d/${PROJECT_NAME}"; then
-	sed -i "/:5783/a HiddenServicePort ${MQTT_PORT} 127.0.0.1:${MQTT_ONION_PORT}" "/etc/torrc.d/${PROJECT_NAME}"
-	restart_tor_daemon
+        sed -i "/:5783/a HiddenServicePort ${MQTT_PORT} 127.0.0.1:${MQTT_ONION_PORT}" "/etc/torrc.d/${PROJECT_NAME}"
+        restart_tor_daemon
     fi
 
     firewall_add mqtt ${MQTT_PORT} tcp
