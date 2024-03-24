@@ -47,6 +47,11 @@ function install_mqtt {
             echo "listener ${MQTT_PORT}" >> /etc/mosquitto/mosquitto.conf
             systemctl restart mosquitto
         fi
+        if ! grep -q 'allow_anonymous' /etc/mosquitto/mosquitto.conf; then
+            echo "allow_anonymous true" >> /etc/mosquitto/mosquitto.conf
+        else
+            sed -i 's|allow_anonymous.*|allow_anonymous true|g' /etc/mosquitto/mosquitto.conf
+        fi
     fi
 
     if ! grep -q ":${MQTT_ONION_PORT}" "/etc/torrc.d/${PROJECT_NAME}"; then
