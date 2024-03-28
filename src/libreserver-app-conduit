@@ -86,6 +86,23 @@ conduit_variables=(ONION_ONLY
                    MY_USERNAME
                    ARCHITECTURE)
 
+function conduit_setup_turn {
+    turn_url=${DEFAULT_DOMAIN_NAME}
+    turn_secret=$(grep "static-auth-secret=" /etc/turnserver.conf | awk -F '=' '{print $2}')
+
+    if ! grep -q "turn_uris"; then
+        echo "turn_uris = [\"turn:${turn_url}?transport=udp\", \"turn:${turn_url}?transport=tcp\"]" >> ${CONDUIT_CONFIG_FILENAME}
+    else
+        sed -i "s|turn_uris.*|turn_uris = [\"turn:${turn_url}?transport=udp\", \"turn:${turn_url}?transport=tcp\"]|g" ${CONDUIT_CONFIG_FILENAME}
+    fi
+
+    if ! grep -q "turn_secret"; then
+        echo "turn_secret = \"${turn_secret}\"" >> ${CONDUIT_CONFIG_FILENAME}
+    else
+        sed -i "s|turn_secret.*|turn_secret = \"${turn_secret}\"|g" ${CONDUIT_CONFIG_FILENAME}
+    fi
+}
+
 function conduit_setting_registration {
     allow_registrations="$1"
 
@@ -202,6 +219,15 @@ function upgrade_distro_conduit {
 }
 
 function upgrade_conduit {
+    if [ ! -f /etc/turnserver.conf ]; then
+        install_turn
+    fi
+    if ! grep -q "turn_uris" ${CONDUIT_CONFIG_FILENAME}; then
+        conduit_setup_turn
+        systemctl restart conduit
+        echo "conduit turn configured"
+    fi
+
     # choose the appropriate binary
     ARCHITECTURE=$(uname -m)
     CONDUIT_BINARY=${CONDUIT_BINARY_X86}
@@ -702,6 +728,12 @@ function install_conduit {
 
     chown -R conduit:conduit "${CONDUIT_DATA_DIR}"
     chmod 700 ${CONDUIT_DATA_DIR}/
+
+    if [ ! -f /etc/turnserver.conf ]; then
+        install_turn
+    fi
+    conduit_setup_turn
+    systemctl restart conduit
 
     set_completion_param "conduit version" "${CONDUIT_VERSION}"
     APP_INSTALLED=1
