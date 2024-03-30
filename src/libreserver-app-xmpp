@@ -1749,12 +1749,12 @@ function install_xmpp {
     if ! grep -q "packages.prosody.im" /etc/apt/sources.list; then
         echo deb http://packages.prosody.im/debian $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list
     fi
-    # wget https://prosody.im/files/prosody-debian-packages.key -O- | sudo apt-key add -
-    wget -O /usr/share/keyrings/prosody.gpg https://prosody.im/files/prosody-debian-packages.key
-    if [ ! -f /usr/share/keyrings/prosody.gpg ]; then
-        echo $'prosody package signing key not downloaded'
-        exit 8
-    fi
+    wget -qO - https://packages.prosody.im/debian/pubkey.asc | sudo apt-key add -
+    # wget -O /usr/share/keyrings/prosody.gpg https://prosody.im/files/prosody-debian-packages.key
+    # if [ ! -f /usr/share/keyrings/prosody.gpg ]; then
+    #     echo $'prosody package signing key not downloaded'
+    #     exit 8
+    # fi
     apt-get update
     INSTALL_PACKAGES prosody
     if [ ! -f /usr/bin/prosody ]; then
