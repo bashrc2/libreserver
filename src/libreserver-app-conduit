@@ -50,6 +50,7 @@ SHOW_URL_PORT=
 REQUIRES_APP=
 
 CONDUIT_CONFIG_FILENAME=/etc/matrix-conduit/conduit.toml
+CONDUIT_COMPACT_FILENAME=/etc/cron.hourly/conduit_compact
 
 # number of days after which stored media will expire
 CONDUIT_EXPIRE_MEDIA_DAYS=30
@@ -91,7 +92,6 @@ conduit_variables=(ONION_ONLY
 
 function conduit_remove_old_media {
     # expires media files after some number of days
-    CONDUIT_COMPACT_FILENAME=/etc/cron.hourly/conduit_compact
     if [ -f ${CONDUIT_COMPACT_FILENAME} ]; then
         return
     fi
@@ -322,6 +322,10 @@ function remove_conduit {
     if [[ "$ONION_ONLY" == 'no' ]]; then
         firewall_remove ${CONDUIT_HTTP_PORT}
         firewall_max_connections ${CONDUIT_PORT_INTERNAL} ${CONDUIT_FIREWALL_MAX_CONNECTIONS} remove
+    fi
+
+    if [ -f ${CONDUIT_COMPACT_FILENAME} ]; then
+        rm ${CONDUIT_COMPACT_FILENAME}
     fi
 
     nginx_dissite "$CONDUIT_DOMAIN_NAME"
