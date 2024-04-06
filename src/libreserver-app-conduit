@@ -100,7 +100,7 @@ function conduit_remove_old_media {
         return
     fi
 
-    { echo "!#/bin/bash";
+    { echo "#!/bin/bash";
       echo "cd ${CONDUIT_DATA_DIR} || exit 1";
       echo "find ${CONDUIT_DATA_DIR}/media/ -type f -atime +${CONDUIT_EXPIRE_MEDIA_DAYS} -delete"; } > ${CONDUIT_COMPACT_FILENAME}
     chmod +x ${CONDUIT_COMPACT_FILENAME}
