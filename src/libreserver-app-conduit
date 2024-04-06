@@ -51,6 +51,9 @@ REQUIRES_APP=
 
 CONDUIT_CONFIG_FILENAME=/etc/matrix-conduit/conduit.toml
 
+# number of days after which stored media will expire
+CONDUIT_EXPIRE_MEDIA_DAYS=30
+
 CONDUIT_DOMAIN_NAME=
 CONDUIT_CODE=
 CONDUIT_ONION_PORT=8123
@@ -85,6 +88,23 @@ conduit_variables=(ONION_ONLY
                    DDNS_PROVIDER
                    MY_USERNAME
                    ARCHITECTURE)
+
+function conduit_remove_old_media {
+    # expires media files after some number of days
+    CONDUIT_COMPACT_FILENAME=/etc/cron.hourly/conduit_compact
+    if [ -f ${CONDUIT_COMPACT_FILENAME} ]; then
+        return
+    fi
+
+    if [ ! "${CONDUIT_DATA_DIR}" ]; then
+        return
+    fi
+
+    { echo "!#/bin/bash";
+      echo "cd ${CONDUIT_DATA_DIR} || exit 1";
+      echo "find ${CONDUIT_DATA_DIR}/media/ -type f -atime +${CONDUIT_EXPIRE_MEDIA_DAYS} -delete"; } > ${CONDUIT_COMPACT_FILENAME}
+    chmod +x ${CONDUIT_COMPACT_FILENAME}
+}
 
 function conduit_setup_turn {
     turn_url=${DEFAULT_DOMAIN_NAME}
@@ -219,6 +239,8 @@ function upgrade_distro_conduit {
 }
 
 function upgrade_conduit {
+    conduit_remove_old_media
+
     if [ ! -f /etc/turnserver.conf ]; then
         install_turn
     fi
@@ -733,6 +755,7 @@ function install_conduit {
         install_turn
     fi
     conduit_setup_turn
+    conduit_remove_old_media
     systemctl restart conduit
 
     set_completion_param "conduit version" "${CONDUIT_VERSION}"
