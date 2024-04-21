@@ -40,7 +40,7 @@ for d in /home/*/ ; do
             # update archives
             python3 /usr/local/bin/${PROJECT_NAME}-cleanup-maildir --archive-folder="archive" --maildir-root="/home/$USERNAME/Maildir" archive ""
             # ensure the user has permissions on the archives
-	    # shellcheck disable=SC2231
+	          # shellcheck disable=SC2231
             for archive_dir in /home/$USERNAME/Maildir/archive-* ; do
                 chown -R "$USERNAME":"$USERNAME" "$archive_dir"
             done
