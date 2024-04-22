@@ -198,7 +198,7 @@ class MaildirCleaner(object):
     stats = {'total': 0, 'delete': 0, 'trash': 0, 'archive': 0}
     keepSubjects = {}
     archiveFolder = None
-    archiveHierDepth = 2
+    archiveHierDepth = 1
     folderBase = None
     folderPrefix = "."
     folderSeperator = "."
