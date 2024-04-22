@@ -200,8 +200,8 @@ class MaildirCleaner(object):
     archiveFolder = None
     archiveHierDepth = 1
     folderBase = None
-    folderPrefix = "."
-    folderSeperator = "."
+    folderPrefix = ""
+    folderSeperator = "-"
     keepFlaggedThreads = False
     trashFolder = "Trash"
     isTrialRun = False
