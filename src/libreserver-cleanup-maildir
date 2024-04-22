@@ -456,20 +456,20 @@ try:
              "age=", "keep-flagged-threads", "keep-read", "folder-seperator=",
              "folder-prefix=", "maildir-root=", "archive-folder=",
              "archive-hierarchy-depth=", "trial-run"])
-except getopt.GetoptError, (msg, opt):
-    logger.error("%s\n\n%s" % (msg, __doc__))
+except getopt.GetoptError as exc:
+    logger.error("%s\n\n%s" % (str(exc), __doc__))
     sys.exit(2)
 output = None
 for o, a in opts:
     if o in ("-h", "--help"):
-        print __doc__
+        print(__doc__)
         sys.exit()
     if o in ("-q", "--quiet"):
         logging.disable(logging.WARNING - 1)
     if o in ("-v", "--verbose"):
         logging.disable(logging.DEBUG - 1)
     if o == "--version":
-        print __version__
+        print(__version__)
         sys.exit()
     if o in ("-n", "--trial-run"):
         cleaner.isTrialRun = True
