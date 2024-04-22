@@ -95,7 +95,7 @@ __version__ = "0.3.0"
 import mailbox
 import os.path
 import os
-import rfc822
+import email
 import string
 import socket
 import time
