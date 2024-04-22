@@ -104,12 +104,12 @@ import sys
 import getopt
 
 
-def mkMaildir(path):
+def mkMaildir(path: str):
     """Make a Maildir structure rooted at 'path'"""
-    os.mkdir(path, 0700)
-    os.mkdir(os.path.join(path, 'tmp'), 0700)
-    os.mkdir(os.path.join(path, 'new'), 0700)
-    os.mkdir(os.path.join(path, 'cur'), 0700)
+    os.mkdir(path, 700)
+    os.mkdir(os.path.join(path, 'tmp'), 700)
+    os.mkdir(os.path.join(path, 'new'), 700)
+    os.mkdir(os.path.join(path, 'cur'), 700)
 
 
 class MaildirWriter(object):
