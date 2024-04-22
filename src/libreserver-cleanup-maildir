@@ -127,7 +127,7 @@ class MaildirWriter(object):
         """
         if path != None:
             if not os.path.isdir(path):
-                raise ValueError, 'Path does not exist: %s' % path
+                raise ValueError('Path does not exist: %s' % path)
             self.path = path
         self.logger = logging.getLogger('MaildirWriter')
 
@@ -141,7 +141,7 @@ class MaildirWriter(object):
         if path != None:
             self.path = path
         if self.path == None or not os.path.isdir(self.path):
-            raise ValueError, 'Path does not exist'
+            raise ValueError('Path does not exist')
         tryCount = 1
         srcFile = msg.getFilePath();
         (dstName, tmpFile, newFile, dstFile) = (None, None, None, None)
@@ -156,10 +156,10 @@ class MaildirWriter(object):
                 os.link(srcFile, tmpFile) # Copy into tmp
                 self.logger.debug("deliver: attempt link to %s" % newFile)
                 os.link(tmpFile, newFile) # Link into new
-            except OSError, (n, s):
+            except OSError as exc:
                 self.logger.critical(
                         "deliver failed: %s (src=%s tmp=%s new=%s i=%d)" %
-                        (s, srcFile, tmpFile, newFile, tryCount))
+                        (str(exc), srcFile, tmpFile, newFile, tryCount))
                 self.logger.info("sleeping")
                 time.sleep(2)
                 tryCount += 1
