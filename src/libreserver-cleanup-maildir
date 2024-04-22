@@ -95,7 +95,7 @@ __version__ = "0.3.0"
 import mailbox
 import os.path
 import os
-import email
+import rfc822
 import string
 import socket
 import time
@@ -201,8 +201,7 @@ class MaildirMessage(rfc822.Message):
     def getFilePath(self):
         if sys.hexversion >= 0x020500F0:
             return self.fp._file.name
-        else:
-            return self.fp.name
+        return self.fp.name
 
     def isFlagged(self):
         """return true if the message is flagged as important"""
