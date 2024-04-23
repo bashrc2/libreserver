@@ -226,7 +226,7 @@ function check_ssh_sessions {
     ssh_sessions_high_count=$((ssh_sessions_high_count+1))
     # a high count must be observed for a length of time in order to avoid
     # notifying about temporary blips
-    if [ $ssh_sessions_high_count -gt 2 ]; then
+    if [ $ssh_sessions_high_count -gt 5 ]; then
         # unusual number of ssh connections
         if [ ! -f ${ssh_sessions_count_filename} ]; then
             echo -n "${ssh_sessions_count}" > ${ssh_sessions_count_filename}
