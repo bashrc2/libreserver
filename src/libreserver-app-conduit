@@ -268,6 +268,11 @@ function upgrade_conduit {
         echo $"Unable to upgrade matrix conduit binary ${CONDUIT_BINARY}"
         return
     fi
+    if [ ! -s /usr/local/bin/matrix-conduit-new ]; then
+        echo $"Unable to upgrade matrix conduit binary (zero size) ${CONDUIT_BINARY}"
+        rm /usr/local/bin/matrix-conduit-new
+        return
+    fi
     if ! cmp --silent -- "/usr/local/bin/matrix-conduit" "/usr/local/bin/matrix-conduit-new"; then
         mv /usr/local/bin/matrix-conduit-new /usr/local/bin/matrix-conduit
         chmod +x /usr/local/bin/matrix-conduit
@@ -419,6 +424,11 @@ function install_conduit {
     wget -O /usr/local/bin/matrix-conduit ${CONDUIT_BINARY}
     if [ ! -f /usr/local/bin/matrix-conduit ]; then
         echo $"Unable to install matrix conduit binary ${CONDUIT_BINARY}"
+        exit 39
+    fi
+    if [ ! -s /usr/local/bin/matrix-conduit-new ]; then
+        echo $"Unable to download matrix conduit binary (zero size) ${CONDUIT_BINARY}"
+        rm /usr/local/bin/matrix-conduit
         exit 39
     fi
 
