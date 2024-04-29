@@ -72,11 +72,12 @@ CONDUIT_MOBILE_APP_URL=
 CONDUIT_FIREWALL_PORTS="${CONDUIT_HTTP_PORT}"
 CONDUIT_FIREWALL_MAX_CONNECTIONS=200
 
-CONDUIT_REPO="https://gitlab.com/famedly/conduit"
-CONDUIT_BUILD="${CONDUIT_REPO}/-/jobs/artifacts/master/raw/build-output"
-CONDUIT_BINARY_X86="${CONDUIT_BUILD}/linux_amd64/conduit?job=docker:master"
-CONDUIT_BINARY_AARCH64="${CONDUIT_BUILD}/linux_arm64/conduit?job=docker:master"
-CONDUIT_BINARY_ARM7="${CONDUIT_BUILD}/linux_arm_v7/conduit?job=docker:master"
+CONDUIT_REPO="https://gitlab.com/api/v4/projects/famedly%2Fconduit"
+CONDUIT_BUILD="${CONDUIT_REPO}/jobs/artifacts/master/raw"
+CONDUIT_BINARY_X86="${CONDUIT_BUILD}/x86_64-unknown-linux-musl?job=artifacts"
+CONDUIT_BINARY_AARCH64="${CONDUIT_BUILD}/aarch64-unknown-linux-musl?job=artifacts"
+# ARM7 build not available
+CONDUIT_BINARY_ARM7="${CONDUIT_BUILD}"
 
 CONDUIT_TRUSTED_SERVERS='["matrix.org"]'
 
