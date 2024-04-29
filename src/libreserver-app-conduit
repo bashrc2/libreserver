@@ -270,7 +270,6 @@ function upgrade_conduit {
     fi
     if [ ! -s /usr/local/bin/matrix-conduit-new ]; then
         echo $"Unable to upgrade matrix conduit binary (zero size) ${CONDUIT_BINARY}"
-        rm /usr/local/bin/matrix-conduit-new
         return
     fi
     if ! cmp --silent -- "/usr/local/bin/matrix-conduit" "/usr/local/bin/matrix-conduit-new"; then
