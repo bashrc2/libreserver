@@ -230,8 +230,13 @@ function check_ssh_sessions {
         # unusual number of ssh connections
         if [ ! -f ${ssh_sessions_count_filename} ]; then
             echo -n "${ssh_sessions_count}" > ${ssh_sessions_count_filename}
+            ssh_ip=$(journalctl -u ssh -r | grep "Timeout before authentication for" | head -n 1 | awk -F ' for ' '{print $2}' | awk -F ' ' '{print $1}')
+            ssh_country=''
+            if [[ "${ssh_ip}" == *"."* ]]; then
+                ssh_country=$(whois "${ssh_ip}" | grep "country:" | head -n 1 | awk -F ' ' '{print $2}')
+            fi
             translated_max_ssh=$(web_admin_translate_text "ssh connections too high")
-            ${PROJECT_NAME}-notification -s "${PROJECT_NAME}" -m "$translated_max_ssh"
+            ${PROJECT_NAME}-notification -s "${PROJECT_NAME}" -m "${translated_max_ssh} ${ssh_country} ${ssh_ip}"
         fi
     fi
 }
