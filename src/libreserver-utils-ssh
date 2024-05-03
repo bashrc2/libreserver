@@ -42,13 +42,14 @@ function lockdown_ssh {
         echo 'Removed deprecated ssh option UsePrivilegeSeparation'
     fi
 
-    if ! grep -q 'RhostsRSAAuthentication' /etc/ssh/sshd_config; then
-        echo 'RhostsRSAAuthentication yes' >> /etc/ssh/sshd_config
-    else
-        sed -i 's| RhostsRSAAuthentication.*|RhostsRSAAuthentication yes|g' /etc/ssh/sshd_config
-        sed -i 's|##RhostsRSAAuthentication|RhostsRSAAuthentication|g' /etc/ssh/sshd_config
-        sed -i 's|#RhostsRSAAuthentication|RhostsRSAAuthentication|g' /etc/ssh/sshd_config
-        sed -i 's|RhostsRSAAuthentication.*|RhostsRSAAuthentication yes|g' /etc/ssh/sshd_config
+    if grep -q "ServerKeyBits" /etc/ssh/sshd_config; then
+        sed -i '/ServerKeyBits/d' /etc/ssh/sshd_config
+        echo 'Removed deprecated ssh option ServerKeyBits'
+    fi
+
+    if grep -q "RhostsRSAAuthentication" /etc/ssh/sshd_config; then
+        sed -i '/RhostsRSAAuthentication/d' /etc/ssh/sshd_config
+        echo 'Removed deprecated ssh option RhostsRSAAuthentication'
     fi
 
     if ! grep -q 'AllowAgentForwarding' /etc/ssh/sshd_config; then
@@ -202,15 +203,6 @@ function lockdown_ssh {
         sed -i 's/##X11Forwarding/X11Forwarding/g' /etc/ssh/sshd_config
         sed -i 's/#X11Forwarding/X11Forwarding/g' /etc/ssh/sshd_config
         sed -i 's/X11Forwarding.*/X11Forwarding no/g' /etc/ssh/sshd_config
-    fi
-
-    if ! grep -q 'ServerKeyBits' /etc/ssh/sshd_config; then
-        echo 'ServerKeyBits 2048' >> /etc/ssh/sshd_config
-    else
-        sed -i 's/ ServerKeyBits.*/ServerKeyBits 2048/g' /etc/ssh/sshd_config
-        sed -i 's/##ServerKeyBits/ServerKeyBits/g' /etc/ssh/sshd_config
-        sed -i 's/#ServerKeyBits/ServerKeyBits/g' /etc/ssh/sshd_config
-        sed -i 's/ServerKeyBits.*/ServerKeyBits 2048/g' /etc/ssh/sshd_config
     fi
 
     if ! grep -q 'TCPKeepAlive' /etc/ssh/sshd_config; then
