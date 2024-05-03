@@ -37,6 +37,11 @@ function lockdown_ssh {
         cp /etc/ssh/sshd_config /etc/ssh/sshd_config.backup
     fi
 
+    if grep -q "UsePrivilegeSeparation" /etc/ssh/sshd_config; then
+        sed -i '/UsePrivilegeSeparation/d' /etc/ssh/sshd_config
+        echo 'Removed deprecated ssh option UsePrivilegeSeparation'
+    fi
+
     if ! grep -q 'RhostsRSAAuthentication' /etc/ssh/sshd_config; then
         echo 'RhostsRSAAuthentication yes' >> /etc/ssh/sshd_config
     else
