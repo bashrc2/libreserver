@@ -286,15 +286,6 @@ function lockdown_ssh {
         echo "KexAlgorithms ${SSH_KEX}" >> /etc/ssh/sshd_config
     fi
 
-    if ! grep -q 'UsePrivilegeSeparation' /etc/ssh/sshd_config; then
-        echo 'UsePrivilegeSeparation sandbox' >> /etc/ssh/sshd_config
-    else
-        sed -i 's| UsePrivilegeSeparation .*|UsePrivilegeSeparation sandbox|g' /etc/ssh/sshd_config
-        sed -i 's|##UsePrivilegeSeparation .*|UsePrivilegeSeparation sandbox|g' /etc/ssh/sshd_config
-        sed -i 's|#UsePrivilegeSeparation .*|UsePrivilegeSeparation sandbox|g' /etc/ssh/sshd_config
-        sed -i 's|UsePrivilegeSeparation .*|UsePrivilegeSeparation sandbox|g' /etc/ssh/sshd_config
-    fi
-
     # No password login by default, use the webadmin to enable it if needed
     if ! grep -q 'PasswordAuthentication' /etc/ssh/sshd_config; then
         echo 'PasswordAuthentication no' >> /etc/ssh/sshd_config
