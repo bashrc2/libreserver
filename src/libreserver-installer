@@ -3371,7 +3371,8 @@ function update_enable_ssh {
                     echo "$ssh_public_key" > "/home/$ADMIN_USERNAME/.ssh/authorized_keys"
                     echo "" >> "/home/$ADMIN_USERNAME/.ssh/authorized_keys"
                     chown -R "$ADMIN_USERNAME":"$ADMIN_USERNAME" "/home/$ADMIN_USERNAME/.ssh"
-                    /usr/sbin/nft add rule inet filter INPUT tcp dport "${SSH_PORT}" accept
+                    configure_enable_ssh_access /etc/firewall.conf
+                    #/usr/sbin/nft add rule inet filter INPUT tcp dport "${SSH_PORT}" accept
                 fi
             fi
         fi

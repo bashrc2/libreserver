@@ -259,6 +259,25 @@ function firewall_enable_vpn {
     save_firewall_settings
 }
 
+function configure_enable_ssh_access {
+    filename="$1"
+    if [ ! "$SSH_PORT" ]; then
+        return
+    fi
+    if ! grep -q "tcp dport $SSH_PORT meter" "${filename}"; then
+        sed -i "/ 80, 443 /a tcp dport $SSH_PORT meter test-$SSH_PORT-count-meter size 65535 { ip saddr & 255.255.255.0 ct count over 3 }  counter packets 0 bytes 0 reject with tcp reset" "${filename}"
+        # reload the firewall
+        /usr/sbin/nft flush ruleset
+        /usr/sbin/nft -f /etc/firewall.conf
+    fi
+    if ! grep -q "tcp dport { $SSH_PORT }" "${filename}"; then
+        sed -i "/ 80, 443 /a tcp dport { $SSH_PORT } ip saddr { 192.168.1.0/24, 192.168.2.0/24, 192.168.10.0/24 } ct state new accept" "${filename}"
+        # reload the firewall
+        /usr/sbin/nft flush ruleset
+        /usr/sbin/nft -f /etc/firewall.conf
+    fi
+}
+
 function configure_firewall_base {
     filename="$1"
 
