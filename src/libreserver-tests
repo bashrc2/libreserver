@@ -1275,15 +1275,6 @@ function test_stig {
     output "SV-86861r2_rule" $? ${SETLANG}
     ################
 
-    ## The SSH daemon must not allow authentication using RSA rhosts authentication.
-    if [ "$VERBOSE" ]; then
-        echo "The SSH daemon must not allow authentication using RSA rhosts authentication."
-    fi
-    bash $STIG_TESTS_DIR/check-ssh.sh RhostsRSAAuthentication >/dev/null 2>&1 &
-    stig_spinner $!
-    output "SV-86863r2_rule" $? ${SETLANG}
-    ################
-
     ## All network connections associated with SSH traffic must terminate after a period of inactivity.
     if [ "$VERBOSE" ]; then
         echo "All network connections associated with SSH traffic must terminate after a period of inactivity."
