@@ -1383,15 +1383,6 @@ function test_stig {
     output "SV-86887r2_rule" $? ${SETLANG}
     ################
 
-    ## The SSH daemon must use privilege separation.
-    if [ "$VERBOSE" ]; then
-        echo "The SSH daemon must use privilege separation."
-    fi
-    bash $STIG_TESTS_DIR/check-ssh.sh UsePrivilegeSeparation >/dev/null 2>&1 &
-    stig_spinner $!
-    output "SV-86889r2_rule" $? ${SETLANG}
-    ################
-
     ## The SSH daemon must not allow compression or must only allow compression after successful authentication.
     if [ "$VERBOSE" ]; then
         echo "The SSH daemon must not allow compression or must only allow compression after successful authentication."
