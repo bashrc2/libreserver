@@ -220,6 +220,9 @@ function show_domains {
             W+=("IPv6" "${ipv6_address}")
         fi
 
+        if [ ! -f /usr/bin/xxd ]; then
+            INSTALL_PACKAGES xxd
+        fi
         if [ -f /etc/ssh/ssh_host_rsa_key.pub ]; then
             W+=("ssh rsa sha256" "$(awk '{print $2}' /etc/ssh/ssh_host_rsa_key.pub | base64 -d | sha256sum -b | awk '{print $1}' | xxd -r -p | base64 | sed 's|=||g')")
         fi

@@ -403,6 +403,9 @@ function configure_firewall_for_ssh {
 }
 
 function get_ssh_server_key {
+    if [ ! -f /usr/bin/xxd ]; then
+        INSTALL_PACKAGES xxd
+    fi
     if [ -f /etc/ssh/ssh_host_rsa_key.pub ]; then
         echo "RSA Md5:       $(ssh-keygen -lf /etc/ssh/ssh_host_rsa_key.pub | awk -F ' ' '{print $2}')"
         echo "RSA SHA256:    $(awk '{print $2}' /etc/ssh/ssh_host_rsa_key.pub | base64 -d | sha256sum -b | awk '{print $1}' | xxd -r -p | base64 | sed 's|=||g')"
