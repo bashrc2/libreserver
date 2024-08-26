@@ -1310,7 +1310,7 @@ function xmpp_modules {
       echo '  "cloud_notify_filters";';
       echo '  "throttle_presence"; -- Reduce battery and bandwidth usage';
       echo '  "filter_chatstates"; -- Reduce battery and bandwidth usage';
-      echo '  "mod_bind2"; -- Bind 2';
+      echo '  "bind2"; -- Bind 2';
       echo '};'; } >> "$filename"
 }
 
