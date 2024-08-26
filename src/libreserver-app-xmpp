@@ -48,8 +48,8 @@ XMPP_CIPHERS='EDH+CAMELLIA:EDH+aRSA:EECDH+aRSA+AESGCM:EECDH+aRSA+SHA256:EECDH:+C
 XMPP_ECC_CURVE='secp384r1'
 
 # From https://hg.prosody.im/prosody-modules
-prosody_modules_filename='prosody-modules-20220206.tar.gz'
-prosody_modules_hash='18559a428b79a96d96f2f5dd09bdd79fd20fdd1d5250f90c7b2172eae86d266f'
+prosody_modules_filename='prosody-modules-20240826.tar.gz'
+prosody_modules_hash='a3b41484c395b53400cb8cb398f996c2b2040d88aad405081253259009126ca7'
 xmpp_encryption_warning=$"For security reasons, OMEMO or PGP encryption is required for conversations on this server."
 
 XMPP_SHORT_DESCRIPTION=$'Chat system'
