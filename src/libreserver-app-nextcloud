@@ -10,7 +10,7 @@
 # License
 # =======
 #
-# Copyright (C) 2017-2023 Bob Mottram <bob@libreserver.org>
+# Copyright (C) 2017-2024 Bob Mottram <bob@libreserver.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -33,7 +33,7 @@ IN_DEFAULT_INSTALL=0
 SHOW_ON_ABOUT=1
 REQUIRES_APP=
 
-NEXTCLOUD_VERSION="28.0.0"
+NEXTCLOUD_VERSION="29.0.7"
 NEXTCLOUD_DOWNLOAD_FILE="nextcloud-${NEXTCLOUD_VERSION}.zip"
 NEXTCLOUD_DOWNLOAD_URL="https://download.nextcloud.com/server/releases/${NEXTCLOUD_DOWNLOAD_FILE}"
 
