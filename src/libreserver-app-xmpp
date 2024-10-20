@@ -1057,6 +1057,9 @@ function upgrade_xmpp {
     prosody_set_parameter 'muc_room_default_members_only' 'false'
     prosody_set_parameter 'muc_tombstones' 'false'
 
+    # reactions
+    prosody_add_module "mod_muc_occupantid"
+
     # security labels
     prosody_add_module "seclabels"
     prosody_default_security_labels /etc/prosody/prosody.cfg.lua
@@ -1311,6 +1314,7 @@ function xmpp_modules {
       echo '  "throttle_presence"; -- Reduce battery and bandwidth usage';
       echo '  "filter_chatstates"; -- Reduce battery and bandwidth usage';
       echo '  "external_services";';
+      echo '  "mod_muc_occupantid"; -- reactions';
       echo '};'; } >> "$filename"
 }
 
