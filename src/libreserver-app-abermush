@@ -36,9 +36,10 @@ NOT_ON_HOMEPAGE=0
 REQUIRES_APP=
 
 ABERMUSH_REPO="https://gitlab.com/bashrc2/AberMUSH"
-ABERMUSH_COMMIT='48f4e829ba36577ae5ebc52bcea7f7c922414a69'
+ABERMUSH_COMMIT='038c88da66db02408d4573c51145cc7d75abbb58'
 
 ABERMUSH_PORT=35123
+ABERMUSH_SSH_PORT=35124
 ABERMUSH_I2P_PORT=6566
 ABERMUSH_WEBSOCKET_PORT=6221
 SHOW_TELNET_PORT=${ABERMUSH_PORT}
@@ -154,6 +155,7 @@ function restore_remote_abermush {
 
 function remove_abermush {
     firewall_remove ${ABERMUSH_PORT}
+    firewall_remove ${ABERMUSH_SSH_PORT}
 
     function_check remove_onion_service
     remove_onion_service abermush ${ABERMUSH_ONION_PORT}
@@ -187,7 +189,8 @@ function remove_abermush {
     fi
 
     function_check remove_onion_service
-    remove_onion_service abermush ${ABERMUSH_PORT}
+    remove_onion_service abermush_telnet ${ABERMUSH_PORT}
+    remove_onion_service abermush_ssh ${ABERMUSH_SSH_PORT}
 }
 
 function abermush_copy_to_htdocs {
@@ -499,7 +502,8 @@ function install_abermush {
 
     systemctl restart abermush.service
 
-    # firewall_add abermush ${ABERMUSH_PORT}
+    # firewall_add abermush_telnet ${ABERMUSH_PORT}
+    firewall_add abermush_ssh ${ABERMUSH_SSH_PORT}
 
     increment_app_install_progress
 
