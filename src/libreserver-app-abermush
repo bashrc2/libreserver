@@ -36,7 +36,7 @@ NOT_ON_HOMEPAGE=0
 REQUIRES_APP=
 
 ABERMUSH_REPO="https://gitlab.com/bashrc2/AberMUSH"
-ABERMUSH_COMMIT='038c88da66db02408d4573c51145cc7d75abbb58'
+ABERMUSH_COMMIT='8bbc2cace246172fd567c1ebfd3dd1a98bead1a4'
 
 ABERMUSH_PORT=35123
 ABERMUSH_SSH_PORT=35124
@@ -423,7 +423,7 @@ function install_abermush {
 
     increment_app_install_progress
 
-    INSTALL_PACKAGES python3 python3-pip
+    INSTALL_PACKAGES python3 python3-pip python3-paramiko
 
     increment_app_install_progress
 
@@ -462,7 +462,7 @@ function install_abermush {
       echo 'User=abermush';
       echo "Group=${abermush_group}";
       echo "WorkingDirectory=${ABERMUSH_DIR}";
-      echo "ExecStart=/usr/bin/python3 $ABERMUSH_DIR/abermush.py";
+      echo "ExecStart=/usr/bin/python3 $ABERMUSH_DIR/abermush.py --noweb";
       echo 'Environment=PATH=/usr/bin:/usr/local/bin';
       echo "Environment=GIT_CEILING_DIRECTORIES=${ABERMUSH_DIR}";
       echo 'Restart=always';
