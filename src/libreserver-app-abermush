@@ -423,7 +423,8 @@ function install_abermush {
 
     increment_app_install_progress
 
-    INSTALL_PACKAGES python3 python3-pip python3-paramiko
+    INSTALL_PACKAGES python3 python3-dateutil python3-websocket python3-paramiko
+    INSTALL_PACKAGES python3-pip
 
     increment_app_install_progress
 
