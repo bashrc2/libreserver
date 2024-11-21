@@ -102,11 +102,12 @@ function upgrade_abermush {
 
     abermush_copy_to_htdocs
 
-    if [[ "${ONION_ONLY}" == 'no' ]]; then
-        chown -R abermush:ssl-cert ${ABERMUSH_DIR}
-    else
-        chown -R abermush:abermush ${ABERMUSH_DIR}
-    fi
+    chown -R abermush:abermush ${ABERMUSH_DIR}
+    #if [[ "${ONION_ONLY}" == 'no' ]]; then
+    #    chown -R abermush:ssl-cert ${ABERMUSH_DIR}
+    #else
+    #    chown -R abermush:abermush ${ABERMUSH_DIR}
+    #fi
     systemctl start abermush
 }
 
@@ -157,8 +158,8 @@ function remove_abermush {
     firewall_remove ${ABERMUSH_PORT}
     firewall_remove ${ABERMUSH_SSH_PORT}
 
-    function_check remove_onion_service
-    remove_onion_service abermush ${ABERMUSH_ONION_PORT}
+    #function_check remove_onion_service
+    #remove_onion_service abermush ${ABERMUSH_ONION_PORT}
     nginx_dissite "${ABERMUSH_DOMAIN_NAME}"
     remove_certs "${ABERMUSH_DOMAIN_NAME}"
     if [ -f "/etc/nginx/sites-available/${ABERMUSH_DOMAIN_NAME}" ]; then
@@ -188,9 +189,9 @@ function remove_abermush {
         rm -rf ${ABERMUSH_DIR}
     fi
 
-    function_check remove_onion_service
-    remove_onion_service abermush_telnet ${ABERMUSH_PORT}
-    remove_onion_service abermush_ssh ${ABERMUSH_SSH_PORT}
+    #function_check remove_onion_service
+    #remove_onion_service abermush_telnet ${ABERMUSH_PORT}
+    #remove_onion_service abermush_ssh ${ABERMUSH_SSH_PORT}
 }
 
 function abermush_copy_to_htdocs {
@@ -434,17 +435,18 @@ function install_abermush {
 
     increment_app_install_progress
 
-    if [[ "$ONION_ONLY" == 'no' ]]; then
-        chown -R abermush:ssl-cert ${ABERMUSH_DIR}
-    else
-        chown -R abermush:abermush ${ABERMUSH_DIR}
-    fi
+    chown -R abermush:abermush ${ABERMUSH_DIR}
+    #if [[ "$ONION_ONLY" == 'no' ]]; then
+    #    chown -R abermush:ssl-cert ${ABERMUSH_DIR}
+    #else
+    #    chown -R abermush:abermush ${ABERMUSH_DIR}
+    #fi
 
-    increment_app_install_progress
+    #increment_app_install_progress
 
-    ABERMUSH_ONION_HOSTNAME=$(add_onion_service abermush 80 ${ABERMUSH_ONION_PORT})
+    #ABERMUSH_ONION_HOSTNAME=$(add_onion_service abermush 80 ${ABERMUSH_ONION_PORT})
 
-    install_abermush_website
+    #install_abermush_website
 
     increment_app_install_progress
 
@@ -490,16 +492,17 @@ function install_abermush {
 
     increment_app_install_progress
 
-    if [[ "${ONION_ONLY}" == 'no' ]]; then
-        usermod -g ssl-cert abermush
-    fi
     usermod -g www-data abermush
+    #if [[ "${ONION_ONLY}" == 'no' ]]; then
+    #    usermod -g ssl-cert abermush
+    #fi
 
-    if [[ "$ONION_ONLY" == 'no' ]]; then
-        chown -R abermush:ssl-cert ${ABERMUSH_DIR}
-    else
-        chown -R abermush:abermush ${ABERMUSH_DIR}
-    fi
+    chown -R abermush:abermush ${ABERMUSH_DIR}
+    #if [[ "$ONION_ONLY" == 'no' ]]; then
+    #    chown -R abermush:ssl-cert ${ABERMUSH_DIR}
+    #else
+    #    chown -R abermush:abermush ${ABERMUSH_DIR}
+    #fi
 
     systemctl restart abermush.service
 
