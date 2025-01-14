@@ -1057,8 +1057,11 @@ function upgrade_xmpp {
     prosody_set_parameter 'muc_room_default_members_only' 'false'
     prosody_set_parameter 'muc_tombstones' 'false'
 
+    # SASL SCRAM downgrade protection
+    prosody_add_module "sasl_ssdp"
+
     # reactions
-    prosody_add_module "mod_muc_occupantid"
+    prosody_add_module "muc_occupantid"
 
     # security labels
     prosody_add_module "seclabels"
@@ -1314,7 +1317,8 @@ function xmpp_modules {
       echo '  "throttle_presence"; -- Reduce battery and bandwidth usage';
       echo '  "filter_chatstates"; -- Reduce battery and bandwidth usage';
       echo '  "external_services";';
-      echo '  "mod_muc_occupantid"; -- reactions';
+      echo '  "muc_occupantid"; -- reactions';
+      echo '  "sasl_ssdp"; -- SASL SCRAM downgrade protection';
       echo '};'; } >> "$filename"
 }
 
