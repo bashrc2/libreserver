@@ -159,7 +159,7 @@ function remove_emacs {
 }
 
 function install_emacs {
-    INSTALL_PACKAGES emacs-nox ispell ibritish ifrench ispanish iitalian irussian iswedish inorwegian iirish ingerman iswiss iogerman idutch idanish ibrazilian ibulgarian ipolish iczech iestonian ilithuanian icatalan python3-jedi elpa-flycheck elpa-use-package pylint elpa-php-mode python3-flake8 elpa-diminish
+    INSTALL_PACKAGES emacs-nox ispell ibritish ifrench ispanish iitalian irussian iswedish inorwegian iirish ingerman iswiss iogerman idutch idanish ibrazilian ibulgarian ipolish iczech iestonian ilithuanian icatalan python3-jedi elpa-flycheck elpa-use-package pylint elpa-php-mode python3-flake8 elpa-diminish elpa-nov elpa-pdf-tools
     # INSTALL_PACKAGES elpa-jedi iukrainian
     update-alternatives --set editor /usr/bin/emacs
 
@@ -269,6 +269,11 @@ function install_emacs {
       echo '       ";; Welcome\n"))';
       echo $';; ===== highlight current line ========================================';
       echo '(global-hl-line-mode)';
+      echo '';
+      echo $';; ===== epub reading ========================================';
+      echo '(use-package nov';
+      echo '    :init';
+      echo "    (add-to-list 'auto-mode-alist '(\"\\.epub\\'\" . nov-mode)))";
       echo '';
       echo $';; ===== Python autocompletion =========================================';
       echo '';
