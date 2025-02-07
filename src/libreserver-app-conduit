@@ -142,6 +142,33 @@ function conduit_setting_registration {
     fi
 }
 
+function configure_interactive_conduit {
+    enable_registration_str=$"Enable registration"
+    enable_registration_value="1"
+    if grep -q "allow_registration = true" ${CONDUIT_CONFIG_FILENAME}; then
+        enable_registration_str=$"Disable registration"
+        enable_registration_value="0"
+    fi
+    W=(1 "${enable_registration_str}"
+       2 $"Option 2")
+
+    while true
+    do
+        # shellcheck disable=SC2068
+        selection=$(dialog --backtitle $"LibreServer Administrator Control Panel" --title $"epicyon" --menu $"Choose an operation, or ESC for main menu:" 14 70 3 "${W[@]}" 3>&2 2>&1 1>&3)
+
+        if [ ! "$selection" ]; then
+            break
+        fi
+        case $selection in
+            1) conduit_setting_registration "${enable_registration_value}"
+            ;;
+            2) # call some function for option 2
+            ;;
+        esac
+    done
+}
+
 function logging_on_conduit {
     sed -i 's|"log =.*|"log = \"debug,state_res=debug,rocket=off,_=off,sled=off\"|g' ${CONDUIT_CONFIG_FILENAME}
     systemctl restart conduit
