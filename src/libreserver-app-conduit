@@ -771,8 +771,11 @@ function install_conduit {
     if [ ! -f /etc/turnserver.conf ]; then
         install_turn
     fi
+    echo "Setting up turnserver"
     conduit_setup_turn
+    echo "Setting up old media removal"
     conduit_remove_old_media
+    echo "restarting daemon"
     systemctl restart conduit
 
     set_completion_param "conduit version" "${CONDUIT_VERSION}"
