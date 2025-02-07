@@ -108,6 +108,9 @@ function conduit_remove_old_media {
 }
 
 function conduit_setup_turn {
+    if [ ! -f /etc/turnserver.conf ]; then
+        echo "turnserver is not installed"
+    fi
     turn_url=${DEFAULT_DOMAIN_NAME}
     turn_secret=$(grep "static-auth-secret=" /etc/turnserver.conf | awk -F '=' '{print $2}')
 
