@@ -97,6 +97,7 @@ function conduit_clear_log_files {
     fi
     { echo '#!/bin/bash';
       echo "rm ${CONDUIT_DATA_DIR}/LOG*"; } > /usr/bin/conduit_clear_log
+    chmod +x /usr/bin/conduit_clear_log
     cron_add_mins 60 "/usr/bin/conduit_clear_log"
 }
 

@@ -99,6 +99,7 @@ function epicyon_clear_browser_cache {
       echo '    rm -rf /var/www/cache/*';
       echo '    rm /etc/epicyon/accounts/.clear_cache';
       echo 'fi'; } > /usr/bin/epicyon_clear_cache
+    chmod +x /usr/bin/epicyon_clear_cache
     cron_add_mins 1 "/usr/bin/epicyon_clear_cache"
 }
 
