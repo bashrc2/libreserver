@@ -91,6 +91,15 @@ conduit_variables=(ONION_ONLY
                    MY_USERNAME
                    ARCHITECTURE)
 
+function conduit_clear_log_files {
+    if [ -f /usr/bin/conduit_clear_log ]; then
+        return
+    fi
+    { echo '#!/bin/bash';
+      echo "rm ${CONDUIT_DATA_DIR}/LOG*"; } > /usr/bin/conduit_clear_log
+    cron_add_mins 60 "/usr/bin/conduit_clear_log"
+}
+
 function conduit_remove_old_media {
     # expires media files after some number of days
     if [ -f ${CONDUIT_COMPACT_FILENAME} ]; then
@@ -272,6 +281,7 @@ function upgrade_distro_conduit {
 
 function upgrade_conduit {
     conduit_remove_old_media
+    conduit_clear_log_files
 
     if [ ! -f /etc/turnserver.conf ]; then
         install_turn
@@ -805,6 +815,8 @@ function install_conduit {
     conduit_remove_old_media
     echo "restarting daemon"
     systemctl restart conduit
+
+    conduit_clear_log_files
 
     set_completion_param "conduit version" "${CONDUIT_VERSION}"
     APP_INSTALLED=1
