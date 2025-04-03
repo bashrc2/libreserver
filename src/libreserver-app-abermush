@@ -508,6 +508,7 @@ function install_abermush {
 
     # turn on tty support within ssh server
     ssh_enable_tty yes
+    systemctl restart ssh
 
     # firewall_add abermush_telnet ${ABERMUSH_PORT}
     firewall_add abermush_ssh ${ABERMUSH_SSH_PORT}
