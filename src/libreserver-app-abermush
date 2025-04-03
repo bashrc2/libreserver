@@ -193,6 +193,9 @@ function remove_abermush {
     if [ -d ${ABERMUSH_DIR} ]; then
         rm -rf ${ABERMUSH_DIR}
     fi
+    if [ -d ${ABERMUSH_DIR2} ]; then
+        rm -rf ${ABERMUSH_DIR2}
+    fi
 
     #function_check remove_onion_service
     #remove_onion_service abermush_telnet ${ABERMUSH_PORT}
