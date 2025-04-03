@@ -319,6 +319,19 @@ function lockdown_ssh {
     fi
 }
 
+function ssh_enable_tty {
+    # typically for MUD games
+    tty_enabled="$1"
+    if ! grep -q 'PermitTTY' /etc/ssh/sshd_config; then
+        echo "PermitTTY ${tty_enabled}" >> /etc/ssh/sshd_config
+    else
+        sed -i "s| PermitTTY.*|PermitTTY ${tty_enabled}|g" /etc/ssh/sshd_config
+        sed -i 's|##PermitTTY|PermitTTY|g' /etc/ssh/sshd_config
+        sed -i 's|#PermitTTY|PermitTTY|g' /etc/ssh/sshd_config
+        sed -i "s|PermitTTY.*|PermitTTY ${tty_enabled}|g" /etc/ssh/sshd_config
+    fi
+}
+
 function configure_ssh {
     if [[ $(is_completed "${FUNCNAME[0]}") == "1"  ]]; then
         return
