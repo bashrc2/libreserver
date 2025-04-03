@@ -117,7 +117,7 @@ function upgrade_abermush {
 }
 
 function backup_local_abermush {
-    source_directory=${ABERMUSH_DIR}
+    source_directory=${ABERMUSH_DIR2}
     if [ -d ${source_directory} ]; then
         dest_directory=abermush
         function_check backup_directory_to_usb
@@ -126,16 +126,16 @@ function backup_local_abermush {
 }
 
 function restore_local_abermush {
-    if [ -d ${ABERMUSH_DIR} ]; then
+    if [ -d ${ABERMUSH_DIR2} ]; then
         if [ -d "${USB_MOUNT_ABERMUSH}/backup/abermush" ]; then
             echo $"Restoring ABERMUSH"
             temp_restore_dir=/root/tempabermush
             function_check restore_directory_from_usb
             restore_directory_from_usb ${temp_restore_dir} abermush
-            if [ -d ${temp_restore_dir}${ABERMUSH_DIR} ]; then
-                cp -r ${temp_restore_dir}${ABERMUSH_DIR}/* ${ABERMUSH_DIR}/
+            if [ -d ${temp_restore_dir}${ABERMUSH_DIR2} ]; then
+                cp -r ${temp_restore_dir}${ABERMUSH_DIR2}/* ${ABERMUSH_DIR2}/
             else
-                cp -r ${temp_restore_dir}/* ${ABERMUSH_DIR}/
+                cp -r ${temp_restore_dir}/* ${ABERMUSH_DIR2}/
             fi
             # shellcheck disable=SC2181
             if [ ! "$?" = "0" ]; then
