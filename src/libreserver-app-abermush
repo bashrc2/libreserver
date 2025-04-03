@@ -49,6 +49,7 @@ ABERMUSH_CODE=
 ABERMUSH_ONION_PORT=8049
 
 ABERMUSH_DIR=/etc/abermush
+ABERMUSH_DIR2=/opt/abermush
 
 ABERMUSH_SHORT_DESCRIPTION=$'Multi User Dungeon'
 ABERMUSH_DESCRIPTION=$'Multi User Dungeon'
@@ -103,6 +104,7 @@ function upgrade_abermush {
     abermush_copy_to_htdocs
 
     chown -R abermush:abermush ${ABERMUSH_DIR}
+    chown -R abermush:abermush ${ABERMUSH_DIR2}
     #if [[ "${ONION_ONLY}" == 'no' ]]; then
     #    chown -R abermush:ssl-cert ${ABERMUSH_DIR}
     #else
@@ -436,6 +438,7 @@ function install_abermush {
     increment_app_install_progress
 
     chown -R abermush:abermush ${ABERMUSH_DIR}
+    chown -R abermush:abermush ${ABERMUSH_DIR2}
     #if [[ "$ONION_ONLY" == 'no' ]]; then
     #    chown -R abermush:ssl-cert ${ABERMUSH_DIR}
     #else
@@ -498,6 +501,7 @@ function install_abermush {
     #fi
 
     chown -R abermush:abermush ${ABERMUSH_DIR}
+    chown -R abermush:abermush ${ABERMUSH_DIR2}
     #if [[ "$ONION_ONLY" == 'no' ]]; then
     #    chown -R abermush:ssl-cert ${ABERMUSH_DIR}
     #else
