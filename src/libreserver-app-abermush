@@ -103,6 +103,9 @@ function upgrade_abermush {
 
     abermush_copy_to_htdocs
 
+    cd ${ABERMUSH_DIR} || exit 32
+    ./installer.sh
+
     chown -R abermush:abermush ${ABERMUSH_DIR}
     chown -R abermush:abermush ${ABERMUSH_DIR2}
     #if [[ "${ONION_ONLY}" == 'no' ]]; then
