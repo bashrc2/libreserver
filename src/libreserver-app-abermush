@@ -197,9 +197,8 @@ function remove_abermush {
         rm -rf ${ABERMUSH_DIR2}
     fi
 
-    #function_check remove_onion_service
-    #remove_onion_service abermush_telnet ${ABERMUSH_PORT}
-    #remove_onion_service abermush_ssh ${ABERMUSH_SSH_PORT}
+    function_check remove_onion_service
+    remove_onion_service abermush_ssh ${ABERMUSH_SSH_PORT}
 }
 
 function abermush_copy_to_htdocs {
@@ -454,6 +453,7 @@ function install_abermush {
     #increment_app_install_progress
 
     #ABERMUSH_ONION_HOSTNAME=$(add_onion_service abermush 80 ${ABERMUSH_ONION_PORT})
+    ABERMUSH_ONION_SSH_HOSTNAME=$(add_onion_service abermush_ssh ${ABERMUSH_SSH_PORT} ${ABERMUSH_SSH_PORT})
 
     #install_abermush_website
 
