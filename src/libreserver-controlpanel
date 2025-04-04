@@ -286,6 +286,10 @@ function show_domains {
                 fi
                 onion_address=$(get_app_onion_address "${curr_app_name}")
                 if [ ${#onion_address} -eq 0 ]; then
+                    # try getting the ssh address
+                    onion_address=$(get_app_onion_address "${curr_app_name}_ssh")
+                fi
+                if [ ${#onion_address} -eq 0 ]; then
                     onion_address="-"
                 fi
 
