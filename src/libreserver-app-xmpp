@@ -1701,6 +1701,7 @@ function remove_upstream_xmpp_package {
     if ! grep -q "packages.prosody.im" /etc/apt/sources.list; then
         return
     fi
+    echo $'Removing upstream prosody package'
     INSTALL_DIR=$HOME/build
     REMOVE_XMPP_DIR=$INSTALL_DIR/remove_xmpp_package
     if [ ! -d "$REMOVE_XMPP_DIR" ]; then
@@ -1722,6 +1723,7 @@ function remove_upstream_xmpp_package {
     chown -R prosody:prosody /etc/prosody
     chown -R prosody:prosody /var/lib/prosody
     systemctl restart prosody
+    echo $'Upstream prosody package removed'
 }
 
 function install_xmpp {
