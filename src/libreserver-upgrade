@@ -175,6 +175,7 @@ if [ -d "$PROJECT_DIR" ]; then
                 disable_email_encryption_at_rest
                 email_remove_html
                 email_flooding_defense
+                email_repair_saslauthd
                 configure_email_i2p
                 if [ -f /var/log/freedns_@_update.log ]; then
                     rm /var/log/freedns_@_update.log

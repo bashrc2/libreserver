@@ -916,6 +916,7 @@ function install_email_basic {
     function_check configure_firewall_for_email
     configure_firewall_for_email
     dpkg-reconfigure --frontend noninteractive exim4-config
+
     systemctl restart exim4
 }
 
@@ -943,6 +944,17 @@ function email_add_xmpp_headers {
         dpkg-reconfigure --frontend noninteractive exim4-config
         systemctl restart exim4
     fi
+}
+
+function email_repair_saslauthd {
+    # if START=yes is missing from saslauthd config
+    if ! -f /etc/default/saslauthd; then
+        return
+    fi
+    if grep -q 'START=' /etc/default/saslauthd; then
+        return
+    fi
+    echo 'START=yes' >> /etc/default/saslauthd
 }
 
 function email_smtp_proxy_through_isp {
