@@ -1717,7 +1717,8 @@ function remove_upstream_xmpp_package {
     cp -r /var/lib/prosody/* "${REMOVE_XMPP_DIR}/var"
     sed -i '/packages.prosody.im/d' /etc/apt/sources.list
     apt-get update
-    REINSTALL_PACKAGES prosody
+    REMOVE_PACKAGES prosody
+    INSTALL_PACKAGES prosody
     cp -r "${REMOVE_XMPP_DIR}/etc/"* /etc/prosody/
     cp -r "${REMOVE_XMPP_DIR}/var/"* /var/lib/prosody/
     chown -R prosody:prosody /etc/prosody
