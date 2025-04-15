@@ -960,6 +960,8 @@ function xmpp_update_certs {
 }
 
 function upgrade_xmpp {
+    remove_upstream_xmpp_package
+
     # deprecated module
     if grep -q 'smacks_offline' /etc/prosody/prosody.cfg.lua; then
         sed -i '/smacks_offline/d' /etc/prosody/prosody.cfg.lua
@@ -1694,6 +1696,34 @@ function add_xmpp_onion_to_email {
     restart_tor_daemon
 }
 
+function remove_upstream_xmpp_package {
+    # The upstream debian package breaks stuff, so remove it
+    if ! grep -q "packages.prosody.im" /etc/apt/sources.list; then
+        return
+    fi
+    INSTALL_DIR=$HOME/build
+    REMOVE_XMPP_DIR=$INSTALL_DIR/remove_xmpp_package
+    if [ ! -d "$REMOVE_XMPP_DIR" ]; then
+        mkdir -p "$REMOVE_XMPP_DIR"
+    fi
+    if [ ! -d "${REMOVE_XMPP_DIR}/etc" ]; then
+        mkdir -p "${REMOVE_XMPP_DIR}/etc"
+    fi
+    if [ ! -d "${REMOVE_XMPP_DIR}/var" ]; then
+        mkdir -p "${REMOVE_XMPP_DIR}/var"
+    fi
+    cp -r /etc/prosody/* "${REMOVE_XMPP_DIR}/etc"
+    cp -r /var/lib/prosody/* "${REMOVE_XMPP_DIR}/var"
+    sed -i '/packages.prosody.im/d' /etc/apt/sources.list
+    apt-get update
+    REINSTALL_PACKAGES prosody
+    cp -r "${REMOVE_XMPP_DIR}/etc/"* /etc/prosody/
+    cp -r "${REMOVE_XMPP_DIR}/var/"* /var/lib/prosody/
+    chown -R prosody:prosody /etc/prosody
+    chown -R prosody:prosody /var/lib/prosody
+    systemctl restart prosody
+}
+
 function install_xmpp {
     increment_app_install_progress
 
@@ -1752,19 +1782,6 @@ function install_xmpp {
 
     increment_app_install_progress
 
-    # NOTE: there is a bug in the packaged version 0.11.9 of prosodyctl
-    # which prevents sendxmpp from working.
-    # Use the prosody project's version of the package instead
-    if ! grep -q "packages.prosody.im" /etc/apt/sources.list; then
-        echo deb http://packages.prosody.im/debian $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list
-    fi
-    wget -qO - https://packages.prosody.im/debian/pubkey.asc | sudo apt-key add -
-    # wget -O /usr/share/keyrings/prosody.gpg https://prosody.im/files/prosody-debian-packages.key
-    # if [ ! -f /usr/share/keyrings/prosody.gpg ]; then
-    #     echo $'prosody package signing key not downloaded'
-    #     exit 8
-    # fi
-    apt-get update
     INSTALL_PACKAGES prosody
     if [ ! -f /usr/bin/prosody ]; then
         echo '$prosody was not installed'
