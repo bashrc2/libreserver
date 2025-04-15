@@ -6,6 +6,7 @@
 #
 # XMPP server
 #
+# Don't use the upstream debian package. It moves fast and breaks things.
 # python-xmpp has been removed from debian. A python3 version is not yet available
 #
 # License
