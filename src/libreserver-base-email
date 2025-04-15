@@ -955,6 +955,7 @@ function email_repair_saslauthd {
         return
     fi
     echo 'START=yes' >> /etc/default/saslauthd
+    systemctl restart saslauthd
 }
 
 function email_smtp_proxy_through_isp {
@@ -1865,6 +1866,7 @@ function install_email {
     prevent_mail_process_overrun
     exim_enable_tls
     configure_dkim
+    email_repair_saslauthd
 
     mark_completed "${FUNCNAME[0]}"
 }
