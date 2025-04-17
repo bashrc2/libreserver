@@ -5,6 +5,7 @@
 # |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # Email functions
+# Frozen messages: exim -d -M {message-id}
 #
 # License
 # =======
