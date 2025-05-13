@@ -543,7 +543,35 @@ function install_conduit {
       echo 'max_concurrent_requests = 100 # How many requests Conduit sends to other servers at the same time';
       echo "log = \"warn,state_res=warn,rocket=off,_=off,sled=off\"";
       echo '';
-      echo 'address = "127.0.0.1"'; } > "${CONDUIT_CONFIG_FILENAME}"
+      echo 'address = "127.0.0.1"';
+      echo '';
+      echo '[global.media]';
+      echo 'backend = "filesystem"';
+      echo "path = \"${CONDUIT_DATA_DIR}/media\"";
+      echo '';
+      echo '[global.media.directory_structure]';
+      echo 'depth = 4';
+      echo 'length = 2';
+      echo '';
+      echo '# Total size for all media';
+      echo '[[global.media.retention]]';
+      echo 'space = "2G"';
+      echo '';
+      echo '# Delete remote media not accessed, or older than 20 days';
+      echo '[[global.media.retention]]';
+      echo 'scope = "remote"';
+      echo 'accessed = "20d"';
+      echo 'created = "20days"';
+      echo '';
+      echo '# Delete local media not accessed for 30 days';
+      echo '[[global.media.retention]]';
+      echo 'scope = "local"';
+      echo 'accessed = "30d"';
+      echo '';
+      echo '# Only store 1GB of thumbnails';
+      echo '[[global.media.retention]]';
+      echo 'scope = "thumbnail"';
+      echo 'space = "1GB"'; } > "${CONDUIT_CONFIG_FILENAME}"
 
     increment_app_install_progress
 
