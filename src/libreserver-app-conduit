@@ -101,22 +101,6 @@ function conduit_clear_log_files {
     cron_add_mins 60 "/usr/bin/conduit_clear_log"
 }
 
-function conduit_remove_old_media {
-    # expires media files after some number of days
-    if [ -f ${CONDUIT_COMPACT_FILENAME} ]; then
-        return
-    fi
-
-    if [ ! "${CONDUIT_DATA_DIR}" ]; then
-        return
-    fi
-
-    { echo "#!/bin/bash";
-      echo "cd ${CONDUIT_DATA_DIR} || exit 1";
-      echo "find ${CONDUIT_DATA_DIR}/media/ -type f -ctime +${CONDUIT_EXPIRE_MEDIA_DAYS} -delete"; } > ${CONDUIT_COMPACT_FILENAME}
-    chmod +x ${CONDUIT_COMPACT_FILENAME}
-}
-
 function conduit_setup_turn {
     if [ ! -f /etc/turnserver.conf ]; then
         echo "turnserver is not installed"
@@ -281,8 +265,12 @@ function upgrade_distro_conduit {
 }
 
 function upgrade_conduit {
-    conduit_remove_old_media
     conduit_clear_log_files
+
+    # remove old way of managing retained media
+    if [ -f ${CONDUIT_COMPACT_FILENAME} ]; then
+        rm ${CONDUIT_COMPACT_FILENAME}
+    fi
 
     if [ ! -f /etc/turnserver.conf ]; then
         install_turn
@@ -840,8 +828,6 @@ function install_conduit {
     fi
     echo "Setting up turnserver"
     conduit_setup_turn
-    echo "Setting up old media removal"
-    conduit_remove_old_media
     echo "restarting daemon"
     systemctl restart conduit
 
