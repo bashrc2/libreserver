@@ -689,7 +689,7 @@ if [[ "$app_php" == 'yes' ]]; then
     echo ''
     echo '    increment_app_install_progress'
     echo ''
-    echo "    INSTALL_PACKAGES memcached php-memcached php-intl exiftool libfcgi0t64"
+    echo "    INSTALL_PACKAGES memcached php-memcached php-intl ruby-mini-exiftool libfcgi0t64"
     echo ''
     echo '    increment_app_install_progress'
     echo ''

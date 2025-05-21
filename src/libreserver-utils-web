@@ -9,7 +9,7 @@
 # License
 # =======
 #
-# Copyright (C) 2014-2023 Bob Mottram <bob@libreserver.org>
+# Copyright (C) 2014-2025 Bob Mottram <bob@libreserver.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -589,45 +589,7 @@ function install_dynamicdns {
         set_repo_commit "$INSTALL_DIR/inadyn" "inadyn commit" "$INADYN_COMMIT" "$INADYN_REPO"
     fi
 
-    # Here we compile from source because the current package
-    # doesn't support https, which could result in passwords
-    # being leaked
-    # Debian version 1.99.4-1
-    # https version 1.99.8
-
-    INSTALL_PACKAGES build-essential curl libgnutls28-dev automake
-    INSTALL_PACKAGES gnutls-dev libconfuse-dev pkg-config libtool
-
-    if [ ! -d "$INSTALL_DIR/inadyn" ]; then
-        if [ -d /repos/inadyn ]; then
-            mkdir -p "$INSTALL_DIR/inadyn"
-            cp -r -p /repos/inadyn/. "$INSTALL_DIR/inadyn"
-            cd "$INSTALL_DIR/inadyn" || exit 24
-            git pull
-        else
-            git_clone "$INADYN_REPO" "$INSTALL_DIR/inadyn"
-        fi
-    fi
-    if [ ! -d "$INSTALL_DIR/inadyn" ]; then
-        echo 'inadyn repo not cloned'
-        echo -n | openssl s_client -showcerts -connect github.com:443 -CApath /etc/ssl/certs
-        exit 67
-    fi
-    cd "$INSTALL_DIR/inadyn" || exit 24
-    git checkout "$INADYN_COMMIT" -b "$INADYN_COMMIT"
-    set_completion_param "inadyn commit" "$INADYN_COMMIT"
-
-    ./autogen.sh
-
-    if ! ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var; then
-        exit 74
-    fi
-    if ! make -j5; then
-        exit 75
-    fi
-    if ! make install-strip; then
-        exit 37
-    fi
+    INSTALL_PACKAGES inadyn
 
     # create a configuration file
     if [ ! -f "${INADYN_CONFIG_FILE}" ]; then

@@ -300,7 +300,7 @@ function install_grocy {
 
     increment_app_install_progress
 
-    INSTALL_PACKAGES memcached php-memcached php-intl exiftool libfcgi0t64
+    INSTALL_PACKAGES memcached php-memcached php-intl ruby-mini-exiftool libfcgi0t64
 
     increment_app_install_progress
 
