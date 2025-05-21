@@ -96,7 +96,7 @@ function random_number_generator {
 
     case $HWRNG_TYPE in
         beaglebone)
-            INSTALL_PACKAGES rng-tools
+            INSTALL_PACKAGES rng-tools5
             if [ -f /etc/default/rng-tools ]; then
                 sed -i 's|#HRNGDEVICE=|HRNGDEVICE=|g' /etc/default/rng-tools
                 sed -i 's|#HRNGDEVICE=.*|HRNGDEVICE=/dev/hwrng|g' /etc/default/rng-tools

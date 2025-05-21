@@ -201,7 +201,7 @@ function install_mariadb {
     if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
         return
     fi
-    INSTALL_PACKAGES software-properties-common debconf-utils
+    INSTALL_PACKAGES debconf-utils
     $UPDATE_PACKAGES
 
     remove_watchdog_daemon mariadb
@@ -433,6 +433,7 @@ function database_reinstall {
 }
 
 function install_rethinkdb {
+    # NOTE: there are currently no apps using this
     if [[ "$(arch)" == "arm"* ]]; then
         echo $'rethinkdb does not currently support ARM debian packages'
         echo $"See http://download.rethinkdb.com/apt/dists/${DEBIAN_VERSION}/main"
@@ -475,6 +476,7 @@ function install_rethinkdb {
 }
 
 function remove_rethinkdb {
+    # NOTE: there are currently no apps using this
     if [ ! -d /etc/rethinkdb ]; then
         return
     fi

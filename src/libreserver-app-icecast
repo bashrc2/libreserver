@@ -645,7 +645,7 @@ function remove_icecast {
 function install_icecast {
     increment_app_install_progress
 
-    INSTALL_PACKAGES software-properties-common debconf-utils
+    INSTALL_PACKAGES debconf-utils
 
     increment_app_install_progress
 
