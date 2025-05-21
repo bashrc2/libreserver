@@ -105,7 +105,7 @@ function INSTALL_PACKAGES_BACKPORTS {
     done;
 }
 
-PYTHON_VERSION='3.11'
+PYTHON_VERSION='3.13'
 
 # REINSTALL_PACKAGES="apt-get -yq ${CONFDEF_OPTION} install --reinstall"
 REINSTALL_PACKAGES_BACKPORTS="apt-get -yq -t trixie-backports ${CONFDEF_OPTION} install --reinstall"
