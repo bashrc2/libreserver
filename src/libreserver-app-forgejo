@@ -52,11 +52,11 @@ FORGEJO_MOBILE_APP_URL=
 forgejo_os_type='linux'
 
 forgejo_variables=(ONION_ONLY
-                 FORGEJO_DOMAIN_NAME
-                 FORGEJO_CODE
-                 MY_USERNAME
-                 DDNS_PROVIDER
-                 ARCHITECTURE)
+                   FORGEJO_DOMAIN_NAME
+                   FORGEJO_CODE
+                   MY_USERNAME
+                   DDNS_PROVIDER
+                   ARCHITECTURE)
 
 function upgrade_distro_forgejo {
     target_distro="$1"
