@@ -1782,7 +1782,9 @@ function install_xmpp {
 
     increment_app_install_progress
 
-    INSTALL_PACKAGES python3-aioxmpp
+    # project appears dead
+    # https://codeberg.org/jssfr/aioxmpp/commits/branch/devel
+    # INSTALL_PACKAGES python3-aioxmpp
 
     increment_app_install_progress
 
