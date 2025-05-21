@@ -83,7 +83,7 @@ function mumble_setting_password {
 function upgrade_distro_mumble {
     target_distro="$1"
 
-    if [[ "$target_distro" == 'bookworm' ]]; then
+    if [[ "$target_distro" == 'trixie' ]]; then
         echo -n ''
     fi
 }

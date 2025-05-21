@@ -2800,7 +2800,7 @@ function webadmin_upgrade {
 function webadmin_upgrade_operating_system {
     if [ -f "$upgradeos_file" ]; then
         cp /usr/local/bin/${PROJECT_NAME}-distro-upgrade /usr/bin/temp-distro-upgrade
-        /bin/bash /usr/bin/temp-distro-upgrade bookworm &
+        /bin/bash /usr/bin/temp-distro-upgrade trixie &
         rm "$upgradeos_file"
     fi
 }

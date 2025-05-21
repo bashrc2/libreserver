@@ -56,7 +56,7 @@ minetest_variables=(SYSTEM_TYPE
 function upgrade_distro_minetest {
     target_distro="$1"
 
-    if [[ "$target_distro" == 'bookworm' ]]; then
+    if [[ "$target_distro" == 'trixie' ]]; then
         echo -n ''
     fi
 }

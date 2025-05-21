@@ -6,7 +6,7 @@
 #
 # RSS reader application
 #
-# php-mcrypt is missing from bookworm
+# php-mcrypt is missing from trixie
 #
 # License
 # =======
@@ -55,7 +55,7 @@ rss_variables=(RSS_READER_REPO
 function upgrade_distro_rss {
     target_distro="$1"
 
-    if [[ "$target_distro" == 'bookworm' ]]; then
+    if [[ "$target_distro" == 'trixie' ]]; then
         echo -n ''
     fi
 }

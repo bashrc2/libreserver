@@ -67,7 +67,7 @@ function akaunting_update_email {
 function upgrade_distro_akaunting {
     target_distro="$1"
 
-    if [[ "$target_distro" == 'bookworm' ]]; then
+    if [[ "$target_distro" == 'trixie' ]]; then
         echo -n ''
     fi
 }

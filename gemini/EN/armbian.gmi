@@ -45,13 +45,13 @@ apt update
 apt upgrade
 ```
 
-Then clone the LibreServer repository and checkout the bookworm development branch.
+Then clone the LibreServer repository and checkout the trixie development branch.
 
 ``` command
 apt install -y git dialog build-essential
 git clone https://gitlab.com/bashrc2/libreserver
 cd libreserver
-git checkout bookworm
+git checkout trixie
 ```
 
 Install the LibreServer commands:

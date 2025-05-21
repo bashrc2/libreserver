@@ -83,7 +83,7 @@ function element_setting_jitsi {
 function upgrade_distro_element {
     target_distro="$1"
 
-    if [[ "$target_distro" == 'bookworm' ]]; then
+    if [[ "$target_distro" == 'trixie' ]]; then
         echo -n ''
     fi
 }

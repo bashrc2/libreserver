@@ -21,13 +21,13 @@
       <h3>1. Download</h3>
 
       <pre>
-wget https://raspi.debian.net/daily/raspi_4_bookworm.img.xz
-wget https://raspi.debian.net/daily/raspi_4_bookworm.img.xz.sha256</pre>
+wget https://raspi.debian.net/daily/raspi_4_trixie.img.xz
+wget https://raspi.debian.net/daily/raspi_4_trixie.img.xz.sha256</pre>
 
       <p>Verify the download:</p>
 
       <pre>
-sha256sum -c raspi_4_bookworm.img.xz.sha256</pre>
+sha256sum -c raspi_4_trixie.img.xz.sha256</pre>
 
       <h3>2. Copy to drive</h3>
       <p>
@@ -35,7 +35,7 @@ sha256sum -c raspi_4_bookworm.img.xz.sha256</pre>
       </p>
 
       <pre>
-xzcat raspi_4_bookworm.img.xz | sudo dd of=/dev/sdX bs=64k oflag=dsync status=progress
+xzcat raspi_4_trixie.img.xz | sudo dd of=/dev/sdX bs=64k oflag=dsync status=progress
 sync</pre>
       <p>
         Where <b>sdX</b> is the name of your drive.
@@ -112,7 +112,7 @@ apt update
 apt upgrade</pre>
 
       <p>
-        Then clone the LibreServer repository and checkout the bookworm development branch.
+        Then clone the LibreServer repository and checkout the trixie development branch.
       </p>
 
       <pre>
@@ -120,7 +120,7 @@ apt install -y git dialog build-essential
 cd
 git clone https://gitlab.com/bashrc2/libreserver
 cd libreserver
-git checkout bookworm</pre>
+git checkout trixie</pre>
 
       <p>
         Install the LibreServer commands:

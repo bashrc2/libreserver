@@ -24,7 +24,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Set the base image to debian
 
-FROM debian:bookworm
+FROM debian:trixie
 
 # File Author / Maintainer
 MAINTAINER Liam Hurwitz and Bob Mottram
@@ -48,7 +48,7 @@ RUN apt-get install git build-essential dialog openssh-client -y
 RUN git clone https://gitlab.com/bashrc2/libreserver.git
 RUN git clone https://gitlab.com/bashrc2/libreserver-maker.git
 RUN cd libreserver &&\
-        git checkout bookworm &&\
+        git checkout trixie &&\
         make install
 
 ##

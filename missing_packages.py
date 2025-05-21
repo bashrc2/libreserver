@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-#  _    _ _            ___                      
-# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
-# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # Shows missing packages
 #
@@ -34,7 +34,7 @@ if __name__=="__main__":
         print('No packages found within the current directory')
         sys.exit()
 
-    current_debian_version = 'bookworm (testing)'
+    current_debian_version = 'trixie (testing)'
 
     filename = '/tmp/debian.txt'
     with open(packages_filename, "r") as f:
