@@ -604,33 +604,6 @@ if [ ! $sensitive_notification ]; then
     fi
 fi
 
-if [ -d /etc/scuttlebot/notification ]; then
-    if grep -q "SSB_NOTIFY=" "/root/${PROJECT_NAME}.cfg"; then
-        SSB_NOTIFY=$(grep 'SSB_NOTIFY=' "/root/${PROJECT_NAME}.cfg" | head -n 1 | sed 's|SSB_NOTIFY=||g')
-        if [[ "$SSB_NOTIFY" == '@'* && "$SSB_NOTIFY" == *'.ed25519' ]]; then
-            notify_by_scuttlebutt=1
-            if [ -f "$notification_method_filename" ]; then
-                notify_by_scuttlebutt=
-                if grep -q 'scuttlebutt' "$notification_method_filename"; then
-                    notify_by_scuttlebutt=1
-                fi
-            fi
-            if [ $notify_by_scuttlebutt ]; then
-                cat <<EOF > /etc/scuttlebot/send_scuttlebutt_notification
-#!/bin/bash
-cd /etc/scuttlebot/notification || exit 1
-./ssb-example-pm.js $SSB_NOTIFY "$MESSAGE"
-exit 0
-EOF
-                chmod +x /etc/scuttlebot/send_scuttlebutt_notification
-                chown scuttlebot:scuttlebot /etc/scuttlebot/send_scuttlebutt_notification
-                #su -c '/etc/scuttlebot/send_scuttlebutt_notification' - scuttlebot
-                rm /etc/scuttlebot/send_scuttlebutt_notification
-            fi
-        fi
-    fi
-fi
-
 if [ -f $notification_image_filename ]; then
     rm $notification_image_filename
 fi

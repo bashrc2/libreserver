@@ -996,34 +996,6 @@ function web_admin_create_installed_apps_category {
                                 fi
                             fi
                         fi
-                        if [[ "$app_name" == 'scuttlebot' ]]; then
-                            read_config_param SCUTTLEBOT_INVITE
-                            if [ "$SCUTTLEBOT_INVITE" ]; then
-                                domain_name="$SCUTTLEBOT_INVITE"
-                                recreate_scuttlebot_qrcode=
-                                if [ ! -f /etc/scuttlebot/.current_invite.txt ]; then
-                                    recreate_scuttlebot_qrcode=1
-                                else
-                                    if [[ "$(cat /etc/scuttlebot/.current_invite.txt)" != "$SCUTTLEBOT_INVITE" ]]; then
-                                        recreate_scuttlebot_qrcode=1
-                                    fi
-                                fi
-                                if [ ! -f "$webadmin_install_dir/app_qrcode_${app_name}.png" ]; then
-                                    recreate_scuttlebot_qrcode=1
-                                fi
-
-                                if [ $recreate_scuttlebot_qrcode ]; then
-                                    if [ ! -f /usr/local/bin/myqr ]; then
-                                        echo -n "$SCUTTLEBOT_INVITE" | qrencode -t PNG -o "$webadmin_install_dir/app_qrcode_${app_name}.png"
-                                    else
-                                        myqr "$SCUTTLEBOT_INVITE" -p /root/libreserver/img/android-app/scuttlebot.png -c -n "$webadmin_install_dir/app_qrcode_${app_name}.png"
-                                    fi
-                                    echo -n "$SCUTTLEBOT_INVITE" > /etc/scuttlebot/.current_invite.txt
-                                fi
-                            else
-                                domain_name=
-                            fi
-                        fi
                         onion_domain_name=
                         i2p_domain_name=$(get_i2p_domain ${onion_app_name})
                         if [ -f "/var/lib/tor/hidden_service_${onion_app_name}/hostname" ]; then
@@ -1121,13 +1093,6 @@ function web_admin_create_installed_apps_category {
                             cp "$app2_template_filename" "$filename"
                         fi
 
-                        if [[ "$app_name" == 'scuttlebot' ]]; then
-                            # add a refresh header so that new invites appear automatically once created by the daemon
-                            if ! grep -q '"Refresh"' "$filename"; then
-                                sed -i '/<head>/a <meta http-equiv="Refresh" content="30" charset="utf-8">' "$filename"
-                            fi
-                        fi
-
                         if ! grep -q 'SHOW_DOMAIN_IN_WEBADMIN=0' "$app_filename"; then
                             if [ ! -f "$webadmin_install_dir/app_qrcode_${app_name}.png" ]; then
                                 if [[ "$app_name" != 'rsync' ]]; then
@@ -1218,12 +1183,8 @@ function web_admin_create_installed_apps_category {
                             if [[ "$app_name" == 'dlna' ]]; then
                                 sed -i "s|\"APPURL\"|\"\"|g" "$filename"
                             fi
-                            if [[ "$app_name" != 'scuttlebot' ]]; then
-                                sed -i '/app_qrcode_/d' "$filename"
-                                sed -i '/APPURL/d' "$filename"
-                            else
-                                sed -i "s|APPURL|$domain_name|g" "$filename"
-                            fi
+                            sed -i '/app_qrcode_/d' "$filename"
+                            sed -i '/APPURL/d' "$filename"
                         fi
                         sed -i "s|HOSTNAME|$(hostname)|g" "$filename"
                         sed -i "s|APPNAME|${app_name}|g" "$filename"

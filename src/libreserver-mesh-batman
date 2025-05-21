@@ -271,7 +271,6 @@ function start {
 
     enable_mesh_firewall
 
-    enable_mesh_scuttlebot
     enable_mesh_tor
 
     sed -i "s|server_name .*|server_name ${HOSTNAME}.local;|g" /etc/nginx/sites-available/git_ssb

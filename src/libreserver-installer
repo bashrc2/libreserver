@@ -109,7 +109,6 @@ vpn_remote_file="$webadmin_install_dir/.vpn_remote.txt"
 upgradeos_file="$webadmin_install_dir/.upgradeos.txt"
 cancel_install_file="$webadmin_install_dir/.cancel_install.txt"
 default_domain_file="$webadmin_install_dir/.default_domain.txt"
-scuttlebot_file="$webadmin_install_dir/.scuttlebot_invite.txt"
 email_proxy_file="$webadmin_install_dir/.emailproxy.txt"
 theme_file="$webadmin_install_dir/.theme.txt"
 translations_import_file="$webadmin_install_dir/.translations_import.txt"
@@ -4046,30 +4045,6 @@ function change_default_domain {
     fi
 }
 
-function create_scuttlebot_invite {
-    if [ -f "$scuttlebot_file" ]; then
-        if [ -d /etc/scuttlebot ]; then
-            invite_string=$(su -c "/etc/scuttlebot/node_modules/.bin/sbot invite.create 1" - scuttlebot | sed 's/"//g')
-            if [ ! "$invite_string" ]; then
-                echo $'Unable to create scuttlebot invite'
-                exit 36
-            fi
-            current_invite=$(grep 'SCUTTLEBOT_INVITE=' "${CONFIGURATION_FILE}" | head -n 1 | sed 's|SCUTTLEBOT_INVITE=||g')
-            sed -i "s|SCUTTLEBOT_INVITE=.*|SCUTTLEBOT_INVITE=${invite_string}|g" "${CONFIGURATION_FILE}"
-            sed -i "s|$current_invite|$invite_string|g" "$webadmin_install_dir/app_scuttlebot.html"
-
-            if [ ! -f /usr/local/bin/myqr ]; then
-                echo -n "$invite_string" | qrencode -t PNG -o "$webadmin_install_dir/app_qrcode_scuttlebot.png"
-            else
-                myqr "$invite_string" -p /root/${PROJECT_NAME}/img/android-app/scuttlebot.png -c -n "$webadmin_install_dir/app_qrcode_scuttlebot.png"
-            fi
-            echo -n "$invite_string" > /etc/scuttlebot/.current_invite.txt
-        fi
-
-        rm "$scuttlebot_file"
-    fi
-}
-
 function update_bridges {
     if [ -f "$bridgeslist_file" ]; then
 
@@ -4893,7 +4868,6 @@ function installer_main_loop {
     update_vpn
     import_translations
     webadmin_upgrade
-    create_scuttlebot_invite
     cancel_app_installs
     # shellcheck disable=SC2119
     install_apps_from_webadmin

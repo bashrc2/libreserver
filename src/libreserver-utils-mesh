@@ -243,24 +243,6 @@ function disable_mesh_firewall {
     sed -i 's|net.ipv4.ip_forward=.*|net.ipv4.ip_forward=0|g' /etc/sysctl.conf
 }
 
-function enable_mesh_scuttlebot {
-    if [ -f /etc/scuttlebot/.ssb/config ]; then
-        ethernet_connected=$(cat /sys/class/net/eth0/carrier)
-        if [[ "$ethernet_connected" != "0" ]]; then
-            sed -i "s|\"host\": .*|\"host\": \"$(get_ipv6_wlan)\",|g" /etc/scuttlebot/.ssb/config
-            systemctl restart scuttlebot
-        else
-            if [ ! -f /etc/nginx/sites-available/git_ssb ]; then
-                systemctl stop scuttlebot
-            else
-                systemctl restart scuttlebot
-            fi
-        fi
-    fi
-    sed -i "s|\"host\":.*|\"host\": \"${HOSTNAME}.local\",|g" /etc/scuttlebot/.ssb/config
-    systemctl restart scuttlebot
-}
-
 function enable_mesh_tor {
     # if we have an ethernet connection to an internet router then create
     # an onion address for this peer
