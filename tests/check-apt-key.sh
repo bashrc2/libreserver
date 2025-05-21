@@ -2,6 +2,35 @@
 #Verify with the key match from https://ftp-master.debian.org/keys.html
 
 #---------------------------------------------------------------------------
+#"Debian Archive Automatic Signing Key (13/trixie) <ftpmaster@debian.org>"
+
+TRIXIEARCHIVEKEY="04B5 4C3C DCA7 9751 B16B  C6B5 2256 29DF 75B1 88BD"
+CHECKTMP=$(apt-key list | grep -B 1 "Debian Archive Automatic Signing Key (13/trixie) <ftpmaster@debian.org>" | head -n1 | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+
+if [ "$CHECKTMP" == "$TRIXIEARCHIVEKEY" ];then
+    echo Good
+    :
+else
+    echo bad
+    exit 1
+fi
+
+#---------------------------------------------------------------------------
+#"Debian Security Archive Automatic Signing Key (13/trixie) <ftpmaster@debian.org>"
+
+TRIXIESECURITYARCHIVEKEY="5E04 A1E3 223A 19A2 0706  E20F 9904 613D 4CCE 68C6"
+CHECKTMP=$(apt-key list | grep -B 1 "Debian Security Archive Automatic Signing Key (13/trixie) <ftpmaster@debian.org>" | head -n1 | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+
+if [ "$CHECKTMP" == "$TRIXIESECURITYARCHIVEKEY" ];then
+    echo Good
+    :
+else
+    echo bad
+    exit 1
+fi
+
+
+#---------------------------------------------------------------------------
 #"Debian Archive Automatic Signing Key (12/bookworm) <ftpmaster@debian.org>"
 
 BOOKWORMARCHIVEKEY="B8B8 0B5B 623E AB6A D877  5C45 B7C5 D7D6 3509 47F8"
@@ -29,44 +58,3 @@ else
     exit 1
 fi
 
-#---------------------------------------------------------------------------
-#"Debian Archive Automatic Signing Key (11/bullseye) <ftpmaster@debian.org>"
-
-BULLSEYEARCHIVEKEY="1F89 983E 0081 FDE0 18F3  CC96 73A4 F27B 8DD4 7936"
-CHECKTMP=$(apt-key list | grep -B 1 "Debian Archive Automatic Signing Key (11/bullseye) <ftpmaster@debian.org>" | head -n1 | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
-
-if [ "$CHECKTMP" == "$BULLSEYEARCHIVEKEY" ];then
-       echo Good
-       :
-else
-       echo bad
-       exit 1
-fi
-
-#---------------------------------------------------------------------------
-#"Debian Security Archive Automatic Signing Key (11/bullseye) <ftpmaster@debian.org>"
-
-BULLSEYESECURITYKEY="AC53 0D52 0F2F 3269 F5E9  8313 A484 4904 4AAD 5C5D"
-CHECKTMP=$(apt-key list | grep -B 1 "Debian Security Archive Automatic Signing Key (11/bullseye) <ftpmaster@debian.org>" | head -n1 | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
-
-if [ "$CHECKTMP" == "$BULLSEYESECURITYKEY" ];then
-       echo Good
-       :
-else
-       echo bad
-       exit 1
-fi
-
-#---------------------------------------------------------------------------
-#"Debian Stable Release Key (11/bullseye) <debian-release@lists.debian.org>"
-
-BULLSEYESTABLEKEY="A428 5295 FC7B 1A81 6000  62A9 605C 66F0 0D6C 9793"
-CHECKTMP=$(apt-key list | grep -B 1 "Debian Stable Release Key (11/bullseye) <debian-release@lists.debian.org>" | head -n1 | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
-
-if [ "$CHECKTMP" == "$BULLSEYESTABLEKEY" ];then
-       echo Good
-       :
-else
-       echo bad
-       exit 1
-fi
