@@ -365,7 +365,7 @@ function install_friendica {
 
     increment_app_install_progress
 
-    INSTALL_PACKAGES libgraphicsmagick1-dev libfreetype6-dev libwebp-dev librsvg2-2
+    INSTALL_PACKAGES libgraphicsmagick1-dev libfreetype-dev libwebp-dev librsvg2-2
 
     increment_app_install_progress
 
@@ -373,7 +373,7 @@ function install_friendica {
 
     increment_app_install_progress
 
-    INSTALL_PACKAGES php-dev imagemagick php-imagick libfcgi0ldbl
+    INSTALL_PACKAGES php-dev imagemagick php-imagick libfcgi0t64
 
     increment_app_install_progress
 

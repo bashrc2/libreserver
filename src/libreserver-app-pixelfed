@@ -547,7 +547,7 @@ function install_pixelfed {
 
     increment_app_install_progress
 
-    INSTALL_PACKAGES memcached php-memcached php-intl exiftool libfcgi0ldbl
+    INSTALL_PACKAGES memcached php-memcached php-intl exiftool libfcgi0t64
 
     increment_app_install_progress
 
@@ -555,7 +555,7 @@ function install_pixelfed {
 
     increment_app_install_progress
 
-    INSTALL_PACKAGES libjpeg62-turbo libpng16-16 libxpm4 libwebp7 libfreetype6-dev
+    INSTALL_PACKAGES libjpeg62-turbo libpng16-16-udeb libxpm4 libwebp7 libfreetype-dev
 
     increment_app_install_progress
 
@@ -563,7 +563,7 @@ function install_pixelfed {
 
     increment_app_install_progress
 
-    INSTALL_PACKAGES libmagickwand-dev libmagickwand-6.q16-6
+    INSTALL_PACKAGES libmagickwand-dev libmagickwand-7.q16-10
 
     increment_app_install_progress
 

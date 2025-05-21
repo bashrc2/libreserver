@@ -316,7 +316,7 @@ function install_bludit {
 
     increment_app_install_progress
 
-    INSTALL_PACKAGES memcached php-memcached php-intl exiftool libfcgi0ldbl
+    INSTALL_PACKAGES memcached php-memcached php-intl exiftool libfcgi0t64
 
     if [ ! "$BLUDIT_DOMAIN_NAME" ]; then
         echo $'No domain name was given for bludit'

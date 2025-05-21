@@ -595,7 +595,7 @@ function install_dynamicdns {
     # Debian version 1.99.4-1
     # https version 1.99.8
 
-    INSTALL_PACKAGES build-essential curl libgnutls28-dev automake1.11
+    INSTALL_PACKAGES build-essential curl libgnutls28-dev automake
     INSTALL_PACKAGES gnutls-dev libconfuse-dev pkg-config libtool
 
     if [ ! -d "$INSTALL_DIR/inadyn" ]; then

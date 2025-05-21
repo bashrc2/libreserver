@@ -464,7 +464,7 @@ function install_lychee {
     increment_app_install_progress
 
     # for the avatar changing command
-    INSTALL_PACKAGES imagemagick exif zip libfcgi0ldbl
+    INSTALL_PACKAGES imagemagick exif zip libfcgi0t64
     # shellcheck disable=SC2086
     INSTALL_PACKAGES php${PHP_VERSION}-mysql php${PHP_VERSION}-imagick
     # shellcheck disable=SC2086

@@ -608,7 +608,7 @@ function install_nextcloud_base {
 
     increment_app_install_progress
 
-    INSTALL_PACKAGES php-intl memcached php-memcached libfcgi0ldbl
+    INSTALL_PACKAGES php-intl memcached php-memcached libfcgi0t64
 
     increment_app_install_progress
 

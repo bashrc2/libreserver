@@ -302,7 +302,7 @@ function install_dokuwiki {
 
     increment_app_install_progress
 
-    INSTALL_PACKAGES php-dev imagemagick php-imagick libfcgi0ldbl
+    INSTALL_PACKAGES php-dev imagemagick php-imagick libfcgi0t64
 
     increment_app_install_progress
 
