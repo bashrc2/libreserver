@@ -304,7 +304,7 @@ function install_akaunting {
 
     increment_app_install_progress
 
-    INSTALL_PACKAGES php-php-gettext php-curl php-gd php-mysql git curl
+    INSTALL_PACKAGES php-curl php-gd php-mysql git curl
 
     increment_app_install_progress
 

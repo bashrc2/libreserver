@@ -685,7 +685,7 @@ if [ "$app_nodeapp" ]; then
     echo '    increment_app_install_progress'
 fi
 if [[ "$app_php" == 'yes' ]]; then
-    echo "    INSTALL_PACKAGES php-php-gettext php-curl php-gd php-mysql git curl"
+    echo "    INSTALL_PACKAGES php-curl php-gd php-mysql git curl"
     echo ''
     echo '    increment_app_install_progress'
     echo ''

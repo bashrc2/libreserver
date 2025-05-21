@@ -312,7 +312,7 @@ function remove_bludit {
 function install_bludit {
     increment_app_install_progress
 
-    INSTALL_PACKAGES php-php-gettext php-curl php-gd php-mysql git curl wget unzip
+    INSTALL_PACKAGES php-curl php-gd php-mysql git curl wget unzip
 
     increment_app_install_progress
 

@@ -293,7 +293,7 @@ function install_rss_main {
     function_check remove_onion_service
     remove_onion_service rss ${RSS_READER_ONION_PORT} ${RSS_MOBILE_READER_ONION_PORT}
 
-    INSTALL_PACKAGES php-php-gettext php-curl php-gd php-mysql git
+    INSTALL_PACKAGES php-curl php-gd php-mysql git
     INSTALL_PACKAGES curl php-mcrypt libfcgi0t64
 
     remove_onion_service mobilerss ${RSS_MOBILE_READER_ONION_PORT}
