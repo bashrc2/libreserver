@@ -4,12 +4,12 @@
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
 # |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
-# Gitea functions
+# Forgejo git server
 #
 # License
 # =======
 #
-# Copyright (C) 2014-2025 Bob Mottram <bob@libreserver.org>
+# Copyright (C) 2025 Bob Mottram <bob@libreserver.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -32,33 +32,33 @@ IN_DEFAULT_INSTALL=0
 SHOW_ON_ABOUT=1
 REQUIRES_APP=
 
-GITEA_USERNAME='gitea'
-GITEA_VERSION='1.19.0'
-GITEA_DOWNLOAD='https://github.com/go-gitea/gitea/releases/download'
+FORGEJO_USERNAME='forgejo'
+FORGEJO_VERSION='11.0.1'
+FORGEJO_DOWNLOAD='https://codeberg.org/forgejo/forgejo/releases/download'
 
-GITEA_DOMAIN_NAME=
-GITEA_CODE=
-GITEA_ONION_PORT=8340
-GITEA_I2P_PORT=9559
-GITEA_ADMIN_PASSWORD=
-GITEA_BIN=
-GITEA_SRC=
-GITEA_PORT=3144
+FORGEJO_DOMAIN_NAME=
+FORGEJO_CODE=
+FORGEJO_ONION_PORT=8340
+FORGEJO_I2P_PORT=9559
+FORGEJO_ADMIN_PASSWORD=
+FORGEJO_BIN=
+FORGEJO_SRC=
+FORGEJO_PORT=3144
 
-GITEA_SHORT_DESCRIPTION=$'Git repo management'
-GITEA_DESCRIPTION=$'Git repo management'
-GITEA_MOBILE_APP_URL=
+FORGEJO_SHORT_DESCRIPTION=$'Git repo management'
+FORGEJO_DESCRIPTION=$'Git repo management'
+FORGEJO_MOBILE_APP_URL=
 
-gitea_os_type='linux'
+forgejo_os_type='linux'
 
-gitea_variables=(ONION_ONLY
-                 GITEA_DOMAIN_NAME
-                 GITEA_CODE
+forgejo_variables=(ONION_ONLY
+                 FORGEJO_DOMAIN_NAME
+                 FORGEJO_CODE
                  MY_USERNAME
                  DDNS_PROVIDER
                  ARCHITECTURE)
 
-function upgrade_distro_gitea {
+function upgrade_distro_forgejo {
     target_distro="$1"
 
     if [[ "$target_distro" == 'trixie' ]]; then
@@ -66,80 +66,80 @@ function upgrade_distro_gitea {
     fi
 }
 
-function gitea_setting_registration {
+function forgejo_setting_registration {
     allow_registrations="$1"
-    gitea_ini_filename=/home/gitea/custom/conf/app.ini
+    forgejo_ini_filename=/home/forgejo/custom/conf/app.ini
 
     if [[ "$allow_registrations" == '1' ]]; then
-        sed -i "s|DISABLE_REGISTRATION =.*|DISABLE_REGISTRATION = false|g" ${gitea_ini_filename}
-        sed -i "s|SHOW_REGISTRATION_BUTTON =.*|SHOW_REGISTRATION_BUTTON = true|g" ${gitea_ini_filename}
-        systemctl restart gitea
+        sed -i "s|DISABLE_REGISTRATION =.*|DISABLE_REGISTRATION = false|g" ${forgejo_ini_filename}
+        sed -i "s|SHOW_REGISTRATION_BUTTON =.*|SHOW_REGISTRATION_BUTTON = true|g" ${forgejo_ini_filename}
+        systemctl restart forgejo
     fi
 
     if [[ "$allow_registrations" == '0' ]]; then
-        sed -i "s|DISABLE_REGISTRATION =.*|DISABLE_REGISTRATION = true|g" ${gitea_ini_filename}
-        sed -i "s|SHOW_REGISTRATION_BUTTON =.*|SHOW_REGISTRATION_BUTTON = false|g" ${gitea_ini_filename}
-        systemctl restart gitea
+        sed -i "s|DISABLE_REGISTRATION =.*|DISABLE_REGISTRATION = true|g" ${forgejo_ini_filename}
+        sed -i "s|SHOW_REGISTRATION_BUTTON =.*|SHOW_REGISTRATION_BUTTON = false|g" ${forgejo_ini_filename}
+        systemctl restart forgejo
     fi
 }
 
-function gitea_turn_off_registrations {
-    gitea_ini_filename=/home/gitea/custom/conf/app.ini
+function forgejo_turn_off_registrations {
+    forgejo_ini_filename=/home/forgejo/custom/conf/app.ini
     { echo '#!/bin/bash';
-      echo "if ! grep -q 'DISABLE_REGISTRATION = true' ${gitea_ini_filename}; then";
-      echo "  sed -i 's|DISABLE_REGISTRATION =.*|DISABLE_REGISTRATION = true|g' ${gitea_ini_filename}";
-      echo "  sed -i 's|SHOW_REGISTRATION_BUTTON =.*|SHOW_REGISTRATION_BUTTON = false|g' ${gitea_ini_filename}";
-      echo '  systemctl restart gitea';
-      echo 'fi'; } > /etc/cron.weekly/gitea-registrations
-    chmod +x /etc/cron.weekly/gitea-registrations
+      echo "if ! grep -q 'DISABLE_REGISTRATION = true' ${forgejo_ini_filename}; then";
+      echo "  sed -i 's|DISABLE_REGISTRATION =.*|DISABLE_REGISTRATION = true|g' ${forgejo_ini_filename}";
+      echo "  sed -i 's|SHOW_REGISTRATION_BUTTON =.*|SHOW_REGISTRATION_BUTTON = false|g' ${forgejo_ini_filename}";
+      echo '  systemctl restart forgejo';
+      echo 'fi'; } > /etc/cron.weekly/forgejo-registrations
+    chmod +x /etc/cron.weekly/forgejo-registrations
 }
 
-function logging_on_gitea {
+function logging_on_forgejo {
     echo -n ''
 }
 
-function logging_off_gitea {
+function logging_off_forgejo {
     echo -n ''
 }
 
-function change_password_gitea {
+function change_password_forgejo {
     curr_username="$1"
     new_user_password="$2"
 }
 
-function install_interactive_gitea {
+function install_interactive_forgejo {
     if [[ $ONION_ONLY != "no" ]]; then
-        GITEA_DOMAIN_NAME='gitea.local'
-        write_config_param "GITEA_DOMAIN_NAME" "$GITEA_DOMAIN_NAME"
+        FORGEJO_DOMAIN_NAME='forgejo.local'
+        write_config_param "FORGEJO_DOMAIN_NAME" "$FORGEJO_DOMAIN_NAME"
     else
         function_check interactive_site_details
-        interactive_site_details gitea
+        interactive_site_details forgejo
     fi
     APP_INSTALLED=1
 }
 
-function configure_interactive_gitea {
-    gitea_ini_filename=/home/gitea/custom/conf/app.ini
-    dialog --title $"Gitea" \
+function configure_interactive_forgejo {
+    forgejo_ini_filename=/home/forgejo/custom/conf/app.ini
+    dialog --title $"Forgejo" \
            --backtitle $"LibreServer Control Panel" \
            --defaultno \
            --yesno $"\nAllow registration of new users?" 10 60
     sel=$?
     case $sel in
         0)
-            sed -i "s|DISABLE_REGISTRATION =.*|DISABLE_REGISTRATION = false|g" ${gitea_ini_filename}
-            sed -i "s|SHOW_REGISTRATION_BUTTON =.*|SHOW_REGISTRATION_BUTTON = true|g" ${gitea_ini_filename}
+            sed -i "s|DISABLE_REGISTRATION =.*|DISABLE_REGISTRATION = false|g" ${forgejo_ini_filename}
+            sed -i "s|SHOW_REGISTRATION_BUTTON =.*|SHOW_REGISTRATION_BUTTON = true|g" ${forgejo_ini_filename}
             ;;
         1)
-            sed -i "s|DISABLE_REGISTRATION =.*|DISABLE_REGISTRATION = true|g" ${gitea_ini_filename}
-            sed -i "s|SHOW_REGISTRATION_BUTTON =.*|SHOW_REGISTRATION_BUTTON = false|g" ${gitea_ini_filename}
+            sed -i "s|DISABLE_REGISTRATION =.*|DISABLE_REGISTRATION = true|g" ${forgejo_ini_filename}
+            sed -i "s|SHOW_REGISTRATION_BUTTON =.*|SHOW_REGISTRATION_BUTTON = false|g" ${forgejo_ini_filename}
             ;;
         255) return;;
     esac
-    systemctl restart gitea
+    systemctl restart forgejo
 }
 
-function gitea_parameters {
+function forgejo_parameters {
     if [[ ${ARCHITECTURE} == *"386" || ${ARCHITECTURE} == *"686" ]]; then
         CURR_ARCH=386
     fi
@@ -173,230 +173,230 @@ function gitea_parameters {
         fi
     fi
 
-    GITEA_FILE=gitea-${GITEA_VERSION}-${gitea_os_type}-${CURR_ARCH}.xz
-    GITEA_BIN="${GITEA_DOWNLOAD}/v${GITEA_VERSION}/${GITEA_FILE}"
-    GITEA_FILE_SRC=gitea-src-${GITEA_VERSION}.tar.gz
-    GITEA_SRC="${GITEA_DOWNLOAD}/v${GITEA_VERSION}/${GITEA_FILE_SRC}"
+    FORGEJO_FILE=forgejo-${FORGEJO_VERSION}-${forgejo_os_type}-${CURR_ARCH}.xz
+    FORGEJO_BIN="${FORGEJO_DOWNLOAD}/v${FORGEJO_VERSION}/${FORGEJO_FILE}"
+    FORGEJO_FILE_SRC=forgejo-src-${FORGEJO_VERSION}.tar.gz
+    FORGEJO_SRC="${FORGEJO_DOWNLOAD}/v${FORGEJO_VERSION}/${FORGEJO_FILE_SRC}"
 }
 
-function gitea_create_database {
+function forgejo_create_database {
     if [ -f "${IMAGE_PASSWORD_FILE}" ]; then
-        GITEA_ADMIN_PASSWORD="$(printf "%s" "$(cat "$IMAGE_PASSWORD_FILE")")"
+        FORGEJO_ADMIN_PASSWORD="$(printf "%s" "$(cat "$IMAGE_PASSWORD_FILE")")"
     else
-        if [ ! "${GITEA_ADMIN_PASSWORD}" ]; then
-            GITEA_ADMIN_PASSWORD="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
+        if [ ! "${FORGEJO_ADMIN_PASSWORD}" ]; then
+            FORGEJO_ADMIN_PASSWORD="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
         fi
     fi
-    if [ ! "$GITEA_ADMIN_PASSWORD" ]; then
+    if [ ! "$FORGEJO_ADMIN_PASSWORD" ]; then
         return
     fi
 
-    drop_database gitea
+    drop_database forgejo
 
     function_check create_database
-    create_database gitea "$GITEA_ADMIN_PASSWORD"
+    create_database forgejo "$FORGEJO_ADMIN_PASSWORD"
 }
 
-function reconfigure_gitea {
+function reconfigure_forgejo {
     echo -n ''
 }
 
-function upgrade_gitea {
-    gitea_turn_off_registrations
+function upgrade_forgejo {
+    forgejo_turn_off_registrations
 
-    if ! grep -q 'gitea version:' "$COMPLETION_FILE"; then
+    if ! grep -q 'forgejo version:' "$COMPLETION_FILE"; then
         return
     fi
 
-    GITEA_CONFIG_PATH=/home/${GITEA_USERNAME}/custom/conf
-    GITEA_CONFIG_FILE=$GITEA_CONFIG_PATH/app.ini
+    FORGEJO_CONFIG_PATH=/home/${FORGEJO_USERNAME}/custom/conf
+    FORGEJO_CONFIG_FILE=$FORGEJO_CONFIG_PATH/app.ini
 
-    restart_gitea=
-    if grep -q "DB_TYPE = " "${GITEA_CONFIG_FILE}"; then
-        sed -i 's|DB_TYPE = |TYPE = |g' "${GITEA_CONFIG_FILE}"
-        restart_gitea=1
+    restart_forgejo=
+    if grep -q "DB_TYPE = " "${FORGEJO_CONFIG_FILE}"; then
+        sed -i 's|DB_TYPE = |TYPE = |g' "${FORGEJO_CONFIG_FILE}"
+        restart_forgejo=1
     fi
 
-    if grep -q "PASSWD = " "${GITEA_CONFIG_FILE}"; then
-        sed -i 's|PASSWD = |PASSWORD = |g' "${GITEA_CONFIG_FILE}"
-        restart_gitea=1
+    if grep -q "PASSWD = " "${FORGEJO_CONFIG_FILE}"; then
+        sed -i 's|PASSWD = |PASSWORD = |g' "${FORGEJO_CONFIG_FILE}"
+        restart_forgejo=1
     fi
 
-    if grep -q "PROVIDER = file" "${GITEA_CONFIG_FILE}"; then
-        sed -i 's|PROVIDER = file|PROVIDER = memory|g' "${GITEA_CONFIG_FILE}"
-        restart_gitea=1
+    if grep -q "PROVIDER = file" "${FORGEJO_CONFIG_FILE}"; then
+        sed -i 's|PROVIDER = file|PROVIDER = memory|g' "${FORGEJO_CONFIG_FILE}"
+        restart_forgejo=1
     fi
 
     # Change port number if necessary
-    if ! grep -q "HTTP_PORT = ${GITEA_PORT}" "${GITEA_CONFIG_FILE}"; then
-        sed -i "s|HTTP_PORT =.*|HTTP_PORT = ${GITEA_PORT}|g" "${GITEA_CONFIG_FILE}"
-        read_config_param GITEA_DOMAIN_NAME
-        sed -i "s|proxy_pass .*|proxy_pass http://localhost:${GITEA_PORT};|g" "/etc/nginx/sites-available/${GITEA_DOMAIN_NAME}"
-        restart_gitea=1
+    if ! grep -q "HTTP_PORT = ${FORGEJO_PORT}" "${FORGEJO_CONFIG_FILE}"; then
+        sed -i "s|HTTP_PORT =.*|HTTP_PORT = ${FORGEJO_PORT}|g" "${FORGEJO_CONFIG_FILE}"
+        read_config_param FORGEJO_DOMAIN_NAME
+        sed -i "s|proxy_pass .*|proxy_pass http://localhost:${FORGEJO_PORT};|g" "/etc/nginx/sites-available/${FORGEJO_DOMAIN_NAME}"
+        restart_forgejo=1
     fi
 
-    if [ $restart_gitea ]; then
-        systemctl restart gitea
+    if [ $restart_forgejo ]; then
+        systemctl restart forgejo
         systemctl restart nginx
     fi
 
-    CURR_GITEA_VERSION=$(get_completion_param "gitea version")
-    echo "gitea current version: ${CURR_GITEA_VERSION}"
-    echo "gitea app version: ${GITEA_VERSION}"
-    if [[ "${CURR_GITEA_VERSION}" == "${GITEA_VERSION}" ]]; then
+    CURR_FORGEJO_VERSION=$(get_completion_param "forgejo version")
+    echo "forgejo current version: ${CURR_FORGEJO_VERSION}"
+    echo "forgejo app version: ${FORGEJO_VERSION}"
+    if [[ "${CURR_FORGEJO_VERSION}" == "${FORGEJO_VERSION}" ]]; then
         return
     fi
 
-    cp "$GITEA_CONFIG_FILE" "$INSTALL_DIR/gitea_config.ini"
+    cp "$FORGEJO_CONFIG_FILE" "$INSTALL_DIR/forgejo_config.ini"
 
-    if [ -d "$INSTALL_DIR/gitea-repositories" ]; then
-        rm -rf "$INSTALL_DIR/gitea-repositories"
+    if [ -d "$INSTALL_DIR/forgejo-repositories" ]; then
+        rm -rf "$INSTALL_DIR/forgejo-repositories"
     fi
-    if [ -d /home/${GITEA_USERNAME}/gitea-repositories ]; then
+    if [ -d /home/${FORGEJO_USERNAME}/forgejo-repositories ]; then
         # shellcheck disable=SC2086
-        mv /home/${GITEA_USERNAME}/gitea-repositories $INSTALL_DIR
+        mv /home/${FORGEJO_USERNAME}/forgejo-repositories $INSTALL_DIR
     fi
 
-    gitea_parameters
-    echo "gitea binary upgrade: ${GITEA_BIN}"
+    forgejo_parameters
+    echo "forgejo binary upgrade: ${FORGEJO_BIN}"
 
     if [ ! -d "${INSTALL_DIR}" ]; then
         mkdir -p "${INSTALL_DIR}"
     fi
     cd "${INSTALL_DIR}" || exit 26
-    if [ -d "${INSTALL_DIR}/gitea" ]; then
-        rm -rf "${INSTALL_DIR}/gitea"
+    if [ -d "${INSTALL_DIR}/forgejo" ]; then
+        rm -rf "${INSTALL_DIR}/forgejo"
     fi
 
     # download binary
-    GITEA_FILE_BASE=gitea-${GITEA_VERSION}-${gitea_os_type}-${CURR_ARCH}
-    GITEA_FILE=${GITEA_FILE_BASE}.xz
-    if [ ! -f ${GITEA_FILE} ]; then
+    FORGEJO_FILE_BASE=forgejo-${FORGEJO_VERSION}-${forgejo_os_type}-${CURR_ARCH}
+    FORGEJO_FILE=${FORGEJO_FILE_BASE}.xz
+    if [ ! -f ${FORGEJO_FILE} ]; then
         if [[ "$ONION_ONLY" == 'no' ]]; then
-            wget ${GITEA_BIN}
+            wget ${FORGEJO_BIN}
         else
-            torsocks wget ${GITEA_BIN}
-            if [ ! -f ${GITEA_FILE} ]; then
-                wget ${GITEA_BIN}
+            torsocks wget ${FORGEJO_BIN}
+            if [ ! -f ${FORGEJO_FILE} ]; then
+                wget ${FORGEJO_BIN}
             fi
         fi
     fi
-    if [ ! -f "${INSTALL_DIR}/${GITEA_FILE}" ]; then
-        echo "Unable to download ${GITEA_FILE}"
+    if [ ! -f "${INSTALL_DIR}/${FORGEJO_FILE}" ]; then
+        echo "Unable to download ${FORGEJO_FILE}"
         exit 62
     fi
-    if [ -f "${INSTALL_DIR}/${GITEA_FILE_BASE}" ]; then
-        rm "${INSTALL_DIR}/${GITEA_FILE_BASE}"
+    if [ -f "${INSTALL_DIR}/${FORGEJO_FILE_BASE}" ]; then
+        rm "${INSTALL_DIR}/${FORGEJO_FILE_BASE}"
     fi
-    unxz "${INSTALL_DIR}/${GITEA_FILE}"
-    if [ ! -f "${INSTALL_DIR}/${GITEA_FILE_BASE}" ]; then
+    unxz "${INSTALL_DIR}/${FORGEJO_FILE}"
+    if [ ! -f "${INSTALL_DIR}/${FORGEJO_FILE_BASE}" ]; then
         exit 37
     fi
 
     # download source
-    GITEA_FILE_BASE_SRC=gitea-src-${GITEA_VERSION}
-    GITEA_FILE_SRC=${GITEA_FILE_BASE_SRC}.tar.gz
-    if [ ! -f ${GITEA_FILE_SRC} ]; then
+    FORGEJO_FILE_BASE_SRC=forgejo-src-${FORGEJO_VERSION}
+    FORGEJO_FILE_SRC=${FORGEJO_FILE_BASE_SRC}.tar.gz
+    if [ ! -f ${FORGEJO_FILE_SRC} ]; then
         if [[ "$ONION_ONLY" == 'no' ]]; then
-            wget ${GITEA_SRC}
+            wget ${FORGEJO_SRC}
         else
-            torsocks wget ${GITEA_SRC}
-            if [ ! -f ${GITEA_FILE_SRC} ]; then
-                wget ${GITEA_SRC}
+            torsocks wget ${FORGEJO_SRC}
+            if [ ! -f ${FORGEJO_FILE_SRC} ]; then
+                wget ${FORGEJO_SRC}
             fi
         fi
     fi
-    if [ ! -f "${INSTALL_DIR}/${GITEA_FILE_SRC}" ]; then
-        echo "Unable to download source ${GITEA_FILE_SRC}"
+    if [ ! -f "${INSTALL_DIR}/${FORGEJO_FILE_SRC}" ]; then
+        echo "Unable to download source ${FORGEJO_FILE_SRC}"
         exit 62
     fi
-    tar -xzf "${INSTALL_DIR}/${GITEA_FILE_SRC}"
-    if [ ! -d "${INSTALL_DIR}/${GITEA_FILE_BASE_SRC}" ]; then
-        echo "source directory not found ${INSTALL_DIR}/${GITEA_FILE_BASE_SRC}"
+    tar -xzf "${INSTALL_DIR}/${FORGEJO_FILE_SRC}"
+    if [ ! -d "${INSTALL_DIR}/${FORGEJO_FILE_BASE_SRC}" ]; then
+        echo "source directory not found ${INSTALL_DIR}/${FORGEJO_FILE_BASE_SRC}"
         exit 37
     fi
 
-    rm -rf "/home/${GITEA_USERNAME:?}/"*
-    cp -r "${INSTALL_DIR}/${GITEA_FILE_BASE_SRC}"/* "/home/${GITEA_USERNAME}"
-    cp "${INSTALL_DIR}/${GITEA_FILE_BASE}" "/home/${GITEA_USERNAME}/gitea"
-    chmod +x "/home/${GITEA_USERNAME}/gitea"
-    if [ -f "${INSTALL_DIR}/${GITEA_FILE_BASE}" ]; then
-        rm "${INSTALL_DIR}/${GITEA_FILE_BASE}"
+    rm -rf "/home/${FORGEJO_USERNAME:?}/"*
+    cp -r "${INSTALL_DIR}/${FORGEJO_FILE_BASE_SRC}"/* "/home/${FORGEJO_USERNAME}"
+    cp "${INSTALL_DIR}/${FORGEJO_FILE_BASE}" "/home/${FORGEJO_USERNAME}/forgejo"
+    chmod +x "/home/${FORGEJO_USERNAME}/forgejo"
+    if [ -f "${INSTALL_DIR}/${FORGEJO_FILE_BASE}" ]; then
+        rm "${INSTALL_DIR}/${FORGEJO_FILE_BASE}"
     fi
-    if [ -d "${INSTALL_DIR}/${GITEA_FILE_BASE_SRC}" ]; then
-        rm -rf "${INSTALL_DIR}/${GITEA_FILE_BASE_SRC}"
-    fi
-
-    if [ ! -d ${GITEA_CONFIG_PATH} ]; then
-        mkdir -p ${GITEA_CONFIG_PATH}
+    if [ -d "${INSTALL_DIR}/${FORGEJO_FILE_BASE_SRC}" ]; then
+        rm -rf "${INSTALL_DIR}/${FORGEJO_FILE_BASE_SRC}"
     fi
 
-    cp "$INSTALL_DIR/gitea_config.ini" "$GITEA_CONFIG_FILE"
-    if [ ! -f $GITEA_CONFIG_FILE ]; then
-        echo $'Gitea ini file not upgraded'
+    if [ ! -d ${FORGEJO_CONFIG_PATH} ]; then
+        mkdir -p ${FORGEJO_CONFIG_PATH}
+    fi
+
+    cp "$INSTALL_DIR/forgejo_config.ini" "$FORGEJO_CONFIG_FILE"
+    if [ ! -f $FORGEJO_CONFIG_FILE ]; then
+        echo $'Forgejo ini file not upgraded'
         exit 87
     fi
-    rm "$INSTALL_DIR/gitea_config.ini"
-    if [ -d /home/${GITEA_USERNAME}/gitea-repositories ]; then
-        rm -rf /home/${GITEA_USERNAME}/gitea-repositories
+    rm "$INSTALL_DIR/forgejo_config.ini"
+    if [ -d /home/${FORGEJO_USERNAME}/forgejo-repositories ]; then
+        rm -rf /home/${FORGEJO_USERNAME}/forgejo-repositories
     fi
-    if [ -d "$INSTALL_DIR/gitea-repositories" ]; then
+    if [ -d "$INSTALL_DIR/forgejo-repositories" ]; then
         # shellcheck disable=SC2086
-        mv $INSTALL_DIR/gitea-repositories /home/${GITEA_USERNAME}/gitea-repositories
+        mv $INSTALL_DIR/forgejo-repositories /home/${FORGEJO_USERNAME}/forgejo-repositories
     fi
-    chown -R "${GITEA_USERNAME}":"${GITEA_USERNAME}" "/home/${GITEA_USERNAME}"
+    chown -R "${FORGEJO_USERNAME}":"${FORGEJO_USERNAME}" "/home/${FORGEJO_USERNAME}"
 
-    sed -i "s|gitea version.*|gitea version:$GITEA_VERSION|g" "${COMPLETION_FILE}"
+    sed -i "s|forgejo version.*|forgejo version:$FORGEJO_VERSION|g" "${COMPLETION_FILE}"
     systemctl restart mariadb
-    systemctl restart gitea
+    systemctl restart forgejo
 }
 
-function backup_local_gitea {
-    if ! grep -q "gitea domain" "${COMPLETION_FILE}"; then
+function backup_local_forgejo {
+    if ! grep -q "forgejo domain" "${COMPLETION_FILE}"; then
         return
     fi
 
-    if [ ! -d "/home/${GITEA_USERNAME}/gitea-repositories" ]; then
+    if [ ! -d "/home/${FORGEJO_USERNAME}/forgejo-repositories" ]; then
         return
     fi
 
-    echo $"Backing up gitea"
+    echo $"Backing up forgejo"
 
     function_check backup_database_to_usb
-    backup_database_to_usb gitea
+    backup_database_to_usb forgejo
 
     function_check backup_directory_to_usb
-    backup_directory_to_usb "/home/${GITEA_USERNAME}/custom" gitea
-    backup_directory_to_usb "/home/${GITEA_USERNAME}/gitea-repositories" gitearepos
-    backup_directory_to_usb "/home/${GITEA_USERNAME}/.ssh" giteassh
+    backup_directory_to_usb "/home/${FORGEJO_USERNAME}/custom" forgejo
+    backup_directory_to_usb "/home/${FORGEJO_USERNAME}/forgejo-repositories" forgejorepos
+    backup_directory_to_usb "/home/${FORGEJO_USERNAME}/.ssh" forgejossh
 
-    echo $"Gitea backup complete"
+    echo $"Forgejo backup complete"
 }
 
-function restore_local_gitea {
-    if ! grep -q "gitea domain" "${COMPLETION_FILE}"; then
+function restore_local_forgejo {
+    if ! grep -q "forgejo domain" "${COMPLETION_FILE}"; then
         return
     fi
 
-    if [ ${#GITEA_DOMAIN_NAME} -gt 2 ]; then
-        function_check gitea_create_database
-        gitea_create_database
+    if [ ${#FORGEJO_DOMAIN_NAME} -gt 2 ]; then
+        function_check forgejo_create_database
+        forgejo_create_database
 
-        GITEA_CONFIG_PATH="/home/${GITEA_USERNAME}/custom/conf"
-        GITEA_CONFIG_FILE="${GITEA_CONFIG_PATH}/app.ini"
+        FORGEJO_CONFIG_PATH="/home/${FORGEJO_USERNAME}/custom/conf"
+        FORGEJO_CONFIG_FILE="${FORGEJO_CONFIG_PATH}/app.ini"
 
         function_check restore_database
-        restore_database gitea "${GITEA_DOMAIN_NAME}"
-        temp_restore_dir=/root/tempgitea
-        if [ -d "${USB_MOUNT}/backup/gitea" ]; then
-            echo $"Restoring Gitea settings"
-            if [ ! -d $GITEA_CONFIG_PATH ]; then
-                mkdir -p $GITEA_CONFIG_PATH
+        restore_database forgejo "${FORGEJO_DOMAIN_NAME}"
+        temp_restore_dir=/root/tempforgejo
+        if [ -d "${USB_MOUNT}/backup/forgejo" ]; then
+            echo $"Restoring Forgejo settings"
+            if [ ! -d $FORGEJO_CONFIG_PATH ]; then
+                mkdir -p $FORGEJO_CONFIG_PATH
             fi
-            if [ -d "/root/tempgitea/home/${GITEA_USERNAME}/custom" ]; then
-                cp -r "/root/tempgitea/home/${GITEA_USERNAME}/custom/"* "/home/${GITEA_USERNAME}/custom/"
+            if [ -d "/root/tempforgejo/home/${FORGEJO_USERNAME}/custom" ]; then
+                cp -r "/root/tempforgejo/home/${FORGEJO_USERNAME}/custom/"* "/home/${FORGEJO_USERNAME}/custom/"
             else
-                cp -r "/root/tempgitea/"* "/home/${GITEA_USERNAME}/custom/"
+                cp -r "/root/tempforgejo/"* "/home/${FORGEJO_USERNAME}/custom/"
             fi
             # shellcheck disable=SC2181
             if [ ! "$?" = "0" ]; then
@@ -406,16 +406,16 @@ function restore_local_gitea {
                 backup_unmount_drive
                 exit 98
             fi
-            echo $"Restoring Gitea repos"
+            echo $"Restoring Forgejo repos"
             function_check restore_directory_from_usb
-            restore_directory_from_usb "${temp_restore_dir}repos" gitearepos
-            if [ ! -d "/home/${GITEA_USERNAME}/gitea-repositories" ]; then
-                mkdir "/home/${GITEA_USERNAME}/gitea-repositories"
+            restore_directory_from_usb "${temp_restore_dir}repos" forgejorepos
+            if [ ! -d "/home/${FORGEJO_USERNAME}/forgejo-repositories" ]; then
+                mkdir "/home/${FORGEJO_USERNAME}/forgejo-repositories"
             fi
-            if [ -d "${temp_restore_dir}repos/home/${GITEA_USERNAME}/gitea-repositories" ]; then
-                cp -r "${temp_restore_dir}repos/home/${GITEA_USERNAME}/gitea-repositories/"* "/home/${GITEA_USERNAME}/gitea-repositories/"
+            if [ -d "${temp_restore_dir}repos/home/${FORGEJO_USERNAME}/forgejo-repositories" ]; then
+                cp -r "${temp_restore_dir}repos/home/${FORGEJO_USERNAME}/forgejo-repositories/"* "/home/${FORGEJO_USERNAME}/forgejo-repositories/"
             else
-                cp -r "${temp_restore_dir}repos/"* "/home/${GITEA_USERNAME}/gitea-repositories/"
+                cp -r "${temp_restore_dir}repos/"* "/home/${FORGEJO_USERNAME}/forgejo-repositories/"
             fi
             # shellcheck disable=SC2181
             if [ ! "$?" = "0" ]; then
@@ -425,16 +425,16 @@ function restore_local_gitea {
                 backup_unmount_drive
                 exit 67
             fi
-            echo $"Restoring Gitea authorized_keys"
+            echo $"Restoring Forgejo authorized_keys"
             function_check restore_directory_from_usb
-            restore_directory_from_usb ${temp_restore_dir}ssh giteassh
-            if [ ! -d /home/${GITEA_USERNAME}/.ssh ]; then
-                mkdir /home/${GITEA_USERNAME}/.ssh
+            restore_directory_from_usb ${temp_restore_dir}ssh forgejossh
+            if [ ! -d /home/${FORGEJO_USERNAME}/.ssh ]; then
+                mkdir /home/${FORGEJO_USERNAME}/.ssh
             fi
-            if [ -d ${temp_restore_dir}ssh/home/${GITEA_USERNAME}/.ssh ]; then
-                cp -r ${temp_restore_dir}ssh/home/${GITEA_USERNAME}/.ssh/* /home/${GITEA_USERNAME}/.ssh/
+            if [ -d ${temp_restore_dir}ssh/home/${FORGEJO_USERNAME}/.ssh ]; then
+                cp -r ${temp_restore_dir}ssh/home/${FORGEJO_USERNAME}/.ssh/* /home/${FORGEJO_USERNAME}/.ssh/
             else
-                cp -r ${temp_restore_dir}/* /home/${GITEA_USERNAME}/.ssh/
+                cp -r ${temp_restore_dir}/* /home/${FORGEJO_USERNAME}/.ssh/
             fi
             # shellcheck disable=SC2181
             if [ ! "$?" = "0" ]; then
@@ -447,89 +447,89 @@ function restore_local_gitea {
             rm -rf ${temp_restore_dir}
             rm -rf ${temp_restore_dir}repos
             rm -rf ${temp_restore_dir}ssh
-            chown -R ${GITEA_USERNAME}:${GITEA_USERNAME} /home/${GITEA_USERNAME}
+            chown -R ${FORGEJO_USERNAME}:${FORGEJO_USERNAME} /home/${FORGEJO_USERNAME}
         fi
 
         MARIADB_PASSWORD=$("${PROJECT_NAME}-pass" -u root -a mariadb)
-        sed -i "s|PASSWORD =.*|PASSWORD = $MARIADB_PASSWORD|g" ${GITEA_CONFIG_FILE}
+        sed -i "s|PASSWORD =.*|PASSWORD = $MARIADB_PASSWORD|g" ${FORGEJO_CONFIG_FILE}
         MARIADB_PASSWORD=
-        systemctl restart gitea
+        systemctl restart forgejo
     fi
 }
 
-function backup_remote_gitea {
+function backup_remote_forgejo {
     echo -n ''
 }
 
-function restore_remote_gitea {
+function restore_remote_forgejo {
     echo -n ''
 }
 
-function remove_gitea {
-    if [ ${#GITEA_DOMAIN_NAME} -eq 0 ]; then
+function remove_forgejo {
+    if [ ${#FORGEJO_DOMAIN_NAME} -eq 0 ]; then
         return
     fi
-    systemctl stop gitea
-    systemctl disable gitea
+    systemctl stop forgejo
+    systemctl disable forgejo
 
-    if [ -f /etc/cron.weekly/gitea-registrations ]; then
-        rm /etc/cron.weekly/gitea-registrations
+    if [ -f /etc/cron.weekly/forgejo-registrations ]; then
+        rm /etc/cron.weekly/forgejo-registrations
     fi
 
-    nginx_dissite "${GITEA_DOMAIN_NAME}"
-    remove_certs "${GITEA_DOMAIN_NAME}"
-    if [ -d "/var/www/${GITEA_DOMAIN_NAME}" ]; then
-        rm -rf "/var/www/${GITEA_DOMAIN_NAME}"
+    nginx_dissite "${FORGEJO_DOMAIN_NAME}"
+    remove_certs "${FORGEJO_DOMAIN_NAME}"
+    if [ -d "/var/www/${FORGEJO_DOMAIN_NAME}" ]; then
+        rm -rf "/var/www/${FORGEJO_DOMAIN_NAME}"
     fi
-    if [ -f "/etc/nginx/sites-available/${GITEA_DOMAIN_NAME}" ]; then
-        rm "/etc/nginx/sites-available/${GITEA_DOMAIN_NAME}"
+    if [ -f "/etc/nginx/sites-available/${FORGEJO_DOMAIN_NAME}" ]; then
+        rm "/etc/nginx/sites-available/${FORGEJO_DOMAIN_NAME}"
     fi
     function_check drop_database
-    drop_database gitea
-    rm /etc/systemd/system/gitea.service
+    drop_database forgejo
+    rm /etc/systemd/system/forgejo.service
     systemctl daemon-reload
-    rm -rf "/home/${GITEA_USERNAME:?}/"*
-    remove_onion_service gitea ${GITEA_ONION_PORT} 9418
-    remove_completion_param "install_gitea"
-    sed -i '/gitea /d' "$COMPLETION_FILE"
-    remove_backup_database_local gitea
-    remove_i2p_service gitea
+    rm -rf "/home/${FORGEJO_USERNAME:?}/"*
+    remove_onion_service forgejo ${FORGEJO_ONION_PORT} 9418
+    remove_completion_param "install_forgejo"
+    sed -i '/forgejo /d' "$COMPLETION_FILE"
+    remove_backup_database_local forgejo
+    remove_i2p_service forgejo
 
-    groupdel -f gitea
-    userdel -r gitea
+    groupdel -f forgejo
+    userdel -r forgejo
 
     function_check remove_ddns_domain
-    remove_ddns_domain "$GITEA_DOMAIN_NAME"
+    remove_ddns_domain "$FORGEJO_DOMAIN_NAME"
 }
 
-function install_gitea {
-    if [ ! "$GITEA_DOMAIN_NAME" ]; then
-        echo $"Missing gitea domain name"
+function install_forgejo {
+    if [ ! "$FORGEJO_DOMAIN_NAME" ]; then
+        echo $"Missing forgejo domain name"
         return
     fi
 
-    INSTALL_PACKAGES xz-utils
+    INSTALL_PACKAGES xz-utils git git-lfs
 
     increment_app_install_progress
 
-    adduser --disabled-login --gecos 'Gitea' $GITEA_USERNAME
+    adduser --disabled-login --gecos 'Forgejo' $FORGEJO_USERNAME
 
     increment_app_install_progress
 
-    if [ ! -d /home/$GITEA_USERNAME ]; then
-        echo $"/home/$GITEA_USERNAME directory not created"
+    if [ ! -d /home/$FORGEJO_USERNAME ]; then
+        echo $"/home/$FORGEJO_USERNAME directory not created"
         exit 78
     fi
 
     increment_app_install_progress
 
-    if ! grep -q "gitea:" /etc/group; then
-        groupadd gitea
+    if ! grep -q "forgejo:" /etc/group; then
+        groupadd forgejo
     fi
 
     increment_app_install_progress
 
-    gitea_parameters
+    forgejo_parameters
 
     increment_app_install_progress
 
@@ -537,72 +537,72 @@ function install_gitea {
         mkdir -p "${INSTALL_DIR}"
     fi
     cd "${INSTALL_DIR}" || exit 246
-    if [ -d "$INSTALL_DIR/gitea" ]; then
-        rm -rf "$INSTALL_DIR/gitea"
+    if [ -d "$INSTALL_DIR/forgejo" ]; then
+        rm -rf "$INSTALL_DIR/forgejo"
     fi
 
     # download binary
-    GITEA_FILE_BASE="gitea-${GITEA_VERSION}-${gitea_os_type}-${CURR_ARCH}"
-    GITEA_FILE="${GITEA_FILE_BASE}.xz"
-    if [ ! -f ${GITEA_FILE} ]; then
+    FORGEJO_FILE_BASE="forgejo-${FORGEJO_VERSION}-${forgejo_os_type}-${CURR_ARCH}"
+    FORGEJO_FILE="${FORGEJO_FILE_BASE}.xz"
+    if [ ! -f ${FORGEJO_FILE} ]; then
         if [[ "$ONION_ONLY" == 'no' ]]; then
-            wget ${GITEA_BIN}
+            wget ${FORGEJO_BIN}
         else
-            torsocks wget ${GITEA_BIN}
-            if [ ! -f ${GITEA_FILE} ]; then
-                wget ${GITEA_BIN}
+            torsocks wget ${FORGEJO_BIN}
+            if [ ! -f ${FORGEJO_FILE} ]; then
+                wget ${FORGEJO_BIN}
             fi
         fi
     fi
-    if [ ! -f ${GITEA_FILE} ]; then
-        echo "Unable to download ${GITEA_FILE}"
+    if [ ! -f ${FORGEJO_FILE} ]; then
+        echo "Unable to download ${FORGEJO_FILE}"
         exit 62
     else
-        if [ -f "${INSTALL_DIR}/${GITEA_FILE_BASE}" ]; then
-            rm "${INSTALL_DIR}/${GITEA_FILE_BASE}"
+        if [ -f "${INSTALL_DIR}/${FORGEJO_FILE_BASE}" ]; then
+            rm "${INSTALL_DIR}/${FORGEJO_FILE_BASE}"
         fi
-        unxz "${INSTALL_DIR}/${GITEA_FILE}"
+        unxz "${INSTALL_DIR}/${FORGEJO_FILE}"
     fi
-    if [ ! -f "${INSTALL_DIR}/${GITEA_FILE_BASE}" ]; then
+    if [ ! -f "${INSTALL_DIR}/${FORGEJO_FILE_BASE}" ]; then
         exit 37
     fi
 
     # download source
-    GITEA_FILE_BASE_SRC=gitea-src-${GITEA_VERSION}
-    GITEA_FILE_SRC=${GITEA_FILE_BASE_SRC}.tar.gz
-    if [ ! -f ${GITEA_FILE_SRC} ]; then
+    FORGEJO_FILE_BASE_SRC=forgejo-src-${FORGEJO_VERSION}
+    FORGEJO_FILE_SRC=${FORGEJO_FILE_BASE_SRC}.tar.gz
+    if [ ! -f ${FORGEJO_FILE_SRC} ]; then
         if [[ "$ONION_ONLY" == 'no' ]]; then
-            wget ${GITEA_SRC}
+            wget ${FORGEJO_SRC}
         else
-            torsocks wget ${GITEA_SRC}
-            if [ ! -f ${GITEA_FILE_SRC} ]; then
-                wget ${GITEA_SRC}
+            torsocks wget ${FORGEJO_SRC}
+            if [ ! -f ${FORGEJO_FILE_SRC} ]; then
+                wget ${FORGEJO_SRC}
             fi
         fi
     fi
-    if [ ! -f "${INSTALL_DIR}/${GITEA_FILE_SRC}" ]; then
-        echo "Unable to download source ${GITEA_FILE_SRC}"
+    if [ ! -f "${INSTALL_DIR}/${FORGEJO_FILE_SRC}" ]; then
+        echo "Unable to download source ${FORGEJO_FILE_SRC}"
         exit 62
     fi
-    tar -xzf "${INSTALL_DIR}/${GITEA_FILE_SRC}"
-    if [ ! -d "${INSTALL_DIR}/${GITEA_FILE_BASE_SRC}" ]; then
-        echo "source directory not found ${INSTALL_DIR}/${GITEA_FILE_BASE_SRC}"
+    tar -xzf "${INSTALL_DIR}/${FORGEJO_FILE_SRC}"
+    if [ ! -d "${INSTALL_DIR}/${FORGEJO_FILE_BASE_SRC}" ]; then
+        echo "source directory not found ${INSTALL_DIR}/${FORGEJO_FILE_BASE_SRC}"
         exit 37
     fi
 
-    rm -rf "/home/${GITEA_USERNAME:?}/"*
-    cp -r "${INSTALL_DIR}/${GITEA_FILE_BASE_SRC}"/* "/home/${GITEA_USERNAME}"
-    cp "${INSTALL_DIR}/${GITEA_FILE_BASE}" "/home/${GITEA_USERNAME}/gitea"
-    chmod +x "/home/${GITEA_USERNAME}/gitea"
-    if [ -f "${INSTALL_DIR}/${GITEA_FILE_BASE}" ]; then
-        rm "${INSTALL_DIR}/${GITEA_FILE_BASE}"
+    rm -rf "/home/${FORGEJO_USERNAME:?}/"*
+    cp -r "${INSTALL_DIR}/${FORGEJO_FILE_BASE_SRC}"/* "/home/${FORGEJO_USERNAME}"
+    cp "${INSTALL_DIR}/${FORGEJO_FILE_BASE}" "/home/${FORGEJO_USERNAME}/forgejo"
+    chmod +x "/home/${FORGEJO_USERNAME}/forgejo"
+    if [ -f "${INSTALL_DIR}/${FORGEJO_FILE_BASE}" ]; then
+        rm "${INSTALL_DIR}/${FORGEJO_FILE_BASE}"
     fi
-    if [ -d "${INSTALL_DIR}/${GITEA_FILE_BASE_SRC}" ]; then
-        rm -rf "${INSTALL_DIR}/${GITEA_FILE_BASE_SRC}"
+    if [ -d "${INSTALL_DIR}/${FORGEJO_FILE_BASE_SRC}" ]; then
+        rm -rf "${INSTALL_DIR}/${FORGEJO_FILE_BASE_SRC}"
     fi
 
-    if [ ! -f "/home/${GITEA_USERNAME}/gitea" ]; then
-        echo 'Gitea binary not installed'
+    if [ ! -f "/home/${FORGEJO_USERNAME}/forgejo" ]; then
+        echo 'Forgejo binary not installed'
         exit 34
     fi
 
@@ -611,8 +611,8 @@ function install_gitea {
     { echo "export GOROOT=/home/go";
       # shellcheck disable=SC2153
       echo "export GOPATH=\${GOROOT}/go${GO_VERSION}/bin";
-      echo "export PATH=\$PATH:\$GOPATH"; } >> "/home/${GITEA_USERNAME}/.bashrc"
-    chown -R ${GITEA_USERNAME}:${GITEA_USERNAME} /home/${GITEA_USERNAME}
+      echo "export PATH=\$PATH:\$GOPATH"; } >> "/home/${FORGEJO_USERNAME}/.bashrc"
+    chown -R ${FORGEJO_USERNAME}:${FORGEJO_USERNAME} /home/${FORGEJO_USERNAME}
 
     increment_app_install_progress
 
@@ -626,22 +626,25 @@ function install_gitea {
 
     increment_app_install_progress
 
-    function_check gitea_create_database
-    gitea_create_database
+    function_check forgejo_create_database
+    forgejo_create_database
 
     increment_app_install_progress
 
-    if [ ! -f "/home/${GITEA_USERNAME}/contrib/mysql.sql" ]; then
-        echo $'MySql template for Gitea was not found'
+    if [ ! -f "/home/${FORGEJO_USERNAME}/contrib/mysql.sql" ]; then
+        echo $'MySql template for Forgejo was not found'
         exit 72
     fi
 
-    chown -R ${GITEA_USERNAME}:${GITEA_USERNAME} /home/${GITEA_USERNAME}
+    chown -R ${FORGEJO_USERNAME}:${FORGEJO_USERNAME} /home/${FORGEJO_USERNAME}
 
     increment_app_install_progress
 
+    FORGEJO_CONFIG_PATH=/home/${FORGEJO_USERNAME}/custom/conf
+    FORGEJO_CONFIG_FILE=$FORGEJO_CONFIG_PATH/app.ini
+
     { echo '[Unit]';
-      echo 'Description=Gitea (Go Git Service)';
+      echo 'Description=Forgejo (Go Git Service)';
       echo 'After=syslog.target';
       echo 'After=network.target';
       echo 'After=mysqld.service';
@@ -650,14 +653,14 @@ function install_gitea {
       echo '#LimitMEMLOCK=infinity';
       echo '#LimitNOFILE=65535';
       echo 'Type=simple';
-      echo 'User=gitea';
-      echo 'Group=gitea';
-      echo "WorkingDirectory=/home/${GITEA_USERNAME}";
-      echo "ExecStart=/home/${GITEA_USERNAME}/gitea web";
+      echo 'User=forgejo';
+      echo 'Group=forgejo';
+      echo "WorkingDirectory=/home/${FORGEJO_USERNAME}";
+      echo "ExecStart=/home/${FORGEJO_USERNAME}/forgejo web --config ${FORGEJO_CONFIG_FILE}";
       echo 'Restart=always';
       echo 'RestartSec=10';
-      echo "Environment=\"USER=${GITEA_USERNAME}\" \"HOME=/home/${GITEA_USERNAME}\" \"GOPATH=/home/go/go${GO_VERSION}\"";
-      echo "Environment=GIT_CEILING_DIRECTORIES=/home/${GITEA_USERNAME}";
+      echo "Environment=\"USER=${FORGEJO_USERNAME}\" \"HOME=/home/${FORGEJO_USERNAME}\" \"GOPATH=/home/go/go${GO_VERSION}\"";
+      echo "Environment=GIT_CEILING_DIRECTORIES=/home/${FORGEJO_USERNAME}";
       echo 'PrivateTmp=true';
       echo 'PrivateDevices=false';
       echo 'CapabilityBoundingSet=~CAP_SYS_ADMIN';
@@ -671,51 +674,51 @@ function install_gitea {
       echo 'NoNewPrivileges=true';
       echo '';
       echo '[Install]';
-      echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/gitea.service
+      echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/forgejo.service
 
     increment_app_install_progress
 
-    systemctl enable gitea
+    systemctl enable forgejo
     systemctl daemon-reload
-    systemctl start gitea
+    systemctl start forgejo
 
     increment_app_install_progress
 
-    if [ ! -d "/var/www/${GITEA_DOMAIN_NAME}" ]; then
-        mkdir "/var/www/${GITEA_DOMAIN_NAME}"
+    if [ ! -d "/var/www/${FORGEJO_DOMAIN_NAME}" ]; then
+        mkdir "/var/www/${FORGEJO_DOMAIN_NAME}"
     fi
-    if [ -d "/var/www/${GITEA_DOMAIN_NAME}/htdocs" ]; then
-        rm -rf "/var/www/${GITEA_DOMAIN_NAME}/htdocs"
+    if [ -d "/var/www/${FORGEJO_DOMAIN_NAME}/htdocs" ]; then
+        rm -rf "/var/www/${FORGEJO_DOMAIN_NAME}/htdocs"
     fi
 
-    GIT_ONION_HOSTNAME=$(cat /var/lib/tor/hidden_service_gitea/hostname)
+    GIT_ONION_HOSTNAME=$(cat /var/lib/tor/hidden_service_forgejo/hostname)
 
     increment_app_install_progress
 
     if [[ "${ONION_ONLY}" == "no" ]]; then
         function_check nginx_http_redirect
-        nginx_http_redirect "${GITEA_DOMAIN_NAME}"
+        nginx_http_redirect "${FORGEJO_DOMAIN_NAME}"
         { echo 'server {';
           echo '    listen 443 ssl;';
           echo '    #listen [::]:443 ssl;';
-          echo "    root /var/www/${GITEA_DOMAIN_NAME}/htdocs;";
-          echo "    server_name ${GITEA_DOMAIN_NAME};";
+          echo "    root /var/www/${FORGEJO_DOMAIN_NAME}/htdocs;";
+          echo "    server_name ${FORGEJO_DOMAIN_NAME};";
           echo '    server_tokens off;';
           echo '    access_log /dev/null;';
           echo "    error_log /dev/null;";
-          echo ''; } >> "/etc/nginx/sites-available/${GITEA_DOMAIN_NAME}"
+          echo ''; } >> "/etc/nginx/sites-available/${FORGEJO_DOMAIN_NAME}"
         function_check nginx_ssl
-        nginx_ssl "${GITEA_DOMAIN_NAME}"
+        nginx_ssl "${FORGEJO_DOMAIN_NAME}"
         function_check nginx_security_options
-        nginx_security_options "${GITEA_DOMAIN_NAME}"
-        nginx_robots "${GITEA_DOMAIN_NAME}"
+        nginx_security_options "${FORGEJO_DOMAIN_NAME}"
+        nginx_robots "${FORGEJO_DOMAIN_NAME}"
         { echo '    add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
           echo "    add_header Onion-Location http://${GIT_ONION_HOSTNAME}\$request_uri;";
           echo '';
-          echo '    location / {'; } >> "/etc/nginx/sites-available/${GITEA_DOMAIN_NAME}"
+          echo '    location / {'; } >> "/etc/nginx/sites-available/${FORGEJO_DOMAIN_NAME}"
         function_check nginx_limits
-        nginx_limits "${GITEA_DOMAIN_NAME}" '10G'
-        { echo "        proxy_pass http://localhost:${GITEA_PORT};";
+        nginx_limits "${FORGEJO_DOMAIN_NAME}" '10G'
+        { echo "        proxy_pass http://localhost:${FORGEJO_PORT};";
           echo '    }';
           echo '';
           echo '    fastcgi_buffers 64 4K;';
@@ -729,27 +732,27 @@ function install_gitea {
           echo '        access_log /dev/null;';
           echo '    }';
           echo '}';
-          echo ''; } >> "/etc/nginx/sites-available/${GITEA_DOMAIN_NAME}"
+          echo ''; } >> "/etc/nginx/sites-available/${FORGEJO_DOMAIN_NAME}"
     else
-        echo -n '' > "/etc/nginx/sites-available/${GITEA_DOMAIN_NAME}"
+        echo -n '' > "/etc/nginx/sites-available/${FORGEJO_DOMAIN_NAME}"
     fi
     { echo 'server {';
-      echo "    listen 127.0.0.1:${GITEA_ONION_PORT} default_server;";
+      echo "    listen 127.0.0.1:${FORGEJO_ONION_PORT} default_server;";
       echo '    port_in_redirect off;';
-      echo "    root /var/www/$GITEA_DOMAIN_NAME/htdocs;";
-      echo "    server_name $GITEA_DOMAIN_NAME;";
+      echo "    root /var/www/$FORGEJO_DOMAIN_NAME/htdocs;";
+      echo "    server_name $FORGEJO_DOMAIN_NAME;";
       echo '    server_tokens off;';
       echo '    access_log /dev/null;';
       echo "    error_log /dev/null;";
-      echo ''; } >> "/etc/nginx/sites-available/${GITEA_DOMAIN_NAME}"
+      echo ''; } >> "/etc/nginx/sites-available/${FORGEJO_DOMAIN_NAME}"
     function_check nginx_security_options
-    nginx_security_options "${GITEA_DOMAIN_NAME}"
+    nginx_security_options "${FORGEJO_DOMAIN_NAME}"
     { echo '    add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
       echo '';
-      echo '    location / {'; } >> "/etc/nginx/sites-available/${GITEA_DOMAIN_NAME}"
+      echo '    location / {'; } >> "/etc/nginx/sites-available/${FORGEJO_DOMAIN_NAME}"
     function_check nginx_limits
-    nginx_limits "${GITEA_DOMAIN_NAME}" '10G'
-    { echo "        proxy_pass http://localhost:${GITEA_PORT};";
+    nginx_limits "${FORGEJO_DOMAIN_NAME}" '10G'
+    { echo "        proxy_pass http://localhost:${FORGEJO_PORT};";
       echo '    }';
       echo '';
       echo '    fastcgi_buffers 64 4K;';
@@ -762,28 +765,28 @@ function install_gitea {
       echo '        log_not_found off;';
       echo '        access_log /dev/null;';
       echo '    }';
-      echo '}'; } >> "/etc/nginx/sites-available/${GITEA_DOMAIN_NAME}"
+      echo '}'; } >> "/etc/nginx/sites-available/${FORGEJO_DOMAIN_NAME}"
 
-    add_i2p_service gitea 80 $GITEA_I2P_PORT
-    GITEA_I2P_HOSTNAME=$(get_i2p_domain gitea)
-    if [ "$GITEA_I2P_HOSTNAME" ]; then
+    add_i2p_service forgejo 80 $FORGEJO_I2P_PORT
+    FORGEJO_I2P_HOSTNAME=$(get_i2p_domain forgejo)
+    if [ "$FORGEJO_I2P_HOSTNAME" ]; then
         { echo 'server {';
-          echo "    listen 127.0.0.1:${GITEA_I2P_PORT};";
+          echo "    listen 127.0.0.1:${FORGEJO_I2P_PORT};";
           echo '    port_in_redirect off;';
-          echo "    root /var/www/$GITEA_DOMAIN_NAME/htdocs;";
-          echo "    server_name $GITEA_I2P_HOSTNAME;";
+          echo "    root /var/www/$FORGEJO_DOMAIN_NAME/htdocs;";
+          echo "    server_name $FORGEJO_I2P_HOSTNAME;";
           echo '    server_tokens off;';
           echo '    access_log /dev/null;';
           echo "    error_log /dev/null;";
-          echo ''; } >> "/etc/nginx/sites-available/${GITEA_DOMAIN_NAME}"
+          echo ''; } >> "/etc/nginx/sites-available/${FORGEJO_DOMAIN_NAME}"
         function_check nginx_security_options
-        nginx_security_options "${GITEA_DOMAIN_NAME}"
+        nginx_security_options "${FORGEJO_DOMAIN_NAME}"
         { echo '    add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
           echo '';
-          echo '    location / {'; } >> "/etc/nginx/sites-available/${GITEA_DOMAIN_NAME}"
+          echo '    location / {'; } >> "/etc/nginx/sites-available/${FORGEJO_DOMAIN_NAME}"
         function_check nginx_limits
-        nginx_limits "${GITEA_DOMAIN_NAME}" '10G'
-        { echo "        proxy_pass http://localhost:${GITEA_PORT};";
+        nginx_limits "${FORGEJO_DOMAIN_NAME}" '10G'
+        { echo "        proxy_pass http://localhost:${FORGEJO_PORT};";
           echo '    }';
           echo '';
           echo '    fastcgi_buffers 64 4K;';
@@ -796,7 +799,7 @@ function install_gitea {
           echo '        log_not_found off;';
           echo '        access_log /dev/null;';
           echo '    }';
-          echo '}'; } >> "/etc/nginx/sites-available/${GITEA_DOMAIN_NAME}"
+          echo '}'; } >> "/etc/nginx/sites-available/${FORGEJO_DOMAIN_NAME}"
     fi
 
     function_check configure_php
@@ -805,22 +808,22 @@ function install_gitea {
     increment_app_install_progress
 
     function_check create_site_certificate
-    create_site_certificate "${GITEA_DOMAIN_NAME}" 'yes'
+    create_site_certificate "${FORGEJO_DOMAIN_NAME}" 'yes'
 
     increment_app_install_progress
 
-    nginx_ensite "${GITEA_DOMAIN_NAME}"
+    nginx_ensite "${FORGEJO_DOMAIN_NAME}"
 
     if [ ! -d /var/lib/tor ]; then
-        echo $'No Tor installation found. Gitea onion site cannot be configured.'
+        echo $'No Tor installation found. Forgejo onion site cannot be configured.'
         exit 87
     fi
-    if ! grep -q "hidden_service_gitea" "$ONION_SERVICES_FILE"; then
-        { echo 'HiddenServiceDir /var/lib/tor/hidden_service_gitea/';
+    if ! grep -q "hidden_service_forgejo" "$ONION_SERVICES_FILE"; then
+        { echo 'HiddenServiceDir /var/lib/tor/hidden_service_forgejo/';
           echo 'HiddenServiceVersion 3';
-          echo "HiddenServicePort 80 127.0.0.1:${GITEA_ONION_PORT}";
+          echo "HiddenServicePort 80 127.0.0.1:${FORGEJO_ONION_PORT}";
           echo "HiddenServicePort 9418 127.0.0.1:9418"; } >> "$ONION_SERVICES_FILE"
-        echo $'Added onion site for Gitea'
+        echo $'Added onion site for Forgejo'
     fi
 
     onion_update
@@ -828,7 +831,7 @@ function install_gitea {
     increment_app_install_progress
 
     function_check wait_for_onion_service
-    wait_for_onion_service 'gitea'
+    wait_for_onion_service 'forgejo'
 
     systemctl restart mariadb
 
@@ -841,43 +844,43 @@ function install_gitea {
 
     systemctl restart nginx
 
-    set_completion_param "gitea domain" "$GITEA_DOMAIN_NAME"
-    set_completion_param "gitea onion domain" "$GIT_ONION_HOSTNAME"
+    set_completion_param "forgejo domain" "$FORGEJO_DOMAIN_NAME"
+    set_completion_param "forgejo onion domain" "$GIT_ONION_HOSTNAME"
 
     function_check add_ddns_domain
-    add_ddns_domain "${GITEA_DOMAIN_NAME}"
+    add_ddns_domain "${FORGEJO_DOMAIN_NAME}"
 
     # obtain the secret key
-    GITEA_SECRET_KEY="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
-    "${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a gitea -p "*"
+    FORGEJO_SECRET_KEY="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
+    "${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a forgejo -p "*"
 
     # create the configuration
-    GITEA_CONFIG_PATH="/home/${GITEA_USERNAME}/custom/conf"
-    if [ ! -d ${GITEA_CONFIG_PATH} ]; then
-        mkdir -p ${GITEA_CONFIG_PATH}
+    FORGEJO_CONFIG_PATH="/home/${FORGEJO_USERNAME}/custom/conf"
+    if [ ! -d ${FORGEJO_CONFIG_PATH} ]; then
+        mkdir -p ${FORGEJO_CONFIG_PATH}
     fi
-    GITEA_CONFIG_FILE=${GITEA_CONFIG_PATH}/app.ini
-    # see https://github.com/go-gitea/gitea/blob/main/custom/conf/app.example.ini
+    FORGEJO_CONFIG_FILE=${FORGEJO_CONFIG_PATH}/app.ini
+    # see https://codeberg.org/forgejo/forgejo/src/branch/forgejo/custom/conf/app.example.ini
 
     { echo "APP_NAME = ; ${PROJECT_NAME}";
-      echo "RUN_USER = $GITEA_USERNAME";
+      echo "RUN_USER = ${FORGEJO_USERNAME}";
       echo 'RUN_MODE = prod';
       echo "";
-      echo '[server]'; } >> ${GITEA_CONFIG_FILE}
+      echo '[server]'; } >> ${FORGEJO_CONFIG_FILE}
     if [[ ${ONION_ONLY} == 'no' ]]; then
-        echo "DOMAIN = ${GITEA_DOMAIN_NAME}" >> ${GITEA_CONFIG_FILE}
-        echo "LOCAL_ROOT_URL = https://$GITEA_DOMAIN_NAME/" >> ${GITEA_CONFIG_FILE}
-        echo "ROOT_URL = https://$GITEA_DOMAIN_NAME/" >> ${GITEA_CONFIG_FILE}
+        echo "DOMAIN = ${FORGEJO_DOMAIN_NAME}" >> ${FORGEJO_CONFIG_FILE}
+        echo "LOCAL_ROOT_URL = https://$FORGEJO_DOMAIN_NAME/" >> ${FORGEJO_CONFIG_FILE}
+        echo "ROOT_URL = https://$FORGEJO_DOMAIN_NAME/" >> ${FORGEJO_CONFIG_FILE}
     else
-        echo "DOMAIN = ${GIT_ONION_HOSTNAME}" >> ${GITEA_CONFIG_FILE}
-        echo "LOCAL_ROOT_URL = http://${GIT_ONION_HOSTNAME}/" >> ${GITEA_CONFIG_FILE}
-        echo "ROOT_URL = http://${GIT_ONION_HOSTNAME}/" >> ${GITEA_CONFIG_FILE}
+        echo "DOMAIN = ${GIT_ONION_HOSTNAME}" >> ${FORGEJO_CONFIG_FILE}
+        echo "LOCAL_ROOT_URL = http://${GIT_ONION_HOSTNAME}/" >> ${FORGEJO_CONFIG_FILE}
+        echo "ROOT_URL = http://${GIT_ONION_HOSTNAME}/" >> ${FORGEJO_CONFIG_FILE}
     fi
-    { echo "HTTP_PORT = ${GITEA_PORT}";
-      echo "SSH_PORT = $SSH_PORT";
+    { echo "HTTP_PORT = ${FORGEJO_PORT}";
+      echo "SSH_PORT = ${SSH_PORT}";
       echo 'SSH_DOMAIN = %(DOMAIN)s';
-      echo "CERT_FILE = /etc/ssl/certs/${GITEA_DOMAIN_NAME}.pem";
-      echo "KEY_FILE = /etc/ssl/private/${GITEA_DOMAIN_NAME}.key";
+      echo "CERT_FILE = /etc/ssl/certs/${FORGEJO_DOMAIN_NAME}.pem";
+      echo "KEY_FILE = /etc/ssl/private/${FORGEJO_DOMAIN_NAME}.key";
       echo 'DISABLE_ROUTER_LOG = true';
       echo 'UNIX_SOCKET_PERMISSION = 666';
       echo ";PROTOCOL = http";
@@ -905,7 +908,7 @@ function install_gitea {
       echo ";SSH_SERVER_CIPHERS = chacha20-poly1305@openssh.com, aes128-ctr, aes192-ctr, aes256-ctr, aes128-gcm@openssh.com, aes256-gcm@openssh.com";
       echo ";SSH_SERVER_KEY_EXCHANGES = curve25519-sha256, ecdh-sha2-nistp256, ecdh-sha2-nistp384, ecdh-sha2-nistp521, diffie-hellman-group14-sha256, diffie-hellman-group14-sha1";
       echo ";SSH_SERVER_MACS = hmac-sha2-256-etm@openssh.com, hmac-sha2-256, hmac-sha1";
-      echo ";SSH_SERVER_HOST_KEYS=ssh/gitea.rsa, ssh/gogs.rsa";
+      echo ";SSH_SERVER_HOST_KEYS=ssh/forgejo.rsa, ssh/gogs.rsa";
       echo ";SSH_KEY_TEST_PATH =";
       echo ";SSH_KEYGEN_PATH = ssh-keygen";
       echo ";SSH_AUTHORIZED_KEYS_BACKUP = true";
@@ -943,9 +946,9 @@ function install_gitea {
       echo "[database]";
       echo "DB_TYPE = mysql";
       echo 'HOST = 127.0.0.1:3306';
-      echo "NAME = gitea";
+      echo "NAME = forgejo";
       echo "USER = root";
-      echo "PASSWD = $MARIADB_PASSWORD";
+      echo "PASSWD = ${MARIADB_PASSWORD}";
       echo ";CHARSET = utf8mb4 ;either utf8 or utf8mb4, default is utf8mb4.";
       echo 'SSL_MODE = disable';
       echo ";ITERATE_BUFFER_SIZE = 50";
@@ -958,12 +961,12 @@ function install_gitea {
       echo "";
       echo "[security]";
       echo "INSTALL_LOCK = true";
-      echo "SECRET_KEY = ${GITEA_SECRET_KEY}";
+      echo "SECRET_KEY = ${FORGEJO_SECRET_KEY}";
       echo "INTERNAL_TOKEN=";
-      echo ";INTERNAL_TOKEN_URI = ;e.g. /etc/gitea/internal_token";
+      echo ";INTERNAL_TOKEN_URI = ;e.g. /etc/forgejo/internal_token";
       echo "LOGIN_REMEMBER_DAYS = 7";
-      echo "COOKIE_USERNAME = gitea_awesome";
-      echo "COOKIE_REMEMBER_NAME = gitea_incredible";
+      echo "COOKIE_USERNAME = forgejo_awesome";
+      echo "COOKIE_REMEMBER_NAME = forgejo_incredible";
       echo ";REVERSE_PROXY_AUTHENTICATION_USER = X-WEBAUTH-USER";
       echo ";REVERSE_PROXY_AUTHENTICATION_EMAIL = X-WEBAUTH-EMAIL";
       echo ";REVERSE_PROXY_LIMIT = 1";
@@ -972,7 +975,7 @@ function install_gitea {
       echo ";IMPORT_LOCAL_PATHS = false";
       echo ";DISABLE_GIT_HOOKS = true";
       echo ";DISABLE_WEBHOOKS = false";
-      echo ";ONLY_ALLOW_PUSH_IF_GITEA_ENVIRONMENT_SET = true";
+      echo ";ONLY_ALLOW_PUSH_IF_FORGEJO_ENVIRONMENT_SET = true";
       echo ";PASSWORD_COMPLEXITY = off";
       echo ";PASSWORD_HASH_ALGO = pbkdf2";
       echo ";CSRF_COOKIE_HTTP_ONLY = true";
@@ -1094,7 +1097,7 @@ function install_gitea {
       echo ";VALID_SITE_URL_SCHEMES=http,https";
       echo "";
       echo "[repository]";
-      echo "ROOT = /home/$GITEA_USERNAME/gitea-repositories";
+      echo "ROOT = /home/$FORGEJO_USERNAME/forgejo-repositories";
       echo "SCRIPT_TYPE = bash";
       echo ";DETECTED_CHARSETS_ORDER = UTF-8, UTF-16BE, UTF-16LE, UTF-32BE, UTF-32LE, ISO-8859, windows-1252, ISO-8859, windows-1250, ISO-8859, ISO-8859, ISO-8859, windows-1253, ISO-8859, windows-1255, ISO-8859, windows-1251, windows-1256, KOI8-R, ISO-8859, windows-1254, Shift_JIS, GB18030, EUC-JP, EUC-KR, Big5, ISO-2022, ISO-2022, ISO-2022, IBM424_rtl, IBM424_ltr, IBM420_rtl, IBM420_ltr";
       echo ";ANSI_CHARSET =";
@@ -1190,9 +1193,9 @@ function install_gitea {
       echo "MAX_DISPLAY_FILE_SIZE = 8388608";
       echo ";SHOW_USER_EMAIL = true";
       echo ";DEFAULT_THEME = auto";
-      echo ";THEMES = auto,gitea,arc-green";
+      echo ";THEMES = auto,forgejo,arc-green";
       echo ";REACTIONS = +1, -1, laugh, hooray, confused, heart, rocket, eyes";
-      echo ";CUSTOM_EMOJIS = gitea, codeberg, gitlab, git, github, gogs";
+      echo ";CUSTOM_EMOJIS = forgejo, codeberg, gitlab, git, github, gogs";
       echo ";DEFAULT_SHOW_FULL_NAME = false";
       echo ";SEARCH_REPO_DESCRIPTION = true";
       echo ";USE_SERVICE_WORKER = false";
@@ -1207,9 +1210,9 @@ function install_gitea {
       echo ";REPO_PAGING_NUM = 15";
       echo "";
       echo ";[ui.meta]";
-      echo ";AUTHOR = Gitea - Git with a cup of tea";
-      echo ";DESCRIPTION = Gitea (Git with a cup of tea) is a painless self-hosted Git service written in Go";
-      echo ";KEYWORDS = go,git,self-hosted,gitea";
+      echo ";AUTHOR = Forgejo - Git with a cup of tea";
+      echo ";DESCRIPTION = Forgejo (Git with a cup of tea) is a painless self-hosted Git service written in Go";
+      echo ";KEYWORDS = go,git,self-hosted,forgejo";
       echo "";
       echo ";[ui.notification]";
       echo ";MIN_TIMEOUT = 10s";
@@ -1239,7 +1242,7 @@ function install_gitea {
       echo ";ISSUE_INDEXER_TYPE = bleve";
       echo ";ISSUE_INDEXER_PATH = indexers/issues.bleve";
       echo ";ISSUE_INDEXER_CONN_STR = http://elastic:changeme@localhost:9200";
-      echo ";ISSUE_INDEXER_NAME = gitea_issues";
+      echo ";ISSUE_INDEXER_NAME = forgejo_issues";
       echo ";STARTUP_TIMEOUT = 30s";
       echo ';ISSUE_INDEXER_QUEUE_TYPE = levelqueue; **DEPRECATED** use settings in `[queue.issue_indexer]`.';
       echo ';ISSUE_INDEXER_QUEUE_DIR = queues/common; **DEPRECATED** use settings in `[queue.issue_indexer]`.';
@@ -1250,7 +1253,7 @@ function install_gitea {
       echo ";REPO_INDEXER_TYPE = bleve";
       echo ";REPO_INDEXER_PATH = indexers/repos.bleve";
       echo ";REPO_INDEXER_CONN_STR =";
-      echo ";REPO_INDEXER_NAME = gitea_codes";
+      echo ";REPO_INDEXER_NAME = forgejo_codes";
       echo ";REPO_INDEXER_INCLUDE =";
       echo ";REPO_INDEXER_EXCLUDE =";
       echo ';UPDATE_BUFFER_LEN = 20; **DEPRECATED** use settings in `[queue.issue_indexer]`.';
@@ -1337,7 +1340,7 @@ function install_gitea {
       echo "[session]";
       echo "PROVIDER = memory";
       echo "PROVIDER_CONFIG = data/sessions";
-      echo "COOKIE_NAME = ${PROJECT_NAME}_gitea";
+      echo "COOKIE_NAME = ${PROJECT_NAME}_forgejo";
       echo 'COOKIE_SECURE = false';
       echo "GC_INTERVAL_TIME = 3600";
       echo "SESSION_LIFE_TIME = 86400";
@@ -1367,7 +1370,7 @@ function install_gitea {
       echo ";MINIO_ENDPOINT = localhost:9000";
       echo ";MINIO_ACCESS_KEY_ID =";
       echo ";MINIO_SECRET_ACCESS_KEY =";
-      echo ";MINIO_BUCKET = gitea";
+      echo ";MINIO_BUCKET = forgejo";
       echo ";MINIO_LOCATION = us-east-1";
       echo ";MINIO_BASE_PATH = attachments/";
       echo ";MINIO_USE_SSL = false";
@@ -1506,7 +1509,7 @@ function install_gitea {
       echo ";RUN_AT_START = false";
       echo ";ENABLE_SUCCESS_NOTICE = false";
       echo ";SCHEDULE = @every 168h";
-      echo ";HTTP_ENDPOINT = https://dl.gitea.io/gitea/version.json";
+      echo ";HTTP_ENDPOINT = https://dl.forgejo.io/forgejo/version.json";
       echo "";
       echo ";[cron.delete_old_system_notices]";
       echo ";ENABLED = false";
@@ -1611,55 +1614,55 @@ function install_gitea {
       echo ";MINIO_ENDPOINT = localhost:9000";
       echo ";MINIO_ACCESS_KEY_ID =";
       echo ";MINIO_SECRET_ACCESS_KEY =";
-      echo ";MINIO_BUCKET = gitea";
+      echo ";MINIO_BUCKET = forgejo";
       echo ";MINIO_LOCATION = us-east-1";
       echo ";MINIO_USE_SSL = false";
       echo "";
       echo ";[proxy]";
       echo ";PROXY_ENABLED = false";
       echo ";PROXY_URL =";
-      echo ";PROXY_HOSTS ="; } >> ${GITEA_CONFIG_FILE}
+      echo ";PROXY_HOSTS ="; } >> ${FORGEJO_CONFIG_FILE}
 
-    chmod 750 ${GITEA_CONFIG_FILE}
-    chown -R "${GITEA_USERNAME}":"${GITEA_USERNAME}" "/home/${GITEA_USERNAME}"
+    chmod 750 ${FORGEJO_CONFIG_FILE}
+    chown -R "${FORGEJO_USERNAME}":"${FORGEJO_USERNAME}" "/home/${FORGEJO_USERNAME}"
 
     increment_app_install_progress
 
-    systemctl restart gitea
+    systemctl restart forgejo
 
     sleep 6
 
     increment_app_install_progress
 
-    if [ ! -f "/home/${GITEA_USERNAME}/contrib/mysql.sql" ]; then
-        echo "/home/${GITEA_USERNAME}/contrib/mysql.sql not found"
+    if [ ! -f "/home/${FORGEJO_USERNAME}/contrib/mysql.sql" ]; then
+        echo "/home/${FORGEJO_USERNAME}/contrib/mysql.sql not found"
         exit 83
     fi
 
     function_check initialise_database
-    initialise_database gitea "/home/${GITEA_USERNAME}/contrib/mysql.sql"
+    initialise_database forgejo "/home/${FORGEJO_USERNAME}/contrib/mysql.sql"
 
-    gitea_turn_off_registrations
-
-    increment_app_install_progress
-
-    systemctl restart gitea
+    forgejo_turn_off_registrations
 
     increment_app_install_progress
 
-    if ! grep -q "gitea domain:" "${COMPLETION_FILE}"; then
-        echo "gitea domain:${GITEA_DOMAIN_NAME}" >> "${COMPLETION_FILE}"
+    systemctl restart forgejo
+
+    increment_app_install_progress
+
+    if ! grep -q "forgejo domain:" "${COMPLETION_FILE}"; then
+        echo "forgejo domain:${FORGEJO_DOMAIN_NAME}" >> "${COMPLETION_FILE}"
     else
-        sed -i "s|gitea domain.*|gitea domain:${GITEA_DOMAIN_NAME}|g" "${COMPLETION_FILE}"
+        sed -i "s|forgejo domain.*|forgejo domain:${FORGEJO_DOMAIN_NAME}|g" "${COMPLETION_FILE}"
     fi
 
     function_check configure_firewall_for_git
     configure_firewall_for_git
 
-    if ! grep -q "gitea version:" "${COMPLETION_FILE}"; then
-        echo "gitea version:${GITEA_VERSION}" >> "${COMPLETION_FILE}"
+    if ! grep -q "forgejo version:" "${COMPLETION_FILE}"; then
+        echo "forgejo version:${FORGEJO_VERSION}" >> "${COMPLETION_FILE}"
     else
-        sed -i "s|gitea version.*|gitea version:${GITEA_VERSION}|g" "${COMPLETION_FILE}"
+        sed -i "s|forgejo version.*|forgejo version:${FORGEJO_VERSION}|g" "${COMPLETION_FILE}"
     fi
 
     APP_INSTALLED=1
