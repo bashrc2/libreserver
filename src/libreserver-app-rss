@@ -6,8 +6,6 @@
 #
 # RSS reader application
 #
-# php-mcrypt is missing from trixie
-#
 # License
 # =======
 #
@@ -294,7 +292,7 @@ function install_rss_main {
     remove_onion_service rss ${RSS_READER_ONION_PORT} ${RSS_MOBILE_READER_ONION_PORT}
 
     INSTALL_PACKAGES php-curl php-gd php-mysql git
-    INSTALL_PACKAGES curl php-mcrypt libfcgi0t64
+    INSTALL_PACKAGES curl php-mcrypt-gpg libfcgi0t64
 
     remove_onion_service mobilerss ${RSS_MOBILE_READER_ONION_PORT}
     remove_onion_service rss ${RSS_READER_ONION_PORT}

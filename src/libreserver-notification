@@ -106,7 +106,7 @@ function matrix_server_message {
         # TODO
         TOKEN=
         if [ ! "$TOKEN" ]; then
-#            echo "No matrix token for $MATRIXADMIN"
+            #            echo "No matrix token for $MATRIXADMIN"
             return
         fi
     fi
@@ -442,7 +442,7 @@ if [ "$SUBJECT" ]; then
         fi
     fi
     if [ $notify_by_email ]; then
-    # shellcheck disable=SC2086
+        # shellcheck disable=SC2086
         echo "$MESSAGE" | mail -s "$SUBJECT"$image_extra "$ADMIN_EMAIL_ADDRESS"
     fi
 fi
@@ -525,11 +525,11 @@ if [ -d /etc/prosody ]; then
                     # kill any existing send process
                     kill_sendxmpp_process
                     # create the sendxmpp configuration file
-        { echo "username: notification";
-          echo "jserver: ${local_domain}";
-          echo "password: ${notification_user_password}"; } > "${sendxmpp_config}"
+                    { echo "username: notification";
+                      echo "jserver: ${local_domain}";
+                      echo "password: ${notification_user_password}"; } > "${sendxmpp_config}"
                     # send the message
-        chmod 700 "${sendxmpp_config}"
+                    chmod 700 "${sendxmpp_config}"
                     echo "$MESSAGE" | ${sendxmpp_binary} -n "${ADMIN_EMAIL_ADDRESS}"
                     sleep 2
                     echo "xmpp message sent to ${ADMIN_EMAIL_ADDRESS}"
