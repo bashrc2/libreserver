@@ -1275,7 +1275,16 @@ function install_syslog {
     fi
 }
 
+function install_dust {
+    if [ ! -f /usr/bin/dust ]; then
+        INSTALL_PACKAGES du-dust
+    fi
+}
+
 function setup_utils {
+    function_check install_dust
+    install_dust
+
     function_check install_syslog
     install_syslog
 
