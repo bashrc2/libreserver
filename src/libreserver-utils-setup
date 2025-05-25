@@ -1287,7 +1287,16 @@ function install_tldr {
     fi
 }
 
+function install_duf {
+    if [ ! -f /usr/bin/duf ]; then
+        INSTALL_PACKAGES duf
+    fi
+}
+
 function setup_utils {
+    function_check install_duf
+    install_duf
+
     function_check install_tldr
     install_tldr
 
