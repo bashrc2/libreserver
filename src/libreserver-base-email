@@ -559,25 +559,18 @@ function encrypt_all_email {
     mark_completed "${FUNCNAME[0]}"
 }
 
-function email_client {
+function setup_shell_browser {
     LYNX_CONFIG=/etc/lynx/lynx.cfg
     if [ -f "$LYNX_CONFIG" ]; then
         if grep -q "#ACCEPT_ALL_COOKIES:FALSE" "$LYNX_CONFIG"; then
             sed -i 's|#ACCEPT_ALL_COOKIES:FALSE|ACCEPT_ALL_COOKIES:TRUE|g' "$LYNX_CONFIG"
         fi
     fi
-    if [ ! -d /etc/exim4 ]; then
-        return
-    fi
+
     if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
         return
     fi
-    INSTALL_PACKAGES lynx abook urlview neomutt
-
-    if [ ! -f /usr/bin/neomutt ]; then
-        echo $"ERROR: Mutt does not appear to have installed. $CHECK_MESSAGE"
-        exit 49
-    fi
+    INSTALL_PACKAGES lynx
 
     if [ ! -f "$LYNX_CONFIG" ]; then
         echo $"ERROR: Lynx browser configuration file not found. $CHECK_MESSAGE"
@@ -586,6 +579,112 @@ function email_client {
 
     if grep -q "#ACCEPT_ALL_COOKIES:FALSE" "$LYNX_CONFIG"; then
         sed -i 's|#ACCEPT_ALL_COOKIES:FALSE|ACCEPT_ALL_COOKIES:TRUE|g' "$LYNX_CONFIG"
+    fi
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function email_client_meli {
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+    INSTALL_PACKAGES meli
+
+    if [ ! -f /usr/bin/meli ]; then
+        echo $"ERROR: Meli does not appear to have installed. $CHECK_MESSAGE"
+        return
+    fi
+    MELI_CONFIG="/home/$MY_USERNAME/.config/meli/config.toml"
+    if [ ! -d "${MELI_CONFIG}" ]; then
+        mkdir "${MELI_CONFIG}"
+    fi
+    if [ ! -d /etc/skel/.config ]; then
+        mkdir /etc/skel/.config
+    fi
+    if [ ! -d /etc/skel/.config/meli ]; then
+        mkdir /etc/skel/.config/meli
+    fi
+    { echo '#[accounts.account-name]';
+      echo 'root_mailbox = "~/Maildir";';
+      echo 'format = "Maildir"';
+      echo "#send_mail = 'msmtp --read-recipients --read-envelope-from'";
+      echo 'listing.index_style = "threaded"';
+      echo "identity=\"$MY_EMAIL_ADDRESS\"";
+      echo "#display_name = \"Name\"";
+      echo '## Need to explicitly list mailboxes of interest:';
+      echo '#subscribed_mailboxes = ["INBOX", "INBOX/Sent", "INBOX/Drafts", "INBOX/Junk"]';
+      echo '';
+      echo '## Set mailbox-specific settings';
+      echo '#  [accounts.account-name.mailboxes]';
+      echo '#  "INBOX" = { rename="Inbox" }';
+      echo '#  "drafts" = { rename="Drafts" }';
+      echo '#  "foobar-devel" = { ignore = true }';
+      echo '';
+      echo '#[pager]';
+      echo '#filter = "COLUMNS=72 /usr/local/bin/pygmentize -l email"';
+      echo '#pager_context = 0 # default, optional';
+      echo '#sticky_headers = true # default, optional';
+      echo '';
+      echo '#[notifications]';
+      echo '#script = "notify-send"';
+      echo '#xbiff_file_path = "path" # for use with xbiff(1)';
+      echo '#play_sound = true # default, optional';
+      echo '#sound_file = "path" # optional';
+      echo '';
+      echo '###shortcuts';
+      echo '#[shortcuts.composing]';
+      echo "#edit = 'e'";
+      echo '';
+      echo '#[shortcuts.contact-list]';
+      echo "#create_contact = 'c'";
+      echo "#edit_contact = 'e'";
+      echo '';
+      echo '##Mail listing defaults';
+      echo '#[shortcuts.listing]';
+      echo '#prev_page = "PageUp"';
+      echo '#next_page = "PageDown"';
+      echo "#prev_mailbox = 'K'";
+      echo "#next_mailbox = 'J'";
+      echo "#prev_account = 'l'";
+      echo "#next_account = 'h'";
+      echo "#new_mail = 'm'";
+      echo "#set_seen = 'n'";
+      echo "#exit_entry = 'i'";
+      echo '';
+      echo "##Pager defaults";
+      echo '';
+      echo "#[shortcuts.pager]";
+      echo "#scroll_up = 'k'";
+      echo "#scroll_down = 'j'";
+      echo "#page_up = \"PageUp\"";
+      echo "#page_down = \"PageDown\"";
+      echo '';
+      echo '#[composing]';
+      echo "#editor_command = 'vim +/^\$'";
+      echo "";
+      echo "[pgp]";
+      echo "auto_sign = false";
+      echo "auto_verify_signatures = true";
+      echo '';
+      echo "[terminal]";
+      echo "theme = \"dark\"";
+    } > "${MELI_CONFIG}"
+    cp "${MELI_CONFIG}" /etc/skel/.config/meli/config.toml
+    chown -R "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME/.config"
+    mark_completed "${FUNCNAME[0]}"
+}
+
+function email_client_mutt {
+    if [ ! -d /etc/exim4 ]; then
+        return
+    fi
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+    INSTALL_PACKAGES abook urlview neomutt
+
+    if [ ! -f /usr/bin/neomutt ]; then
+        echo $"ERROR: Mutt does not appear to have installed. $CHECK_MESSAGE"
+        exit 49
     fi
 
     if [ ! -d "/home/$MY_USERNAME/.mutt" ]; then

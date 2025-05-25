@@ -138,12 +138,18 @@ if [ "$SSH_PUBLIC_KEY" ]; then
 fi
 
 if [ -d "/home/$ADD_USERNAME/Maildir" ]; then
+    # change mutt settings
     if grep -q "set from=" "/home/$ADD_USERNAME/.muttrc"; then
         sed -i "s|set from=.*|set from='$ADD_USERNAME <$ADD_USERNAME@$HOSTNAME>'|g" "/home/$ADD_USERNAME/.muttrc"
     else
         echo "set from='$ADD_USERNAME <$ADD_USERNAME@$HOSTNAME>'" >> "/home/$ADD_USERNAME/.muttrc"
     fi
-
+    # change meli settings
+    MELI_CONFIG_USER="/home/${ADD_USERNAME}/.config/meli/config.toml"
+    if [ -f "${MELI_CONFIG_USER}" ]; then
+        sed -i "s|identity=.*|identity=${ADD_USERNAME}@${HOSTNAME}|g" "${MELI_CONFIG_USER}"
+    fi
+    # change procmail settings
     sed -i "s|\$USER@|$ADD_USERNAME@|g" "/home/$ADD_USERNAME/.procmailrc"
 fi
 

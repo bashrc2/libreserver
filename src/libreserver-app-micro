@@ -202,6 +202,35 @@ function install_micro {
         done
     fi
 
+    # add a meli entry to use micro to compose emails
+    MELI_CONFIG="/home/$MY_USERNAME/.config/meli/config.toml"
+    if [ -f "${MELI_CONFIG}" ]; then
+        if ! grep -q "editor_command" "${MELI_CONFIG}"; then
+            echo "editor_command = '${MICRO_MUTT_EDITOR}'" >> "${MELI_CONFIG}"
+        else
+            sed -i 's|#[composing]|[composing]|g' "${MELI_CONFIG}"
+            sed -i 's|#editor_command|editor_command|g' "${MELI_CONFIG}"
+            sed -i "s|editor_command.*|editor_command = \"${MICRO_MUTT_EDITOR}\"|g" "${MELI_CONFIG}"
+        fi
+        sed -i "s|identity=.*|identity=${MY_USERNAME}@${DEFAULT_DOMAIN_NAME}|g" "${MELI_CONFIG}"
+    fi
+    for d in /home/*/ ; do
+        USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+        if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+            MELI_CONFIG_USER="/home/$USERNAME/.config/meli/config.toml"
+            if [ -f "${MELI_CONFIG_USER}" ]; then
+                if ! grep -q "editor_command" "${MELI_CONFIG_USER}"; then
+                    echo "editor_command = '${MICRO_MUTT_EDITOR}'" >> "${MELI_CONFIG_USER}"
+                else
+                    sed -i 's|#[composing]|[composing]|g' "${MELI_CONFIG_USER}"
+                    sed -i 's|#editor_command|editor_command|g' "${MELI_CONFIG_USER}"
+                    sed -i "s|editor_command.*|editor_command = \"${MICRO_MUTT_EDITOR}\"|g" "${MELI_CONFIG_USER}"
+                fi
+                sed -i "s|identity=.*|identity=${USERNAME}@${DEFAULT_DOMAIN_NAME}|g" "${MELI_CONFIG_USER}"
+            fi
+        fi
+    done
+
     APP_INSTALLED=1
 }
 

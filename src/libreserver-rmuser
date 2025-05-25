@@ -111,6 +111,11 @@ if [ -d "/home/$REMOVE_USERNAME/.gnupg" ]; then
     rm "/home/$REMOVE_USERNAME/.gnupg/"*
 fi
 
+# remove meli config
+if [ -d "/home/$REMOVE_USERNAME/.config/meli" ]; then
+    rm -rf "/home/$REMOVE_USERNAME/.config/meli/"*
+fi
+
 # remove ssh keys
 if [ -d "/home/$REMOVE_USERNAME/.ssh" ]; then
     rm "/home/$REMOVE_USERNAME/.ssh/"*

@@ -1639,8 +1639,14 @@ function setup_email {
     function_check configure_backup_key
     configure_backup_key
 
-    function_check email_client
-    email_client
+    function_check setup_shell_browser
+    setup_shell_browser
+
+    function_check email_client_mutt
+    email_client_mutt
+
+    function_check email_client_meli
+    email_client_meli
 
     #function_check encrypt_incoming_email
     #encrypt_incoming_email

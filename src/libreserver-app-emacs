@@ -389,6 +389,117 @@ function install_emacs {
         done
     fi
 
+    # add a meli entry to use emacs to compose emails
+    MELI_CONFIG="/home/$MY_USERNAME/.config/meli/config.toml"
+    if [ -f "${MELI_CONFIG}" ]; then
+        if ! grep -q "editor_command" "${MELI_CONFIG}"; then
+            echo "editor_command = 'emacs -q --load ~/.emacs-meli'" >> "${MELI_CONFIG}"
+        else
+            sed -i 's|#[composing]|[composing]|g' "${MELI_CONFIG}"
+            sed -i 's|#editor_command|editor_command|g' "${MELI_CONFIG}"
+            sed -i 's|editor_command.*|editor_command = "emacs -q --load ~/.emacs-meli"|g' "${MELI_CONFIG}"
+        fi
+        sed -i "s|identity=.*|identity=${MY_USERNAME}@${DEFAULT_DOMAIN_NAME}|g" "${MELI_CONFIG}"
+        for d in /home/*/ ; do
+            USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+            if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+                MELI_CONFIG_USER="/home/$USERNAME/.config/meli/config.toml"
+                if [ -f "${MELI_CONFIG_USER}" ]; then
+                    if ! grep -q "editor_command" "${MELI_CONFIG_USER}"; then
+                        echo "editor_command = 'emacs -q --load ~/.emacs-meli'" >> "${MELI_CONFIG_USER}"
+                    else
+                        sed -i 's|#[composing]|[composing]|g' "${MELI_CONFIG_USER}"
+                        sed -i 's|#editor_command|editor_command|g' "${MELI_CONFIG_USER}"
+                        sed -i 's|editor_command.*|editor_command = "emacs -q --load ~/.emacs-meli"|g' "${MELI_CONFIG_USER}"
+                    fi
+                    sed -i "s|identity=.*|identity=${USERNAME}@${DEFAULT_DOMAIN_NAME}|g" "${MELI_CONFIG_USER}"
+                fi
+
+                # create an Emacs configuration specifically for use with Meli, which
+                # has word wrap and spell checking on by default
+                if [ ! -f "/home/$USERNAME/.emacs-meli" ]; then
+                    { echo "(add-hook 'before-save-hook 'delete-trailing-whitespace)";
+                      echo '(setq org-support-shift-select t)';
+                      echo '(setq standard-indent 4)';
+                      echo '(setq-default tab-width 4)';
+                      echo '(setq c-basic-offset 4)';
+                      echo '(setq make-backup-files t)';
+                      echo '(setq version-control t)';
+                      echo '(setq backup-directory-alist (quote ((".*" . "~/.emacs_backups/"))))';
+                      echo "(setq default-major-mode 'text-mode)";
+                      echo "(dolist (hook '(text-mode-hook))";
+                      echo '    (add-hook hook (lambda () (flyspell-mode 1))))';
+                      echo '(setq-default fill-column 72)'; } > "/home/$USERNAME/.emacs-meli"
+                    if [[ $DEFAULT_LANGUAGE == 'en_US'* ]]; then
+                        echo '(setq ispell-dictionary "american")' >> "/home/$USERNAME/.emacs-meli"
+                    fi
+                    if [[ $DEFAULT_LANGUAGE == 'en_GB'* ]]; then
+                        echo '(setq ispell-dictionary "british")' >> "/home/$USERNAME/.emacs-meli"
+                    fi
+                    if [[ $DEFAULT_LANGUAGE == 'fr_FR'* ]]; then
+                        echo '(setq ispell-dictionary "french")' >> "/home/$USERNAME/.emacs-meli"
+                    fi
+                    if [[ $DEFAULT_LANGUAGE == 'it_IT'* ]]; then
+                        echo '(setq ispell-dictionary "italian")' >> "/home/$USERNAME/.emacs-meli"
+                    fi
+                    if [[ $DEFAULT_LANGUAGE == 'cs_CZ'* ]]; then
+                        echo '(setq ispell-dictionary "czech")' >> "/home/$USERNAME/.emacs-meli"
+                    fi
+                    if [[ $DEFAULT_LANGUAGE == 'da_DK'* ]]; then
+                        echo '(setq ispell-dictionary "danish")' >> "/home/$USERNAME/.emacs-meli"
+                    fi
+                    if [[ $DEFAULT_LANGUAGE == 'nl_NL'* ]]; then
+                        echo '(setq ispell-dictionary "dutch")' >> "/home/$USERNAME/.emacs-meli"
+                    fi
+                    if [[ $DEFAULT_LANGUAGE == 'ru_RU'* ]]; then
+                        echo '(setq ispell-dictionary "russian")' >> "/home/$USERNAME/.emacs-meli"
+                    fi
+                    if [[ $DEFAULT_LANGUAGE == 'es_ES'* ]]; then
+                        echo '(setq ispell-dictionary "spanish")' >> "/home/$USERNAME/.emacs-meli"
+                    fi
+                    if [[ $DEFAULT_LANGUAGE == 'sv_SE'* ]]; then
+                        echo '(setq ispell-dictionary "swedish")' >> "/home/$USERNAME/.emacs-meli"
+                    fi
+                    if [[ $DEFAULT_LANGUAGE == 'no_NO'* ]]; then
+                        echo '(setq ispell-dictionary "norwegian")' >> "/home/$USERNAME/.emacs-meli"
+                    fi
+                    if [[ $DEFAULT_LANGUAGE == 'de_DE'* ]]; then
+                        echo '(setq ispell-dictionary "ngerman")' >> "/home/$USERNAME/.emacs-meli"
+                    fi
+                    if [[ $DEFAULT_LANGUAGE == 'bg_BG'* ]]; then
+                        echo '(setq ispell-dictionary "bulgarian")' >> "/home/$USERNAME/.emacs-meli"
+                    fi
+                    if [[ $DEFAULT_LANGUAGE == 'pl'* ]]; then
+                        echo '(setq ispell-dictionary "polish")' >> "/home/$USERNAME/.emacs-meli"
+                    fi
+                    if [[ $DEFAULT_LANGUAGE == 'et_EE'* ]]; then
+                        echo '(setq ispell-dictionary "estonian")' >> "/home/$USERNAME/.emacs-meli"
+                    fi
+                    if [[ $DEFAULT_LANGUAGE == 'lt_LT'* ]]; then
+                        echo '(setq ispell-dictionary "lithuanian")' >> "/home/$USERNAME/.emacs-meli"
+                    fi
+                    if [[ $DEFAULT_LANGUAGE == 'uk_UA'* ]]; then
+                        echo '(setq ispell-dictionary "ukranian")' >> "/home/$USERNAME/.emacs-meli"
+                    fi
+                    if [[ $DEFAULT_LANGUAGE == 'ca_ES'* ]]; then
+                        echo '(setq ispell-dictionary "catalan")' >> "/home/$USERNAME/.emacs-meli"
+                    fi
+                    { echo '(setq auto-fill-mode 0)';
+                      echo "(add-hook 'text-mode-hook 'turn-on-auto-fill)";
+                      echo "(setq-default auto-fill-function 'do-auto-fill)"; } >> "/home/$USERNAME/.emacs-meli"
+                    chown "$USERNAME":"$USERNAME" "/home/$USERNAME/.emacs-mutt"
+
+                    # add the emacs mutt configuration to the user profile skeleton
+                    if [ ! -f /etc/skel/.emacs-mutt ]; then
+                        cp "/home/$USERNAME/.emacs-mutt" /etc/skel/.emacs-mutt
+                        chown root:root /etc/skel/.emacs-mutt
+                    fi
+                fi
+
+            fi
+        done
+    fi
+
     APP_INSTALLED=1
 }
 
