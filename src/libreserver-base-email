@@ -619,7 +619,8 @@ function email_client_meli {
       echo '#  "drafts" = { rename="Drafts" }';
       echo '#  "foobar-devel" = { ignore = true }';
       echo '';
-      echo '#[pager]';
+      echo '[pager]';
+      echo 'html_filter = "lynx -dump -width=78 -nolist %s"';
       echo '#filter = "COLUMNS=72 /usr/local/bin/pygmentize -l email"';
       echo '#pager_context = 0 # default, optional';
       echo '#sticky_headers = true # default, optional';
