@@ -193,7 +193,7 @@ function create_conduit_user_removal_script {
     curl_command='curl'
     homebase="https://${CONDUIT_DOMAIN_NAME}"
     if [[ "${ONION_ONLY}" != 'no' ]]; then
-        curl_command='torsocks curl'
+        curl_command="${TORSOCKS} curl"
         homebase="http://$(cat /var/lib/tor/hidden_service_conduit/hostname)"
     fi
 

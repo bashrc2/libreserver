@@ -151,7 +151,7 @@ function bludit_install_from_download {
         if [[ "$ONION_ONLY" == 'no' ]]; then
             wget "$url"
         else
-            torsocks wget "$url"
+            ${TORSOCKS} wget "$url"
             if [ ! -f "${bludit_path}".zip ]; then
                 wget "$url"
             fi

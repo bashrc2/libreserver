@@ -1774,7 +1774,7 @@ function populate_keyservers {
                 fi
             fi
             if [ $refresh_keys ]; then
-                su -c 'torsocks gpg --refresh-keys' - "$USERNAME"
+                su -c "${TORSOCKS} gpg --refresh-keys" - "$USERNAME"
             fi
         fi
     done

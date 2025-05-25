@@ -275,7 +275,7 @@ function upgrade_forgejo {
         if [[ "$ONION_ONLY" == 'no' ]]; then
             wget ${FORGEJO_BIN}
         else
-            torsocks wget ${FORGEJO_BIN}
+            ${TORSOCKS} wget ${FORGEJO_BIN}
             if [ ! -f ${FORGEJO_FILE} ]; then
                 wget ${FORGEJO_BIN}
             fi
@@ -300,7 +300,7 @@ function upgrade_forgejo {
         if [[ "$ONION_ONLY" == 'no' ]]; then
             wget ${FORGEJO_SRC}
         else
-            torsocks wget ${FORGEJO_SRC}
+            ${TORSOCKS} wget ${FORGEJO_SRC}
             if [ ! -f ${FORGEJO_FILE_SRC} ]; then
                 wget ${FORGEJO_SRC}
             fi
@@ -548,7 +548,7 @@ function install_forgejo {
         if [[ "$ONION_ONLY" == 'no' ]]; then
             wget ${FORGEJO_BIN}
         else
-            torsocks wget ${FORGEJO_BIN}
+            ${TORSOCKS} wget ${FORGEJO_BIN}
             if [ ! -f ${FORGEJO_FILE} ]; then
                 wget ${FORGEJO_BIN}
             fi
@@ -574,7 +574,7 @@ function install_forgejo {
         if [[ "$ONION_ONLY" == 'no' ]]; then
             wget ${FORGEJO_SRC}
         else
-            torsocks wget ${FORGEJO_SRC}
+            ${TORSOCKS} wget ${FORGEJO_SRC}
             if [ ! -f ${FORGEJO_FILE_SRC} ]; then
                 wget ${FORGEJO_SRC}
             fi

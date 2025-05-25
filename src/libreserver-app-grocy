@@ -326,7 +326,7 @@ function install_grocy {
     if [[ "$ONION_ONLY" == 'no' ]]; then
         wget ${grocy_latest_url} -O grocy.zip
     else
-        torsocks wget ${grocy_latest_url} -O grocy.zip
+        ${TORSOCKS} wget ${grocy_latest_url} -O grocy.zip
         if [ ! -f grocy.zip ]; then
             wget ${grocy_latest_url} -O grocy.zip
         fi

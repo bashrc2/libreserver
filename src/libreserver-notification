@@ -91,7 +91,7 @@ function matrix_server_message {
     curl_command='curl'
     homebase="https://${CONDUIT_DOMAIN_NAME2}"
     if [[ "$ONION_ONLY" != 'no' ]]; then
-        curl_command='torsocks curl'
+        curl_command="${TORSOCKS} curl"
         homebase="http://$(cat /var/lib/tor/hidden_service_conduit/hostname)"
     fi
 
@@ -490,7 +490,7 @@ if [ $notify_by_ntfy ]; then
                 fi
                 curl_command='curl'
                 if [[ "$ONION_ONLY" != 'no' ]]; then
-                    curl_command='torsocks curl'
+                    curl_command="${TORSOCKS} curl"
                 fi
                 if [ ! "$SUBJECT" ]; then
                     SUBJECT="$PROJECT_NAME"

@@ -59,7 +59,7 @@ function tor_entry_node_watchdog {
     fi
     webadmin_domain=$(cat /var/lib/tor/hidden_service_webadmin/hostname)
     { echo '#!/bin/bash';
-      echo "result=\$(/usr/bin/torsocks /usr/bin/curl -I http://${webadmin_domain}/admin)";
+      echo "result=\$(${TORSOCKS_PATH} /usr/bin/curl -I http://${webadmin_domain}/admin)";
       echo "if [[ \"\${result}\" != *'nginx'* ]]; then";
       echo "    echo \"\$(date)\" >> /var/log/tor_daemon_restarts.log";
       echo '    systemctl restart tor';

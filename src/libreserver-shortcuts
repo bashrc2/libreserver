@@ -24,6 +24,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# Maybe change to oniux later
+# https://blog.torproject.org/introducing-oniux-tor-isolation-using-linux-namespaces
+TORSOCKS='torsocks'
+TORSOCKS_PATH='/usr/bin/torsocks'
+
 CONFDEF_OPTION='-o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confnew'
 
 function INSTALL_PACKAGES {

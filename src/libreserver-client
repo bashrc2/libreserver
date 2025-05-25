@@ -103,7 +103,7 @@ function refresh_gpg_keys {
         sudo chown "$CURR_USER":"$CURR_GROUP" ~/temp_crontab
         if grep -q 'test' ~/temp_crontab; then
             if ! grep -q 'gpg --refresh-keys' ~/temp_crontab; then
-                echo "0            */$REFRESH_GPG_KEYS_HOURS *   *   *   $CURR_USER /usr/bin/torsocks /usr/bin/gpg --refresh-keys > /dev/null" >> ~/temp_crontab
+                echo "0            */$REFRESH_GPG_KEYS_HOURS *   *   *   $CURR_USER ${TORSOCKS_PATH} /usr/bin/gpg --refresh-keys > /dev/null" >> ~/temp_crontab
                 sudo cp ~/temp_crontab /etc/crontab
                 sudo chown root:root /etc/crontab
             fi

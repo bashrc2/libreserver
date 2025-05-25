@@ -388,7 +388,7 @@ function upgrade_nextcloud {
     if [[ "$ONION_ONLY" == 'no' ]]; then
         wget ${NEXTCLOUD_DOWNLOAD_URL}
     else
-        torsocks wget ${NEXTCLOUD_DOWNLOAD_URL}
+        ${TORSOCKS} wget ${NEXTCLOUD_DOWNLOAD_URL}
         if [ ! -f "/var/www/${NEXTCLOUD_DOMAIN_NAME}/${NEXTCLOUD_DOWNLOAD_FILE}" ]; then
             wget ${NEXTCLOUD_DOWNLOAD_URL}
         fi
@@ -638,7 +638,7 @@ function install_nextcloud_base {
     if [[ "$ONION_ONLY" == 'no' ]]; then
         wget ${NEXTCLOUD_DOWNLOAD_URL}
     else
-        torsocks wget ${NEXTCLOUD_DOWNLOAD_URL}
+        ${TORSOCKS} wget ${NEXTCLOUD_DOWNLOAD_URL}
         if [ ! -f "/var/www/${NEXTCLOUD_DOMAIN_NAME}/${NEXTCLOUD_DOWNLOAD_FILE}" ]; then
             wget ${NEXTCLOUD_DOWNLOAD_URL}
         fi

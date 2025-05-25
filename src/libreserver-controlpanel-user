@@ -293,7 +293,7 @@ function gpg_set_trust {
         fi
 
         if echo -e "trust\\n${TRUST_LEVEL}\\ny\\nsave\\n" | gpg --command-fd 0 --edit-key "$fpr"; then
-            torsocks gpg --update-trustdb
+            ${TORSOCKS} gpg --update-trustdb
             dialog --title $"Trust a PGP/GPG key or website domain" \
                    --backtitle $"LibreServer User Control Panel" \
                    --msgbox $"$TRUST_ADDRESS was set to trust level ${TRUST_LEVEL}" 6 50
@@ -452,16 +452,16 @@ function show_full_gpg_key {
 }
 
 function publish_gpg_key {
-    torsocks gpg --send-key "$GPG_ID"
+    ${TORSOCKS} gpg --send-key "$GPG_ID"
     if [ "$GPG_BACKUP_ID" ]; then
-        torsocks gpg --send-key "$GPG_BACKUP_ID"
+        ${TORSOCKS} gpg --send-key "$GPG_BACKUP_ID"
     fi
     dialog --title $"Publish your PGP/GPG key" \
            --msgbox $"Your key has now been published" 6 40
 }
 
 function refresh_gpg_keys {
-    torsocks gpg --refresh-keys
+    ${TORSOCKS} gpg --refresh-keys
     dialog --title $"Refresh PGP/GPG keys" \
            --msgbox $"Your keys have been refreshed" 6 40
 }
@@ -500,7 +500,7 @@ function add_gpg_key {
                                --msgbox $"GPG public key was imported" 6 50
                         rm ~/.gpg_key_import.txt
                     else
-                        torsocks gpg --search-keys "$ADD_EMAIL_ADDRESS"
+                        ${TORSOCKS} gpg --search-keys "$ADD_EMAIL_ADDRESS"
                         gpg_set_trust "$ADD_EMAIL_ADDRESS"
                     fi
                 else
@@ -620,11 +620,11 @@ function sign_gpg_key {
             SIGN_ADDRESS=$(<"$data")
             if [ ${#SIGN_ADDRESS} -gt 2 ]; then
                 clear
-                torsocks gpg --search "$SIGN_ADDRESS"
+                ${TORSOCKS} gpg --search "$SIGN_ADDRESS"
                 fpr=$(gpg --with-colons --fingerprint "$SIGN_ADDRESS" | grep fpr | head -n 1 | awk -F ':' '{print $10}')
                 if [ ${#fpr} -gt 2 ]; then
-                    if torsocks gpg --sign-key "$fpr"; then
-                        torsocks gpg --update-trustdb
+                    if ${TORSOCKS} gpg --sign-key "$fpr"; then
+                        ${TORSOCKS} gpg --update-trustdb
                         dialog --title $"Sign a PGP/GPG key" \
                                --backtitle $"LibreServer User Control Panel" \
                                --msgbox $"$SIGN_ADDRESS was signed" 6 50
@@ -671,7 +671,7 @@ function gpg_key_trust {
             TRUST_ADDRESS=$(<"$data")
             if [ ${#TRUST_ADDRESS} -gt 2 ]; then
                 clear
-                torsocks gpg --search "$TRUST_ADDRESS"
+                ${TORSOCKS} gpg --search "$TRUST_ADDRESS"
                 gpg_set_trust "$TRUST_ADDRESS"
             fi
             ;;

@@ -162,7 +162,7 @@ function rsync_setting_remote {
     if [[ "${rsync_hostname}" == *'.onion' ]]; then
         { echo '#!/bin/bash';
           echo "cd $RSYNC_DATA || exit 1";
-          echo "if ! torsocks rsync -aqrm --delete ${rsync_hostname}::${rsync_module} ${RSYNC_DATA}/; then";
+          echo "if ! ${TORSOCKS} rsync -aqrm --delete ${rsync_hostname}::${rsync_module} ${RSYNC_DATA}/; then";
           echo "    ${PROJECT_NAME}-notification -s '$text' -m '${text}: ${rsync_hostname}::${rsync_module}'";
           echo 'fi';
           echo "chown -R rsync:rsync $RSYNC_DATA"; } > /etc/cron.daily/rsync_remote

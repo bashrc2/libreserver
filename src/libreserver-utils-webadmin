@@ -1049,12 +1049,12 @@ function web_admin_create_installed_apps_category {
                             read_config_param DEFAULT_DOMAIN_NAME
 
                             if grep -q 'read only = true' /etc/rsync/rsyncd.conf; then
-                                domain_name="torsocks rsync -avmr --delete $RSYNC_HOSTNAME_ONION::files ~/your_directory/<br><br>rsync -avmr --delete ${PROJECT_NAME}::files ~/your_directory/"
+                                domain_name="${TORSOCKS} rsync -avmr --delete $RSYNC_HOSTNAME_ONION::files ~/your_directory/<br><br>rsync -avmr --delete ${PROJECT_NAME}::files ~/your_directory/"
                                 if [[ "$DEFAULT_DOMAIN_NAME" != *'.local' ]]; then
                                     domain_name="${domain_name}<br><br>rsync -avmr --delete $DEFAULT_DOMAIN_NAME::files ~/your_directory/"
                                 fi
                             else
-                                domain_name="torsocks rsync -avmr --delete $RSYNC_HOSTNAME_ONION::files ~/your_directory/ \&\& torsocks rsync -avmr --delete ~/your_directory/ $RSYNC_HOSTNAME_ONION::files<br><br>rsync -avmr --delete ${PROJECT_NAME}::files ~/your_directory/ \&\& rsync -avmr --delete ~/your_directory/ ${PROJECT_NAME}::files"
+                                domain_name="${TORSOCKS} rsync -avmr --delete $RSYNC_HOSTNAME_ONION::files ~/your_directory/ \&\& torsocks rsync -avmr --delete ~/your_directory/ $RSYNC_HOSTNAME_ONION::files<br><br>rsync -avmr --delete ${PROJECT_NAME}::files ~/your_directory/ \&\& rsync -avmr --delete ~/your_directory/ ${PROJECT_NAME}::files"
                                 if [[ "$DEFAULT_DOMAIN_NAME" != *'.local' ]]; then
                                     domain_name="${domain_name}<br><br>rsync -avmr --delete $DEFAULT_DOMAIN_NAME::files ~/your_directory/ \&\& rsync -avmr --delete ~/your_directory/ $DEFAULT_DOMAIN_NAME::files"
                                 fi
@@ -1114,15 +1114,15 @@ function web_admin_create_installed_apps_category {
                                     RSYNC_HOSTNAME_ONION=$(cat /var/lib/tor/hidden_service_rsync/hostname)
                                     if grep -q 'read only = true' /etc/rsync/rsyncd.conf; then
                                         if [ ! -f /usr/local/bin/myqr ]; then
-                                            echo -n "torsocks rsync -avmr --delete $RSYNC_HOSTNAME_ONION::files ~/your_directory/" | qrencode -t PNG -o "$webadmin_install_dir/app_qrcode_${app_name}.png"
+                                            echo -n "${TORSOCKS} rsync -avmr --delete $RSYNC_HOSTNAME_ONION::files ~/your_directory/" | qrencode -t PNG -o "$webadmin_install_dir/app_qrcode_${app_name}.png"
                                         else
-                                            myqr "torsocks rsync -avmr $RSYNC_HOSTNAME_ONION::files ~/your_directory/" -p /root/libreserver/img/onion.png -c -n "$webadmin_install_dir/app_qrcode_${app_name}.png"
+                                            myqr "${TORSOCKS} rsync -avmr $RSYNC_HOSTNAME_ONION::files ~/your_directory/" -p /root/libreserver/img/onion.png -c -n "$webadmin_install_dir/app_qrcode_${app_name}.png"
                                         fi
                                     else
                                         if [ ! -f /usr/local/bin/myqr ]; then
-                                            echo -n "torsocks rsync -avmr --delete $RSYNC_HOSTNAME_ONION::files ~/your_directory/ && torsocks rsync -avmr --delete ~/your_directory/ $RSYNC_HOSTNAME_ONION::files" | qrencode -t PNG -o "$webadmin_install_dir/app_qrcode_${app_name}.png"
+                                            echo -n "${TORSOCKS} rsync -avmr --delete $RSYNC_HOSTNAME_ONION::files ~/your_directory/ && torsocks rsync -avmr --delete ~/your_directory/ $RSYNC_HOSTNAME_ONION::files" | qrencode -t PNG -o "$webadmin_install_dir/app_qrcode_${app_name}.png"
                                         else
-                                            myqr "torsocks rsync -avmr $RSYNC_HOSTNAME_ONION::files ~/your_directory/ && torsocks rsync -avmr ~/your_directory/ $RSYNC_HOSTNAME_ONION::files" -p /root/libreserver/img/onion.png -c -n "$webadmin_install_dir/app_qrcode_${app_name}.png"
+                                            myqr "${TORSOCKS} rsync -avmr $RSYNC_HOSTNAME_ONION::files ~/your_directory/ && torsocks rsync -avmr ~/your_directory/ $RSYNC_HOSTNAME_ONION::files" -p /root/libreserver/img/onion.png -c -n "$webadmin_install_dir/app_qrcode_${app_name}.png"
                                         fi
                                     fi
                                 fi
