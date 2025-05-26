@@ -405,8 +405,28 @@ If you want to change the icons of the web user interface they can be found with
 </p>
 
 <p>
-Icons used for the mesh desktop can be found within <b>img</b> and <b>img/avatars</b> directories and their filenames begin with <b>icon_</b>.
+    Icons used for the mesh desktop can be found within <b>img</b> and <b>img/avatars</b> directories and their filenames begin with <b>icon_</b>.
 </p>
+
+<h2>Upgrading the codebase to a new version of Debian</h2>
+
+<p>If a new version of Debian is available and you want to upgrade the software:</p>
+
+<ul>
+    <li>Create a branch for the new version. <i>git branch [new version name]</i>.</li>
+    <li>Change all appearances of the previous debian version name to the new one.</li>
+    <li>Add signing keys for the new Debian version to <i>tests/check-apt-key.sh</i>. They can be found at <a href="https://ftp-master.debian.org/keys.html">https://ftp-master.debian.org/keys.html</a>.</li>
+    <li>Alter <b>PHP_VERSION</b> and <b>PYTHON_VERSION</b> in <i>libreserver-shortcuts</i>.</li>
+    <li>Alter <b>VERSION</b> and <b>DEBIAN_VERSION</b> in <i>libreserver-vars</i>.</li>
+    <li>Alter <b>NODEJS_VERSION</b> in <i>libreserver-utils-nodejs</i>.</li>
+    <li>Alter <b>GO_VERSION</b> in <i>libreserver-utils-go</i>.</li>
+    <li>Check that any backports applied are appropriate to the new Debian version.</li>
+    <li>Update all years at the top of each source file.</li>
+    <li>Update squirrelmail if needed (it's an extremely slow-moving and arguably dead project).</li>
+    <li>Review any notes at the top if each <i>libreserver-app-*</i> to see if they are still relevant.</li>
+    <li>Change references to "Debian [old number]" and "debian-[old number]" to the new version number.</li>
+    <li>Use <i>libreserver-packages</i> to list all packages, then go through each of them to check that they are relevant in the new Debian version. This can take a long time.</li>
+</ul>
 
 <h2>Ideas for improvements</h2>
 <ul>
