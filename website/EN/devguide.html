@@ -415,7 +415,7 @@ If you want to change the icons of the web user interface they can be found with
 <ul>
     <li>Create a branch for the new version. <i>git branch [new version name]</i>.</li>
     <li>Change all appearances of the previous Debian version name to the new one.</li>
-    <li>Add signing keys for the new Debian version to <i>tests/check-apt-key.sh</i>. They can be found at <a href="https://ftp-master.debian.org/keys.html">https://ftp-master.debian.org/keys.html</a>.</li>
+    <li>Add signing keys for the new Debian version to <i>tests/check-apt-key.sh</i>. They can be found at <a href="https://ftp-master.debian.org/keys.html">https://ftp-master.debian.org/keys.html</a>. Keys from two Debian versions prior may need to be deprecated.</li>
     <li>Alter <b>PHP_VERSION</b> and <b>PYTHON_VERSION</b> in <i>libreserver-shortcuts</i>.</li>
     <li>Alter <b>VERSION</b> and <b>DEBIAN_VERSION</b> in <i>libreserver-vars</i>.</li>
     <li>Alter <b>NODEJS_VERSION</b> in <i>libreserver-utils-nodejs</i>.</li>
