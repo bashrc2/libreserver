@@ -1281,12 +1281,6 @@ function install_dust {
     fi
 }
 
-function install_tldr {
-    if [ ! -f /usr/bin/tldr ]; then
-        INSTALL_PACKAGES tldr
-    fi
-}
-
 function install_duf {
     if [ ! -f /usr/bin/duf ]; then
         INSTALL_PACKAGES duf
@@ -1296,9 +1290,6 @@ function install_duf {
 function setup_utils {
     function_check install_duf
     install_duf
-
-    function_check install_tldr
-    install_tldr
 
     function_check install_dust
     install_dust
