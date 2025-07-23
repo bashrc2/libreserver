@@ -160,6 +160,9 @@ function remove_emacs {
 
 function install_emacs {
     INSTALL_PACKAGES emacs-nox ispell ibritish ifrench ispanish iitalian irussian iswedish inorwegian iirish ingerman iswiss iogerman idutch idanish ibrazilian ibulgarian ipolish iczech iestonian ilithuanian icatalan python3-jedi elpa-flycheck elpa-use-package pylint elpa-php-mode python3-flake8 elpa-diminish elpa-nov elpa-pdf-tools
+
+linum-mode
+
     update-alternatives --set editor /usr/bin/emacs
 
     if [ ! -d /root/.emacs_backups ]; then
@@ -195,10 +198,6 @@ function install_emacs {
       echo ';; Goto a line number with CTRL-l';
       echo -n '(global-set-key "\C-l" ';
       echo "'goto-line)";
-      echo '';
-      echo $';; ===== Show line numbers ==============================================';
-      echo '';
-      echo "(add-hook 'find-file-hook (lambda () (linum-mode 1)))";
       echo '';
       echo $';; ===== Enable line wrapping in org-mode ===============================';
       echo '';
