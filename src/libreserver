@@ -128,6 +128,7 @@ if [[ "$command_options" == "menuconfig-full" ]]; then
     MINIMAL_INSTALL="no"
 fi
 
+# generate a configuration file
 if [[ "$CONFIGURATION_FILE" != "/root/${PROJECT_NAME}.cfg" ]]; then
     if [ -f "$CONFIGURATION_FILE" ]; then
         cp "$CONFIGURATION_FILE" "/root/${PROJECT_NAME}.cfg"
@@ -140,7 +141,11 @@ if [[ "$command_options" == "menuconfig-onion" ]]; then
     MINIMAL_INSTALL="yes"
     ONION_ONLY="yes"
     if [ -f "$CONFIGURATION_FILE" ]; then
-        sed -i 's|ONION_ONLY=.*|ONION_ONLY=yes|g' "$CONFIGURATION_FILE"
+        if grep -q "ONION_ONLY=" "$CONFIGURATION_FILE"; then
+            sed -i 's|ONION_ONLY=.*|ONION_ONLY=yes|g' "$CONFIGURATION_FILE"
+        else
+            echo "ONION_ONLY=yes" >> "$CONFIGURATION_FILE"
+        fi
     fi
 fi
 
