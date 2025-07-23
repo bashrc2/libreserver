@@ -187,7 +187,7 @@ function mariadb_fix_authentication {
         sed -i 's| --skip-grant-tables||g' /lib/systemd/system/mariadb.service
         systemctl daemon-reload
     fi
-    systemctl start mariadb
+    systemctl restart mariadb
     add_watchdog_daemon mariadb
 }
 
