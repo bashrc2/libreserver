@@ -53,6 +53,10 @@ pixelfed_variables=(ONION_ONLY
                     MY_USERNAME
                     MY_EMAIL_ADDRESS)
 
+function pixelfed_force_old_ui {
+    sed -i "s|if (\$request->has('force_old_ui')) {|{|g" /var/www/${PIXELFED_DOMAIN_NAME}/htdocs/app/Http/Controllers/SiteController.php
+}
+
 function upgrade_distro_pixelfed {
     target_distro="$1"
 
@@ -428,6 +432,7 @@ function upgrade_pixelfed {
     function_check set_repo_commit
     set_repo_commit "/var/www/$PIXELFED_DOMAIN_NAME/htdocs" "pixelfed commit" "$PIXELFED_COMMIT" "$PIXELFED_REPO"
 
+    pixelfed_force_old_ui
     cd "/var/www/$PIXELFED_DOMAIN_NAME/htdocs" || exit 36
     if [ -f "/var/www/$PIXELFED_DOMAIN_NAME/htdocs/app/Util/Lexer/RestrictedNames.php" ]; then
         sed -i "/'admin',/d" "/var/www/$PIXELFED_DOMAIN_NAME/htdocs/app/Util/Lexer/RestrictedNames.php"
@@ -699,8 +704,12 @@ function install_pixelfed {
       echo 'ACTIVITYPUB_SHAREDINBOX=false';
       echo '';
       echo 'ACTIVITY_PUB=true';
-      echo 'REMOTE_FOLLOW=true'; } > "/var/www/$PIXELFED_DOMAIN_NAME/htdocs/.env"
+      echo 'REMOTE_FOLLOW=true';
+      echo 'PF_ENABLE_CLOUD=false';
+      echo 'EXP_EMC="false"'; } > "/var/www/$PIXELFED_DOMAIN_NAME/htdocs/.env"
     chown www-data:www-data "/var/www/$PIXELFED_DOMAIN_NAME/htdocs/.env"
+
+    pixelfed_force_old_ui
 
     # allow user with name 'admin'
     sed -i "/'admin',/d" "/var/www/$PIXELFED_DOMAIN_NAME/htdocs/app/Util/Lexer/RestrictedNames.php"
