@@ -674,7 +674,7 @@ function install_pixelfed {
       echo 'MAIL_PASSWORD=null';
       echo 'MAIL_ENCRYPTION=null';
       echo 'MAIL_FROM_NAME=admin';
-      echo "MAIL_FROM_ADDRESS={MY_EMAIL_ADDRESS}";
+      echo "MAIL_FROM_ADDRESS=${MY_EMAIL_ADDRESS}";
       echo '';
       echo "SESSION_DOMAIN=${pixelfed_domain}";
       echo 'SESSION_SECURE_COOKIE=true';
