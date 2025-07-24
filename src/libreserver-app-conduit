@@ -456,7 +456,7 @@ function install_conduit {
         echo $"Unable to install matrix conduit binary ${CONDUIT_BINARY}"
         exit 39
     fi
-    if [ ! -s /usr/local/bin/matrix-conduit-new ]; then
+    if [ ! -s /usr/local/bin/matrix-conduit ]; then
         echo $"Unable to download matrix conduit binary (zero size) ${CONDUIT_BINARY}"
         rm /usr/local/bin/matrix-conduit
         exit 39
