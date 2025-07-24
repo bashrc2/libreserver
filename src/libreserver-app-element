@@ -5,6 +5,7 @@
 # |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # Element Web user interface for Matrix
+# NOTE: images fail to be displayed in Tor browser after version 1.11.100
 #
 # License
 # =======
@@ -33,7 +34,7 @@ SHOW_ON_ABOUT=1
 REQUIRES_APP=conduit
 ELEMENT_MINIMUM_RAM_MB=900
 
-ELEMENT_VERSION='1.11.106'
+ELEMENT_VERSION='1.11.100'
 ELEMENT_FILENAME="element-v${ELEMENT_VERSION}"
 ELEMENT_DOWNLOAD_URL="https://github.com/vector-im/element-web/releases/download/v${ELEMENT_VERSION}"
 ELEMENT_ONION_PORT=8118
