@@ -145,6 +145,11 @@ function add_user_dokuwiki {
     HASHED_DOKUWIKI_PASSWORD=$(echo -n "$new_user_password" | md5sum | awk -F ' ' '{print $1}')
     echo "$new_username:$HASHED_DOKUWIKI_PASSWORD:$new_username:$new_username@$HOSTNAME:user,upload" >> "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/lib/plugins/acl/users.auth.php"
     cp "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/lib/plugins/acl/users.auth.php" "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/conf/users.auth.php"
+
+    if ! grep -q "@${new_username}" "/var/www/${DOKUWIKI_DOMAIN_NAME}/htdocs/conf/acl.auth.php"; then
+        echo "*               @${new_username}      8"; >> "/var/www/${DOKUWIKI_DOMAIN_NAME}/htdocs/conf/acl.auth.php"
+    fi
+
     chmod 640 "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/lib/plugins/acl/users.auth.php"
     chmod 640 "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/conf/users.auth.php"
     "${PROJECT_NAME}-pass" -u "$new_username" -a dokuwiki -p "$new_user_password"
@@ -159,6 +164,10 @@ function remove_user_dokuwiki {
         sed -i "/$remove_username:/d" "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/lib/plugins/acl/users.auth.php"
         sed -i "/$remove_username:/d" "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs/conf/users.auth.php"
         "${PROJECT_NAME}-pass" -u "$remove_username" --rmapp dokuwiki
+    fi
+
+    if grep -q "@${remove_username}" "/var/www/${DOKUWIKI_DOMAIN_NAME}/htdocs/conf/acl.auth.php"; then
+        sed -i "/@${remove_username}/d" "/var/www/${DOKUWIKI_DOMAIN_NAME}/htdocs/conf/acl.auth.php"
     fi
 }
 
@@ -651,6 +660,20 @@ function install_dokuwiki {
     add_ddns_domain "$DOKUWIKI_DOMAIN_NAME"
 
     increment_app_install_progress
+
+    # create ACL
+    { echo '# acl.auth.php';
+      echo '# <?php exit()?>';
+      echo '';
+      echo '# none   0';
+      echo '# read   1';
+      echo '# edit   2';
+      echo '# create 4';
+      echo '# upload 8';
+      echo '# delete 16';
+      echo '';
+      echo '*               @ALL        1';
+      echo "*               @${MY_USERNAME}      16"; } > "/var/www/${DOKUWIKI_DOMAIN_NAME}/htdocs/conf/acl.auth.php"
 
     "${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a dokuwiki -p "$DOKUWIKI_ADMIN_PASSWORD"
 
