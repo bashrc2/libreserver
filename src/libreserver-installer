@@ -3336,6 +3336,10 @@ function update_enable_ssh {
             mkdir /run/sshd
             chmod 0755 /run/sshd
         fi
+        if grep -q 'EnvironmentFile=-' /etc/systemd/system/sshd.service; then
+            sed -i 's|EnvironmentFile=-/etc/default/ssh|EnvironmentFile=/etc/default/ssh|g' /etc/systemd/system/sshd.service
+            systemctl daemon-reload
+        fi
         if [ -f /etc/ssh/sshd_config.ucf-dist ]; then
             rm /etc/ssh/sshd_config.ucf-dist
         fi
