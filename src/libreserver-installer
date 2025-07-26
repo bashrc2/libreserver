@@ -3332,6 +3332,10 @@ function change_updates_settings {
 function update_enable_ssh {
     if [ -f "$ssh_file" ]; then
         SSH_CONFIG='/etc/ssh/sshd_config'
+        if [ ! -d /run/sshd ]; then
+            mkdir /run/sshd
+            chmod 0755 /run/sshd
+        fi
         if [ -f /etc/ssh/sshd_config.ucf-dist ]; then
             rm /etc/ssh/sshd_config.ucf-dist
         fi

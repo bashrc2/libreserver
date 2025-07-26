@@ -33,6 +33,11 @@ SSH_KEX="sntrup761x25519-sha512@openssh.com,curve25519-sha256@libssh.org,diffie-
 SSH_HOST_KEY_ALGORITHMS="ssh-ed25519-cert-v01@openssh.com,ssh-rsa-cert-v01@openssh.com,ssh-rsa-cert-v00@openssh.com,ssh-ed25519,ssh-rsa"
 
 function lockdown_ssh {
+    if [ ! -d /run/sshd ]; then
+        mkdir /run/sshd
+        chmod 0755 /run/sshd
+        systemctl restart ssh
+    fi
     if [ -f /etc/ssh/sshd_config.ucf-dist ]; then
         rm /etc/ssh/sshd_config.ucf-dist
         systemctl restart ssh
