@@ -3332,6 +3332,9 @@ function change_updates_settings {
 function update_enable_ssh {
     if [ -f "$ssh_file" ]; then
         SSH_CONFIG='/etc/ssh/sshd_config'
+        if [ -f /etc/ssh/sshd_config.ucf-dist ]; then
+            rm /etc/ssh/sshd_config.ucf-dist
+        fi
         if grep -q 'PrintMotd yes' $SSH_CONFIG; then
             sed -i 's|PrintMotd yes|PrintMotd no|g' $SSH_CONFIG
         fi
