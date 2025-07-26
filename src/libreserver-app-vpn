@@ -580,7 +580,7 @@ function install_stunnel {
       echo '[Service]';
       echo 'Type=forking';
       echo 'RuntimeDirectory=stunnel';
-      echo 'EnvironmentFile=-/etc/stunnel/stunnel.conf';
+      echo 'EnvironmentFile=/etc/stunnel/stunnel.conf';
       echo 'ExecStart=/usr/bin/stunnel /etc/stunnel/stunnel.conf';
       echo 'ExecStop=/usr/bin/killall -9 stunnel';
       echo 'RemainAfterExit=yes'; } > "$prefix/etc/systemd/system/stunnel.service"
