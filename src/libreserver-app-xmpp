@@ -1591,7 +1591,6 @@ function xmpp_create_config {
       echo '        "filter_words";';
       echo '        "muc_block_pm";';
       echo "        ${xmpp_tls_enabled}\"tls\";";
-      echo '        "vcard_muc";';
       echo '        "s2s_blacklist";';
       echo '    }'; } >> /etc/prosody/prosody.cfg.lua
 
