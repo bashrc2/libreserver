@@ -144,17 +144,6 @@ function change_password_profanity {
     curr_username="$1"
     new_user_password="$2"
 
-    read_config_param DEFAULT_DOMAIN_NAME
-
-    "${PROJECT_NAME}-pass" -u "$curr_username" -a xmpp -p "$new_user_password"
-
-    # TODO: this is currently interactive. Really there needs to be a
-    # non-interactive password change option for prosodyctl
-    clear
-    # echo ''
-    # echo $'Currently Prosody requires password changes to be done interactively'
-    # prosodyctl passwd "${curr_username}@${DEFAULT_DOMAIN_NAME}"
-
     XMPP_CLIENT_DIR=/home/${curr_username}/.local/share/profanity
     XMPP_CLIENT_ACCOUNTS=$XMPP_CLIENT_DIR/accounts
     if [ -f "$XMPP_CLIENT_ACCOUNTS" ]; then

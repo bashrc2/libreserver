@@ -669,7 +669,9 @@ function add_user_xmpp_client {
     new_username="$1"
     new_user_password="$2"
 
-    add_user_profanity "${new_username}" "${new_user_password}"
+    if [ -f ${PROFANITY_BINARY} ]; then
+        add_user_profanity "${new_username}" "${new_user_password}"
+    fi
 }
 
 function add_user_xmpp {
@@ -722,11 +724,7 @@ function change_password_xmpp {
     prosodyctl passwd "${curr_username}@${DEFAULT_DOMAIN_NAME}"
 
     if [ -f ${PROFANITY_BINARY} ]; then
-        XMPP_CLIENT_DIR=/home/$curr_username/.local/share/profanity
-        XMPP_CLIENT_ACCOUNTS=$XMPP_CLIENT_DIR/accounts
-        if [ -f "$XMPP_CLIENT_ACCOUNTS" ]; then
-            sed -i "s|password=.*|password=$new_user_password|g" "$XMPP_CLIENT_ACCOUNTS"
-        fi
+        change_password_profanity "${curr_username}" "${new_user_password}"
     fi
 }
 
