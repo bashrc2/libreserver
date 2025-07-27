@@ -145,7 +145,7 @@ function change_password_profanity {
     new_user_password="$2"
 
     XMPP_CLIENT_DIR=/home/${curr_username}/.local/share/profanity
-    XMPP_CLIENT_ACCOUNTS=$XMPP_CLIENT_DIR/accounts
+    XMPP_CLIENT_ACCOUNTS=${XMPP_CLIENT_DIR}/accounts
     if [ -f "$XMPP_CLIENT_ACCOUNTS" ]; then
         sed -i "s|password=.*|password=$new_user_password|g" "$XMPP_CLIENT_ACCOUNTS"
     fi
