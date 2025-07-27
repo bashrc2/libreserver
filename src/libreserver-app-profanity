@@ -193,7 +193,7 @@ function install_profanity {
     fi
 
     XMPP_CLIENT_DIR=/home/${MY_USERNAME}/.local/share/profanity
-    XMPP_CLIENT_ACCOUNTS=$XMPP_CLIENT_DIR/accounts
+    XMPP_CLIENT_ACCOUNTS=${XMPP_CLIENT_DIR}/accounts
     if [ ! -d "$XMPP_CLIENT_DIR" ]; then
         mkdir -p "$XMPP_CLIENT_DIR"
     fi
@@ -202,7 +202,7 @@ function install_profanity {
     MY_GPG_PUBLIC_KEY_ID=$(gpg_pubkey_from_email "${MY_USERNAME}" "${MY_USERNAME}@${DEFAULT_DOMAIN_NAME}")
 
     XMPP_PASSWORD=
-    if [ -f "$IMAGE_PASSWORD_FILE" ]; then
+    if [ -f "${IMAGE_PASSWORD_FILE}" ]; then
         XMPP_PASSWORD="$(printf "%s" "$(cat "$IMAGE_PASSWORD_FILE")")"
     fi
 
@@ -222,22 +222,22 @@ function install_profanity {
           echo 'priority.chat=0';
           echo 'priority.away=0';
           echo 'priority.xa=0';
-          echo 'priority.dnd=0'; } > "$XMPP_CLIENT_ACCOUNTS"
+          echo 'priority.dnd=0'; } > "${XMPP_CLIENT_ACCOUNTS}"
         if [ "${XMPP_PASSWORD}" ]; then
-            echo "password=$XMPP_PASSWORD" >> "$XMPP_CLIENT_ACCOUNTS"
+            echo "password=$XMPP_PASSWORD" >> "${XMPP_CLIENT_ACCOUNTS}"
         fi
     fi
 
     if [ -f /var/lib/tor/hidden_service_email/hostname ]; then
-        echo "[${MY_USERNAME}@${XMPP_ONION_HOSTNAME}]" >> "$XMPP_CLIENT_ACCOUNTS"
+        echo "[${MY_USERNAME}@${XMPP_ONION_HOSTNAME}]" >> "${XMPP_CLIENT_ACCOUNTS}"
         if [[ $ONION_ONLY == 'no' ]]; then
-            echo 'enabled=false' >> "$XMPP_CLIENT_ACCOUNTS"
+            echo 'enabled=false' >> "${XMPP_CLIENT_ACCOUNTS}"
         else
-            echo 'enabled=true' >> "$XMPP_CLIENT_ACCOUNTS"
+            echo 'enabled=true' >> "${XMPP_CLIENT_ACCOUNTS}"
         fi
         { echo "jid=${MY_USERNAME}@${XMPP_ONION_HOSTNAME}";
-          echo "server=$XMPP_ONION_HOSTNAME";
-          echo "pgp.keyid=$MY_GPG_PUBLIC_KEY_ID";
+          echo "server=${XMPP_ONION_HOSTNAME}";
+          echo "pgp.keyid=${MY_GPG_PUBLIC_KEY_ID}";
           echo "pgp.keyid=";
           echo 'resource=profanity';
           echo "muc.service=${XMPP_ONION_HOSTNAME}";
@@ -248,9 +248,9 @@ function install_profanity {
           echo 'priority.chat=0';
           echo 'priority.away=0';
           echo 'priority.xa=0';
-          echo 'priority.dnd=0'; } >> "$XMPP_CLIENT_ACCOUNTS"
+          echo 'priority.dnd=0'; } > "${XMPP_CLIENT_ACCOUNTS}"
         if [ "${XMPP_PASSWORD}" ]; then
-            echo "password=$XMPP_PASSWORD" >> "$XMPP_CLIENT_ACCOUNTS"
+            echo "password=${XMPP_PASSWORD}" >> "${XMPP_CLIENT_ACCOUNTS}"
         fi
     fi
 
