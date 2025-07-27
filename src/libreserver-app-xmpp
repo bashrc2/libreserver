@@ -461,7 +461,7 @@ function logging_on_xmpp {
             if ! grep -q "/var/log/prosody/prosody.log" /etc/prosody/prosody.cfg.lua; then
                 sed -i 's|info = "/dev/null";|info = "/var/log/prosody/prosody.log";|g' /etc/prosody/prosody.cfg.lua
                 sed -i 's|error = "/dev/null";|error = "/var/log/prosody/prosody.err";|g' /etc/prosody/prosody.cfg.lua
-                sed -i 's|levels = { "error" }; to = "/dev/null";|levels = { "info" }; to = "syslog";|g' /etc/prosody/prosody.cfg.lua
+                sed -i 's|levels = { "error" }; to = "/dev/null";|levels = { "debug" }; to = "syslog";|g' /etc/prosody/prosody.cfg.lua
                 touch /var/log/prosody/prosody.log
                 chown prosody:prosody /var/log/prosody/prosody.log
                 touch /var/log/prosody/prosody.err
