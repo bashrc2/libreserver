@@ -118,9 +118,11 @@ fi
 
 # make local copy of torsocks config
 torsocks_conf=/etc/tor/torsocks.conf
-if [ ! -f "/home/${ADD_USERNAME}/torsocks.conf" ]; then
-    cp ${torsocks_conf} "/home/${ADD_USERNAME}/torsocks.conf"
-    chown ${ADD_USERNAME}:${ADD_USERNAME} "/home/${ADD_USERNAME}/torsocks.conf"
+if [ ! -f ${torsocks_conf} ]; then
+    if [ ! -f "/home/${ADD_USERNAME}/torsocks.conf" ]; then
+        cp ${torsocks_conf} "/home/${ADD_USERNAME}/torsocks.conf"
+        chown ${ADD_USERNAME}:${ADD_USERNAME} "/home/${ADD_USERNAME}/torsocks.conf"
+    fi
 fi
 
 if [ "$SSH_PUBLIC_KEY" ]; then
