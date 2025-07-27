@@ -1028,7 +1028,7 @@ function upgrade_xmpp {
     prosody_add_module "sasl_ssdp"
 
     # reactions
-    prosody_add_module "muc_occupantid"
+    prosody_remove_module "muc_occupantid"
 
     # security labels
     prosody_add_module "seclabels"
@@ -1279,7 +1279,6 @@ function xmpp_modules {
       echo '  "throttle_presence"; -- Reduce battery and bandwidth usage';
       echo '  "filter_chatstates"; -- Reduce battery and bandwidth usage';
       echo '  "external_services";';
-      echo '  "muc_occupantid"; -- reactions';
       echo '  "sasl_ssdp"; -- SASL SCRAM downgrade protection';
       echo '};'; } >> "$filename"
 }
