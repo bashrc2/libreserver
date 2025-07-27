@@ -132,7 +132,7 @@ function add_user_profanity {
 }
 
 function run_client_profanity {
-    torify profanity
+    TORSOCKS_CONF_FILE=~/torsocks.conf torify profanity
 }
 
 function install_interactive_profanity {

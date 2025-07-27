@@ -42,6 +42,7 @@ function tor_allow_outbound {
         return
     fi
     sed -i 's|#AllowOutboundLocalhost.*|AllowOutboundLocalhost 1|g' ${torsocks_conf}
+    sed -i 's|#AllowInbound.*|AllowInbound 1|g' ${torsocks_conf}
 }
 
 function restart_tor_daemon {

@@ -73,7 +73,7 @@ function run_client_gemini {
         return
     fi
     clear
-    torify /usr/bin/leo --url gemini://${DEFAULT_GEMINI_URL}
+    TORSOCKS_CONF_FILE=/etc/tor/torsocks.conf torify /usr/bin/leo --url gemini://${DEFAULT_GEMINI_URL}
 }
 
 function install_gemini_client {
