@@ -9,6 +9,8 @@
 # Don't use the upstream debian package. It moves fast and breaks things.
 # python-xmpp has been removed from debian. A python3 version is not yet available
 #
+# Possibly deprecated in debian 13: mod_cloud_notify, mod_server_info, muc_vcard
+#
 # License
 # =======
 #
@@ -1056,7 +1058,7 @@ function upgrade_xmpp {
     # prosody_set_parameter "group_default_name" "${PROJECT_NAME}"
 
     # push notifications
-    prosody_add_module "cloud_notify"
+    prosody_remove_module "cloud_notify"
     prosody_add_module "cloud_notify_encrypted"
     prosody_add_module "cloud_notify_priority_tag"
     prosody_add_module "cloud_notify_filters"
@@ -1238,7 +1240,7 @@ function xmpp_modules {
     filename="$1"
 
     { echo 'modules_enabled = {';
-      echo '  "server_contact_info";';
+      echo '  -- "server_contact_info";';
       echo '  "pubsub";';
       echo '  "pubsub_hub";';
       echo '  "dialback"; -- s2s dialback support';
@@ -1284,7 +1286,7 @@ function xmpp_modules {
       echo '  -- "groups_internal";';
       echo '  -- "groups_migration";';
       echo '  -- "groups_muc_bookmarks";';
-      echo '  "cloud_notify";';
+      echo '  -- "cloud_notify";';
       echo '  "cloud_notify_encrypted";';
       echo '  "cloud_notify_priority_tag";';
       echo '  "cloud_notify_filters";';
