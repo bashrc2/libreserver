@@ -9,7 +9,8 @@
 # Don't use the upstream debian package. It moves fast and breaks things.
 # python-xmpp has been removed from debian. A python3 version is not yet available
 #
-# Possibly deprecated in debian 13: mod_cloud_notify, mod_server_info, muc_vcard
+# Possibly deprecated in debian 13:
+#   mod_cloud_notify, mod_server_info, muc_vcard, mod_http_upload, mod_profile
 #
 # License
 # =======
@@ -752,17 +753,6 @@ function reconfigure_xmpp {
     echo -n ''
 }
 
-function prosody_allow_http_upload {
-    # particularly on onion installs, upload via http:// should be permitted
-    if [ ! -f /usr/lib/prosody/modules/mod_http_upload/mod_http_upload.lua ]; then
-        return
-    fi
-    if grep -q 'ignore://' /usr/lib/prosody/modules/mod_http_upload/mod_http_upload.lua; then
-        return
-    fi
-    sed -i 's|module:http_url():match("^http://")|module:http_url():match("^ignore://")|g' /usr/lib/prosody/modules/mod_http_upload/mod_http_upload.lua
-}
-
 function update_prosody_modules {
     if [ ! "$1" ]; then
         if [ ! -d ${XMPP_DIRECTORY}/prosody-modules ]; then
@@ -818,8 +808,6 @@ function update_prosody_modules {
                         cp -r "/root/${PROJECT_NAME}/image_build/prosody_mod_i2p" ${XMPP_DIRECTORY}/prosody-modules/mod_i2p
                         cp -r "/root/${PROJECT_NAME}/image_build/prosody_mod_i2p" /usr/lib/prosody/modules/mod_i2p
                     fi
-
-                    prosody_allow_http_upload
 
                     chown -R prosody:prosody ${XMPP_DIRECTORY}/prosody-modules
                     chown -R prosody:prosody /usr/lib/prosody/modules
@@ -1026,9 +1014,9 @@ function upgrade_xmpp {
         xmpp_restart=1
     fi
 
-    prosody_set_parameter 'http_upload_file_size_limit' '25165824'
-    prosody_set_parameter 'http_upload_expire_after' '60 * 60 * 24 * 7 -- a week'
-    prosodyctl mod_http_upload expire
+    prosody_set_parameter 'http_file_share_size_limit' '25165824'
+    prosody_set_parameter 'http_file_share_expire_after' '60 * 60 * 24 * 7 -- a week'
+    prosodyctl mod_http_file_share expire
 
     prosody_set_parameter 'muc_room_default_members_only' 'false'
     prosody_set_parameter 'muc_tombstones' 'false'
@@ -1281,7 +1269,7 @@ function xmpp_modules {
       echo '  "http";';
       echo '  "turncredentials"; -- VoIP';
       echo '  "limits"; -- rate limits';
-      echo '  "http_upload";';
+      echo '  "http_file_share";';
       echo '  "websocket";';
       echo '  -- "groups_internal";';
       echo '  -- "groups_migration";';
@@ -1578,9 +1566,9 @@ function xmpp_create_config {
       echo '    }';
       echo '';
       echo 'Include "conf.d/*.cfg.lua"';
-      echo 'http_upload_path = "/var/lib/prosody/http_uploads"';
-      echo 'http_upload_file_size_limit = 25165824';
-      echo 'http_upload_expire_after = 60 * 60 * 24 * 7 -- a week';
+      echo 'http_file_share_path = "/var/lib/prosody/http_uploads"';
+      echo 'http_file_share_size_limit = 25165824';
+      echo 'http_file_share_expire_after = 60 * 60 * 24 * 7 -- a week';
       echo '';
       echo "Component \"chat.${xmpp_muc_domain}\" \"muc\"";
       echo '    name = "Chatrooms"';
