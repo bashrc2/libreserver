@@ -116,6 +116,13 @@ if [ ! -d "/home/$ADD_USERNAME" ]; then
     exit 4
 fi
 
+# make local copy of torsocks
+torsocks_conf=/etc/tor/torsocks.conf
+if [ ! -f "/home/${ADD_USERNAME}/torsocks.conf" ]; then
+    cp ${torsocks_conf} "/home/${ADD_USERNAME}/torsocks.conf"
+    chown ${ADD_USERNAME}:${ADD_USERNAME} "/home/${ADD_USERNAME}/torsocks.conf"
+fi
+
 if [ "$SSH_PUBLIC_KEY" ]; then
     if [ ${#SSH_PUBLIC_KEY} -gt 5 ]; then
         if [ -f "$SSH_PUBLIC_KEY" ]; then
