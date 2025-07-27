@@ -81,6 +81,17 @@ xmpp_variables=(ONION_ONLY
                 DEFAULT_DOMAIN_NAME
                 XMPP_DOMAIN_CODE)
 
+function prosody_fix_broken_modules {
+    # (sigh)
+    if grep -q "\"mod_carbons_adhoc#status\", adhoc_status)" /usr/lib/prosody/modules/mod_carbons_adhoc/mod_carbons_adhoc.lua; then
+        sed -i "s|\"mod_carbons_adhoc#status\", adhoc_status)|\"mod_carbons_adhoc#status\", adhoc_status, 'any')|g" /usr/lib/prosody/modules/mod_carbons_adhoc/mod_carbons_adhoc.lua
+    fi
+
+    if grep -q "\"mod_carbons_adhoc#status\", adhoc_status)" /var/lib/prosody/prosody-modules/mod_carbons_adhoc/mod_carbons_adhoc.lua; then
+        sed -i "s|\"mod_carbons_adhoc#status\", adhoc_status)|\"mod_carbons_adhoc#status\", adhoc_status, 'any')|g" /var/lib/prosody/prosody-modules/mod_carbons_adhoc/mod_carbons_adhoc.lua
+    fi
+}
+
 function xmpp_setup_turn {
     domain=$DEFAULT_DOMAIN_NAME
     if [[ "$ONION_ONLY" != 'no' ]]; then
@@ -235,6 +246,7 @@ function xmpp_setting_stricttls {
     fi
 
     if [ $strict_tls_update ]; then
+        prosody_fix_broken_modules
         systemctl restart prosody
     fi
 }
@@ -305,6 +317,7 @@ function change_default_domain_name_xmpp {
     read_config_param DEFAULT_DOMAIN_NAME
     sed -i "s|$DEFAULT_DOMAIN_NAME|$new_default_domain_name|g" /etc/prosody/prosody.cfg.lua
     change_default_domain_name_turn "$new_default_domain_name"
+    prosody_fix_broken_modules
     systemctl restart prosody
 }
 
@@ -468,6 +481,7 @@ function logging_on_xmpp {
                 chown prosody:prosody /var/log/prosody/prosody.err
             fi
         fi
+        prosody_fix_broken_modules
         systemctl restart prosody
     fi
 }
@@ -514,6 +528,7 @@ function logging_off_xmpp {
     fi
 
     if [ $logging_restart_prosody ]; then
+        prosody_fix_broken_modules
         systemctl restart prosody
     fi
 }
@@ -533,6 +548,7 @@ function xmpp_add_onion_address {
         else
             sed -i "/onions_map = {/a  [\"${domain_name}\"] = \"${onion_address}\";" /etc/prosody/prosody.cfg.lua
         fi
+        prosody_fix_broken_modules
         systemctl restart prosody
     fi
 }
@@ -584,6 +600,7 @@ function xmpp_remove_onion_address {
         xmpp_changed=1
     fi
     if [ $xmpp_changed ]; then
+        prosody_fix_broken_modules
         systemctl restart prosody
     fi
 }
@@ -637,6 +654,7 @@ function configure_interactive_xmpp {
                fi
                write_config_param 'XMPP_E2EE' "$XMPP_E2EE"
                xmpp_update_e2e_policy /etc/prosody/prosody.cfg.lua
+               prosody_fix_broken_modules
                systemctl restart prosody
 
                e2ee_policy=$'optional'
@@ -913,6 +931,7 @@ function xmpp_update_certs {
 }
 
 function upgrade_xmpp {
+    prosody_fix_broken_modules
     remove_upstream_xmpp_package
 
     # deprecated module
@@ -1672,6 +1691,7 @@ function remove_upstream_xmpp_package {
     apt-get update
     REMOVE_PACKAGES prosody
     INSTALL_PACKAGES prosody
+    prosody_fix_broken_modules
     cp -r "${REMOVE_XMPP_DIR}/etc/"* /etc/prosody/
     cp -r "${REMOVE_XMPP_DIR}/var/"* /var/lib/prosody/
     chown -R prosody:prosody /etc/prosody
@@ -1904,6 +1924,10 @@ function install_xmpp {
 
     prosody_update_onion_certs
 
+    increment_app_install_progress
+
+    prosody_fix_broken_modules
+
     systemctl restart prosody
 
     increment_app_install_progress
@@ -1995,6 +2019,10 @@ function install_xmpp {
     increment_app_install_progress
 
     xmpp_setup_turn
+
+    increment_app_install_progress
+
+    prosody_fix_broken_modules
 
     increment_app_install_progress
 
