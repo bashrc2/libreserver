@@ -826,6 +826,9 @@ function update_prosody_modules {
         prosody_add_module 's2s_blacklist' muc
         prosody_add_module 'firewall'
         prosody_add_module 'block_strangers'
+        prosody_add_module 'file_share'
+        prosody_remove_module 'http_upload'
+        prosody_remove_module 'server_contact_info'
     else
         echo "Prosody modules directory not found ${XMPP_DIRECTORY}/prosody-modules"
     fi
@@ -1228,7 +1231,6 @@ function xmpp_modules {
     filename="$1"
 
     { echo 'modules_enabled = {';
-      echo '  -- "server_contact_info";';
       echo '  "pubsub";';
       echo '  "pubsub_hub";';
       echo '  "dialback"; -- s2s dialback support';
@@ -1274,7 +1276,6 @@ function xmpp_modules {
       echo '  -- "groups_internal";';
       echo '  -- "groups_migration";';
       echo '  -- "groups_muc_bookmarks";';
-      echo '  -- "cloud_notify";';
       echo '  "cloud_notify_encrypted";';
       echo '  "cloud_notify_priority_tag";';
       echo '  "cloud_notify_filters";';
