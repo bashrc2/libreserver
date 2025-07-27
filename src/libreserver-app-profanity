@@ -212,7 +212,6 @@ function install_profanity {
           echo "jid=${MY_USERNAME}@${DEFAULT_DOMAIN_NAME}";
           echo "server=$XMPP_ONION_HOSTNAME";
           echo "pgp.keyid=$MY_GPG_PUBLIC_KEY_ID";
-          echo "pgp.keyid=";
           echo 'resource=profanity';
           echo "muc.service=chat.${DEFAULT_DOMAIN_NAME}";
           echo "muc.nick=${MY_USERNAME}";
@@ -238,7 +237,6 @@ function install_profanity {
         { echo "jid=${MY_USERNAME}@${XMPP_ONION_HOSTNAME}";
           echo "server=${XMPP_ONION_HOSTNAME}";
           echo "pgp.keyid=${MY_GPG_PUBLIC_KEY_ID}";
-          echo "pgp.keyid=";
           echo 'resource=profanity';
           echo "muc.service=${XMPP_ONION_HOSTNAME}";
           echo "muc.nick=${MY_USERNAME}";
