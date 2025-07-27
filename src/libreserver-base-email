@@ -1051,7 +1051,7 @@ function email_add_xmpp_headers {
 
 function email_repair_saslauthd {
     # if START=yes is missing from saslauthd config
-    if ! -f /etc/default/saslauthd; then
+    if [ ! -f /etc/default/saslauthd ]; then
         return
     fi
     if grep -q 'START=' /etc/default/saslauthd; then
