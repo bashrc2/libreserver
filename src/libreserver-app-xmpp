@@ -1064,7 +1064,7 @@ function upgrade_xmpp {
     # handling avatars
     prosody_remove_module "pep_vcard_avatar"
     prosody_remove_module "profile"
-    prosody_add_module "vcard"
+    prosody_add_module "vcard_legacy"
 
     xmpp_update_certs
 
@@ -1272,7 +1272,7 @@ function xmpp_modules {
       echo '  "limits"; -- rate limits';
       echo '  "http_file_share";';
       echo '  "websocket";';
-      echo '  "vcard";';
+      echo '  "vcard_legacy";';
       echo '  -- "groups_internal";';
       echo '  -- "groups_migration";';
       echo '  -- "groups_muc_bookmarks";';
