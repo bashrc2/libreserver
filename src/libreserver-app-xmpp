@@ -68,6 +68,8 @@ XMPP_FIREWALL_MAX_CONNECTIONS_S2S=64
 XMPP_MAX_S2S_RATE=10
 XMPP_MAX_C2S_RATE=10
 
+PROFANITY_BINARY=/usr/bin/profanity
+
 xmpp_variables=(ONION_ONLY
                 INSTALLED_WITHIN_DOCKER
                 XMPP_CIPHERS
@@ -667,14 +669,14 @@ function add_user_xmpp_client {
     new_username="$1"
     new_user_password="$2"
 
-    if [ -f /usr/local/bin/profanity ]; then
+    if [ -f ${PROFANITY_BINARY} ]; then
         XMPP_CLIENT_DIR=/home/$new_username/.local/share/profanity
         XMPP_CLIENT_ACCOUNTS=$XMPP_CLIENT_DIR/accounts
-        if [ ! -d "$XMPP_CLIENT_DIR" ]; then
-            mkdir -p "$XMPP_CLIENT_DIR"
+        if [ ! -d "${XMPP_CLIENT_DIR}" ]; then
+            mkdir -p "${XMPP_CLIENT_DIR}"
         fi
-        if [ ! -d "/home/$new_username/.config/profanity" ]; then
-            mkdir -p "/home/$new_username/.config/profanity"
+        if [ ! -d "/home/${new_username}/.config/profanity" ]; then
+            mkdir -p "/home/${new_username}/.config/profanity"
         fi
         MY_GPG_PUBLIC_KEY_ID=$(gpg_pubkey_from_email "$new_username" "$new_username@$HOSTNAME")
         { echo "[${new_username}@${HOSTNAME}]";
@@ -691,13 +693,13 @@ function add_user_xmpp_client {
           echo 'priority.chat=0';
           echo 'priority.away=0';
           echo 'priority.xa=0';
-          echo 'priority.dnd=0'; } > "$XMPP_CLIENT_ACCOUNTS"
+          echo 'priority.dnd=0'; } > "${XMPP_CLIENT_ACCOUNTS}"
 
-        echo '[connection]' > "/home/$new_username/.config/profanity/profrc"
+        echo '[connection]' > "/home/${new_username}/.config/profanity/profrc"
         if [[ $ONION_ONLY != "no" ]]; then
-            echo "account=${new_username}@${XMPP_ONION_HOSTNAME}" >> "/home/$new_username/.config/profanity/profrc"
+            echo "account=${new_username}@${XMPP_ONION_HOSTNAME}" >> "/home/${new_username}/.config/profanity/profrc"
         else
-            echo "account=${new_username}@${HOSTNAME}" >> "/home/$new_username/.config/profanity/profrc"
+            echo "account=${new_username}@${HOSTNAME}" >> "/home/${new_username}/.config/profanity/profrc"
         fi
         { echo '';
           echo '[plugins]';
@@ -711,10 +713,10 @@ function add_user_xmpp_client {
           echo 'log=off';
           echo '';
           echo '[ui]';
-          echo 'enc.warn=true'; } >> "/home/$new_username/.config/profanity/profrc"
+          echo 'enc.warn=true'; } >> "/home/${new_username}/.config/profanity/profrc"
 
-        chown -R "$new_username":"$new_username" "/home/$new_username/.local"
-        chown -R "$new_username":"$new_username" "/home/$new_username/.config"
+        chown -R "${new_username}":"${new_username}" "/home/${new_username}/.local"
+        chown -R "${new_username}":"${new_username}" "/home/${new_username}/.config"
     fi
 }
 
@@ -767,7 +769,7 @@ function change_password_xmpp {
     echo $'Currently Prosody requires password changes to be done interactively'
     prosodyctl passwd "${curr_username}@${DEFAULT_DOMAIN_NAME}"
 
-    if [ -f /usr/local/bin/profanity ]; then
+    if [ -f ${PROFANITY_BINARY} ]; then
         XMPP_CLIENT_DIR=/home/$curr_username/.local/share/profanity
         XMPP_CLIENT_ACCOUNTS=$XMPP_CLIENT_DIR/accounts
         if [ -f "$XMPP_CLIENT_ACCOUNTS" ]; then
