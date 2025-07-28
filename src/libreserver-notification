@@ -525,6 +525,7 @@ if [ -d /etc/prosody ]; then
                       echo "password: ${notification_user_password}"; } > "${sendxmpp_config}"
                     # send the message
                     chmod 400 "${sendxmpp_config}"
+                    chown ${ADMIN_USERNAME}:${ADMIN_USERNAME} "${sendxmpp_config}"
                     if [[ "${local_domain}" != *".onion" ]]; then
                         echo "$MESSAGE" | ${sendxmpp_binary} -n "${ADMIN_EMAIL_ADDRESS}"
                         sleep 2
