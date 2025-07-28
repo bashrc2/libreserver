@@ -1565,6 +1565,7 @@ function xmpp_create_config {
       echo '    }';
       echo '';
       echo 'Include "conf.d/*.cfg.lua"';
+      echo "Component \"upload.${xmpp_muc_domain}\" \"http_file_share\"";
       echo 'http_file_share_path = "/var/lib/prosody/http_uploads"';
       echo 'http_file_share_size_limit = 25165824';
       echo 'http_file_share_expire_after = 60 * 60 * 24 * 7 -- a week';
