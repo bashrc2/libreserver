@@ -530,7 +530,11 @@ if [ -d /etc/prosody ]; then
                       echo "password: ${notification_user_password}"; } > "${sendxmpp_config}"
                     # send the message
                     chmod 700 "${sendxmpp_config}"
-                    echo "$MESSAGE" | ${sendxmpp_binary} -n "${ADMIN_EMAIL_ADDRESS}"
+                    if [[ "${local_domain}" != *".onion" ]]; then
+                        echo "$MESSAGE" | ${sendxmpp_binary} -n "${ADMIN_EMAIL_ADDRESS}"
+                    else
+                        echo "$MESSAGE" | /usr/bin/torify ${sendxmpp_binary} -n "${ADMIN_EMAIL_ADDRESS}"
+                    fi
                     sleep 2
                     echo "xmpp message sent to ${ADMIN_EMAIL_ADDRESS}"
                     # remove the sendxmpp configuration file
