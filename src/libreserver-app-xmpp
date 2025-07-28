@@ -61,9 +61,6 @@ XMPP_SHORT_DESCRIPTION=$'Chat system'
 XMPP_DESCRIPTION=$'Chat system'
 XMPP_MOBILE_APP_URL='https://f-droid.org/packages/eu.siacs.conversations'
 
-# used to disable TLS on onion only installs
-xmpp_tls_enabled=''
-
 XMPP_FIREWALL_PORTS="5222,5223,5269,5280,5281"
 XMPP_FIREWALL_MAX_CONNECTIONS=16
 XMPP_FIREWALL_MAX_CONNECTIONS_S2S=64
@@ -1590,7 +1587,7 @@ function xmpp_create_config {
       echo '        "muc_limits";';
       echo '        "filter_words";';
       echo '        "muc_block_pm";';
-      echo "        ${xmpp_tls_enabled}\"tls\";";
+      echo '        "tls";';
       echo '        "s2s_blacklist";';
       echo '    }'; } >> /etc/prosody/prosody.cfg.lua
 
@@ -1712,14 +1709,6 @@ function install_xmpp {
     fi
     if [ -d "$INSTALL_DIR/prosody-modules" ]; then
         rm -rf "$INSTALL_DIR/prosody-modules"
-    fi
-
-    if [[ "$ONION_ONLY" != 'no' ]]; then
-        # Disable TLS for onion only versions
-        # this makes the user experience a lot slicker
-        # because there are no prompts to accept
-        # self-signed certs
-        xmpp_tls_enabled='-- '
     fi
 
     increment_app_install_progress
