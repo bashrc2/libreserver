@@ -824,6 +824,7 @@ function update_prosody_modules {
 
     if [ -d "${XMPP_DIRECTORY}/prosody-modules" ]; then
         prosody_add_module 's2s_blacklist' muc
+        prosody_add_module 'admin_shell'
         prosody_add_module 'firewall'
         prosody_add_module 'block_strangers'
         prosody_add_module 'file_share'
@@ -1231,6 +1232,7 @@ function xmpp_modules {
     filename="$1"
 
     { echo 'modules_enabled = {';
+      echo '  "admin_shell";';
       echo '  "pubsub";';
       echo '  "pubsub_hub";';
       echo '  "dialback"; -- s2s dialback support';
