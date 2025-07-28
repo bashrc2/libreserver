@@ -523,6 +523,11 @@ if [ -d /etc/prosody ]; then
                     { echo "username: notification";
                       echo "jserver: ${local_domain}";
                       echo "password: ${notification_user_password}"; } > "${sendxmpp_config}"
+                    # TEST
+                    notification_user_password=$(cat /root/login.txt)
+                    { echo "username: ${ADMIN_USERNAME}";
+                      echo "jserver: ${local_domain}";
+                      echo "password: ${notification_user_password}"; } > "${sendxmpp_config}"
                     # send the message
                     chmod 400 "${sendxmpp_config}"
                     chown ${ADMIN_USERNAME}:${ADMIN_USERNAME} "${sendxmpp_config}"
