@@ -530,7 +530,8 @@ if [ -d /etc/prosody ]; then
                         echo "$MESSAGE" | ${sendxmpp_cmd} "${ADMIN_EMAIL_ADDRESS}"
                         sleep 2
                     else
-                        echo "$MESSAGE" | HTTP_PROXY="socks5://127.0.0.1:9050" ${sendxmpp_cmd} "${ADMIN_EMAIL_ADDRESS}"
+                        echo "TEST: echo \"$MESSAGE\" | HTTP_PROXY=\"socks5://127.0.0.1:9050\" ${sendxmpp_cmd} --no-tls-verify \"${ADMIN_EMAIL_ADDRESS}\""
+                        echo "$MESSAGE" | HTTP_PROXY="socks5://127.0.0.1:9050" ${sendxmpp_cmd} --no-tls-verify "${ADMIN_EMAIL_ADDRESS}"
                         sleep 5
                     fi
                     echo "xmpp message sent to ${ADMIN_EMAIL_ADDRESS}"
