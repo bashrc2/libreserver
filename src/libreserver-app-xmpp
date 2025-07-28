@@ -5,6 +5,7 @@
 # |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # XMPP server
+# NOTE do not disable TLS for onion only versions
 #
 # Don't use the upstream debian package. It moves fast and breaks things.
 # python-xmpp has been removed from debian. A python3 version is not yet available
@@ -981,8 +982,6 @@ function upgrade_xmpp {
 
     read_config_param ONION_ONLY
     prosody_update_onion_certs
-
-    # NOTE do not disable TLS for onion only versions
 
     read_config_param XMPP_E2EE
     xmpp_update_e2e_policy /etc/prosody/prosody.cfg.lua
