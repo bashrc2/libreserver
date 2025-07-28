@@ -928,7 +928,7 @@ function upgrade_xmpp {
     prosody_fix_broken_modules
     remove_upstream_xmpp_package
 
-    if [ ! -d ${XMPP_DIRECTORY}/http_file shares ]; then
+    if [ ! -d ${XMPP_DIRECTORY}/http_file_shares ]; then
         mkdir -p ${XMPP_DIRECTORY}/http_file_shares
     fi
 
