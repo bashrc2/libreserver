@@ -168,6 +168,14 @@ if ! which openssl > /dev/null ;then
     exit 56
 fi
 
+# xmpp special case
+if [[ "${HOSTNAME}" == "xmpp" ]]; then
+    read_config_param ONION_ONLY
+    if [ "$ONION_ONLY" != 'no' ]; then
+        HOSTNAME=$(cat /var/lib/tor/hidden_service_email/hostname)
+    fi
+fi
+
 CERTFILE=$HOSTNAME
 
 function remove_cert_letsencrypt {
