@@ -499,11 +499,9 @@ if [ $notify_by_ntfy ]; then
 fi
 
 if [ -d /etc/prosody ]; then
-    sendxmpp_config=/root/.sendxmpprc
+    sendxmpp_config=/home/${ADMIN_USERNAME}/.sendxmpprc
     sendxmpp_binary=/usr/bin/go-sendxmpp
-    if [ -f /root/.config/sendxmpp.toml ]; then
-        rm /root/.config/sendxmpp.toml
-    fi
+    sendxmpp_cmd="sudo -H -u ${ADMIN_USERNAME} ${sendxmpp_binary}"
     if [ -f "${sendxmpp_binary}" ]; then
         notify_by_xmpp=
         if [ -f "${notification_method_filename}" ]; then
@@ -526,13 +524,14 @@ if [ -d /etc/prosody ]; then
                       echo "jserver: ${local_domain}";
                       echo "password: ${notification_user_password}"; } > "${sendxmpp_config}"
                     # send the message
-                    chmod 700 "${sendxmpp_config}"
+                    chmod 400 "${sendxmpp_config}"
                     if [[ "${local_domain}" != *".onion" ]]; then
                         echo "$MESSAGE" | ${sendxmpp_binary} -n "${ADMIN_EMAIL_ADDRESS}"
+                        sleep 2
                     else
-                        echo "$MESSAGE" | HTTP_PROXY="socks5://127.0.0.1:9050" ${sendxmpp_binary} -n "${ADMIN_EMAIL_ADDRESS}"
+                        echo "$MESSAGE" | HTTP_PROXY="socks5://127.0.0.1:9050" ${sendxmpp_cmd} -n "${ADMIN_EMAIL_ADDRESS}"
+                        sleep 5
                     fi
-                    sleep 2
                     echo "xmpp message sent to ${ADMIN_EMAIL_ADDRESS}"
                     # remove the sendxmpp configuration file
                     if [ "${sendxmpp_config}" ]; then
