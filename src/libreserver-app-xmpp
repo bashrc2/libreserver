@@ -1130,6 +1130,18 @@ function restore_local_xmpp {
             exit 72
         fi
         rm -rf $temp_restore_dir
+        # old file uploads directory becomes new one
+        if [ -d ${XMPP_DIRECTORY}/http_uploads ]; then
+            if [ ! -d ${XMPP_DIRECTORY}/http_file shares ]; then
+                mv ${XMPP_DIRECTORY}/http_uploads ${XMPP_DIRECTORY}/http_file shares
+            else
+                cp -r ${XMPP_DIRECTORY}/http_uploads/* ${XMPP_DIRECTORY}/http_file shares/
+            fi
+        fi
+        # create a new file shares directory if needed
+        if [ ! -d ${XMPP_DIRECTORY}/http_file shares ]; then
+            mkdir -p ${XMPP_DIRECTORY}/http_file_shares
+        fi
         systemctl restart prosody
         chown -R prosody:prosody ${XMPP_DIRECTORY}/*
         echo $"Restore of xmpp settings complete"
