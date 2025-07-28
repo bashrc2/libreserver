@@ -928,6 +928,16 @@ function upgrade_xmpp {
     prosody_fix_broken_modules
     remove_upstream_xmpp_package
 
+    if [ ! -d ${XMPP_DIRECTORY}/http_file shares ]; then
+        mkdir -p ${XMPP_DIRECTORY}/http_file_shares
+    fi
+
+    # replace upload module
+    if grep -q 'http_upload' /etc/prosody/prosody.cfg.lua; then
+        sed -i 's|http_upload|http_file_share|g' /etc/prosody/prosody.cfg.lua
+        systemctl restart prosody
+    fi
+
     # deprecated module
     if grep -q 'smacks_offline' /etc/prosody/prosody.cfg.lua; then
         sed -i '/smacks_offline/d' /etc/prosody/prosody.cfg.lua
@@ -1566,7 +1576,7 @@ function xmpp_create_config {
       echo '';
       echo 'Include "conf.d/*.cfg.lua"';
       echo "Component \"upload.${xmpp_muc_domain}\" \"http_file_share\"";
-      echo 'http_file_share_path = "/var/lib/prosody/http_uploads"';
+      echo 'http_file_share_path = "/var/lib/prosody/http_file_shares"';
       echo 'http_file_share_size_limit = 25165824';
       echo 'http_file_share_expire_after = 60 * 60 * 24 * 7 -- a week';
       echo '';
@@ -1775,8 +1785,8 @@ function install_xmpp {
         groupadd prosody
     fi
 
-    if [ ! -d ${XMPP_DIRECTORY}/http_uploads ]; then
-        mkdir -p ${XMPP_DIRECTORY}/http_uploads
+    if [ ! -d ${XMPP_DIRECTORY}/http_file shares ]; then
+        mkdir -p ${XMPP_DIRECTORY}/http_file_shares
     fi
     if [ ! -d /etc/prosody/conf.d ]; then
         mkdir -p /etc/prosody/conf.d
