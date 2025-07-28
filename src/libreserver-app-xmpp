@@ -1038,7 +1038,7 @@ function upgrade_xmpp {
     # SASL SCRAM downgrade protection
     prosody_add_module "sasl_ssdp"
 
-    # reactions
+    # old reactions, now integrated into muc
     prosody_remove_module "muc_occupantid"
 
     # security labels
