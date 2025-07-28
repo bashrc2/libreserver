@@ -304,10 +304,7 @@ function kill_sendxmpp_process {
     # Sometimes the process can get stuck, so ensure that
     # it gets killed if necessary
     # shellcheck disable=SC2009
-    sendxmpp_binary=/usr/bin/sendxmpp
-    if [ -f /root/.cargo/bin/sendxmpp ]; then
-        sendxmpp_binary=/root/.cargo/bin/sendxmpp
-    fi
+    sendxmpp_binary=/usr/bin/go-sendxmpp
     sendxmpp_pid=$(ps ax | grep ${sendxmpp_binary} | grep -v grep | awk -F ' ' '{print $1}')
     if [ "$sendxmpp_pid" ]; then
         kill -9 "$sendxmpp_pid"
@@ -503,7 +500,7 @@ fi
 
 if [ -d /etc/prosody ]; then
     sendxmpp_config=/root/.sendxmpprc
-    sendxmpp_binary=/usr/bin/sendxmpp
+    sendxmpp_binary=/usr/bin/go-sendxmpp
     if [ -f /root/.config/sendxmpp.toml ]; then
         rm /root/.config/sendxmpp.toml
     fi

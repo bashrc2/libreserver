@@ -958,8 +958,8 @@ function upgrade_xmpp {
 
     xmpp_restart=
 
-    if [ ! -f /usr/bin/sendxmpp ]; then
-        $PACKAGE_INSTALL sendxmpp
+    if [ ! -f /usr/bin/go-sendxmpp ]; then
+        $PACKAGE_INSTALL go-sendxmpp
     fi
 
     xmpp_fix_exists
@@ -1200,7 +1200,7 @@ function remove_xmpp {
         firewall_remove 5281 tcp
     fi
 
-    $REMOVE_PACKAGES_PURGE prosody sendxmpp
+    $REMOVE_PACKAGES_PURGE prosody go-sendxmpp
     rm /etc/cron.daily/prosody
     if [ -f "$INSTALL_DIR/$prosody_modules_filename" ]; then
         rm "$INSTALL_DIR/$prosody_modules_filename"
@@ -1779,7 +1779,7 @@ function install_xmpp {
 
     increment_app_install_progress
 
-    INSTALL_PACKAGES sendxmpp
+    INSTALL_PACKAGES go-sendxmpp
 
     increment_app_install_progress
 
