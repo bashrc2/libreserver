@@ -537,7 +537,7 @@ function remove_management_engine_interface {
 }
 
 function set_login_umask {
-    if ! -grep -q "UMASK" /etc/login.defs; then
+    if ! grep -q "UMASK" /etc/login.defs; then
         echo "UMASK		077" >> /etc/login.defs
     fi
     logindefs_umask=$(grep UMASK /etc/login.defs | grep -v '#')
