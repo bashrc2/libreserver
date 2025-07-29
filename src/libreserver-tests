@@ -695,7 +695,7 @@ function test_stig {
     if [ "$VERBOSE" ]; then
         echo "RHEL-06-000063"
     fi
-    sed -e '/^#/d' -e '/^[ \t][ \t]*#/d' -e 's/#.*$//' -e '/^$/d' /etc/login.defs | grep "ENCRYPT_METHOD.*SHA512" > /dev/null 2>&1 &
+    sed -e '/^#/d' -e '/^[ \t][ \t]*#/d' -e 's/#.*$//' -e '/^$/d' /etc/login.defs | grep "ENCRYPT_METHOD.*YESCRYPT" > /dev/null 2>&1 &
 
     stig_spinner $!
     output "V-38576" $? ${SETLANG}
