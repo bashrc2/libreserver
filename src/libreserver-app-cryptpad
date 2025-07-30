@@ -184,6 +184,8 @@ function upgrade_cryptpad {
 
     systemctl start cryptpad
 
+    chmod -R 755 /var/www/cryptpad
+
     if ! grep -q "debug|kanban" /etc/nginx/sites-available/cryptpad; then
         sed -i 's@location ~.*@location ~ ^/(register|login|settings|user|pad|drive|poll|slide|code|whiteboard|file|media|profile|contacts|todo|filepicker|debug|kanban)$ {@g' /etc/nginx/sites-available/cryptpad
         systemctl restart nginx
@@ -610,6 +612,8 @@ function install_cryptpad {
     cryptpad_evict_inactive_data
 
     increment_app_install_progress
+
+    chmod -R 755 /var/www/cryptpad
 
     systemctl restart nginx
 
