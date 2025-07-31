@@ -37,6 +37,8 @@ REQUIRES_APP=
 
 CRYPTPAD_ONION_PORT=8119
 CRYPTPAD_PORT=9003
+CRYPTPAD_SAFE_PORT=9004
+CRYPTPAD_WEBSOCKET_PORT=9005
 CRYPTPAD_REPO="https://github.com/xwiki-labs/cryptpad"
 CRYPTPAD_COMMIT='ae5da10f8dad9d07a90751b8069f7ea101409a7c'
 CRYPTPAD_DIR=/etc/cryptpad
@@ -104,11 +106,17 @@ function upgrade_distro_cryptpad {
 }
 
 function logging_on_cryptpad {
-    echo -n ''
+    sed -i 's|logToStdout:.*|logToStdout: true,|g' "$cryptpad_prefix${CRYPTPAD_DIR}/config/config.js"
+    sed -i 's|logLevel:.*|logLevel: debug,|g' "$cryptpad_prefix${CRYPTPAD_DIR}/config/config.js"
+    sed -i 's|verbose:.*|verbose: true|g' "$cryptpad_prefix${CRYPTPAD_DIR}/config/config.js"
+    systemctl restart cryptpad
 }
 
 function logging_off_cryptpad {
-    echo -n ''
+    sed -i 's|logToStdout:.*|logToStdout: false,|g' "$cryptpad_prefix${CRYPTPAD_DIR}/config/config.js"
+    sed -i 's|logLevel:.*|logLevel: error,|g' "$cryptpad_prefix${CRYPTPAD_DIR}/config/config.js"
+    sed -i 's|verbose:.*|verbose: false|g' "$cryptpad_prefix${CRYPTPAD_DIR}/config/config.js"
+    systemctl restart cryptpad
 }
 
 function remove_user_cryptpad {
@@ -307,8 +315,12 @@ function cryptpad_create_config {
     { echo 'module.exports = {';
       echo "    httpUnsafeOrigin: '${cryptpad_unsafe_origin}',";
       echo "    httpSafeOrigin: '${cryptpad_mydomain}',";
+      echo "    httpAddress: 'localhost',";
       echo "    httpPort: ${CRYPTPAD_PORT},";
+      echo "    httpSafePort: ${CRYPTPAD_SAFE_PORT},";
+      echo "    websocketPort: ${CRYPTPAD_WEBSOCKET_PORT},";
       echo "    adminEmail: '${MY_EMAIL_ADDRESS}',";
+      echo '    adminKeys: [],';
       echo '    retainData: false,';
       echo '    archiveRetentionTime: 15,';
       echo '    maxUploadSize: 20 * 1024 * 1024,';
@@ -319,6 +331,7 @@ function cryptpad_create_config {
       echo '    disableIntegratedTasks: false,';
       echo '    removeDonateButton: true,';
       echo '    allowSubscriptions: true,';
+      echo '    enforceMFA: false,';
       echo '';
       echo "    filePath: './datastore/',";
       echo "    archivePath: './data/archive',";
@@ -332,7 +345,8 @@ function cryptpad_create_config {
       echo "    logToStdout: false,";
       echo "    logLevel: 'error',";
       echo "    logFeedback: false,";
-      echo "    verbose: false,";
+      echo "    logIP: false,";
+      echo "    verbose: false";
       echo '};'; } > "$cryptpad_prefix${CRYPTPAD_DIR}/config/config.js"
 
     if [[ "$cryptpad_install_type" != "mesh" ]]; then
