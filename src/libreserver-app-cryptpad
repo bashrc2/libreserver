@@ -48,8 +48,6 @@ CRYPTPAD_SHORT_DESCRIPTION=$'Secure realtime collaboration'
 CRYPTPAD_DESCRIPTION=$'Secure realtime collaboration with docs, presentations, drawing and voting. Documents are ephemeral and unless you save them will be deleted when you close the browser.'
 CRYPTPAD_MOBILE_APP_URL=
 
-CRYPTPAD_BOWER_VERSION='1.8.12'
-
 cryptpad_variables=(ONION_ONLY
                     CRYPTPAD_DOMAIN_NAME
                     MY_EMAIL_ADDRESS)
@@ -179,14 +177,8 @@ function upgrade_cryptpad {
     fi
     cryptpad_create_config
     /usr/bin/npm upgrade
-    /usr/bin/npm install
-    if [ ! -f "${CRYPTPAD_DIR}/node_modules/bower/bin/bower" ]; then
-        /usr/bin/npm install bower@${CRYPTPAD_BOWER_VERSION}
-        chown -R cryptpad:cryptpad "${CRYPTPAD_DIR}"
-    fi
-    rm -rf ${CRYPTPAD_DIR}/.cache/bower
-    su -c './node_modules/bower/bin/bower install --force-latest --config.interactive=false' - cryptpad
-    su -c './node_modules/bower/bin/bower update --config.interactive=false' - cryptpad
+    /usr/bin/npm ci
+    /usr/bin/npm run install:components
     cryptpad_generate_api_config
     chown -R cryptpad:cryptpad ${CRYPTPAD_DIR}
 
@@ -313,7 +305,7 @@ function cryptpad_create_config {
         cryptpad_unsafe_origin="${cryptpad_mydomain}"
     fi
     { echo 'module.exports = {';
-      echo "    httpUnsafeOrigin: '${cryptpad_unsafe_origin}',";
+      echo "    httpUnsafeOrigin: 'http://127.0.0.1:${CRYPTPAD_PORT}',";
       echo "    httpSafeOrigin: '${cryptpad_mydomain}',";
       echo "    httpAddress: 'localhost',";
       echo "    httpPort: ${CRYPTPAD_PORT},";
@@ -554,8 +546,11 @@ function install_cryptpad {
 
     cd ${CRYPTPAD_DIR} || exit 35
 
-    /usr/bin/npm install
-    /usr/bin/npm install @mcrowe/minibloom
+    /usr/bin/npm ci
+
+    increment_app_install_progress
+
+    /usr/bin/npm run install:components
 
     increment_app_install_progress
 
@@ -606,6 +601,7 @@ function install_cryptpad {
       echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/cryptpad.service
     systemctl enable cryptpad.service
     systemctl daemon-reload
+    chmod 755 /etc/systemd/system/cryptpad.service
     systemctl start cryptpad.service
 
     increment_app_install_progress
@@ -617,18 +613,6 @@ function install_cryptpad {
     increment_app_install_progress
 
     cd ${CRYPTPAD_DIR} || exit 73
-    /usr/bin/npm install bower@${CRYPTPAD_BOWER_VERSION}
-    if [ ! -f "${CRYPTPAD_DIR}/node_modules/bower/bin/bower" ]; then
-        echo $"bower was not installed"
-        exit 89
-    fi
-    increment_app_install_progress
-    chown -R cryptpad:cryptpad ${CRYPTPAD_DIR}/node_modules/bower
-    increment_app_install_progress
-    su -c './node_modules/bower/bin/bower install --force-latest --config.interactive=false' - cryptpad
-    increment_app_install_progress
-    su -c './node_modules/bower/bin/bower update --config.interactive=false' - cryptpad
-
     increment_app_install_progress
 
     cryptpad_turn_off_signups
