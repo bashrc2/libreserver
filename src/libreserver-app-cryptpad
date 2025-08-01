@@ -36,9 +36,9 @@ NOT_ON_HOMEPAGE=1
 REQUIRES_APP=
 
 CRYPTPAD_ONION_PORT=8119
-CRYPTPAD_PORT=9003
-CRYPTPAD_SAFE_PORT=9004
-CRYPTPAD_WEBSOCKET_PORT=9005
+CRYPTPAD_PORT=3000
+CRYPTPAD_SAFE_PORT=3001
+CRYPTPAD_WEBSOCKET_PORT=3003
 CRYPTPAD_REPO="https://github.com/xwiki-labs/cryptpad"
 CRYPTPAD_COMMIT='ae5da10f8dad9d07a90751b8069f7ea101409a7c'
 CRYPTPAD_DIR=/etc/cryptpad
@@ -279,6 +279,7 @@ function remove_cryptpad {
     remove_app cryptpad
     remove_completion_param install_cryptpad
     sed -i '/cryptpad/d' "$COMPLETION_FILE"
+    sed -i '/Cryptpad setup/d' "$COMPLETION_FILE"
 
     userdel -r cryptpad
 }
@@ -626,6 +627,22 @@ function install_cryptpad {
     chmod -R 755 /var/www/cryptpad
 
     systemctl restart nginx
+
+    cryptpad_initial_login=$(systemctl status cryptpad | grep "http://" | head -n 1 | awk -F ': ' '{print $2}')
+
+    CRYPTPAD_ONION_HOSTNAME=$(cat /var/lib/tor/hidden_service_cryptpad/hostname)
+    cryptpad_mydomain="http://${CRYPTPAD_ONION_HOSTNAME}"
+
+    if [[ "${cryptpad_initial_login}" != "${cryptpad_mydomain}/install/"* ]]; then
+        echo $'Unable to find cryptpad initial setup link'
+        exit 82
+    fi
+
+    if ! grep -q 'Cryptpad setup:' "$COMPLETION_FILE"; then
+        echo "Cryptpad setup: ${cryptpad_initial_login}" >> "$COMPLETION_FILE"
+    else
+        sed -i "s|Cryptpad setup: .*|Cryptpad setup: ${cryptpad_initial_login}|g" "$COMPLETION_FILE"
+    fi
 
     APP_INSTALLED=1
 }
