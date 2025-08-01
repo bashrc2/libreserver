@@ -147,7 +147,7 @@ function cryptpad_generate_api_config {
     if [ ! -d ${CRYPTPAD_DIR}/customize/api ]; then
         mkdir -p ${CRYPTPAD_DIR}/customize/api
     fi
-    wget 127.0.0.1:${CRYPTPAD_PORT}/api/config -O ${CRYPTPAD_DIR}/customize/api/config
+    wget http://127.0.0.1:${CRYPTPAD_PORT}/api/config -O ${CRYPTPAD_DIR}/customize/api/config
     if [ ! -f ${CRYPTPAD_DIR}/customize/api/config ]; then
         echo $'Unable to wget api/config'
         exit 89
