@@ -305,7 +305,7 @@ function cryptpad_create_config {
         cryptpad_unsafe_origin="${cryptpad_mydomain}"
     fi
     { echo 'module.exports = {';
-      echo "    httpUnsafeOrigin: 'http://127.0.0.1:${CRYPTPAD_PORT}',";
+      echo "    httpUnsafeOrigin: '${cryptpad_mydomain}',";
       echo "    httpSafeOrigin: '${cryptpad_mydomain}',";
       echo "    httpAddress: 'localhost',";
       echo "    httpPort: ${CRYPTPAD_PORT},";
