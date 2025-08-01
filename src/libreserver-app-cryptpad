@@ -565,6 +565,13 @@ function install_cryptpad {
     increment_app_install_progress
 
     cryptpad_create_config
+
+    increment_app_install_progress
+
+    cp ${CRYPTPAD_DIR}/customize.dist/application_config.js ${CRYPTPAD_DIR}/customize/application_config.js
+
+    increment_app_install_progress
+
     chown -R cryptpad:cryptpad ${CRYPTPAD_DIR}
 
     increment_app_install_progress
