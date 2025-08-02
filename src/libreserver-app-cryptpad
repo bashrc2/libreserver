@@ -189,6 +189,7 @@ function upgrade_cryptpad {
     /usr/bin/npm run install:components
     cryptpad_generate_api_config
     chown -R cryptpad:cryptpad ${CRYPTPAD_DIR}
+    chmod -R 755 ${CRYPTPAD_DIR}
 
     systemctl start cryptpad
 
@@ -652,6 +653,7 @@ function install_cryptpad {
     fi
     chmod 755 ${CRYPTPAD_DIR}/customize/application_config.js
     chown cryptpad:cryptpad ${CRYPTPAD_DIR}/customize/application_config.js
+    chmod -R 755 ${CRYPTPAD_DIR}
 
     increment_app_install_progress
 
