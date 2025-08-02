@@ -651,6 +651,7 @@ function install_cryptpad {
         exit 72
     fi
     chmod 755 ${CRYPTPAD_DIR}/customize/application_config.js
+    chown cryptpad:cryptpad ${CRYPTPAD_DIR}/customize/application_config.js
 
     increment_app_install_progress
 
