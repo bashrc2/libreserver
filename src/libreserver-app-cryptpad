@@ -573,6 +573,11 @@ function install_cryptpad {
     fi
     cp ${CRYPTPAD_DIR}/customize.dist/application_config.js ${CRYPTPAD_DIR}/customize/application_config.js
 
+    if [ ! -f ${CRYPTPAD_DIR}/customize/application_config.js ]; then
+        echo $'Failed to copy application_config.js'
+        exit 72
+    fi
+
     increment_app_install_progress
 
     chown -R cryptpad:cryptpad ${CRYPTPAD_DIR}
