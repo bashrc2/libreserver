@@ -568,6 +568,9 @@ function install_cryptpad {
 
     increment_app_install_progress
 
+    if [ ! -d ${CRYPTPAD_DIR}/customize ]; then
+        mkdir ${CRYPTPAD_DIR}/customize
+    fi
     cp ${CRYPTPAD_DIR}/customize.dist/application_config.js ${CRYPTPAD_DIR}/customize/application_config.js
 
     increment_app_install_progress
