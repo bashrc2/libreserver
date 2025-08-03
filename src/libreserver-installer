@@ -4062,7 +4062,6 @@ function update_bridges {
         if [ -f "/root/.webadmin_torbridges" ]; then
             rm "/root/.webadmin_torbridges"
         fi
-        touch "/root/.webadmin_torbridges"
 
         if [ ! -f /usr/bin/obfs4proxy ]; then
             apt-get -yq install obfs4proxy
@@ -4100,6 +4099,9 @@ function update_bridges {
                             bridge_cert=$(echo "$line" | awk -F ' ' '{print $4}')
                             bridge_mode=$(echo "$line" | awk -F ' ' '{print $5}')
                             if [[ "${bridge_ip_address}" == *"."* && "${bridge_cert}" == "cert="* && "${bridge_mode}" == *"="* ]]; then
+                                if [ ! -f "/root/.webadmin_torbridges" ]; then
+                                    touch "/root/.webadmin_torbridges"
+                                fi
                                 if [ ! -f /etc/torrc.d/bridges ]; then
                                     { echo 'ClientTransportPlugin obfs4 exec /usr/bin/obfs4proxy managed';
                                       echo 'UseBridges 1'; } > /etc/torrc.d/bridges
