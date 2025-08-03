@@ -150,7 +150,7 @@ If you don't have a domain then just select Continue|도메인이없는 경우 �
 If you don't have Orbot installed then enable The Guardian Project repository from the drop down menu and install it.|Orbot을 설치하지 않은 경우 드롭 다운 메뉴에서 Guardian Project 저장소를 활성화하고 설치하십시오.
 If you don't need a password then just leave this blank and select Update|암호가 필요하지 않은 경우이 칸을 비워두고 업데이트를 선택하십시오.
 If you have a USB plugged in leave it inserted until you can confirm that the stream is working|연결된 USB가있는 경우 스트림이 작동하는지 확인할 수있을 때까지 삽입 된 상태로 두십시오
-If you have trouble accessing onion addresses paste some Tor bridges below. See https://bridges.torproject.org/bridges|양파 주소에 액세스하는 데 문제가 있으면 아래의 Tor 브리지를 붙여 넣으십시오. https://bridges.torproject.org/bridges를 참조하십시오.
+If you have trouble accessing onion addresses paste some Tor bridges below. See https://bridges.torproject.org|양파 주소에 액세스하는 데 문제가 있으면 아래의 Tor 브리지를 붙여 넣으십시오. https://bridges.torproject.org를 참조하십시오.
 If you're using the Element mobile app to access your Matrix homeserver then you can significantly improve battery performance by going to the settings and changing 'Sync request timeout' to 30 seconds and 'Delay between two sync requests' to 600 seconds. Also turning off 'msgs in group chats' will help, since it will avoid getting a notification whenever a group chat event happens, which then wakes up the screen|Element 모바일 앱을 사용하여 Matrix 홈 서버에 액세스하는 경우 설정으로 이동하여 '동기화 요청 제한 시간'을 30 초로, '두 개의 동기화 요청 간 지연'을 600 초로 변경하면 배터리 성능을 크게 향상시킬 수 있습니다. 또한 그룹 채팅 이벤트가 발생할 때마다 알림을받지 않으므로 '그룹 채팅의 메시지'를 끄면 화면이 다시 활성화됩니다
 If your translations are accepted they will later appear in the upstream project and be usable by anyone.|귀하의 번역본이 받아 들여지면 나중에 업스트림 프로젝트에 나타나고 누구든지 사용할 수 있습니다.
 Import|수입

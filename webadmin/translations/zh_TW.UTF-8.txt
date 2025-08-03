@@ -150,7 +150,7 @@ If you don't have a domain then just select Continue|如果您沒有域，則只
 If you don't have Orbot installed then enable The Guardian Project repository from the drop down menu and install it.|如果您沒有安裝Orbot，請從下拉菜單中啟用Guardian Project存儲庫並進行安裝。
 If you don't need a password then just leave this blank and select Update|如果您不需要密碼，請將其留空並選擇更新
 If you have a USB plugged in leave it inserted until you can confirm that the stream is working|如果您已插入USB，請將其插入，直到您可以確認該流正常工作
-If you have trouble accessing onion addresses paste some Tor bridges below. See https://bridges.torproject.org/bridges|如果您無法訪問洋蔥地址，請在下方粘貼一些Tor橋。請參閱https://bridges.torproject.org/bridges
+If you have trouble accessing onion addresses paste some Tor bridges below. See https://bridges.torproject.org|如果您無法訪問洋蔥地址，請在下方粘貼一些Tor橋。請參閱https://bridges.torproject.org
 If you're using the Element mobile app to access your Matrix homeserver then you can significantly improve battery performance by going to the settings and changing 'Sync request timeout' to 30 seconds and 'Delay between two sync requests' to 600 seconds. Also turning off 'msgs in group chats' will help, since it will avoid getting a notification whenever a group chat event happens, which then wakes up the screen|如果您使用Element移動應用程序訪問Matrix主服務器，那麼您可以通過轉到設置並將“同步請求超時”更改為30秒並將“兩個同步請求之間的延遲”更改為600秒來顯著提高電池性能。關閉“群組聊天中的消息”也會有所幫助，因為它會避免在群聊事件發生時收到通知，然後喚醒屏幕
 If your translations are accepted they will later appear in the upstream project and be usable by anyone.|如果您的翻譯被接受，它們將在以後出現在上游項目中並且可供任何人使用。
 Import|進口

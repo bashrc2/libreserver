@@ -150,7 +150,7 @@ If you don't have a domain then just select Continue|ドメインがない場合
 If you don't have Orbot installed then enable The Guardian Project repository from the drop down menu and install it.|Orbotをインストールしていない場合は、ドロップダウンメニューからGuardian Projectリポジトリを有効にしてインストールします。
 If you don't need a password then just leave this blank and select Update|パスワードが必要ない場合は、このフィールドを空白のままにして、[更新]を選択します。
 If you have a USB plugged in leave it inserted until you can confirm that the stream is working|USBを差し込んだままにしておくと、ストリームが動作していることを確認できるまで挿入されます
-If you have trouble accessing onion addresses paste some Tor bridges below. See https://bridges.torproject.org/bridges|タマネギのアドレスにアクセスする際に問題がある場合は、以下のTorブリッジを貼り付けてください。 https://bridges.torproject.org/bridgesを参照してください。
+If you have trouble accessing onion addresses paste some Tor bridges below. See https://bridges.torproject.org|タマネギのアドレスにアクセスする際に問題がある場合は、以下のTorブリッジを貼り付けてください。 https://bridges.torproject.orgを参照してください。
 If you're using the Element mobile app to access your Matrix homeserver then you can significantly improve battery performance by going to the settings and changing 'Sync request timeout' to 30 seconds and 'Delay between two sync requests' to 600 seconds. Also turning off 'msgs in group chats' will help, since it will avoid getting a notification whenever a group chat event happens, which then wakes up the screen|Elementモバイルアプリケーションを使用してMatrixホームサーバーにアクセスしている場合は、設定に進み、「同期要求のタイムアウト」を30秒に、「2つの同期要求の間の遅延」を600秒に変更することで、バッテリー性能を大幅に向上できます。また、グループチャットイベントが発生したときに通知を受け取らないようにするため、「グループチャットのメッセージ」をオフにすると、画面が起動します
 If your translations are accepted they will later appear in the upstream project and be usable by anyone.|翻訳が受け入れられた場合、後で上流のプロジェクトに表示され、誰でも使用できるようになります。
 Import|インポート
