@@ -59,8 +59,8 @@ function upgrade_distro_privatebin {
 }
 
 function secure_privatebin {
-    pbpath="/var/www/$PRIVATEBIN_DOMAIN_NAME/htdocs"
-    pbdata="/var/www/$PRIVATEBIN_DOMAIN_NAME/htdocs/data"
+    pbpath="/var/www/${PRIVATEBIN_DOMAIN_NAME}/htdocs"
+    pbdata="/var/www/${PRIVATEBIN_DOMAIN_NAME}/htdocs/data"
     htgroup='www-data'
     rootuser='root'
 
@@ -101,7 +101,7 @@ function install_interactive_privatebin {
         PRIVATEBIN_DOMAIN_NAME='privatebin.local'
     else
         PRIVATEBIN_DETAILS_COMPLETE=
-        while [ ! $PRIVATEBIN_DETAILS_COMPLETE ]
+        while [ ! ${PRIVATEBIN_DETAILS_COMPLETE} ]
         do
             data=$(mktemp 2>/dev/null)
             dialog --backtitle $"LibreServer Configuration" \
@@ -117,24 +117,24 @@ function install_interactive_privatebin {
                      exit 1;;
             esac
             PRIVATEBIN_DOMAIN_NAME=$(sed -n 1p < "$data")
-            if [ "$PRIVATEBIN_DOMAIN_NAME" ]; then
-                if [[ "$PRIVATEBIN_DOMAIN_NAME" == "$HUBZILLA_DOMAIN_NAME" ]]; then
+            if [ "${PRIVATEBIN_DOMAIN_NAME}" ]; then
+                if [[ "${PRIVATEBIN_DOMAIN_NAME}" == "$HUBZILLA_DOMAIN_NAME" ]]; then
                     PRIVATEBIN_DOMAIN_NAME=""
                 fi
-                TEST_DOMAIN_NAME=$PRIVATEBIN_DOMAIN_NAME
+                TEST_DOMAIN_NAME=${PRIVATEBIN_DOMAIN_NAME}
                 validate_domain_name
-                if [[ "$TEST_DOMAIN_NAME" != "$PRIVATEBIN_DOMAIN_NAME" ]]; then
+                if [[ "$TEST_DOMAIN_NAME" != "${PRIVATEBIN_DOMAIN_NAME}" ]]; then
                     PRIVATEBIN_DOMAIN_NAME=
                     dialog --title $"Domain name validation" --msgbox "$TEST_DOMAIN_NAME" 15 50
                 fi
             fi
-            if [ $PRIVATEBIN_DOMAIN_NAME ]; then
+            if [ ${PRIVATEBIN_DOMAIN_NAME} ]; then
                 PRIVATEBIN_DETAILS_COMPLETE="yes"
             fi
             rm -f "$data"
         done
     fi
-    write_config_param "PRIVATEBIN_DOMAIN_NAME" "$PRIVATEBIN_DOMAIN_NAME"
+    write_config_param "PRIVATEBIN_DOMAIN_NAME" "${PRIVATEBIN_DOMAIN_NAME}"
     APP_INSTALLED=1
 }
 
@@ -149,10 +149,10 @@ function reconfigure_privatebin {
 }
 
 function upgrade_privatebin {
-    if grep -q "privatebin domain" "$COMPLETION_FILE"; then
+    if grep -q "privatebin domain" "${COMPLETION_FILE}"; then
         PRIVATEBIN_DOMAIN_NAME=$(get_completion_param "privatebin domain")
     fi
-    chmod 755 "/var/www/$PRIVATEBIN_DOMAIN_NAME/htdocs/data"
+    chmod 755 "/var/www/${PRIVATEBIN_DOMAIN_NAME}/htdocs/data"
 
     CURR_PRIVATEBIN_COMMIT=$(get_completion_param "privatebin commit")
     if [[ "$CURR_PRIVATEBIN_COMMIT" == "$PRIVATEBIN_COMMIT" ]]; then
@@ -161,7 +161,7 @@ function upgrade_privatebin {
 
     # update to the next commit
     function_check set_repo_commit
-    set_repo_commit "/var/www/$PRIVATEBIN_DOMAIN_NAME/htdocs" "privatebin commit" "$PRIVATEBIN_COMMIT" "$PRIVATEBIN_REPO"
+    set_repo_commit "/var/www/${PRIVATEBIN_DOMAIN_NAME}/htdocs" "privatebin commit" "$PRIVATEBIN_COMMIT" "$PRIVATEBIN_REPO"
 
     secure_privatebin
 }
@@ -169,7 +169,7 @@ function upgrade_privatebin {
 
 function backup_local_privatebin {
     PRIVATEBIN_DOMAIN_NAME='privatebin'
-    if grep -q "privatebin domain" "$COMPLETION_FILE"; then
+    if grep -q "privatebin domain" "${COMPLETION_FILE}"; then
         PRIVATEBIN_DOMAIN_NAME=$(get_completion_param "privatebin domain")
     fi
 
@@ -187,11 +187,11 @@ function backup_local_privatebin {
 }
 
 function restore_local_privatebin {
-    if ! grep -q "privatebin domain" "$COMPLETION_FILE"; then
+    if ! grep -q "privatebin domain" "${COMPLETION_FILE}"; then
         return
     fi
     PRIVATEBIN_DOMAIN_NAME=$(get_completion_param "privatebin domain")
-    if [ "$PRIVATEBIN_DOMAIN_NAME" ]; then
+    if [ "${PRIVATEBIN_DOMAIN_NAME}" ]; then
         echo $"Restoring privatebin"
         temp_restore_dir=/root/tempprivatebin
         privatebin_dir="/var/www/${PRIVATEBIN_DOMAIN_NAME}/htdocs/data"
@@ -226,15 +226,15 @@ function remove_privatebin {
     fi
     read_config_param "PRIVATEBIN_DOMAIN_NAME"
     read_config_param "MY_USERNAME"
-    echo "Removing $PRIVATEBIN_DOMAIN_NAME"
-    nginx_dissite "$PRIVATEBIN_DOMAIN_NAME"
-    remove_certs "$PRIVATEBIN_DOMAIN_NAME"
+    echo "Removing ${PRIVATEBIN_DOMAIN_NAME}"
+    nginx_dissite "${PRIVATEBIN_DOMAIN_NAME}"
+    remove_certs "${PRIVATEBIN_DOMAIN_NAME}"
 
-    if [ -d "/var/www/$PRIVATEBIN_DOMAIN_NAME" ]; then
-        rm -rf "/var/www/$PRIVATEBIN_DOMAIN_NAME"
+    if [ -d "/var/www/${PRIVATEBIN_DOMAIN_NAME}" ]; then
+        rm -rf "/var/www/${PRIVATEBIN_DOMAIN_NAME}"
     fi
-    if [ -f "/etc/nginx/sites-available/$PRIVATEBIN_DOMAIN_NAME" ]; then
-        rm "/etc/nginx/sites-available/$PRIVATEBIN_DOMAIN_NAME"
+    if [ -f "/etc/nginx/sites-available/${PRIVATEBIN_DOMAIN_NAME}" ]; then
+        rm "/etc/nginx/sites-available/${PRIVATEBIN_DOMAIN_NAME}"
     fi
     function_check remove_onion_service
     remove_onion_service privatebin ${PRIVATEBIN_ONION_PORT}
@@ -244,10 +244,10 @@ function remove_privatebin {
     remove_app privatebin
     remove_i2p_service privatebin
     remove_completion_param install_privatebin
-    sed -i '/privatebin/d' "$COMPLETION_FILE"
+    sed -i '/privatebin/d' "${COMPLETION_FILE}"
 
     function_check remove_ddns_domain
-    remove_ddns_domain "$PRIVATEBIN_DOMAIN_NAME"
+    remove_ddns_domain "${PRIVATEBIN_DOMAIN_NAME}"
 }
 
 function install_privatebin {
@@ -255,7 +255,7 @@ function install_privatebin {
         ONION_ONLY='no'
     fi
 
-    if [ ! "$PRIVATEBIN_DOMAIN_NAME" ]; then
+    if [ ! "${PRIVATEBIN_DOMAIN_NAME}" ]; then
         echo $'No domain name was given for privatebin'
         exit 73
     fi
@@ -274,22 +274,22 @@ function install_privatebin {
 
     increment_app_install_progress
 
-    if [ ! -d "/var/www/$PRIVATEBIN_DOMAIN_NAME" ]; then
-        mkdir "/var/www/$PRIVATEBIN_DOMAIN_NAME"
+    if [ ! -d "/var/www/${PRIVATEBIN_DOMAIN_NAME}" ]; then
+        mkdir "/var/www/${PRIVATEBIN_DOMAIN_NAME}"
     fi
-    if [ ! -d "/var/www/$PRIVATEBIN_DOMAIN_NAME/htdocs" ]; then
+    if [ ! -d "/var/www/${PRIVATEBIN_DOMAIN_NAME}/htdocs" ]; then
 
         if [ -d /repos/privatebin ]; then
-            mkdir -p "/var/www/$PRIVATEBIN_DOMAIN_NAME/htdocs"
-            cp -r -p /repos/privatebin/. "/var/www/$PRIVATEBIN_DOMAIN_NAME/htdocs"
-            cd "/var/www/$PRIVATEBIN_DOMAIN_NAME/htdocs" || exit 34
+            mkdir -p "/var/www/${PRIVATEBIN_DOMAIN_NAME}/htdocs"
+            cp -r -p /repos/privatebin/. "/var/www/${PRIVATEBIN_DOMAIN_NAME}/htdocs"
+            cd "/var/www/${PRIVATEBIN_DOMAIN_NAME}/htdocs" || exit 34
             git pull
         else
             function_check git_clone
-            git_clone "$PRIVATEBIN_REPO" "/var/www/$PRIVATEBIN_DOMAIN_NAME/htdocs"
+            git_clone "$PRIVATEBIN_REPO" "/var/www/${PRIVATEBIN_DOMAIN_NAME}/htdocs"
         fi
 
-        if [ ! -d "/var/www/$PRIVATEBIN_DOMAIN_NAME/htdocs" ]; then
+        if [ ! -d "/var/www/${PRIVATEBIN_DOMAIN_NAME}/htdocs" ]; then
             echo $'Unable to clone privatebin repo'
             exit 63
         fi
@@ -297,17 +297,17 @@ function install_privatebin {
 
     increment_app_install_progress
 
-    cd "/var/www/$PRIVATEBIN_DOMAIN_NAME/htdocs" || exit 24
+    cd "/var/www/${PRIVATEBIN_DOMAIN_NAME}/htdocs" || exit 24
     git checkout "$PRIVATEBIN_COMMIT" -b "$PRIVATEBIN_COMMIT"
     set_completion_param "privatebin commit" "$PRIVATEBIN_COMMIT"
 
-    chmod g+w "/var/www/$PRIVATEBIN_DOMAIN_NAME/htdocs"
-    chown -R www-data:www-data "/var/www/$PRIVATEBIN_DOMAIN_NAME/htdocs"
+    chmod g+w "/var/www/${PRIVATEBIN_DOMAIN_NAME}/htdocs"
+    chown -R www-data:www-data "/var/www/${PRIVATEBIN_DOMAIN_NAME}/htdocs"
 
     increment_app_install_progress
 
     function_check add_ddns_domain
-    add_ddns_domain "$PRIVATEBIN_DOMAIN_NAME"
+    add_ddns_domain "${PRIVATEBIN_DOMAIN_NAME}"
 
     increment_app_install_progress
 
@@ -315,26 +315,26 @@ function install_privatebin {
 
     increment_app_install_progress
 
-    privatebin_nginx_site=/etc/nginx/sites-available/$PRIVATEBIN_DOMAIN_NAME
+    privatebin_nginx_site=/etc/nginx/sites-available/${PRIVATEBIN_DOMAIN_NAME}
     if [[ $ONION_ONLY == "no" ]]; then
         function_check nginx_http_redirect
-        nginx_http_redirect "$PRIVATEBIN_DOMAIN_NAME" "index index.php"
+        nginx_http_redirect "${PRIVATEBIN_DOMAIN_NAME}" "index index.php"
         { echo 'server {';
           echo '  listen 443 ssl;';
           echo '  #listen [::]:443 ssl;';
-          echo "  server_name $PRIVATEBIN_DOMAIN_NAME;";
+          echo "  server_name ${PRIVATEBIN_DOMAIN_NAME};";
           echo '  server_tokens off;';
           echo ''; } >> "$privatebin_nginx_site"
         function_check nginx_compress
-        nginx_compress "$PRIVATEBIN_DOMAIN_NAME"
+        nginx_compress "${PRIVATEBIN_DOMAIN_NAME}"
         echo '' >> "$privatebin_nginx_site"
         echo '  # Security' >> "$privatebin_nginx_site"
         function_check nginx_ssl
-        nginx_ssl "$PRIVATEBIN_DOMAIN_NAME"
+        nginx_ssl "${PRIVATEBIN_DOMAIN_NAME}"
 
         function_check nginx_security_options
-        nginx_security_options "$PRIVATEBIN_DOMAIN_NAME"
-        nginx_robots "$PRIVATEBIN_DOMAIN_NAME"
+        nginx_security_options "${PRIVATEBIN_DOMAIN_NAME}"
+        nginx_robots "${PRIVATEBIN_DOMAIN_NAME}"
 
         { echo '  add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
           echo "  add_header Onion-Location http://${PRIVATEBIN_ONION_HOSTNAME}\$request_uri;";
@@ -343,7 +343,7 @@ function install_privatebin {
           echo '  access_log /dev/null;';
           echo '  error_log /dev/null;';
           echo '';
-          echo "  root /var/www/$PRIVATEBIN_DOMAIN_NAME/htdocs;";
+          echo "  root /var/www/${PRIVATEBIN_DOMAIN_NAME}/htdocs;";
           echo '';
           echo '  index index.php;';
           echo '';
@@ -356,7 +356,7 @@ function install_privatebin {
           echo '  # Location';
           echo '  location / {'; } >> "$privatebin_nginx_site"
         function_check nginx_limits
-        nginx_limits "$PRIVATEBIN_DOMAIN_NAME" '15m'
+        nginx_limits "${PRIVATEBIN_DOMAIN_NAME}" '15m'
         { echo "    try_files \$uri \$uri/ @privatebin;";
           echo '  }';
           echo '';
@@ -376,16 +376,16 @@ function install_privatebin {
       echo '    server_tokens off;';
       echo ''; } >> "$privatebin_nginx_site"
     function_check nginx_compress
-    nginx_compress "$PRIVATEBIN_DOMAIN_NAME"
+    nginx_compress "${PRIVATEBIN_DOMAIN_NAME}"
     echo '' >> "$privatebin_nginx_site"
     function_check nginx_security_options
-    nginx_security_options "$PRIVATEBIN_DOMAIN_NAME"
+    nginx_security_options "${PRIVATEBIN_DOMAIN_NAME}"
     { echo '';
       echo '  # Logs';
       echo '  access_log /dev/null;';
       echo '  error_log /dev/null;';
       echo '';
-      echo "  root /var/www/$PRIVATEBIN_DOMAIN_NAME/htdocs;";
+      echo "  root /var/www/${PRIVATEBIN_DOMAIN_NAME}/htdocs;";
       echo '';
       echo '  index index.php;';
       echo '';
@@ -398,7 +398,7 @@ function install_privatebin {
       echo '  # Location';
       echo '  location / {'; } >> "$privatebin_nginx_site"
     function_check nginx_limits
-    nginx_limits "$PRIVATEBIN_DOMAIN_NAME" '15m'
+    nginx_limits "${PRIVATEBIN_DOMAIN_NAME}" '15m'
     { echo "    try_files \$uri \$uri/ @privatebin;";
       echo '  }';
       echo '';
@@ -412,22 +412,22 @@ function install_privatebin {
     PRIVATEBIN_I2P_HOSTNAME=$(get_i2p_domain privatebin)
     if [ "$PRIVATEBIN_I2P_HOSTNAME" ]; then
         { echo 'server {';
-          echo "    listen 127.0.0.1:$PRIVATEBIN_I2P_PORT;";
+          echo "    listen 127.0.0.1:${PRIVATEBIN_I2P_PORT};";
           echo '    port_in_redirect off;';
-          echo "    server_name $PRIVATEBIN_I2P_HOSTNAME;";
+          echo "    server_name ${PRIVATEBIN_I2P_HOSTNAME};";
           echo '    server_tokens off;';
-          echo ''; } >> "$privatebin_nginx_site"
+          echo ''; } >> "${privatebin_nginx_site}"
         function_check nginx_compress
-        nginx_compress "$PRIVATEBIN_DOMAIN_NAME"
-        echo '' >> "$privatebin_nginx_site"
+        nginx_compress "${PRIVATEBIN_DOMAIN_NAME}"
+        echo '' >> "${privatebin_nginx_site}"
         function_check nginx_security_options
-        nginx_security_options "$PRIVATEBIN_DOMAIN_NAME"
+        nginx_security_options "${PRIVATEBIN_DOMAIN_NAME}"
         { echo '';
           echo '  # Logs';
           echo '  access_log /dev/null;';
           echo '  error_log /dev/null;';
           echo '';
-          echo "  root /var/www/$PRIVATEBIN_DOMAIN_NAME/htdocs;";
+          echo "  root /var/www/${PRIVATEBIN_DOMAIN_NAME}/htdocs;";
           echo '';
           echo '  index index.php;';
           echo '';
@@ -440,7 +440,7 @@ function install_privatebin {
           echo '  # Location';
           echo '  location / {'; } >> "$privatebin_nginx_site"
         function_check nginx_limits
-        nginx_limits "$PRIVATEBIN_DOMAIN_NAME" '15m'
+        nginx_limits "${PRIVATEBIN_DOMAIN_NAME}" '15m'
         { echo "    try_files \$uri \$uri/ @privatebin;";
           echo '  }';
           echo '';
@@ -448,7 +448,7 @@ function install_privatebin {
           echo '  location ~ /\.(ht|git) {';
           echo '    deny all;';
           echo '  }';
-          echo '}'; } >> "$privatebin_nginx_site"
+          echo '}'; } >> "${privatebin_nginx_site}"
     fi
 
     function_check configure_php
@@ -457,30 +457,30 @@ function install_privatebin {
     increment_app_install_progress
 
     function_check create_site_certificate
-    create_site_certificate "$PRIVATEBIN_DOMAIN_NAME" 'yes'
+    create_site_certificate "${PRIVATEBIN_DOMAIN_NAME}" 'yes'
 
     increment_app_install_progress
 
     function_check nginx_ensite
-    nginx_ensite "$PRIVATEBIN_DOMAIN_NAME"
+    nginx_ensite "${PRIVATEBIN_DOMAIN_NAME}"
 
     increment_app_install_progress
 
-    cp "/var/www/$PRIVATEBIN_DOMAIN_NAME/htdocs/cfg/conf.sample.php" "/var/www/$PRIVATEBIN_DOMAIN_NAME/htdocs/cfg/conf.php"
+    cp "/var/www/${PRIVATEBIN_DOMAIN_NAME}/htdocs/cfg/conf.sample.php" "/var/www/${PRIVATEBIN_DOMAIN_NAME}/htdocs/cfg/conf.php"
 
     # Change some defaults
-    sed -i 's|; qrcode|qrcode|g' "/var/www/$PRIVATEBIN_DOMAIN_NAME/htdocs/cfg/conf.php"
-    sed -i 's|default =.*|default = "1day"|g' "/var/www/$PRIVATEBIN_DOMAIN_NAME/htdocs/cfg/conf.php"
-    sed -i 's|languagedefault =.*|languagedefault = "en"|g' "/var/www/$PRIVATEBIN_DOMAIN_NAME/htdocs/cfg/conf.php"
-    sed -i 's|1year =|; 1year =|g' "/var/www/$PRIVATEBIN_DOMAIN_NAME/htdocs/cfg/conf.php"
-    sed -i 's|never =|; never =|g' "/var/www/$PRIVATEBIN_DOMAIN_NAME/htdocs/cfg/conf.php"
-    sed -i 's|limit = 10|limit = 30|g' "/var/www/$PRIVATEBIN_DOMAIN_NAME/htdocs/cfg/conf.php"
-    sed -i 's|limit = 300|limit = 0|g' "/var/www/$PRIVATEBIN_DOMAIN_NAME/htdocs/cfg/conf.php"
-    sed -i 's|batchsize =.*|batchsize = 100|g' "/var/www/$PRIVATEBIN_DOMAIN_NAME/htdocs/cfg/conf.php"
-    sed -i 's|sizelimit =.*|sizelimit = 32768|g' "/var/www/$PRIVATEBIN_DOMAIN_NAME/htdocs/cfg/conf.php"
-    sed -i 's|defaultformatter =.*|defaultformatter = "markdown"|g' "/var/www/$PRIVATEBIN_DOMAIN_NAME/htdocs/cfg/conf.php"
+    sed -i 's|; qrcode|qrcode|g' "/var/www/${PRIVATEBIN_DOMAIN_NAME}/htdocs/cfg/conf.php"
+    sed -i 's|default =.*|default = "1day"|g' "/var/www/${PRIVATEBIN_DOMAIN_NAME}/htdocs/cfg/conf.php"
+    sed -i 's|languagedefault =.*|languagedefault = "en"|g' "/var/www/${PRIVATEBIN_DOMAIN_NAME}/htdocs/cfg/conf.php"
+    sed -i 's|1year =|; 1year =|g' "/var/www/${PRIVATEBIN_DOMAIN_NAME}/htdocs/cfg/conf.php"
+    sed -i 's|never =|; never =|g' "/var/www/${PRIVATEBIN_DOMAIN_NAME}/htdocs/cfg/conf.php"
+    sed -i 's|limit = 10|limit = 30|g' "/var/www/${PRIVATEBIN_DOMAIN_NAME}/htdocs/cfg/conf.php"
+    sed -i 's|limit = 300|limit = 0|g' "/var/www/${PRIVATEBIN_DOMAIN_NAME}/htdocs/cfg/conf.php"
+    sed -i 's|batchsize =.*|batchsize = 100|g' "/var/www/${PRIVATEBIN_DOMAIN_NAME}/htdocs/cfg/conf.php"
+    sed -i 's|sizelimit =.*|sizelimit = 32768|g' "/var/www/${PRIVATEBIN_DOMAIN_NAME}/htdocs/cfg/conf.php"
+    sed -i 's|defaultformatter =.*|defaultformatter = "markdown"|g' "/var/www/${PRIVATEBIN_DOMAIN_NAME}/htdocs/cfg/conf.php"
 
-    mkdir -p "/var/www/$PRIVATEBIN_DOMAIN_NAME/htdocs/data"
+    mkdir -p "/var/www/${PRIVATEBIN_DOMAIN_NAME}/htdocs/data"
 
     increment_app_install_progress
 
@@ -493,9 +493,11 @@ function install_privatebin {
 
     increment_app_install_progress
 
+    chmod -R 755 "/var/www/${PRIVATEBIN_DOMAIN_NAME}"
+
     systemctl restart nginx
 
-    set_completion_param "privatebin domain" "$PRIVATEBIN_DOMAIN_NAME"
+    set_completion_param "privatebin domain" "${PRIVATEBIN_DOMAIN_NAME}"
 
     APP_INSTALLED=1
 }
