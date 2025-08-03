@@ -4905,6 +4905,7 @@ function installer_main_loop {
     set_static_ip_address
     update_notification_type
     check_for_changed_email_domain
+    update_bridges
 }
 
 # do a factory reset if needed
