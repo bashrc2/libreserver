@@ -104,16 +104,24 @@ function upgrade_distro_cryptpad {
 }
 
 function logging_on_cryptpad {
-    sed -i 's|logToStdout:.*|logToStdout: true,|g' "$cryptpad_prefix${CRYPTPAD_DIR}/config/config.js"
-    sed -i 's|logLevel:.*|logLevel: debug,|g' "$cryptpad_prefix${CRYPTPAD_DIR}/config/config.js"
-    sed -i 's|verbose:.*|verbose: true|g' "$cryptpad_prefix${CRYPTPAD_DIR}/config/config.js"
+    cryptpad_config="$cryptpad_prefix${CRYPTPAD_DIR}/config/config.js"
+    if [ ! -f "${cryptpad_config}" ]; then
+        return
+    fi
+    sed -i 's|logToStdout:.*|logToStdout: true,|g' "${cryptpad_config}"
+    sed -i 's|logLevel:.*|logLevel: debug,|g' "${cryptpad_config}"
+    sed -i 's|verbose:.*|verbose: true|g' "${cryptpad_config}"
     systemctl restart cryptpad
 }
 
 function logging_off_cryptpad {
-    sed -i 's|logToStdout:.*|logToStdout: false,|g' "$cryptpad_prefix${CRYPTPAD_DIR}/config/config.js"
-    sed -i 's|logLevel:.*|logLevel: error,|g' "$cryptpad_prefix${CRYPTPAD_DIR}/config/config.js"
-    sed -i 's|verbose:.*|verbose: false|g' "$cryptpad_prefix${CRYPTPAD_DIR}/config/config.js"
+    cryptpad_config="$cryptpad_prefix${CRYPTPAD_DIR}/config/config.js"
+    if [ ! -f "${cryptpad_config}" ]; then
+        return
+    fi
+    sed -i 's|logToStdout:.*|logToStdout: false,|g' "${cryptpad_config}"
+    sed -i 's|logLevel:.*|logLevel: error,|g' "${cryptpad_config}"
+    sed -i 's|verbose:.*|verbose: false|g' "${cryptpad_config}"
     systemctl restart cryptpad
 }
 
