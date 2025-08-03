@@ -59,7 +59,7 @@ function validate_freedns_code {
 
 function is_valid_user {
     USRNAME="$1"
-    if [[ "$USRNAME" != "znc" && "$USRNAME" != "conduit" && "$USRNAME" != "${PROJECT_NAME}" && "$USRNAME" != "go" && "$USRNAME" != "gitea" && "$USRNAME" != "gemini" && "$USRNAME" != "git" && "$USRNAME" != "sync" && "$USRNAME" != "pi" && "$USRNAME" != "forgejo" ]]; then
+    if [[ "$USRNAME" != "znc" && "$USRNAME" != "conduit" && "$USRNAME" != "${PROJECT_NAME}" && "$USRNAME" != "go" && "$USRNAME" != "gemini" && "$USRNAME" != "git" && "$USRNAME" != "sync" && "$USRNAME" != "pi" && "$USRNAME" != "forgejo" ]]; then
         echo "1"
     else
         echo "0"
