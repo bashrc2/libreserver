@@ -24,9 +24,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# The maximum amount of traffic per day in gigabytes
-TOR_MAX_TRAFFIC_PER_MONTH_GB=10
-
 HIDDEN_SERVICE_PATH='/var/lib/tor/hidden_service_'
 ONION_SERVICES_FILE=/etc/torrc.d/${PROJECT_NAME}
 
@@ -438,7 +435,9 @@ function install_tor {
     fi
 
     echo 'Log notice file /var/log/tor/notices.log' > /etc/torrc.d/logging
-    echo "AccountingMax $TOR_MAX_TRAFFIC_PER_MONTH_GB GBytes" > /etc/torrc.d/maxtraffic
+    if [ -f /etc/torrc.d/maxtraffic ]; then
+        rm /etc/torrc.d/maxtraffic
+    fi
 
     libreserver-fix-tor
 
