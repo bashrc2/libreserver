@@ -4057,7 +4057,7 @@ function change_default_domain {
 }
 
 function update_bridges {
-    if [ -f "$bridgeslist_file" ]; then
+    if [ -f "${bridgeslist_file}" ]; then
 
         if [ -f "/root/.webadmin_torbridges" ]; then
             rm "/root/.webadmin_torbridges"
@@ -4069,8 +4069,9 @@ function update_bridges {
         fi
 
         bridge_type='obfs4'
-        { echo 'ClientTransportPlugin obfs4 exec /usr/bin/obfs4proxy managed';
-          echo 'UseBridges 1'; } > /etc/torrc.d/bridges
+        if [ -f /etc/torrc.d/bridges ]; then
+            rm /etc/torrc.d/bridges
+        fi
 
         bridges_lines_ctr=0
         while read -r line; do
@@ -4089,13 +4090,22 @@ function update_bridges {
                     if [[ "$line" == '#'* ]]; then
                         echo "$line" >> "/root/.webadmin_torbridges"
                     else
-                        bridge_ip_address=$(echo "$line" | awk -F ':' '{print $1}')
-                        bridge_port=$(echo "$line" | awk -F ':' '{print $2}' | awk -F ' ' '{print $1}')
-                        bridge_key=$(echo "$line" | awk -F ' ' '{print $2}')
-                        if [[ "${bridge_ip_address}" == *"."* ]]; then
-                            if ! grep -q "Bridge $bridge_type ${bridge_ip_address}:${bridge_port} ${bridge_key}" /etc/torrc.d/bridges; then
-                                echo "Bridge $bridge_type ${bridge_ip_address}:${bridge_port} ${bridge_key}" >> /etc/torrc.d/bridges
-                                echo "${bridge_ip_address}:${bridge_port} ${bridge_key}" >> "/root/.webadmin_torbridges"
+                        # format is expected to be:
+                        # obfs4 IP:port key other
+                        bridge_type2=$(echo "$line" | awk -F ' ' '{print $1}')
+                        if [[ "${bridge_type2}" == "${bridge_type}" ]]; then
+                            bridge_ip_address=$(echo "$line" | awk -F ' ' '{print $2}' | awk -F ':' '{print $1}')
+                            bridge_port=$(echo "$line" | awk -F ' ' '{print $2}' | awk -F ':' '{print $2}')
+                            bridge_key=$(echo "$line" | awk -F ' ' '{print $3}')
+                            if [[ "${bridge_ip_address}" == *"."* ]]; then
+                                if [ ! -f /etc/torrc.d/bridges ]; then
+                                    { echo 'ClientTransportPlugin obfs4 exec /usr/bin/obfs4proxy managed';
+                                      echo 'UseBridges 1'; } > /etc/torrc.d/bridges
+                                fi
+                                if ! grep -q "Bridge $bridge_type ${bridge_ip_address}:${bridge_port} ${bridge_key}" /etc/torrc.d/bridges; then
+                                    echo "Bridge $bridge_type ${bridge_ip_address}:${bridge_port} ${bridge_key}" >> /etc/torrc.d/bridges
+                                    echo "${bridge_ip_address}:${bridge_port} ${bridge_key}" >> "/root/.webadmin_torbridges"
+                                fi
                             fi
                         fi
                     fi
