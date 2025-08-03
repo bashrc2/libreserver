@@ -4104,7 +4104,7 @@ function update_bridges {
                                 fi
                                 if ! grep -q "Bridge $bridge_type ${bridge_ip_address}:${bridge_port} ${bridge_key}" /etc/torrc.d/bridges; then
                                     echo "Bridge $bridge_type ${bridge_ip_address}:${bridge_port} ${bridge_key}" >> /etc/torrc.d/bridges
-                                    echo "${bridge_ip_address}:${bridge_port} ${bridge_key}" >> "/root/.webadmin_torbridges"
+                                    echo "${bridge_type} ${bridge_ip_address}:${bridge_port} ${bridge_key}" >> "/root/.webadmin_torbridges"
                                 fi
                             fi
                         fi
