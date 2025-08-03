@@ -631,11 +631,6 @@ function install_forgejo {
 
     increment_app_install_progress
 
-    if [ ! -f "/home/${FORGEJO_USERNAME}/contrib/mysql.sql" ]; then
-        echo $'MySql template for Forgejo was not found'
-        exit 72
-    fi
-
     chown -R ${FORGEJO_USERNAME}:${FORGEJO_USERNAME} /home/${FORGEJO_USERNAME}
 
     increment_app_install_progress
@@ -1633,14 +1628,6 @@ function install_forgejo {
     sleep 6
 
     increment_app_install_progress
-
-    if [ ! -f "/home/${FORGEJO_USERNAME}/contrib/mysql.sql" ]; then
-        echo "/home/${FORGEJO_USERNAME}/contrib/mysql.sql not found"
-        exit 83
-    fi
-
-    function_check initialise_database
-    initialise_database forgejo "/home/${FORGEJO_USERNAME}/contrib/mysql.sql"
 
     forgejo_turn_off_registrations
 
