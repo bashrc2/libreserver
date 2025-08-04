@@ -2,7 +2,7 @@
 
 # LibreServer Apps
 
-* AberMUSH - MUD game played over telnet
+* AberMUSH - MUD game played over ssh or in a browser
 * Akaunting - A web based accounts system for small businesses or freelancers
 * Bludit - Databaseless blogging system
 * Conduit - Lightweight matrix chat server
@@ -14,9 +14,9 @@
 * Etherpad - Collaborative document creation
 * Federated wiki - A new approach to creating wiki content
 * Flightgear - Multi-player server for the flight simulator
+* Forgejo - Federated git project hosting system
 * Freeciv - Multi-player server for the city building game
 * Gemini - Gemini protocol server, similar to gopher but with encryption
-* Forgejo - Federated git project hosting system
 * Grocy - Inventory management for your home
 * Icecast media stream - Make your own internet radio station
 * KanBoard - Simple kanban system for managing projects or TODO lists
