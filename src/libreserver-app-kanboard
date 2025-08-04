@@ -192,6 +192,7 @@ function upgrade_kanboard {
     cd "/var/www/${KANBOARD_DOMAIN_NAME}/htdocs" || return
     ./cli db:migrate
 
+    chmod -R 755 "/var/www/${KANBOARD_DOMAIN_NAME}"
     chown -R www-data:www-data "/var/www/${KANBOARD_DOMAIN_NAME}/htdocs"
 }
 
@@ -674,6 +675,7 @@ function install_kanboard {
 
     cd "/var/www/${KANBOARD_DOMAIN_NAME}/htdocs" || exit 25
     ./cli db:migrate
+    chmod -R 755 "/var/www/${KANBOARD_DOMAIN_NAME}"
     chown -R www-data:www-data "/var/www/${KANBOARD_DOMAIN_NAME}/htdocs"
 
     change_password_kanboard admin "$KANBOARD_ADMIN_PASSWORD"
