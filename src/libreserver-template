@@ -453,6 +453,7 @@ else
     echo '    # update to the next commit'
     if [ ! "$app_dir" ]; then
         echo "    set_repo_commit \"/var/www/\$${app_name_upper}_DOMAIN_NAME/htdocs\" \"${app_name} commit\" \"\$${app_name_upper}_COMMIT\" \"\$${app_name_upper}_REPO\""
+        echo "    chmod -R 755 \"/var/www/\${${app_name_upper}_DOMAIN_NAME}\""
         echo "    chown -R www-data:www-data \"/var/www/\${${app_name_upper}_DOMAIN_NAME}/htdocs\""
     else
         echo "    set_repo_commit \"${app_dir}\" \"${app_name} commit\" \"\$${app_name_upper}_COMMIT\" \"\$${app_name_upper}_REPO\""
