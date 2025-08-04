@@ -425,7 +425,6 @@ This is a wiki which stores its content in text files. Having no database makes 
 Provides an easy and private way to sync calendar and contacts between devices.|デバイス間でカレンダーや連絡先を簡単かつプライベートに同期させる方法を提供します。
 Using on mobile|モバイルでの使用
 The user interface is a little misleading. Make sure that you log in with your username, not your email addres.|ユーザーインターフェイスは少し誤解を招く。メールアドレスではなく、ユーザー名でログインしてください。
-Also choose the advanced option and enter the subdomain that you installed etesync on.|また、拡張オプションを選択し、etesyncをインストールしたサブドメインを入力します。
 This is a well known system for real time collaborative editing of documents. Just log in, choose a document title and then edit. Different users will appear in different colours, and can also chat in the sidebar. This is installed as a private system in which only users on your LibreServer server will be able to create and edit documents, so it's not open to any random users on the internet.|これは、文書のリアルタイム共同編集のための周知のシステムである。ログインしてドキュメントのタイトルを選択し、編集してください。異なるユーザーが異なる色で表示され、サイドバーでチャットすることもできます。これはLibreServerサーバー上のユーザーだけがドキュメントを作成し編集できるプライベートシステムとしてインストールされるため、インターネット上の任意のランダムユーザーには公開されていません。
 This is a federated social networking system. It can federate with other popular fediverse systems.|これは連合されたソーシャルネットワーキングシステムです。それは他の一般的な宇宙システムと連合することができます。
 This is a blogging system which has no database and only uses text files for storage.|これはデータベースを持たず、保存用のテキストファイルのみを使用するブログシステムです。

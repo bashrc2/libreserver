@@ -425,7 +425,6 @@ This is a wiki which stores its content in text files. Having no database makes 
 Provides an easy and private way to sync calendar and contacts between devices.|장치간에 일정 및 연락처를 쉽고 개인적으로 동기화 할 수있는 방법을 제공합니다.
 Using on mobile|모바일에서 사용
 The user interface is a little misleading. Make sure that you log in with your username, not your email addres.|사용자 인터페이스는 약간 오해의 소지가 있습니다. 이메일 주소가 아닌 사용자 이름으로 로그인하십시오.
-Also choose the advanced option and enter the subdomain that you installed etesync on.|또한 고급 옵션을 선택하고 etesync를 설치 한 하위 도메인을 입력하십시오.
 This is a well known system for real time collaborative editing of documents. Just log in, choose a document title and then edit. Different users will appear in different colours, and can also chat in the sidebar. This is installed as a private system in which only users on your LibreServer server will be able to create and edit documents, so it's not open to any random users on the internet.|이것은 문서의 실시간 공동 편집을위한 잘 알려진 시스템입니다. 로그인하여 문서 제목을 선택한 다음 편집하십시오. 서로 다른 사용자가 서로 다른 색으로 표시되며 사이드 바에서 채팅 할 수도 있습니다. 이것은 LibreServer 서버의 사용자 만 문서를 작성하고 편집 할 수있는 개인 시스템으로 설치되므로 인터넷상의 임의의 임의의 사용자에게는 공개되지 않습니다.
 This is a federated social networking system. It can federate with other popular fediverse systems.|이것은 연합 소셜 네트워킹 시스템입니다. 그것은 다른 인기있는 연방 시스템과 연합 할 수 있습니다.
 This is a blogging system which has no database and only uses text files for storage.|이것은 데이터베이스가없고 텍스트 파일 만 사용하여 저장하는 블로깅 시스템입니다.
