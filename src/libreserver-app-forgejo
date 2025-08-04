@@ -236,6 +236,7 @@ function upgrade_forgejo {
     fi
 
     if [ $restart_forgejo ]; then
+        chmod 755 "/home/${FORGEJO_USERNAME}/forgejo"
         systemctl restart forgejo
         systemctl restart nginx
     fi
@@ -348,6 +349,7 @@ function upgrade_forgejo {
 
     sed -i "s|forgejo version.*|forgejo version:$FORGEJO_VERSION|g" "${COMPLETION_FILE}"
     systemctl restart mariadb
+    chmod 755 "/home/${FORGEJO_USERNAME}/forgejo"
     systemctl restart forgejo
 }
 
@@ -1622,6 +1624,8 @@ function install_forgejo {
     chown -R "${FORGEJO_USERNAME}":"${FORGEJO_USERNAME}" "/home/${FORGEJO_USERNAME}"
 
     increment_app_install_progress
+
+    chmod 755 "/home/${FORGEJO_USERNAME}/forgejo"
 
     systemctl restart forgejo
 
