@@ -129,13 +129,13 @@ function reconfigure_streams {
 }
 
 function streams_set_permissions {
-    chown -R www-data:www-data "$STREAMS_PATH/doc"
-    chown -R www-data:www-data "$STREAMS_PATH/store"
-    chmod -R 755 "$STREAMS_PATH/store"
-    chmod 1755 "$STREAMS_PATH/store/[data]/smarty3"
-    chmod 1755 "$STREAMS_PATH/view/tpl"
-    chmod 1755 "$STREAMS_PATH/view/tpl/smarty3"
-    chmod 755 "$STREAMS_PATH/.htconfig.php"
+    chown -R www-data:www-data "${STREAMS_PATH}/doc"
+    chown -R www-data:www-data "${STREAMS_PATH}/store"
+    chmod -R 755 "${STREAMS_PATH}/store"
+    chmod 1755 "${STREAMS_PATH}/store/[data]/smarty3"
+    chmod 1755 "${STREAMS_PATH}/view/tpl"
+    chmod 1755 "${STREAMS_PATH}/view/tpl/smarty3"
+    chmod 755 "${STREAMS_PATH}/.htconfig.php"
 }
 
 function upgrade_streams {
@@ -147,7 +147,7 @@ function upgrade_streams {
     fi
 
     function_check set_repo_commit
-    set_repo_commit "$STREAMS_PATH" "streams commit" "$STREAMS_COMMIT" $STREAMS_REPO
+    set_repo_commit "${STREAMS_PATH}" "streams commit" "$STREAMS_COMMIT" $STREAMS_REPO
     #if [ -d ${STREAMS_PATH}/zaddons ]; then
     #    cd ${STREAMS_PATH}/zaddons || exit 34
     #    git remote set-url origin $STREAMS_ADDONS_REPO
@@ -155,12 +155,12 @@ function upgrade_streams {
     #cd ${STREAMS_PATH} || exit 34
     #./util/update_addon_repo zaddons
 
-    if [ -d "$STREAMS_PATH/store/[data]/smarty3/compiled" ]; then
-        rm -rf "$STREAMS_PATH/store/[data]/smarty3/compiled"/*
+    if [ -d "${STREAMS_PATH}/store/[data]/smarty3/compiled" ]; then
+        rm -rf "${STREAMS_PATH}/store/[data]/smarty3/compiled"/*
     fi
 
-    if [ -d "$STREAMS_PATH/extend" ]; then
-        chown -R www-data:www-data "$STREAMS_PATH/extend"
+    if [ -d "${STREAMS_PATH}/extend" ]; then
+        chown -R www-data:www-data "${STREAMS_PATH}/extend"
     fi
     cd "${STREAMS_PATH}" || return
     ./util/importdoc
@@ -198,7 +198,7 @@ function restore_local_streams {
 
         MARIADB_PASSWORD=$("${PROJECT_NAME}-pass" -u root -a mariadb)
         STREAMS_PATH="/var/www/$STREAMS_DOMAIN_NAME/htdocs"
-        sed -i "s|\$db_pass =.*|\$db_pass = '${MARIADB_PASSWORD}';|g" "$STREAMS_PATH/.htconfig.php"
+        sed -i "s|\$db_pass =.*|\$db_pass = '${MARIADB_PASSWORD}';|g" "${STREAMS_PATH}/.htconfig.php"
         MARIADB_PASSWORD=
     fi
 }
@@ -280,29 +280,29 @@ function install_streams {
     if [ ! -d "/var/www/$STREAMS_DOMAIN_NAME" ]; then
         mkdir "/var/www/$STREAMS_DOMAIN_NAME"
     fi
-    if [ ! -d "$STREAMS_PATH" ]; then
-        mkdir -p "$STREAMS_PATH"
+    if [ ! -d "${STREAMS_PATH}" ]; then
+        mkdir -p "${STREAMS_PATH}"
     fi
 
-    if [ ! -f "$STREAMS_PATH/index.php" ]; then
+    if [ ! -f "${STREAMS_PATH}/index.php" ]; then
         if [ -d /repos/streams ]; then
-            mkdir -p "$STREAMS_PATH"
-            cp -r -p /repos/streams/. "$STREAMS_PATH"
-            cd "$STREAMS_PATH" || exit 24
+            mkdir -p "${STREAMS_PATH}"
+            cp -r -p /repos/streams/. "${STREAMS_PATH}"
+            cd "${STREAMS_PATH}" || exit 24
             git pull
         else
             function_check git_clone
-            git_clone "$STREAMS_REPO" "$STREAMS_PATH"
+            git_clone "$STREAMS_REPO" "${STREAMS_PATH}"
         fi
 
         git checkout "$STREAMS_COMMIT" -b "$STREAMS_COMMIT"
         set_completion_param "streams commit" "$STREAMS_COMMIT"
-        chown -R www-data:www-data "$STREAMS_PATH"
+        chown -R www-data:www-data "${STREAMS_PATH}"
     fi
 
     increment_app_install_progress
 
-    if [ ! -f "$STREAMS_PATH/install/schema_mysql.sql" ]; then
+    if [ ! -f "${STREAMS_PATH}/install/schema_mysql.sql" ]; then
         echo $'No database schema found for streams'
         exit 25
     fi
@@ -321,7 +321,7 @@ function install_streams {
     { echo 'server {';
       echo '    listen 443 ssl;';
       echo '    #listen [::]:443 ssl;';
-      echo "    root $STREAMS_PATH;";
+      echo "    root ${STREAMS_PATH};";
       echo "    server_name $STREAMS_DOMAIN_NAME;";
       echo '    server_tokens off;';
       echo "    error_log /dev/null;";
@@ -415,22 +415,22 @@ function install_streams {
 
     increment_app_install_progress
 
-    if [ ! -d "$STREAMS_PATH/view/tpl/smarty3" ]; then
-        mkdir "$STREAMS_PATH/view/tpl/smarty3"
+    if [ ! -d "${STREAMS_PATH}/view/tpl/smarty3" ]; then
+        mkdir "${STREAMS_PATH}/view/tpl/smarty3"
     fi
-    if [ ! -d "$STREAMS_PATH/store" ]; then
-        mkdir "$STREAMS_PATH/store"
+    if [ ! -d "${STREAMS_PATH}/store" ]; then
+        mkdir "${STREAMS_PATH}/store"
     fi
-    if [ ! -d "$STREAMS_PATH/store/[data]" ]; then
-        mkdir "$STREAMS_PATH/store/[data]"
+    if [ ! -d "${STREAMS_PATH}/store/[data]" ]; then
+        mkdir "${STREAMS_PATH}/store/[data]"
     fi
-    if [ ! -d "$STREAMS_PATH/store/[data]/smarty3" ]; then
-        mkdir "$STREAMS_PATH/store/[data]/smarty3"
-        chmod 1755 "$STREAMS_PATH/store/[data]/smarty3"
+    if [ ! -d "${STREAMS_PATH}/store/[data]/smarty3" ]; then
+        mkdir "${STREAMS_PATH}/store/[data]/smarty3"
+        chmod 1755 "${STREAMS_PATH}/store/[data]/smarty3"
     fi
-    chmod 1755 "$STREAMS_PATH/view/tpl"
-    chown -R www-data:www-data "$STREAMS_PATH/store"
-    chmod 1755 "$STREAMS_PATH/view/tpl/smarty3"
+    chmod 1755 "${STREAMS_PATH}/view/tpl"
+    chown -R www-data:www-data "${STREAMS_PATH}/store"
+    chmod 1755 "${STREAMS_PATH}/view/tpl/smarty3"
 
     # Ensure that the database gets backed up locally, if remote
     # backups are not being used
@@ -444,7 +444,7 @@ function install_streams {
 
     increment_app_install_progress
 
-    chown -R www-data:www-data "$STREAMS_PATH"
+    chown -R www-data:www-data "${STREAMS_PATH}"
 
     function_check nginx_ensite
     nginx_ensite "$STREAMS_DOMAIN_NAME"
@@ -452,7 +452,7 @@ function install_streams {
     increment_app_install_progress
 
     function_check initialise_database
-    initialise_database streams "$STREAMS_PATH/install/schema_mysql.sql"
+    initialise_database streams "${STREAMS_PATH}/install/schema_mysql.sql"
 
     increment_app_install_progress
 
@@ -504,10 +504,10 @@ function install_streams {
       echo '//error_reporting(E_ERROR | E_WARNING | E_PARSE );';
       echo "//ini_set('error_log','php.out');";
       echo "//ini_set('log_errors','1');";
-      echo "//ini_set('display_errors', '0');"; } > "$STREAMS_PATH/.htconfig.php"
+      echo "//ini_set('display_errors', '0');"; } > "${STREAMS_PATH}/.htconfig.php"
 
-    chown www-data:www-data "$STREAMS_PATH/.htconfig.php"
-    chmod 755 "$STREAMS_PATH/.htconfig.php"
+    chown www-data:www-data "${STREAMS_PATH}/.htconfig.php"
+    chmod 755 "${STREAMS_PATH}/.htconfig.php"
 
     systemctl restart mariadb
 
@@ -526,23 +526,24 @@ function install_streams {
 
     increment_app_install_progress
 
-    cd "$STREAMS_PATH" || exit 36
+    cd "${STREAMS_PATH}" || exit 36
     #./util/add_addon_repo ${STREAMS_ADDONS_REPO} zaddons
-    if [ -d "$STREAMS_PATH/extend" ]; then
-        chown -R www-data:www-data "$STREAMS_PATH/extend"
+    if [ -d "${STREAMS_PATH}/extend" ]; then
+        chown -R www-data:www-data "${STREAMS_PATH}/extend"
     fi
     ./util/importdoc
-    chown -R www-data:www-data "$STREAMS_PATH/doc"
+    chown -R www-data:www-data "${STREAMS_PATH}/doc"
 
     increment_app_install_progress
 
     install_composer
-    chown -R www-data:www-data "$STREAMS_PATH"
+    chmod -R 755 "${STREAMS_PATH}"
+    chown -R www-data:www-data "${STREAMS_PATH}"
 
     increment_app_install_progress
 
     if ! grep -q '/Code/Daemon/' /etc/crontab; then
-        echo "*/10 * * * *  www-data cd $STREAMS_PATH; /usr/bin/php Code/Daemon/Run.php Cron > /dev/null 2>&1" >> /etc/crontab
+        echo "*/10 * * * *  www-data cd ${STREAMS_PATH}; /usr/bin/php Code/Daemon/Run.php Cron > /dev/null 2>&1" >> /etc/crontab
     fi
 
     increment_app_install_progress
