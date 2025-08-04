@@ -37,7 +37,7 @@ AKAUNTING_CODE=
 AKAUNTING_ONION_PORT=8341
 AKAUNTING_I2P_PORT=6567
 AKAUNTING_REPO="https://github.com/akaunting/akaunting"
-AKAUNTING_COMMIT='476612d6690ad175f36160cdfba8304e8705bb46'
+AKAUNTING_COMMIT='502c7b0d319d4e95597699eb6710afdb78ee1b65'
 AKAUNTING_ADMIN_PASSWORD=
 
 AKAUNTING_BACKGROUND_IMAGE_URL=
@@ -54,7 +54,7 @@ akaunting_variables=(ONION_ONLY
                      MY_EMAIL_ADDRESS)
 
 function akaunting_update_email {
-    env_filename="/var/www/$AKAUNTING_DOMAIN_NAME/htdocs/.env"
+    env_filename="/var/www/${AKAUNTING_DOMAIN_NAME}/htdocs/.env"
     if [ ! -f "$env_filename" ]; then
         echo $'No .env file found'
         return
@@ -73,13 +73,13 @@ function upgrade_distro_akaunting {
 }
 
 function akaunting_remove_bad_links {
-    cd "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs" || exit 36
+    cd "/var/www/${AKAUNTING_DOMAIN_NAME}/htdocs" || exit 36
 
-    cd "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs" || exit 32
+    cd "/var/www/${AKAUNTING_DOMAIN_NAME}/htdocs" || exit 32
     jquery_download '1.12.4' '430f36f9b5f21aae8cc9dca6a81c4d3d84da5175eaedcf2fdc2c226302cb3575'
 
     sed -i '/googleapi/d' resources/assets/sass/app.scss
-    sed -i "s|ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js|$AKAUNTING_DOMAIN_NAME/jquery-${jquery_version}.js|g" vendor/league/flysystem/docs/_layouts/default.html
+    sed -i "s|ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js|${AKAUNTING_DOMAIN_NAME}/jquery-${jquery_version}.js|g" vendor/league/flysystem/docs/_layouts/default.html
     sed -i '/googleapi/d' vendor/laravel/framework/src/Illuminate/Foundation/Exceptions/views/503.blade.php
     sed -i '/googleapi/d' vendor/almasaeed2010/adminlte/build/less/AdminLTE-without-plugins.less
     sed -i '/googleapi/d' vendor/almasaeed2010/adminlte/build/less/AdminLTE.less
@@ -87,9 +87,9 @@ function akaunting_remove_bad_links {
     sed -i '/googleapi/d' vendor/almasaeed2010/adminlte/dist/css/AdminLTE.min.css
     sed -i '/googleapi/d' vendor/almasaeed2010/adminlte/dist/css/alt/AdminLTE-without-plugins.css
     sed -i '/googleapi/d' vendor/almasaeed2010/adminlte/dist/css/alt/AdminLTE-without-plugins.min.css
-    sed -i "s|ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js|$AKAUNTING_DOMAIN_NAME/jquery-${jquery_version}.js|g" vendor/almasaeed2010/adminlte/plugins/ckeditor/samples/old/jquery.html
+    sed -i "s|ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js|${AKAUNTING_DOMAIN_NAME}/jquery-${jquery_version}.js|g" vendor/almasaeed2010/adminlte/plugins/ckeditor/samples/old/jquery.html
 
-    chown -R www-data:www-data "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs"
+    chown -R www-data:www-data "/var/www/${AKAUNTING_DOMAIN_NAME}/htdocs"
 }
 
 function logging_on_akaunting {
@@ -142,24 +142,24 @@ function install_interactive_akaunting {
                      exit 1;;
             esac
             AKAUNTING_DOMAIN_NAME=$(sed -n 1p < "$data")
-            if [ "$AKAUNTING_DOMAIN_NAME" ]; then
-                if [[ $AKAUNTING_DOMAIN_NAME == "$HUBZILLA_DOMAIN_NAME" ]]; then
+            if [ "${AKAUNTING_DOMAIN_NAME}" ]; then
+                if [[ ${AKAUNTING_DOMAIN_NAME} == "$HUBZILLA_DOMAIN_NAME" ]]; then
                     AKAUNTING_DOMAIN_NAME=""
                 fi
-                TEST_DOMAIN_NAME=$AKAUNTING_DOMAIN_NAME
+                TEST_DOMAIN_NAME=${AKAUNTING_DOMAIN_NAME}
                 validate_domain_name
-                if [[ "$TEST_DOMAIN_NAME" != "$AKAUNTING_DOMAIN_NAME" ]]; then
+                if [[ "$TEST_DOMAIN_NAME" != "${AKAUNTING_DOMAIN_NAME}" ]]; then
                     AKAUNTING_DOMAIN_NAME=
                     dialog --title $"Domain name validation" --msgbox "$TEST_DOMAIN_NAME" 15 50
                 fi
             fi
-            if [ $AKAUNTING_DOMAIN_NAME ]; then
+            if [ ${AKAUNTING_DOMAIN_NAME} ]; then
                 AKAUNTING_DETAILS_COMPLETE="yes"
             fi
             rm -f "$data"
         done
     fi
-    write_config_param "AKAUNTING_DOMAIN_NAME" "$AKAUNTING_DOMAIN_NAME"
+    write_config_param "AKAUNTING_DOMAIN_NAME" "${AKAUNTING_DOMAIN_NAME}"
     APP_INSTALLED=1
 }
 
@@ -204,13 +204,14 @@ function upgrade_akaunting {
 
     # update to the next commit
     function_check set_repo_commit
-    set_repo_commit "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs" "akaunting commit" "$AKAUNTING_COMMIT" "$AKAUNTING_REPO"
+    set_repo_commit "/var/www/${AKAUNTING_DOMAIN_NAME}/htdocs" "akaunting commit" "$AKAUNTING_COMMIT" "$AKAUNTING_REPO"
 
-    cd "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs" || exit 36
+    cd "/var/www/${AKAUNTING_DOMAIN_NAME}/htdocs" || exit 36
     install_composer
     akaunting_update_email
     akaunting_remove_bad_links
 
+    chmod -R 755 "/var/www/${AKAUNTING_DOMAIN_NAME}"
     chown -R www-data:www-data "/var/www/${AKAUNTING_DOMAIN_NAME}/htdocs"
 }
 
@@ -256,15 +257,15 @@ function remove_akaunting {
 
     read_config_param "AKAUNTING_DOMAIN_NAME"
     read_config_param "MY_USERNAME"
-    echo "Removing $AKAUNTING_DOMAIN_NAME"
-    nginx_dissite "$AKAUNTING_DOMAIN_NAME"
-    remove_certs "$AKAUNTING_DOMAIN_NAME"
+    echo "Removing ${AKAUNTING_DOMAIN_NAME}"
+    nginx_dissite "${AKAUNTING_DOMAIN_NAME}"
+    remove_certs "${AKAUNTING_DOMAIN_NAME}"
 
-    if [ -d "/var/www/$AKAUNTING_DOMAIN_NAME" ]; then
-        rm -rf "/var/www/$AKAUNTING_DOMAIN_NAME"
+    if [ -d "/var/www/${AKAUNTING_DOMAIN_NAME}" ]; then
+        rm -rf "/var/www/${AKAUNTING_DOMAIN_NAME}"
     fi
-    if [ -f "/etc/nginx/sites-available/$AKAUNTING_DOMAIN_NAME" ]; then
-        rm "/etc/nginx/sites-available/$AKAUNTING_DOMAIN_NAME"
+    if [ -f "/etc/nginx/sites-available/${AKAUNTING_DOMAIN_NAME}" ]; then
+        rm "/etc/nginx/sites-available/${AKAUNTING_DOMAIN_NAME}"
     fi
     function_check drop_database
     drop_database akaunting
@@ -279,7 +280,7 @@ function remove_akaunting {
     sed -i '/akaunting/d' "$COMPLETION_FILE"
 
     function_check remove_ddns_domain
-    remove_ddns_domain "$AKAUNTING_DOMAIN_NAME"
+    remove_ddns_domain "${AKAUNTING_DOMAIN_NAME}"
 }
 
 function install_akaunting {
@@ -287,7 +288,7 @@ function install_akaunting {
         ONION_ONLY='no'
     fi
 
-    if [ ! "$AKAUNTING_DOMAIN_NAME" ]; then
+    if [ ! "${AKAUNTING_DOMAIN_NAME}" ]; then
         echo $'No domain name was given for akaunting'
         exit 89
     fi
@@ -317,21 +318,21 @@ function install_akaunting {
 
     increment_app_install_progress
 
-    if [ ! -d "/var/www/$AKAUNTING_DOMAIN_NAME" ]; then
-        mkdir "/var/www/$AKAUNTING_DOMAIN_NAME"
+    if [ ! -d "/var/www/${AKAUNTING_DOMAIN_NAME}" ]; then
+        mkdir "/var/www/${AKAUNTING_DOMAIN_NAME}"
     fi
-    if [ ! -d "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs" ]; then
+    if [ ! -d "/var/www/${AKAUNTING_DOMAIN_NAME}/htdocs" ]; then
         if [ -d /repos/akaunting ]; then
-            mkdir -p "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs"
-            cp -r -p /repos/akaunting/. "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs"
-            cd "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs" || exit 23
+            mkdir -p "/var/www/${AKAUNTING_DOMAIN_NAME}/htdocs"
+            cp -r -p /repos/akaunting/. "/var/www/${AKAUNTING_DOMAIN_NAME}/htdocs"
+            cd "/var/www/${AKAUNTING_DOMAIN_NAME}/htdocs" || exit 23
             git pull
         else
             function_check git_clone
-            git_clone "$AKAUNTING_REPO" "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs"
+            git_clone "$AKAUNTING_REPO" "/var/www/${AKAUNTING_DOMAIN_NAME}/htdocs"
         fi
 
-        if [ ! -d "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs" ]; then
+        if [ ! -d "/var/www/${AKAUNTING_DOMAIN_NAME}/htdocs" ]; then
             echo $'Unable to clone akaunting repo'
             exit 25
         fi
@@ -339,16 +340,16 @@ function install_akaunting {
 
     increment_app_install_progress
 
-    cd "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs" || exit 234
+    cd "/var/www/${AKAUNTING_DOMAIN_NAME}/htdocs" || exit 234
     git checkout "$AKAUNTING_COMMIT" -b "$AKAUNTING_COMMIT"
     set_completion_param "akaunting commit" "$AKAUNTING_COMMIT"
 
-    chmod g+w "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs"
-    chown -R www-data:www-data "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs"
+    chmod g+w "/var/www/${AKAUNTING_DOMAIN_NAME}/htdocs"
+    chown -R www-data:www-data "/var/www/${AKAUNTING_DOMAIN_NAME}/htdocs"
 
     increment_app_install_progress
 
-    cd "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs" || exit 34
+    cd "/var/www/${AKAUNTING_DOMAIN_NAME}/htdocs" || exit 34
     install_composer
 
     increment_app_install_progress
@@ -398,8 +399,8 @@ function install_akaunting {
       echo 'MAIL_PASSWORD=null';
       echo 'MAIL_ENCRYPTION=null';
       echo 'MAIL_FROM_NAME=null';
-      echo 'MAIL_FROM_ADDRESS=null'; } > "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs/.env"
-    chown www-data:www-data "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs/.env"
+      echo 'MAIL_FROM_ADDRESS=null'; } > "/var/www/${AKAUNTING_DOMAIN_NAME}/htdocs/.env"
+    chown www-data:www-data "/var/www/${AKAUNTING_DOMAIN_NAME}/htdocs/.env"
 
     if ! php artisan install -n \
         --db-host=localhost \
@@ -417,7 +418,7 @@ function install_akaunting {
 
     increment_app_install_progress
 
-    if [ ! -f "/var/www/$AKAUNTING_DOMAIN_NAME/htdocs/.env" ]; then
+    if [ ! -f "/var/www/${AKAUNTING_DOMAIN_NAME}/htdocs/.env" ]; then
         echo $'No .env file generated'
         exit 72
     fi
@@ -426,30 +427,30 @@ function install_akaunting {
     increment_app_install_progress
 
     function_check add_ddns_domain
-    add_ddns_domain "$AKAUNTING_DOMAIN_NAME"
+    add_ddns_domain "${AKAUNTING_DOMAIN_NAME}"
 
     increment_app_install_progress
 
-    akaunting_nginx_site=/etc/nginx/sites-available/$AKAUNTING_DOMAIN_NAME
+    akaunting_nginx_site=/etc/nginx/sites-available/${AKAUNTING_DOMAIN_NAME}
     if [[ $ONION_ONLY == "no" ]]; then
         function_check nginx_http_redirect
-        nginx_http_redirect "$AKAUNTING_DOMAIN_NAME" "index index.php"
+        nginx_http_redirect "${AKAUNTING_DOMAIN_NAME}" "index index.php"
         { echo 'server {';
           echo '  listen 443 ssl;';
           echo '  #listen [::]:443 ssl;';
-          echo "  server_name $AKAUNTING_DOMAIN_NAME;";
+          echo "  server_name ${AKAUNTING_DOMAIN_NAME};";
           echo '  server_tokens off;';
           echo ''; } >> "$akaunting_nginx_site"
         function_check nginx_compress
-        nginx_compress "$AKAUNTING_DOMAIN_NAME"
+        nginx_compress "${AKAUNTING_DOMAIN_NAME}"
         echo '' >> "$akaunting_nginx_site"
         echo '  # Security' >> "$akaunting_nginx_site"
         function_check nginx_ssl
-        nginx_ssl "$AKAUNTING_DOMAIN_NAME"
+        nginx_ssl "${AKAUNTING_DOMAIN_NAME}"
 
         function_check nginx_security_options
-        nginx_security_options "$AKAUNTING_DOMAIN_NAME"
-        nginx_robots "$AKAUNTING_DOMAIN_NAME"
+        nginx_security_options "${AKAUNTING_DOMAIN_NAME}"
+        nginx_robots "${AKAUNTING_DOMAIN_NAME}"
 
         { echo '  add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
           echo "  add_header Onion-Location http://${AKAUNTING_ONION_HOSTNAME}\$request_uri;";
@@ -457,7 +458,7 @@ function install_akaunting {
           echo '  access_log /dev/null;';
           echo '  error_log /dev/null;';
           echo '';
-          echo "  root /var/www/$AKAUNTING_DOMAIN_NAME/htdocs;";
+          echo "  root /var/www/${AKAUNTING_DOMAIN_NAME}/htdocs;";
           echo '';
           echo '  index index.html index.htm index.php;';
           echo '';
@@ -472,7 +473,7 @@ function install_akaunting {
           echo '';
           echo '  location / {'; } >> "$akaunting_nginx_site"
         function_check nginx_limits
-        nginx_limits "$AKAUNTING_DOMAIN_NAME" '15m'
+        nginx_limits "${AKAUNTING_DOMAIN_NAME}" '15m'
         { echo "    try_files \$uri \$uri/ /index.php?\$query_string;";
           echo '  }';
           echo '';
@@ -503,15 +504,15 @@ function install_akaunting {
       echo '    server_tokens off;';
       echo ''; } >> "$akaunting_nginx_site"
       function_check nginx_compress
-    nginx_compress "$AKAUNTING_DOMAIN_NAME"
+    nginx_compress "${AKAUNTING_DOMAIN_NAME}"
     echo '' >> "$akaunting_nginx_site"
     function_check nginx_security_options
-    nginx_security_options "$AKAUNTING_DOMAIN_NAME"
+    nginx_security_options "${AKAUNTING_DOMAIN_NAME}"
     { echo '';
       echo '  access_log /dev/null;';
       echo '  error_log /dev/null;';
       echo '';
-      echo "  root /var/www/$AKAUNTING_DOMAIN_NAME/htdocs;";
+      echo "  root /var/www/${AKAUNTING_DOMAIN_NAME}/htdocs;";
       echo '';
       echo '  index index.html index.htm index.php;';
       echo '';
@@ -530,7 +531,7 @@ function install_akaunting {
       echo '';
       echo '  location / {'; } >> "$akaunting_nginx_site"
     function_check nginx_limits
-    nginx_limits "$AKAUNTING_DOMAIN_NAME" '15m'
+    nginx_limits "${AKAUNTING_DOMAIN_NAME}" '15m'
     { echo "    try_files \$uri \$uri/ /index.php?\$query_string;";
       echo '  }';
       echo '';
@@ -561,15 +562,15 @@ function install_akaunting {
           echo '    server_tokens off;';
           echo ''; } >> "$akaunting_nginx_site"
         function_check nginx_compress
-        nginx_compress "$AKAUNTING_DOMAIN_NAME"
+        nginx_compress "${AKAUNTING_DOMAIN_NAME}"
         echo '' >> "$akaunting_nginx_site"
         function_check nginx_security_options
-        nginx_security_options "$AKAUNTING_DOMAIN_NAME"
+        nginx_security_options "${AKAUNTING_DOMAIN_NAME}"
         { echo '';
           echo '  access_log /dev/null;';
           echo '  error_log /dev/null;';
           echo '';
-          echo "  root /var/www/$AKAUNTING_DOMAIN_NAME/htdocs;";
+          echo "  root /var/www/${AKAUNTING_DOMAIN_NAME}/htdocs;";
           echo '';
           echo '  index index.html index.htm index.php;';
           echo '';
@@ -588,7 +589,7 @@ function install_akaunting {
           echo '';
           echo '  location / {'; } >> "$akaunting_nginx_site"
         function_check nginx_limits
-        nginx_limits "$AKAUNTING_DOMAIN_NAME" '15m'
+        nginx_limits "${AKAUNTING_DOMAIN_NAME}" '15m'
         { echo "    try_files \$uri \$uri/ /index.php?\$query_string;";
           echo '  }';
           echo '';
@@ -619,14 +620,17 @@ function install_akaunting {
     increment_app_install_progress
 
     function_check create_site_certificate
-    create_site_certificate "$AKAUNTING_DOMAIN_NAME" 'yes'
+    create_site_certificate "${AKAUNTING_DOMAIN_NAME}" 'yes'
 
     increment_app_install_progress
 
     function_check nginx_ensite
-    nginx_ensite "$AKAUNTING_DOMAIN_NAME"
+    nginx_ensite "${AKAUNTING_DOMAIN_NAME}"
 
     akaunting_remove_bad_links
+
+    chmod -R 755 "/var/www/${AKAUNTING_DOMAIN_NAME}"
+    chown -R www-data:www-data "/var/www/${AKAUNTING_DOMAIN_NAME}/htdocs"
 
     systemctl restart mariadb
     # shellcheck disable=SC2086
@@ -637,7 +641,7 @@ function install_akaunting {
 
     "${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a akaunting -p "$AKAUNTING_ADMIN_PASSWORD"
 
-    set_completion_param "akaunting domain" "$AKAUNTING_DOMAIN_NAME"
+    set_completion_param "akaunting domain" "${AKAUNTING_DOMAIN_NAME}"
 
     APP_INSTALLED=1
 }
