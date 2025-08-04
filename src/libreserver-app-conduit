@@ -305,7 +305,7 @@ function upgrade_conduit {
     fi
     if ! cmp --silent -- "/usr/local/bin/matrix-conduit" "/usr/local/bin/matrix-conduit-new"; then
         mv /usr/local/bin/matrix-conduit-new /usr/local/bin/matrix-conduit
-        chmod +x /usr/local/bin/matrix-conduit
+        chmod 755 /usr/local/bin/matrix-conduit
         systemctl restart conduit
         echo $'conduit binary upgraded'
     fi
@@ -462,7 +462,7 @@ function install_conduit {
         exit 39
     fi
 
-    chmod +x /usr/local/bin/matrix-conduit
+    chmod 755 /usr/local/bin/matrix-conduit
 
     increment_app_install_progress
     if [[ "$ONION_ONLY" == 'no' ]]; then
