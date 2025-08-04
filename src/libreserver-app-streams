@@ -36,7 +36,7 @@ REQUIRES_APP=
 STREAMS_DOMAIN_NAME=
 STREAMS_CODE=
 STREAMS_REPO="https://codeberg.org/streams/streams"
-STREAMS_COMMIT='f83fb00660dba0ab0bb4bdc5a631eeee57ff08ff'
+STREAMS_COMMIT='fc1451d1ee10b100411db53c99af595f6da0a923'
 STREAMS_ADDONS_REPO="https://codeberg.org/streams/streams-addons"
 STREAMS_ADMIN_PASSWORD=
 
