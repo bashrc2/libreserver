@@ -5,6 +5,8 @@
 # |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
 # Personal or small business accounts
+# NOTE: does not work with php 8.4
+# https://github.com/akaunting/akaunting/pull/3236
 #
 # License
 # =======
