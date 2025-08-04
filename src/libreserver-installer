@@ -212,6 +212,23 @@ function reverse_shell_detect {
 }
 
 function check_ssh_sessions {
+    # fix ssh environment file
+    if [ -f /etc/systemd/system/sshd.service ]; then
+        if grep -q 'EnvironmentFile=-' /etc/systemd/system/sshd.service; then
+            sed -i 's|EnvironmentFile=-/etc/default/ssh|EnvironmentFile=/etc/default/ssh|g' /etc/systemd/system/sshd.service
+            systemctl daemon-reload
+            systemctl restart ssh
+        fi
+    fi
+
+    if [ -f /usr/lib/systemd/system/ssh.service ]; then
+        if grep -q 'EnvironmentFile=-' /usr/lib/systemd/system/ssh.service; then
+            sed -i 's|EnvironmentFile=-/etc/default/ssh|EnvironmentFile=/etc/default/ssh|g' /usr/lib/systemd/system/ssh.service
+            systemctl daemon-reload
+            systemctl restart ssh
+        fi
+    fi
+
     max_ssh_sessions=3
     ssh_sessions_count=$(netstat -nt | grep ":2222 " | grep "ESTABLISHED" | wc -l)
     if [ $ssh_sessions_count -le $max_ssh_sessions ]; then
