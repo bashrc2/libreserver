@@ -456,7 +456,9 @@ function configure_firewall_ping {
 
 function configure_internet_protocol {
     if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
-        return
+        if grep -q "net.ipv4.conf.default.send_redirects" /etc/sysctl.conf; then
+            return
+        fi
     fi
     if [[ $SYSTEM_TYPE == "mesh"* ]]; then
         return
