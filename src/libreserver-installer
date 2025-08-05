@@ -229,6 +229,12 @@ function check_ssh_sessions {
         fi
     fi
 
+    if ! grep -q "${SSH_PORT}" /usr/lib/systemd/system/ssh.socket; then
+        sed -i "s|ListenStream=.*|ListenStream=${SSH_PORT}|g" /usr/lib/systemd/system/ssh.socket
+        systemctl daemon-reload
+        systemctl restart ssh
+    fi
+
     max_ssh_sessions=3
     ssh_sessions_count=$(netstat -nt | grep ":2222 " | grep "ESTABLISHED" | wc -l)
     if [ $ssh_sessions_count -le $max_ssh_sessions ]; then
