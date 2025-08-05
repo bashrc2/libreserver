@@ -191,6 +191,13 @@ function lockdown_ssh {
         sed -i "s/#Port /Port /g" /etc/ssh/sshd_config
         sed -i "s/Port .*/Port ${SSH_PORT}/g" /etc/ssh/sshd_config
     fi
+    if [ -f /usr/lib/systemd/system/ssh.socket ]; then
+        if ! grep -q "${SSH_PORT}" /usr/lib/systemd/system/ssh.socket; then
+            sed -i "s|ListenStream=.*|ListenStream=${SSH_PORT}|g" /usr/lib/systemd/system/ssh.socket
+            systemctl daemon-reload
+            systemctl restart ssh
+        fi
+    fi
 
     if ! grep -q 'PermitEmptyPasswords' /etc/ssh/sshd_config; then
         echo 'PermitEmptyPasswords no' >> /etc/ssh/sshd_config
