@@ -355,7 +355,7 @@ function upgrade_etherpad {
     cd "$etherpad_dir" || return
     /bin/sh "$etherpad_dir/bin/installDeps.sh"
     chown -R etherpad:etherpad "$etherpad_dir"
-    chmod 755 "/var/www/${ETHERPAD_DOMAIN_NAME}/htdocs"
+    chmod -R 755 "/var/www/${ETHERPAD_DOMAIN_NAME}"
     systemctl restart etherpad
 }
 
@@ -739,7 +739,7 @@ function install_etherpad {
 
     increment_app_install_progress
 
-    chmod 755 "/var/www/${ETHERPAD_DOMAIN_NAME}/htdocs"
+    chmod -R 755 "/var/www/${ETHERPAD_DOMAIN_NAME}"
 
     systemctl start etherpad
 
