@@ -58,7 +58,7 @@ case $1 in
     fi
     ;;
     sshd_status)
-        if systemctl status sshd | grep "Active:.*(running)";then
+        if systemctl status ssh | grep "Active:.*(running)";then
             :
         else
             exit 1
