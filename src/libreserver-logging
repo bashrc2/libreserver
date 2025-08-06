@@ -120,11 +120,11 @@ if [[ "$1" == "on" || "$1" == "On" || "$1" == "ON" ]]; then
     turn_logging_on
 
     if [ -f /etc/mosquitto/mosquitto.conf ]; then
-	if grep -q 'log_dest ' /etc/mosquitto/mosquitto.conf; then
-	    sed -i 's|log_dest .*|log_dest stderr|g' /etc/mosquitto/mosquitto.conf
-	else
-	    echo 'log_dest stderr' >> /etc/mosquitto/mosquitto.conf
-	fi
+	      if grep -q 'log_dest ' /etc/mosquitto/mosquitto.conf; then
+	          sed -i 's|log_dest .*|log_dest stderr|g' /etc/mosquitto/mosquitto.conf
+	      else
+	          echo 'log_dest stderr' >> /etc/mosquitto/mosquitto.conf
+	      fi
     fi
 
     if [ -f /etc/turnserver.conf ]; then
@@ -134,16 +134,16 @@ if [[ "$1" == "on" || "$1" == "On" || "$1" == "ON" ]]; then
     if [ -d /etc/tor ]; then
         if [ ! -d /var/log/tor ]; then
             mkdir /var/log/tor
-	    if ! grep -q "adm:" /etc/group; then
-		groupadd adm
-	    fi
+	          if ! grep -q "adm:" /etc/group; then
+		            groupadd adm
+	          fi
             chown -R debian-tor:adm /var/log/tor
         fi
         if [ ! -f /var/log/tor/notices.log ]; then
             touch /var/log/tor/notices.log
-	    if ! grep -q "adm:" /etc/group; then
-		groupadd adm
-	    fi
+	          if ! grep -q "adm:" /etc/group; then
+		            groupadd adm
+	          fi
             chown debian-tor:adm /var/log/tor/notices.log
         fi
         echo 'Log debug file /var/log/tor/debug.log' > /etc/torrc.d/logging
@@ -193,15 +193,39 @@ else
     turn_logging_off
 
     if [ -f /etc/mosquitto/mosquitto.conf ]; then
-	if grep -q 'log_dest ' /etc/mosquitto/mosquitto.conf; then
-	    sed -i '/log_dest /d' /etc/mosquitto/mosquitto.conf
-	fi
+	      if grep -q 'log_dest ' /etc/mosquitto/mosquitto.conf; then
+	          sed -i '/log_dest /d' /etc/mosquitto/mosquitto.conf
+	      fi
     fi
 
     if [ -f /etc/turnserver.conf ]; then
         sed -i 's|log-file=.*|log-file=/dev/null|g' /etc/turnserver.conf
     fi
 
+    if [ -d /var/log/journal ]; then
+        $REMOVE_FILES_COMMAND /var/log/journal/*
+    fi
+    if [ -d /var/log/i2pd ]; then
+        $REMOVE_FILES_COMMAND /var/log/i2pd/*
+    fi
+    if [ -d /var/log/apt ]; then
+        $REMOVE_FILES_COMMAND /var/log/apt/*
+    fi
+    if [ -d /var/log/redis ]; then
+        $REMOVE_FILES_COMMAND /var/log/redis/*
+    fi
+    if [ -d /var/log/runit ]; then
+        $REMOVE_FILES_COMMAND /var/log/runit/*
+    fi
+    if [ -d /var/log/private ]; then
+        $REMOVE_FILES_COMMAND /var/log/private/*
+    fi
+    if [ -d /var/log/mosquitto ]; then
+        $REMOVE_FILES_COMMAND /var/log/mosquitto/*
+    fi
+    if [ -d /var/log/tor ]; then
+        $REMOVE_FILES_COMMAND /var/log/tor/*
+    fi
     if [ -d /etc/torrc.d ]; then
         echo 'Log notice file /var/log/tor/notices.log' > /etc/torrc.d/logging
     fi
@@ -278,7 +302,7 @@ fi
 systemctl restart syslog
 if [ -d /etc/tor ]; then
     if [[ "$2" != "--onion" ]]; then
-	restart_tor_daemon
+	      restart_tor_daemon
     fi
 fi
 if [ -f /etc/init.d/spamassassin ]; then
