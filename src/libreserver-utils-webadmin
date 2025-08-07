@@ -2015,6 +2015,16 @@ function install_web_admin_webmail {
         fi
     fi
 
+    # copy webmail themes
+    if [ ! -d "/var/www/${local_hostname}/htdocs/mail/css/freedom_light" ]; then
+        mkdir -p "/var/www/${local_hostname}/htdocs/mail/css/freedom_light"
+    fi
+    cp -r "/root/${PROJECT_NAME}/webmail_themes/freedom_light/default.css" "/var/www/${local_hostname}/htdocs/mail/css/freedom_light/default.css"
+    if [ ! -d "/var/www/${local_hostname}/htdocs/mail/css/freedom_dark" ]; then
+        mkdir -p "/var/www/${local_hostname}/htdocs/mail/css/freedom_dark"
+    fi
+    cp -r "/root/${PROJECT_NAME}/webmail_themes/freedom_dark/default.css" "/var/www/${local_hostname}/htdocs/mail/css/freedom_dark/default.css"
+
     { echo '<?php';
       echo '';
       echo '/**';
@@ -2077,7 +2087,7 @@ function install_web_admin_webmail {
       echo "\$color[12]  = '#f2f3ff'; // Alternate color for message list (alters between #4 and this one)";
       echo "\$color[13]  = '#555';    // Color for single-quoted text ('> text')";
       echo "\$color[14]  = '#666666'; // Color for text with more than one quote ('>> text')";
-      echo "\$color[15]  = '#f5f9ff'; // Non-selectable folders in the left frame (defaults to #6)"; } > "/var/www/${local_hostname}/htdocs/mail/themes/freedom_light.php"
+      echo "\$color[15]  = '#f5f9ff'; // Non-selectable folders in the left frame (defaults to #6)"; } > "/var/www/${local_hostname}/htdocs/mail/css/freedom_light/default.css"
 
     webmail_language='en_GB'
     if [ "$DEFAULT_LANGUAGE" ]; then
