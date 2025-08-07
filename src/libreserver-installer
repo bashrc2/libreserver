@@ -638,9 +638,9 @@ function web_admin_background_color {
     # change webmail theme
     if [ -f "/var/www/${local_hostname}/htdocs/mail/config/config.php" ]; then
         if [[ "$bg_color" == *'dddddd' ]]; then
-            sed -i 's|user_theme_default.*|user_theme_default = 54;|g' "/var/www/${local_hostname}/htdocs/mail/config/config.php"
+            sed -i 's|user_theme_default.*|user_theme_default = 0;|g' "/var/www/${local_hostname}/htdocs/mail/config/config.php"
         else
-            sed -i 's|user_theme_default.*|user_theme_default = 55;|g' "/var/www/${local_hostname}/htdocs/mail/config/config.php"
+            sed -i 's|user_theme_default.*|user_theme_default = 1;|g' "/var/www/${local_hostname}/htdocs/mail/config/config.php"
         fi
 
         # remove the chosen theme parameter

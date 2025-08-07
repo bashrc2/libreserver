@@ -212,9 +212,9 @@ function web_admin_background_color {
     # change webmail theme
     if [ -f "/var/www/${local_hostname}/htdocs/mail/config/config.php" ]; then
         if [[ "$bg_color" == *'dddddd' ]]; then
-            sed -i 's|user_theme_default.*|user_theme_default = 54;|g' "/var/www/${local_hostname}/htdocs/mail/config/config.php"
+            sed -i 's|user_theme_default.*|user_theme_default = 0;|g' "/var/www/${local_hostname}/htdocs/mail/config/config.php"
         else
-            sed -i 's|user_theme_default.*|user_theme_default = 55;|g' "/var/www/${local_hostname}/htdocs/mail/config/config.php"
+            sed -i 's|user_theme_default.*|user_theme_default = 1;|g' "/var/www/${local_hostname}/htdocs/mail/config/config.php"
         fi
 
         # remove the chosen theme parameter
@@ -2007,11 +2007,11 @@ function install_web_admin_webmail {
     fi
 
     # select light or dark theme
-    webmail_theme=54
+    webmail_theme=0
     if grep -q "WEBADMIN_BACKGROUND_COLOR=" "/root/${PROJECT_NAME}.cfg"; then
         bg_color=$(grep "WEBADMIN_BACKGROUND_COLOR=" "/root/${PROJECT_NAME}.cfg" | head -n 1 | awk -F '=' '{print $2}')
         if [[ "$bg_color" != *'dddddd' ]]; then
-            webmail_theme=55
+            webmail_theme=1
         fi
     fi
 
@@ -2117,118 +2117,10 @@ function install_web_admin_webmail {
       echo '';
       echo "\$theme_css = '../themes/css/freedom.css';";
       echo "\$user_theme_default = $webmail_theme;";
-      echo "\$user_themes[0]['PATH'] = SM_PATH . 'themes/default_theme.php';";
-      echo "\$user_themes[0]['NAME'] = 'Default';";
-      echo "\$user_themes[1]['PATH'] = SM_PATH . 'themes/plain_blue_theme.php';";
-      echo "\$user_themes[1]['NAME'] = 'Plain Blue';";
-      echo "\$user_themes[2]['PATH'] = SM_PATH . 'themes/sandstorm_theme.php';";
-      echo "\$user_themes[2]['NAME'] = 'Sand Storm';";
-      echo "\$user_themes[3]['PATH'] = SM_PATH . 'themes/deepocean_theme.php';";
-      echo "\$user_themes[3]['NAME'] = 'Deep Ocean';";
-      echo "\$user_themes[4]['PATH'] = SM_PATH . 'themes/slashdot_theme.php';";
-      echo "\$user_themes[4]['NAME'] = 'Slashdot';";
-      echo "\$user_themes[5]['PATH'] = SM_PATH . 'themes/purple_theme.php';";
-      echo "\$user_themes[5]['NAME'] = 'Purple';";
-      echo "\$user_themes[6]['PATH'] = SM_PATH . 'themes/forest_theme.php';";
-      echo "\$user_themes[6]['NAME'] = 'Forest';";
-      echo "\$user_themes[7]['PATH'] = SM_PATH . 'themes/ice_theme.php';";
-      echo "\$user_themes[7]['NAME'] = 'Ice';";
-      echo "\$user_themes[8]['PATH'] = SM_PATH . 'themes/seaspray_theme.php';";
-      echo "\$user_themes[8]['NAME'] = 'Sea Spray';";
-      echo "\$user_themes[9]['PATH'] = SM_PATH . 'themes/bluesteel_theme.php';";
-      echo "\$user_themes[9]['NAME'] = 'Blue Steel';";
-      echo "\$user_themes[10]['PATH'] = SM_PATH . 'themes/dark_grey_theme.php';";
-      echo "\$user_themes[10]['NAME'] = 'Dark Grey';";
-      echo "\$user_themes[11]['PATH'] = SM_PATH . 'themes/high_contrast_theme.php';";
-      echo "\$user_themes[11]['NAME'] = 'High Contrast';";
-      echo "\$user_themes[12]['PATH'] = SM_PATH . 'themes/black_bean_burrito_theme.php';";
-      echo "\$user_themes[12]['NAME'] = 'Black Bean Burrito';";
-      echo "\$user_themes[13]['PATH'] = SM_PATH . 'themes/servery_theme.php';";
-      echo "\$user_themes[13]['NAME'] = 'Servery';";
-      echo "\$user_themes[14]['PATH'] = SM_PATH . 'themes/maize_theme.php';";
-      echo "\$user_themes[14]['NAME'] = 'Maize';";
-      echo "\$user_themes[15]['PATH'] = SM_PATH . 'themes/bluesnews_theme.php';";
-      echo "\$user_themes[15]['NAME'] = 'BluesNews';";
-      echo "\$user_themes[16]['PATH'] = SM_PATH . 'themes/deepocean2_theme.php';";
-      echo "\$user_themes[16]['NAME'] = 'Deep Ocean 2';";
-      echo "\$user_themes[17]['PATH'] = SM_PATH . 'themes/blue_grey_theme.php';";
-      echo "\$user_themes[17]['NAME'] = 'Blue Grey';";
-      echo "\$user_themes[18]['PATH'] = SM_PATH . 'themes/dompie_theme.php';";
-      echo "\$user_themes[18]['NAME'] = 'Dompie';";
-      echo "\$user_themes[19]['PATH'] = SM_PATH . 'themes/methodical_theme.php';";
-      echo "\$user_themes[19]['NAME'] = 'Methodical';";
-      echo "\$user_themes[20]['PATH'] = SM_PATH . 'themes/greenhouse_effect.php';";
-      echo "\$user_themes[20]['NAME'] = 'Greenhouse Effect (Changes)';";
-      echo "\$user_themes[21]['PATH'] = SM_PATH . 'themes/in_the_pink.php';";
-      echo "\$user_themes[21]['NAME'] = 'In The Pink (Changes)';";
-      echo "\$user_themes[22]['PATH'] = SM_PATH . 'themes/kind_of_blue.php';";
-      echo "\$user_themes[22]['NAME'] = 'Kind of Blue (Changes)';";
-      echo "\$user_themes[23]['PATH'] = SM_PATH . 'themes/monostochastic.php';";
-      echo "\$user_themes[23]['NAME'] = 'Monostochastic (Changes)';";
-      echo "\$user_themes[24]['PATH'] = SM_PATH . 'themes/shades_of_grey.php';";
-      echo "\$user_themes[24]['NAME'] = 'Shades of Grey (Changes)';";
-      echo "\$user_themes[25]['PATH'] = SM_PATH . 'themes/spice_of_life.php';";
-      echo "\$user_themes[25]['NAME'] = 'Spice of Life (Changes)';";
-      echo "\$user_themes[26]['PATH'] = SM_PATH . 'themes/spice_of_life_lite.php';";
-      echo "\$user_themes[26]['NAME'] = 'Spice of Life - Lite (Changes)';";
-      echo "\$user_themes[27]['PATH'] = SM_PATH . 'themes/spice_of_life_dark.php';";
-      echo "\$user_themes[27]['NAME'] = 'Spice of Life - Dark (Changes)';";
-      echo "\$user_themes[28]['PATH'] = SM_PATH . 'themes/christmas.php';";
-      echo "\$user_themes[28]['NAME'] = 'Holiday - Christmas';";
-      echo "\$user_themes[29]['PATH'] = SM_PATH . 'themes/darkness.php';";
-      echo "\$user_themes[29]['NAME'] = 'Darkness (Changes)';";
-      echo "\$user_themes[30]['PATH'] = SM_PATH . 'themes/random.php';";
-      echo "\$user_themes[30]['NAME'] = 'Random (Changes every login)';";
-      echo "\$user_themes[31]['PATH'] = SM_PATH . 'themes/midnight.php';";
-      echo "\$user_themes[31]['NAME'] = 'Midnight';";
-      echo "\$user_themes[32]['PATH'] = SM_PATH . 'themes/alien_glow.php';";
-      echo "\$user_themes[32]['NAME'] = 'Alien Glow';";
-      echo "\$user_themes[33]['PATH'] = SM_PATH . 'themes/dark_green.php';";
-      echo "\$user_themes[33]['NAME'] = 'Dark Green';";
-      echo "\$user_themes[34]['PATH'] = SM_PATH . 'themes/penguin.php';";
-      echo "\$user_themes[34]['NAME'] = 'Penguin';";
-      echo "\$user_themes[35]['PATH'] = SM_PATH . 'themes/minimal_bw.php';";
-      echo "\$user_themes[35]['NAME'] = 'Minimal BW';";
-      echo "\$user_themes[36]['PATH'] = SM_PATH . 'themes/redmond.php';";
-      echo "\$user_themes[36]['NAME'] = 'Redmond';";
-      echo "\$user_themes[37]['PATH'] = SM_PATH . 'themes/netstyle_theme.php';";
-      echo "\$user_themes[37]['NAME'] = 'Net Style';";
-      echo "\$user_themes[38]['PATH'] = SM_PATH . 'themes/silver_steel_theme.php';";
-      echo "\$user_themes[38]['NAME'] = 'Silver Steel';";
-      echo "\$user_themes[39]['PATH'] = SM_PATH . 'themes/simple_green_theme.php';";
-      echo "\$user_themes[39]['NAME'] = 'Simple Green';";
-      echo "\$user_themes[40]['PATH'] = SM_PATH . 'themes/wood_theme.php';";
-      echo "\$user_themes[40]['NAME'] = 'Wood';";
-      echo "\$user_themes[41]['PATH'] = SM_PATH . 'themes/bluesome.php';";
-      echo "\$user_themes[41]['NAME'] = 'Bluesome';";
-      echo "\$user_themes[42]['PATH'] = SM_PATH . 'themes/simple_green2.php';";
-      echo "\$user_themes[42]['NAME'] = 'Simple Green 2';";
-      echo "\$user_themes[43]['PATH'] = SM_PATH . 'themes/simple_purple.php';";
-      echo "\$user_themes[43]['NAME'] = 'Simple Purple';";
-      echo "\$user_themes[44]['PATH'] = SM_PATH . 'themes/autumn.php';";
-      echo "\$user_themes[44]['NAME'] = 'Autumn';";
-      echo "\$user_themes[45]['PATH'] = SM_PATH . 'themes/autumn2.php';";
-      echo "\$user_themes[45]['NAME'] = 'Autumn 2';";
-      echo "\$user_themes[46]['PATH'] = SM_PATH . 'themes/blue_on_blue.php';";
-      echo "\$user_themes[46]['NAME'] = 'Blue on Blue';";
-      echo "\$user_themes[47]['PATH'] = SM_PATH . 'themes/classic_blue.php';";
-      echo "\$user_themes[47]['NAME'] = 'Classic Blue';";
-      echo "\$user_themes[48]['PATH'] = SM_PATH . 'themes/classic_blue2.php';";
-      echo "\$user_themes[48]['NAME'] = 'Classic Blue 2';";
-      echo "\$user_themes[49]['PATH'] = SM_PATH . 'themes/powder_blue.php';";
-      echo "\$user_themes[49]['NAME'] = 'Powder Blue';";
-      echo "\$user_themes[50]['PATH'] = SM_PATH . 'themes/techno_blue.php';";
-      echo "\$user_themes[50]['NAME'] = 'Techno Blue';";
-      echo "\$user_themes[51]['PATH'] = SM_PATH . 'themes/turquoise.php';";
-      echo "\$user_themes[51]['NAME'] = 'Turquoise';";
-      echo "\$user_themes[52]['PATH'] = SM_PATH . 'themes/solarized_light.php';";
-      echo "\$user_themes[52]['NAME'] = 'Solarized Light';";
-      echo "\$user_themes[53]['PATH'] = SM_PATH . 'themes/solarized_dark.php';";
-      echo "\$user_themes[53]['NAME'] = 'Solarized Dark';";
-      echo "\$user_themes[54]['PATH'] = SM_PATH . 'themes/freedom_light.php';";
-      echo "\$user_themes[54]['NAME'] = 'Freedom Light';";
-      echo "\$user_themes[55]['PATH'] = SM_PATH . 'themes/freedom_dark.php';";
-      echo "\$user_themes[55]['NAME'] = 'Freedom Dark';";
+      echo "\$user_themes[0]['PATH'] = SM_PATH . 'css/freedom_light/';";
+      echo "\$user_themes[0]['NAME'] = 'Freedom Light';";
+      echo "\$user_themes[1]['PATH'] = SM_PATH . 'css/freedom_dark/';";
+      echo "\$user_themes[1]['NAME'] = 'Freedom Dark';";
       echo '';
       echo "\$default_use_javascript_addr_book = false;";
       echo "\$abook_global_file = '';";
