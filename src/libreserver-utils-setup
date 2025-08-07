@@ -1688,9 +1688,6 @@ function setup_web {
     function_check php_disable_functions
     php_disable_functions
 
-    function_check install_static_map
-    install_static_map
-
     mark_completed "${FUNCNAME[0]}"
 }
 
