@@ -34,7 +34,6 @@ install:
 	cp src/view-x-face ${DESTDIR}${PREFIX}/bin
 	cp src/muttquote-x-face ${DESTDIR}${PREFIX}/bin
 	cp src/* ${DESTDIR}${PREFIX}/bin
-	cp src/${APP}-mesh-batman ${DESTDIR}${PREFIX}/bin/batman
 	cp src/${APP}-backup-local ${DESTDIR}${PREFIX}/bin/backup
 	cp src/${APP}-backup-local ${DESTDIR}${PREFIX}/bin/backup2friends
 	cp src/${APP}-restore-local ${DESTDIR}${PREFIX}/bin/restore

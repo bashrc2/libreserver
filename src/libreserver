@@ -276,10 +276,6 @@ else
                 USB_DRIVE=$1
                 ;;
             # Enable B.A.T.M.A.N
-            --batman)
-                shift
-                ENABLE_BATMAN="yes"
-                ;;
             # Mumble server password
             --vpass)
                 shift
