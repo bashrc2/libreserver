@@ -339,10 +339,6 @@ else
                 shift
                 MINIMAL_INSTALL="$1"
                 ;;
-            --network|--mesh)
-                shift
-                COMMUNITY_NETWORK="$1"
-                ;;
             *)
                 # unknown option
                 ;;
@@ -366,7 +362,6 @@ function parse_args {
     read_config_param 'DDNS_PROVIDER'
     read_config_param 'DDNS_USERNAME'
     read_config_param 'DDNS_PASSWORD'
-    read_config_param 'COMMUNITY_NETWORK'
 
     if [ ! -d "/home/$MY_USERNAME" ]; then
         echo $"There is no user '$MY_USERNAME' on the system. Use 'adduser $MY_USERNAME' to create the user."
@@ -523,10 +518,6 @@ fi
 function_check hostname_check
 echo $'hostname_check'
 hostname_check
-
-function_check install_community_network
-echo $'install_community_network'
-install_community_network
 
 function_check notify_logins
 echo $'notify_logins'

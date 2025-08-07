@@ -201,9 +201,6 @@ function clear_network_interfaces {
 }
 
 function setup_final {
-    function_check check_community_network
-    check_community_network
-
     function_check update_installed_apps_list
     update_installed_apps_list
 

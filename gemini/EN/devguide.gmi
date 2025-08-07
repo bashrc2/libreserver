@@ -237,7 +237,4 @@ If you need particular dconf commands to alter desktop appearance or behavior th
 * Fix the progress bar when installing from menuconfig on Armbian. This doesn't work at all currently, but is probably easy to fix.
 * Make images for recent SBCs. You can use Armbian as a base. Test that all STIG tests pass. Check that HRNGs are being used properly for each board type.
 * Distributed backup. Make a proposal or produce an implementation for a way to do distributed backups. This should require negligible intervention or knowledge from the user. As close to fully automatic as possible. I did have a way of doing this in the past, but it was too complex.
-* Add more community networks. Many cities in Germany now seem to have Freifunk networks, and I don't think they're all supported in Libreserver yet.
-* Are there ways to speed up the community network map updates without using javascript? This is an unknown. Something to research.
 * Add support for I2P to the web interface. Show a QR code for I2P addresses. There's already support for XMPP over I2P in the background, but it hasn't been linked up to the web interface.
-* Make a howto set of instructions for setting up Libreserver with a community Network. To do it at the lowest possible cost you could use Orange Pi Zero, which has wifi. Recommend good antennas and procedures for physical installation. Tools needed, time estimates, etc. Someone with electrical/radio experience would be good for this.

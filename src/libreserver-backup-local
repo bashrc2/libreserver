@@ -340,17 +340,6 @@ function backup_dkim {
     fi
 }
 
-function backup_communitynetwork {
-    if [ ! -d "$COMMUNITYNETWORK_PATH" ]; then
-        return
-    fi
-    echo $"Backing up ${PROJECT_NAME} communitynetwork"
-    if grep -Fxq 'MAP_' "$CONFIGURATION_FILE"; then
-        grep -Fx 'MAP_' "$CONFIGURATION_FILE" > "${COMMUNITYNETWORK_PATH}/settings"
-    fi
-    backup_directory_to_usb "$COMMUNITYNETWORK_PATH" communitynetwork
-}
-
 function backup_configfiles {
     echo $"Backing up ${PROJECT_NAME} configuration files"
     temp_backup_dir=/root/tempbackupconfig
@@ -550,9 +539,6 @@ backup_dkim
 
 increment_backup_progress
 backup_squirrelmail
-
-increment_backup_progress
-backup_communitynetwork
 
 increment_backup_progress
 backup_mariadb

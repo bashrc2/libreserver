@@ -1822,26 +1822,6 @@ function webadmin_change_language {
     fi
 }
 
-function webadmin_change_network {
-    network_name="$1"
-    local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
-    webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
-
-    if ! grep -q 'COMMUNITY_NETWORK=' "$CONFIGURATION_FILE"; then
-        cp "$webadmin_install_dir/network_template.html" "$webadmin_install_dir/network.html"
-        chown www-data:www-data "$webadmin_install_dir/network.html"
-        return
-    fi
-
-    if [ -f "$webadmin_install_dir/network_template.html" ]; then
-        if grep -q "\"$network_name\"" "$webadmin_install_dir/network_template.html"; then
-            cp "$webadmin_install_dir/network_template.html" "$webadmin_install_dir/network.html"
-            sed -i "s|\"$network_name\"|\"$network_name\" selected|g" "$webadmin_install_dir/network.html"
-            chown www-data:www-data "$webadmin_install_dir/network.html"
-        fi
-    fi
-}
-
 function webadmin_update_version {
     local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
     webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
@@ -2435,19 +2415,6 @@ function install_web_admin_webmail {
     chown -R www-data:www-data "/var/www/${local_hostname}/htdocs/mail"
 }
 
-function check_community_network {
-    if [ ! "$webadmin_install_dir" ]; then
-        local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
-        webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
-    fi
-    if [ -d "$webadmin_install_dir" ]; then
-        if [ ! -f "$webadmin_install_dir/network.html" ]; then
-            cp "$webadmin_install_dir/network_template.html" "$webadmin_install_dir/network.html"
-            chown www-data:www-data "$webadmin_install_dir/network.html"
-        fi
-    fi
-}
-
 function web_admin_onion_config {
     nginx_file="$1"
     onion_port="$2"
@@ -2872,13 +2839,6 @@ function install_web_admin {
     echo "Web interface change of selected language took $SECONDS seconds"
     SECONDS=0
 
-    if grep -q 'COMMUNITY_NETWORK=' "$CONFIGURATION_FILE"; then
-        read_config_param COMMUNITY_NETWORK
-        webadmin_change_network "$COMMUNITY_NETWORK"
-        echo "Web interface community network update took $SECONDS seconds"
-        SECONDS=0
-    fi
-
     webadmin_update_version
 
     echo "Web interface version number update took $SECONDS seconds"
@@ -2913,8 +2873,6 @@ function install_web_admin {
     web_create_homepage
 
     echo "Web interface update of home page took $SECONDS seconds"
-
-    check_community_network
 
     SECONDS=0
 

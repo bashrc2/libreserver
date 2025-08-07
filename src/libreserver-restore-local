@@ -261,20 +261,6 @@ function restore_dkim {
     fi
 }
 
-function restore_communitynetwork {
-    if [[ $RESTORE_APP != 'all' ]]; then
-        if [[ $RESTORE_APP != 'communitynetwork' ]]; then
-            return
-        fi
-    fi
-
-    if [ -d $USB_MOUNT/backup/communitynetwork ]; then
-        echo $"Restoring communitynetwork"
-        restore_directory_from_usb "$COMMUNITYNETWORK_PATH" communitynetwork
-        resume_communitynetwork
-    fi
-}
-
 function restore_configfiles {
     if [[ $RESTORE_APP != 'all' ]]; then
         if [[ $RESTORE_APP != 'configfiles' ]]; then
@@ -1113,9 +1099,6 @@ restore_dkim
 increment_restore_progress
 
 restore_squirrelmail
-increment_restore_progress
-
-restore_communitynetwork
 increment_restore_progress
 
 restore_configfiles

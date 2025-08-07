@@ -181,7 +181,6 @@ if [ -d "$PROJECT_DIR" ]; then
                     rm /var/log/freedns_@_update.log
                 fi
                 upgrade_iptables
-                network_communities_upgrade
                 update_email_onion_dns
                 if [ -d /home/pi ]; then
                     echo $'Removing default raspberry pi user account'

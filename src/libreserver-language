@@ -78,15 +78,6 @@ chown www-data:www-data "$webadmin_home_dir/index.html"
 
 SECONDS=0
 
-# title on community network screen
-if [ -f "$webadmin_install_dir/network.html" ]; then
-    translated_network_str=$(web_admin_translate_text "Choose your network:")
-    sed -i "s|<p class=\"headertext\".*|<p class=\"headertext\" translate=\"yes\">${translated_network_str}</p>|g" "$webadmin_install_dir/network.html"
-fi
-
-echo "Set community network screen title took $SECONDS seconds"
-SECONDS=0
-
 # change the selected language in the web interface
 cp "$webadmin_install_dir/language_template.html" "$webadmin_install_dir/language.html"
 sed -i "s|\"$language\" translate=\"yes\"|\"$language\" translate=\"yes\" selected|g" "$webadmin_install_dir/language.html"

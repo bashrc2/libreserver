@@ -99,11 +99,6 @@ webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
 ssh_sessions_count_filename=/root/.ssh_sessions_count
 restore_app_file="$webadmin_install_dir/.restore_app.txt"
 static_ip_address_file="$webadmin_install_dir/.static_ip_address.txt"
-protocol_file="$webadmin_install_dir/.communitynetwork_protocol.txt"
-add_node_file="$webadmin_install_dir/.communitynetwork_add.txt"
-remove_node_file="$webadmin_install_dir/.communitynetwork_remove.txt"
-network_file="$webadmin_install_dir/.network.txt"
-network_coords_file="$webadmin_install_dir/.network_coords.txt"
 vpn_file="$webadmin_install_dir/.vpn.txt"
 vpn_remote_file="$webadmin_install_dir/.vpn_remote.txt"
 upgradeos_file="$webadmin_install_dir/.upgradeos.txt"
@@ -3029,15 +3024,6 @@ function update_mumble_password {
     fi
 }
 
-function change_network_protocol {
-    if [ -f "$protocol_file" ]; then
-        protocol=$(awk -F ';' '{print $1}' < "$protocol_file")
-        network_node_name=$(grep "COMMUNITY_NETWORK=" "$CONFIGURATION_FILE" | awk -F '=' '{print $2}')
-        communitynetwork_change_protocol "$protocol" "$network_node_name"
-        rm "$protocol_file"
-    fi
-}
-
 function update_icecast {
     if [ -f "$icecast_file" ]; then
         if [ -d /etc/icecast2 ]; then
@@ -3546,118 +3532,6 @@ function update_email_muted_words {
         if [ -f /etc/prosody/prosody.cfg.lua ]; then
             systemctl restart prosody
         fi
-    fi
-}
-
-function update_network_map {
-    if [ -f "$network_coords_file" ]; then
-        if ! grep -q 'COMMUNITY_NETWORK=' "$CONFIGURATION_FILE"; then
-            rm "$network_coords_file"
-            return
-        fi
-        # shellcheck disable=SC2034
-        COMMUNITY_NETWORK=$(grep 'COMMUNITY_NETWORK=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
-        network_map_markers_filename="$webadmin_install_dir/network_map_markers.txt"
-        if [[ "$COMMUNITY_NETWORK" == 'none' ]]; then
-            rm "$network_coords_file"
-            if [ -f "$network_map_markers_filename" ]; then
-                rm "$network_map_markers_filename"
-            fi
-            return
-        fi
-        # shellcheck disable=SC2034
-        MAP_LONGITUDE=$(awk -F ';' '{print $1}' < "$network_coords_file")
-        if [ ! "$MAP_LONGITUDE" ]; then
-            rm "$network_coords_file"
-            return
-        fi
-        # shellcheck disable=SC2034
-        MAP_LATITUDE=$(awk -F ';' '{print $2}' < "$network_coords_file")
-        if [ ! "$MAP_LATITUDE" ]; then
-            rm "$network_coords_file"
-            return
-        fi
-        if grep -q 'MAP_ZOOM=' "$CONFIGURATION_FILE"; then
-            MAP_ZOOM=$(grep 'MAP_ZOOM=' "$CONFIGURATION_FILE" | awk -F '=' '{print $2}')
-        fi
-        if [ ! "$MAP_ZOOM" ]; then
-            MAP_ZOOM=14
-        fi
-        MAP_ZOOM_IN=$(awk -F ';' '{print $3}' < "$network_coords_file")
-        if [[ "$MAP_ZOOM_IN" == '+' ]]; then
-            # shellcheck disable=SC2086
-            if [ $MAP_ZOOM -lt 18 ]; then
-                MAP_ZOOM=$((MAP_ZOOM+1))
-            fi
-        fi
-        if [[ "$MAP_ZOOM_IN" == '-' ]]; then
-            if [ $MAP_ZOOM -gt 10 ]; then
-                MAP_ZOOM=$((MAP_ZOOM-1))
-            fi
-        fi
-        MAP_ZONE=$(awk -F ';' '{print $4}' < "$network_coords_file")
-        MAP_DOMAIN=$(awk -F ';' '{print $5}' < "$network_coords_file")
-
-        if [ "$MAP_DOMAIN" ]; then
-            # a minimal check that this is a domain and not just the default variable name
-            if [[ "$MAP_DOMAIN" != *'.'* ]]; then
-                MAP_DOMAIN=
-            fi
-        fi
-
-        # If no community network name was given then try to obtain it
-        if [ ! "$MAP_DOMAIN" ]; then
-            if grep -q 'MAP_DOMAIN=' "$CONFIGURATION_FILE"; then
-                MAP_DOMAIN=$(grep 'MAP_DOMAIN=' "$CONFIGURATION_FILE" | awk -f '=' '{print $2}')
-            else
-                if [ -f /var/lib/tor/hidden_service_communitynetwork/hostname ]; then
-                    MAP_DOMAIN=$(cat /var/lib/tor/hidden_service_communitynetwork/hostname)
-                fi
-            fi
-        fi
-
-        # remove any domain prefix
-        if [[ "$MAP_DOMAIN" == 'https'* ]]; then
-            # shellcheck disable=SC2001
-            MAP_DOMAIN=$(echo "$MAP_DOMAIN" | sed 's|https://||g')
-        fi
-        if [[ "$MAP_DOMAIN" == 'http'* ]]; then
-            # shellcheck disable=SC2001
-            MAP_DOMAIN=$(echo "$MAP_DOMAIN" | sed 's|http://||g')
-        fi
-
-        # save values to the configuration file
-        if grep -q 'MAP_LONGITUDE=' "$CONFIGURATION_FILE"; then
-            sed -i "s|MAP_LONGITUDE=.*|MAP_LONGITUDE=$MAP_LONGITUDE|g" "$CONFIGURATION_FILE"
-        else
-            echo "MAP_LONGITUDE=$MAP_LONGITUDE" >> "$CONFIGURATION_FILE"
-        fi
-        if grep -q 'MAP_LATITUDE=' "$CONFIGURATION_FILE"; then
-            sed -i "s|MAP_LATITUDE=.*|MAP_LATITUDE=$MAP_LATITUDE|g" "$CONFIGURATION_FILE"
-        else
-            echo "MAP_LATITUDE=$MAP_LATITUDE" >> "$CONFIGURATION_FILE"
-        fi
-        if grep -q 'MAP_ZOOM=' "$CONFIGURATION_FILE"; then
-            sed -i "s|MAP_ZOOM=.*|MAP_ZOOM=$MAP_ZOOM|g" "$CONFIGURATION_FILE"
-        else
-            echo "MAP_ZOOM=$MAP_ZOOM" >> "$CONFIGURATION_FILE"
-        fi
-        if grep -q 'MAP_ZONE=' "$CONFIGURATION_FILE"; then
-            sed -i "s|MAP_ZONE=.*|MAP_ZONE=$MAP_ZONE|g" "$CONFIGURATION_FILE"
-        else
-            echo "MAP_ZONE=$MAP_ZONE" >> "$CONFIGURATION_FILE"
-        fi
-        if [ "$MAP_DOMAIN" ]; then
-            if grep -q 'MAP_DOMAIN=' "$CONFIGURATION_FILE"; then
-                sed -i "s|MAP_DOMAIN=.*|MAP_DOMAIN=$MAP_DOMAIN|g" "$CONFIGURATION_FILE"
-            else
-                echo "MAP_DOMAIN=$MAP_DOMAIN" >> "$CONFIGURATION_FILE"
-            fi
-        fi
-
-        /usr/bin/timeout $APP_INSTALL_TIMEOUT_SEC /usr/local/bin/${PROJECT_NAME}-network "$COMMUNITY_NETWORK" coords > "$webadmin_install_dir/log.txt"
-
-        rm "$network_coords_file"
     fi
 }
 
@@ -4211,35 +4085,6 @@ function update_email_proxy {
     fi
 }
 
-function add_communitynetwork_node {
-    if [ -f "$add_node_file" ]; then
-        if [ -f "$COMMUNITYNETWORK_NODES_FILENAME" ]; then
-            network_node_name=$(awk -F ';' '{print $1}' < "$add_node_file")
-            network_node_longitude=$(awk -F ';' '{print $2}' < "$add_node_file")
-            network_node_latitude=$(awk -F ';' '{print $3}' < "$add_node_file")
-            network_node_ip_address=$(awk -F ';' '{print $4}' < "$add_node_file")
-            add_mesh_node "$network_node_name" "$network_node_longitude" "$network_node_latitude" "$network_node_ip_address"
-            /usr/bin/timeout $APP_INSTALL_TIMEOUT_SEC /usr/local/bin/${PROJECT_NAME}-network "communitynetwork" > "$webadmin_install_dir/log.txt"
-        fi
-
-        rm "$add_node_file"
-    fi
-}
-
-function remove_communitynetwork_node {
-    if [ -f "$remove_node_file" ]; then
-        if [ -f "$COMMUNITYNETWORK_NODES_FILENAME" ]; then
-            network_node_name=$(cat "$remove_node_file")
-            if [ "$network_node_name" ]; then
-                remove_mesh_node "$network_node_name"
-                /usr/bin/timeout $APP_INSTALL_TIMEOUT_SEC /usr/local/bin/${PROJECT_NAME}-network "communitynetwork" > "$webadmin_install_dir/log.txt"
-            fi
-        fi
-
-        rm "$remove_node_file"
-    fi
-}
-
 function update_dynamic_dns {
     if [ -f "$dynamic_dns_file" ]; then
         if [ -f "$dynamic_dns_password_file" ]; then
@@ -4501,26 +4346,6 @@ function change_language {
         fi
 
         rm "$language_file"
-    fi
-}
-
-function change_network {
-    if [ -f "$network_file" ]; then
-        network=$(cat "$network_file")
-        local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
-        webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
-        if [ -f "$webadmin_install_dir/network_template.html" ]; then
-            if grep -q "\"$network\"" "$webadmin_install_dir/network_template.html"; then
-                /usr/bin/timeout $APP_INSTALL_TIMEOUT_SEC /usr/local/bin/${PROJECT_NAME}-network "${network}" > "$webadmin_install_dir/log.txt"
-
-                # change the selected language
-                cp "$webadmin_install_dir/network_template.html" "$webadmin_install_dir/network.html"
-                sed -i "s|\"$network\" translate=\"yes\"|\"$network\" translate=\"yes\" selected|g" "$webadmin_install_dir/network.html"
-                chown www-data:www-data "$webadmin_install_dir/network.html"
-            fi
-        fi
-
-        rm "$network_file"
     fi
 }
 
@@ -4901,8 +4726,6 @@ function installer_main_loop {
     webadmin_monitor_ip_changes
     update_system_monitor
     change_language
-    change_network
-    update_network_map
     change_theme
     backup_and_restore
     restore_app_from_backup
@@ -4924,9 +4747,6 @@ function installer_main_loop {
     store_onion_domain ssh
     sleep 1
     remove_apps_from_webadmin
-    add_communitynetwork_node
-    remove_communitynetwork_node
-    change_network_protocol
     set_static_ip_address
     update_notification_type
     check_for_changed_email_domain
