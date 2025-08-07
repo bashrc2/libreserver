@@ -89,12 +89,16 @@ function grocy_remove_bad_links {
     jquery_version='2.2.4'
     jquery_download "$jquery_version" '893e90f6230962e42231635df650f20544ad22affc3ee396df768eaa6bc5a6a2'
 
-    if grep -q 'googleapi' node_modules/timeago/index.html; then
-        sed -i "s|https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js|${http_str}://${grocy_domain}/jquery-${jquery_version}.js|g" node_modules/timeago/index.html
+    if [ -f node_modules/timeago/index.html ]; then
+        if grep -q 'googleapi' node_modules/timeago/index.html; then
+            sed -i "s|https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js|${http_str}://${grocy_domain}/jquery-${jquery_version}.js|g" node_modules/timeago/index.html
+        fi
     fi
 
-    if grep -q 'googleapi' node_modules/timeago/test/index.html; then
-        sed -i "s|http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js|${http_str}://${grocy_domain}/jquery-${jquery_version}.js|g" node_modules/timeago/test/index.html
+    if [ -f node_modules/timeago/test/index.html ]; then
+        if grep -q 'googleapi' node_modules/timeago/test/index.html; then
+            sed -i "s|http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js|${http_str}://${grocy_domain}/jquery-${jquery_version}.js|g" node_modules/timeago/test/index.html
+        fi
     fi
 
     if [ -d node_modules/chart.js/dist/docs ]; then
@@ -121,14 +125,16 @@ function grocy_remove_bad_links {
         rm -rf node_modules/bootbox/docs
     fi
 
-    if grep -q 'googleapi' node_modules/fullcalendar/dist/gcal.js; then
-        sed -i "s|GcalEventSource.API_BASE =.*|GcalEventSource.API_BASE = '';|g" node_modules/fullcalendar/dist/gcal.js
-        sed -i "s|https:\\\/\\\/www.googleapis.com|${http_str}://${grocy_domain}|g" node_modules/fullcalendar/dist/gcal.js
-        sed -i "s|https?:\\\/\\\/www.google.com|${http_str}://${grocy_domain}|g" node_modules/fullcalendar/dist/gcal.js
-        sed -i "s|https:\\\/\\\/www.google.com|${http_str}://${grocy_domain}|g" node_modules/fullcalendar/dist/gcal.js
+    if [ -f node_modules/fullcalendar/dist/gcal.js ]; then
+        if grep -q 'googleapi' node_modules/fullcalendar/dist/gcal.js; then
+            sed -i "s|GcalEventSource.API_BASE =.*|GcalEventSource.API_BASE = '';|g" node_modules/fullcalendar/dist/gcal.js
+            sed -i "s|https:\\\/\\\/www.googleapis.com|${http_str}://${grocy_domain}|g" node_modules/fullcalendar/dist/gcal.js
+            sed -i "s|https?:\\\/\\\/www.google.com|${http_str}://${grocy_domain}|g" node_modules/fullcalendar/dist/gcal.js
+            sed -i "s|https:\\\/\\\/www.google.com|${http_str}://${grocy_domain}|g" node_modules/fullcalendar/dist/gcal.js
 
-        cp node_modules/fullcalendar/dist/gcal.js node_modules/fullcalendar/dist/gcal.min.js
-        chown www-data:www-data node_modules/fullcalendar/dist/gcal.min.js
+            cp node_modules/fullcalendar/dist/gcal.js node_modules/fullcalendar/dist/gcal.min.js
+            chown www-data:www-data node_modules/fullcalendar/dist/gcal.min.js
+        fi
     fi
 }
 
