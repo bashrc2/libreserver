@@ -46,14 +46,14 @@ FIREWALL_PORTSCAN='20, 21, 90, 23, 109, 118, 119, 135, 222, 389, 563, 636, 843, 
 
 function update_portscan_defense {
     # If the portscan ports have changed then update the firewall
-    if grep -q "$FIREWALL_PORTSCAN" /etc/firewall.conf; then
+    if grep -q "${FIREWALL_PORTSCAN}" /etc/firewall.conf; then
         return
     fi
     # make a backup just in case
     cp /etc/firewall.conf /etc/firewall.conf.backup
     # change the ports
-    sed -i "/ add @blackhole/c\tcp dport { $FIREWALL_PORTSCAN } add @blackhole { ip saddr timeout 1d }  counter packets 0 bytes 0 drop comment \"portscan\"" /etc/firewall.conf
-    sed -i "s|tcp dport { $FIREWALL_PORTSCAN } add @blackhole|        tcp dport { $FIREWALL_PORTSCAN } add @blackhole|g" /etc/firewall.conf
+    sed -i "/ add @blackhole/c\tcp dport { ${FIREWALL_PORTSCAN} } add @blackhole { ip saddr timeout 1d } counter packets 0 bytes 0 drop comment \"portscan\"" /etc/firewall.conf
+    sed -i "s|tcp dport { ${FIREWALL_PORTSCAN} } add @blackhole|                tcp dport { ${FIREWALL_PORTSCAN} } add @blackhole|g" /etc/firewall.conf
     # reload the firewall
     /usr/sbin/nft flush ruleset
     /usr/sbin/nft -f /etc/firewall.conf
