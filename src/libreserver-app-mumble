@@ -138,14 +138,14 @@ function upgrade_mumble {
         if ! grep -q "mumble.pem" /etc/${MUMBLE_CONFIG_FILE}; then
             sed -i 's|sslCert=.*|sslCert=/var/lib/mumble-server/mumble.pem|g' /etc/${MUMBLE_CONFIG_FILE}
             sed -i 's|sslKey=.*|sslKey=/var/lib/mumble-server/mumble.key|g' /etc/${MUMBLE_CONFIG_FILE}
-            systemctl restart mumble
+            systemctl restart mumble-server
         fi
     else
         if ! grep -q "${MUMBLE_DOMAIN_NAME}/fullchain.pem" /etc/${MUMBLE_CONFIG_FILE}; then
             usermod -a -G ssl-cert mumble-server
             sed -i "s|sslCert=.*|sslCert=/etc/letsencrypt/live/${MUMBLE_DOMAIN_NAME}/fullchain.pem|g" /etc/${MUMBLE_CONFIG_FILE}
             sed -i "s|sslKey=.*|sslKey=/etc/letsencrypt/live/${MUMBLE_DOMAIN_NAME}/privkey.pem|g" /etc/${MUMBLE_CONFIG_FILE}
-            systemctl restart mumble
+            systemctl restart mumble-server
         fi
     fi
 }
