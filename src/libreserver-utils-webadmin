@@ -2016,6 +2016,9 @@ function install_web_admin_webmail {
     fi
 
     # copy webmail themes
+    if [ -d "/var/www/${local_hostname}/htdocs/mail/themes" ]; then
+        rm -rf "/var/www/${local_hostname}/htdocs/mail/themes"
+    fi
     if [ ! -d "/var/www/${local_hostname}/htdocs/mail/css/freedom_light" ]; then
         mkdir -p "/var/www/${local_hostname}/htdocs/mail/css/freedom_light"
     fi
