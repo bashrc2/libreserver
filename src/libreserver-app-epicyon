@@ -76,7 +76,7 @@ function run_client_epicyon {
     fi
     EPICYONDOMAIN=$(cat ~/.epicyon_domain_name)
     clear
-    torify lynx "${EPICYONDOMAIN}"
+    TORSOCKS_CONF_FILE=~/torsocks.conf torify lynx "${EPICYONDOMAIN}"
 }
 
 function epicyon_clear_browser_cache {
