@@ -53,7 +53,7 @@ install:
 	cp -r webadmin/* ${DESTDIR}/usr/share/${APP}/webadmin
 	chown -R root: /usr/share/${APP}
 	chown root: /usr/local/bin/${APP}*
-	chmod -R +r /usr/share/${APP}
+	chmod -R 755 /usr/share/${APP}
 #	bash -c "./translate install"
 	cp src/${APP}-email-remove-html /usr/bin/remove_html
 	mkdir -p ${DESTDIR}/etc/share/distro-info
