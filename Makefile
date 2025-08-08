@@ -54,6 +54,7 @@ install:
 	chown -R root: /usr/share/${APP}
 	chown root: /usr/local/bin/${APP}*
 	chmod -R 755 /usr/share/${APP}
+	chmod -R 755 /usr/local/bin/${APP}*
 #	bash -c "./translate install"
 	cp src/${APP}-email-remove-html /usr/bin/remove_html
 	mkdir -p ${DESTDIR}/etc/share/distro-info
