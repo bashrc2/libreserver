@@ -76,21 +76,7 @@ function run_client_epicyon {
     fi
     EPICYONDOMAIN=$(cat ~/.epicyon_domain_name)
     clear
-    if [ ! -d ~/.epicyon ]; then
-        git clone ${EPICYON_REPO} ~/.epicyon
-    else
-        cd ~/.epicyon || return
-        git pull
-    fi
-    clear
-    echo 'Epicyon Client'
-    echo ''
-    cd ~/.epicyon || return
-    if [[ "${EPICYONDOMAIN}" != *'.onion' ]]; then
-        python3 epicyon.py --desktop ${USER}@${EPICYONDOMAIN}
-    else
-        python3 epicyon.py --desktop ${USER}@${EPICYONDOMAIN} --http
-    fi
+    torify lynx "${EPICYONDOMAIN}"
 }
 
 function epicyon_clear_browser_cache {
@@ -475,7 +461,7 @@ function install_epicyon {
         pip3 uninstall -y six
         REINSTALL_PACKAGES python3-six
     fi
-    INSTALL_PACKAGES python3-socks imagemagick python3-setuptools python3-cryptography python3-dateutil libimage-exiftool-perl python3-flake8 python3-pyqrcode python3-png python3-pyld python3-six wget python3-requests
+    INSTALL_PACKAGES python3-socks imagemagick python3-setuptools python3-cryptography python3-dateutil libimage-exiftool-perl python3-flake8 python3-pyqrcode python3-png python3-pyld python3-six wget python3-requests lynx
 
     increment_app_install_progress
 
