@@ -100,14 +100,14 @@ function upgrade_flightgear {
 		    return
     fi
     function_check set_repo_commit
-    set_repo_commit "$INSTALL_DIR/fgms-src" "flightgear commit" "$FLIGHTGEAR_COMMIT" $FLIGHTGEAR_REPO
-    cd "$INSTALL_DIR/build_fgms" || exit 73
+    set_repo_commit "${INSTALL_DIR}/fgms-src" "flightgear commit" "$FLIGHTGEAR_COMMIT" $FLIGHTGEAR_REPO
+    cd "${INSTALL_DIR}/build_fgms" || exit 73
     cmake ../fgms-src
-    if [ -f "$INSTALL_DIR/build_fgms/fgms" ]; then
-		    rm "$INSTALL_DIR/build_fgms/fgms"
+    if [ -f "${INSTALL_DIR}/build_fgms/fgms" ]; then
+		    rm "${INSTALL_DIR}/build_fgms/fgms"
     fi
     make
-    if [ ! -f "$INSTALL_DIR/build_fgms/fgms" ]; then
+    if [ ! -f "${INSTALL_DIR}/build_fgms/fgms" ]; then
 		    echo "Failed to upgrade fgms to commit $FLIGHTGEAR_COMMIT"
 		    return
     fi
@@ -165,11 +165,11 @@ function remove_flightgear {
 
     remove_onion_service fgms ${FLIGHTGEAR_PORT}
 
-    if [ -d "$INSTALL_DIR/fgms-src" ]; then
-        rm -rf "$INSTALL_DIR/fgms-src"
+    if [ -d "${INSTALL_DIR}/fgms-src" ]; then
+        rm -rf "${INSTALL_DIR}/fgms-src"
     fi
-    if [ -d "$INSTALL_DIR/build_fgms" ]; then
-        rm -rf "$INSTALL_DIR/build_fgms"
+    if [ -d "${INSTALL_DIR}/build_fgms" ]; then
+        rm -rf "${INSTALL_DIR}/build_fgms"
     fi
     if [ -d "${FLIGHTGEAR_DIR}" ]; then
         rm -rf "${FLIGHTGEAR_DIR}"
@@ -191,8 +191,8 @@ function remove_flightgear {
 }
 
 function install_flightgear {
-    if [ -d "$INSTALL_DIR/fgms-src" ]; then
-        rm -rf "$INSTALL_DIR/fgms-src"
+    if [ -d "${INSTALL_DIR}/fgms-src" ]; then
+        rm -rf "${INSTALL_DIR}/fgms-src"
     fi
 
     if ! grep -q "fgms:" /etc/group; then
@@ -221,18 +221,18 @@ function install_flightgear {
 
     increment_app_install_progress
 
-    git_clone "$FLIGHTGEAR_REPO" "$INSTALL_DIR/fgms-src"
+    git_clone "$FLIGHTGEAR_REPO" "${INSTALL_DIR}/fgms-src"
     increment_app_install_progress
-    cd "$INSTALL_DIR/fgms-src" || exit 71
+    cd "${INSTALL_DIR}/fgms-src" || exit 71
     git checkout "$FLIGHTGEAR_COMMIT" -b "$FLIGHTGEAR_COMMIT"
-    cd "$INSTALL_DIR" || exit 72
-    mkdir "$INSTALL_DIR/build_fgms"
-    cd "$INSTALL_DIR/build_fgms" || exit 73
+    cd "${INSTALL_DIR}" || exit 72
+    mkdir "${INSTALL_DIR}/build_fgms"
+    cd "${INSTALL_DIR}/build_fgms" || exit 73
     increment_app_install_progress
     cmake ../fgms-src
     increment_app_install_progress
     make
-    if [ ! -f "$INSTALL_DIR/build_fgms/fgms" ]; then
+    if [ ! -f "${INSTALL_DIR}/build_fgms/fgms" ]; then
 		    echo "Failed to build fgms"
 		    exit 75
     fi
