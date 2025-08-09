@@ -64,24 +64,24 @@ function upgrade_distro_flightgear {
 }
 
 function logging_on_flightgear {
-    if [ ! -f "$FLIGHTGEAR_DIR/fgms.conf" ]; then
+    if [ ! -f "${FLIGHTGEAR_DIR}/fgms.conf" ]; then
 		    return
     fi
-    if grep -q "${FLIGHTGEAR_DIR}/fgms.log" "$FLIGHTGEAR_DIR/fgms.conf"; then
+    if grep -q "${FLIGHTGEAR_DIR}/fgms.log" "${FLIGHTGEAR_DIR}/fgms.conf"; then
 		    return
     fi
-    sed -i "s|server.logfile.*|server.logfile = ${FLIGHTGEAR_DIR}/fgms.log" "$FLIGHTGEAR_DIR/fgms.conf"
+    sed -i "s|server.logfile.*|server.logfile = ${FLIGHTGEAR_DIR}/fgms.log" "${FLIGHTGEAR_DIR}/fgms.conf"
     systemctl restart fgms
 }
 
 function logging_off_flightgear {
-    if [ ! -f "$FLIGHTGEAR_DIR/fgms.conf" ]; then
+    if [ ! -f "${FLIGHTGEAR_DIR}/fgms.conf" ]; then
 		    return
     fi
-    if grep -q '/dev/null' "$FLIGHTGEAR_DIR/fgms.conf"; then
+    if grep -q '/dev/null' "${FLIGHTGEAR_DIR}/fgms.conf"; then
 		    return
     fi
-    sed -i "s|server.logfile.*|server.logfile = /dev/null" "$FLIGHTGEAR_DIR/fgms.conf"
+    sed -i "s|server.logfile.*|server.logfile = /dev/null" "${FLIGHTGEAR_DIR}/fgms.conf"
     systemctl restart fgms
 }
 
@@ -116,7 +116,7 @@ function upgrade_flightgear {
 }
 
 function backup_local_flightgear {
-    source_directory=$FLIGHTGEAR_DIR
+    source_directory=${FLIGHTGEAR_DIR}
     if [ -d $source_directory ]; then
         dest_directory=flightgear
         function_check backup_directory_to_usb
@@ -125,16 +125,16 @@ function backup_local_flightgear {
 }
 
 function restore_local_flightgear {
-    if [ -d $FLIGHTGEAR_DIR ]; then
-        if [ -d "$USB_MOUNT_FLIGHTGEAR/backup/flightgear" ]; then
+    if [ -d ${FLIGHTGEAR_DIR} ]; then
+        if [ -d "${USB_MOUNT_FLIGHTGEAR}/backup/flightgear" ]; then
             echo $"Restoring FLIGHTGEAR"
             temp_restore_dir=/root/tempflightgear
             function_check restore_directory_from_usb
             restore_directory_from_usb $temp_restore_dir flightgear
-            if [ -d $temp_restore_dir$FLIGHTGEAR_DIR ]; then
-                cp -r $temp_restore_dir$FLIGHTGEAR_DIR/* $FLIGHTGEAR_DIR/
+            if [ -d $temp_restore_dir${FLIGHTGEAR_DIR} ]; then
+                cp -r $temp_restore_dir${FLIGHTGEAR_DIR}/* ${FLIGHTGEAR_DIR}/
             else
-                cp -r $temp_restore_dir/* $FLIGHTGEAR_DIR/
+                cp -r $temp_restore_dir/* ${FLIGHTGEAR_DIR}/
             fi
             # shellcheck disable=SC2181
             if [ ! "$?" = "0" ]; then
@@ -171,8 +171,8 @@ function remove_flightgear {
     if [ -d "$INSTALL_DIR/build_fgms" ]; then
         rm -rf "$INSTALL_DIR/build_fgms"
     fi
-    if [ -d "$FLIGHTGEAR_DIR" ]; then
-        rm -rf "$FLIGHTGEAR_DIR"
+    if [ -d "${FLIGHTGEAR_DIR}" ]; then
+        rm -rf "${FLIGHTGEAR_DIR}"
     fi
     if [ -f ${FLIGHTGEAR_FILENAME} ]; then
 		    rm ${FLIGHTGEAR_FILENAME}
@@ -198,7 +198,7 @@ function install_flightgear {
     if ! grep -q "fgms:" /etc/group; then
 		    groupadd fgms
     fi
-    useradd -c "Flightgear Multiplayer" -d "$FLIGHTGEAR_DIR" -m -r -g fgms fgms
+    useradd -c "Flightgear Multiplayer" -d "${FLIGHTGEAR_DIR}" -m -r -g fgms fgms
 
     increment_app_install_progress
 
@@ -245,8 +245,8 @@ function install_flightgear {
 
     increment_app_install_progress
 
-    if [ ! -d $FLIGHTGEAR_DIR ]; then
-		    mkdir $FLIGHTGEAR_DIR
+    if [ ! -d ${FLIGHTGEAR_DIR} ]; then
+		    mkdir ${FLIGHTGEAR_DIR}
     fi
 
     increment_app_install_progress
@@ -272,8 +272,8 @@ function install_flightgear {
       echo '# crossfeed.port = 5002';
       echo 'whitelist = 127.0.0.1';
       echo 'blacklist = 123.123.123.123';
-      echo 'blacklist = 12.12.12.12'; } > "$FLIGHTGEAR_DIR/fgms.conf"
-    chown -R fgms:fgms "$FLIGHTGEAR_DIR"
+      echo 'blacklist = 12.12.12.12'; } > "${FLIGHTGEAR_DIR}/fgms.conf"
+    chown -R fgms:fgms "${FLIGHTGEAR_DIR}"
 
     increment_app_install_progress
 
@@ -289,8 +289,8 @@ function install_flightgear {
       echo 'Type=simple';
       echo 'User=fgms';
       echo 'Group=fgms';
-      echo "WorkingDirectory=$FLIGHTGEAR_DIR";
-      echo "ExecStart=${FLIGHTGEAR_FILENAME} -c $FLIGHTGEAR_DIR/fgms.conf";
+      echo "WorkingDirectory=${FLIGHTGEAR_DIR}";
+      echo "ExecStart=${FLIGHTGEAR_FILENAME} -c ${FLIGHTGEAR_DIR}/fgms.conf";
       echo 'Restart=on-failure';
       echo 'RestartSec=10';
       echo 'PrivateTmp=true';
