@@ -164,13 +164,17 @@ function configure_interactive_conduit {
 }
 
 function logging_on_conduit {
-    sed -i 's|"log =.*|"log = \"debug,state_res=debug,rocket=off,_=off,sled=off\"|g' ${CONDUIT_CONFIG_FILENAME}
-    systemctl restart conduit
+    if [ -f ${CONDUIT_CONFIG_FILENAME} ]; then
+        sed -i 's|"log =.*|"log = \"debug,state_res=debug,rocket=off,_=off,sled=off\"|g' ${CONDUIT_CONFIG_FILENAME}
+        systemctl restart conduit
+    fi
 }
 
 function logging_off_conduit {
-    sed -i 's|"log =.*|"log = \"warn,state_res=warn,rocket=off,_=off,sled=off\"|g' ${CONDUIT_CONFIG_FILENAME}
-    systemctl restart conduit
+    if [ -f ${CONDUIT_CONFIG_FILENAME} ]; then
+        sed -i 's|"log =.*|"log = \"warn,state_res=warn,rocket=off,_=off,sled=off\"|g' ${CONDUIT_CONFIG_FILENAME}
+        systemctl restart conduit
+    fi
 }
 
 function conduit_add_onion_federation {

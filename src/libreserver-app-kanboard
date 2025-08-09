@@ -62,8 +62,8 @@ function logging_on_kanboard {
     read_config_param KANBOARD_DOMAIN_NAME
     if [ $KANBOARD_DOMAIN_NAME ]; then
         kanboard_configfile=/var/www/${KANBOARD_DOMAIN_NAME}/htdocs/config.php
-        if [ -f $kanboard_configfile ]; then
-            sed -i "s|define('LOG_FILE'.*|define('LOG_FILE', DATA_DIR.DIRECTORY_SEPARATOR.'debug.log');|g" $kanboard_configfile
+        if [ -f ${kanboard_configfile} ]; then
+            sed -i "s|define('LOG_FILE'.*|define('LOG_FILE', DATA_DIR.DIRECTORY_SEPARATOR.'debug.log');|g" ${kanboard_configfile}
         fi
     fi
 }

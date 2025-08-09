@@ -289,7 +289,9 @@ function logging_on_icecast {
         return
     fi
     sed -i 's|<loglevel>.*|<loglevel>4</loglevel>|g' /etc/icecast2/icecast.xml
-    sed -i "s|set(\"log.file.path\".*|set(\"log.file.path\", \"$liquidsoap_log\")|g" "$liquidsoap_script"
+    if [ -f "$liquidsoap_script" ]; then
+        sed -i "s|set(\"log.file.path\".*|set(\"log.file.path\", \"$liquidsoap_log\")|g" "$liquidsoap_script"
+    fi
 }
 
 function logging_off_icecast {
