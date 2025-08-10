@@ -896,7 +896,7 @@ function menu_top_level {
             4) mutt_set_avatar;;
             5) menu_run_client_app;;
             6) user_notifications;;
-            7) TORSOCKS_CONF_FILE=~/torsocks.conf torify elinks -no-home;;
+            7) lynx -socks5_proxy=127.0.0.1:9050;;
             8) menu_encryption_keys;;
             9) menu_admin;;
             10) break;;

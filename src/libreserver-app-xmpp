@@ -1170,7 +1170,6 @@ function configure_firewall_for_xmpp {
 }
 
 function remove_xmpp {
-    remove_profanity
     read_config_param ONION_ONLY
     if [[ $ONION_ONLY == "no" ]]; then
         firewall_max_connections 5222 $XMPP_FIREWALL_MAX_CONNECTIONS remove
