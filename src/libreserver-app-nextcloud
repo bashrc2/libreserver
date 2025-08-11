@@ -345,8 +345,6 @@ function upgrade_nextcloud_base {
     # shellcheck disable=SC2086
     systemctl restart php${PHP_VERSION}-fpm
 
-    echo "NEXTCLOUD_WWW ${NEXTCLOUD_WWW}"
-    echo "data /var/www/${NEXTCLOUD_DOMAIN_NAME}/data"
     chown -R www-data:www-data "${NEXTCLOUD_WWW}"
     chown -R www-data:www-data "/var/www/${NEXTCLOUD_DOMAIN_NAME}/data"
     cd "${NEXTCLOUD_WWW}" || exit 23
@@ -362,13 +360,13 @@ function upgrade_nextcloud_base {
 }
 
 function upgrade_nextcloud {
+    NEXTCLOUD_WWW="/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs"
     nextcloud_configure_smtp
 
     if grep -q "nextcloud domain" "$COMPLETION_FILE"; then
         NEXTCLOUD_DOMAIN_NAME=$(get_completion_param "nextcloud domain")
     fi
 
-    NEXTCLOUD_WWW="/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs"
     if [ ! -f /etc/turnserver.conf ]; then
         install_turn
     fi
