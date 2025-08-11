@@ -179,7 +179,7 @@ function set_email_nextcloud {
 }
 
 function nextcloud_configure_smtp {
-    nextcloud_config="/var/www/$NEXTCLOUD_DOMAIN_NAME/htdocs/config/config.php"
+    nextcloud_config="${NEXTCLOUD_WWW}/config/config.php"
     if ! grep -q "mail_domain" "${nextcloud_config}"; then
         email_domain="${DEFAULT_DOMAIN_NAME}"
         if [ ! "$ONION_ONLY" ]; then
