@@ -1209,25 +1209,10 @@ function firewall_facebook {
 function firewall_microsoft {
     # github is on AS36459
     block_ips_from_asn AS12076 microsoft_corp_usa
-    block_ips_from_asn AS13399 microsoft_corp_msn_as_2
-    block_ips_from_asn AS14271 microsoft_corp_azure_peering
-    block_ips_from_asn AS14719 microsoft_corp_bcentral
-    block_ips_from_asn AS20046 microsoft_bos
-    block_ips_from_asn AS23468 microsoft_corp_xbox_online
     block_ips_from_asn AS35106 microsoft_live_meeting
     block_ips_from_asn AS3598 microsoft_corp_as_0
-    block_ips_from_asn AS395496 microsoft_corp_as_block_msit_3
-    block_ips_from_asn AS395524 microsoft_corp_as_block_msit_4
-    block_ips_from_asn AS395851 microsoft_corp_as_block_msit_2
-    block_ips_from_asn AS396463 microsoft_corp_as_block_msit_1
-    block_ips_from_asn AS397096 microsoft_azure_dedicated_1
-    block_ips_from_asn AS398575 microsoft_azure_orbital
-    block_ips_from_asn AS398656 microsoft_azure_dedicated_2
-    block_ips_from_asn AS400572 microsoft_azure_dedicated_3
     block_ips_from_asn AS45139 microsoft_as_ap
-    block_ips_from_asn AS52985 microsoft_brasil
     block_ips_from_asn AS5761 microsoft_corp_msn_as_saturn
-    block_ips_from_asn AS6182 microsoft_corp_msn_as_4
     block_ips_from_asn AS6584 microsoft_gp_as
     block_ips_from_asn AS8068 microsoft_corp_msn_as_block_1
     block_ips_from_asn AS8069 microsoft_corp_msn_as_block_2
