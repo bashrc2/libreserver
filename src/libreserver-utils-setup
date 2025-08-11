@@ -858,6 +858,9 @@ function setup_firewall {
 
     function_check firewall_facebook
     firewall_facebook
+
+    function_check firewall_microsoft
+    firewall_microsoft
 }
 
 function setup_powerline {
