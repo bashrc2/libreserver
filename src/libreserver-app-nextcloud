@@ -338,15 +338,17 @@ function reconfigure_nextcloud {
 }
 
 function upgrade_nextcloud_base {
-    NEXTCLOUD_WWW="/var/www/$NEXTCLOUD_DOMAIN_NAME/htdocs"
+    NEXTCLOUD_WWW="/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs"
     nextcloud_check_php_init "/etc/php/${PHP_VERSION}/cli/php.ini"
     nextcloud_check_php_init "/etc/php/${PHP_VERSION}/fpm/php.ini"
 
     # shellcheck disable=SC2086
     systemctl restart php${PHP_VERSION}-fpm
 
+    echo "NEXTCLOUD_WWW ${NEXTCLOUD_WWW}"
+    echo "data /var/www/${NEXTCLOUD_DOMAIN_NAME}/data"
     chown -R www-data:www-data "${NEXTCLOUD_WWW}"
-    chown -R www-data:www-data "/var/www/$NEXTCLOUD_DOMAIN_NAME/data"
+    chown -R www-data:www-data "/var/www/${NEXTCLOUD_DOMAIN_NAME}/data"
     cd "${NEXTCLOUD_WWW}" || exit 23
     chmod +x "${NEXTCLOUD_WWW}/occ"
     ${NEXTCLOUD_COMMAND} maintenance:repair
