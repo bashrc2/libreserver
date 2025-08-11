@@ -1221,6 +1221,10 @@ function firewall_microsoft {
     block_ips_from_asn AS8075 microsoft_corp_msn_as_block_5
 }
 
+function firewall_openai {
+    block_ips_from_asn AS401864 openai_llc
+}
+
 function firewall_unblock_ip {
     blocked_ip="$1"
     block_ip_comment="$2"
