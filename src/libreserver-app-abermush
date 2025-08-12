@@ -59,6 +59,10 @@ abermush_variables=(SYSTEM_TYPE
                     MY_USERNAME
                     ABERMUSH_DOMAIN_NAME)
 
+function run_client_abermush {
+    ssh ${USER}@localhost -p ${ABERMUSH_SSH_PORT}
+}
+
 function upgrade_distro_abermush {
     target_distro="$1"
 
