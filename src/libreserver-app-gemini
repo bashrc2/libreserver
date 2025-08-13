@@ -73,7 +73,7 @@ function run_client_gemini {
         return
     fi
     clear
-    TORSOCKS_CONF_FILE=/etc/tor/torsocks.conf torify /usr/bin/leo --url gemini://${DEFAULT_GEMINI_URL}
+    TORSOCKS_CONF_FILE=/etc/tor/torsocks.conf torify /usr/bin/leo --url gemini://${DEFAULT_DOMAIN_NAME}
 }
 
 function install_gemini_client {
@@ -95,7 +95,7 @@ function install_gemini_client {
         git stash
         git pull
         cp "$INSTALL_DIR/leo/leo" "/usr/bin/leo"
-        chmod +x "/usr/bin/leo"
+        chmod 755 "/usr/bin/leo"
         return
     fi
 
@@ -107,7 +107,7 @@ function install_gemini_client {
         return
     fi
     cp "$INSTALL_DIR/leo/leo" "/usr/bin/leo"
-    chmod +x "/usr/bin/leo"
+    chmod 755 "/usr/bin/leo"
 }
 
 function convert_blog_to_gemini {
