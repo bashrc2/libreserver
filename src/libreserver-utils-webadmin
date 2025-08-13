@@ -2120,7 +2120,7 @@ function install_web_admin_webmail {
       echo "\$allow_charset_search     = true;";
       echo "\$uid_support              = true;";
       echo '';
-      echo "\$theme_css = '../themes/css/freedom.css';";
+      echo "\$theme_css = SM_PATH . 'css/freedom/default.css';";
       echo "\$user_theme_default = $webmail_theme;";
       echo "\$user_themes[0]['PATH'] = SM_PATH . 'css/freedom_light/';";
       echo "\$user_themes[0]['NAME'] = 'Freedom Light';";
@@ -2167,6 +2167,9 @@ function install_web_admin_webmail {
       echo "@include SM_PATH . 'mail/config/config_local.php';"; } > "/var/www/${local_hostname}/htdocs/mail/config/config.php"
 
     # style sheet and font
+    if [! -d "/var/www/${local_hostname}/htdocs/mail/css/freedom" ]; then
+        mkdir -p "/var/www/${local_hostname}/htdocs/mail/css/freedom"
+    fi
     { echo '@font-face {';
       echo "  font-family: 'Montserrat-Regular';";
       echo '  font-style: normal;';
@@ -2186,8 +2189,8 @@ function install_web_admin_webmail {
       echo 'textarea, pre {';
       echo "  font-family: 'Montserrat-Regular';";
       echo '  font-size: 12pt;';
-      echo '}'; } > "/var/www/${local_hostname}/htdocs/mail/themes/css/freedom.css"
-    cp -r "/root/${PROJECT_NAME}/webadmin/EN/fonts" "/var/www/${local_hostname}/htdocs/mail/themes/css/"
+      echo '}'; } > "/var/www/${local_hostname}/htdocs/mail/css/freedom/default.css"
+    cp -r "/root/${PROJECT_NAME}/webadmin/EN/fonts" "/var/www/${local_hostname}/htdocs/mail/css/"
 
     cp "/root/${PROJECT_NAME}/webadmin/images/logo_webmail.png" "/var/www/${local_hostname}/htdocs/mail/images/sm_logo.png"
 

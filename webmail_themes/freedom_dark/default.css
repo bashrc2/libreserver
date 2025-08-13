@@ -1,12 +1,34 @@
 /* older css template */
 /* page body formatting */
+@font-face {
+    font-family: 'Montserrat-Regular';
+    font-style: normal;
+    font-weight: normal;
+    font-display: block;
+    src: url('./fonts/Montserrat-Regular.ttf') format('truetype');
+}
+
 body {
     color:  #ffffff;
     background-color: #222;
+    font-family: 'Montserrat-Regular';
 }
 body.sqm_leftMain {
     color:  #ffffff;
     background-color: #222;
+}
+
+body, small {
+    font-size: 10pt;
+}
+
+td, th {
+    font-size: 12pt;
+}
+
+textarea, pre {
+    font-family: 'Montserrat-Regular';
+    font-size: 12pt;
 }
 
 /* right links */
