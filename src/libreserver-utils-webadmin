@@ -981,14 +981,19 @@ function web_admin_create_installed_apps_category {
                         if [[ "$ONION_ONLY" == 'no' && "$I2P_ONLY" == 'no' ]]; then
                             if grep -q "INSTALLED_ON_DEFAULT_DOMAIN=1" "$app_filename"; then
                                 read_config_param DEFAULT_DOMAIN_NAME
-                                domain_name=$DEFAULT_DOMAIN_NAME
+                                domain_name=${DEFAULT_DOMAIN_NAME}
                             else
                                 test_domain_name="${app_name_upper}_DOMAIN_NAME"
                                 domain_name=${!test_domain_name}
                             fi
                         else
                             if [[ "$ONION_ONLY" != 'no' ]]; then
-                                domain_name=$(cat "/var/lib/tor/hidden_service_${onion_app_name}/hostname")
+                                if [ -f "/var/lib/tor/hidden_service_${onion_app_name}/hostname" ]; then
+                                    domain_name=$(cat "/var/lib/tor/hidden_service_${onion_app_name}/hostname")
+                                else
+                                    read_config_param DEFAULT_DOMAIN_NAME
+                                    domain_name=${DEFAULT_DOMAIN_NAME}
+                                fi
                             else
                                 if [[ "$I2P_ONLY" != 'no' ]]; then
                                     domain_name=$(get_i2p_domain ${i2p_app_name})
