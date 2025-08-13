@@ -33,7 +33,7 @@ MY_EMAIL_ADDRESS=$USER@$HOSTNAME
 GPG_ID=$(gpg --list-keys "$MY_EMAIL_ADDRESS" | sed -n '2p' | sed 's/^[ \t]*//')
 GPG_BACKUP_ID=$(gpg --list-keys "(backup key)" | sed -n '2p' | sed 's/^[ \t]*//')
 
-DEFAULT_BROWSER_WEBSITE="http://xmh57jrknzkhv6y3ls3ubitzfqnkrwxhopf5aygthi7d6rplyvk3noyd.onion"
+DEFAULT_BROWSER_WEBSITE="https://wiby.me"
 
 # If the default key is specified within gpg.conf
 if [ -f ~/.gnupg/gpg.conf ]; then
