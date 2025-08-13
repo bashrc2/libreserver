@@ -2167,7 +2167,7 @@ function install_web_admin_webmail {
       echo "@include SM_PATH . 'mail/config/config_local.php';"; } > "/var/www/${local_hostname}/htdocs/mail/config/config.php"
 
     # style sheet and font
-    if [! -d "/var/www/${local_hostname}/htdocs/mail/css/freedom" ]; then
+    if [ ! -d "/var/www/${local_hostname}/htdocs/mail/css/freedom" ]; then
         mkdir -p "/var/www/${local_hostname}/htdocs/mail/css/freedom"
     fi
     { echo '@font-face {';
