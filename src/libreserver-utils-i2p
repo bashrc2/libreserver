@@ -120,7 +120,7 @@ function i2p_base_config {
 
     sed -i 's|#nat =|nat =|g' /etc/i2pd/i2pd.conf
     sed -i 's|# nat =|nat =|g' /etc/i2pd/i2pd.conf
-    if ! grep -q "nat = true" /etc/i2pd/i2pd.conf; then
+    if ! grep -Fxq "nat = true" /etc/i2pd/i2pd.conf; then
         echo 'Enabling i2p NAT traversal'
         sed -i 's|nat =.*|nat = true|g' /etc/i2pd/i2pd.conf
     fi
