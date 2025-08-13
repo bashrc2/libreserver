@@ -33,6 +33,8 @@ MY_EMAIL_ADDRESS=$USER@$HOSTNAME
 GPG_ID=$(gpg --list-keys "$MY_EMAIL_ADDRESS" | sed -n '2p' | sed 's/^[ \t]*//')
 GPG_BACKUP_ID=$(gpg --list-keys "(backup key)" | sed -n '2p' | sed 's/^[ \t]*//')
 
+DEFAULT_BROWSER_WEBSITE="http://xmh57jrknzkhv6y3ls3ubitzfqnkrwxhopf5aygthi7d6rplyvk3noyd.onion"
+
 # If the default key is specified within gpg.conf
 if [ -f ~/.gnupg/gpg.conf ]; then
     if grep -q "default-key" ~/.gnupg/gpg.conf; then
@@ -896,7 +898,7 @@ function menu_top_level {
             4) mutt_set_avatar;;
             5) menu_run_client_app;;
             6) user_notifications;;
-            7) lynx -socks5_proxy=127.0.0.1:9050;;
+            7) lynx -socks5_proxy=127.0.0.1:9050 ${DEFAULT_BROWSER_WEBSITE};;
             8) menu_encryption_keys;;
             9) menu_admin;;
             10) break;;
