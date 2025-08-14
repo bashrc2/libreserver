@@ -1497,6 +1497,7 @@ function image_install_web_admin {
       echo '';
       echo '  allow 192.168.0.0/16;';
       echo '  allow 10.0.0.0/16;';
+      echo '  allow fc00::/7;';
       echo '  deny all;';
       echo '';
       echo '  access_log /dev/null;';
@@ -2437,6 +2438,7 @@ function install_web_admin {
       echo '';
       echo '  allow 192.168.0.0/16;';
       echo '  allow 10.0.0.0/16;';
+      echo '  allow fc00::/7;';
       echo '  deny all;';
       echo '';
       echo '  access_log /dev/null;';
@@ -2518,6 +2520,7 @@ function install_web_admin {
       echo '';
       echo '  allow 192.168.0.0/16;';
       echo '  allow 10.0.0.0/16;';
+      echo '  allow fc00::/7;';
       echo '  deny all;';
       echo '';
       echo '  access_log /dev/null;';
