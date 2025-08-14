@@ -97,38 +97,19 @@ function i2p_modify_daemon {
 }
 
 function i2p_base_config {
-    sed -i 's|#tunnelsdir =|tunnelsdir =|g' /etc/i2pd/i2pd.conf
-    sed -i 's|# tunnelsdir =|tunnelsdir =|g' /etc/i2pd/i2pd.conf
-    if ! grep -q "tunnelsdir = $i2p_tunnels_dir" /etc/i2pd/i2pd.conf; then
-        echo 'Setting i2p tunnels'
-        sed -i "s|tunnelsdir =.*|tunnelsdir = $i2p_tunnels_dir|g" /etc/i2pd/i2pd.conf
+    if [ ! -f ${rootdir}/etc/i2pd/i2pd.conf.old ]; then
+        cp ${rootdir}/etc/i2pd/i2pd.conf ${rootdir}/etc/i2pd/i2pd.conf.old
     fi
 
-    sed -i 's|#ipv6 =|ipv6 =|g' /etc/i2pd/i2pd.conf
-    sed -i 's|# ipv6 =|ipv6 =|g' /etc/i2pd/i2pd.conf
-    if ! grep -q "ipv6 = true" /etc/i2pd/i2pd.conf; then
-        echo 'Enabling ipv6 for i2p'
-        sed -i 's|ipv6 =.*|ipv6 = true|g' /etc/i2pd/i2pd.conf
-    fi
-
-    sed -i 's|#logfile =|logfile =|g' /etc/i2pd/i2pd.conf
-    sed -i 's|# logfile =|logfile =|g' /etc/i2pd/i2pd.conf
-    if ! grep -q "logfile = /dev/null" /etc/i2pd/i2pd.conf; then
-        echo 'Disabling i2p logging'
-        sed -i 's|logfile =.*|logfile = /dev/null|g' /etc/i2pd/i2pd.conf
-    fi
-
-    sed -i 's|#nat =|nat =|g' /etc/i2pd/i2pd.conf
-    sed -i 's|# nat =|nat =|g' /etc/i2pd/i2pd.conf
-    if ! grep -Fxq "nat =" /etc/i2pd/i2pd.conf; then
-        echo 'Enabling i2p NAT traversal'
-        sed -i "s|ipv6 =.*|ipv6 = true\\nnat = true|g" /etc/i2pd/i2pd.conf
-    else
-        if ! grep -Fxq "nat = true" /etc/i2pd/i2pd.conf; then
-            echo 'Enabling i2p NAT traversal'
-            sed -i 's|nat =.*|nat = true|g' /etc/i2pd/i2pd.conf
-        fi
-    fi
+    { echo "tunnelsdir = ${i2p_tunnels_dir}";
+      echo 'logfile = /dev/null';
+      echo 'ipv4 = true';
+      echo 'ipv6 = true';
+      echo 'nat = true';
+      echo "port = ${I2P_LISTEN_PORT}";
+      echo '';
+      echo '[reseed]';
+      echo 'verify = true'; } > ${rootdir}/etc/i2pd/i2pd.conf
 
     if [ ! -d /run/i2pd ]; then
         mkdir /run/i2pd
@@ -142,13 +123,14 @@ function i2p_base_config {
     chmod 644 /etc/i2pd/tunnels.d/*
     chmod 755 "$i2p_tunnels_dir"
     chmod 755 /etc/i2pd/tunnels.d
+
+    firewall_add i2p ${I2P_LISTEN_PORT}
 }
 
 function install_i2p {
     i2p_domain_script
     if [ -d "$rootdir/var/lib/i2pd" ]; then
         i2p_modify_daemon
-        open_i2p_listen_port
         i2p_base_config
         return
     fi
@@ -164,7 +146,6 @@ function install_i2p {
     fi
 
     i2p_modify_daemon
-    open_i2p_listen_port
 
     # i2p needs ipv6 to be enabled
     enable_ipv6
