@@ -412,6 +412,7 @@ function install_kanboard {
 
     increment_app_install_progress
 
+    crawlers_list=$(get_web_crawlers)
     kanboard_nginx_site=/etc/nginx/sites-available/$KANBOARD_DOMAIN_NAME
     if [[ $ONION_ONLY == "no" ]]; then
         function_check nginx_http_redirect
@@ -421,6 +422,8 @@ function install_kanboard {
           echo '  listen [::]:443 ssl;';
           echo "  server_name $KANBOARD_DOMAIN_NAME;";
           echo '  server_tokens off;';
+          echo '';
+          echo "  if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
           echo '';
           echo '  # Security'; } >> "$kanboard_nginx_site"
         function_check nginx_ssl
@@ -491,6 +494,8 @@ function install_kanboard {
       echo '    port_in_redirect off;';
       echo "    server_name $KANBOARD_ONION_HOSTNAME;";
       echo '    server_tokens off;';
+      echo '';
+      echo "    if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
       echo ''; } >> "$kanboard_nginx_site"
     echo '' >> "$kanboard_nginx_site"
     function_check nginx_security_options
@@ -555,6 +560,8 @@ function install_kanboard {
           echo '    port_in_redirect off;';
           echo "    server_name $KANBOARD_I2P_HOSTNAME;";
           echo '    server_tokens off;';
+          echo '';
+          echo "    if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
           echo ''; } >> "$kanboard_nginx_site"
         echo '' >> "$kanboard_nginx_site"
         function_check nginx_security_options

@@ -340,6 +340,7 @@ function install_bludit {
 
     increment_app_install_progress
 
+    crawlers_list=$(get_web_crawlers)
     bludit_nginx_site=/etc/nginx/sites-available/$BLUDIT_DOMAIN_NAME
     if [[ "$ONION_ONLY" == "no" ]]; then
         nginx_http_redirect "$BLUDIT_DOMAIN_NAME" "index index.php"
@@ -358,6 +359,8 @@ function install_bludit {
 
         { echo '  add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
           echo "  add_header Onion-Location http://${BLUDIT_ONION_HOSTNAME}\$request_uri;";
+          echo '';
+          echo "  if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
           echo '';
           echo "  if (!-e \$request_filename) {";
           echo "    set \$test P;";
@@ -416,6 +419,8 @@ function install_bludit {
       echo '  access_log /dev/null;';
       echo '  error_log /dev/null;';
       echo '';
+      echo "  if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
+      echo '';
       echo "  if (!-e \$request_filename) {";
       echo "    set \$test P;";
       echo '  }';
@@ -469,6 +474,8 @@ function install_bludit {
           echo '  # Logs';
           echo '  access_log /dev/null;';
           echo '  error_log /dev/null;';
+          echo '';
+          echo "  if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
           echo '';
           echo "  if (!-e \$request_filename) {";
           echo "    set \$test P;";

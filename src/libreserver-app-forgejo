@@ -692,6 +692,7 @@ function install_forgejo {
 
     increment_app_install_progress
 
+    crawlers_list=$(get_web_crawlers)
     if [[ "${ONION_ONLY}" == "no" ]]; then
         function_check nginx_http_redirect
         nginx_http_redirect "${FORGEJO_DOMAIN_NAME}"
@@ -703,6 +704,8 @@ function install_forgejo {
           echo '    server_tokens off;';
           echo '    access_log /dev/null;';
           echo "    error_log /dev/null;";
+          echo '';
+          echo "    if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
           echo ''; } >> "/etc/nginx/sites-available/${FORGEJO_DOMAIN_NAME}"
         function_check nginx_ssl
         nginx_ssl "${FORGEJO_DOMAIN_NAME}"
@@ -741,6 +744,8 @@ function install_forgejo {
       echo '    server_tokens off;';
       echo '    access_log /dev/null;';
       echo "    error_log /dev/null;";
+      echo '';
+      echo "    if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
       echo ''; } >> "/etc/nginx/sites-available/${FORGEJO_DOMAIN_NAME}"
     function_check nginx_security_options
     nginx_security_options "${FORGEJO_DOMAIN_NAME}"
@@ -775,6 +780,8 @@ function install_forgejo {
           echo '    server_tokens off;';
           echo '    access_log /dev/null;';
           echo "    error_log /dev/null;";
+          echo '';
+          echo "    if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
           echo ''; } >> "/etc/nginx/sites-available/${FORGEJO_DOMAIN_NAME}"
         function_check nginx_security_options
         nginx_security_options "${FORGEJO_DOMAIN_NAME}"

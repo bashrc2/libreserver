@@ -604,6 +604,7 @@ function install_conduit {
 
     increment_app_install_progress
 
+    crawlers_list=$(get_web_crawlers)
     conduit_nginx_site=/etc/nginx/sites-available/${CONDUIT_DOMAIN_NAME}
     if [[ "${ONION_ONLY}" == "no" ]]; then
         nginx_http_redirect "${CONDUIT_DOMAIN_NAME}" "index index.html"
@@ -630,6 +631,8 @@ function install_conduit {
           echo "  root /var/www/${CONDUIT_DOMAIN_NAME}/htdocs;";
           echo '';
           echo '  index index.html;';
+          echo '';
+          echo "  if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
           echo '';
           echo '  keepalive_timeout 70;';
           echo '  sendfile on;';
@@ -691,6 +694,8 @@ function install_conduit {
       echo '';
       echo '  index index.html;';
       echo '';
+      echo "  if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
+      echo '';
       echo '  keepalive_timeout 70;';
       echo '  sendfile on;';
       echo '';
@@ -750,6 +755,8 @@ function install_conduit {
           echo "  root /var/www/${CONDUIT_DOMAIN_NAME}/htdocs;";
           echo '';
           echo '  index index.html;';
+          echo '';
+          echo "  if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
           echo '';
           echo '  keepalive_timeout 70;';
           echo '  sendfile on;';

@@ -551,6 +551,7 @@ function install_etherpad {
       echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/etherpad.service
     chmod +x /etc/systemd/system/etherpad.service
 
+    crawlers_list=$(get_web_crawlers)
     etherpad_nginx_site=/etc/nginx/sites-available/$ETHERPAD_DOMAIN_NAME
     if [[ $ONION_ONLY == "no" ]]; then
         function_check nginx_http_redirect
@@ -560,6 +561,8 @@ function install_etherpad {
           echo '  listen [::]:443 ssl;';
           echo "  server_name $ETHERPAD_DOMAIN_NAME;";
           echo '  server_tokens off;';
+          echo '';
+          echo "  if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
           echo '';
           echo '  # Security'; } >> "$etherpad_nginx_site"
         function_check nginx_ssl
@@ -609,6 +612,8 @@ function install_etherpad {
       echo '    port_in_redirect off;';
       echo "    server_name $ETHERPAD_ONION_HOSTNAME;";
       echo '    server_tokens off;';
+      echo '';
+      echo "    if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
       echo ''; } >> "$etherpad_nginx_site"
     function_check nginx_security_options
     nginx_security_options "$ETHERPAD_DOMAIN_NAME"
@@ -646,6 +651,8 @@ function install_etherpad {
           echo '    port_in_redirect off;';
           echo "    server_name $ETHERPAD_I2P_HOSTNAME;";
           echo '    server_tokens off;';
+          echo '';
+          echo "    if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
           echo ''; } >> "$etherpad_nginx_site"
         function_check nginx_security_options
         nginx_security_options "$ETHERPAD_DOMAIN_NAME"

@@ -2426,6 +2426,7 @@ function install_web_admin {
         WEBADMIN_SECONDARY_ONION_HOSTNAME=$(cat /var/lib/tor/hidden_service_email/hostname)
     fi
 
+    crawlers_list=$(get_web_crawlers)
     nginx_file=/etc/nginx/sites-available/$local_hostname
     { echo 'server {';
       echo '  listen 80 default_server;';
@@ -2435,6 +2436,8 @@ function install_web_admin {
       echo "  root /var/www/${local_hostname}/htdocs;";
       echo '  index index.html;';
       echo '  charset UTF-8;';
+      echo '';
+      echo "  if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
       echo '';
       echo '  allow 192.168.0.0/16;';
       echo '  allow 10.0.0.0/16;';
@@ -2517,6 +2520,8 @@ function install_web_admin {
       echo "  root /var/www/${local_hostname}/htdocs;";
       echo '  index index.html;';
       echo '  charset UTF-8;';
+      echo '';
+      echo "  if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
       echo '';
       echo '  allow 192.168.0.0/16;';
       echo '  allow 10.0.0.0/16;';

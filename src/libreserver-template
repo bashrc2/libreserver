@@ -788,6 +788,7 @@ if [ "$app_webui" ]; then
     echo ''
     echo "    ${app_name}_nginx_site=/etc/nginx/sites-available/\$${app_name_upper}_DOMAIN_NAME"
 
+    crawlers_list=$(get_web_crawlers)
     if [ ! $app_onion_only ]; then
         echo "    if [[ \"\$ONION_ONLY\" == \"no\" ]]; then"
         if [[ "$app_php" == 'yes' ]]; then
@@ -800,6 +801,9 @@ if [ "$app_webui" ]; then
         echo "          echo '  listen [::]:443 ssl;';"
         echo "          echo \"  server_name \$${app_name_upper}_DOMAIN_NAME;\";"
         echo "          echo \"  server_tokens off;\";"
+        echo "          echo '';"
+        echo "          echo \"  if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }\";"
+
         echo "          echo ''; } >> \"\$${app_name}_nginx_site\""
         echo "        nginx_compress \"\$${app_name_upper}_DOMAIN_NAME\""
         echo "        echo '' >> \"\$${app_name}_nginx_site\""
@@ -852,6 +856,8 @@ if [ "$app_webui" ]; then
     echo "      echo \"    listen 127.0.0.1:\$${app_name_upper}_ONION_PORT default_server;\";"
     echo "      echo \"    server_name \$${app_name_upper}_ONION_HOSTNAME;\";"
     echo "      echo \"    server_tokens off;\";"
+    echo "      echo '';"
+    echo "      echo \"  if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }\";"
     echo "      echo ''; } >> \"\$${app_name}_nginx_site\""
     echo "    nginx_compress \"\$${app_name_upper}_DOMAIN_NAME\""
     echo "    echo '' >> \"\$${app_name}_nginx_site\""

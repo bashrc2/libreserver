@@ -433,6 +433,7 @@ function install_akaunting {
 
     increment_app_install_progress
 
+    crawlers_list=$(get_web_crawlers)
     akaunting_nginx_site=/etc/nginx/sites-available/${AKAUNTING_DOMAIN_NAME}
     if [[ $ONION_ONLY == "no" ]]; then
         function_check nginx_http_redirect
@@ -463,6 +464,8 @@ function install_akaunting {
           echo "  root /var/www/${AKAUNTING_DOMAIN_NAME}/htdocs;";
           echo '';
           echo '  index index.html index.htm index.php;';
+          echo '';
+          echo "  if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
           echo '';
           echo '  location ~ \.php {';
           echo '    include snippets/fastcgi-php.conf;';
@@ -517,6 +520,8 @@ function install_akaunting {
       echo "  root /var/www/${AKAUNTING_DOMAIN_NAME}/htdocs;";
       echo '';
       echo '  index index.html index.htm index.php;';
+      echo '';
+      echo "  if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
       echo '';
       echo '  location ~ \.(env|log) {';
       echo '    deny all;';
@@ -575,6 +580,8 @@ function install_akaunting {
           echo "  root /var/www/${AKAUNTING_DOMAIN_NAME}/htdocs;";
           echo '';
           echo '  index index.html index.htm index.php;';
+          echo '';
+          echo "  if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
           echo '';
           echo '  location ~ \.(env|log) {';
           echo '    deny all;';

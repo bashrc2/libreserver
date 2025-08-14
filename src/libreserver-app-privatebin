@@ -315,6 +315,7 @@ function install_privatebin {
 
     increment_app_install_progress
 
+    crawlers_list=$(get_web_crawlers)
     privatebin_nginx_site=/etc/nginx/sites-available/${PRIVATEBIN_DOMAIN_NAME}
     if [[ $ONION_ONLY == "no" ]]; then
         function_check nginx_http_redirect
@@ -324,6 +325,8 @@ function install_privatebin {
           echo '  listen [::]:443 ssl;';
           echo "  server_name ${PRIVATEBIN_DOMAIN_NAME};";
           echo '  server_tokens off;';
+          echo '';
+          echo "  if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
           echo ''; } >> "$privatebin_nginx_site"
         function_check nginx_compress
         nginx_compress "${PRIVATEBIN_DOMAIN_NAME}"
@@ -374,6 +377,8 @@ function install_privatebin {
       echo '    port_in_redirect off;';
       echo "    server_name $PRIVATEBIN_ONION_HOSTNAME;";
       echo '    server_tokens off;';
+      echo '';
+      echo "    if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
       echo ''; } >> "$privatebin_nginx_site"
     function_check nginx_compress
     nginx_compress "${PRIVATEBIN_DOMAIN_NAME}"
@@ -416,6 +421,8 @@ function install_privatebin {
           echo '    port_in_redirect off;';
           echo "    server_name ${PRIVATEBIN_I2P_HOSTNAME};";
           echo '    server_tokens off;';
+          echo '';
+          echo "    if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
           echo ''; } >> "${privatebin_nginx_site}"
         function_check nginx_compress
         nginx_compress "${PRIVATEBIN_DOMAIN_NAME}"

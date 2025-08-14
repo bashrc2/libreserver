@@ -316,6 +316,8 @@ function install_streams {
 
     increment_app_install_progress
 
+    crawlers_list=$(get_web_crawlers)
+
     function_check nginx_http_redirect
     nginx_http_redirect "$STREAMS_DOMAIN_NAME"
     { echo 'server {';
@@ -327,7 +329,9 @@ function install_streams {
       echo "    error_log /dev/null;";
       echo '    index index.php;';
       echo '    charset utf-8;';
-      echo '    access_log /dev/null;'; } >> "/etc/nginx/sites-available/$STREAMS_DOMAIN_NAME"
+      echo '    access_log /dev/null;';
+      echo '';
+      echo "    if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }"; } >> "/etc/nginx/sites-available/$STREAMS_DOMAIN_NAME"
     function_check nginx_ssl
     nginx_ssl "$STREAMS_DOMAIN_NAME"
     function_check nginx_security_options

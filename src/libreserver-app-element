@@ -463,6 +463,7 @@ function install_element {
 
     increment_app_install_progress
 
+    crawlers_list=$(get_web_crawlers)
     element_nginx_site="/etc/nginx/sites-available/${ELEMENT_DOMAIN_NAME}"
     if [[ "$ONION_ONLY" == "no" ]]; then
         function_check nginx_http_redirect
@@ -472,6 +473,8 @@ function install_element {
           echo '  listen [::]:443 ssl http2;';
           echo "  server_name ${ELEMENT_DOMAIN_NAME};";
           echo '  server_tokens off;';
+          echo '';
+          echo "  if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
           echo '';
           echo '  # Security'; } >> $element_nginx_site
         function_check nginx_ssl
@@ -511,6 +514,8 @@ function install_element {
     function_check nginx_security_options
     nginx_security_options "${ELEMENT_DOMAIN_NAME}"
     { echo '';
+      echo "  if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
+      echo '';
       echo '  # Logs';
       echo '  access_log /dev/null;';
       echo '  error_log /dev/null;';
@@ -538,6 +543,8 @@ function install_element {
         function_check nginx_security_options
         nginx_security_options "${ELEMENT_DOMAIN_NAME}"
         { echo '';
+          echo "  if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
+          echo '';
           echo '  # Logs';
           echo '  access_log /dev/null;';
           echo '  error_log /dev/null;';

@@ -196,6 +196,7 @@ if [ -d "$PROJECT_DIR" ]; then
                 fi
                 # enable ipv6 on websites
                 sed -i 's|#listen \[::|listen \[::|g' /etc/nginx/sites-available/*
+                block_web_crawlers
                 systemctl restart nginx
                 #defrag_filesystem
                 ;;

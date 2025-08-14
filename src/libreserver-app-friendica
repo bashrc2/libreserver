@@ -434,6 +434,7 @@ function install_friendica {
     function_check add_ddns_domain
     add_ddns_domain "$FRIENDICA_DOMAIN_NAME"
 
+    crawlers_list=$(get_web_crawlers)
     if [[ "$ONION_ONLY" == "no" ]]; then
         function_check nginx_http_redirect
         nginx_http_redirect "$FRIENDICA_DOMAIN_NAME"
@@ -446,7 +447,9 @@ function install_friendica {
           echo "    error_log /dev/null;";
           echo '    index index.php;';
           echo '    charset utf-8;';
-          echo '    access_log /dev/null;'; } >> "/etc/nginx/sites-available/$FRIENDICA_DOMAIN_NAME"
+          echo '    access_log /dev/null;';
+          echo '';
+          echo "    if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }"; } >> "/etc/nginx/sites-available/$FRIENDICA_DOMAIN_NAME"
         function_check nginx_ssl
         nginx_ssl "$FRIENDICA_DOMAIN_NAME"
         function_check nginx_security_options
@@ -523,6 +526,8 @@ function install_friendica {
           echo '    index index.php;';
           echo '    charset utf-8;';
           echo '    access_log /dev/null;';
+          echo '';
+          echo "    if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
           echo '';
           echo '    # rewrite to front controller as default rule';
           echo '    location / {'; } > "/etc/nginx/sites-available/$FRIENDICA_DOMAIN_NAME"

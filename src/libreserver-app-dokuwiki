@@ -391,6 +391,7 @@ function install_dokuwiki {
 
     increment_app_install_progress
 
+    crawlers_list=$(get_web_crawlers)
     if [[ $ONION_ONLY == "no" ]]; then
         function_check nginx_http_redirect
         nginx_http_redirect "$DOKUWIKI_DOMAIN_NAME"
@@ -404,7 +405,8 @@ function install_dokuwiki {
           echo "    error_log /dev/null;";
           echo '    index index.php;';
           echo '    charset utf-8;';
-          echo '    proxy_read_timeout 86400s;'; } >> "/etc/nginx/sites-available/$DOKUWIKI_DOMAIN_NAME"
+          echo '    proxy_read_timeout 86400s;';
+          echo "    if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }"; } >> "/etc/nginx/sites-available/$DOKUWIKI_DOMAIN_NAME"
         function_check nginx_ssl
         nginx_ssl "$DOKUWIKI_DOMAIN_NAME"
         function_check nginx_security_options
@@ -488,7 +490,8 @@ function install_dokuwiki {
       echo "    error_log /dev/null;";
       echo '    index index.php;';
       echo '    charset utf-8;';
-      echo '    proxy_read_timeout 86400s;'; } >> "/etc/nginx/sites-available/$DOKUWIKI_DOMAIN_NAME"
+      echo '    proxy_read_timeout 86400s;';
+      echo "    if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }"; } >> "/etc/nginx/sites-available/$DOKUWIKI_DOMAIN_NAME"
     function_check nginx_security_options
     nginx_security_options "$DOKUWIKI_DOMAIN_NAME"
     { echo '    add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
@@ -561,14 +564,15 @@ function install_dokuwiki {
         { echo 'server {';
           echo "    listen 127.0.0.1:${DOKUWIKI_I2P_PORT} default_server;";
           echo '    port_in_redirect off;';
-          echo "    root /var/www/$DOKUWIKI_DOMAIN_NAME/htdocs;";
-          echo "    server_name $DOKUWIKI_ONION_HOSTNAME;";
+          echo "    root /var/www/${DOKUWIKI_DOMAIN_NAME}/htdocs;";
+          echo "    server_name ${DOKUWIKI_ONION_HOSTNAME};";
           echo '    server_tokens off;';
           echo '    access_log /dev/null;';
           echo "    error_log /dev/null;";
           echo '    index index.php;';
           echo '    charset utf-8;';
-          echo '    proxy_read_timeout 86400s;'; } >> "/etc/nginx/sites-available/$DOKUWIKI_DOMAIN_NAME"
+          echo '    proxy_read_timeout 86400s;';
+          echo "    if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }"; } >> "/etc/nginx/sites-available/$DOKUWIKI_DOMAIN_NAME"
         function_check nginx_security_options
         nginx_security_options "$DOKUWIKI_DOMAIN_NAME"
         { echo '    add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';

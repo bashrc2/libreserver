@@ -233,6 +233,7 @@ function install_abermush_website {
     abermush_copy_to_htdocs
 
     set_completion_param "abermush domain" "${ABERMUSH_DOMAIN_NAME}"
+    crawlers_list=$(get_web_crawlers)
 
     if [[ ${ONION_ONLY} == "no" ]]; then
         function_check nginx_http_redirect
@@ -261,7 +262,8 @@ function install_abermush_website {
           echo "    error_log /dev/null;";
           echo '    index index.html;';
           echo '    charset utf-8;';
-          echo '    proxy_read_timeout 86400s;'; } >> "/etc/nginx/sites-available/${ABERMUSH_DOMAIN_NAME}"
+          echo '    proxy_read_timeout 86400s;';
+          echo "    if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }"; } >> "/etc/nginx/sites-available/${ABERMUSH_DOMAIN_NAME}"
         function_check nginx_ssl
         nginx_ssl "${ABERMUSH_DOMAIN_NAME}"
         function_check nginx_security_options
@@ -309,7 +311,8 @@ function install_abermush_website {
       echo "    error_log /dev/null;";
       echo '    index index.html;';
       echo '    charset utf-8;';
-      echo '    proxy_read_timeout 86400s;'; } >> "/etc/nginx/sites-available/${ABERMUSH_DOMAIN_NAME}"
+      echo '    proxy_read_timeout 86400s;';
+      echo "    if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }"; } >> "/etc/nginx/sites-available/${ABERMUSH_DOMAIN_NAME}"
     function_check nginx_security_options
     nginx_security_options "${ABERMUSH_DOMAIN_NAME}"
     { echo '    location /websocket {';
@@ -338,7 +341,8 @@ function install_abermush_website {
           echo "    error_log /dev/null;";
           echo '    index index.html;';
           echo '    charset utf-8;';
-          echo '    proxy_read_timeout 86400s;'; } >> "/etc/nginx/sites-available/${ABERMUSH_DOMAIN_NAME}"
+          echo '    proxy_read_timeout 86400s;';
+          echo "    if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }"; } >> "/etc/nginx/sites-available/${ABERMUSH_DOMAIN_NAME}"
         function_check nginx_security_options
         nginx_security_options "${ABERMUSH_DOMAIN_NAME}"
         { echo '    location /websocket {';

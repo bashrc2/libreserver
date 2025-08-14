@@ -508,6 +508,7 @@ function install_epicyon {
         chown www-data:www-data /var/www/cache
     fi
 
+    crawlers_list=$(get_web_crawlers)
     epicyon_nginx_site=/etc/nginx/sites-available/$EPICYON_DOMAIN_NAME
     if [[ "$ONION_ONLY" == "no" ]]; then
         nginx_http_redirect "$EPICYON_DOMAIN_NAME" "index index.html"
@@ -516,6 +517,8 @@ function install_epicyon {
           echo '  listen [::]:443 ssl http2;';
           echo "  server_name $EPICYON_DOMAIN_NAME;";
           echo '  server_tokens off;';
+          echo '';
+          echo "  if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
           echo ''; } >> "$epicyon_nginx_site"
         nginx_compress "$EPICYON_DOMAIN_NAME"
         echo '  # Security' >> "$epicyon_nginx_site"
@@ -571,6 +574,8 @@ function install_epicyon {
       echo "    listen [::]:${EPICYON_ONION_PORT} default_server;";
       echo "    server_name $EPICYON_ONION_HOSTNAME;";
       echo '    server_tokens off;';
+      echo '';
+      echo "    if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
       echo ''; } >> "$epicyon_nginx_site"
     nginx_compress "$EPICYON_DOMAIN_NAME"
     nginx_security_options "$EPICYON_DOMAIN_NAME"
@@ -620,6 +625,8 @@ function install_epicyon {
           echo "    listen [::]:${EPICYON_I2P_PORT};";
           echo "    server_name $EPICYON_I2P_HOSTNAME;";
           echo '    server_tokens off;';
+          echo '';
+          echo "    if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
           echo ''; } >> "$epicyon_nginx_site"
         nginx_compress "$EPICYON_DOMAIN_NAME"
         nginx_security_options "$EPICYON_DOMAIN_NAME"

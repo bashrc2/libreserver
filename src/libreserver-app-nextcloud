@@ -689,6 +689,7 @@ function install_nextcloud_base {
 
     increment_app_install_progress
 
+    crawlers_list=$(get_web_crawlers)
     nextcloud_nginx_site=/etc/nginx/sites-available/${NEXTCLOUD_DOMAIN_NAME}
     if [[ $ONION_ONLY == "no" ]]; then
         function_check nginx_http_redirect
@@ -698,6 +699,8 @@ function install_nextcloud_base {
           echo '  listen [::]:443 ssl;';
           echo "  server_name ${NEXTCLOUD_DOMAIN_NAME};";
           echo '  server_tokens off;';
+          echo '';
+          echo "  if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
           echo '';
           echo '  # Security'; } >> "${nextcloud_nginx_site}"
         function_check nginx_ssl
@@ -772,6 +775,8 @@ function install_nextcloud_base {
       echo '    port_in_redirect off;';
       echo "    server_name ${NEXTCLOUD_DOMAIN_NAME};";
       echo '    server_tokens off;';
+      echo '';
+      echo "    if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
       echo ''; } >> "${nextcloud_nginx_site}"
     function_check nginx_security_options
     nginx_security_options "${NEXTCLOUD_DOMAIN_NAME}"
@@ -839,6 +844,8 @@ function install_nextcloud_base {
           echo '    port_in_redirect off;';
           echo "    server_name ${NEXTCLOUD_I2P_HOSTNAME};";
           echo '    server_tokens off;';
+          echo '';
+          echo "    if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
           echo ''; } >> "${nextcloud_nginx_site}"
         function_check nginx_security_options
         nginx_security_options "${NEXTCLOUD_DOMAIN_NAME}"

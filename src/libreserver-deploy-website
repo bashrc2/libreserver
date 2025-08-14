@@ -82,13 +82,14 @@ if [ ! "$rootdir" ]; then
     fi
 
     site_onion_domain=$(cat "$rootdir/var/lib/tor/hidden_service_${PROJECT_NAME}/hostname")
+    crawlers_list=$(get_web_crawlers)
 
     if [[ "$ONION_ONLY" == 'no' ]]; then
         { echo 'server {';
           echo '    listen 80;';
           echo '    listen [::]:80;';
           echo "    server_name ${site_domain};";
-	  echo '    server_tokens off;';
+	        echo '    server_tokens off;';
           echo "    root ${dest_dir};";
           echo '    access_log /dev/null;';
           echo '    error_log /dev/null;';
@@ -105,7 +106,9 @@ if [ ! "$rootdir" ]; then
           echo 'server {';
           echo '  listen 443 ssl;';
           echo "  server_name ${site_domain};";
-	  echo '  server_tokens off;';
+	        echo '  server_tokens off;';
+          echo '';
+          echo "    if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
           echo '';
           echo '    gzip            on;';
           echo '    gzip_min_length 1000;';
@@ -123,7 +126,7 @@ if [ ! "$rootdir" ]; then
           echo '    ssl_prefer_server_ciphers on;';
           echo '    ssl_session_cache shared:SSL:10m;';
           echo '    ssl_session_tickets off;';
-	  echo '';
+	        echo '';
           echo "    add_header Content-Security-Policy \"default-src https:; script-src https: 'unsafe-inline'; style-src https: 'unsafe-inline'\";";
           echo '    add_header X-XSS-Protection "1; mode=block";';
           echo '    add_header X-Permitted-Cross-Domain-Policies none;';
@@ -131,7 +134,7 @@ if [ ! "$rootdir" ]; then
           echo '    add_header X-Content-Type-Options nosniff;';
           echo "    add_header Onion-Location http://${site_onion_domain}\$request_uri;";
           echo '';
-	  echo '  add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
+	        echo '  add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
           echo '';
           echo '  access_log /dev/null;';
           echo '  error_log /dev/null;';
@@ -181,6 +184,8 @@ if [ ! "$rootdir" ]; then
           echo "    root ${dest_dir};";
           echo '';
           echo '    index index.html;';
+          echo '';
+          echo "    if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
           echo '';
           echo '    location / {';
           echo '        #proxy_pass http://127.0.0.1:8099;';
@@ -289,16 +294,16 @@ if [ -d "${rootdir}/var/gemini" ]; then
     # copy epicyon gemini site
     epicyon_dir=
     if [ -d "${rootdir}/etc/epicyon" ]; then
-	epicyon_dir="${rootdir}/etc/epicyon"
+	      epicyon_dir="${rootdir}/etc/epicyon"
     fi
     if [ -d "${rootdir}/opt/epicyon" ]; then
-	epicyon_dir="${rootdir}/opt/epicyon"
+	      epicyon_dir="${rootdir}/opt/epicyon"
     fi
     if [ -d "${rootdir}${epicyon_dir}/gemini/EN" ]; then
-	if [ ! -d "${dest_dir}/epicyon" ]; then
-	    mkdir "${dest_dir}/epicyon"
-	fi
-	cp -r "${rootdir}${epicyon_dir}/gemini/EN"/* "${dest_dir}/epicyon"
+	      if [ ! -d "${dest_dir}/epicyon" ]; then
+	          mkdir "${dest_dir}/epicyon"
+	      fi
+	      cp -r "${rootdir}${epicyon_dir}/gemini/EN"/* "${dest_dir}/epicyon"
     fi
 
     chown -R gemini:gemini "${dest_dir}"
@@ -309,21 +314,21 @@ fi
 if [ -d "${rootdir}${epicyon_dir}/website/EN" ]; then
     dest_dir='/var/www/libreserver.org/htdocs'
     if [ -d "$dest_dir" ]; then
-	epicyon_dir=
-	if [ -d "${rootdir}/etc/epicyon" ]; then
-	    epicyon_dir="${rootdir}/etc/epicyon"
-	fi
-	if [ -d "${rootdir}/opt/epicyon" ]; then
-	    epicyon_dir="${rootdir}/opt/epicyon"
-	fi
-	if [ -d "$epicyon_dir" ]; then
-	    if [ ! -d "${dest_dir}/epicyon" ]; then
-		mkdir "${dest_dir}/epicyon"
-	    fi
-	    cp -r "${rootdir}${epicyon_dir}/website/EN"/* "${dest_dir}/epicyon"
-	    chown -R www-data:www-data $dest_dir
-	    echo "Epicyon website copied to https://libreserver.org/epicyon"
-	fi
+	      epicyon_dir=
+	      if [ -d "${rootdir}/etc/epicyon" ]; then
+	          epicyon_dir="${rootdir}/etc/epicyon"
+	      fi
+	      if [ -d "${rootdir}/opt/epicyon" ]; then
+	          epicyon_dir="${rootdir}/opt/epicyon"
+	      fi
+	      if [ -d "$epicyon_dir" ]; then
+	          if [ ! -d "${dest_dir}/epicyon" ]; then
+		            mkdir "${dest_dir}/epicyon"
+	          fi
+	          cp -r "${rootdir}${epicyon_dir}/website/EN"/* "${dest_dir}/epicyon"
+	          chown -R www-data:www-data $dest_dir
+	          echo "Epicyon website copied to https://libreserver.org/epicyon"
+	      fi
     fi
 fi
 echo "$site_domain"
