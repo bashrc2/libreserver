@@ -51,9 +51,12 @@ function update_portscan_defense {
     fi
     # make a backup just in case
     cp /etc/firewall.conf /etc/firewall.conf.backup
-    # change the ports
-    sed -i "/ add @blackhole/c\tcp dport { ${FIREWALL_PORTSCAN} } add @blackhole { ip saddr timeout 1d } counter packets 0 bytes 0 drop comment \"portscan\"" /etc/firewall.conf
-    sed -i "s|tcp dport { ${FIREWALL_PORTSCAN} } add @blackhole|                tcp dport { ${FIREWALL_PORTSCAN} } add @blackhole|g" /etc/firewall.conf
+    # change the ipv4 ports
+    sed -i "/ add @blackhole /c\tcp dport { ${FIREWALL_PORTSCAN} } add @blackhole { ip saddr timeout 1d } counter packets 0 bytes 0 drop comment \"portscan\"" /etc/firewall.conf
+    sed -i "s|tcp dport { ${FIREWALL_PORTSCAN} } add @blackhole |                tcp dport { ${FIREWALL_PORTSCAN} } add @blackhole |g" /etc/firewall.conf
+    # change the ipv6 ports
+    sed -i "/ add @blackhole6 /c\tcp dport { ${FIREWALL_PORTSCAN} } add @blackhole6 { ip6 saddr timeout 1d } counter packets 0 bytes 0 drop comment \"portscan\"" /etc/firewall.conf
+    sed -i "s|tcp dport { ${FIREWALL_PORTSCAN} } add @blackhole6 |                tcp dport { ${FIREWALL_PORTSCAN} } add @blackhole6 |g" /etc/firewall.conf
     # reload the firewall
     /usr/sbin/nft flush ruleset
     /usr/sbin/nft -f /etc/firewall.conf
