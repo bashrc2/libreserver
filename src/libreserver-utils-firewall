@@ -151,12 +151,12 @@ function block_firefox_telemetry {
         echo '127.0.0.1  telemetry.mozilla.org' >> /etc/hosts
     fi
 
-    if grep -q "$FIREFOX_TELEMETRY_IP" /etc/firewall.conf; then
+    if grep -q "${FIREFOX_TELEMETRY_IP}" /etc/firewall.conf; then
         return
     fi
 
-    /usr/sbin/nft add rule inet filter OUTPUT ip saddr "$FIREFOX_TELEMETRY_IP" counter drop comment \"firefox telemetry\"
-    /usr/sbin/nft add rule inet filter OUTPUT ipv6 saddr "$FIREFOX_TELEMETRY_IP" counter drop comment \"firefox telemetry ipv6\"
+    /usr/sbin/nft add rule inet filter OUTPUT ip saddr "${FIREFOX_TELEMETRY_IP}" counter drop comment \"firefox telemetry\"
+    /usr/sbin/nft add rule inet filter OUTPUT ipv6 saddr "${FIREFOX_TELEMETRY_IP}" counter drop comment \"firefox telemetry ipv6\"
     save_firewall_settings
 }
 
@@ -532,6 +532,129 @@ function configure_internet_protocol {
     fi
     if [[ $SYSTEM_TYPE == "mesh"* ]]; then
         return
+    fi
+
+    if grep -q "net.ipv6.conf.all.accept_ra" /etc/sysctl.conf; then
+        sed -i "s/net.ipv6.conf.all.accept_ra.*/net.ipv6.conf.all.accept_ra=0/g" /etc/sysctl.conf
+    else
+        echo "net.ipv6.conf.all.accept_ra=0" >> /etc/sysctl.conf
+    fi
+
+    if grep -q "net.ipv6.conf.default.accept_ra" /etc/sysctl.conf; then
+        sed -i "s/net.ipv6.conf.default.accept_ra.*/net.ipv6.conf.default.accept_ra=0/g" /etc/sysctl.conf
+    else
+        echo "net.ipv6.conf.default.accept_ra=0" >> /etc/sysctl.conf
+    fi
+
+    # ipv6 privacy mode
+    if grep -q "net.ipv6.conf.all.use_tempaddr" /etc/sysctl.conf; then
+        sed -i "s/net.ipv6.conf.all.use_tempaddr.*/net.ipv6.conf.all.use_tempaddr=2/g" /etc/sysctl.conf
+    else
+        echo "net.ipv6.conf.all.use_tempaddr=2" >> /etc/sysctl.conf
+    fi
+
+    if grep -q "net.ipv6.conf.default.use_tempaddr" /etc/sysctl.conf; then
+        sed -i "s/net.ipv6.conf.default.use_tempaddr.*/net.ipv6.conf.default.use_tempaddr=2/g" /etc/sysctl.conf
+    else
+        echo "net.ipv6.conf.default.use_tempaddr=2" >> /etc/sysctl.conf
+    fi
+
+    if [ -f /etc/NetworkManager/NetworkManager.conf ]; then
+        if ! grep -q 'ipv6.ip6-privacy' /etc/NetworkManager/NetworkManager.conf; then
+            if ! grep -q '[connection]' /etc/NetworkManager/NetworkManager.conf; then
+                { echo '';
+                  echo '[connection]';
+                  echo 'ipv6.ip6-privacy=2'; } >> /etc/NetworkManager/NetworkManager.conf
+            else
+                sed -i "s|[connection]|[connection]\\nipv6.ip6-privacy=2|g" /etc/NetworkManager/NetworkManager.conf
+            fi
+        fi
+    fi
+
+    if grep -q "net.ipv6.icmp.ratelimit" /etc/sysctl.conf; then
+        sed -i "s/net.ipv6.icmp.ratelimit.*/net.ipv6.icmp.ratelimit=1/g" /etc/sysctl.conf
+    else
+        echo "net.ipv6.icmp.ratelimit=1" >> /etc/sysctl.conf
+    fi
+
+    # ipv6 routing
+    if grep -q "net.ipv6.route.gc_elasticity" /etc/sysctl.conf; then
+        sed -i "s/net.ipv6.route.gc_elasticity.*/net.ipv6.route.gc_elasticity=9/g" /etc/sysctl.conf
+    else
+        echo "net.ipv6.route.gc_elasticity=9" >> /etc/sysctl.conf
+    fi
+
+    if grep -q "net.ipv6.route.gc_interval" /etc/sysctl.conf; then
+        sed -i "s/net.ipv6.route.gc_interval.*/net.ipv6.route.gc_interval=30/g" /etc/sysctl.conf
+    else
+        echo "net.ipv6.route.gc_interval=30" >> /etc/sysctl.conf
+    fi
+
+    if grep -q "net.ipv6.route.gc_min_interval" /etc/sysctl.conf; then
+        sed -i "s/net.ipv6.route.gc_min_interval.*/net.ipv6.route.gc_min_interval=0/g" /etc/sysctl.conf
+    else
+        echo "net.ipv6.route.gc_min_interval=0" >> /etc/sysctl.conf
+    fi
+
+    if grep -q "net.ipv6.route.gc_min_interval_ms" /etc/sysctl.conf; then
+        sed -i "s/net.ipv6.route.gc_min_interval_ms.*/net.ipv6.route.gc_min_interval_ms=500/g" /etc/sysctl.conf
+    else
+        echo "net.ipv6.route.gc_min_interval_ms=500" >> /etc/sysctl.conf
+    fi
+
+    if grep -q "net.ipv6.route.gc_thresh" /etc/sysctl.conf; then
+        sed -i "s/net.ipv6.route.gc_thresh.*/net.ipv6.route.gc_thresh=1024/g" /etc/sysctl.conf
+    else
+        echo "net.ipv6.route.gc_thresh=1024" >> /etc/sysctl.conf
+    fi
+
+    if grep -q "net.ipv6.route.gc_timeout" /etc/sysctl.conf; then
+        sed -i "s/net.ipv6.route.gc_timeout.*/net.ipv6.route.gc_timeout=60/g" /etc/sysctl.conf
+    else
+        echo "net.ipv6.route.gc_timeout=60" >> /etc/sysctl.conf
+    fi
+
+    if grep -q "net.ipv6.route.max_size" /etc/sysctl.conf; then
+        sed -i "s/net.ipv6.route.max_size.*/net.ipv6.route.max_size=4096/g" /etc/sysctl.conf
+    else
+        echo "net.ipv6.route.max_size=4096" >> /etc/sysctl.conf
+    fi
+
+    if grep -q "net.ipv6.route.min_adv_mss" /etc/sysctl.conf; then
+        sed -i "s/net.ipv6.route.min_adv_mss.*/net.ipv6.route.min_adv_mss=1220/g" /etc/sysctl.conf
+    else
+        echo "net.ipv6.route.min_adv_mss=1220" >> /etc/sysctl.conf
+    fi
+
+    if grep -q "net.ipv6.route.mtu_expires" /etc/sysctl.conf; then
+        sed -i "s/net.ipv6.route.mtu_expires.*/net.ipv6.route.mtu_expires=600/g" /etc/sysctl.conf
+    else
+        echo "net.ipv6.route.mtu_expires=600" >> /etc/sysctl.conf
+    fi
+
+    # ipv6 fragmentation
+    if grep -q "net.ipv6.ip6frag_high_thresh" /etc/sysctl.conf; then
+        sed -i "s/net.ipv6.ip6frag_high_thresh.*/net.ipv6.ip6frag_high_thresh=4194304/g" /etc/sysctl.conf
+    else
+        echo "net.ipv6.ip6frag_high_thresh=4194304" >> /etc/sysctl.conf
+    fi
+
+    if grep -q "net.ipv6.ip6frag_low_thresh" /etc/sysctl.conf; then
+        sed -i "s/net.ipv6.ip6frag_low_thresh.*/net.ipv6.ip6frag_low_thresh=3145728/g" /etc/sysctl.conf
+    else
+        echo "net.ipv6.ip6frag_low_thresh=3145728" >> /etc/sysctl.conf
+    fi
+
+    if grep -q "net.ipv6.ip6frag_secret_interval" /etc/sysctl.conf; then
+        sed -i "s/net.ipv6.ip6frag_secret_interval.*/net.ipv6.ip6frag_secret_interval=600/g" /etc/sysctl.conf
+    else
+        echo "net.ipv6.ip6frag_secret_interval=600" >> /etc/sysctl.conf
+    fi
+
+    if grep -q "net.ipv6.ip6frag_time" /etc/sysctl.conf; then
+        sed -i "s/net.ipv6.ip6frag_time.*/net.ipv6.ip6frag_time=60/g" /etc/sysctl.conf
+    else
+        echo "net.ipv6.ip6frag_time=60" >> /etc/sysctl.conf
     fi
 
     if grep -q "net.ipv4.tcp_syncookies" /etc/sysctl.conf; then
