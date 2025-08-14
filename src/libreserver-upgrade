@@ -194,6 +194,9 @@ if [ -d "$PROJECT_DIR" ]; then
                 if [ -f ${ssh_sessions_count_filename} ]; then
                     rm ${ssh_sessions_count_filename}
                 fi
+                # enable ipv6 on websites
+                sed -i 's|#listen \[::|listen \[::|g' /etc/nginx/sites-available/*
+                systemctl restart nginx
                 #defrag_filesystem
                 ;;
         esac
