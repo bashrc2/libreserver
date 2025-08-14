@@ -33,7 +33,7 @@ SHOW_ON_ABOUT=1
 REQUIRES_APP=
 
 FORGEJO_USERNAME='forgejo'
-FORGEJO_VERSION='11.0.1'
+FORGEJO_VERSION='12.0.1'
 FORGEJO_DOWNLOAD='https://codeberg.org/forgejo/forgejo/releases/download'
 
 FORGEJO_DOMAIN_NAME=
@@ -993,7 +993,7 @@ function install_forgejo {
       echo ";ALLWAYS = false";
       echo "";
       echo "[oauth2]";
-      echo "ENABLE = true";
+      echo "ENABLED = true";
       echo ";JWT_SIGNING_ALGORITHM = RS256";
       echo ";JWT_SIGNING_PRIVATE_KEY_FILE = jwt/private.pem";
       echo ";JWT_SECRET =";
@@ -1007,7 +1007,6 @@ function install_forgejo {
       echo "MODE = file";
       echo "LEVEL = Info";
       echo ";DISABLE_ROUTER_LOG=false";
-      echo "ROUTER = console";
       echo "";
       echo ";ENABLE_ACCESS_LOG = false";
       echo ";ACCESS = file";
