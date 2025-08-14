@@ -1477,7 +1477,8 @@ function xmpp_create_config {
       echo 'pidfile = "/var/run/prosody/prosody.pid";';
       echo '';
       echo 'https_ports = { 5281 }';
-      echo 'https_interfaces = { "*" }';
+      echo 'http_interfaces = { "*", "::" }';
+      echo 'https_interfaces = { "*", "::" }';
       echo 'https_ssl = {'; } >> /etc/prosody/prosody.cfg.lua
     if [ -f "/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/fullchain.pem" ]; then
         echo "    certificate = \"/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/fullchain.pem\";" >> /etc/prosody/prosody.cfg.lua
