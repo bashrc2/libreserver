@@ -111,8 +111,8 @@ function i2p_base_config {
       echo '[reseed]';
       echo 'verify = true'; } > ${rootdir}/etc/i2pd/i2pd.conf
 
-    if [ ! -d /run/i2pd ]; then
-        mkdir /run/i2pd
+    if [ ! -d ${rootdir}/run/i2pd ]; then
+        mkdir ${rootdir}/run/i2pd
     fi
 
     echo 'Setting i2p file permissions'
