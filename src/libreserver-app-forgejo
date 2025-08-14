@@ -697,7 +697,7 @@ function install_forgejo {
         nginx_http_redirect "${FORGEJO_DOMAIN_NAME}"
         { echo 'server {';
           echo '    listen 443 ssl;';
-          echo '    #listen [::]:443 ssl;';
+          echo '    listen [::]:443 ssl;';
           echo "    root /var/www/${FORGEJO_DOMAIN_NAME}/htdocs;";
           echo "    server_name ${FORGEJO_DOMAIN_NAME};";
           echo '    server_tokens off;';

@@ -557,7 +557,7 @@ function install_etherpad {
         nginx_http_redirect "$ETHERPAD_DOMAIN_NAME"
         { echo 'server {';
           echo '  listen 443 ssl;';
-          echo '  #listen [::]:443 ssl;';
+          echo '  listen [::]:443 ssl;';
           echo "  server_name $ETHERPAD_DOMAIN_NAME;";
           echo '  server_tokens off;';
           echo '';

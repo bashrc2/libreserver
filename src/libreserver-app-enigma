@@ -287,7 +287,7 @@ function install_enigma {
         nginx_http_redirect "$ENIGMA_DOMAIN_NAME" "index index.html"
         { echo 'server {';
           echo '  listen 443 ssl;';
-          echo '  #listen [::]:443 ssl;';
+          echo '  listen [::]:443 ssl;';
           echo "  server_name $ENIGMA_DOMAIN_NAME;";
           echo "  server_tokens off;";
           echo ''; } >> "$enigma_nginx_site"

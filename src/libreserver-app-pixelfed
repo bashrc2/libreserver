@@ -771,7 +771,7 @@ function install_pixelfed {
         nginx_http_redirect "$PIXELFED_DOMAIN_NAME" "index index.php"
         { echo 'server {';
           echo '  listen 443 ssl;';
-          echo '  #listen [::]:443 ssl;';
+          echo '  listen [::]:443 ssl;';
           echo "  server_name $PIXELFED_DOMAIN_NAME;";
           echo '  server_tokens off;';
           echo ''; } >> "$pixelfed_nginx_site"

@@ -1489,7 +1489,7 @@ function image_install_web_admin {
     nginx_file=${rootdir}/etc/nginx/sites-available/${local_hostname}
     { echo 'server {';
       echo '  listen 80 default_server;';
-      echo '  #listen [::]:80;';
+      echo '  listen [::]:80;';
       echo "  server_name ${local_hostname};";
       echo '  server_tokens off;';
       echo "  root /var/www/${local_hostname}/htdocs;";
@@ -2428,7 +2428,7 @@ function install_web_admin {
     nginx_file=/etc/nginx/sites-available/$local_hostname
     { echo 'server {';
       echo '  listen 80 default_server;';
-      echo '  #listen [::]:80;';
+      echo '  listen [::]:80;';
       echo "  server_name ${local_hostname};";
       echo '  server_tokens off;';
       echo "  root /var/www/${local_hostname}/htdocs;";
@@ -2509,7 +2509,7 @@ function install_web_admin {
       echo '';
       echo 'server {';
       echo '  listen 443 default_server ssl;';
-      echo '  #listen [::]:443 ssl;';
+      echo '  listen [::]:443 ssl;';
       echo "  server_name ${local_hostname};";
       echo '  server_tokens off;';
       echo "  root /var/www/${local_hostname}/htdocs;";

@@ -320,7 +320,7 @@ function install_streams {
     nginx_http_redirect "$STREAMS_DOMAIN_NAME"
     { echo 'server {';
       echo '    listen 443 ssl;';
-      echo '    #listen [::]:443 ssl;';
+      echo '    listen [::]:443 ssl;';
       echo "    root ${STREAMS_PATH};";
       echo "    server_name $STREAMS_DOMAIN_NAME;";
       echo '    server_tokens off;';

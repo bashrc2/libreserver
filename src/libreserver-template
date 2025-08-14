@@ -797,7 +797,7 @@ if [ "$app_webui" ]; then
         fi
         echo "        { echo 'server {';"
         echo "          echo '  listen 443 ssl;';"
-        echo "          echo '  #listen [::]:443 ssl;';"
+        echo "          echo '  listen [::]:443 ssl;';"
         echo "          echo \"  server_name \$${app_name_upper}_DOMAIN_NAME;\";"
         echo "          echo \"  server_tokens off;\";"
         echo "          echo ''; } >> \"\$${app_name}_nginx_site\""

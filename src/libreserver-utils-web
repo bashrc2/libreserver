@@ -1131,7 +1131,7 @@ function create_default_web_site {
             nginx_http_redirect "$curr_default_domain_name"
             { echo 'server {';
               echo '  listen 443 ssl;';
-              echo '  #listen [::]:443 ssl;';
+              echo '  listen [::]:443 ssl;';
               echo "  server_name $curr_default_domain_name;";
                     echo '  server_tokens off;';
               echo '';

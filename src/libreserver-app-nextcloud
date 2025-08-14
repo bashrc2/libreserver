@@ -695,7 +695,7 @@ function install_nextcloud_base {
         nginx_http_redirect "${NEXTCLOUD_DOMAIN_NAME}"
         { echo 'server {';
           echo '  listen 443 ssl;';
-          echo '  #listen [::]:443 ssl;';
+          echo '  listen [::]:443 ssl;';
           echo "  server_name ${NEXTCLOUD_DOMAIN_NAME};";
           echo '  server_tokens off;';
           echo '';

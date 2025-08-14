@@ -239,7 +239,7 @@ function install_abermush_website {
         nginx_http_redirect "${ABERMUSH_DOMAIN_NAME}"
         { echo 'server {';
           echo "    listen ${ABERMUSH_WEBSOCKET_PORT};";
-          echo "    #listen [::]:${ABERMUSH_WEBSOCKET_PORT};";
+          echo "    listen [::]:${ABERMUSH_WEBSOCKET_PORT};";
           echo "    root /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs;";
           echo '';
           echo '    location / {';
@@ -253,7 +253,7 @@ function install_abermush_website {
           echo '';
           echo 'server {';
           echo '    listen 443 ssl;';
-          echo '    #listen [::]:443 ssl;';
+          echo '    listen [::]:443 ssl;';
           echo "    root /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs;";
           echo "    server_name ${ABERMUSH_DOMAIN_NAME};";
           echo '    server_tokens off;';
@@ -286,7 +286,7 @@ function install_abermush_website {
     else
         { echo 'server {';
           echo "    listen ${ABERMUSH_WEBSOCKET_PORT};";
-          echo "    #listen [::]:${ABERMUSH_WEBSOCKET_PORT};";
+          echo "    listen [::]:${ABERMUSH_WEBSOCKET_PORT};";
           echo "    root /var/www/${ABERMUSH_DOMAIN_NAME}/htdocs;";
           echo '';
           echo '    location / {';

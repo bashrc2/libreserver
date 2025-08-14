@@ -411,7 +411,7 @@ function install_grocy {
         nginx_http_redirect "$GROCY_DOMAIN_NAME" "index index.php"
         { echo 'server {';
           echo '  listen 443 ssl;';
-          echo '  #listen [::]:443 ssl;';
+          echo '  listen [::]:443 ssl;';
           echo "  server_name $GROCY_DOMAIN_NAME;";
           echo '  server_tokens off;';
           echo ''; } >> "$grocy_nginx_site"

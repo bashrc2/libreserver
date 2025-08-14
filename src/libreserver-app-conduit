@@ -609,7 +609,7 @@ function install_conduit {
         nginx_http_redirect "${CONDUIT_DOMAIN_NAME}" "index index.html"
         { echo 'server {';
           echo '  listen 443 ssl http2;';
-          echo '  #listen [::]:443 ssl http2;';
+          echo '  listen [::]:443 ssl http2;';
           echo "  server_name ${CONDUIT_DOMAIN_NAME};";
           echo '  merge_slashes off;';
           echo '  server_tokens off;';
@@ -676,7 +676,7 @@ function install_conduit {
     fi
     { echo 'server {';
       echo "    listen 127.0.0.1:${CONDUIT_ONION_PORT} default_server;";
-      echo "    #listen [::]:${CONDUIT_ONION_PORT} default_server;";
+      echo "    listen [::]:${CONDUIT_ONION_PORT} default_server;";
       echo "    server_name ${CONDUIT_ONION_HOSTNAME};";
       echo '  merge_slashes off;';
       echo '    server_tokens off;';
@@ -737,7 +737,7 @@ function install_conduit {
     if [ "$CONDUIT_I2P_HOSTNAME" ]; then
         { echo 'server {';
           echo "    listen 127.0.0.1:${CONDUIT_I2P_PORT};";
-          echo "    #listen [::]:${CONDUIT_I2P_PORT};";
+          echo "    listen [::]:${CONDUIT_I2P_PORT};";
           echo "    server_name ${CONDUIT_I2P_HOSTNAME};";
           echo '    server_tokens off;';
           echo ''; } >> "$conduit_nginx_site"

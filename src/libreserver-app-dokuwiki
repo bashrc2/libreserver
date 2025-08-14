@@ -396,7 +396,7 @@ function install_dokuwiki {
         nginx_http_redirect "$DOKUWIKI_DOMAIN_NAME"
         { echo 'server {';
           echo '    listen 443 ssl;';
-          echo '    #listen [::]:443 ssl;';
+          echo '    listen [::]:443 ssl;';
           echo "    root /var/www/$DOKUWIKI_DOMAIN_NAME/htdocs;";
           echo "    server_name $DOKUWIKI_DOMAIN_NAME;";
           echo '    server_tokens off;';
