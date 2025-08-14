@@ -233,10 +233,18 @@ function global_rate_limit {
 
 function enable_ipv6 {
     # endure that ipv6 is enabled and can route
-    sed -i 's/net.ipv6.conf.all.disable_ipv6.*/net.ipv6.conf.all.disable_ipv6 = 0/g' /etc/sysctl.conf
+    if grep -q 'net.ipv6.conf.all.disable_ipv6' /etc/sysctl.conf; then
+        sed -i 's/net.ipv6.conf.all.disable_ipv6.*/net.ipv6.conf.all.disable_ipv6 = 0/g' /etc/sysctl.conf
+    else
+        echo 'net.ipv6.conf.all.disable_ipv6 = 0' >> /etc/sysctl.conf
+    fi
     # sed -i "s/net.ipv6.conf.all.accept_redirects.*/net.ipv6.conf.all.accept_redirects = 1/g" /etc/sysctl.conf
     # sed -i "s/net.ipv6.conf.all.accept_source_route.*/net.ipv6.conf.all.accept_source_route = 1/g" /etc/sysctl.conf
-    sed -i "s/net.ipv6.conf.all.forwarding.*/net.ipv6.conf.all.forwarding=1/g" /etc/sysctl.conf
+    if grep -q 'net.ipv6.conf.all.forwarding' /etc/sysctl.conf; then
+        sed -i "s/net.ipv6.conf.all.forwarding.*/net.ipv6.conf.all.forwarding=1/g" /etc/sysctl.conf
+    else
+        echo 'net.ipv6.conf.all.forwarding=1' >> /etc/sysctl.conf
+    fi
     echo 1 > /proc/sys/net/ipv6/conf/all/forwarding
 }
 

@@ -125,6 +125,9 @@ function i2p_base_config {
     chmod 755 ${rootdir}/etc/i2pd/tunnels.d
 
     firewall_add i2p ${I2P_LISTEN_PORT}
+
+    enable_ipv6
+    /sbin/sysctl -p -q
 }
 
 function install_i2p {
@@ -168,10 +171,9 @@ function remove_i2p {
     systemctl disable i2pd
     $REMOVE_PACKAGES_PURGE i2pd
 
-    # It's assumed here that ipv6 is only needed for i2p
-    # This might not be true in future
-    sed -i 's|net.ipv6.conf.all.disable_ipv6.*|net.ipv6.conf.all.disable_ipv6 = 1|g' /etc/sysctl.conf
-    /sbin/sysctl -p -q
+    # it is assumed that ipv6 will remain enabled
+    # disable_ipv6
+    # /sbin/sysctl -p -q
 
     if [ -d /var/lib/i2pd ]; then
         rm -rf /var/lib/i2pd
