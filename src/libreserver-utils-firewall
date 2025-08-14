@@ -68,7 +68,7 @@ function delete_firewall_port_via_handle {
     delete_handle_list=$(/usr/sbin/nft -a list ruleset | grep "dport ${firewall_port} \|daddr ${firewall_port} \|saddr ${firewall_port} \|icmp ${firewall_port} \| meter ${firewall_port} ")
     if [ "${delete_handle_list}" ]; then
         nft_handles=$(echo -n "${delete_handle_list}" | awk -F '#' '{print $2}' | uniq)
-        if [ "$nft_handles" ]; then
+        if [ "${nft_handles}" ]; then
             # remove using the handle numbers
             IFS=$'\n'
             while IFS= read -r nft_handle; do
@@ -78,14 +78,14 @@ function delete_firewall_port_via_handle {
                 /usr/sbin/nft delete rule inet filter FORWARD ${nft_handle} 2> /dev/null
                 # shellcheck disable=SC2086
                 /usr/sbin/nft delete rule inet filter OUTPUT ${nft_handle} 2> /dev/null
-            done <<< "$nft_handles"
+            done <<< "${nft_handles}"
         fi
     fi
 }
 
 function save_firewall_settings {
     # shellcheck disable=SC2154
-    if [ ! "$rootdir" ]; then
+    if [ ! "${rootdir}" ]; then
         if [ ! -f /usr/sbin/nft ]; then
             if ! grep -q "crontab:" /etc/group; then
                 groupadd crontab
@@ -95,17 +95,17 @@ function save_firewall_settings {
             fi
             INSTALL_PACKAGES nftables
         fi
-        /usr/sbin/nft list ruleset > "$rootdir/etc/firewall.conf"
+        /usr/sbin/nft list ruleset > "${rootdir}/etc/firewall.conf"
     else
-        chroot "$rootdir" /usr/sbin/nft list ruleset > /etc/firewall.conf
+        chroot "${rootdir}" /usr/sbin/nft list ruleset > /etc/firewall.conf
     fi
-    if [ ! -d "$rootdir/etc/network/if-up.d" ]; then
-        mkdir -p "$rootdir/etc/network/if-up.d"
+    if [ ! -d "${rootdir}/etc/network/if-up.d" ]; then
+        mkdir -p "${rootdir}/etc/network/if-up.d"
     fi
     { echo '#!/bin/sh';
       echo '/usr/sbin/nft flush ruleset';
-      echo '/usr/sbin/nft -f /etc/firewall.conf'; } > "$rootdir/etc/network/if-up.d/firewall"
-    chmod +x "$rootdir/etc/network/if-up.d/firewall"
+      echo '/usr/sbin/nft -f /etc/firewall.conf'; } > "${rootdir}/etc/network/if-up.d/firewall"
+    chmod +x "${rootdir}/etc/network/if-up.d/firewall"
 }
 
 function block_microsoft_on_raspbian {
@@ -126,16 +126,16 @@ function block_microsoft_on_raspbian {
     apt-mark hold raspberrypi-sys-mods
     MALICIOUS_GPG_KEY=/etc/apt/trusted.gpg.d/microsoft.gpg
     if [ -f "${MALICIOUS_GPG_KEY}" ]; then
-  if [ -s "${MALICIOUS_GPG_KEY}" ]; then
+        if [ -s "${MALICIOUS_GPG_KEY}" ]; then
             echo "microsoft.gpg found. Removing it by clearing the contents of the file."
             chattr -i "${MALICIOUS_GPG_KEY}"
             rm -vf "${MALICIOUS_GPG_KEY}"
             touch "${MALICIOUS_GPG_KEY}"
             chattr +i "${MALICIOUS_GPG_KEY}"
             lsattr "${MALICIOUS_GPG_KEY}"
-  else
-      echo "Malicious microsoft gpg key neutralized"
-  fi
+        else
+            echo "Malicious microsoft gpg key neutralized"
+        fi
     fi
 }
 
@@ -153,6 +153,7 @@ function block_firefox_telemetry {
     fi
 
     /usr/sbin/nft add rule inet filter OUTPUT ip saddr "$FIREFOX_TELEMETRY_IP" counter drop comment \"firefox telemetry\"
+    /usr/sbin/nft add rule inet filter OUTPUT ipv6 saddr "$FIREFOX_TELEMETRY_IP" counter drop comment \"firefox telemetry ipv6\"
     save_firewall_settings
 }
 
@@ -171,16 +172,13 @@ function block_scanners {
 }
 
 function firewall_block_bad_ip_ranges {
-    if [ "$INSTALLING_MESH" ]; then
-        return
-    fi
     ruleset=$(/usr/sbin/nft list ruleset)
     # does the firewall exist?
-    if [ ! "$ruleset" ]; then
+    if [ ! "${ruleset}" ]; then
         return
     fi
     # is military already configured?
-    if [[ "$ruleset" == *"military"* ]]; then
+    if [[ "${ruleset}" == *"military"* ]]; then
         return
     fi
 
@@ -269,17 +267,19 @@ function firewall_enable_vpn {
 
 function configure_enable_ssh_access {
     filename="$1"
-    if [ ! "$SSH_PORT" ]; then
+    if [ ! "${SSH_PORT}" ]; then
         return
     fi
-    if ! grep -q "tcp dport $SSH_PORT meter" "${filename}"; then
-        sed -i "/ 80, 443 /a tcp dport $SSH_PORT meter test-$SSH_PORT-count-meter size 65535 { ip saddr & 255.255.255.0 ct count over 3 }  counter packets 0 bytes 0 reject with tcp reset" "${filename}"
+    if ! grep -q "tcp dport ${SSH_PORT} meter" "${filename}"; then
+        sed -i "/ 80, 443 /a tcp dport ${SSH_PORT} meter test-${SSH_PORT}-count-meter size 65535 { ip saddr & 255.255.255.0 ct count over 3 } counter packets 0 bytes 0 reject with tcp reset" "${filename}"
+        sed -i "/ 80, 443 /a tcp dport ${SSH_PORT} meter test-${SSH_PORT}-count-meter6 size 65535 { ip6 saddr ct count over 3 } counter packets 0 bytes 0 reject with tcp reset" "${filename}"
         # reload the firewall
         /usr/sbin/nft flush ruleset
         /usr/sbin/nft -f /etc/firewall.conf
     fi
-    if ! grep -q "tcp dport { $SSH_PORT }" "${filename}"; then
-        sed -i "/ 80, 443 /a tcp dport { $SSH_PORT } ip saddr { 192.168.1.0/24, 192.168.2.0/24, 192.168.10.0/24 } ct state new accept" "${filename}"
+    if ! grep -q "tcp dport { ${SSH_PORT} }" "${filename}"; then
+        sed -i "/ 80, 443 /a tcp dport { ${SSH_PORT} } ip saddr { 192.168.1.0/24, 192.168.2.0/24, 192.168.10.0/24 } ct state new accept" "${filename}"
+        sed -i "/ 80, 443 /a tcp dport { ${SSH_PORT} } ip6 saddr { fc00::/7 } ct state new accept" "${filename}"
         # reload the firewall
         /usr/sbin/nft flush ruleset
         /usr/sbin/nft -f /etc/firewall.conf
@@ -300,6 +300,55 @@ function configure_firewall_base {
       echo '        flags timeout';
       echo '    }';
       echo '';
+      echo '    set blackhole6 {';
+      echo '        type ipv4_addr';
+      echo '        flags timeout';
+      echo '    }';
+      echo '';
+      echo '    set test-2222-count-meter {';
+      echo '        type ipv4_addr';
+      echo '        size 65535';
+      echo '        flags dynamic';
+      echo '}';
+      echo '';
+      echo '    set test-2222-count-meter6 {';
+      echo '        type ipv6_addr';
+      echo '        flags dynamic';
+      echo '}';
+      echo '';
+      echo '    set test-80-count-meter {';
+      echo '        type ipv4_addr';
+      echo '        size 65535';
+      echo '        flags dynamic';
+      echo '}';
+      echo '';
+      echo '    set test-80-count-meter6 {';
+      echo '        type ipv6_addr';
+      echo '        flags dynamic';
+      echo '}';
+      echo '';
+      echo '    set test-443-count-meter {';
+      echo '        type ipv4_addr';
+      echo '        size 65535';
+      echo '        flags dynamic';
+      echo '}';
+      echo '';
+      echo '    set test-443-count-meter6 {';
+      echo '        type ipv6_addr';
+      echo '        flags dynamic';
+      echo '}';
+      echo '';
+      echo '    set test-1965-count-meter {';
+      echo '        type ipv4_addr';
+      echo '        size 65535';
+      echo '        flags dynamic';
+      echo '}';
+      echo '';
+      echo '    set test-1965-count-meter6 {';
+      echo '        type ipv6_addr';
+      echo '        flags dynamic';
+      echo '}';
+      echo '';
       echo '    chain INPUT {';
       echo '        type filter hook input priority filter; policy drop;';
       echo '';
@@ -310,7 +359,8 @@ function configure_firewall_base {
       echo '        tcp flags syn tcp option maxseg size 1-536 counter drop';
       echo '        ip frag-off & 8191 != 0 counter packets 0 bytes 0 drop';
       echo '';
-      echo '        ip saddr @blackhole counter packets 0 bytes 0 drop comment "portscan"';
+      echo '        ip saddr @blackhole counter packets 0 bytes 0 drop comment "portscan ipv4"';
+      echo '        ip6 saddr @blackhole6 counter packets 0 bytes 0 drop comment "portscan ipv6"';
       echo '';
       echo '        iif lo accept comment "localhost traffic"';
       echo '';
@@ -318,15 +368,21 @@ function configure_firewall_base {
       echo '';
       echo '        ct state invalid counter drop comment "drop invalid packets"';
       echo '';
-      echo '        ip protocol icmp counter drop comment "drop icmp"';
+      echo '        ip protocol icmp counter drop comment "drop icmp ipv4"';
+      echo '        ip6 nexthdr icmpv6 icmpv6 type echo-request drop comment "drop icmp ipv6"';
       echo '';
       echo '        tcp dport { 80, 443 } ct state new accept';
-      echo '        tcp dport { 2222 } ip saddr { 192.168.1.0/24, 192.168.2.0/24, 192.168.10.0/24 } ct state new accept';
+      echo '        tcp dport { 2222 } ip saddr { 192.168.1.0/24, 192.168.2.0/24, 192.168.10.0/24 } ct state new accept comment "allow local ssh ipv4"';
+      echo '        tcp dport 2222 ip6 saddr { fc00::/7 } ct state new accept comment "allow local ssh ipv6"';
       echo '';
-      echo "        tcp dport { $FIREWALL_PORTSCAN } add @blackhole { ip saddr timeout 1d }  counter packets 0 bytes 0 drop comment \"portscan\"";
+      echo "        tcp dport { $FIREWALL_PORTSCAN } add @blackhole { ip saddr timeout 1d } counter packets 0 bytes 0 drop comment \"portscan ipv4\"";
+      echo "        tcp dport { $FIREWALL_PORTSCAN } add @blackhole6 { ip6 saddr timeout 1d } counter packets 0 bytes 0 drop comment \"portscan ipv6\"";
       echo '        tcp dport 2222 meter test-2222-count-meter size 65535 { ip saddr & 255.255.255.0 ct count over 3 }  counter packets 0 bytes 0 reject with tcp reset';
-      echo '        tcp dport http meter test-80-count-meter size 65535 { ip saddr & 255.255.255.0 ct count over 200 }  counter packets 0 bytes 0 reject with tcp reset';
-      echo '        tcp dport https meter test-443-count-meter size 65535 { ip saddr & 255.255.255.0 ct count over 100 }  counter packets 0 bytes 0 reject with tcp reset';
+      echo '        tcp dport 2222 meter test-2222-count-meter6 size 65535 { ip6 saddr ct count over 3 } counter packets 0 bytes 0 reject with tcp reset';
+      echo '        tcp dport http meter test-80-count-meter size 65535 { ip saddr & 255.255.255.0 ct count over 200 } counter packets 0 bytes 0 reject with tcp reset';
+      echo '        tcp dport http meter test-80-count-meter6 size 65535 { ip6 saddr ct count over 200 } counter packets 0 bytes 0 reject with tcp reset';
+      echo '        tcp dport https meter test-443-count-meter size 65535 { ip saddr & 255.255.255.0 ct count over 100 } counter packets 0 bytes 0 reject with tcp reset';
+      echo '        tcp dport https meter test-443-count-meter6 size 65535 { ip6 saddr ct count over 100 } counter packets 0 bytes 0 reject with tcp reset';
       echo '    }';
       echo '';
       echo '    chain FORWARD {';
@@ -343,9 +399,10 @@ function firewall_max_connections {
     firewall_port="$1"
     firewall_connections="$2"
     firewall_remove_connections="$3"
-    if [ ! "$firewall_remove_connections" ]; then
+    if [ ! "${firewall_remove_connections}" ]; then
         # shellcheck disable=SC2086
-        /usr/sbin/nft add rule inet filter INPUT tcp dport $firewall_port meter test-${firewall_port}-count-meter "{ ip saddr & 255.255.255.0 ct count over $firewall_connections }" counter reject with tcp reset
+        /usr/sbin/nft add rule inet filter INPUT tcp dport ${firewall_port} meter test-${firewall_port}-count-meter "{ ip saddr & 255.255.255.0 ct count over ${firewall_connections} }" counter reject with tcp reset
+        /usr/sbin/nft add rule inet filter INPUT tcp dport ${firewall_port} meter test-${firewall_port}-count-meter6 "{ ip6 saddr ct count over ${firewall_connections} }" counter reject with tcp reset
     else
         if grep -q "test-${firewall_port}-count-meter" /etc/firewall.conf; then
             # shellcheck disable=SC2086
@@ -356,7 +413,7 @@ function firewall_max_connections {
 }
 
 function configure_firewall {
-    if [ ! -f "$rootdir/usr/sbin/nft" ]; then
+    if [ ! -f "${rootdir}/usr/sbin/nft" ]; then
         if ! grep -q "crontab:" /etc/group; then
             groupadd crontab
         fi
@@ -370,16 +427,16 @@ function configure_firewall {
         ruleset=$(/usr/sbin/nft list ruleset)
         # does the firewall exist?
         if [ ! "$ruleset" ]; then
-            if grep -q "firewall" "$COMPLETION_FILE"; then
-                sed -i '/firewall/d' "$COMPLETION_FILE"
+            if grep -q "firewall" "${COMPLETION_FILE}"; then
+                sed -i '/firewall/d' "${COMPLETION_FILE}"
                 if [ -f "$FIREWALL_DOMAINS" ]; then
                     rm "$FIREWALL_DOMAINS"
                 fi
                 if [ -f "$FIREWALL_ALLOW_DOMAINS" ]; then
                     rm "$FIREWALL_ALLOW_DOMAINS"
                 fi
-                if [ -f "$MUTED_WORDS" ]; then
-                    rm "$MUTED_WORDS"
+                if [ -f "${MUTED_WORDS}" ]; then
+                    rm "${MUTED_WORDS}"
                 fi
                 if [ -f "$FIREWALL_DOMAINS_MASKED" ]; then
                     rm "$FIREWALL_DOMAINS_MASKED"
@@ -388,13 +445,13 @@ function configure_firewall {
         else
             # does the firewall contain expected entries?
             if [[ "$ruleset" != *"tcp flags"* || "$ruleset" != *"ip saddr"* || "$ruleset" != *"facebook"* ]]; then
-                if grep -q "firewall" "$COMPLETION_FILE"; then
-                    sed -i '/firewall/d' "$COMPLETION_FILE"
+                if grep -q "firewall" "${COMPLETION_FILE}"; then
+                    sed -i '/firewall/d' "${COMPLETION_FILE}"
                     if [ -f "$FIREWALL_DOMAINS" ]; then
                         rm "$FIREWALL_DOMAINS"
                     fi
-                    if [ -f "$MUTED_WORDS" ]; then
-                        rm "$MUTED_WORDS"
+                    if [ -f "${MUTED_WORDS}" ]; then
+                        rm "${MUTED_WORDS}"
                     fi
                     if [ -f "$FIREWALL_ALLOW_DOMAINS" ]; then
                         rm "$FIREWALL_ALLOW_DOMAINS"
@@ -456,7 +513,9 @@ function configure_firewall_ping {
         return
     fi
     /usr/sbin/nft add rule inet filter INPUT icmp type echo-request counter accept
+    /usr/sbin/nft add rule inet filter INPUT icmpv6 type echo-request counter accept
     /usr/sbin/nft add rule inet filter OUTPUT icmp type echo-reply counter accept
+    /usr/sbin/nft add rule inet filter OUTPUT icmpv6 type echo-reply counter accept
     function_check save_firewall_settings
     save_firewall_settings
     mark_completed "${FUNCNAME[0]}"
@@ -679,7 +738,7 @@ function firewall_add {
         INSTALL_PACKAGES nftables
     fi
 
-    if ! grep -q "${firewall_name}=${firewall_port}" "$FIREWALL_CONFIG"; then
+    if ! grep -q "${firewall_name}=${firewall_port}" "${FIREWALL_CONFIG}"; then
         if [ ! "${firewall_protocol}" ]; then
             /usr/sbin/nft add rule inet filter INPUT tcp dport "${firewall_port}" accept comment \""${firewall_name}"\"
             /usr/sbin/nft add rule inet filter INPUT udp dport "${firewall_port}" accept comment \""${firewall_name}"\"
@@ -691,7 +750,7 @@ function firewall_add {
                 /usr/sbin/nft add rule inet filter INPUT tcp dport "${firewall_port}" accept comment \""${firewall_name}"\"
             fi
         fi
-        echo "${firewall_name}=${firewall_port}" >> "$FIREWALL_CONFIG"
+        echo "${firewall_name}=${firewall_port}" >> "${FIREWALL_CONFIG}"
         save_firewall_settings
     fi
 }
@@ -703,8 +762,8 @@ function firewall_add_range {
     firewall_protocol="$4"
     add_range_comment="$5"
 
-    if ! grep -q "${firewall_name}=${firewall_port_start}:${firewall_port_end}" "$FIREWALL_CONFIG"; then
-        echo "${firewall_name}=${firewall_port_start}:${firewall_port_end}" >> "$FIREWALL_CONFIG"
+    if ! grep -q "${firewall_name}=${firewall_port_start}:${firewall_port_end}" "${FIREWALL_CONFIG}"; then
+        echo "${firewall_name}=${firewall_port_start}:${firewall_port_end}" >> "${FIREWALL_CONFIG}"
         if [ ! "${firewall_protocol}" ]; then
             if [ "$add_range_comment" ]; then
                 # shellcheck disable=SC2086
@@ -743,8 +802,8 @@ function firewall_block_range {
     firewall_port_end=$3
     block_range_comment="$4"
 
-    if ! grep -q "${firewall_name}=${firewall_port_start}:${firewall_port_end}" "$FIREWALL_CONFIG"; then
-        echo "${firewall_name}=${firewall_port_start}:${firewall_port_end}" >> "$FIREWALL_CONFIG"
+    if ! grep -q "${firewall_name}=${firewall_port_start}:${firewall_port_end}" "${FIREWALL_CONFIG}"; then
+        echo "${firewall_name}=${firewall_port_start}:${firewall_port_end}" >> "${FIREWALL_CONFIG}"
         if [ "$block_range_comment" ]; then
             # shellcheck disable=SC2086
             /usr/sbin/nft add rule inet filter INPUT ip daddr "${firewall_port_start}"-"${firewall_port_end}" drop comment \"$block_range_comment\"
@@ -761,8 +820,8 @@ function firewall_unblock_range {
     firewall_port_end=$3
     block_range_comment="$4"
 
-    if grep -q "=${firewall_port_start}:${firewall_port_end}" "$FIREWALL_CONFIG"; then
-        sed -i "/${firewall_port_start}:${firewall_port_end}/d" "$FIREWALL_CONFIG"
+    if grep -q "=${firewall_port_start}:${firewall_port_end}" "${FIREWALL_CONFIG}"; then
+        sed -i "/${firewall_port_start}:${firewall_port_end}/d" "${FIREWALL_CONFIG}"
         delete_firewall_port_via_handle "${firewall_port_start}-${firewall_port_end}"
         save_firewall_settings
     fi
@@ -903,7 +962,7 @@ function firewall_unblock_cloudflare {
     done <"$cloudflare_ips"
 
     if grep -q "${cf_comment}" /etc/firewall.conf; then
-       sed -i "/${cf_comment}/d" /etc/firewall.conf
+        sed -i "/${cf_comment}/d" /etc/firewall.conf
     fi
     save_firewall_settings
     /etc/network/if-up.d/firewall
@@ -1075,14 +1134,14 @@ function firewall_remove {
     firewall_port=$1
     firewall_protocol="$2"
 
-    if [ ! -f "$FIREWALL_CONFIG" ]; then
+    if [ ! -f "${FIREWALL_CONFIG}" ]; then
         return
     fi
 
-    if grep -q "=${firewall_port}" "$FIREWALL_CONFIG"; then
+    if grep -q "=${firewall_port}" "${FIREWALL_CONFIG}"; then
         # shellcheck disable=SC2086
         delete_firewall_port_via_handle $firewall_port
-        sed -i "/=${firewall_port}/d" "$FIREWALL_CONFIG"
+        sed -i "/=${firewall_port}/d" "${FIREWALL_CONFIG}"
         save_firewall_settings
     fi
 }
@@ -1092,8 +1151,8 @@ function firewall_remove_range {
     firewall_port_end=$2
     firewall_protocol="$3"
 
-    if grep -q "=${firewall_port_start}:${firewall_port_end}" "$FIREWALL_CONFIG"; then
-        sed -i "/${firewall_port_start}:${firewall_port_end}/d" "$FIREWALL_CONFIG"
+    if grep -q "=${firewall_port_start}:${firewall_port_end}" "${FIREWALL_CONFIG}"; then
+        sed -i "/${firewall_port_start}:${firewall_port_end}/d" "${FIREWALL_CONFIG}"
         delete_firewall_port_via_handle "${firewall_port_start}-${firewall_port_end}"
         save_firewall_settings
     fi
@@ -1162,44 +1221,44 @@ function firewall_remove_allowed_domain {
 
 function firewall_block_words {
     blocked_words="$1"
-    if [ ! -f "$MUTED_WORDS" ]; then
-        touch "$MUTED_WORDS"
+    if [ ! -f "${MUTED_WORDS}" ]; then
+        touch "${MUTED_WORDS}"
     fi
-    if ! grep -q "$blocked_words" "$MUTED_WORDS"; then
-        echo "${blocked_words}" >> "$MUTED_WORDS"
+    if ! grep -q "$blocked_words" "${MUTED_WORDS}"; then
+        echo "${blocked_words}" >> "${MUTED_WORDS}"
     fi
     regenerate_webadmin_blocklist_muted_words
 }
 
 function firewall_block_ip {
     blocked_ip="$1"
-    if [[ "$blocked_ip" == *'@'* ]]; then
+    if [[ "${blocked_ip}" == *'@'* ]]; then
         # Don't try to block email/microblog addresses
         return
     fi
 
-    firewall_domains_file="$FIREWALL_DOMAINS"
-    if [[ "$blocked_ip" == *'/'* ]]; then
-        firewall_domains_file="$FIREWALL_DOMAINS_MASKED"
+    firewall_domains_file="${FIREWALL_DOMAINS}"
+    if [[ "${blocked_ip}" == *'/'* ]]; then
+        firewall_domains_file="${FIREWALL_DOMAINS_MASKED}"
     fi
 
-    if [ ! -f "$firewall_domains_file" ]; then
-        touch "$firewall_domains_file"
+    if [ ! -f "${firewall_domains_file}" ]; then
+        touch "${firewall_domains_file}"
     fi
 
-    if ! grep -q "$blocked_ip" "$firewall_domains_file"; then
+    if ! grep -q "${blocked_ip}" "${firewall_domains_file}"; then
         block_ip_comment="$2"
-        if [ "$block_ip_comment" ]; then
+        if [ "${block_ip_comment}" ]; then
             # shellcheck disable=SC2086
-            /usr/sbin/nft add rule inet filter INPUT ip saddr "$blocked_ip" drop comment \"${block_ip_comment}\"
+            /usr/sbin/nft add rule inet filter INPUT ip saddr "${blocked_ip}" drop comment \"${block_ip_comment}\"
             # shellcheck disable=SC2086
-            /usr/sbin/nft add rule inet filter OUTPUT ip daddr "$blocked_ip" drop comment \"${block_ip_comment}\"
+            /usr/sbin/nft add rule inet filter OUTPUT ip daddr "${blocked_ip}" drop comment \"${block_ip_comment}\"
         else
-            /usr/sbin/nft add rule inet filter INPUT ip saddr "$blocked_ip" drop
-            /usr/sbin/nft add rule inet filter OUTPUT ip daddr "$blocked_ip" drop
+            /usr/sbin/nft add rule inet filter INPUT ip saddr "${blocked_ip}" drop
+            /usr/sbin/nft add rule inet filter OUTPUT ip daddr "${blocked_ip}" drop
         fi
 
-        echo "${blocked_ip}" >> "$firewall_domains_file"
+        echo "${blocked_ip}" >> "${firewall_domains_file}"
         if [ "$3" ]; then
             if [[ "$3" != "nosave" ]]; then
                 save_firewall_settings
@@ -1236,21 +1295,21 @@ function firewall_openai {
 function firewall_unblock_ip {
     blocked_ip="$1"
     block_ip_comment="$2"
-    if [[ "$blocked_ip" == *'@'* ]]; then
+    if [[ "${blocked_ip}" == *'@'* ]]; then
         # Don't try to block email/microblog addresses
         return
     fi
 
-    firewall_domains_file="$FIREWALL_DOMAINS"
-    if [[ "$blocked_ip" == *'/'* ]]; then
-        firewall_domains_file="$FIREWALL_DOMAINS_MASKED"
+    firewall_domains_file="${FIREWALL_DOMAINS}"
+    if [[ "${blocked_ip}" == *'/'* ]]; then
+        firewall_domains_file="${FIREWALL_DOMAINS_MASKED}"
     fi
 
-    if grep -q "$blocked_ip" "$firewall_domains_file"; then
-        delete_firewall_port_via_handle "$blocked_ip"
+    if grep -q "${blocked_ip}" "${firewall_domains_file}"; then
+        delete_firewall_port_via_handle "${blocked_ip}"
 
-        if grep -q "$blocked_ip" "$firewall_domains_file"; then
-            sed -i "/$blocked_ip/d" "$firewall_domains_file"
+        if grep -q "${blocked_ip}" "${firewall_domains_file}"; then
+            sed -i "/${blocked_ip}/d" "${firewall_domains_file}"
         fi
 
         if [ "$3" ]; then
@@ -1287,12 +1346,12 @@ function firewall_unblock_domain {
 function firewall_unblock_words {
     unblocked_words="$1"
 
-    if [ ! -f "$MUTED_WORDS" ]; then
-        touch "$MUTED_WORDS"
+    if [ ! -f "${MUTED_WORDS}" ]; then
+        touch "${MUTED_WORDS}"
     fi
 
-    if grep -q "${unblocked_words}" "$MUTED_WORDS"; then
-        sed -i "/${unblocked_domain}/d" "$MUTED_WORDS"
+    if grep -q "${unblocked_words}" "${MUTED_WORDS}"; then
+        sed -i "/${unblocked_domain}/d" "${MUTED_WORDS}"
     fi
 
     regenerate_webadmin_blocklist_muted_words
@@ -1316,23 +1375,23 @@ function firewall_rate_limits {
 }
 
 function regenerate_webadmin_blocklist {
-    if [ ! -f "$FIREWALL_DOMAINS" ]; then
-        touch "$FIREWALL_DOMAINS"
+    if [ ! -f "${FIREWALL_DOMAINS}" ]; then
+        touch "${FIREWALL_DOMAINS}"
     fi
     local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
     webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
-    if [ -f "$webadmin_install_dir/blocking_template.html" ]; then
-        cp "$webadmin_install_dir/blocking_template.html" "$webadmin_install_dir/blocking.html"
+    if [ -f "${webadmin_install_dir}/blocking_template.html" ]; then
+        cp "${webadmin_install_dir}/blocking_template.html" "${webadmin_install_dir}/blocking.html"
         blockedlist=$(sed 's@[/\&]@\\&@g;s/$/\\/' "$FIREWALL_DOMAINS"; echo .)
         blockedlist=${blockedlist%.}
-        sed -i "s|BLOCKEDLIST|$blockedlist|g" "$webadmin_install_dir/blocking.html"
-        chown www-data:www-data "$webadmin_install_dir/blocking.html"
+        sed -i "s|BLOCKEDLIST|${blockedlist}|g" "${webadmin_install_dir}/blocking.html"
+        chown www-data:www-data "${webadmin_install_dir}/blocking.html"
     fi
 }
 
 function regenerate_webadmin_federationlist {
-    if [ ! -f "$FIREWALL_ALLOW_DOMAINS" ]; then
-        touch "$FIREWALL_ALLOW_DOMAINS"
+    if [ ! -f "${FIREWALL_ALLOW_DOMAINS}" ]; then
+        touch "${FIREWALL_ALLOW_DOMAINS}"
     fi
     local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
     webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
@@ -1345,50 +1404,50 @@ function regenerate_webadmin_vpn {
     fi
     local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
     webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
-    vpn_file="$webadmin_install_dir/vpn.txt"
-    if [ -f "$webadmin_install_dir/vpn_template.html" ]; then
-        cp "$webadmin_install_dir/vpn_template.html" "$webadmin_install_dir/vpn.html"
+    vpn_file="${webadmin_install_dir}/vpn.txt"
+    if [ -f "${webadmin_install_dir}/vpn_template.html" ]; then
+        cp "${webadmin_install_dir}/vpn_template.html" "${webadmin_install_dir}/vpn.html"
         if [ -f "$vpn_file" ]; then
             vpnlist=$(sed 's@[/\&]@\\&@g;s/$/\\/' "$vpn_file"; echo .)
             vpnlist=${vpnlist%.}
-            sed -i "s|VPNLIST|$vpnlist|g" "$webadmin_install_dir/vpn.html"
+            sed -i "s|VPNLIST|$vpnlist|g" "${webadmin_install_dir}/vpn.html"
         else
-            sed -i "s|VPNLIST||g" "$webadmin_install_dir/vpn.html"
+            sed -i "s|VPNLIST||g" "${webadmin_install_dir}/vpn.html"
         fi
 
-        if grep -q 'VPN_DOMAIN=' "$CONFIGURATION_FILE"; then
+        if grep -q 'VPN_DOMAIN=' "${CONFIGURATION_FILE}"; then
             # NOTE: Don't use read_config_param here
-            VPN_DOMAIN=$(grep 'VPN_DOMAIN=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+            VPN_DOMAIN=$(grep 'VPN_DOMAIN=' "${CONFIGURATION_FILE}" | head -n 1 | awk -F '=' '{print $2}')
             if [[ "$VPN_DOMAIN" == *'.'* ]]; then
-                sed -i "s|name=\"remotevpndomain\".*|name=\"remotevpndomain\" value=\"${VPN_DOMAIN}\" autofocus>|g" "$webadmin_install_dir/vpn.html"
+                sed -i "s|name=\"remotevpndomain\".*|name=\"remotevpndomain\" value=\"${VPN_DOMAIN}\" autofocus>|g" "${webadmin_install_dir}/vpn.html"
             fi
         fi
 
-        if grep -q 'VPN_PUBLIC_KEY=' "$CONFIGURATION_FILE"; then
+        if grep -q 'VPN_PUBLIC_KEY=' "${CONFIGURATION_FILE}"; then
             # NOTE: Don't use read_config_param here
-            VPN_PUBLIC_KEY=$(grep 'VPN_PUBLIC_KEY=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
-            sed -i "s|name=\"remotevpnpublickey\".*|name=\"remotevpnpublickey\" value=\"${VPN_PUBLIC_KEY}\">|g" "$webadmin_install_dir/vpn.html"
+            VPN_PUBLIC_KEY=$(grep 'VPN_PUBLIC_KEY=' "${CONFIGURATION_FILE}" | head -n 1 | awk -F '=' '{print $2}')
+            sed -i "s|name=\"remotevpnpublickey\".*|name=\"remotevpnpublickey\" value=\"${VPN_PUBLIC_KEY}\">|g" "${webadmin_install_dir}/vpn.html"
         fi
 
         vpn_public_key=$(cat /etc/wireguard/publickey)
-        sed -i "s|VPNPUBLICKEY|$vpn_public_key|g" "$webadmin_install_dir/vpn.html"
-        chown www-data:www-data "$webadmin_install_dir/vpn.html"
+        sed -i "s|VPNPUBLICKEY|${vpn_public_key}|g" "${webadmin_install_dir}/vpn.html"
+        chown www-data:www-data "${webadmin_install_dir}/vpn.html"
     fi
 }
 
 
 function regenerate_webadmin_blocklist_muted_words {
-    if [ ! -f "$MUTED_WORDS" ]; then
-        touch "$MUTED_WORDS"
+    if [ ! -f "${MUTED_WORDS}" ]; then
+        touch "${MUTED_WORDS}"
     fi
     local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
     webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
-    if [ -f "$webadmin_install_dir/blocking_words_template.html" ]; then
-        cp "$webadmin_install_dir/blocking_words_template.html" "$webadmin_install_dir/blocking_words.html"
-        blockedlistwords=$(sed 's@[/\&]@\\&@g;s/$/\\/' "$MUTED_WORDS"; echo .)
+    if [ -f "${webadmin_install_dir}/blocking_words_template.html" ]; then
+        cp "${webadmin_install_dir}/blocking_words_template.html" "${webadmin_install_dir}/blocking_words.html"
+        blockedlistwords=$(sed 's@[/\&]@\\&@g;s/$/\\/' "${MUTED_WORDS}"; echo .)
         blockedlistwords=${blockedlistwords%.}
-        sed -i "s|BLOCKEDWORDSLIST|$blockedlistwords|g" "$webadmin_install_dir/blocking_words.html"
-        chown www-data:www-data "$webadmin_install_dir/blocking_words.html"
+        sed -i "s|BLOCKEDWORDSLIST|$blockedlistwords|g" "${webadmin_install_dir}/blocking_words.html"
+        chown www-data:www-data "${webadmin_install_dir}/blocking_words.html"
     fi
 }
 
@@ -1398,19 +1457,19 @@ function upgrade_iptables {
     fi
 
     # clear existing installed firewall functions
-    sed -i '/firewall/d' "$COMPLETION_FILE"
+    sed -i '/firewall/d' "${COMPLETION_FILE}"
 
     # run the firewall setup again
     setup_firewall
 
     # email ports
-    sed -i '/=25$/d' "$FIREWALL_CONFIG"
+    sed -i '/=25$/d' "${FIREWALL_CONFIG}"
     firewall_add Email 25 tcp
-    sed -i '/=587$/d' "$FIREWALL_CONFIG"
+    sed -i '/=587$/d' "${FIREWALL_CONFIG}"
     firewall_add Email 587 tcp
-    sed -i '/=465$/d' "$FIREWALL_CONFIG"
+    sed -i '/=465$/d' "${FIREWALL_CONFIG}"
     firewall_add Email 465 tcp
-    sed -i '/=993$/d' "$FIREWALL_CONFIG"
+    sed -i '/=993$/d' "${FIREWALL_CONFIG}"
     firewall_add Imap 993 tcp
 
     # upgrade firewall ports each app
@@ -1423,8 +1482,8 @@ function upgrade_iptables {
             echo $"Update firewall for $app_name"
 
             if [[ "$app_firewall_ports" != *','* ]]; then
-                if grep -q "=${app_firewall_ports}\$" "$FIREWALL_CONFIG"; then
-                    sed -i "/=${app_firewall_ports}\$/d" "$FIREWALL_CONFIG"
+                if grep -q "=${app_firewall_ports}\$" "${FIREWALL_CONFIG}"; then
+                    sed -i "/=${app_firewall_ports}\$/d" "${FIREWALL_CONFIG}"
                 fi
                 firewall_add "$app_name" "$app_firewall_ports"
             else
@@ -1434,8 +1493,8 @@ function upgrade_iptables {
                 while [ $port_ctr -le $no_of_ports ]
                 do
                     curr_port=$(echo "$app_firewall_ports" | awk -F ',' "{print \$${port_ctr}}")
-                    if grep -q "=${curr_port}\$" "$FIREWALL_CONFIG"; then
-                        sed -i "/=${curr_port}\$/d" "$FIREWALL_CONFIG"
+                    if grep -q "=${curr_port}\$" "${FIREWALL_CONFIG}"; then
+                        sed -i "/=${curr_port}\$/d" "${FIREWALL_CONFIG}"
                     fi
                     firewall_add "${app_name}${port_ctr}" "${curr_port}"
                     port_ctr=$((port_ctr + 1))
