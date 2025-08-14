@@ -33,7 +33,7 @@ i2p_tunnels_dir=/var/lib/i2pd/tunnels.d
 
 function i2p_domain_script {
     # shellcheck disable=SC2154
-    if [ -f "$rootdir/usr/bin/i2pdomain" ]; then
+    if [ -f "${rootdir}/usr/bin/i2pdomain" ]; then
         return
     fi
     { echo '#!/usr/bin/env python3';
@@ -46,8 +46,8 @@ function i2p_domain_script {
       echo '    except:';
       echo '        pass';
       echo '    if not isRead:';
-      echo "        print(base64.b32encode(hashlib.sha256(base64.b64decode(f.read(516), '-~')).digest()).decode().strip('=').lower()+\".b32.i2p\")"; } > "$rootdir/usr/bin/i2pdomain"
-    chmod +x "$rootdir/usr/bin/i2pdomain"
+      echo "        print(base64.b32encode(hashlib.sha256(base64.b64decode(f.read(516), '-~')).digest()).decode().strip('=').lower()+\".b32.i2p\")"; } > "${rootdir}/usr/bin/i2pdomain"
+    chmod +x "${rootdir}/usr/bin/i2pdomain"
 }
 
 function get_i2p_domain {
@@ -80,7 +80,7 @@ function open_i2p_listen_port {
     fi
     if [ $i2p_port_opened ]; then
         firewall_add i2p $I2P_LISTEN_PORT
-        if [ ! "$rootdir" ]; then
+        if [ ! "${rootdir}" ]; then
             systemctl restart i2pd
         fi
     fi
@@ -89,7 +89,7 @@ function open_i2p_listen_port {
 function i2p_modify_daemon {
     if grep -q '/var/run' "${rootdir}/lib/systemd/system/i2pd.service"; then
         sed -i 's|/var/run|/run|g' "${rootdir}/lib/systemd/system/i2pd.service"
-        if [ ! "$rootdir" ]; then
+        if [ ! "${rootdir}" ]; then
             systemctl daemon-reload
             systemctl restart i2pd
         fi
@@ -129,16 +129,16 @@ function i2p_base_config {
 
 function install_i2p {
     i2p_domain_script
-    if [ -d "$rootdir/var/lib/i2pd" ]; then
+    if [ -d "${rootdir}/var/lib/i2pd" ]; then
         i2p_modify_daemon
         i2p_base_config
         return
     fi
-    if [ ! "$rootdir" ]; then
+    if [ ! "${rootdir}" ]; then
         INSTALL_PACKAGES i2pd
     else
         # shellcheck disable=SC2086
-        chroot "$rootdir" INSTALL_PACKAGES i2pd
+        chroot "${rootdir}" INSTALL_PACKAGES i2pd
     fi
 
     if [ ! -f "${rootdir}/etc/i2pd/i2pd.conf" ]; then
@@ -158,8 +158,8 @@ function install_i2p {
         systemctl enable i2pd
         systemctl restart i2pd
     else
-        chroot "$rootdir" systemctl enable i2pd
-        chroot "$rootdir" systemctl restart i2pd
+        chroot "${rootdir}" systemctl enable i2pd
+        chroot "${rootdir}" systemctl restart i2pd
     fi
 }
 
