@@ -200,6 +200,7 @@ if [ -d "$PROJECT_DIR" ]; then
     fi
 fi
 
+systemctl restart i2pd
 systemctl restart webadmin
 
 # upgrading file prevents USB canary from activating
