@@ -277,6 +277,7 @@ function upgrade_element {
     fi
 
     sed -i "s|\"m.homeserver\":.*|\"m.homeserver\": {\"base_url\": \"${http_prefix}://${element_domain}\",|g" "$element_config_file"
+    chmod -R 755 "/var/www/${ELEMENT_DOMAIN_NAME}"
     systemctl restart nginx
 }
 
@@ -588,6 +589,7 @@ function install_element {
     increment_app_install_progress
 
     element_remove_bad_links
+    chmod -R 755 "/var/www/${ELEMENT_DOMAIN_NAME}"
     chown -R www-data:www-data "/var/www/${ELEMENT_DOMAIN_NAME}/htdocs"
 
     increment_app_install_progress
