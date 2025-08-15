@@ -272,7 +272,7 @@ function set_default_onion_domains {
     BLUDIT_DOMAIN_NAME='bludit.local'
     DOKUWIKI_DOMAIN_NAME='dokuwiki.local'
     DEFAULT_DOMAIN_NAME="${LOCAL_NAME}.local"
-    GITEA_DOMAIN_NAME='gitea.local'
+    FORGEJO_DOMAIN_NAME='forgejo.local'
 }
 
 function create_avahi_onion_domains {
@@ -282,9 +282,9 @@ function create_avahi_onion_domains {
     if [ ! -d /etc/avahi/services ]; then
         return
     fi
-    if [ "$GITEA_DOMAIN_NAME" ]; then
+    if [ "$FORGEJO_DOMAIN_NAME" ]; then
         function_check create_avahi_service
-        create_avahi_service 'gitea' 'http' 'tcp' "$GITEA_ONION_PORT"
+        create_avahi_service 'forgejo' 'http' 'tcp' "$FORGEJO_ONION_PORT"
     fi
     if [ "$DOKUWIKI_DOMAIN_NAME" ]; then
         function_check create_avahi_service

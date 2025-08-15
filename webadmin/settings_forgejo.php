@@ -5,12 +5,12 @@
 // | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
 // |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 //
-// Gitea settings menu
+// Forgejo settings menu
 //
 // License
 // =======
 //
-// Copyright (C) 2018-2023 Bob Mottram <bob@libreserver.org>
+// Copyright (C) 2025 Bob Mottram <bob@libreserver.org>
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -27,7 +27,7 @@
 
 include dirname(__FILE__)."/common.php";
 
-$output_filename = "app_gitea.html";
+$output_filename = "app_forgejo.html";
 
 if (php_sapi_name()!=='fpm-fcgi') exit('php script must be run from the web interface');
 
@@ -35,7 +35,7 @@ if (isset($_POST['submitallowregistrations'])) {
     if(filter_string('allowregistrations')) {
         $confirm = htmlspecialchars($_POST['allowregistrations']);
         $settings_file = fopen(".appsettings.txt", "w") or die("Unable to write to appsettings file");
-        fwrite($settings_file, "gitea,registration,".$confirm);
+        fwrite($settings_file, "forgejo,registration,".$confirm);
         fclose($settings_file);
     }
 }

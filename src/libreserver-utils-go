@@ -231,11 +231,11 @@ function upgrade_golang {
     rootdir=
     mesh_upgrade_golang
 
-    # alter the go version used by the gitea daemon
-    if [ -f /etc/systemd/system/gitea.service ]; then
-        sed -i "s|Environment=.*|Environment=\"USER=gitea\" \"HOME=/home/gitea\" \"GOPATH=/home/go/go${GO_VERSION}\"|g" /etc/systemd/system/gitea.service
+    # alter the go version used by the forgejo daemon
+    if [ -f /etc/systemd/system/forgejo.service ]; then
+        sed -i "s|Environment=.*|Environment=\"USER=forgejo\" \"HOME=/home/forgejo\" \"GOPATH=/home/go/go${GO_VERSION}\"|g" /etc/systemd/system/forgejo.service
         systemctl daemon-reload
-        systemctl restart gitea
+        systemctl restart forgejo
     fi
 
     set_completion_param "${FUNCNAME[0]}" "$GO_VERSION"
