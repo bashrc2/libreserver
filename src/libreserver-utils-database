@@ -363,7 +363,7 @@ function create_database {
     fi
 
     echo "Creating database ${app_name}"
-    echo "create database ${app_name};" > "${INSTALL_DIR}/create_database.sql"
+    echo "create database ${app_name} CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_bin';" > "${INSTALL_DIR}/create_database.sql"
     mysql -u root --password="${MARIADB_PASSWORD}" < "${INSTALL_DIR}/create_database.sql"
     rm "${INSTALL_DIR}/batch.sql"
     echo "Creating database user ${app_admin_username}@localhost"
