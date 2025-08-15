@@ -688,6 +688,25 @@ function install_forgejo {
         rm -rf "/var/www/${FORGEJO_DOMAIN_NAME}/htdocs"
     fi
 
+    if [ ! -d /var/lib/tor ]; then
+        echo $'No Tor installation found. Forgejo onion site cannot be configured.'
+        exit 87
+    fi
+    if ! grep -q "hidden_service_forgejo" "$ONION_SERVICES_FILE"; then
+        { echo 'HiddenServiceDir /var/lib/tor/hidden_service_forgejo/';
+          echo 'HiddenServiceVersion 3';
+          echo "HiddenServicePort 80 127.0.0.1:${FORGEJO_ONION_PORT}";
+          echo "HiddenServicePort 9418 127.0.0.1:9418"; } >> "$ONION_SERVICES_FILE"
+        echo $'Added onion site for Forgejo'
+    fi
+
+    onion_update
+
+    increment_app_install_progress
+
+    function_check wait_for_onion_service
+    wait_for_onion_service 'forgejo'
+
     GIT_ONION_HOSTNAME=$(cat /var/lib/tor/hidden_service_forgejo/hostname)
 
     increment_app_install_progress
@@ -817,25 +836,6 @@ function install_forgejo {
     increment_app_install_progress
 
     nginx_ensite "${FORGEJO_DOMAIN_NAME}"
-
-    if [ ! -d /var/lib/tor ]; then
-        echo $'No Tor installation found. Forgejo onion site cannot be configured.'
-        exit 87
-    fi
-    if ! grep -q "hidden_service_forgejo" "$ONION_SERVICES_FILE"; then
-        { echo 'HiddenServiceDir /var/lib/tor/hidden_service_forgejo/';
-          echo 'HiddenServiceVersion 3';
-          echo "HiddenServicePort 80 127.0.0.1:${FORGEJO_ONION_PORT}";
-          echo "HiddenServicePort 9418 127.0.0.1:9418"; } >> "$ONION_SERVICES_FILE"
-        echo $'Added onion site for Forgejo'
-    fi
-
-    onion_update
-
-    increment_app_install_progress
-
-    function_check wait_for_onion_service
-    wait_for_onion_service 'forgejo'
 
     systemctl restart mariadb
 
