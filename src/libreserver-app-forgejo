@@ -110,7 +110,7 @@ function change_password_forgejo {
 function install_interactive_forgejo {
     if [[ $ONION_ONLY != "no" ]]; then
         FORGEJO_DOMAIN_NAME='forgejo.local'
-        write_config_param "FORGEJO_DOMAIN_NAME" "$FORGEJO_DOMAIN_NAME"
+        write_config_param "FORGEJO_DOMAIN_NAME" "${FORGEJO_DOMAIN_NAME}"
     else
         function_check interactive_site_details
         interactive_site_details forgejo
@@ -320,7 +320,7 @@ function upgrade_forgejo {
     rm -rf "/home/${FORGEJO_USERNAME:?}/"*
     cp -r "${INSTALL_DIR}/${FORGEJO_FILE_BASE_SRC}"/* "/home/${FORGEJO_USERNAME}"
     cp "${INSTALL_DIR}/${FORGEJO_FILE_BASE}" "/home/${FORGEJO_USERNAME}/forgejo"
-    chmod +x "/home/${FORGEJO_USERNAME}/forgejo"
+    chmod 755 "/home/${FORGEJO_USERNAME}/forgejo"
     if [ -f "${INSTALL_DIR}/${FORGEJO_FILE_BASE}" ]; then
         rm "${INSTALL_DIR}/${FORGEJO_FILE_BASE}"
     fi
@@ -350,6 +350,7 @@ function upgrade_forgejo {
     sed -i "s|forgejo version.*|forgejo version:$FORGEJO_VERSION|g" "${COMPLETION_FILE}"
     systemctl restart mariadb
     chmod 755 "/home/${FORGEJO_USERNAME}/forgejo"
+    chmod 750 ${FORGEJO_CONFIG_FILE}
     systemctl restart forgejo
 }
 
@@ -501,11 +502,11 @@ function remove_forgejo {
     userdel -r forgejo
 
     function_check remove_ddns_domain
-    remove_ddns_domain "$FORGEJO_DOMAIN_NAME"
+    remove_ddns_domain "${FORGEJO_DOMAIN_NAME}"
 }
 
 function install_forgejo {
-    if [ ! "$FORGEJO_DOMAIN_NAME" ]; then
+    if [ ! "${FORGEJO_DOMAIN_NAME}" ]; then
         echo $"Missing forgejo domain name"
         return
     fi
@@ -514,12 +515,12 @@ function install_forgejo {
 
     increment_app_install_progress
 
-    adduser --disabled-login --gecos 'Forgejo' $FORGEJO_USERNAME
+    adduser --disabled-login --gecos 'Forgejo' ${FORGEJO_USERNAME}
 
     increment_app_install_progress
 
-    if [ ! -d /home/$FORGEJO_USERNAME ]; then
-        echo $"/home/$FORGEJO_USERNAME directory not created"
+    if [ ! -d /home/${FORGEJO_USERNAME} ]; then
+        echo $"/home/${FORGEJO_USERNAME} directory not created"
         exit 78
     fi
 
@@ -595,7 +596,7 @@ function install_forgejo {
     rm -rf "/home/${FORGEJO_USERNAME:?}/"*
     cp -r "${INSTALL_DIR}/${FORGEJO_FILE_BASE_SRC}"/* "/home/${FORGEJO_USERNAME}"
     cp "${INSTALL_DIR}/${FORGEJO_FILE_BASE}" "/home/${FORGEJO_USERNAME}/forgejo"
-    chmod +x "/home/${FORGEJO_USERNAME}/forgejo"
+    chmod 755 "/home/${FORGEJO_USERNAME}/forgejo"
     if [ -f "${INSTALL_DIR}/${FORGEJO_FILE_BASE}" ]; then
         rm "${INSTALL_DIR}/${FORGEJO_FILE_BASE}"
     fi
@@ -758,8 +759,8 @@ function install_forgejo {
     { echo 'server {';
       echo "    listen 127.0.0.1:${FORGEJO_ONION_PORT} default_server;";
       echo '    port_in_redirect off;';
-      echo "    root /var/www/$FORGEJO_DOMAIN_NAME/htdocs;";
-      echo "    server_name $FORGEJO_DOMAIN_NAME;";
+      echo "    root /var/www/${FORGEJO_DOMAIN_NAME}/htdocs;";
+      echo "    server_name ${FORGEJO_DOMAIN_NAME};";
       echo '    server_tokens off;';
       echo '    access_log /dev/null;';
       echo "    error_log /dev/null;";
@@ -794,7 +795,7 @@ function install_forgejo {
         { echo 'server {';
           echo "    listen 127.0.0.1:${FORGEJO_I2P_PORT};";
           echo '    port_in_redirect off;';
-          echo "    root /var/www/$FORGEJO_DOMAIN_NAME/htdocs;";
+          echo "    root /var/www/${FORGEJO_DOMAIN_NAME}/htdocs;";
           echo "    server_name $FORGEJO_I2P_HOSTNAME;";
           echo '    server_tokens off;';
           echo '    access_log /dev/null;';
@@ -848,7 +849,7 @@ function install_forgejo {
 
     systemctl restart nginx
 
-    set_completion_param "forgejo domain" "$FORGEJO_DOMAIN_NAME"
+    set_completion_param "forgejo domain" "${FORGEJO_DOMAIN_NAME}"
     set_completion_param "forgejo onion domain" "$GIT_ONION_HOSTNAME"
 
     function_check add_ddns_domain
@@ -873,8 +874,8 @@ function install_forgejo {
       echo '[server]'; } >> ${FORGEJO_CONFIG_FILE}
     if [[ ${ONION_ONLY} == 'no' ]]; then
         echo "DOMAIN = ${FORGEJO_DOMAIN_NAME}" >> ${FORGEJO_CONFIG_FILE}
-        echo "LOCAL_ROOT_URL = https://$FORGEJO_DOMAIN_NAME/" >> ${FORGEJO_CONFIG_FILE}
-        echo "ROOT_URL = https://$FORGEJO_DOMAIN_NAME/" >> ${FORGEJO_CONFIG_FILE}
+        echo "LOCAL_ROOT_URL = https://${FORGEJO_DOMAIN_NAME}/" >> ${FORGEJO_CONFIG_FILE}
+        echo "ROOT_URL = https://${FORGEJO_DOMAIN_NAME}/" >> ${FORGEJO_CONFIG_FILE}
     else
         echo "DOMAIN = ${GIT_ONION_HOSTNAME}" >> ${FORGEJO_CONFIG_FILE}
         echo "LOCAL_ROOT_URL = http://${GIT_ONION_HOSTNAME}/" >> ${FORGEJO_CONFIG_FILE}
@@ -1100,7 +1101,7 @@ function install_forgejo {
       echo ";VALID_SITE_URL_SCHEMES=http,https";
       echo "";
       echo "[repository]";
-      echo "ROOT = /home/$FORGEJO_USERNAME/forgejo-repositories";
+      echo "ROOT = /home/${FORGEJO_USERNAME}/forgejo-repositories";
       echo "SCRIPT_TYPE = bash";
       echo ";DETECTED_CHARSETS_ORDER = UTF-8, UTF-16BE, UTF-16LE, UTF-32BE, UTF-32LE, ISO-8859, windows-1252, ISO-8859, windows-1250, ISO-8859, ISO-8859, ISO-8859, windows-1253, ISO-8859, windows-1255, ISO-8859, windows-1251, windows-1256, KOI8-R, ISO-8859, windows-1254, Shift_JIS, GB18030, EUC-JP, EUC-KR, Big5, ISO-2022, ISO-2022, ISO-2022, IBM424_rtl, IBM424_ltr, IBM420_rtl, IBM420_ltr";
       echo ";ANSI_CHARSET =";
