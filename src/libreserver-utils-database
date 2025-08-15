@@ -192,7 +192,7 @@ function mariadb_fix_authentication {
 }
 
 function mariadb_create_root_user {
-    run_query mysql "CREATE USER 'root@localhost' IDENTIFIED BY '${MARIADB_PASSWORD}'; flush privileges;"
+    run_query mysql "SET old_passwords=0; CREATE USER 'root@localhost' IDENTIFIED BY '${MARIADB_PASSWORD}'; flush privileges;"
     run_query mysql "ALTER USER 'root'@'localhost' IDENTIFIED BY '${MARIADB_PASSWORD}'; flush privileges;"
     run_query mysql "GRANT ALL PRIVILEGES ON * TO 'root@localhost' WITH GRANT OPTION; flush privileges;"
 }
@@ -370,7 +370,7 @@ function create_database {
     user_exists=$(database_user_exists "${app_admin_username}" | tail -n 1)
     echo "User exists = ${user_exists}"
     if [[ "${user_exists}" == "0" ]]; then
-        run_query "${app_name}" "CREATE USER '${app_admin_username}@localhost' IDENTIFIED BY '${app_admin_password}';"
+        run_query "${app_name}" "SET old_passwords=0; CREATE USER '${app_admin_username}@localhost' IDENTIFIED BY '${app_admin_password}';"
 
         echo "Setting database privileges for ${app_admin_username}@localhost in ${app_name}"
         echo "GRANT ALL PRIVILEGES ON ${app_name}.* TO '${app_admin_username}@localhost' WITH GRANT OPTION;
