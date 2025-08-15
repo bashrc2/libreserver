@@ -411,10 +411,12 @@ function disable_email_encryption_at_rest {
     for d in /home/*/ ; do
         USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
         if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
-            if grep -q 'gpgit.pl' "/home/$USERNAME/.procmailrc"; then
-                if ! grep -q '#| /usr/bin/gpgit.pl' "/home/$USERNAME/.procmailrc"; then
-                    sed -i 's@| /usr/bin/gpgit.pl@#| /usr/bin/gpgit.pl@g' "/home/$USERNAME/.procmailrc"
-                    #sed -i 's|:0 f|#:0 f|g' "/home/$USERNAME/.procmailrc"
+            if [ -f "/home/$USERNAME/.procmailrc" ]; then
+                if grep -q 'gpgit.pl' "/home/$USERNAME/.procmailrc"; then
+                    if ! grep -q '#| /usr/bin/gpgit.pl' "/home/$USERNAME/.procmailrc"; then
+                        sed -i 's@| /usr/bin/gpgit.pl@#| /usr/bin/gpgit.pl@g' "/home/$USERNAME/.procmailrc"
+                        #sed -i 's|:0 f|#:0 f|g' "/home/$USERNAME/.procmailrc"
+                    fi
                 fi
             fi
         fi

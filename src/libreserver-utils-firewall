@@ -1583,19 +1583,29 @@ function upgrade_iptables {
     fi
 
     # clear existing installed firewall functions
-    sed -i '/firewall/d' "${COMPLETION_FILE}"
+    if grep -q 'firewall' "${COMPLETION_FILE}"; then
+        sed -i '/firewall/d' "${COMPLETION_FILE}"
+    fi
 
     # run the firewall setup again
     setup_firewall
 
     # email ports
-    sed -i '/=25$/d' "${FIREWALL_CONFIG}"
+    if grep -q '=25$' "${FIREWALL_CONFIG}"; then
+        sed -i '/=25$/d' "${FIREWALL_CONFIG}"
+    fi
     firewall_add Email 25 tcp
-    sed -i '/=587$/d' "${FIREWALL_CONFIG}"
+    if grep -q '=587$' "${FIREWALL_CONFIG}"; then
+        sed -i '/=587$/d' "${FIREWALL_CONFIG}"
+    fi
     firewall_add Email 587 tcp
-    sed -i '/=465$/d' "${FIREWALL_CONFIG}"
+    if grep -q '=465$' "${FIREWALL_CONFIG}"; then
+        sed -i '/=465$/d' "${FIREWALL_CONFIG}"
+    fi
     firewall_add Email 465 tcp
-    sed -i '/=993$/d' "${FIREWALL_CONFIG}"
+    if grep -q '=993$' "${FIREWALL_CONFIG}"; then
+        sed -i '/=993$/d' "${FIREWALL_CONFIG}"
+    fi
     firewall_add Imap 993 tcp
 
     # upgrade firewall ports each app
