@@ -61,7 +61,6 @@ function upgrade_installation_from_previous_versions {
     sed -i 's|install_dlna_server|install_dlna|g' "$COMPLETION_FILE"
     sed -i 's|voip_turn|turn|g' "$COMPLETION_FILE"
     sed -i 's|install_voip|install_mumble|g' "$COMPLETION_FILE"
-    sed -i 's|install_rss_reader|install_rss|g' "$COMPLETION_FILE"
     sed -i 's|intrusion_detection|install_tripwire|g' "$COMPLETION_FILE"
 
     sed -i 's|XMPP|xmpp|g' "$COMPLETION_FILE"
@@ -71,7 +70,6 @@ function upgrade_installation_from_previous_versions {
     sed -i 's|Hubzilla|hubzilla|g' "$COMPLETION_FILE"
     sed -i 's|Gitea|forgejo|g' "$COMPLETION_FILE"
     sed -i 's|Wiki|dokuwiki|g' "$COMPLETION_FILE"
-    sed -i 's|RSS|rss|g' "$COMPLETION_FILE"
 
     mark_completed "${FUNCNAME[0]}"
 }

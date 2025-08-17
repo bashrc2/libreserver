@@ -314,17 +314,6 @@ function show_domains {
             fi
         done
 
-        if grep -q "rss reader domain" "$COMPLETION_FILE"; then
-            if [ -d /var/lib/tor/hidden_service_ttrss ]; then
-                domain_onion=$(cat /var/lib/tor/hidden_service_ttrss/hostname)
-                W+=("RSS Reader" "${domain_onion}")
-            fi
-            if [ -d /var/lib/tor/hidden_service_mobilerss ]; then
-                domain_onion=$(cat /var/lib/tor/hidden_service_mobilerss/hostname)
-                W+=("RSS mobile" "${domain_onion}")
-            fi
-        fi
-
         width=$(tput cols)
         height=$(tput lines)
 

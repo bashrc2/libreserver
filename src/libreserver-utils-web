@@ -180,13 +180,11 @@ function nginx_ssl {
 function test_domain_name {
     if [ "$1" ]; then
         TEST_DOMAIN_NAME=$1
-        if [[ $TEST_DOMAIN_NAME != 'ttrss' ]]; then
-            function_check validate_domain_name
-            validate_domain_name
-            if [[ "$TEST_DOMAIN_NAME" != "$1" ]]; then
-                echo $"Invalid domain name $TEST_DOMAIN_NAME"
-                exit 85
-            fi
+        function_check validate_domain_name
+        validate_domain_name
+        if [[ "$TEST_DOMAIN_NAME" != "$1" ]]; then
+            echo $"Invalid domain name $TEST_DOMAIN_NAME"
+            exit 85
         fi
     fi
 }
