@@ -56,7 +56,7 @@ if [[ "$2" == "password="* ]]; then
     SSH_PUBLIC_KEY=
     password_param=$(echo -n "$2" | awk -F '=' '{print $2}')
 fi
-GPG_KEYSERVER='hkp://keys.gnupg.net'
+GPG_KEYSERVER='keys.openpgp.org'
 SSH_PORT=2222
 COMPLETION_FILE=$HOME/${PROJECT_NAME}-completed.txt
 DEFAULT_DOMAIN_NAME=

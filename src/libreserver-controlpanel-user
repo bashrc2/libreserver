@@ -502,7 +502,11 @@ function add_gpg_key {
                                --msgbox $"GPG public key was imported" 6 50
                         rm ~/.gpg_key_import.txt
                     else
-                        ${TORSOCKS} gpg --keyserver keys.openpgp.org --search-keys "$ADD_EMAIL_ADDRESS"
+                        if [ "${GPG_KEYSERVER}" ]; then
+                            ${TORSOCKS} gpg --keyserver ${GPG_KEYSERVER} --search-keys "$ADD_EMAIL_ADDRESS"
+                        else
+                            ${TORSOCKS} gpg --keyserver keys.openpgp.org --search-keys "$ADD_EMAIL_ADDRESS"
+                        fi
                         gpg_set_trust "$ADD_EMAIL_ADDRESS"
                     fi
                 else

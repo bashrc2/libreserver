@@ -32,7 +32,7 @@ MY_EMAIL_ADDRESS=$MY_USERNAME@$DEFAULT_DOMAIN_NAME
 # https://riseup.net/en/security/network-security/tor
 RISEUP_EMAIL_ONION='5gdvpfoh6kb2iqbizb37lzk2ddzrwa47m6rpdueg2m656fovmbhoptqd.onion'
 
-GPG_KEYSERVER="hkp://keys.gnupg.net"
+GPG_KEYSERVER="keys.openpgp.org"
 
 # whether to encrypt all incoming email with your public key
 GPG_ENCRYPT_STORED_EMAIL="no"
