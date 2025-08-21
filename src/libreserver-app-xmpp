@@ -1071,6 +1071,10 @@ function upgrade_xmpp {
         xmpp_restart=1
     fi
 
+    # channel binding
+    prosody_add_module "sasl2"
+    prosody_add_module "sasl2_bind2"
+
     install_i2p
     xmpp_i2p_bridge
     xmpp_i2p_virtualhost
@@ -1288,6 +1292,8 @@ function xmpp_modules {
       echo '  "filter_chatstates"; -- Reduce battery and bandwidth usage';
       echo '  "external_services";';
       echo '  "sasl_ssdp"; -- SASL SCRAM downgrade protection';
+      echo '  "sasl2"; -- for channel binding'
+      echo '  "sasl2_bind2";'
       echo '};'; } >> "$filename"
 }
 
