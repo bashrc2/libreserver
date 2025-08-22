@@ -33,7 +33,7 @@ SHOW_ON_ABOUT=1
 REQUIRES_APP=
 
 FORGEJO_USERNAME='forgejo'
-FORGEJO_VERSION='12.0.1'
+FORGEJO_VERSION='11.0.3'
 FORGEJO_DOWNLOAD='https://codeberg.org/forgejo/forgejo/releases/download'
 
 FORGEJO_DOMAIN_NAME=
