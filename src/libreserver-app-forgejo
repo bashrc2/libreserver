@@ -972,7 +972,7 @@ function install_forgejo {
       echo "SECRET_KEY = ${FORGEJO_SECRET_KEY}";
       echo "INTERNAL_TOKEN=";
       echo ";INTERNAL_TOKEN_URI = ;e.g. /etc/forgejo/internal_token";
-      echo "LOGIN_REMEMBER_DAYS = 7";
+      echo "LOGIN_REMEMBER_DAYS = 2";
       echo "COOKIE_USERNAME = forgejo_awesome";
       echo "COOKIE_REMEMBER_NAME = forgejo_incredible";
       echo ";REVERSE_PROXY_AUTHENTICATION_USER = X-WEBAUTH-USER";
