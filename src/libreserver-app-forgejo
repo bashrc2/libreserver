@@ -212,18 +212,21 @@ function upgrade_forgejo {
     FORGEJO_CONFIG_FILE=$FORGEJO_CONFIG_PATH/app.ini
 
     restart_forgejo=
-    if grep -q "DB_TYPE = " "${FORGEJO_CONFIG_FILE}"; then
-        sed -i 's|DB_TYPE = |DB_TYPE = |g' "${FORGEJO_CONFIG_FILE}"
+    if ! grep -q "DB_TYPE = mysql" "${FORGEJO_CONFIG_FILE}"; then
+        sed -i 's|DB_TYPE =.*|DB_TYPE = mysql|g' "${FORGEJO_CONFIG_FILE}"
         restart_forgejo=1
     fi
 
-    if grep -q "PASSWD = " "${FORGEJO_CONFIG_FILE}"; then
-        sed -i 's|PASSWD = |PASSWORD = |g' "${FORGEJO_CONFIG_FILE}"
-        restart_forgejo=1
+    MARIADB_PASSWORD=$("${PROJECT_NAME}-pass" -u root -a mariadb)
+    if [ "${MARIADB_PASSWORD}" ]; then
+        if ! grep -q "PASSWD = ${MARIADB_PASSWORD}" "${FORGEJO_CONFIG_FILE}"; then
+            sed -i "s|PASSWD =.*|PASSWORD = ${MARIADB_PASSWORD}|g" "${FORGEJO_CONFIG_FILE}"
+            restart_forgejo=1
+        fi
     fi
 
-    if grep -q "PROVIDER = file" "${FORGEJO_CONFIG_FILE}"; then
-        sed -i 's|PROVIDER = file|PROVIDER = memory|g' "${FORGEJO_CONFIG_FILE}"
+    if ! grep -q "PROVIDER = memory" "${FORGEJO_CONFIG_FILE}"; then
+        sed -i 's|PROVIDER =.*|PROVIDER = memory|g' "${FORGEJO_CONFIG_FILE}"
         restart_forgejo=1
     fi
 
