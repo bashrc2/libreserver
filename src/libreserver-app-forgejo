@@ -33,7 +33,7 @@ SHOW_ON_ABOUT=1
 REQUIRES_APP=
 
 FORGEJO_USERNAME='forgejo'
-FORGEJO_VERSION='11.0.3'
+FORGEJO_VERSION='12.0.1'
 FORGEJO_DOWNLOAD='https://codeberg.org/forgejo/forgejo/releases/download'
 
 FORGEJO_DOMAIN_NAME=
@@ -213,7 +213,7 @@ function upgrade_forgejo {
 
     restart_forgejo=
     if grep -q "DB_TYPE = " "${FORGEJO_CONFIG_FILE}"; then
-        sed -i 's|DB_TYPE = |TYPE = |g' "${FORGEJO_CONFIG_FILE}"
+        sed -i 's|DB_TYPE = |DB_TYPE = |g' "${FORGEJO_CONFIG_FILE}"
         restart_forgejo=1
     fi
 
