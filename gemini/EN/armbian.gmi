@@ -4,7 +4,7 @@
 
 => https://www.armbian.com/download Download the Armbian image for your board.
 
-It must be version 11 (Bullseye), otherwise it won't work. Extract the image from its archive, then copy it to a microSD card
+It must be version 13 (Trixie), otherwise it won't work. Extract the image from its archive, then copy it to a microSD card
 
 ``` command
 sudo dd bs=32M if=[Armbian .img file] of=/dev/sdX conv=fdatasync,sync,noerror status=progress
