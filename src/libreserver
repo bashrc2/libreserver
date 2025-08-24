@@ -66,7 +66,7 @@ else
 fi
 
 if [ ! $installing_on_debian ]; then
-    echo $'You should only run this on a Debian Buster based system'
+    echo $'You should only run this on a Debian Trixie based system'
     exit 0
 fi
 
