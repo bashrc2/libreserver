@@ -402,7 +402,7 @@ function configure_firewall_base {
       echo '    chain OUTPUT {';
       echo '        type filter hook output priority 0; policy accept;';
       echo '    }';
-      echo '}'; } >> "$filename"
+      echo '}'; } > "$filename"
 }
 
 function firewall_max_connections {
@@ -490,6 +490,7 @@ function configure_firewall {
 
     configure_firewall_base /etc/firewall.conf
     configure_firewall_base /etc/firewall_test.conf
+    /usr/sbin/nft flush ruleset
     /usr/sbin/nft -f /etc/firewall.conf
 
     mark_completed "${FUNCNAME[0]}"
