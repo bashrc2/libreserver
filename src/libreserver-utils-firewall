@@ -304,7 +304,7 @@ function configure_firewall_base {
       echo '    }';
       echo '';
       echo '    set blackhole6 {';
-      echo '        type ipv4_addr';
+      echo '        type ipv6_addr';
       echo '        flags timeout';
       echo '    }';
       echo '';
