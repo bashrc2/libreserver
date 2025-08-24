@@ -36,6 +36,7 @@ MUTED_WORDS=$HOME/${PROJECT_NAME}-firewall-words.cfg
 FIREWALL_EIFACE=eth0
 EXTERNAL_IPV4_ADDRESS=
 FIREFOX_TELEMETRY_IP='52.88.27.118'
+FIREFOX_TELEMETRY_IPV6=
 WHOISDOMAIN='whois.radb.net'
 
 # If these ports are scanned from outside of the local network
@@ -156,7 +157,9 @@ function block_firefox_telemetry {
     fi
 
     /usr/sbin/nft add rule inet filter OUTPUT ip saddr "${FIREFOX_TELEMETRY_IP}" counter drop comment \"firefox telemetry\"
-    /usr/sbin/nft add rule inet filter OUTPUT ipv6 saddr "${FIREFOX_TELEMETRY_IP}" counter drop comment \"firefox telemetry ipv6\"
+    if [ "${FIREFOX_TELEMETRY_IPV6}" ]; then
+        /usr/sbin/nft add rule inet filter OUTPUT ipv6 saddr "${FIREFOX_TELEMETRY_IPV6}" counter drop comment \"firefox telemetry ipv6\"
+    fi
     save_firewall_settings
 }
 
