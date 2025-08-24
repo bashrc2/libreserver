@@ -152,6 +152,8 @@ if [[ "$command_options" == "menuconfig-onion" ]]; then
         else
             echo "ONION_ONLY=yes" >> "$CONFIGURATION_FILE"
         fi
+    else
+        echo "ONION_ONLY=yes" > "$CONFIGURATION_FILE"
     fi
 fi
 
