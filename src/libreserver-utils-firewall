@@ -316,6 +316,7 @@ function configure_firewall_base {
       echo '';
       echo '    set test-2222-count-meter6 {';
       echo '        type ipv6_addr';
+      echo '        size 65535';
       echo '        flags dynamic';
       echo '}';
       echo '';
@@ -327,6 +328,7 @@ function configure_firewall_base {
       echo '';
       echo '    set test-80-count-meter6 {';
       echo '        type ipv6_addr';
+      echo '        size 65535';
       echo '        flags dynamic';
       echo '}';
       echo '';
@@ -338,6 +340,7 @@ function configure_firewall_base {
       echo '';
       echo '    set test-443-count-meter6 {';
       echo '        type ipv6_addr';
+      echo '        size 65535';
       echo '        flags dynamic';
       echo '}';
       echo '';
@@ -349,6 +352,7 @@ function configure_firewall_base {
       echo '';
       echo '    set test-1965-count-meter6 {';
       echo '        type ipv6_addr';
+      echo '        size 65535';
       echo '        flags dynamic';
       echo '}';
       echo '';
