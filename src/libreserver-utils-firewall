@@ -295,6 +295,14 @@ function configure_enable_ssh_access {
 function configure_firewall_base {
     filename="$1"
 
+    if [ ! -f "${filename}" ]; then
+        # initially create table and chains
+        /usr/sbin/nft add table inet filter
+        /usr/sbin/nft add chain inet filter INPUT { type filter hook input priority 0 \; }
+        /usr/sbin/nft add chain inet filter FORWARD { type filter hook forward priority 0 \; policy drop \; }
+        /usr/sbin/nft add chain inet filter OUTPUT { type filter hook output priority 0 \; policy accept \; }
+    fi
+
     { echo '#!/usr/sbin/nft -f';
       echo '';
       echo 'flush ruleset';
@@ -315,49 +323,49 @@ function configure_firewall_base {
       echo '        type ipv4_addr';
       echo '        size 65535';
       echo '        flags dynamic';
-      echo '}';
+      echo '    }';
       echo '';
       echo '    set test-2222-count-meter6 {';
       echo '        type ipv6_addr';
       echo '        size 65535';
       echo '        flags dynamic';
-      echo '}';
+      echo '    }';
       echo '';
       echo '    set test-80-count-meter {';
       echo '        type ipv4_addr';
       echo '        size 65535';
       echo '        flags dynamic';
-      echo '}';
+      echo '    }';
       echo '';
       echo '    set test-80-count-meter6 {';
       echo '        type ipv6_addr';
       echo '        size 65535';
       echo '        flags dynamic';
-      echo '}';
+      echo '    }';
       echo '';
       echo '    set test-443-count-meter {';
       echo '        type ipv4_addr';
       echo '        size 65535';
       echo '        flags dynamic';
-      echo '}';
+      echo '    }';
       echo '';
       echo '    set test-443-count-meter6 {';
       echo '        type ipv6_addr';
       echo '        size 65535';
       echo '        flags dynamic';
-      echo '}';
+      echo '    }';
       echo '';
       echo '    set test-1965-count-meter {';
       echo '        type ipv4_addr';
       echo '        size 65535';
       echo '        flags dynamic';
-      echo '}';
+      echo '    }';
       echo '';
       echo '    set test-1965-count-meter6 {';
       echo '        type ipv6_addr';
       echo '        size 65535';
       echo '        flags dynamic';
-      echo '}';
+      echo '    }';
       echo '';
       echo '    chain INPUT {';
       echo '        type filter hook input priority filter; policy drop;';
@@ -402,7 +410,7 @@ function configure_firewall_base {
       echo '    chain OUTPUT {';
       echo '        type filter hook output priority 0; policy accept;';
       echo '    }';
-      echo '}'; } > "$filename"
+      echo '}'; } > "${filename}"
 }
 
 function firewall_max_connections {
