@@ -66,6 +66,12 @@ else
 fi
 
 if [ ! $installing_on_debian ]; then
+    if [ -f /etc/apt/sources.list.d/armbian.sources ]; then
+        installing_on_debian=1
+    fi
+fi
+
+if [ ! $installing_on_debian ]; then
     echo $'You should only run this on a Debian Trixie based system'
     exit 0
 fi
