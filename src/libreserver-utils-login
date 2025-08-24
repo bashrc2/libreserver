@@ -25,13 +25,18 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 function change_login_message {
-    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" && $(cat /etc/motd > /dev/null) ]]; then
         return
     fi
 
     # remove automatic motd creator if it exists
     if [ -f /etc/init.d/motd ]; then
         rm -f /etc/init.d/motd
+    fi
+
+    if [ -f /etc/motd ]; then
+        # remove existing motd
+        rm -f /etc/motd
     fi
 
     { echo '  _    _ _            ___                      ';
