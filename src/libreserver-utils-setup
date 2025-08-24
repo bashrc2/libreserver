@@ -1296,9 +1296,18 @@ function install_duf {
     fi
 }
 
+function install_qrencode {
+    if [ ! -f /usr/bin/qrencode ]; then
+        INSTALL_PACKAGES qrencode
+    fi
+}
+
 function setup_utils {
     function_check install_duf
     install_duf
+
+    function_check install_qrencode
+    install_qrencode
 
     function_check install_dust
     install_dust

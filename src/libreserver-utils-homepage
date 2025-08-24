@@ -33,12 +33,6 @@ function homepage_create_qr_code {
     fi
 
     if [ ! -f /usr/local/bin/myqr ]; then
-        if [ ! -f /usr/bin/qrencode ]; then
-            if [ -f /var/lib/dpkg/lock-frontend ]; then
-                rm /var/lib/dpkg/lock-frontend
-            fi
-            INSTALL_PACKAGES qrencode
-        fi
         echo -n "http://${webadmin_onion_domain}/home" | qrencode -t PNG -o "$homepage_install_dir/images/homepage_qrcode.png"
     else
         myqr "http://${webadmin_onion_domain}/home" -p "/root/${PROJECT_NAME}/img/onion.png" -c -v 8 -n "$homepage_install_dir/images/homepage_qrcode.png"
