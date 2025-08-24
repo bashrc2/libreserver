@@ -40,7 +40,7 @@ Images are an easy way of distributing the software in a manner which avoids pro
     sudo apt-get install git build-essential dialog
     git clone https://gitlab.com/bashrc2/libreserver
     cd libreserver
-    git checkout buster
+    git checkout trixie
     sudo make install
 
 Then install packages needed for building images:

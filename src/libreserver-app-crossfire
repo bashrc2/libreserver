@@ -91,11 +91,7 @@ function crossfire_setting_motd {
 }
 
 function upgrade_distro_crossfire {
-    target_distro="$1"
-
-    if [[ "$target_distro" == 'buster' ]]; then
-        echo -n ''
-    fi
+    echo -n ''
 }
 
 function logging_on_crossfire {
