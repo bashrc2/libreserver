@@ -1321,12 +1321,16 @@ function email_install_tls {
         check_certificates exim
         cp /etc/ssl/certs/exim.dhparam /etc/exim4
         chown root:Debian-exim /etc/exim4/exim.dhparam
-        if [ -f /etc/exim4/exim.key ]; then
-            chmod 640 /etc/exim4/exim.key
+        if [ ! -f /etc/exim4/exim.key ]; then
+            cp /etc/ssl/private/exim.key /etc/exim4/exim.key
+            chown root:Debian-exim /etc/exim4/exim.key
         fi
-        if [ -f /etc/exim4/exim.crt ]; then
-            chmod 640 /etc/exim4/exim.crt
+        chmod 640 /etc/exim4/exim.key
+        if [ ! -f /etc/exim4/exim.crt ]; then
+            cp /etc/ssl/certs/exim.crt /etc/exim4/exim.crt
+            chown root:Debian-exim /etc/exim4/exim.crt
         fi
+        chmod 640 /etc/exim4/exim.crt
         chmod 640 /etc/exim4/exim.dhparam
         email_config_changed=1
     fi
