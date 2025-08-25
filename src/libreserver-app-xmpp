@@ -1672,6 +1672,9 @@ function add_xmpp_onion_to_email {
 
 function remove_upstream_xmpp_package {
     # The upstream debian package breaks stuff, so remove it
+    if [ ! -f /etc/apt/sources.list ]; then
+        return
+    fi
     if ! grep -q "packages.prosody.im" /etc/apt/sources.list; then
         return
     fi

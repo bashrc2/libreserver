@@ -47,8 +47,10 @@ function upgrade_debian_repos {
     $UPDATE_PACKAGES
     $UPGRADE_PACKAGES
     $UPGRADE_PACKAGES_DIST
-    sed -i "s|stretch|$1|g" /etc/apt/sources.list
-    sed -i '/backports/d' /etc/apt/sources.list
+    if [ -f /etc/apt/sources.list ]; then
+        sed -i "s|stretch|$1|g" /etc/apt/sources.list
+        sed -i '/backports/d' /etc/apt/sources.list
+    fi
     $UPDATE_PACKAGES
     $UPGRADE_PACKAGES
     $UPGRADE_PACKAGES_DIST

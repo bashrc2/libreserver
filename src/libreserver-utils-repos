@@ -57,10 +57,12 @@ function raspbian_add_backports {
             return
         fi
     fi
-    if ! grep -q "${DEBIAN_VERSION}-backports" /etc/apt/sources.list; then
-        echo "deb http://${DEBIAN_REPO}/debian ${DEBIAN_VERSION}-backports main contrib" >> /etc/apt/sources.list
-        gpg_recv_key hkps://keyserver.ubuntu.com 04EE7237B7D453EC
-        gpg_recv_key hkps://keyserver.ubuntu.com 648ACFD622F3D138
+    if [ -f /etc/apt/sources.list ]; then
+        if ! grep -q "${DEBIAN_VERSION}-backports" /etc/apt/sources.list; then
+            echo "deb http://${DEBIAN_REPO}/debian ${DEBIAN_VERSION}-backports main contrib" >> /etc/apt/sources.list
+            gpg_recv_key hkps://keyserver.ubuntu.com 04EE7237B7D453EC
+            gpg_recv_key hkps://keyserver.ubuntu.com 648ACFD622F3D138
+        fi
     fi
 }
 
@@ -68,11 +70,13 @@ function create_tor_repo_sources {
     # Use of tor repos currently seems flaky, with packages often unavailable or returning errors
     if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
         regenerate_tor_package_repos=
-        if ! grep -q "http://$DEBIAN_REPO_ONION" /etc/apt/sources.list; then
-            regenerate_tor_package_repos=1
-        fi
-        if ! grep -q "http://$DEBIAN_SECURITY_REPO_ONION" /etc/apt/sources.list; then
-            regenerate_tor_package_repos=1
+        if [ -f /etc/apt/sources.list ]; then
+            if ! grep -q "http://$DEBIAN_REPO_ONION" /etc/apt/sources.list; then
+                regenerate_tor_package_repos=1
+            fi
+            if ! grep -q "http://$DEBIAN_SECURITY_REPO_ONION" /etc/apt/sources.list; then
+                regenerate_tor_package_repos=1
+            fi
         fi
         if [ $regenerate_tor_package_repos ]; then
             echo $'Updating sources.list with onion based repos'
@@ -105,11 +109,13 @@ function create_tor_repo_sources {
 }
 
 function create_repo_sources {
-    if grep -q "security.debian.org/ " /etc/apt/sources.list; then
-  sed -i "s|security.debian.org/ .*|deb.debian.org/debian-security ${DEBIAN_VERSION}-security main contrib|g" /etc/apt/sources.list
-    fi
-    if grep -q "# deb https://deb.debian.org/debian-security" /etc/apt/sources.list; then
-  sed -i "s|# deb https://deb.debian.org/debian-security|deb https://deb.debian.org/debian-security|g" /etc/apt/sources.list
+    if [ -f /etc/apt/sources.list ]; then
+        if grep -q "security.debian.org/ " /etc/apt/sources.list; then
+            sed -i "s|security.debian.org/ .*|deb.debian.org/debian-security ${DEBIAN_VERSION}-security main contrib|g" /etc/apt/sources.list
+        fi
+        if grep -q "# deb https://deb.debian.org/debian-security" /etc/apt/sources.list; then
+            sed -i "s|# deb https://deb.debian.org/debian-security|deb https://deb.debian.org/debian-security|g" /etc/apt/sources.list
+        fi
     fi
     #if [[ "$ONION_ONLY" != 'no' ]]; then
     #    create_tor_repo_sources
