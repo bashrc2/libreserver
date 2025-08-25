@@ -701,7 +701,7 @@ function add_user_xmpp {
     "${PROJECT_NAME}-pass" -u "$new_username" -a xmpp -p "$new_user_password"
 
     if [[ "$ONION_ONLY" != "no" ]]; then
-        DOMAIN_NAME=$XMPP_ONION_HOSTNAME
+        DOMAIN_NAME=${XMPP_ONION_HOSTNAME}
     else
         DOMAIN_NAME=$HOSTNAME
     fi
@@ -1456,7 +1456,7 @@ function xmpp_create_config {
     xmpp_muc_domain="$DEFAULT_DOMAIN_NAME"
     xmpp_plain_auth='false'
     if [[ "$ONION_ONLY" != 'no' ]]; then
-        xmpp_muc_domain="$XMPP_ONION_HOSTNAME"
+        xmpp_muc_domain="${XMPP_ONION_HOSTNAME}"
         # plain aith allows xmpp notifications to work on onion addresses
         xmpp_plain_auth='true'
     fi
@@ -1934,9 +1934,9 @@ function install_xmpp {
 
     registered_prosody_user=
     if [[ $ONION_ONLY != 'no' ]]; then
-        prosody_register_str="prosodyctl register \"$MY_USERNAME\" \"$XMPP_ONION_HOSTNAME\" \"[password]\""
-        prosodyctl deluser "$MY_USERNAME@XMPP_ONION_HOSTNAME"
-        if prosodyctl register "$MY_USERNAME" "$XMPP_ONION_HOSTNAME" "$XMPP_PASSWORD"; then
+        prosody_register_str="prosodyctl register \"${MY_USERNAME}\" \"${XMPP_ONION_HOSTNAME}\" \"[password]\""
+        prosodyctl deluser "${MY_USERNAME}@{XMPP_ONION_HOSTNAME}"
+        if prosodyctl register "${MY_USERNAME}" "${XMPP_ONION_HOSTNAME}" "${XMPP_PASSWORD}"; then
             registered_prosody_user=1
         fi
     else
