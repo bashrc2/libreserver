@@ -272,9 +272,9 @@ function gpg_reconstruct_key {
 function gpg_agent_setup {
     gpg_username=$1
 
-    echo "gpg_agent_setup for $gpg_username"
+    echo "gpg_agent_setup for ${gpg_username}"
 
-    if [[ $gpg_username == 'root' ]]; then
+    if [[ ${gpg_username} == 'root' ]]; then
         if ! grep -q 'GPG_TTY' /root/.bashrc; then
             { echo '';
               echo "GPG_TTY=\$(tty)";
@@ -301,11 +301,11 @@ function gpg_agent_setup {
         echo 'Reloading gpg agent'
         echo RELOADAGENT | gpg-connect-agent
     else
-        if ! grep -q 'GPG_TTY' "/home/$gpg_username/.bashrc"; then
+        if ! grep -q 'GPG_TTY' "/home/${gpg_username}/.bashrc"; then
             { echo '';
               echo "GPG_TTY=\$(tty)";
-              echo 'export GPG_TTY'; } >> "/home/$gpg_username/.bashrc"
-            chown "$gpg_username":"$gpg_username" "/home/$gpg_username/.bashrc"
+              echo 'export GPG_TTY'; } >> "/home/${gpg_username}/.bashrc"
+            chown "${gpg_username}":"${gpg_username}" "/home/${gpg_username}/.bashrc"
         fi
         if [ ! -d "/home/${gpg_username}/.gnupg" ]; then
             mkdir "/home/${gpg_username}/.gnupg"
@@ -313,24 +313,24 @@ function gpg_agent_setup {
         if [ ! -f "/home/${gpg_username}/.gnupg/gpg.conf" ]; then
             touch "/home/${gpg_username}/.gnupg/gpg.conf"
         fi
-        if grep -q '# use-agent' "/home/$gpg_username/.gnupg/gpg.conf"; then
-            sed -i 's|# use-agent|use-agent|g' "/home/$gpg_username/.gnupg/gpg.conf"
+        if grep -q '# use-agent' "/home/${gpg_username}/.gnupg/gpg.conf"; then
+            sed -i 's|# use-agent|use-agent|g' "/home/${gpg_username}/.gnupg/gpg.conf"
         fi
-        if ! grep -q 'use-agent' "/home/$gpg_username/.gnupg/gpg.conf"; then
-            echo 'use-agent' >> "/home/$gpg_username/.gnupg/gpg.conf"
+        if ! grep -q 'use-agent' "/home/${gpg_username}/.gnupg/gpg.conf"; then
+            echo 'use-agent' >> "/home/${gpg_username}/.gnupg/gpg.conf"
         fi
-        if ! grep -q 'pinentry-mode loopback' "/home/$gpg_username/.gnupg/gpg.conf"; then
-            echo 'pinentry-mode loopback' >> "/home/$gpg_username/.gnupg/gpg.conf"
+        if ! grep -q 'pinentry-mode loopback' "/home/${gpg_username}/.gnupg/gpg.conf"; then
+            echo 'pinentry-mode loopback' >> "/home/${gpg_username}/.gnupg/gpg.conf"
         fi
-        echo 'default-cache-ttl 300' > "/home/$gpg_username/.gnupg/gpg-agent.conf"
-        echo 'max-cache-ttl 999999' >> "/home/$gpg_username/.gnupg/gpg-agent.conf"
-        echo 'allow-loopback-pinentry' >> "/home/$gpg_username/.gnupg/gpg-agent.conf"
-        if [ -f "/home/$gpg_username/.gnupg/S.dirmngr" ]; then
-            rm "/home/$gpg_username/.gnupg/S.dirmngr"
+        { echo 'default-cache-ttl 300';
+          echo 'max-cache-ttl 999999';
+          echo 'allow-loopback-pinentry'; } > "/home/${gpg_username}/.gnupg/gpg-agent.conf"
+        if [ -f "/home/${gpg_username}/.gnupg/S.dirmngr" ]; then
+            rm "/home/${gpg_username}/.gnupg/S.dirmngr"
         fi
         echo 'Reloading gpg agent'
-        if [[ "$gpg_username" != "$USER" ]]; then
-            su -c "echo RELOADAGENT | gpg-connect-agent" - "$gpg_username"
+        if [[ "${gpg_username}" != "$USER" ]]; then
+            su -c "echo RELOADAGENT | gpg-connect-agent" - "${gpg_username}"
         else
             echo RELOADAGENT | gpg-connect-agent
         fi
@@ -340,24 +340,24 @@ function gpg_agent_setup {
 function gpg_agent_enable {
     gpg_username=$1
 
-    if [[ $gpg_username == 'root' ]]; then
+    if [[ ${gpg_username} == 'root' ]]; then
         return
     else
-        if grep -q 'GPG_TTY' "/home/$gpg_username/.bashrc"; then
-            sed -i '/GPG_TTY/d' "/home/$gpg_username/.bashrc"
-            chown "$gpg_username":"$gpg_username" "/home/$gpg_username/.bashrc"
+        if grep -q 'GPG_TTY' "/home/${gpg_username}/.bashrc"; then
+            sed -i '/GPG_TTY/d' "/home/${gpg_username}/.bashrc"
+            chown "${gpg_username}":"${gpg_username}" "/home/${gpg_username}/.bashrc"
         fi
-        if grep -q 'use-agent' "/home/$gpg_username/.gnupg/gpg.conf"; then
-           sed -i '/use-agent/d' "/home/$gpg_username/.gnupg/gpg.conf"
+        if grep -q 'use-agent' "/home/${gpg_username}/.gnupg/gpg.conf"; then
+           sed -i '/use-agent/d' "/home/${gpg_username}/.gnupg/gpg.conf"
         fi
-        if grep -q 'pinentry-mode loopback' "/home/$gpg_username/.gnupg/gpg.conf"; then
-            sed -i '/pinentry-mode loopback/d' "/home/$gpg_username/.gnupg/gpg.conf"
+        if grep -q 'pinentry-mode loopback' "/home/${gpg_username}/.gnupg/gpg.conf"; then
+            sed -i '/pinentry-mode loopback/d' "/home/${gpg_username}/.gnupg/gpg.conf"
         fi
-        if [ -f "/home/$gpg_username/.gnupg/gpg-agent.conf" ]; then
-            rm "/home/$gpg_username/.gnupg/gpg-agent.conf"
+        if [ -f "/home/${gpg_username}/.gnupg/gpg-agent.conf" ]; then
+            rm "/home/${gpg_username}/.gnupg/gpg-agent.conf"
         fi
-        if [[ "$gpg_username" != "$USER" ]]; then
-            su -c "echo RELOADAGENT | gpg-connect-agent" - "$gpg_username"
+        if [[ "${gpg_username}" != "$USER" ]]; then
+            su -c "echo RELOADAGENT | gpg-connect-agent" - "${gpg_username}"
         else
             echo RELOADAGENT | gpg-connect-agent
         fi
