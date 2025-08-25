@@ -1841,6 +1841,15 @@ function reset_tripwire {
     "${PROJECT_NAME}-logging" off
     echo $'Locking down permissions...'
     lockdown_permissions
+
+    # final check of firewall
+    ruleset=$(/usr/sbin/nft list ruleset)
+    if [ ! "${ruleset}" ]; then
+        /usr/sbin/nft flush ruleset
+        /usr/sbin/nft -f /etc/firewall.conf
+        echo $'Firewall ruleset applied'
+    fi
+
     echo $'Creating configuration...'
     echo '
 
