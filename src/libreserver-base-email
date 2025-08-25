@@ -1080,6 +1080,9 @@ function email_smtp_proxy_through_isp {
           echo '#';
           echo '# Example:';
           echo '### target.mail.server.example:login:password'; } > /etc/exim4/passwd.client
+        if [ ! -f /etc/exim4/update-exim4.conf.conf ]; then
+            touch /etc/exim4/update-exim4.conf.conf
+        fi
         if ! grep -q 'dc_eximconfig_configtype=' /etc/exim4/update-exim4.conf.conf; then
             echo "dc_eximconfig_configtype='internet'" >> /etc/exim4/update-exim4.conf.conf
         else
@@ -1146,6 +1149,9 @@ function email_smtp_proxy_through_isp {
           echo '#';
           echo "${isp_smtp_domain_alias_line}";
           echo "${isp_smtp_domain}:${isp_smtp_username}:${isp_smtp_password}"; } > /etc/exim4/passwd.client
+        if [ ! -f /etc/exim4/update-exim4.conf.conf ]; then
+            touch /etc/exim4/update-exim4.conf.conf
+        fi
         if ! grep -q 'dc_eximconfig_configtype=' /etc/exim4/update-exim4.conf.conf; then
             echo "dc_eximconfig_configtype='$email_server_type'" >> /etc/exim4/update-exim4.conf.conf
         else
