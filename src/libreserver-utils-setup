@@ -173,6 +173,9 @@ function remove_bluetooth {
         fi
         bluetooth_changed=1
     fi
+    if [ ! -f /etc/modprobe.d/bluetooth.conf ]; then
+        return
+    fi
     if ! grep -q 'blacklist bnep' /etc/modprobe.d/bluetooth.conf; then
         echo 'blacklist bnep' >> /etc/modprobe.d/bluetooth.conf
         bluetooth_changed=1
