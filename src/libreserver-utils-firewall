@@ -301,11 +301,10 @@ function configure_firewall_base {
         /usr/sbin/nft add chain inet filter INPUT { type filter hook input priority 0 \; }
         /usr/sbin/nft add chain inet filter FORWARD { type filter hook forward priority 0 \; policy drop \; }
         /usr/sbin/nft add chain inet filter OUTPUT { type filter hook output priority 0 \; policy accept \; }
+        echo $'Initial firewall configuration complete'
     fi
 
     { echo '#!/usr/sbin/nft -f';
-      echo '';
-      echo 'flush ruleset';
       echo '';
       echo 'table inet filter {';
       echo '    set blackhole {';
