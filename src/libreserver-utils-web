@@ -74,13 +74,13 @@ function validate_domain_name {
 
 function nginx_robots {
     domain_name="$1"
-    filename="/etc/nginx/sites-available/$domain_name"
+    filename="/etc/nginx/sites-available/${domain_name}"
     echo '    add_header X-Robots-Tag "noindex, nofollow, nosnippet, noarchive";' >> "$filename"
 }
 
 function nginx_security_options {
     domain_name="$1"
-    filename="/etc/nginx/sites-available/$domain_name"
+    filename="/etc/nginx/sites-available/${domain_name}"
     { echo '    add_header X-Frame-Options DENY;';
       echo '    add_header X-Content-Type-Options nosniff;';
       echo '    add_header X-XSS-Protection "1; mode=block";';
@@ -95,7 +95,7 @@ function nginx_limits {
     if [ "$2" ]; then
         max_body=$2
     fi
-    filename="/etc/nginx/sites-available/$domain_name"
+    filename="/etc/nginx/sites-available/${domain_name}"
     { echo "        client_max_body_size ${max_body};";
       echo '        client_body_buffer_size 128k;';
       echo '';
@@ -106,7 +106,7 @@ function nginx_limits {
 
 function nginx_stapling {
     domain_name="$1"
-    filename="/etc/nginx/sites-available/$domain_name"
+    filename="/etc/nginx/sites-available/${domain_name}"
     { echo "    ssl_stapling on;";
       echo '    ssl_stapling_verify on;';
       echo "    ssl_trusted_certificate /etc/ssl/certs/${domain_name}.pem;";
@@ -116,7 +116,7 @@ function nginx_stapling {
 function nginx_http_redirect {
     # redirect port 80 to https
     domain_name="$1"
-    filename="/etc/nginx/sites-available/$domain_name"
+    filename="/etc/nginx/sites-available/${domain_name}"
     { echo 'server {';
       echo '    listen 80;';
       echo '    listen [::]:80;';
@@ -126,7 +126,7 @@ function nginx_http_redirect {
       echo '    access_log /dev/null;';
       echo "    error_log /dev/null;"; } > "$filename"
     function_check nginx_limits
-    nginx_limits "$domain_name"
+    nginx_limits "${domain_name}"
     if [ ${#2} -gt 0 ]; then
         echo "    $2;" >> "$filename"
     fi
@@ -137,7 +137,7 @@ function nginx_http_redirect {
 
 function nginx_compress {
     domain_name="$1"
-    filename="/etc/nginx/sites-available/$domain_name"
+    filename="/etc/nginx/sites-available/${domain_name}"
     { echo '    gzip on;';
       echo '    gzip_disable "msie6";';
       echo '    gzip_vary on;';
@@ -146,14 +146,14 @@ function nginx_compress {
       echo '    gzip_comp_level 6;';
       echo '    gzip_buffers 16 8k;';
       echo '    gzip_http_version 1.1;';
-      echo '    gzip_types text/plain text/css application/json application/ld+json application/javascript text/xml application/xml application/rdf+xml application/xml+rss text/javascript;'; } >> "$filename"
+      echo '    gzip_types text/plain text/css application/json application/ld+json application/javascript text/xml application/xml application/rdf+xml application/xml+rss text/javascript;'; } >> "${filename}"
 }
 
 function nginx_ssl {
     # creates the SSL/TLS section for a website
     domain_name="$1"
     mobile_ciphers=$2
-    filename="/etc/nginx/sites-available/$domain_name"
+    filename="/etc/nginx/sites-available/${domain_name}"
 
     { echo '    ssl_stapling off;';
       echo '    ssl_stapling_verify off;';
@@ -164,14 +164,14 @@ function nginx_ssl {
       echo '    ssl_session_cache  builtin:1000  shared:SSL:10m;';
       echo '    ssl_session_timeout 60m;';
       echo '    ssl_prefer_server_ciphers on;';
-      echo "    ssl_protocols $SSL_PROTOCOLS;"; } >> "$filename"
+      echo "    ssl_protocols ${SSL_PROTOCOLS};"; } >> "$filename"
     if [ "$mobile_ciphers" ]; then
         echo "    # Mobile compatible ciphers" >> "$filename"
-        echo "    ssl_ciphers '$SSL_CIPHERS_MOBILE';" >> "$filename"
+        echo "    ssl_ciphers '${SSL_CIPHERS_MOBILE}';" >> "$filename"
     else
-        echo "    ssl_ciphers '$SSL_CIPHERS';" >> "$filename"
+        echo "    ssl_ciphers '${SSL_CIPHERS}';" >> "$filename"
     fi
-    echo "    add_header Content-Security-Policy \"default-src https:; script-src https: 'unsafe-inline'; style-src https: 'unsafe-inline'\";" >> "$filename"
+    echo "    add_header Content-Security-Policy \"default-src https:; script-src https: 'unsafe-inline'; style-src https: 'unsafe-inline'\";" >> "${filename}"
 
     #nginx_stapling $1
 }
@@ -182,8 +182,8 @@ function test_domain_name {
         TEST_DOMAIN_NAME=$1
         function_check validate_domain_name
         validate_domain_name
-        if [[ "$TEST_DOMAIN_NAME" != "$1" ]]; then
-            echo $"Invalid domain name $TEST_DOMAIN_NAME"
+        if [[ "${TEST_DOMAIN_NAME}" != "$1" ]]; then
+            echo $"Invalid domain name ${TEST_DOMAIN_NAME}"
             exit 85
         fi
     fi
@@ -199,7 +199,7 @@ function check_certificates {
     if [ "$2" ]; then
         USE_LETSENCRYPT="$2"
     fi
-    if [[ $USE_LETSENCRYPT == 'no' || "$ONION_ONLY" != 'no' || "$I2P_ONLY" != 'no' ]]; then
+    if [[ $USE_LETSENCRYPT == 'no' || "${ONION_ONLY}" != 'no' || "${I2P_ONLY}" != 'no' ]]; then
         if [ ! -f "/etc/ssl/private/${1}.key" ]; then
             echo $"Private certificate for ${CHECK_HOSTNAME} was not created"
             exit 63
@@ -297,7 +297,7 @@ function create_site_certificate {
         NO_SELF_SIGNED="$2"
     fi
 
-    if [[ $ONION_ONLY == "no" && $I2P_ONLY == "no" ]]; then
+    if [[ ${ONION_ONLY} == "no" && ${I2P_ONLY} == "no" ]]; then
         if [[ "$(cert_exists "${SITE_DOMAIN_NAME}")" == "0" ]]; then
             if [[ $LETSENCRYPT_ENABLED != "yes" ]]; then
                 create_self_signed_cert
@@ -316,7 +316,7 @@ function create_site_certificate {
 
 # script to automatically renew any Let's Encrypt certificates
 function letsencrypt_renewals {
-    if [[ $ONION_ONLY != "no" || $I2P_ONLY != "no" ]]; then
+    if [[ ${ONION_ONLY} != "no" || ${I2P_ONLY} != "no" ]]; then
         return
     fi
 
@@ -325,7 +325,7 @@ function letsencrypt_renewals {
     renewal_failure_msg=$'The certificate for $LETSENCRYPT_DOMAIN could not be renewed'
     renewal_email_title=$'${PROJECT_NAME} Lets Encrypt certificate renewal'
 
-    if [ ! "$DEFAULT_DOMAIN_NAME" ]; then
+    if [ ! "${DEFAULT_DOMAIN_NAME}" ]; then
         read_config_param DEFAULT_DOMAIN_NAME
     fi
 
@@ -350,7 +350,7 @@ function letsencrypt_renewals {
       echo '    if [ -f ~/letsencrypt_failed ]; then';
       echo '        rm ~/letsencrypt_failed';
       echo '    fi';
-      echo -n "    ADMIN_USERNAME=\$(cat \$COMPLETION_FILE | grep \"Admin user\" | ";
+      echo -n "    ADMIN_USERNAME=\$(cat \${COMPLETION_FILE} | grep \"Admin user\" | ";
       echo -n "awk -F ':' '{print ";
       echo -n "\$2";
       echo "}')";
@@ -378,9 +378,9 @@ function letsencrypt_renewals {
       echo '            if [ ! -f ~/letsencrypt_failed ]; then';
       echo '                touch ~/letsencrypt_failed';
       echo '            fi';
-      echo "            if [[ \"\$LETSENCRYPT_DOMAIN\" != \"$DEFAULT_DOMAIN_NAME\" ]]; then";
-      echo "                if [[ \"\$LETSENCRYPT_DOMAIN\" != \"chat.$DEFAULT_DOMAIN_NAME\" ]]; then";
-      echo "                    if [[ \"\$LETSENCRYPT_DOMAIN\" != \"mail.$DEFAULT_DOMAIN_NAME\" ]]; then";
+      echo "            if [[ \"\$LETSENCRYPT_DOMAIN\" != \"${DEFAULT_DOMAIN_NAME}\" ]]; then";
+      echo "                if [[ \"\$LETSENCRYPT_DOMAIN\" != \"chat.${DEFAULT_DOMAIN_NAME}\" ]]; then";
+      echo "                    if [[ \"\$LETSENCRYPT_DOMAIN\" != \"mail.${DEFAULT_DOMAIN_NAME}\" ]]; then";
       echo "                        if ! grep -q \"\$LETSENCRYPT_DOMAIN\" /etc/nginx/sites-available/*; then";
       echo '                            # remove the cert';
       echo "                            rm -rf \"/etc/letsencrypt/live/\${LETSENCRYPT_DOMAIN}\"";
@@ -433,7 +433,7 @@ function letsencrypt_renewals {
       echo 'if [ -d /etc/letsencrypt ]; then';
       echo '    if [ -f ~/letsencrypt_failed ]; then';
       echo '        rm ~/letsencrypt_failed';
-      echo -n "        ADMIN_USERNAME=\$(cat \$COMPLETION_FILE | grep \"Admin user\" | ";
+      echo -n "        ADMIN_USERNAME=\$(cat \${COMPLETION_FILE} | grep \"Admin user\" | ";
       echo -n "awk -F ':' '{print ";
       echo -n "\$2";
       echo "}')";
@@ -461,9 +461,9 @@ function letsencrypt_renewals {
       echo '                if [ ! -f ~/letsencrypt_failed ]; then';
       echo '                    touch ~/letsencrypt_failed';
       echo '                fi';
-      echo "                if [[ \"\$LETSENCRYPT_DOMAIN\" != \"$DEFAULT_DOMAIN_NAME\" ]]; then";
-      echo "                    if [[ \"\$LETSENCRYPT_DOMAIN\" != \"chat.$DEFAULT_DOMAIN_NAME\" ]]; then";
-      echo "                        if [[ \"\$LETSENCRYPT_DOMAIN\" != \"mail.$DEFAULT_DOMAIN_NAME\" ]]; then";
+      echo "                if [[ \"\$LETSENCRYPT_DOMAIN\" != \"${DEFAULT_DOMAIN_NAME}\" ]]; then";
+      echo "                    if [[ \"\$LETSENCRYPT_DOMAIN\" != \"chat.${DEFAULT_DOMAIN_NAME}\" ]]; then";
+      echo "                        if [[ \"\$LETSENCRYPT_DOMAIN\" != \"mail.${DEFAULT_DOMAIN_NAME}\" ]]; then";
       echo "                            if ! grep -q \"\$LETSENCRYPT_DOMAIN\" /etc/nginx/sites-available/*; then";
       echo '                                # remove the cert';
       echo "                                rm -rf \"/etc/letsencrypt/live/\${LETSENCRYPT_DOMAIN}\"";
@@ -540,10 +540,10 @@ function upgrade_inadyn_config {
       echo '';
       echo "provider $DDNS_PROVIDER {";
       echo "    ssl            = true";
-      echo "    username       = $DDNS_USERNAME";
+      echo "    username       = ${DDNS_USERNAME}";
       echo "    password       = $DDNS_PASSWORD";
       echo '    wildcard       = true';
-      echo "    hostname       = $DEFAULT_DOMAIN_NAME";
+      echo "    hostname       = ${DEFAULT_DOMAIN_NAME}";
       echo '}'; } > "${INADYN_CONFIG_FILE}"
 }
 
@@ -552,20 +552,20 @@ function install_dynamicdns {
         return
     fi
 
-    if [[ $ONION_ONLY != "no" || $I2P_ONLY != "no" ]]; then
+    if [[ ${ONION_ONLY} != "no" || ${I2P_ONLY} != "no" ]]; then
         return
     fi
 
-    if grep -q "INADYN_REPO" "$CONFIGURATION_FILE"; then
-        sed -i '/INADYN_REPO/d' "$CONFIGURATION_FILE"
+    if grep -q "INADYN_REPO" "${CONFIGURATION_FILE}"; then
+        sed -i '/INADYN_REPO/d' "${CONFIGURATION_FILE}"
     fi
-    if grep -q "INADYN_COMMIT" "$CONFIGURATION_FILE"; then
-        sed -i '/INADYN_COMMIT/d' "$CONFIGURATION_FILE"
+    if grep -q "INADYN_COMMIT" "${CONFIGURATION_FILE}"; then
+        sed -i '/INADYN_COMMIT/d' "${CONFIGURATION_FILE}"
     fi
 
     if [ -f /usr/local/sbin/inadyn ]; then
-        if grep -q "inadyn commit" "$COMPLETION_FILE"; then
-            sed -i '/inadyn commit/d' "$COMPLETION_FILE"
+        if grep -q "inadyn commit" "${COMPLETION_FILE}"; then
+            sed -i '/inadyn commit/d' "${COMPLETION_FILE}"
         fi
     else
         CURR_INADYN_COMMIT=$(get_completion_param "inadyn commit")
@@ -575,8 +575,8 @@ function install_dynamicdns {
     fi
 
     if [ -f /usr/local/sbin/inadyn ]; then
-        if [ -d "$INSTALL_DIR/inadyn" ]; then
-            rm -rf "$INSTALL_DIR/inadyn"
+        if [ -d "${INSTALL_DIR}/inadyn" ]; then
+            rm -rf "${INSTALL_DIR}/inadyn"
         fi
         if [ -d /repos/inadyn ]; then
             rm -rf /repos/inadyn
@@ -584,7 +584,7 @@ function install_dynamicdns {
     else
         # update to the next commit
         function_check set_repo_commit
-        set_repo_commit "$INSTALL_DIR/inadyn" "inadyn commit" "$INADYN_COMMIT" "$INADYN_REPO"
+        set_repo_commit "${INSTALL_DIR}/inadyn" "inadyn commit" "$INADYN_COMMIT" "$INADYN_REPO"
     fi
 
     INSTALL_PACKAGES inadyn
@@ -809,7 +809,7 @@ function install_web_server {
 
     # update to the next commit
     function_check set_repo_commit
-    set_repo_commit "$INSTALL_DIR/nginx_ensite" "nginx-ensite commit" "$NGINX_ENSITE_COMMIT" $NGINX_ENSITE_REPO
+    set_repo_commit "${INSTALL_DIR}/nginx_ensite" "nginx-ensite commit" "${NGINX_ENSITE_COMMIT}" $NGINX_ENSITE_REPO
 
     if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
         return
@@ -941,16 +941,16 @@ function install_web_server {
         cd "$NGINX_ENSITE_DIR" || exit 25
         make install
     else
-        if [ ! -d "$INSTALL_DIR" ]; then
-            mkdir "$INSTALL_DIR"
+        if [ ! -d "${INSTALL_DIR}" ]; then
+            mkdir "${INSTALL_DIR}"
         fi
-        cd "$INSTALL_DIR" || exit 27
+        cd "${INSTALL_DIR}" || exit 27
         function_check git_clone
-        git_clone "$NGINX_ENSITE_REPO" "$INSTALL_DIR/nginx_ensite"
-        cd "$INSTALL_DIR/nginx_ensite" || exit 24
-        git checkout "$NGINX_ENSITE_COMMIT" -b "$NGINX_ENSITE_COMMIT"
+        git_clone "$NGINX_ENSITE_REPO" "${INSTALL_DIR}/nginx_ensite"
+        cd "${INSTALL_DIR}/nginx_ensite" || exit 24
+        git checkout "${NGINX_ENSITE_COMMIT}" -b "${NGINX_ENSITE_COMMIT}"
 
-        set_completion_param "nginx-ensite commit" "$NGINX_ENSITE_COMMIT"
+        set_completion_param "nginx-ensite commit" "${NGINX_ENSITE_COMMIT}"
 
         make install
     fi
@@ -965,7 +965,7 @@ function install_web_server {
 function remove_certs {
     domain_name=$1
 
-    if [ ! "$domain_name" ]; then
+    if [ ! "${domain_name}" ]; then
         return
     fi
 
@@ -994,7 +994,7 @@ function configure_firewall_for_web_access {
         # docker does its own firewalling
         return
     fi
-    if [[ $ONION_ONLY != "no" || $I2P_ONLY != "no" ]]; then
+    if [[ ${ONION_ONLY} != "no" || ${I2P_ONLY} != "no" ]]; then
         return
     fi
     firewall_add HTTP 80 tcp
@@ -1004,7 +1004,7 @@ function configure_firewall_for_web_access {
 
 function update_default_domain {
     echo $'Updating default domain'
-    if [[ $ONION_ONLY == 'no' && $I2P_ONLY == 'no' ]]; then
+    if [[ ${ONION_ONLY} == 'no' && ${I2P_ONLY} == 'no' ]]; then
         if [ -f /etc/mumble-server.ini ]; then
             if [ ! -f "/etc/letsencrypt/live/${DEFAULT_DOMAIN_NAME}/fullchain.pem" ]; then
                 if ! grep -q "mumble.pem" /etc/mumble-server.ini; then
@@ -1064,9 +1064,9 @@ function update_default_domain {
             chown -R prosody:default /etc/prosody
             chmod -R 700 /etc/prosody/certs/*
             chmod 600 /etc/prosody/prosody.cfg.lua
-            if [ -d "$INSTALL_DIR/prosody-modules" ]; then
-                cp -r "$INSTALL_DIR/prosody-modules/"* /var/lib/prosody/prosody-modules/
-                cp -r "$INSTALL_DIR/prosody-modules/"* /usr/lib/prosody/modules/
+            if [ -d "${INSTALL_DIR}/prosody-modules" ]; then
+                cp -r "${INSTALL_DIR}/prosody-modules/"* /var/lib/prosody/prosody-modules/
+                cp -r "${INSTALL_DIR}/prosody-modules/"* /usr/lib/prosody/modules/
             fi
             chown -R prosody:prosody /var/lib/prosody/prosody-modules
             chown -R prosody:prosody /usr/lib/prosody/modules
@@ -1112,7 +1112,7 @@ function block_web_crawlers {
 }
 
 function create_default_web_site {
-    curr_default_domain_name=$DEFAULT_DOMAIN_NAME
+    curr_default_domain_name=${DEFAULT_DOMAIN_NAME}
     if [ "$1" ]; then
         curr_default_domain_name="$1"
     fi
@@ -1134,24 +1134,24 @@ function create_default_web_site {
 
         # add a config for the default domain
         crawlers_list=$(get_web_crawlers)
-        nginx_site=/etc/nginx/sites-available/$DEFAULT_DOMAIN_NAME
-        if [[ $ONION_ONLY == "no" && $I2P_ONLY == "no" ]]; then
+        nginx_site=/etc/nginx/sites-available/${DEFAULT_DOMAIN_NAME}
+        if [[ ${ONION_ONLY} == "no" && ${I2P_ONLY} == "no" ]]; then
             function_check nginx_http_redirect
-            nginx_http_redirect "$curr_default_domain_name"
+            nginx_http_redirect "${curr_default_domain_name}"
             { echo 'server {';
               echo '  listen 443 ssl;';
               echo '  listen [::]:443 ssl;';
-              echo "  server_name $curr_default_domain_name;";
+              echo "  server_name ${curr_default_domain_name};";
               echo '  server_tokens off;';
               echo '';
               echo "    if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
               echo '';
-              echo '  # Security'; } >> "$nginx_site"
+              echo '  # Security'; } >> "${nginx_site}"
             function_check nginx_ssl
-            nginx_ssl "$curr_default_domain_name" mobile
+            nginx_ssl "${curr_default_domain_name}" mobile
 
             function_check nginx_security_options
-            nginx_security_options "$curr_default_domain_name"
+            nginx_security_options "${curr_default_domain_name}"
 
             { echo '  add_header Strict-Transport-Security max-age=15768000;';
               echo '';
@@ -1160,7 +1160,7 @@ function create_default_web_site {
               echo '  error_log /dev/null;';
               echo '';
               echo '  # Root';
-              echo "  root /var/www/$curr_default_domain_name/htdocs;";
+              echo "  root /var/www/${curr_default_domain_name}/htdocs;";
               echo '';
               echo '  # Index';
               echo '  index index.html;';
@@ -1168,7 +1168,7 @@ function create_default_web_site {
               echo '  # Location';
               echo '  location / {'; } >> "$nginx_site"
             function_check nginx_limits
-            nginx_limits "$curr_default_domain_name" '15m'
+            nginx_limits "${curr_default_domain_name}" '15m'
             { echo '  }';
               echo '';
               echo '  # Restrict access that is unnecessary anyway';
@@ -1181,25 +1181,25 @@ function create_default_web_site {
         fi
         { echo 'server {';
           echo "    listen 127.0.0.1:$DEFAULT_DOMAIN_ONION_PORT default_server;";
-          echo "    server_name $curr_default_domain_name;";
+          echo "    server_name ${curr_default_domain_name};";
           echo '    server_tokens off;';
           echo '';
           echo "    if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
           echo ''; } >> "$nginx_site"
         function_check nginx_security_options
-        nginx_security_options "$curr_default_domain_name"
+        nginx_security_options "${curr_default_domain_name}"
         { echo '';
           echo '  # Logs';
           echo '  access_log /dev/null;';
           echo '  error_log /dev/null;';
           echo '';
           echo '  # Root';
-          echo "  root /var/www/$curr_default_domain_name/htdocs;";
+          echo "  root /var/www/${curr_default_domain_name}/htdocs;";
           echo '';
           echo '  # Location';
           echo '  location / {'; } >> "$nginx_site"
         function_check nginx_limits
-        nginx_limits "$curr_default_domain_name" '15m'
+        nginx_limits "${curr_default_domain_name}" '15m'
         { echo '  }';
           echo '';
           echo '  # Restrict access that is unnecessary anyway';
@@ -1210,28 +1210,28 @@ function create_default_web_site {
 
         add_i2p_service default 80 $DEFAULT_I2P_PORT
         DEFAULT_I2P_HOSTNAME=$(get_i2p_domain default)
-        if [ "$DEFAULT_I2P_HOSTNAME" ]; then
+        if [ "${DEFAULT_I2P_HOSTNAME}" ]; then
             { echo 'server {';
-              echo "    listen 127.0.0.1:$DEFAULT_DOMAIN_I2P_PORT;";
-              echo "    server_name $DEFAULT_I2P_HOSTNAME;";
+              echo "    listen 127.0.0.1:${DEFAULT_DOMAIN_I2P_PORT};";
+              echo "    server_name ${DEFAULT_I2P_HOSTNAME};";
               echo '    server_tokens off;';
               echo '';
               echo "    if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
               echo ''; } >> "$nginx_site"
             function_check nginx_security_options
-            nginx_security_options "$curr_default_domain_name"
+            nginx_security_options "${curr_default_domain_name}"
             { echo '';
               echo '  # Logs';
               echo '  access_log /dev/null;';
               echo '  error_log /dev/null;';
               echo '';
               echo '  # Root';
-              echo "  root /var/www/$curr_default_domain_name/htdocs;";
+              echo "  root /var/www/${curr_default_domain_name}/htdocs;";
               echo '';
               echo '  # Location';
               echo '  location / {'; } >> "$nginx_site"
             function_check nginx_limits
-            nginx_limits "$curr_default_domain_name" '15m'
+            nginx_limits "${curr_default_domain_name}" '15m'
             { echo '  }';
               echo '';
               echo '  # Restrict access that is unnecessary anyway';
@@ -1243,10 +1243,10 @@ function create_default_web_site {
 
         if [ ! -f "/etc/ssl/certs/${curr_default_domain_name}.pem" ]; then
             function_check create_site_certificate
-            create_site_certificate "$curr_default_domain_name" 'yes'
+            create_site_certificate "${curr_default_domain_name}" 'yes'
         fi
 
-        nginx_ensite "$curr_default_domain_name"
+        nginx_ensite "${curr_default_domain_name}"
     fi
 }
 
