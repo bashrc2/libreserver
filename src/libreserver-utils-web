@@ -659,53 +659,53 @@ function install_command_line_browser {
 
 function image_install_web_server {
     # shellcheck disable=SC2154
-    if [ -d "$rootdir/etc/apache2" ]; then
+    if [ -d "${rootdir}/etc/apache2" ]; then
         # shellcheck disable=SC2154,SC2086
-        chroot "$rootdir" $REMOVE_PACKAGES_PURGE apache2
-        chroot "$rootdir" rm -rf /etc/apache2
+        chroot "${rootdir}" $REMOVE_PACKAGES_PURGE apache2
+        chroot "${rootdir}" rm -rf /etc/apache2
     fi
 
     # shellcheck disable=SC2086
-    chroot "$rootdir" INSTALL_PACKAGES nginx php${PHP_VERSION}-fpm
+    chroot "${rootdir}" INSTALL_PACKAGES nginx php${PHP_VERSION}-fpm
 
-    if [ ! -d "$rootdir/etc/nginx" ]; then
+    if [ ! -d "${rootdir}/etc/nginx" ]; then
         echo $'Unable to install web server'
         exit 34
     fi
 
     # Turn off logs by default
-    sed -i 's|access_log.*|access_log = /dev/null;|g' "$rootdir/etc/nginx/nginx.conf"
-    sed -i 's|error_log.*|error_log = /dev/null;|g' "$rootdir/etc/nginx/nginx.conf"
+    sed -i 's|access_log.*|access_log = /dev/null;|g' "${rootdir}/etc/nginx/nginx.conf"
+    sed -i 's|error_log.*|error_log = /dev/null;|g' "${rootdir}/etc/nginx/nginx.conf"
 
     # limit the number of php processes
-    if [ -f "$rootdir/etc/php/${PHP_VERSION}/fpm/php-fpm.conf" ]; then
-        sed -i 's/; process.max =.*/process.max = 32/g' "$rootdir/etc/php/${PHP_VERSION}/fpm/php-fpm.conf"
-        #sed -i 's/;process_control_timeout =.*/process_control_timeout = 300/g' "$rootdir/etc/php/${PHP_VERSION}/fpm/php-fpm.conf"
-        sed -i 's|;systemd_interval.*|systemd_interval = 10|g' "$rootdir/etc/php/${PHP_VERSION}/fpm/php-fpm.conf"
-        sed -i 's|;emergency_restart_threshold.*|emergency_restart_threshold = 2|g' "$rootdir/etc/php/${PHP_VERSION}/fpm/php-fpm.conf"
-        sed -i 's|emergency_restart_threshold.*|emergency_restart_threshold = 2|g' "$rootdir/etc/php/${PHP_VERSION}/fpm/php-fpm.conf"
-        sed -i 's|;emergency_restart_interval.*|emergency_restart_interval = 1m|g' "$rootdir/etc/php/${PHP_VERSION}/fpm/php-fpm.conf"
-        sed -i 's|emergency_restart_interval.*|emergency_restart_interval = 1m|g' "$rootdir/etc/php/${PHP_VERSION}/fpm/php-fpm.conf"
-        sed -i 's|;process_control_timeout.*|process_control_timeout = 10s|g' "$rootdir/etc/php/${PHP_VERSION}/fpm/php-fpm.conf"
-        sed -i 's|process_control_timeout.*|process_control_timeout = 10s|g' "$rootdir/etc/php/${PHP_VERSION}/fpm/php-fpm.conf"
+    if [ -f "${rootdir}/etc/php/${PHP_VERSION}/fpm/php-fpm.conf" ]; then
+        sed -i 's/; process.max =.*/process.max = 32/g' "${rootdir}/etc/php/${PHP_VERSION}/fpm/php-fpm.conf"
+        #sed -i 's/;process_control_timeout =.*/process_control_timeout = 300/g' "${rootdir}/etc/php/${PHP_VERSION}/fpm/php-fpm.conf"
+        sed -i 's|;systemd_interval.*|systemd_interval = 10|g' "${rootdir}/etc/php/${PHP_VERSION}/fpm/php-fpm.conf"
+        sed -i 's|;emergency_restart_threshold.*|emergency_restart_threshold = 2|g' "${rootdir}/etc/php/${PHP_VERSION}/fpm/php-fpm.conf"
+        sed -i 's|emergency_restart_threshold.*|emergency_restart_threshold = 2|g' "${rootdir}/etc/php/${PHP_VERSION}/fpm/php-fpm.conf"
+        sed -i 's|;emergency_restart_interval.*|emergency_restart_interval = 1m|g' "${rootdir}/etc/php/${PHP_VERSION}/fpm/php-fpm.conf"
+        sed -i 's|emergency_restart_interval.*|emergency_restart_interval = 1m|g' "${rootdir}/etc/php/${PHP_VERSION}/fpm/php-fpm.conf"
+        sed -i 's|;process_control_timeout.*|process_control_timeout = 10s|g' "${rootdir}/etc/php/${PHP_VERSION}/fpm/php-fpm.conf"
+        sed -i 's|process_control_timeout.*|process_control_timeout = 10s|g' "${rootdir}/etc/php/${PHP_VERSION}/fpm/php-fpm.conf"
 
-        if ! grep -q "pm.max_children" "$rootdir/etc/php/${PHP_VERSION}/fpm/php-fpm.conf"; then
+        if ! grep -q "pm.max_children" "${rootdir}/etc/php/${PHP_VERSION}/fpm/php-fpm.conf"; then
             { echo 'pm = static';
               echo 'pm.max_children = 10';
               echo 'pm.start_servers = 2';
               echo 'pm.min_spare_servers = 2';
               echo 'pm.max_spare_servers = 5';
-              echo 'pm.max_requests = 10'; } >> "$rootdir/etc/php/${PHP_VERSION}/fpm/php-fpm.conf"
+              echo 'pm.max_requests = 10'; } >> "${rootdir}/etc/php/${PHP_VERSION}/fpm/php-fpm.conf"
         fi
-        if ! grep -q "request_terminate_timeout" "$rootdir/etc/php/${PHP_VERSION}/fpm/php-fpm.conf"; then
-            echo 'request_terminate_timeout = 30' >> "$rootdir/etc/php/${PHP_VERSION}/fpm/php-fpm.conf"
+        if ! grep -q "request_terminate_timeout" "${rootdir}/etc/php/${PHP_VERSION}/fpm/php-fpm.conf"; then
+            echo 'request_terminate_timeout = 30' >> "${rootdir}/etc/php/${PHP_VERSION}/fpm/php-fpm.conf"
         else
-            sed -i 's|request_terminate_timeout =.*|request_terminate_timeout = 30|g'  >> "$rootdir/etc/php/${PHP_VERSION}/fpm/php-fpm.conf"
+            sed -i 's|request_terminate_timeout =.*|request_terminate_timeout = 30|g'  >> "${rootdir}/etc/php/${PHP_VERSION}/fpm/php-fpm.conf"
         fi
-        sed -i 's|max_execution_time =.*|max_execution_time = 30|g' "$rootdir/etc/php/${PHP_VERSION}/fpm/php.ini"
+        sed -i 's|max_execution_time =.*|max_execution_time = 30|g' "${rootdir}/etc/php/${PHP_VERSION}/fpm/php.ini"
     fi
 
-    if [ ! -d "$rootdir/etc/nginx" ]; then
+    if [ ! -d "${rootdir}/etc/nginx" ]; then
         echo $"ERROR: nginx does not appear to have installed. $CHECK_MESSAGE"
         exit 51
     fi
@@ -785,19 +785,19 @@ function image_install_web_server {
       echo '';
       echo '        include /etc/nginx/conf.d/*.conf;';
       echo '        include /etc/nginx/sites-enabled/*;';
-      echo '}'; } > "$rootdir/etc/nginx/nginx.conf"
+      echo '}'; } > "${rootdir}/etc/nginx/nginx.conf"
 
-    rm "$rootdir/etc/nginx/sites-enabled/default"
-    if [ -f "$rootdir/etc/nginx/sites-available/default" ]; then
-        rm "$rootdir/etc/nginx/sites-available/default"
+    rm "${rootdir}/etc/nginx/sites-enabled/default"
+    if [ -f "${rootdir}/etc/nginx/sites-available/default" ]; then
+        rm "${rootdir}/etc/nginx/sites-available/default"
     fi
 
     # disable some functions for security reasons
-    if [ -f "$rootdir/etc/php/${PHP_VERSION}/cli/php.ini" ]; then
-        sed -i 's|disable_functions.*|disable_functions = imap_open|g' "$rootdir/etc/php/${PHP_VERSION}/cli/php.ini"
+    if [ -f "${rootdir}/etc/php/${PHP_VERSION}/cli/php.ini" ]; then
+        sed -i 's|disable_functions.*|disable_functions = imap_open|g' "${rootdir}/etc/php/${PHP_VERSION}/cli/php.ini"
     fi
-    if [ -f "$rootdir/etc/php/${PHP_VERSION}/fpm/php.ini" ]; then
-        sed -i 's|disable_functions.*|disable_functions = imap_open|g' "$rootdir/etc/php/${PHP_VERSION}/fpm/php.ini"
+    if [ -f "${rootdir}/etc/php/${PHP_VERSION}/fpm/php.ini" ]; then
+        sed -i 's|disable_functions.*|disable_functions = imap_open|g' "${rootdir}/etc/php/${PHP_VERSION}/fpm/php.ini"
     fi
 }
 
