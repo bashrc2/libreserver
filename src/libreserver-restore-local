@@ -886,7 +886,9 @@ function restore_certs {
             cp /etc/ssl/certs/exim.crt /etc/exim4
             cp /etc/ssl/certs/exim.dhparam /etc/exim4
             chown root:Debian-exim /etc/exim4/exim.key /etc/exim4/exim.crt /etc/exim4/exim.dhparam
-            chmod 640 /etc/exim4/exim.key /etc/exim4/exim.crt /etc/exim4/exim.dhparam
+            chmod 640 /etc/exim4/exim.key
+            chmod 640 /etc/exim4/exim.crt
+            chmod 640 /etc/exim4/exim.dhparam
         fi
         if [ -f /etc/ssl/private/mumble.key ]; then
             if [ -d /var/lib/mumble-server ]; then
