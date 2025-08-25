@@ -1311,9 +1311,9 @@ function email_install_tls {
         curr_default_domain_name="$1"
     fi
 
-    if [ ! -f $tls_config_file ]; then
+    if [ ! -f ${tls_config_file} ]; then
         tls_config_file=/etc/exim4/exim4.conf.template
-        tls_auth_config_file=$tls_config_file
+        tls_auth_config_file=${tls_config_file}
     fi
     if [ ! -f /etc/ssl/certs/exim.dhparam ]; then
         "${PROJECT_NAME}-addcert" -h exim --dhkey "$DH_KEYLENGTH"
@@ -1334,12 +1334,12 @@ function email_install_tls {
         chmod 640 /etc/exim4/exim.dhparam
         email_config_changed=1
     fi
-    if ! grep -q 'MAIN_TLS_ENABLE = true' $tls_config_file; then
-        sed -i "/.ifdef MAIN_HARDCODE_PRIMARY_HOSTNAME/i\\MAIN_HARDCODE_PRIMARY_HOSTNAME =\\nMAIN_TLS_ENABLE = true" "$tls_config_file"
+    if ! grep -q 'MAIN_TLS_ENABLE = true' ${tls_config_file}; then
+        sed -i "/.ifdef MAIN_HARDCODE_PRIMARY_HOSTNAME/i\\MAIN_HARDCODE_PRIMARY_HOSTNAME =\\nMAIN_TLS_ENABLE = true" "${tls_config_file}"
         email_config_changed=1
     fi
-    if ! grep -q "tls_on_connect_ports=465" $tls_config_file; then
-        sed -i '/SSL configuration for exim/i\tls_on_connect_ports=465' $tls_config_file
+    if ! grep -q "tls_on_connect_ports=465" ${tls_config_file}; then
+        sed -i '/SSL configuration for exim/i\tls_on_connect_ports=465' ${tls_config_file}
         email_config_changed=1
     fi
     if grep -q '# login_saslauthd_server' $tls_auth_config_file; then
@@ -1351,11 +1351,11 @@ function email_install_tls {
         chown root:Debian-exim /etc/exim4/*.pem
         chmod 640 /etc/exim4/*.pem
 
-        if ! grep -q "MAIN_TLS_CERTIFICATE = /etc/exim4/fullchain.pem" $tls_config_file; then
-            if ! grep -q "MAIN_TLS_CERTIFICATE =" $tls_config_file; then
-                sed -i "/.ifdef MAIN_TLS_CERTKEY/i\\MAIN_TLS_CERTIFICATE = /etc/exim4/fullchain.pem" $tls_config_file
+        if ! grep -q "MAIN_TLS_CERTIFICATE = /etc/exim4/fullchain.pem" ${tls_config_file}; then
+            if ! grep -q "MAIN_TLS_CERTIFICATE =" ${tls_config_file}; then
+                sed -i "/.ifdef MAIN_TLS_CERTKEY/i\\MAIN_TLS_CERTIFICATE = /etc/exim4/fullchain.pem" ${tls_config_file}
             else
-                sed -i 's|MAIN_TLS_CERTIFICATE =.*|MAIN_TLS_CERTIFICATE = /etc/exim4/fullchain.pem|g' $tls_config_file
+                sed -i 's|MAIN_TLS_CERTIFICATE =.*|MAIN_TLS_CERTIFICATE = /etc/exim4/fullchain.pem|g' ${tls_config_file}
             fi
             email_config_changed=1
         fi
@@ -1367,11 +1367,11 @@ function email_install_tls {
             chmod 640 /etc/exim4/*.pem
         fi
 
-        if ! grep -q "MAIN_TLS_PRIVATEKEY = /etc/exim4/privkey.pem" $tls_config_file; then
-            if ! grep -q "MAIN_TLS_PRIVATEKEY =" $tls_config_file; then
-                sed -i "/.ifndef MAIN_TLS_PRIVATEKEY/i\\MAIN_TLS_PRIVATEKEY = /etc/exim4/privkey.pem" $tls_config_file
+        if ! grep -q "MAIN_TLS_PRIVATEKEY = /etc/exim4/privkey.pem" ${tls_config_file}; then
+            if ! grep -q "MAIN_TLS_PRIVATEKEY =" ${tls_config_file}; then
+                sed -i "/.ifndef MAIN_TLS_PRIVATEKEY/i\\MAIN_TLS_PRIVATEKEY = /etc/exim4/privkey.pem" ${tls_config_file}
             else
-                sed -i 's|MAIN_TLS_PRIVATEKEY =.*|MAIN_TLS_PRIVATEKEY = /etc/exim4/privkey.pem|g' $tls_config_file
+                sed -i 's|MAIN_TLS_PRIVATEKEY =.*|MAIN_TLS_PRIVATEKEY = /etc/exim4/privkey.pem|g' ${tls_config_file}
             fi
             email_config_changed=1
         fi
