@@ -3397,7 +3397,10 @@ function update_enable_ssh {
                 fi
             fi
         fi
-        /usr/sbin/nft list ruleset > /etc/firewall.conf
+        ruleset=$(/usr/sbin/nft list ruleset)
+        if [ "${ruleset}" ]; then
+            /usr/sbin/nft list ruleset > /etc/firewall.conf
+        fi
         systemctl restart ssh
         rm "$ssh_file"
     fi

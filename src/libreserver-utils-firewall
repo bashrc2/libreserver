@@ -99,9 +99,15 @@ function save_firewall_settings {
             fi
             INSTALL_PACKAGES nftables
         fi
-        /usr/sbin/nft list ruleset > "${rootdir}/etc/firewall.conf"
+        ruleset=$(/usr/sbin/nft list ruleset)
+        if [ "${ruleset}" ]; then
+            /usr/sbin/nft list ruleset > "${rootdir}/etc/firewall.conf"
+        fi
     else
-        chroot "${rootdir}" /usr/sbin/nft list ruleset > /etc/firewall.conf
+        ruleset=$(chroot "${rootdir}" /usr/sbin/nft list ruleset)
+        if [ "${ruleset}" ]; then
+            chroot "${rootdir}" /usr/sbin/nft list ruleset > /etc/firewall.conf
+        fi
     fi
     if [ ! -d "${rootdir}/etc/network/if-up.d" ]; then
         mkdir -p "${rootdir}/etc/network/if-up.d"
