@@ -807,9 +807,11 @@ function configure_internet_protocol {
         echo 'net.ipv4.icmp_echo_ignore_all = 1' >> /etc/sysctl.conf
         #echo 'net.ipv6.icmp_echo_ignore_all = 1' >> /etc/sysctl.conf
     fi
-    if ! grep -q "disable ipv6" /etc/sysctl.conf; then
-        echo '# disable ipv6' >> /etc/sysctl.conf
-        echo 'net.ipv6.conf.all.disable_ipv6 = 1' >> /etc/sysctl.conf
+    if ! grep -q "net.ipv6.conf.all.disable_ipv6" /etc/sysctl.conf; then
+        echo '# enable ipv6' >> /etc/sysctl.conf
+        echo 'net.ipv6.conf.all.disable_ipv6 = 0' >> /etc/sysctl.conf
+    else
+        sed -i 's|net.ipv6.conf.all.disable_ipv6.*|net.ipv6.conf.all.disable_ipv6 = 0|g' /etc/sysctl.conf
     fi
     if ! grep -q "net.ipv4.tcp_synack_retries" /etc/sysctl.conf; then
         echo 'net.ipv4.tcp_synack_retries = 2' >> /etc/sysctl.conf
