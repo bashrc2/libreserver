@@ -500,7 +500,11 @@ function configure_firewall {
     /usr/sbin/nft flush ruleset
     /usr/sbin/nft -f /etc/firewall.conf
 
-    mark_completed "${FUNCNAME[0]}"
+    ruleset=$(/usr/sbin/nft list ruleset)
+    if [ "${ruleset}" ]; then
+        echo $'Firewall configured'
+        mark_completed "${FUNCNAME[0]}"
+    fi
 }
 
 function firewall_drop_telnet {
@@ -1131,7 +1135,7 @@ function block_ips_from_asn {
     ruleset=$(/usr/sbin/nft list ruleset)
     # does the firewall exist?
     if [ ! "${ruleset}" ]; then
-        echo $'No firewall exists'
+        echo $'FIREWALL block_ips_from_asn: No firewall exists'
         return
     fi
 
@@ -1139,7 +1143,7 @@ function block_ips_from_asn {
         INSTALL_PACKAGES whois
     fi
     if [ ! -f /usr/bin/whois ]; then
-        echo $'whois is missing'
+        echo $'FIREWALL block_ips_from_asn: whois is missing'
         return
     fi
     if [ ! "${block_comment}" ]; then
@@ -1148,7 +1152,7 @@ function block_ips_from_asn {
 
     list_prefixes_ipv4=$(/usr/bin/whois -h "${WHOISDOMAIN}" -- -i origin "${asn}" | awk '/route:/ {print $2}')
     if [[ ! "$list_prefixes_ipv4" ]]; then
-        echo "FIREWALL: No ip addresses returned from $whoisdomain $asn"
+        echo "FIREWALL block_ips_from_asn: No ip addresses returned from $whoisdomain $asn"
         return
     fi
 
