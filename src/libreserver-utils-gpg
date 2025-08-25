@@ -280,6 +280,12 @@ function gpg_agent_setup {
               echo "GPG_TTY=\$(tty)";
               echo 'export GPG_TTY'; } >> /root/.bashrc
         fi
+        if [ ! -d /root/.gnupg ]; then
+            mkdir /root/.gnupg
+        fi
+        if [ ! -f /root/.gnupg/gpg.conf ]; then
+            touch /root/.gnupg/gpg.conf
+        fi
         if grep -q '# use-agent' /root/.gnupg/gpg.conf; then
             sed -i 's|# use-agent|use-agent|g' /root/.gnupg/gpg.conf
         fi
@@ -300,6 +306,12 @@ function gpg_agent_setup {
               echo "GPG_TTY=\$(tty)";
               echo 'export GPG_TTY'; } >> "/home/$gpg_username/.bashrc"
             chown "$gpg_username":"$gpg_username" "/home/$gpg_username/.bashrc"
+        fi
+        if [ ! -d "/home/${gpg_username}/.gnupg" ]; then
+            mkdir "/home/${gpg_username}/.gnupg"
+        fi
+        if [ ! -f "/home/${gpg_username}/.gnupg/gpg.conf" ]; then
+            touch "/home/${gpg_username}/.gnupg/gpg.conf"
         fi
         if grep -q '# use-agent' "/home/$gpg_username/.gnupg/gpg.conf"; then
             sed -i 's|# use-agent|use-agent|g' "/home/$gpg_username/.gnupg/gpg.conf"
