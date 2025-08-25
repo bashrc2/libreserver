@@ -737,9 +737,9 @@ function configure_internet_protocol {
     fi
 
     if grep -q "net.ipv6.conf.all.forwarding" /etc/sysctl.conf; then
-        sed -i "s/#net.ipv6.conf.all.forwarding.*/net.ipv6.conf.all.forwarding=0/g" /etc/sysctl.conf
+        sed -i "s/#net.ipv6.conf.all.forwarding.*/net.ipv6.conf.all.forwarding=1/g" /etc/sysctl.conf
     else
-        echo "net.ipv6.conf.all.forwarding=0" >> /etc/sysctl.conf
+        echo "net.ipv6.conf.all.forwarding=1" >> /etc/sysctl.conf
     fi
 
     if grep -q "net.ipv4.tcp_syncookies" /etc/sysctl.conf; then
@@ -797,9 +797,9 @@ function configure_internet_protocol {
     fi
 
     if grep -q "net.ipv6.conf.all.forwarding" /etc/sysctl.conf; then
-        sed -i "s/# net.ipv6.conf.all.forwarding.*/net.ipv6.conf.all.forwarding=0/g" /etc/sysctl.conf
+        sed -i "s/# net.ipv6.conf.all.forwarding.*/net.ipv6.conf.all.forwarding=1/g" /etc/sysctl.conf
     else
-        echo "net.ipv6.conf.all.forwarding=0" >> /etc/sysctl.conf
+        echo "net.ipv6.conf.all.forwarding=1" >> /etc/sysctl.conf
     fi
 
     if ! grep -q "ignore pings" /etc/sysctl.conf; then
