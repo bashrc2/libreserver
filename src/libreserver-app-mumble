@@ -98,12 +98,16 @@ function change_default_domain_name_mumble {
 function logging_on_mumble {
     if [ -f ${MUMBLE_CONFIG_FILE} ]; then
         sed -i 's|logfile=.*|logfile=/var/log/mumble-server.log|g' ${MUMBLE_CONFIG_FILE}
+        sed -i 's|;logdays=.*|logdays=2|g' ${MUMBLE_CONFIG_FILE}
+        sed -i 's|logdays=.*|logdays=2|g' ${MUMBLE_CONFIG_FILE}
     fi
 }
 
 function logging_off_mumble {
     if [ -f ${MUMBLE_CONFIG_FILE} ]; then
         sed -i 's|logfile=.*|logfile=/dev/null|g' ${MUMBLE_CONFIG_FILE}
+        sed -i 's|;logdays=.*|logdays=-1|g' ${MUMBLE_CONFIG_FILE}
+        sed -i 's|logdays=.*|logdays=-1|g' ${MUMBLE_CONFIG_FILE}
         if [ -d /var/log/mumble-server ]; then
             $REMOVE_FILES_COMMAND /var/log/mumble-server/*
             rm -rf /var/log/mumble-server
@@ -363,6 +367,8 @@ function install_mumble {
     sed -i 's|;allowhtml=.*|allowhtml=False|g' ${MUMBLE_CONFIG_FILE}
     sed -i 's|allowhtml=.*|allowhtml=False|g' ${MUMBLE_CONFIG_FILE}
     sed -i "s|port=.*|port=${MUMBLE_PORT}|g" ${MUMBLE_CONFIG_FILE}
+    sed -i 's|;logdays=.*|logdays=-1|g' ${MUMBLE_CONFIG_FILE}
+    sed -i 's|logdays=.*|logdays=-1|g' ${MUMBLE_CONFIG_FILE}
 
     increment_app_install_progress
 
