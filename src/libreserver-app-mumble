@@ -370,6 +370,15 @@ function install_mumble {
     sed -i 's|;logdays=.*|logdays=-1|g' ${MUMBLE_CONFIG_FILE}
     sed -i 's|logdays=.*|logdays=-1|g' ${MUMBLE_CONFIG_FILE}
 
+    # discourage client side recording
+    sed -i 's|; allowRecording=.*|allowRecording=false|g' ${MUMBLE_CONFIG_FILE}
+    sed -i 's|;allowRecording=.*|allowRecording=false|g' ${MUMBLE_CONFIG_FILE}
+    sed -i 's|allowRecording=.*|allowRecording=false|g' ${MUMBLE_CONFIG_FILE}
+
+    # Obfuscate any logged ip addresses
+    sed -i 's|;obfuscate=.*|obfuscate=true|g' ${MUMBLE_CONFIG_FILE}
+    sed -i 's|obfuscate=.*|obfuscate=true|g' ${MUMBLE_CONFIG_FILE}
+
     increment_app_install_progress
 
     add_onion_service mumble ${MUMBLE_PORT} ${MUMBLE_ONION_PORT}
