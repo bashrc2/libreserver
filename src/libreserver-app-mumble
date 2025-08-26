@@ -353,16 +353,16 @@ function install_mumble {
         sed -i "s|;sslKey=.*|sslKey=/etc/letsencrypt/live/${MUMBLE_DOMAIN_NAME}/privkey.pem|g" ${MUMBLE_CONFIG_FILE}
     fi
     sed -i 's|;certrequired=.*|certrequired=True|g' ${MUMBLE_CONFIG_FILE}
-    sed -i 's|users=100|users=10|g' ${MUMBLE_CONFIG_FILE}
-    sed -i 's|;channelnestinglimit=10|channelnestinglimit=10|g' ${MUMBLE_CONFIG_FILE}
+    sed -i 's|users=.*|users=10|g' ${MUMBLE_CONFIG_FILE}
+    sed -i 's|;usersperchannel|usersperchannel=10|g' ${MUMBLE_CONFIG_FILE}
+    sed -i 's|usersperchannel|usersperchannel=10|g' ${MUMBLE_CONFIG_FILE}
+    sed -i 's|;channelnestinglimit=.*|channelnestinglimit=10|g' ${MUMBLE_CONFIG_FILE}
     sed -i 's|;textmessagelength=.*|textmessagelength=1000|g' ${MUMBLE_CONFIG_FILE}
     sed -i 's|textmessagelength=.*|textmessagelength=1000|g' ${MUMBLE_CONFIG_FILE}
     sed -i 's|;imagemessagelength=.*|imagemessagelength=131072|g' ${MUMBLE_CONFIG_FILE}
     sed -i 's|;allowhtml=.*|allowhtml=False|g' ${MUMBLE_CONFIG_FILE}
     sed -i 's|allowhtml=.*|allowhtml=False|g' ${MUMBLE_CONFIG_FILE}
     sed -i "s|port=.*|port=${MUMBLE_PORT}|g" ${MUMBLE_CONFIG_FILE}
-    sed -i 's|;usersperchannel|usersperchannel=100|g' ${MUMBLE_CONFIG_FILE}
-    sed -i 's|usersperchannel|usersperchannel=100|g' ${MUMBLE_CONFIG_FILE}
 
     increment_app_install_progress
 
