@@ -3009,7 +3009,7 @@ function datserver_update_settings_template {
 
 function update_mumble_password {
     # Update the password on the mumble settings screen
-    if [ ! -f /etc/mumble-server.ini ]; then
+    if [ ! -f /etc/mumble/mumble-server.ini ]; then
         return
     fi
     if [ ! -f "${webadmin_install_dir}/settings_mumble.html" ]; then
@@ -3018,7 +3018,7 @@ function update_mumble_password {
     if ! grep -q 'value=""' "${webadmin_install_dir}/settings_mumble.html"; then
         return
     fi
-    mumblePassword=$(grep 'serverpassword=' /etc/mumble-server.ini | awk -F '=' '{print $2}')
+    mumblePassword=$(grep 'serverpassword=' /etc/mumble/mumble-server.ini | awk -F '=' '{print $2}')
     if [ "$mumblePassword" ]; then
         sed -i "s|name=\"mumblePassword\".*|name=\"mumblePassword\" value=\"${mumblePassword}\">|g" "${webadmin_install_dir}/settings_mumble.html"
     fi

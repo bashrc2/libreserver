@@ -314,7 +314,7 @@ fi
 if [ -d /etc/dovecot ]; then
     systemctl restart dovecot
 fi
-if [ -f /etc/mumble-server.ini ]; then
+if [ -f /etc/mumble/mumble-server.ini ]; then
     systemctl restart mumble-server
 fi
 if [ -d /var/www/radicale ]; then
