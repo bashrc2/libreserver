@@ -556,6 +556,12 @@ fi
 
 finish_manual_install
 
+INSTALL_STATE_COMMAND_SUCCESS=4
+install_state_file="/root/.install_state.txt"
+echo -n "$INSTALL_STATE_COMMAND_SUCCESS" > "$install_state_file"
+
+libreserver-upgrade
+
 echo ''
 echo $"${PROJECT_NAME} installation is complete."
 echo ''
@@ -580,10 +586,6 @@ if [ ! -f /home/admin/.ssh/authorized_keys ]; then
     echo 'web interface.'
     echo ''
 fi
-
-INSTALL_STATE_COMMAND_SUCCESS=4
-install_state_file="/root/.install_state.txt"
-echo -n "$INSTALL_STATE_COMMAND_SUCCESS" > "$install_state_file"
 
 if [ -d /home/libreserver ]; then
     echo $'The default libreserver user will be deleted when the system restarts.'
