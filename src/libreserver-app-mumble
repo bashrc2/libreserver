@@ -45,7 +45,7 @@ MUMBLE_ONION_PORT=${MUMBLE_PORT}
 
 # Location of mumble database and configuration
 MUMBLE_DATABASE="mumble-server.sqlite"
-MUMBLE_CONFIG_FILE="mumble-server.ini"
+MUMBLE_CONFIG_FILE="/etc/mumble/mumble-server.ini"
 
 MUMBLE_SHORT_DESCRIPTION=$'Voice chat'
 MUMBLE_DESCRIPTION=$'Voice chat'
@@ -59,7 +59,7 @@ mumble_variables=(MY_USERNAME
                   ADMIN_USERNAME)
 
 function mumble_update_settings_screen_password {
-    mumblePassword=$(grep 'serverpassword=' /etc/mumble-server.ini | awk -F '=' '{print $2}')
+    mumblePassword=$(grep 'serverpassword=' ${MUMBLE_CONFIG_FILE} | awk -F '=' '{print $2}')
     local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
     webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
     if [ -f "${webadmin_install_dir}/settings_mumble.html" ]; then
@@ -75,7 +75,7 @@ function mumble_setting_password {
         return
     fi
 
-    sed -i "s|serverpassword=.*|serverpassword=${newPassword}|g" /etc/${MUMBLE_CONFIG_FILE}
+    sed -i "s|serverpassword=.*|serverpassword=${newPassword}|g" ${MUMBLE_CONFIG_FILE}
     systemctl restart mumble-server
     mumble_update_settings_screen_password
 }
@@ -94,14 +94,14 @@ function change_default_domain_name_mumble {
 }
 
 function logging_on_mumble {
-    if [ -f /etc/${MUMBLE_CONFIG_FILE} ]; then
-        sed -i 's|logfile=.*|logfile=/var/log/mumble-server.log|g' /etc/${MUMBLE_CONFIG_FILE}
+    if [ -f ${MUMBLE_CONFIG_FILE} ]; then
+        sed -i 's|logfile=.*|logfile=/var/log/mumble-server.log|g' ${MUMBLE_CONFIG_FILE}
     fi
 }
 
 function logging_off_mumble {
-    if [ -f /etc/${MUMBLE_CONFIG_FILE} ]; then
-        sed -i 's|logfile=.*|logfile=/dev/null|g' /etc/${MUMBLE_CONFIG_FILE}
+    if [ -f ${MUMBLE_CONFIG_FILE} ]; then
+        sed -i 's|logfile=.*|logfile=/dev/null|g' ${MUMBLE_CONFIG_FILE}
         if [ -d /var/log/mumble-server ]; then
             $REMOVE_FILES_COMMAND /var/log/mumble-server/*
             rm -rf /var/log/mumble-server
@@ -118,7 +118,7 @@ function change_password_mumble {
     new_mumble_password="$2"
 
     set_password_for_all_users mumble "$new_mumble_password"
-    sed -i "s|serverpassword=.*|serverpassword=$new_mumble_password|g" /etc/${MUMBLE_CONFIG_FILE}
+    sed -i "s|serverpassword=.*|serverpassword=$new_mumble_password|g" ${MUMBLE_CONFIG_FILE}
     systemctl restart mumble-server
     mumble_update_settings_screen_password
 }
@@ -135,29 +135,29 @@ function upgrade_mumble {
     fi
 
     if [ ! -f "/etc/letsencrypt/live/${MUMBLE_DOMAIN_NAME}/fullchain.pem" ]; then
-        if ! grep -q "mumble.pem" /etc/${MUMBLE_CONFIG_FILE}; then
-            sed -i 's|sslCert=.*|sslCert=/var/lib/mumble-server/mumble.pem|g' /etc/${MUMBLE_CONFIG_FILE}
-            sed -i 's|sslKey=.*|sslKey=/var/lib/mumble-server/mumble.key|g' /etc/${MUMBLE_CONFIG_FILE}
+        if ! grep -q "mumble.pem" ${MUMBLE_CONFIG_FILE}; then
+            sed -i 's|sslCert=.*|sslCert=/var/lib/mumble-server/mumble.pem|g' ${MUMBLE_CONFIG_FILE}
+            sed -i 's|sslKey=.*|sslKey=/var/lib/mumble-server/mumble.key|g' ${MUMBLE_CONFIG_FILE}
             systemctl restart mumble-server
         fi
     else
-        if ! grep -q "${MUMBLE_DOMAIN_NAME}/fullchain.pem" /etc/${MUMBLE_CONFIG_FILE}; then
+        if ! grep -q "${MUMBLE_DOMAIN_NAME}/fullchain.pem" ${MUMBLE_CONFIG_FILE}; then
             usermod -a -G ssl-cert mumble-server
-            sed -i "s|sslCert=.*|sslCert=/etc/letsencrypt/live/${MUMBLE_DOMAIN_NAME}/fullchain.pem|g" /etc/${MUMBLE_CONFIG_FILE}
-            sed -i "s|sslKey=.*|sslKey=/etc/letsencrypt/live/${MUMBLE_DOMAIN_NAME}/privkey.pem|g" /etc/${MUMBLE_CONFIG_FILE}
+            sed -i "s|sslCert=.*|sslCert=/etc/letsencrypt/live/${MUMBLE_DOMAIN_NAME}/fullchain.pem|g" ${MUMBLE_CONFIG_FILE}
+            sed -i "s|sslKey=.*|sslKey=/etc/letsencrypt/live/${MUMBLE_DOMAIN_NAME}/privkey.pem|g" ${MUMBLE_CONFIG_FILE}
             systemctl restart mumble-server
         fi
     fi
 }
 
 function backup_local_mumble {
-    if [ -f /etc/${MUMBLE_CONFIG_FILE} ]; then
+    if [ -f ${MUMBLE_CONFIG_FILE} ]; then
         echo $"Backing up Mumble settings"
         temp_backup_dir=/root/tempmumblebackup
         if [ ! -d $temp_backup_dir ]; then
             mkdir -p $temp_backup_dir
         fi
-        cp -f /etc/${MUMBLE_CONFIG_FILE} $temp_backup_dir
+        cp -f ${MUMBLE_CONFIG_FILE} $temp_backup_dir
         cp -f /var/lib/mumble-server/mumble-server.sqlite $temp_backup_dir
         backup_directory_to_usb $temp_backup_dir mumble
         echo $"Mumble settings backup complete"
@@ -220,8 +220,8 @@ function remove_mumble {
     if [[ $ONION_ONLY == "no" ]]; then
         firewall_remove ${MUMBLE_PORT}
     fi
-    if [ -f /etc/${MUMBLE_CONFIG_FILE} ]; then
-        rm /etc/${MUMBLE_CONFIG_FILE}
+    if [ -f ${MUMBLE_CONFIG_FILE} ]; then
+        rm ${MUMBLE_CONFIG_FILE}
     fi
     remove_certs "$MUMBLE_DOMAIN_NAME"
     if [ -d /var/lib/mumble-server ]; then
@@ -326,39 +326,39 @@ function install_mumble {
 
     chown -R mumble-server:mumble-server /var/lib/mumble-server
 
-    sed -i "s|welcometext=.*|welcometext=\"<br />Welcome to $MUMBLE_DOMAIN_NAME <b>mumble</b>.<br />Chat freely!<br />\"|g" /etc/${MUMBLE_CONFIG_FILE}
+    sed -i "s|welcometext=.*|welcometext=\"<br />Welcome to $MUMBLE_DOMAIN_NAME <b>mumble</b>.<br />Chat freely!<br />\"|g" ${MUMBLE_CONFIG_FILE}
 
     if [[ $MUMBLE_SERVER_PASSWORD ]]; then
-        sed -i "s|serverpassword=.*|serverpassword=$MUMBLE_SERVER_PASSWORD|g" /etc/${MUMBLE_CONFIG_FILE}
+        sed -i "s|serverpassword=.*|serverpassword=$MUMBLE_SERVER_PASSWORD|g" ${MUMBLE_CONFIG_FILE}
     fi
 
     increment_app_install_progress
 
-    sed -i 's|;autobanAttempts.*|autobanAttempts = 10|g' /etc/${MUMBLE_CONFIG_FILE}
-    sed -i 's|;autobanTimeframe.*|autobanTimeframe = 120|g' /etc/${MUMBLE_CONFIG_FILE}
-    sed -i 's|;autobanTime.*|autobanTime = 300|g' /etc/${MUMBLE_CONFIG_FILE}
-    sed -i 's|;sendversion=.*|sendversion=False|g' /etc/${MUMBLE_CONFIG_FILE}
-    sed -i 's|sendversion=.*|sendversion=False|g' /etc/${MUMBLE_CONFIG_FILE}
-    if ! grep -q "allowping" /etc/${MUMBLE_CONFIG_FILE}; then
-        echo 'allowping=False' >> /etc/${MUMBLE_CONFIG_FILE}
+    sed -i 's|;autobanAttempts.*|autobanAttempts = 10|g' ${MUMBLE_CONFIG_FILE}
+    sed -i 's|;autobanTimeframe.*|autobanTimeframe = 120|g' ${MUMBLE_CONFIG_FILE}
+    sed -i 's|;autobanTime.*|autobanTime = 300|g' ${MUMBLE_CONFIG_FILE}
+    sed -i 's|;sendversion=.*|sendversion=False|g' ${MUMBLE_CONFIG_FILE}
+    sed -i 's|sendversion=.*|sendversion=False|g' ${MUMBLE_CONFIG_FILE}
+    if ! grep -q "allowping" ${MUMBLE_CONFIG_FILE}; then
+        echo 'allowping=False' >> ${MUMBLE_CONFIG_FILE}
     fi
-    sed -i 's|allowping=.*|allowping=False|g' /etc/${MUMBLE_CONFIG_FILE}
+    sed -i 's|allowping=.*|allowping=False|g' ${MUMBLE_CONFIG_FILE}
     if [ ! -f "/etc/letsencrypt/live/${MUMBLE_DOMAIN_NAME}/fullchain.pem" ]; then
-        sed -i 's|;sslCert=.*|sslCert=/var/lib/mumble-server/mumble.pem|g' /etc/${MUMBLE_CONFIG_FILE}
-        sed -i 's|;sslKey=.*|sslKey=/var/lib/mumble-server/mumble.key|g' /etc/${MUMBLE_CONFIG_FILE}
+        sed -i 's|;sslCert=.*|sslCert=/var/lib/mumble-server/mumble.pem|g' ${MUMBLE_CONFIG_FILE}
+        sed -i 's|;sslKey=.*|sslKey=/var/lib/mumble-server/mumble.key|g' ${MUMBLE_CONFIG_FILE}
     else
-        sed -i "s|;sslCert=.*|sslCert=/etc/letsencrypt/live/${MUMBLE_DOMAIN_NAME}/fullchain.pem|g" /etc/${MUMBLE_CONFIG_FILE}
-        sed -i "s|;sslKey=.*|sslKey=/etc/letsencrypt/live/${MUMBLE_DOMAIN_NAME}/privkey.pem|g" /etc/${MUMBLE_CONFIG_FILE}
+        sed -i "s|;sslCert=.*|sslCert=/etc/letsencrypt/live/${MUMBLE_DOMAIN_NAME}/fullchain.pem|g" ${MUMBLE_CONFIG_FILE}
+        sed -i "s|;sslKey=.*|sslKey=/etc/letsencrypt/live/${MUMBLE_DOMAIN_NAME}/privkey.pem|g" ${MUMBLE_CONFIG_FILE}
     fi
-    sed -i 's|;certrequired=.*|certrequired=True|g' /etc/${MUMBLE_CONFIG_FILE}
-    sed -i 's|users=100|users=10|g' /etc/${MUMBLE_CONFIG_FILE}
-    sed -i 's|;channelnestinglimit=10|channelnestinglimit=10|g' /etc/${MUMBLE_CONFIG_FILE}
-    sed -i 's|;textmessagelength=.*|textmessagelength=1000|g' /etc/${MUMBLE_CONFIG_FILE}
-    sed -i 's|textmessagelength=.*|textmessagelength=1000|g' /etc/${MUMBLE_CONFIG_FILE}
-    sed -i 's|;imagemessagelength=.*|imagemessagelength=131072|g' /etc/${MUMBLE_CONFIG_FILE}
-    sed -i 's|;allowhtml=.*|allowhtml=False|g' /etc/${MUMBLE_CONFIG_FILE}
-    sed -i 's|allowhtml=.*|allowhtml=False|g' /etc/${MUMBLE_CONFIG_FILE}
-    sed -i "s|port=.*|port=${MUMBLE_PORT}|g" /etc/${MUMBLE_CONFIG_FILE}
+    sed -i 's|;certrequired=.*|certrequired=True|g' ${MUMBLE_CONFIG_FILE}
+    sed -i 's|users=100|users=10|g' ${MUMBLE_CONFIG_FILE}
+    sed -i 's|;channelnestinglimit=10|channelnestinglimit=10|g' ${MUMBLE_CONFIG_FILE}
+    sed -i 's|;textmessagelength=.*|textmessagelength=1000|g' ${MUMBLE_CONFIG_FILE}
+    sed -i 's|textmessagelength=.*|textmessagelength=1000|g' ${MUMBLE_CONFIG_FILE}
+    sed -i 's|;imagemessagelength=.*|imagemessagelength=131072|g' ${MUMBLE_CONFIG_FILE}
+    sed -i 's|;allowhtml=.*|allowhtml=False|g' ${MUMBLE_CONFIG_FILE}
+    sed -i 's|allowhtml=.*|allowhtml=False|g' ${MUMBLE_CONFIG_FILE}
+    sed -i "s|port=.*|port=${MUMBLE_PORT}|g" ${MUMBLE_CONFIG_FILE}
 
     increment_app_install_progress
 
@@ -367,7 +367,7 @@ function install_mumble {
     increment_app_install_progress
 
     # turn off logs by default
-    sed -i 's|logfile=.*|logfile=/dev/null|g' /etc/${MUMBLE_CONFIG_FILE}
+    sed -i 's|logfile=.*|logfile=/dev/null|g' ${MUMBLE_CONFIG_FILE}
 
     if [ -d /etc/letsencrypt ]; then
         usermod -a -G ssl-cert mumble-server
