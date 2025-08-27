@@ -590,6 +590,7 @@ fi
 INSTALL_STATE_COMMAND_SUCCESS=4
 install_state_file="/root/.install_state.txt"
 echo -n "$INSTALL_STATE_COMMAND_SUCCESS" > "$install_state_file"
+systemctl stop webadmin
 
 if [ ! -f /root/.initial_reboot ]; then
     # reboot after install
