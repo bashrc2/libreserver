@@ -560,8 +560,6 @@ INSTALL_STATE_COMMAND_SUCCESS=4
 install_state_file="/root/.install_state.txt"
 echo -n "$INSTALL_STATE_COMMAND_SUCCESS" > "$install_state_file"
 
-libreserver-upgrade
-
 echo ''
 echo $"${PROJECT_NAME} installation is complete."
 echo ''
