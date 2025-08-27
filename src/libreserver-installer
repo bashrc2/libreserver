@@ -4835,6 +4835,12 @@ do
                 sleep 1
             else
                 if [ $install_state -eq $INSTALL_STATE_COMMAND_SUCCESS ]; then
+                    # do an upgrade after first reboot
+                    if [ -f /root/.initial_reboot ]; then
+                        libreserver-upgrade
+                        rm /root/.initial_reboot
+                    fi
+
                     installer_main_loop
                 fi
 
