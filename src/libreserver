@@ -556,10 +556,6 @@ fi
 
 finish_manual_install
 
-INSTALL_STATE_COMMAND_SUCCESS=4
-install_state_file="/root/.install_state.txt"
-echo -n "$INSTALL_STATE_COMMAND_SUCCESS" > "$install_state_file"
-
 echo ''
 echo $"${PROJECT_NAME} installation is complete."
 echo ''
@@ -590,6 +586,10 @@ if [ -d /home/libreserver ]; then
     echo $'Next time you login use the username you gave during the install.'
     echo ''
 fi
+
+INSTALL_STATE_COMMAND_SUCCESS=4
+install_state_file="/root/.install_state.txt"
+echo -n "$INSTALL_STATE_COMMAND_SUCCESS" > "$install_state_file"
 
 if [ ! -f /root/.initial_reboot ]; then
     # reboot after install
