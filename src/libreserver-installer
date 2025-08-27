@@ -1168,6 +1168,8 @@ function web_admin_create_add_apps_category {
     apps_header_str="<fieldset class=\"field_set\"><legend translate=\"yes\" class=\"category\">$translated_category</legend>"
     echo "    $apps_header_str" >> "$appslist_add_filename"
 
+    webadmin_onion_domain=$(cat /var/lib/tor/hidden_service_webadmin/hostname)
+
     for filename in $FILES
     do
         app_name=$(echo "${filename}" | awk -F '-app-' '{print $2}')
@@ -1275,6 +1277,7 @@ function web_admin_create_add_apps_category {
 
                                 # Replace app variables
                                 sed -i "s|HOSTNAME|$(hostname)|g" "$filename_app"
+                                sed -i "s|ONION_DOMAIN|$(webadmin_onion_domain)|g" "$filename_app"
                                 sed -i "s|APPNAME|${app_name}|g" "$filename_app"
                                 sed -i "s|APPDESCRIPTION|${DESCRIPTION}|g" "$filename_app"
 
