@@ -75,8 +75,6 @@ function mumble_setting_password {
         return
     fi
 
-    if ! grep -q 'serverpassword' ${MUMBLE_CONFIG_FILE}; then
-    fi
     sed -i "s|serverpassword=.*|serverpassword=${newPassword}|g" ${MUMBLE_CONFIG_FILE}
     systemctl restart mumble-server
     mumble_update_settings_screen_password
