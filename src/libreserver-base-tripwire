@@ -58,6 +58,8 @@ function install_tripwire {
     debconf-set-selections <<< "tripwire tripwire/use-sitekey boolean false"
     debconf-set-selections <<< "tripwire tripwire/use-localkey boolean false"
 
+    sleep 5
+
     INSTALL_PACKAGES tripwire
     INSTALL_PACKAGES qrencode
     $REMOVE_UNUSED_PACKAGES
