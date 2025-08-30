@@ -301,12 +301,13 @@ function configure_enable_ssh_access {
 function configure_firewall_base {
     filename="$1"
 
-    if [ ! -f "${filename}" ]; then
+    ruleset=$(/usr/sbin/nft list ruleset)
+    if [ ! -f "${filename}" || ! "${ruleset}" ]; then
         # initially create table and chains
         /usr/sbin/nft add table inet filter
-        /usr/sbin/nft add chain inet filter INPUT { type filter hook input priority 0 \; }
-        /usr/sbin/nft add chain inet filter FORWARD { type filter hook forward priority 0 \; policy drop \; }
-        /usr/sbin/nft add chain inet filter OUTPUT { type filter hook output priority 0 \; policy accept \; }
+        /usr/sbin/nft add chain inet filter INPUT { type filter hook input priority 0; }
+        /usr/sbin/nft add chain inet filter FORWARD { type filter hook forward priority 0; policy drop; }
+        /usr/sbin/nft add chain inet filter OUTPUT { type filter hook output priority 0; policy accept; }
         echo $'Initial firewall configuration complete'
     fi
 
