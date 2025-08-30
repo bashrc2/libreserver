@@ -114,6 +114,10 @@ function save_firewall_settings {
     fi
     { echo '#!/bin/sh';
       echo '/usr/sbin/nft flush ruleset';
+      echo '/usr/sbin/nft add table inet filter';
+      echo '/usr/sbin/nft add chain inet filter INPUT { type filter hook input priority 0; }';
+      echo '/usr/sbin/nft add chain inet filter FORWARD { type filter hook forward priority 0; policy drop; }';
+      echo '/usr/sbin/nft add chain inet filter OUTPUT { type filter hook output priority 0; policy accept; }';
       echo '/usr/sbin/nft -f /etc/firewall.conf'; } > "${rootdir}/etc/network/if-up.d/firewall"
     chmod +x "${rootdir}/etc/network/if-up.d/firewall"
 }
