@@ -161,10 +161,11 @@ function install_interactive_vpn {
 }
 
 function vpn_change_tls_port {
-    if ! grep -q "VPN-TLS" "$FIREWALL_CONFIG"; then
-        EXISTING_VPN_TLS_PORT=443
-    else
-        EXISTING_VPN_TLS_PORT=$(grep "VPN-TLS" "$FIREWALL_CONFIG" | awk -F '=' '{print $2}')
+    EXISTING_VPN_TLS_PORT=443
+    if [ -f "${FIREWALL_CONFIG}" ]; then
+        if grep -q "VPN-TLS" "${FIREWALL_CONFIG}"; then
+            EXISTING_VPN_TLS_PORT=$(grep "VPN-TLS" "$FIREWALL_CONFIG" | awk -F '=' '{print $2}')
+        fi
     fi
 
     data=$(mktemp 2>/dev/null)

@@ -910,6 +910,10 @@ function firewall_add {
         INSTALL_PACKAGES nftables
     fi
 
+    if [ ! -f "${FIREWALL_CONFIG}" ]; then
+        touch "${FIREWALL_CONFIG}"
+    fi
+
     if ! grep -q "${firewall_name}=${firewall_port}" "${FIREWALL_CONFIG}"; then
         if [ ! "${firewall_protocol}" ]; then
             /usr/sbin/nft add rule inet filter INPUT tcp dport "${firewall_port}" accept comment \""${firewall_name}"\"
@@ -933,6 +937,10 @@ function firewall_add_range {
     firewall_port_end=$3
     firewall_protocol="$4"
     add_range_comment="$5"
+
+    if [ ! -f "${FIREWALL_CONFIG}" ]; then
+        touch "${FIREWALL_CONFIG}"
+    fi
 
     if ! grep -q "${firewall_name}=${firewall_port_start}:${firewall_port_end}" "${FIREWALL_CONFIG}"; then
         echo "${firewall_name}=${firewall_port_start}:${firewall_port_end}" >> "${FIREWALL_CONFIG}"
@@ -974,6 +982,10 @@ function firewall_block_range {
     firewall_port_end=$3
     block_range_comment="$4"
 
+    if [ ! -f "${FIREWALL_CONFIG}" ]; then
+        touch "${FIREWALL_CONFIG}"
+    fi
+
     if ! grep -q "${firewall_name}=${firewall_port_start}:${firewall_port_end}" "${FIREWALL_CONFIG}"; then
         echo "${firewall_name}=${firewall_port_start}:${firewall_port_end}" >> "${FIREWALL_CONFIG}"
         if [ "$block_range_comment" ]; then
@@ -991,6 +1003,10 @@ function firewall_unblock_range {
     firewall_port_start=$2
     firewall_port_end=$3
     block_range_comment="$4"
+
+    if [ ! -f "${FIREWALL_CONFIG}" ]; then
+        touch "${FIREWALL_CONFIG}"
+    fi
 
     if grep -q "=${firewall_port_start}:${firewall_port_end}" "${FIREWALL_CONFIG}"; then
         sed -i "/${firewall_port_start}:${firewall_port_end}/d" "${FIREWALL_CONFIG}"
@@ -1321,6 +1337,10 @@ function firewall_remove_range {
     firewall_port_end=$2
     firewall_protocol="$3"
 
+    if [ ! -f "${FIREWALL_CONFIG}" ]; then
+        touch "${FIREWALL_CONFIG}"
+    fi
+
     if grep -q "=${firewall_port_start}:${firewall_port_end}" "${FIREWALL_CONFIG}"; then
         sed -i "/${firewall_port_start}:${firewall_port_end}/d" "${FIREWALL_CONFIG}"
         delete_firewall_port_via_handle "${firewall_port_start}-${firewall_port_end}"
@@ -1633,6 +1653,10 @@ function upgrade_iptables {
 
     # run the firewall setup again
     setup_firewall
+
+    if [ ! -f "${FIREWALL_CONFIG}" ]; then
+        touch "${FIREWALL_CONFIG}"
+    fi
 
     # email ports
     if grep -q '=25$' "${FIREWALL_CONFIG}"; then
