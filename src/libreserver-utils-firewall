@@ -604,8 +604,26 @@ function configure_firewall {
 }
 
 function firewall_drop_telnet {
+    # generate the firewall if needed
+    generate_firewall=
+    if [ ! -f /etc/nftables.conf ]; then
+        generate_firewall=1
+    else
+        if ! grep -q 'portscan' /etc/nftables.conf; then
+            generate_firewall=1
+        fi
+    fi
     ruleset=$(/usr/sbin/nft list ruleset)
+    if [ ! "${ruleset}" ]; then
+        generate_firewall=1
+    fi
+    if [ ${generate_firewall} ]; then
+        configure_firewall_base /etc/nftables.conf
+        reload_firewall
+    fi
+
     # does the firewall exist?
+    ruleset=$(/usr/sbin/nft list ruleset)
     if [ ! "$ruleset" ]; then
         return
     fi
@@ -1584,6 +1602,28 @@ function firewall_unblock_words {
 
 function firewall_rate_limits {
     if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+
+    # generate the firewall if needed
+    generate_firewall=
+    if [ ! -f /etc/nftables.conf ]; then
+        generate_firewall=1
+    else
+        if ! grep -q 'portscan' /etc/nftables.conf; then
+            generate_firewall=1
+        fi
+    fi
+    ruleset=$(/usr/sbin/nft list ruleset)
+    if [ ! "${ruleset}" ]; then
+        generate_firewall=1
+    fi
+    if [ ${generate_firewall} ]; then
+        configure_firewall_base /etc/nftables.conf
+        reload_firewall
+    fi
+    ruleset=$(/usr/sbin/nft list ruleset)
+    if [ ! "${ruleset}" ]; then
         return
     fi
 
