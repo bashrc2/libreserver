@@ -936,24 +936,9 @@ function install_web_server {
       echo '}'; } > /etc/nginx/nginx.conf
 
     # install a script to easily enable and disable nginx virtual hosts
-    NGINX_ENSITE_DIR=/root/${PROJECT_NAME}/image_build/nginx_ensite
-    if [ -d ${NGINX_ENSITE_DIR} ]; then
-        cd "$NGINX_ENSITE_DIR" || exit 25
-        make install
-    else
-        if [ ! -d "${INSTALL_DIR}" ]; then
-            mkdir "${INSTALL_DIR}"
-        fi
-        cd "${INSTALL_DIR}" || exit 27
-        function_check git_clone
-        git_clone "$NGINX_ENSITE_REPO" "${INSTALL_DIR}/nginx_ensite"
-        cd "${INSTALL_DIR}/nginx_ensite" || exit 24
-        git checkout "${NGINX_ENSITE_COMMIT}" -b "${NGINX_ENSITE_COMMIT}"
-
-        set_completion_param "nginx-ensite commit" "${NGINX_ENSITE_COMMIT}"
-
-        make install
-    fi
+    NGINX_ENSITE_DIR=/root/${PROJECT_NAME}/nginx_ensite
+    cd "$NGINX_ENSITE_DIR" || exit 25
+    make install
     nginx_dissite default
 
     function_check configure_firewall_for_web_access
