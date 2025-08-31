@@ -51,7 +51,7 @@ function reload_firewall {
     /usr/sbin/nft add chain inet filter INPUT { type filter hook input priority 0 \; }
     /usr/sbin/nft add chain inet filter FORWARD { type filter hook forward priority 0 \; policy drop \; }
     /usr/sbin/nft add chain inet filter OUTPUT { type filter hook output priority 0 \; policy accept \; }
-    /usr/sbin/nft -f /etc/nftables.conf
+    # /usr/sbin/nft -f /etc/nftables.conf
     systemctl enable --now nftables
     systemctl restart nftables
 }
