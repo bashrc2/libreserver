@@ -197,7 +197,24 @@ function block_scanners {
 }
 
 function firewall_block_bad_ip_ranges {
+    # generate the firewall if needed
+    generate_firewall=
+    if [ ! -f /etc/nftables.conf ]; then
+        generate_firewall=1
+    else
+        if ! grep -q 'portscan' /etc/nftables.conf; then
+            generate_firewall=1
+        fi
+    fi
     ruleset=$(/usr/sbin/nft list ruleset)
+    if [ ! "${ruleset}" ]; then
+        generate_firewall=1
+    fi
+    if [ ${generate_firewall} ]; then
+        configure_firewall_base /etc/nftables.conf
+        reload_firewall
+    fi
+
     # does the firewall exist?
     if [ ! "${ruleset}" ]; then
         return
@@ -283,6 +300,60 @@ function disable_ipv6 {
 function firewall_disable_vpn {
     firewall_remove VPN 1194
     save_firewall_settings
+}
+
+function firewall_add {
+    firewall_name=$(string="$1" ; echo "${string// /-}")
+    firewall_port=$2
+    firewall_protocol="$3"
+
+    if [ ! -f /usr/sbin/nft ]; then
+        if ! grep -q "crontab:" /etc/group; then
+            groupadd crontab
+        fi
+        if ! grep -q "messagebus:" /etc/group; then
+            groupadd messagebus
+        fi
+        INSTALL_PACKAGES nftables
+    fi
+
+    if [ ! -f "${FIREWALL_CONFIG}" ]; then
+        touch "${FIREWALL_CONFIG}"
+    fi
+
+    # generate the firewall if needed
+    generate_firewall=
+    if [ ! -f /etc/nftables.conf ]; then
+        generate_firewall=1
+    else
+        if ! grep -q 'portscan' /etc/nftables.conf; then
+            generate_firewall=1
+        fi
+    fi
+    ruleset=$(/usr/sbin/nft list ruleset)
+    if [ ! "${ruleset}" ]; then
+        generate_firewall=1
+    fi
+    if [ ${generate_firewall} ]; then
+        configure_firewall_base /etc/nftables.conf
+        reload_firewall
+    fi
+
+    if ! grep -q "${firewall_name}=${firewall_port}" "${FIREWALL_CONFIG}"; then
+        if [ ! "${firewall_protocol}" ]; then
+            /usr/sbin/nft add rule inet filter INPUT tcp dport "${firewall_port}" accept comment \""${firewall_name}"\"
+            /usr/sbin/nft add rule inet filter INPUT udp dport "${firewall_port}" accept comment \""${firewall_name}"\"
+        else
+            if [[ "${firewall_protocol}" == *"udp"* ]]; then
+                /usr/sbin/nft add rule inet filter INPUT udp dport "${firewall_port}" accept comment \""${firewall_name}"\"
+            fi
+            if [[ "${firewall_protocol}" == *"tcp"* ]]; then
+                /usr/sbin/nft add rule inet filter INPUT tcp dport "${firewall_port}" accept comment \""${firewall_name}"\"
+            fi
+        fi
+        echo "${firewall_name}=${firewall_port}" >> "${FIREWALL_CONFIG}"
+        save_firewall_settings
+    fi
 }
 
 function firewall_enable_vpn {
@@ -893,42 +964,6 @@ function configure_internet_protocol {
     fi
     /sbin/sysctl -p
     mark_completed "${FUNCNAME[0]}"
-}
-
-function firewall_add {
-    firewall_name=$(string="$1" ; echo "${string// /-}")
-    firewall_port=$2
-    firewall_protocol="$3"
-
-    if [ ! -f /usr/sbin/nft ]; then
-        if ! grep -q "crontab:" /etc/group; then
-            groupadd crontab
-        fi
-        if ! grep -q "messagebus:" /etc/group; then
-            groupadd messagebus
-        fi
-        INSTALL_PACKAGES nftables
-    fi
-
-    if [ ! -f "${FIREWALL_CONFIG}" ]; then
-        touch "${FIREWALL_CONFIG}"
-    fi
-
-    if ! grep -q "${firewall_name}=${firewall_port}" "${FIREWALL_CONFIG}"; then
-        if [ ! "${firewall_protocol}" ]; then
-            /usr/sbin/nft add rule inet filter INPUT tcp dport "${firewall_port}" accept comment \""${firewall_name}"\"
-            /usr/sbin/nft add rule inet filter INPUT udp dport "${firewall_port}" accept comment \""${firewall_name}"\"
-        else
-            if [[ "${firewall_protocol}" == *"udp"* ]]; then
-                /usr/sbin/nft add rule inet filter INPUT udp dport "${firewall_port}" accept comment \""${firewall_name}"\"
-            fi
-            if [[ "${firewall_protocol}" == *"tcp"* ]]; then
-                /usr/sbin/nft add rule inet filter INPUT tcp dport "${firewall_port}" accept comment \""${firewall_name}"\"
-            fi
-        fi
-        echo "${firewall_name}=${firewall_port}" >> "${FIREWALL_CONFIG}"
-        save_firewall_settings
-    fi
 }
 
 function firewall_add_range {
