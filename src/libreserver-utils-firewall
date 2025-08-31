@@ -51,22 +51,24 @@ function reload_firewall {
     /usr/sbin/nft add chain inet filter INPUT { type filter hook input priority 0 \; }
     /usr/sbin/nft add chain inet filter FORWARD { type filter hook forward priority 0 \; policy drop \; }
     /usr/sbin/nft add chain inet filter OUTPUT { type filter hook output priority 0 \; policy accept \; }
-    /usr/sbin/nft -f /etc/firewall.conf
+    /usr/sbin/nft -f /etc/nftables.conf
+    systemctl enable --now nftables
+    systemctl restart nftables
 }
 
 function update_portscan_defense {
     # If the portscan ports have changed then update the firewall
-    if grep -q "${FIREWALL_PORTSCAN}" /etc/firewall.conf; then
+    if grep -q "${FIREWALL_PORTSCAN}" /etc/nftables.conf; then
         return
     fi
     # make a backup just in case
-    cp /etc/firewall.conf /etc/firewall.conf.backup
+    cp /etc/nftables.conf /etc/nftables.conf.backup
     # change the ipv4 ports
-    sed -i "/ add @blackhole /c\tcp dport { ${FIREWALL_PORTSCAN} } add @blackhole { ip saddr timeout 1d } counter packets 0 bytes 0 drop comment \"portscan\"" /etc/firewall.conf
-    sed -i "s|tcp dport { ${FIREWALL_PORTSCAN} } add @blackhole |                tcp dport { ${FIREWALL_PORTSCAN} } add @blackhole |g" /etc/firewall.conf
+    sed -i "/ add @blackhole /c\tcp dport { ${FIREWALL_PORTSCAN} } add @blackhole { ip saddr timeout 1d } counter packets 0 bytes 0 drop comment \"portscan\"" /etc/nftables.conf
+    sed -i "s|tcp dport { ${FIREWALL_PORTSCAN} } add @blackhole |                tcp dport { ${FIREWALL_PORTSCAN} } add @blackhole |g" /etc/nftables.conf
     # change the ipv6 ports
-    sed -i "/ add @blackhole6 /c\tcp dport { ${FIREWALL_PORTSCAN} } add @blackhole6 { ip6 saddr timeout 1d } counter packets 0 bytes 0 drop comment \"portscan\"" /etc/firewall.conf
-    sed -i "s|tcp dport { ${FIREWALL_PORTSCAN} } add @blackhole6 |                tcp dport { ${FIREWALL_PORTSCAN} } add @blackhole6 |g" /etc/firewall.conf
+    sed -i "/ add @blackhole6 /c\tcp dport { ${FIREWALL_PORTSCAN} } add @blackhole6 { ip6 saddr timeout 1d } counter packets 0 bytes 0 drop comment \"portscan\"" /etc/nftables.conf
+    sed -i "s|tcp dport { ${FIREWALL_PORTSCAN} } add @blackhole6 |                tcp dport { ${FIREWALL_PORTSCAN} } add @blackhole6 |g" /etc/nftables.conf
     reload_firewall
     echo 'Port scan defense upgraded'
 }
@@ -108,12 +110,12 @@ function save_firewall_settings {
         fi
         ruleset=$(/usr/sbin/nft list ruleset)
         if [ "${ruleset}" ]; then
-            /usr/sbin/nft list ruleset > "${rootdir}/etc/firewall.conf"
+            /usr/sbin/nft list ruleset > "${rootdir}/etc/nftables.conf"
         fi
     else
         ruleset=$(chroot "${rootdir}" /usr/sbin/nft list ruleset)
         if [ "${ruleset}" ]; then
-            chroot "${rootdir}" /usr/sbin/nft list ruleset > /etc/firewall.conf
+            chroot "${rootdir}" /usr/sbin/nft list ruleset > /etc/nftables.conf
         fi
     fi
     if [ ! -d "${rootdir}/etc/network/if-up.d" ]; then
@@ -125,7 +127,7 @@ function save_firewall_settings {
       echo '/usr/sbin/nft add chain inet filter INPUT { type filter hook input priority 0 \; }';
       echo '/usr/sbin/nft add chain inet filter FORWARD { type filter hook forward priority 0 \; policy drop \; }';
       echo '/usr/sbin/nft add chain inet filter OUTPUT { type filter hook output priority 0 \; policy accept \; }';
-      echo '/usr/sbin/nft -f /etc/firewall.conf'; } > "${rootdir}/etc/network/if-up.d/firewall"
+      echo '/usr/sbin/nft -f /etc/nftables.conf'; } > "${rootdir}/etc/network/if-up.d/firewall"
     chmod +x "${rootdir}/etc/network/if-up.d/firewall"
 }
 
@@ -169,7 +171,7 @@ function block_firefox_telemetry {
         echo '127.0.0.1  telemetry.mozilla.org' >> /etc/hosts
     fi
 
-    if grep -q "${FIREFOX_TELEMETRY_IP}" /etc/firewall.conf; then
+    if grep -q "${FIREFOX_TELEMETRY_IP}" /etc/nftables.conf; then
         return
     fi
 
@@ -184,11 +186,11 @@ function block_scanners {
     if ! grep -q 'ncsc.gov.uk' /etc/hosts; then
         echo '127.0.0.1  ncsc.gov.uk' >> /etc/hosts
     fi
-    if ! grep -q "18.171.7.246" /etc/firewall.conf; then
+    if ! grep -q "18.171.7.246" /etc/nftables.conf; then
         /usr/sbin/nft add rule inet filter INPUT ip saddr "18.171.7.246" counter drop comment \"scanner\"
         save_firewall_settings
     fi
-    if ! grep -q "35.177.10.231" /etc/firewall.conf; then
+    if ! grep -q "35.177.10.231" /etc/nftables.conf; then
         /usr/sbin/nft add rule inet filter INPUT ip saddr "35.177.10.231" counter drop comment \"scanner\"
         save_firewall_settings
     fi
@@ -313,8 +315,8 @@ function configure_firewall_base {
     if [ ! "${ruleset}" ]; then
         regenerate_ruleset=1
     fi
-    if [ -f /etc/firewall.conf ]; then
-        if ! grep -q 'portscan' /etc/firewall.conf; then
+    if [ -f /etc/nftables.conf ]; then
+        if ! grep -q 'portscan' /etc/nftables.conf; then
             regenerate_ruleset=1
             /usr/sbin/nft flush ruleset
         fi
@@ -445,7 +447,7 @@ function firewall_max_connections {
         /usr/sbin/nft add rule inet filter INPUT tcp dport ${firewall_port} meter test-${firewall_port}-count-meter "{ ip saddr & 255.255.255.0 ct count over ${firewall_connections} }" counter reject with tcp reset
         /usr/sbin/nft add rule inet filter INPUT tcp dport ${firewall_port} meter test-${firewall_port}-count-meter6 "{ ip6 saddr ct count over ${firewall_connections} }" counter reject with tcp reset
     else
-        if grep -q "test-${firewall_port}-count-meter" /etc/firewall.conf; then
+        if grep -q "test-${firewall_port}-count-meter" /etc/nftables.conf; then
             # shellcheck disable=SC2086
             delete_firewall_port_via_handle "${firewall_port}"
         fi
@@ -519,7 +521,7 @@ function configure_firewall {
         ip6tables -F
     fi
 
-    configure_firewall_base /etc/firewall.conf
+    configure_firewall_base /etc/nftables.conf
     configure_firewall_base /etc/firewall_test.conf
     reload_firewall
 
@@ -1051,8 +1053,8 @@ function firewall_block_cloudflare {
         return
     fi
     # make a backup of the firewall before adding many extra entries
-    if [ -f /etc/firewall.conf ]; then
-        cp /etc/firewall.conf /etc/firewall_without_cloudflare.conf
+    if [ -f /etc/nftables.conf ]; then
+        cp /etc/nftables.conf /etc/firewall_without_cloudflare.conf
     fi
     echo ''
     while read -r cf_ip; do
@@ -1131,8 +1133,8 @@ function firewall_unblock_cloudflare {
         fi
     done <"$cloudflare_ips"
 
-    if grep -q "${cf_comment}" /etc/firewall.conf; then
-        sed -i "/${cf_comment}/d" /etc/firewall.conf
+    if grep -q "${cf_comment}" /etc/nftables.conf; then
+        sed -i "/${cf_comment}/d" /etc/nftables.conf
     fi
     save_firewall_settings
     /etc/network/if-up.d/firewall
@@ -1291,8 +1293,8 @@ function firewall_google {
     # NOTE: blocking google's AS number is thorough,
     # but prevents anything written in Go from installing
     # block_ips_from_asn AS15169 google
-    if grep -q 'googleAS15169' /etc/firewall.conf; then
-        sed -i '/googleAS15169/d' /etc/firewall.conf
+    if grep -q 'googleAS15169' /etc/nftables.conf; then
+        sed -i '/googleAS15169/d' /etc/nftables.conf
         reload_firewall
         echo $'Removed google firewall'
     fi

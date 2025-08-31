@@ -937,7 +937,7 @@ function test_stig {
     if [ "$VERBOSE" ]; then
         echo "RHEL-06-000120"
     fi
-    grep "type filter hook input priority filter; policy drop;" /etc/firewall.conf >/dev/null 2>&1 &
+    grep "type filter hook input priority filter; policy drop;" /etc/nftables.conf >/dev/null 2>&1 &
 
     stig_spinner $!
     output "V-38513" $? ${SETLANG}
@@ -1692,7 +1692,7 @@ function test_stig {
     if [ "$VERBOSE" ]; then
         echo "RHEL-06-000320"
     fi
-    grep "type filter hook forward priority filter; policy drop;" /etc/firewall.conf >/dev/null 2>&1 &
+    grep "type filter hook forward priority filter; policy drop;" /etc/nftables.conf >/dev/null 2>&1 &
 
     stig_spinner $!
     output "V-38686" $? ${SETLANG}
