@@ -309,7 +309,7 @@ function configure_firewall_base {
     filename="$1"
 
     ruleset=$(/usr/sbin/nft list ruleset)
-    if [ ! -f "${filename}" || ! "${ruleset}" ]; then
+    if [ ! "${ruleset}" ]; then
         # initially create table and chains
         /usr/sbin/nft add table inet filter
         /usr/sbin/nft add chain inet filter INPUT { type filter hook input priority 0 \; }
