@@ -37,6 +37,9 @@ function INSTALL_PACKAGES {
         install_max_tries=3
         while [ $install_tries -lt $install_max_tries ]; do
             echo "Installing package $arg"
+            if [ -f /var/lib/dpkg/lock-frontend ]; then
+                rm /var/lib/dpkg/lock-frontend
+            fi
             if [ ! $USE_SUDO ]; then
                 apt-get -yq ${CONFDEF_OPTION} install $arg
             else
