@@ -1,0 +1,84 @@
+nginx\_dissite, nginx\_ensite -- enable/disable an nginx site/virtual host
+==========================================================================
+
+## SYNOPSIS
+
+`nginx_ensite ` `-c` [ <nginx configuration directory> ] `-s` [ <startup program name> ] [ <site> ]...<br>
+`nginx_dissite` `-c` [ <nginx configuration directory> ] `-s` [ <startup program name> ] [ <site> ]...<br>
+
+## DESCRIPTION
+
+This manual page documents briefly the nginx\_ensite
+and nginx\_dissite commands. 
+
+nginx\_ensite is a script that **enables** the specified site which is included in a
+http block within the nginx configuration.  <br> qIt does this by creating
+symlinks within the subdirectory `sites-enabled` of the nginx
+configuration directory (default: `/etc/nginx`).
+
+Likewise, nginx\_dissite disables a site by removing those
+symlinks. It is not an error to enable a site which is already
+enabled, <br> or to disable one which is already disabled.
+
+## OPTIONS
+
+ * `-c` <nginx configuration directory>
+   Sets the nginx configuration directory to the given path (default: `/etc/nginx`).
+   
+ * `-s` <startup program name> 
+   Sets the nginx startup program name (default: `service`). <br>
+   Note that the program must be on the search path available to
+   `nginx_ensite`/`nginx_dissite`. <br>If that not's the case then you
+   need to pass the full path to the startup program executable. 
+ 
+## EXAMPLES
+
+Enable the default site:
+
+    nginx_ensite default
+
+Disable the default site:
+
+    nginx_dissite default
+
+Enable the example.org site:
+
+    nginx_ensite example.org
+
+Enable the image serving vhost:
+
+    nginx_ensite -c /home/luser/api/service/image/nginx img.example.org
+
+this corresponds to
+`/home/luser/api/service/image/nginx/sites-available/img.example.org` <br>
+server configuration. This file will be symlinked to
+`/home/luser/api/service/image/nginx/sites-enabled/img.example.org`.
+
+## FILES 
+
+`/etc/nginx/sites-available` <br>
+Default directory with files providing information on available sites.
+
+`/etc/nginx/sites-enabled` <br>
+Default directory with links to the files in `sites-available` for enabled sites. 
+
+## SEE ALSO
+
+a2ensite(8), a2dissite(8), nginx(1)
+
+## COPYRIGHT
+
+nginx_ensite is Copyright (C) 2010-2015 Antonio P. P. Almeida
+<appa@perusio.net\> under the terms of a MIT license.
+
+## AVAILABILITY
+
+The latest version of nginx_ensite is available from: 
+[https://github.com/perusio/nginx_ensite](https://github.com/perusio/nginx_ensite).
+
+## AUTHOR
+
+nginx_ensite was written by Antonio P. P. Almeida <appa@perusio.net\>
+that also wrote the manual page based on the `a2ensite` manual page by
+Stefan Fritsch <sf@debian.org\> for the Debian GNU/Linux distribution.
+
