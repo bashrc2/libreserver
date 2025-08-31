@@ -1845,8 +1845,7 @@ function reset_tripwire {
     # final check of firewall
     ruleset=$(/usr/sbin/nft list ruleset)
     if [ ! "${ruleset}" ]; then
-        /usr/sbin/nft flush ruleset
-        /usr/sbin/nft -f /etc/firewall.conf
+        reload_firewall
         echo $'Firewall ruleset applied'
     fi
 

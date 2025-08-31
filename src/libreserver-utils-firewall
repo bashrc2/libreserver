@@ -45,6 +45,15 @@ WHOISDOMAIN='whois.radb.net'
 #   nft list set inet filter blackhole
 FIREWALL_PORTSCAN='20, 21, 90, 23, 109, 118, 119, 135, 222, 389, 563, 636, 843, 992, 995, 2022, 2122, 2323, 3333, 5279, 5900, 5901, 5902, 5903, 5931, 5944, 5950, 6039, 6040, 7070, 9389'
 
+function reload_firewall {
+    /usr/sbin/nft flush ruleset
+    /usr/sbin/nft add table inet filter
+    /usr/sbin/nft add chain inet filter INPUT { type filter hook input priority 0; }
+    /usr/sbin/nft add chain inet filter FORWARD { type filter hook forward priority 0; policy drop; }
+    /usr/sbin/nft add chain inet filter OUTPUT { type filter hook output priority 0; policy accept; }
+    /usr/sbin/nft -f /etc/firewall.conf
+}
+
 function update_portscan_defense {
     # If the portscan ports have changed then update the firewall
     if grep -q "${FIREWALL_PORTSCAN}" /etc/firewall.conf; then
@@ -58,9 +67,7 @@ function update_portscan_defense {
     # change the ipv6 ports
     sed -i "/ add @blackhole6 /c\tcp dport { ${FIREWALL_PORTSCAN} } add @blackhole6 { ip6 saddr timeout 1d } counter packets 0 bytes 0 drop comment \"portscan\"" /etc/firewall.conf
     sed -i "s|tcp dport { ${FIREWALL_PORTSCAN} } add @blackhole6 |                tcp dport { ${FIREWALL_PORTSCAN} } add @blackhole6 |g" /etc/firewall.conf
-    # reload the firewall
-    /usr/sbin/nft flush ruleset
-    /usr/sbin/nft -f /etc/firewall.conf
+    reload_firewall
     echo 'Port scan defense upgraded'
 }
 
@@ -289,16 +296,12 @@ function configure_enable_ssh_access {
     if ! grep -q "tcp dport ${SSH_PORT} meter" "${filename}"; then
         sed -i "/ 80, 443 /a tcp dport ${SSH_PORT} meter test-${SSH_PORT}-count-meter size 65535 { ip saddr & 255.255.255.0 ct count over 3 } counter packets 0 bytes 0 reject with tcp reset" "${filename}"
         sed -i "/ 80, 443 /a tcp dport ${SSH_PORT} meter test-${SSH_PORT}-count-meter6 size 65535 { ip6 saddr ct count over 3 } counter packets 0 bytes 0 reject with tcp reset" "${filename}"
-        # reload the firewall
-        /usr/sbin/nft flush ruleset
-        /usr/sbin/nft -f /etc/firewall.conf
+        reload_firewall
     fi
     if ! grep -q "tcp dport { ${SSH_PORT} }" "${filename}"; then
         sed -i "/ 80, 443 /a tcp dport { ${SSH_PORT} } ip saddr { 192.168.1.0/24, 192.168.2.0/24, 192.168.10.0/24 } ct state new accept" "${filename}"
         sed -i "/ 80, 443 /a tcp dport { ${SSH_PORT} } ip6 saddr { fc00::/7 } ct state new accept" "${filename}"
-        # reload the firewall
-        /usr/sbin/nft flush ruleset
-        /usr/sbin/nft -f /etc/firewall.conf
+        reload_firewall
     fi
 }
 
@@ -508,8 +511,7 @@ function configure_firewall {
 
     configure_firewall_base /etc/firewall.conf
     configure_firewall_base /etc/firewall_test.conf
-    /usr/sbin/nft flush ruleset
-    /usr/sbin/nft -f /etc/firewall.conf
+    reload_firewall
 
     ruleset=$(/usr/sbin/nft list ruleset)
     if [ "${ruleset}" ]; then
@@ -1281,9 +1283,7 @@ function firewall_google {
     # block_ips_from_asn AS15169 google
     if grep -q 'googleAS15169' /etc/firewall.conf; then
         sed -i '/googleAS15169/d' /etc/firewall.conf
-        # reload the firewall
-        /usr/sbin/nft flush ruleset
-        /usr/sbin/nft -f /etc/firewall.conf
+        reload_firewall
         echo $'Removed google firewall'
     fi
 }
