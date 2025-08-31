@@ -1659,8 +1659,8 @@ function setup_email {
     function_check email_client_mutt
     email_client_mutt
 
-    function_check email_client_meli
-    email_client_meli
+    # function_check email_client_meli
+    # email_client_meli
 
     #function_check encrypt_incoming_email
     #encrypt_incoming_email
