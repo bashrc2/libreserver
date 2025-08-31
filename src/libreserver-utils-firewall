@@ -308,8 +308,18 @@ function configure_enable_ssh_access {
 function configure_firewall_base {
     filename="$1"
 
+    regenerate_ruleset=
     ruleset=$(/usr/sbin/nft list ruleset)
     if [ ! "${ruleset}" ]; then
+        regenerate_ruleset=1
+    fi
+    if [ -f /etc/firewall.conf ]; then
+        if ! grep -q 'portscan' /etc/firewall.conf; then
+            regenerate_ruleset=1
+            /usr/sbin/nft flush ruleset
+        fi
+    fi
+    if [ ${regenerate_ruleset} ]; then
         # initially create table and chains
         /usr/sbin/nft add table inet filter
         /usr/sbin/nft add chain inet filter INPUT { type filter hook input priority 0 \; }
