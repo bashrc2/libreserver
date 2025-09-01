@@ -401,6 +401,22 @@ function configure_firewall_base {
         echo $'Initial firewall configuration complete'
     fi
 
+    # add kernel configuration options for "ct state" and "ct count"
+    kernel_build=$(uname -a | awk -F ' ' '{print $3}')
+    if [ "${kernel_build}" ]; then
+        kernel_config_filename="/boot/config-${kernel_build}"
+        if [ -f "${kernel_config_filename}" ]; then
+            if ! grep -q "CONFIG_NFT_COUNTER" "${kernel_config_filename}"; then
+                sed -i '/CONFIG_NFT_CT=/a CONFIG_NFT_COUNTER=m' "${kernel_config_filename}"
+                echo $'kernel configuration added CONFIG_NFT_COUNTER'
+            fi
+            if ! grep -q "CONFIG_NFT_OBJREF" "${kernel_config_filename}"; then
+                sed -i '/CONFIG_NFT_CT=/a CONFIG_NFT_OBJREF=m' "${kernel_config_filename}"
+                echo $'kernel configuration added CONFIG_NFT_OBJREF'
+            fi
+        fi
+    fi
+
     { echo '#!/usr/sbin/nft -f';
       echo '';
       echo 'table inet filter {';
