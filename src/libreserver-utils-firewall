@@ -110,12 +110,16 @@ function save_firewall_settings {
         fi
         ruleset=$(/usr/sbin/nft list ruleset)
         if [ "${ruleset}" ]; then
-            /usr/sbin/nft list ruleset > "${rootdir}/etc/nftables.conf"
+            if [[ "${ruleset}" == *"portscan"* ]]; then
+                /usr/sbin/nft list ruleset > "${rootdir}/etc/nftables.conf"
+            fi
         fi
     else
         ruleset=$(chroot "${rootdir}" /usr/sbin/nft list ruleset)
         if [ "${ruleset}" ]; then
-            chroot "${rootdir}" /usr/sbin/nft list ruleset > /etc/nftables.conf
+            if [[ "${ruleset}" == *"portscan"* ]]; then
+                chroot "${rootdir}" /usr/sbin/nft list ruleset > /etc/nftables.conf
+            fi
         fi
     fi
     if [ ! -d "${rootdir}/etc/network/if-up.d" ]; then

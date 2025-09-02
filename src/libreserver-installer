@@ -3402,7 +3402,9 @@ function update_enable_ssh {
         fi
         ruleset=$(/usr/sbin/nft list ruleset)
         if [ "${ruleset}" ]; then
-            /usr/sbin/nft list ruleset > /etc/nftables.conf
+            if [[ "${ruleset}" == *"portscan"* ]]; then
+                /usr/sbin/nft list ruleset > /etc/nftables.conf
+            fi
         fi
         systemctl restart ssh
         rm "$ssh_file"
