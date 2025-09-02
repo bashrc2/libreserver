@@ -1007,6 +1007,24 @@ function firewall_add_range {
     firewall_protocol="$4"
     add_range_comment="$5"
 
+    # generate the firewall if needed
+    generate_firewall=
+    if [ ! -f /etc/nftables.conf ]; then
+        generate_firewall=1
+    else
+        if ! grep -q 'portscan' /etc/nftables.conf; then
+            generate_firewall=1
+        fi
+    fi
+    ruleset=$(/usr/sbin/nft list ruleset)
+    if [ ! "${ruleset}" ]; then
+        generate_firewall=1
+    fi
+    if [ ${generate_firewall} ]; then
+        configure_firewall_base /etc/nftables.conf
+        reload_firewall
+    fi
+
     if [ ! -f "${FIREWALL_CONFIG}" ]; then
         touch "${FIREWALL_CONFIG}"
     fi
