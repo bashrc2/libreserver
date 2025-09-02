@@ -34,9 +34,10 @@ CONFDEF_OPTION='-o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-co
 function INSTALL_PACKAGES {
     for arg; do
         install_tries=0
-        install_max_tries=3
+        install_max_tries=5
         while [ $install_tries -lt $install_max_tries ]; do
             echo "Installing package $arg"
+            dpkg --configure -a
             if [ -f /var/lib/dpkg/lock ]; then
                 rm /var/lib/dpkg/lock
             fi
