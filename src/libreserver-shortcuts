@@ -52,6 +52,7 @@ function INSTALL_PACKAGES {
             if dpkg-query -W --showformat='${Status}\n' $arg 2> /dev/null; then
                 break
             fi
+            sleep 5
             install_tries=$((install_tries + 1))
         done
         if [ $install_tries -ge $install_max_tries ]; then
