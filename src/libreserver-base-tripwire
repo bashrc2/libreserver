@@ -55,6 +55,10 @@ function install_tripwire {
         rm /var/lib/dpkg/lock-frontend
     fi
 
+    if [ -f /var/lib/dpkg/lock ]; then
+        rm /var/lib/dpkg/lock
+    fi
+
     debconf-set-selections <<< "tripwire tripwire/use-sitekey boolean false"
     debconf-set-selections <<< "tripwire tripwire/use-localkey boolean false"
 
