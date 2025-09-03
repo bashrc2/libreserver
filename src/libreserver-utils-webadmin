@@ -301,11 +301,11 @@ function web_admin_translate {
     echo "Changing lang headers"
     langstr="${language:0:2}"
     for filename in "${webadmin_install_dir}"/*.html; do
-        sed -i 's|"yes" lang="en">||g' "$filename"
+        sed -i 's|"yes" lang="en">||g' "${filename}"
     done
     for filename in "${webadmin_install_dir}"/*.html; do
-        sed -i "s|<html>|<html lang=\"$langstr\">|g" "$filename"
-        sed -i "s|<html lang=\"en\">|<html lang=\"$langstr\">|g" "$filename"
+        sed -i "s|<html>|<html lang=\"$langstr\">|g" "${filename}"
+        sed -i "s|<html lang=\"en\">|<html lang=\"$langstr\">|g" "${filename}"
     done
 
     chown www-data:www-data "${webadmin_install_dir}"/*.html
@@ -398,8 +398,8 @@ function web_admin_create_users {
 
     if [ -f "${webadmin_install_dir}/.setupscreenactive" ]; then
         if [ ! -f "${webadmin_install_dir}/.running_install_command" ]; then
-            if [ -f "$users_file" ]; then
-                rm "$users_file"
+            if [ -f "${users_file}" ]; then
+                rm "${users_file}"
             fi
             if [ ! -d "$INSTALL_DIR/tempwebadmin" ]; then
                 mkdir -p "$INSTALL_DIR/tempwebadmin"
@@ -410,13 +410,13 @@ function web_admin_create_users {
     fi
 
     ADMIN_USER=$(get_completion_param "Admin user")
-    cp "${webadmin_install_dir}"/users_template.html "$users_file"
-    sed -i '/users list/,/end of users/d' "$users_file"
-    sed -i '/<\/body>/d' "$users_file"
-    sed -i '/<\/html>/d' "$users_file"
+    cp "${webadmin_install_dir}"/users_template.html "${users_file}"
+    sed -i '/users list/,/end of users/d' "${users_file}"
+    sed -i '/<\/body>/d' "${users_file}"
+    sed -i '/<\/html>/d' "${users_file}"
 
-    echo "    <div class=\"row\">" >> "$users_file"
-    echo "      <div class=\"column\">" >> "$users_file"
+    echo "    <div class=\"row\">" >> "${users_file}"
+    echo "      <div class=\"column\">" >> "${users_file}"
 
     rm "${webadmin_install_dir}/userprofile_"*
 
@@ -441,69 +441,69 @@ function web_admin_create_users {
         fi
     fi
     notifications_user='admin'
-    if grep -q 'Notifications user:' "$COMPLETION_FILE"; then
+    if grep -q 'Notifications user:' "${COMPLETION_FILE}"; then
         # shellcheck disable=SC2002
-        notifications_user=$(cat "$COMPLETION_FILE" | grep 'Notifications user:' | awk -F ':' '{print $2}')
+        notifications_user=$(cat "${COMPLETION_FILE}" | grep 'Notifications user:' | awk -F ':' '{print $2}')
     fi
 
     for d in /home/*/ ; do
         USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
-        if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+        if [[ $(is_valid_user "${USERNAME}") == "1" ]]; then
             userfile="${webadmin_install_dir}/userprofile_${USERNAME}.html"
             useremail=${USERNAME}@${HOSTNAME}
-            GPG_ID=$(su -c "gpg --list-keys '$useremail'" - "$USERNAME" | sed -n '2p' | sed 's/^[ \t]*//')
-            if [ -f "/home/$USERNAME/.gnupg/gpg.conf" ]; then
-                if grep -q "default-key" "/home/$USERNAME/.gnupg/gpg.conf"; then
-                    default_gpg_key=$(grep "default-key" "/home/$USERNAME/.gnupg/gpg.conf")
-                    if [[ "$default_gpg_key" != *'#'* ]]; then
-                        default_gpg_key=$(grep "default-key" "/home/$USERNAME/.gnupg/gpg.conf" | awk -F ' ' '{print $2}')
+            GPG_ID=$(su -c "gpg --list-keys '$useremail'" - "${USERNAME}" | sed -n '2p' | sed 's/^[ \t]*//')
+            if [ -f "/home/${USERNAME}/.gnupg/gpg.conf" ]; then
+                if grep -q "default-key" "/home/${USERNAME}/.gnupg/gpg.conf"; then
+                    default_gpg_key=$(grep "default-key" "/home/${USERNAME}/.gnupg/gpg.conf")
+                    if [[ "${default_gpg_key}" != *'#'* ]]; then
+                        default_gpg_key=$(grep "default-key" "/home/${USERNAME}/.gnupg/gpg.conf" | awk -F ' ' '{print $2}')
                         if [ ${#default_gpg_key} -gt 3 ]; then
-                            GPG_ID=$(su -c "gpg --list-keys '$default_gpg_key'" - "$USERNAME" | sed -n '2p' | sed 's/^[ \t]*//')
+                            GPG_ID=$(su -c "gpg --list-keys '${default_gpg_key}'" - "${USERNAME}" | sed -n '2p' | sed 's/^[ \t]*//')
                         fi
                     fi
                 fi
             fi
             xmpp_qrcode="${webadmin_install_dir}/images/userprofile_${USERNAME}_xmpp.png"
             if [ ! -f /usr/local/bin/myqr ]; then
-                echo -n "${useremail}" | qrencode -t PNG -o "$xmpp_qrcode"
+                echo -n "${useremail}" | qrencode -t PNG -o "${xmpp_qrcode}"
             else
-                myqr "${useremail}" -p /root/libreserver/img/android-app/xmpp.png -c -v 8 -n "$xmpp_qrcode"
+                myqr "${useremail}" -p /root/libreserver/img/android-app/xmpp.png -c -v 8 -n "${xmpp_qrcode}"
             fi
 
             #pubkey_qrcode="${webadmin_install_dir}/images/userprofile_${USERNAME}.png"
-            #su -c "gpg --armor --export \"$GPG_ID\"" - "$USERNAME" | qrencode -t PNG -o "$pubkey_qrcode"
+            #su -c "gpg --armor --export \"$GPG_ID\"" - "${USERNAME}" | qrencode -t PNG -o "${pubkey_qrcode}"
 
             user_image='user.png'
-            if [[ "$USERNAME" == "$ADMIN_USER" ]]; then
+            if [[ "${USERNAME}" == "${ADMIN_USER}" ]]; then
                 user_image='user_admin.png'
             fi
 
             { echo '        <div class="chip">';
               echo "          <a href=\"userprofile_${USERNAME}.html\" title=\"${USERNAME}\">";
               echo "            <img src=\"images/${user_image}\" alt=\"Person\" width=\"96\" height=\"96\">";
-              echo "            $USERNAME";
+              echo "            ${USERNAME}";
               echo '          </a>';
-              echo '        </div>'; } >> "$users_file"
+              echo '        </div>'; } >> "${users_file}"
 
             no_of_users=$((no_of_users+1))
 
-            cp "${webadmin_install_dir}"/userprofile.html "$userfile"
-            sed -i "s|USERNAME|${USERNAME}|g" "$userfile"
-            if [[ "$USERNAME" == "$ADMIN_USER" ]]; then
-                sed -i "s|USERTYPE|Admin|g" "$userfile"
-                sed -i '/remove user button/,/end of remove/d' "$userfile"
+            cp "${webadmin_install_dir}"/userprofile.html "${userfile}"
+            sed -i "s|USERNAME|${USERNAME}|g" "${userfile}"
+            if [[ "${USERNAME}" == "${ADMIN_USER}" ]]; then
+                sed -i "s|USERTYPE|Admin|g" "${userfile}"
+                sed -i '/remove user button/,/end of remove/d' "${userfile}"
             else
-                sed -i "s|USERTYPE|User|g" "$userfile"
+                sed -i "s|USERTYPE|User|g" "${userfile}"
             fi
 
             if [[ "$useremail" != *'.onion' ]]; then
                 useronionemail=${USERNAME}@$(cat /var/lib/tor/hidden_service_email/hostname)
-                sed -i "s|USEREMAIL|${useremail}<br><br>${useronionemail}|g" "$userfile"
+                sed -i "s|USEREMAIL|${useremail}<br><br>${useronionemail}|g" "${userfile}"
             else
-                sed -i "s|USEREMAIL|${useremail}|g" "$userfile"
+                sed -i "s|USEREMAIL|${useremail}|g" "${userfile}"
             fi
 
-            sed -i "s|USERGPG|${GPG_ID}|g" "$userfile"
+            sed -i "s|USERGPG|${GPG_ID}|g" "${userfile}"
 
             # File containing preferred notification methods
             notification_method_filename="/home/${USERNAME}/.notify"
@@ -515,52 +515,52 @@ function web_admin_create_users {
                 fi
             fi
             if [ $can_notify_by_ntfy ]; then
-                sed -i '/option value="email"/a <option value="ntfy">ntfy</option>' "$userfile"
-                if [ -f "$notification_method_filename" ]; then
-                    if grep -q 'ntfy' "$notification_method_filename"; then
-                        sed -i 's|value="ntfy">|value="ntfy" selected>|g' "$userfile"
+                sed -i '/option value="email"/a <option value="ntfy">ntfy</option>' "${userfile}"
+                if [ -f "${notification_method_filename}" ]; then
+                    if grep -q 'ntfy' "${notification_method_filename}"; then
+                        sed -i 's|value="ntfy">|value="ntfy" selected>|g' "${userfile}"
                         notification_selected=1
                     fi
                 fi
             fi
             if [ $can_notify_by_nextcloud ]; then
-                sed -i '/option value="email"/a <option value="nextcloud">Nextcloud</option>' "$userfile"
-                if [ -f "$notification_method_filename" ]; then
-                    if grep -q 'nextcloud' "$notification_method_filename"; then
-                        sed -i 's|value="nextcloud">|value="nextcloud" selected>|g' "$userfile"
+                sed -i '/option value="email"/a <option value="nextcloud">Nextcloud</option>' "${userfile}"
+                if [ -f "${notification_method_filename}" ]; then
+                    if grep -q 'nextcloud' "${notification_method_filename}"; then
+                        sed -i 's|value="nextcloud">|value="nextcloud" selected>|g' "${userfile}"
                         notification_selected=1
                     fi
                 fi
             fi
             if [ $can_notify_by_matrix ]; then
-                sed -i '/option value="email"/a <option value="matrix">Matrix</option>' "$userfile"
-                if [ -f "$notification_method_filename" ]; then
-                    if grep -q 'matrix' "$notification_method_filename"; then
-                        sed -i 's|value="matrix">|value="matrix" selected>|g' "$userfile"
+                sed -i '/option value="email"/a <option value="matrix">Matrix</option>' "${userfile}"
+                if [ -f "${notification_method_filename}" ]; then
+                    if grep -q 'matrix' "${notification_method_filename}"; then
+                        sed -i 's|value="matrix">|value="matrix" selected>|g' "${userfile}"
                         notification_selected=1
                     fi
                 fi
             fi
             if [ $can_notify_by_xmpp ]; then
-                sed -i '/option value="email"/a <option value="xmpp">XMPP</option>' "$userfile"
-                if [ -f "$notification_method_filename" ]; then
-                    if grep -q 'xmpp' "$notification_method_filename"; then
-                        sed -i 's|value="xmpp">|value="xmpp" selected>|g' "$userfile"
+                sed -i '/option value="email"/a <option value="xmpp">XMPP</option>' "${userfile}"
+                if [ -f "${notification_method_filename}" ]; then
+                    if grep -q 'xmpp' "${notification_method_filename}"; then
+                        sed -i 's|value="xmpp">|value="xmpp" selected>|g' "${userfile}"
                         notification_selected=1
                     fi
                 fi
             fi
             if [ ! $notification_selected ]; then
-                sed -i 's|value="email">|value="email" selected>|g' "$userfile"
+                sed -i 's|value="email">|value="email" selected>|g' "${userfile}"
             fi
 
             # check the notifications user
-            if [[ "$USERNAME" == "$notifications_user" ]]; then
-                sed -i 's|name="admin_notify">|name="admin_notify" checked>|g' "$userfile"
+            if [[ "${USERNAME}" == "${notifications_user}" ]]; then
+                sed -i 's|name="admin_notify">|name="admin_notify" checked>|g' "${userfile}"
             fi
 
-            chown www-data:www-data "$userfile"
-            #chown www-data:www-data "$pubkey_qrcode"
+            chown www-data:www-data "${userfile}"
+            #chown www-data:www-data "${pubkey_qrcode}"
         fi
     done
 
@@ -573,15 +573,15 @@ function web_admin_create_users {
           echo '            <img src="images/user.png" alt="Person" width="96" height="96">';
           echo '            <div class="adduser">+</div>';
           echo '          </a>';
-          echo '        </div>'; } >> "$users_file"
+          echo '        </div>'; } >> "${users_file}"
     fi
 
     { echo '      </div>';
       echo '    </div>';
       echo '  </body>';
-      echo '</html>'; } >> "$users_file"
+      echo '</html>'; } >> "${users_file}"
 
-    chown www-data:www-data "$users_file"
+    chown www-data:www-data "${users_file}"
 }
 
 function get_app_categories {
@@ -608,7 +608,7 @@ function web_admin_create_add_apps_category {
 
     # shellcheck disable=SC2086
     category_str="$(tr '[:lower:]' '[:upper:]' <<< ${category:0:1})${category:1}"
-    translated_category=$(web_admin_translate_text "$category_str")
+    translated_category=$(web_admin_translate_text "${category_str}")
 
     apps_header_str="<fieldset class=\"field_set\"><legend translate=\"yes\" class=\"category\">$translated_category</legend>"
     echo "    $apps_header_str" >> "$appslist_add_filename"
@@ -616,10 +616,10 @@ function web_admin_create_add_apps_category {
     FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
     for add_app_filename in $FILES
     do
-        if [[ "$files_checked" != *"|$add_app_filename|"* ]]; then
+        if [[ "${files_checked}" != *"|${add_app_filename}|"* ]]; then
             add_app_name=$(echo "${add_app_filename}" | awk -F '-app-' '{print $2}')
-            if grep -q "APP_CATEGORY=$category" "$add_app_filename"; then
-                if ! grep -q "VARIANTS=''" "$add_app_filename"; then
+            if grep -q "APP_CATEGORY=${category}" "${add_app_filename}"; then
+                if ! grep -q "VARIANTS=''" "${add_app_filename}"; then
                     if [[ $(enough_ram_for_app "$add_app_name") == "0" ]]; then
                         if [[ $(app_not_on_onion_only "$add_app_name") != "0" ]]; then
                             if [[ $(app_not_on_i2p_only "$add_app_name") != "0" ]]; then
@@ -652,30 +652,30 @@ function web_admin_create_add_apps_category {
                                         if [ ! $app_is_installed ]; then
 
                                             # does this app have a category?
-                                            if ! grep -q 'APP_CATEGORY=' "$add_app_filename"; then
-                                                if [[ "$category" != 'other' ]]; then
+                                            if ! grep -q 'APP_CATEGORY=' "${add_app_filename}"; then
+                                                if [[ "${category}" != 'other' ]]; then
                                                     app_index=$((app_index+1))
                                                     continue
                                                 fi
                                             fi
 
                                             # Does this app belong in the current category?
-                                            if ! grep -q "APP_CATEGORY=$category" "$add_app_filename"; then
+                                            if ! grep -q "APP_CATEGORY=${category}" "${add_app_filename}"; then
                                                 app_index=$((app_index+1))
                                                 continue
                                             fi
 
-                                            if grep -q "VARIANTS=''" "$add_app_filename"; then
+                                            if grep -q "VARIANTS=''" "${add_app_filename}"; then
                                                 continue
                                             fi
-                                            if grep -q 'VARIANTS=""' "$add_app_filename"; then
+                                            if grep -q 'VARIANTS=""' "${add_app_filename}"; then
                                                 continue
                                             fi
 
                                             # get the icon for the app
                                             icon_filename="/usr/share/${PROJECT_NAME}/android-app/${add_app_name}.png"
-                                            if [ -f "$icon_filename" ]; then
-                                                cp "$icon_filename" "${webadmin_install_dir}/icons/${add_app_name}.png"
+                                            if [ -f "${icon_filename}" ]; then
+                                                cp "${icon_filename}" "${webadmin_install_dir}/icons/${add_app_name}.png"
                                             else
                                                 icon_filename=
                                                 continue
@@ -693,19 +693,19 @@ function web_admin_create_add_apps_category {
                                             SHORT_DESCRIPTION=
                                             DESCRIPTION=
 
-                                            if ! grep -q "${app_name_upper}_SHORT_DESCRIPTION=" "$add_app_filename"; then
+                                            if ! grep -q "${app_name_upper}_SHORT_DESCRIPTION=" "${add_app_filename}"; then
                                                 continue
                                             fi
-                                            if grep -q "#${app_name_upper}_SHORT_DESCRIPTION=" "$add_app_filename"; then
+                                            if grep -q "#${app_name_upper}_SHORT_DESCRIPTION=" "${add_app_filename}"; then
                                                 continue
                                             fi
-                                            SHORT_DESCRIPTION="$(grep "${app_name_upper}_SHORT_DESCRIPTION=" "$add_app_filename" | head -n 1 | sed 's|\$||g' | sed "s|'||g" | sed 's|\"||g' | awk -F '=' '{print $2}')"
+                                            SHORT_DESCRIPTION="$(grep "${app_name_upper}_SHORT_DESCRIPTION=" "${add_app_filename}" | head -n 1 | sed 's|\$||g' | sed "s|'||g" | sed 's|\"||g' | awk -F '=' '{print $2}')"
                                             translated_short_description=$(web_admin_translate_text "$SHORT_DESCRIPTION")
                                             SHORT_DESCRIPTION="$translated_short_description"
                                             app_title="${SHORT_DESCRIPTION}"
 
-                                            if grep -q "${app_name_upper}_DESCRIPTION=" "$add_app_filename"; then
-                                                DESCRIPTION="$(grep "${app_name_upper}_DESCRIPTION=" "$add_app_filename" | head -n 1 | sed 's|\$||g' | sed "s|'||g" | sed 's|\"||g' | awk -F '=' '{print $2}')"
+                                            if grep -q "${app_name_upper}_DESCRIPTION=" "${add_app_filename}"; then
+                                                DESCRIPTION="$(grep "${app_name_upper}_DESCRIPTION=" "${add_app_filename}" | head -n 1 | sed 's|\$||g' | sed "s|'||g" | sed 's|\"||g' | awk -F '=' '{print $2}')"
                                                 translated_description=$(web_admin_translate_text "$DESCRIPTION")
                                                 DESCRIPTION="$translated_description"
                                                 app_title="${DESCRIPTION}"
@@ -716,8 +716,8 @@ function web_admin_create_add_apps_category {
                                             fi
 
                                             filename_app="${webadmin_install_dir}/app_${add_app_name}.html"
-                                            if [ -f "$filename_app" ]; then
-                                                rm "$filename_app"
+                                            if [ -f "${filename_app}" ]; then
+                                                rm "${filename_app}"
                                             fi
 
                                             filename_app="${webadmin_install_dir}/app_add_${add_app_name}.html"
@@ -740,17 +740,17 @@ function web_admin_create_add_apps_category {
                                                   echo '      </div>'; } >> "$appslist_add_filename"
                                             fi
 
-                                            cp "$app_add_template_filename" "$filename_app"
+                                            cp "$app_add_template_filename" "${filename_app}"
 
                                             # Replace app variables
-                                            sed -i "s|HOSTNAME|$(hostname)|g" "$filename_app"
-                                            sed -i "s|APPNAME|${add_app_name}|g" "$filename_app"
-                                            sed -i "s|APPDESCRIPTION|${DESCRIPTION}|g" "$filename_app"
+                                            sed -i "s|HOSTNAME|$(hostname)|g" "${filename_app}"
+                                            sed -i "s|APPNAME|${add_app_name}|g" "${filename_app}"
+                                            sed -i "s|APPDESCRIPTION|${DESCRIPTION}|g" "${filename_app}"
 
                                             # special case for xmpp and gemini where it is the same as the default domain
                                             if [[ "${add_app_name}" == 'xmpp' || "${add_app_name}" == 'gemini' ]]; then
                                                 if [[ "${ONION_ONLY}" == 'no' && "$I2P_ONLY" == 'no' ]]; then
-                                                    sed -i "s|<p><label translate=\"yes\">Domain:.*|<input type=\"hidden\" name=\"install_domain\" value=\"$(hostname)\">|g" "$filename_app"
+                                                    sed -i "s|<p><label translate=\"yes\">Domain:.*|<input type=\"hidden\" name=\"install_domain\" value=\"$(hostname)\">|g" "${filename_app}"
                                                 fi
                                             fi
 
@@ -759,30 +759,30 @@ function web_admin_create_add_apps_category {
                                                 app_add_remove_domain=1
                                             fi
                                             webadmin_remove_domain=
-                                            if grep -q 'SHOW_DOMAIN_IN_WEBADMIN=0' "$add_app_filename"; then
+                                            if grep -q 'SHOW_DOMAIN_IN_WEBADMIN=0' "${add_app_filename}"; then
                                                 webadmin_remove_domain=1
                                             fi
-                                            if grep -q 'SHOW_DOMAIN_IN_ADD_WEBADMIN=0' "$add_app_filename"; then
+                                            if grep -q 'SHOW_DOMAIN_IN_ADD_WEBADMIN=0' "${add_app_filename}"; then
                                                 webadmin_remove_domain=1
                                             fi
                                             if [ $webadmin_remove_domain ]; then
                                                 app_add_remove_domain=1
-                                                sed -i '/freedns_code/d' "$filename_app"
-                                                sed -i 's|"no_domain".*|"no_domain" value="1">|g' "$filename_app"
+                                                sed -i '/freedns_code/d' "${filename_app}"
+                                                sed -i 's|"no_domain".*|"no_domain" value="1">|g' "${filename_app}"
                                             fi
 
                                             # remove domain if necessary
                                             if [ $app_add_remove_domain ]; then
-                                                if grep -q 'install_domain' "$filename_app"; then
-                                                    sed -i '/install_domain/d' "$filename_app"
+                                                if grep -q 'install_domain' "${filename_app}"; then
+                                                    sed -i '/install_domain/d' "${filename_app}"
                                                 fi
-                                                sed -i "/installappconfirm.php/a <input type=\"hidden\" name=\"install_domain\" value=\"${add_app_name}.$(hostname)\">" "$filename_app"
+                                                sed -i "/installappconfirm.php/a <input type=\"hidden\" name=\"install_domain\" value=\"${add_app_name}.$(hostname)\">" "${filename_app}"
                                             fi
 
                                             # remove freedns if necessary
                                             #if [[ "$DDNS_PROVIDER" != *"freedns"* ]]; then
-                                            #    if grep -q 'freedns_code' "$filename_app"; then
-                                            sed -i '/freedns_code/d' "$filename_app"
+                                            #    if grep -q 'freedns_code' "${filename_app}"; then
+                                            sed -i '/freedns_code/d' "${filename_app}"
                                             #    fi
                                             #fi
 
@@ -894,10 +894,10 @@ function web_admin_create_installed_apps_category {
 
     # shellcheck disable=SC2086
     category_str="$(tr '[:lower:]' '[:upper:]' <<< ${category:0:1})${category:1}"
-    translated_category=$(web_admin_translate_text "$category_str")
+    translated_category=$(web_admin_translate_text "${category_str}")
 
     apps_header_str="<fieldset class=\"field_set\"><legend translate=\"yes\" class=\"category\">$translated_category</legend>"
-    echo "    $apps_header_str" >> "$appslist_filename"
+    echo "    ${apps_header_str}" >> "${appslist_filename}"
 
     # shellcheck disable=SC2068,SC2034
     for a in ${APPS_INSTALLED[@]}
@@ -905,13 +905,13 @@ function web_admin_create_installed_apps_category {
         app_name=${APPS_INSTALLED_NAMES[$app_index]}
         if [ "$app_name" ]; then
             app_filename="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-${app_name}"
-            if [[ "$files_checked" != *"|$app_filename|"* ]]; then
-                if [ -f "$app_filename" ]; then
+            if [[ "${files_checked}" != *"|${app_filename}|"* ]]; then
+                if [ -f "${app_filename}" ]; then
 
                     # check if the app is being removed
                     app_being_removed=
-                    if [ -f "$pending_removes" ]; then
-                        if grep -q "remove_${app_name}" "$pending_removes"; then
+                    if [ -f "${pending_removes}" ]; then
+                        if grep -q "remove_${app_name}" "${pending_removes}"; then
                             app_being_removed=1
                         fi
                     fi
@@ -919,8 +919,8 @@ function web_admin_create_installed_apps_category {
                     if [ ! $app_being_removed ]; then
                         # get the icon for the app
                         icon_filename="/usr/share/${PROJECT_NAME}/android-app/${app_name}.png"
-                        if [ -f "$icon_filename" ]; then
-                            cp "$icon_filename" "${webadmin_install_dir}/icons/${app_name}.png"
+                        if [ -f "${icon_filename}" ]; then
+                            cp "${icon_filename}" "${webadmin_install_dir}/icons/${app_name}.png"
                         else
                             icon_filename=
                         fi
@@ -930,45 +930,45 @@ function web_admin_create_installed_apps_category {
                         DESCRIPTION=
 
                         # does this app have a category?
-                        if ! grep -q 'APP_CATEGORY=' "$app_filename"; then
-                            if [[ "$category" != 'other' ]]; then
+                        if ! grep -q 'APP_CATEGORY=' "${app_filename}"; then
+                            if [[ "${category}" != 'other' ]]; then
                                 app_index=$((app_index+1))
                                 continue
                             fi
                         fi
 
                         # Does this app belong in the current category?
-                        if ! grep -q "APP_CATEGORY=$category" "$app_filename"; then
+                        if ! grep -q "APP_CATEGORY=${category}" "${app_filename}"; then
                             app_index=$((app_index+1))
                             continue
                         fi
 
                         # Do we have a short description?
-                        if ! grep -q "${app_name_upper}_SHORT_DESCRIPTION=" "$app_filename"; then
+                        if ! grep -q "${app_name_upper}_SHORT_DESCRIPTION=" "${app_filename}"; then
                             app_index=$((app_index+1))
                             continue
                         fi
 
                         # is the short description commented out?
-                        if grep -q "#${app_name_upper}_SHORT_DESCRIPTION=" "$app_filename"; then
+                        if grep -q "#${app_name_upper}_SHORT_DESCRIPTION=" "${app_filename}"; then
                             app_index=$((app_index+1))
                             continue
                         fi
 
-                        SHORT_DESCRIPTION="$(grep "${app_name_upper}_SHORT_DESCRIPTION=" "$app_filename" | head -n 1 | sed 's|\$||g' | sed "s|'||g" | sed 's|\"||g' | awk -F '=' '{print $2}')"
+                        SHORT_DESCRIPTION="$(grep "${app_name_upper}_SHORT_DESCRIPTION=" "${app_filename}" | head -n 1 | sed 's|\$||g' | sed "s|'||g" | sed 's|\"||g' | awk -F '=' '{print $2}')"
 
                         translated_short_description=$(web_admin_translate_text "$SHORT_DESCRIPTION")
                         SHORT_DESCRIPTION="$translated_short_description"
                         app_title="${SHORT_DESCRIPTION}"
 
-                        if grep -q "${app_name_upper}_DESCRIPTION=" "$app_filename"; then
-                            DESCRIPTION="$(grep "${app_name_upper}_DESCRIPTION=" "$app_filename" | head -n 1 | sed 's|\$||g' | sed "s|'||g" | sed 's|\"||g' | awk -F '=' '{print $2}')"
+                        if grep -q "${app_name_upper}_DESCRIPTION=" "${app_filename}"; then
+                            DESCRIPTION="$(grep "${app_name_upper}_DESCRIPTION=" "${app_filename}" | head -n 1 | sed 's|\$||g' | sed "s|'||g" | sed 's|\"||g' | awk -F '=' '{print $2}')"
                             translated_description=$(web_admin_translate_text "$DESCRIPTION")
                             DESCRIPTION="$translated_description"
                             app_title="${DESCRIPTION}"
                         fi
 
-                        MOBILE_APP_URL="$(grep "${app_name_upper}_MOBILE_APP_URL==" "$app_filename" | head -n 1)"
+                        MOBILE_APP_URL="$(grep "${app_name_upper}_MOBILE_APP_URL==" "${app_filename}" | head -n 1)"
 
                         read_config_param "${app_name_upper}_DOMAIN_NAME"
                         read_config_param ONION_ONLY
@@ -979,7 +979,7 @@ function web_admin_create_installed_apps_category {
                         fi
                         i2p_app_name="${onion_app_name}"
                         if [[ "${ONION_ONLY}" == 'no' && "$I2P_ONLY" == 'no' ]]; then
-                            if grep -q "INSTALLED_ON_DEFAULT_DOMAIN=1" "$app_filename"; then
+                            if grep -q "INSTALLED_ON_DEFAULT_DOMAIN=1" "${app_filename}"; then
                                 read_config_param DEFAULT_DOMAIN_NAME
                                 domain_name=${DEFAULT_DOMAIN_NAME}
                             else
@@ -1008,11 +1008,11 @@ function web_admin_create_installed_apps_category {
 
                         if [ "$domain_name" ]; then
                             if [[ "$domain_name" != *'.onion' ]]; then
-                                if ! grep -q 'SHOW_DOMAIN_ONLY=1' "$app_filename"; then
+                                if ! grep -q 'SHOW_DOMAIN_ONLY=1' "${app_filename}"; then
                                     domain_name="https://${domain_name}"
                                 fi
                             else
-                                if ! grep -q 'SHOW_DOMAIN_ONLY=1' "$app_filename"; then
+                                if ! grep -q 'SHOW_DOMAIN_ONLY=1' "${app_filename}"; then
                                     domain_name="http://${onion_domain_name}"
                                 else
                                     domain_name="${onion_domain_name}"
@@ -1020,10 +1020,10 @@ function web_admin_create_installed_apps_category {
                             fi
                         fi
 
-                        if grep -q "SHOW_URL_PORT=" "$app_filename"; then
-                            domain_port_number=$(grep "SHOW_URL_PORT=" "$app_filename" | head -n 1 | awk -F '=' '{print $2}')
+                        if grep -q "SHOW_URL_PORT=" "${app_filename}"; then
+                            domain_port_number=$(grep "SHOW_URL_PORT=" "${app_filename}" | head -n 1 | awk -F '=' '{print $2}')
                             if [ "$domain_port_number" ]; then
-                                if ! grep -q 'SHOW_DOMAIN_ONLY=1' "$app_filename"; then
+                                if ! grep -q 'SHOW_DOMAIN_ONLY=1' "${app_filename}"; then
                                     domain_name="http://${local_hostname}:${domain_port_number}"
                                     onion_domain_name="http://${onion_domain_name}:${domain_port_number}"
                                 else
@@ -1033,11 +1033,11 @@ function web_admin_create_installed_apps_category {
                             fi
                         fi
 
-                        if grep -q "SHOW_APP_PORT=" "$app_filename"; then
-                            domain_port_number=$(grep "SHOW_APP_PORT=" "$app_filename" | head -n 1 | awk -F '=' '{print $2}')
+                        if grep -q "SHOW_APP_PORT=" "${app_filename}"; then
+                            domain_port_number=$(grep "SHOW_APP_PORT=" "${app_filename}" | head -n 1 | awk -F '=' '{print $2}')
                             if [ "$domain_port_number" ]; then
                                 translated_port=$(web_admin_translate_text "port")
-                                if ! grep -q 'SHOW_DOMAIN_ONLY=1' "$app_filename"; then
+                                if ! grep -q 'SHOW_DOMAIN_ONLY=1' "${app_filename}"; then
                                     domain_name="http://${domain_name} ${translated_port} ${domain_port_number}"
                                     onion_domain_name="http://${onion_domain_name} ${translated_port} ${domain_port_number}"
                                 else
@@ -1066,12 +1066,12 @@ function web_admin_create_installed_apps_category {
                         fi
 
                         if [ $installed_apps_ctr -eq 0 ]; then
-                            echo '    <div class="row">' >> "$appslist_filename"
+                            echo '    <div class="row">' >> "${appslist_filename}"
                         fi
 
                         filename="${webadmin_install_dir}/app_add_${app_name}.html"
-                        if [ -f "$filename" ]; then
-                            rm "$filename"
+                        if [ -f "${filename}" ]; then
+                            rm "${filename}"
                         fi
 
                         filename="${webadmin_install_dir}/app_${app_name}.html"
@@ -1083,31 +1083,31 @@ function web_admin_create_installed_apps_category {
                           echo "            <center>${app_name}</center>";
                           echo '          </a>';
                           echo '        </div>';
-                          echo '      </div>'; } >> "$appslist_filename"
+                          echo '      </div>'; } >> "${appslist_filename}"
 
-                        cp "$app_template_filename" "$filename"
+                        cp "$app_template_filename" "${filename}"
 
                         # avoid showing the rsync command twice in APPURL and ONIONURL
                         if [[ "$app_name" == 'rsync' ]]; then
-                            sed -i '/APPURL/d' "$filename"
+                            sed -i '/APPURL/d' "${filename}"
                         fi
 
                         # single icon, no qrcode
                         if [[ "$app_name" == 'dlna' ]]; then
-                            cp "$app2_template_filename" "$filename"
+                            cp "$app2_template_filename" "${filename}"
                         fi
 
-                        if ! grep -q 'SHOW_DOMAIN_IN_WEBADMIN=0' "$app_filename"; then
+                        if ! grep -q 'SHOW_DOMAIN_IN_WEBADMIN=0' "${app_filename}"; then
                             if [ ! -f "${webadmin_install_dir}/app_qrcode_${app_name}.png" ]; then
                                 if [[ "$app_name" != 'rsync' ]]; then
                                     if [ ! -f /usr/local/bin/myqr ]; then
-                                        if ! grep -q 'SHOW_DOMAIN_ONLY=1' "$app_filename"; then
+                                        if ! grep -q 'SHOW_DOMAIN_ONLY=1' "${app_filename}"; then
                                             echo -n "http://${onion_domain_name}" | qrencode -t PNG -o "${webadmin_install_dir}/app_qrcode_${app_name}.png"
                                         else
                                             echo -n "${onion_domain_name}" | qrencode -t PNG -o "${webadmin_install_dir}/app_qrcode_${app_name}.png"
                                         fi
                                     else
-                                        if ! grep -q 'SHOW_DOMAIN_ONLY=1' "$app_filename"; then
+                                        if ! grep -q 'SHOW_DOMAIN_ONLY=1' "${app_filename}"; then
                                             myqr "http://${onion_domain_name}" -p /root/libreserver/img/onion.png -c -n "${webadmin_install_dir}/app_qrcode_${app_name}.png"
                                         else
                                             myqr "${onion_domain_name}" -p /root/libreserver/img/onion.png -c -n "${webadmin_install_dir}/app_qrcode_${app_name}.png"
@@ -1138,7 +1138,7 @@ function web_admin_create_installed_apps_category {
                         if [ ! -f "$app_settings_screen" ]; then
                             app_settings_screen_template="${webadmin_install_dir}/settings_${app_name}_template.html"
                             if [ ! -f "$app_settings_screen_template" ]; then
-                                sed -i '/submitappsettings/d' "$filename"
+                                sed -i '/submitappsettings/d' "${filename}"
                             else
                                 cp "$app_settings_screen_template" "$app_settings_screen"
                                 # shellcheck disable=SC2086
@@ -1165,7 +1165,7 @@ function web_admin_create_installed_apps_category {
 
                         if [ ! -f "$app_help_screen" ]; then
                             # remove help button if there are no help screen for this app
-                            sed -i '/submithelp/d' "$filename"
+                            sed -i '/submithelp/d' "${filename}"
                         else
                             # On onion only we don't need to forward ports, so
                             # that text can be removed from the help screen
@@ -1177,69 +1177,69 @@ function web_admin_create_installed_apps_category {
 
                         # Replace app variables
                         if [ ! "$MOBILE_APP_URL" ]; then
-                            sed -i '/MOBILEAPPURL/d' "$filename"
+                            sed -i '/MOBILEAPPURL/d' "${filename}"
                         else
-                            sed -i "s|MOBILEAPPURL|$MOBILE_APP_URL|g" "$filename"
+                            sed -i "s|MOBILEAPPURL|$MOBILE_APP_URL|g" "${filename}"
                         fi
-                        if grep -q 'SHOW_DOMAIN_IN_WEBADMIN=0' "$app_filename"; then
-                            sed -i '/ONIONURL/d' "$filename"
-                            sed -i '/I2PURL/d' "$filename"
+                        if grep -q 'SHOW_DOMAIN_IN_WEBADMIN=0' "${app_filename}"; then
+                            sed -i '/ONIONURL/d' "${filename}"
+                            sed -i '/I2PURL/d' "${filename}"
                             if [[ "$app_name" == 'dlna' ]]; then
-                                sed -i "s|\"APPURL\"|\"\"|g" "$filename"
+                                sed -i "s|\"APPURL\"|\"\"|g" "${filename}"
                             fi
-                            sed -i '/app_qrcode_/d' "$filename"
-                            sed -i '/APPURL/d' "$filename"
+                            sed -i '/app_qrcode_/d' "${filename}"
+                            sed -i '/APPURL/d' "${filename}"
                         fi
-                        sed -i "s|HOSTNAME|$(hostname)|g" "$filename"
-                        sed -i "s|APPNAME|${app_name}|g" "$filename"
+                        sed -i "s|HOSTNAME|$(hostname)|g" "${filename}"
+                        sed -i "s|APPNAME|${app_name}|g" "${filename}"
                         if [[ "${i2p_domain_name}" == *'.'* ]]; then
                             if [[ "$app_name" != 'rsync' ]]; then
-                                if ! grep -q 'SHOW_DOMAIN_ONLY=1' "$app_filename"; then
-                                    sed -i "s|I2PURL|http://${i2p_domain_name}|g" "$filename"
+                                if ! grep -q 'SHOW_DOMAIN_ONLY=1' "${app_filename}"; then
+                                    sed -i "s|I2PURL|http://${i2p_domain_name}|g" "${filename}"
                                 else
-                                    if ! grep -q 'SHOW_TELNET_PORT=' "$app_filename"; then
-                                        sed -i "s|I2PURL|${i2p_domain_name}|g" "$filename"
+                                    if ! grep -q 'SHOW_TELNET_PORT=' "${app_filename}"; then
+                                        sed -i "s|I2PURL|${i2p_domain_name}|g" "${filename}"
                                     else
-                                        telnet_port=$(grep 'SHOW_TELNET_PORT=' "$app_filename" | awk -F '=' '{$print 2}')
-                                        sed -i "s|I2PURL|telnet ${i2p_domain_name} ${telnet_port}|g" "$filename"
+                                        telnet_port=$(grep 'SHOW_TELNET_PORT=' "${app_filename}" | awk -F '=' '{$print 2}')
+                                        sed -i "s|I2PURL|telnet ${i2p_domain_name} ${telnet_port}|g" "${filename}"
                                     fi
                                 fi
                             else
-                                sed -i "s|I2PURL|${domain_name}|g" "$filename"
+                                sed -i "s|I2PURL|${domain_name}|g" "${filename}"
                             fi
                         else
-                            sed -i "/I2PURL/d" "$filename"
+                            sed -i "/I2PURL/d" "${filename}"
                         fi
                         if [[ "${onion_domain_name}" == *'.'* ]]; then
                             if [[ "$app_name" != 'rsync' ]]; then
-                                if ! grep -q 'SHOW_DOMAIN_ONLY=1' "$app_filename"; then
-                                    sed -i "s|ONIONURL|http://${onion_domain_name}|g" "$filename"
+                                if ! grep -q 'SHOW_DOMAIN_ONLY=1' "${app_filename}"; then
+                                    sed -i "s|ONIONURL|http://${onion_domain_name}|g" "${filename}"
                                 else
-                                    if ! grep -q 'SHOW_TELNET_PORT=' "$app_filename"; then
-                                        sed -i "s|ONIONURL|${onion_domain_name}|g" "$filename"
+                                    if ! grep -q 'SHOW_TELNET_PORT=' "${app_filename}"; then
+                                        sed -i "s|ONIONURL|${onion_domain_name}|g" "${filename}"
                                     else
-                                        telnet_port=$(grep 'SHOW_TELNET_PORT=' "$app_filename" | awk -F '=' '{$print 2}')
-                                        sed -i "s|ONIONURL|telnet ${onion_domain_name} ${telnet_port}|g" "$filename"
+                                        telnet_port=$(grep 'SHOW_TELNET_PORT=' "${app_filename}" | awk -F '=' '{$print 2}')
+                                        sed -i "s|ONIONURL|telnet ${onion_domain_name} ${telnet_port}|g" "${filename}"
                                     fi
                                 fi
                             else
-                                sed -i "s|ONIONURL|${domain_name}|g" "$filename"
+                                sed -i "s|ONIONURL|${domain_name}|g" "${filename}"
                             fi
                         else
-                            sed -i '/ONIONURL/d' "$filename"
-                            sed -i '/I2PURL/d' "$filename"
+                            sed -i '/ONIONURL/d' "${filename}"
+                            sed -i '/I2PURL/d' "${filename}"
                         fi
 
                         if [[ "${ONION_ONLY}" != 'no' || "$I2P_ONLY" != 'no' ]]; then
-                            sed -i '/APPURL/d' "$filename"
+                            sed -i '/APPURL/d' "${filename}"
                         else
                             if [[ "${domain_name}" != *'.local' ]]; then
-                                sed -i "s|APPURL|${domain_name}|g" "$filename"
+                                sed -i "s|APPURL|${domain_name}|g" "${filename}"
                             else
-                                sed -i '/APPURL/d' "$filename"
+                                sed -i '/APPURL/d' "${filename}"
                             fi
                         fi
-                        sed -i "s|APPDESCRIPTION|${DESCRIPTION}|g" "$filename"
+                        sed -i "s|APPDESCRIPTION|${DESCRIPTION}|g" "${filename}"
 
                         installed_apps_ctr=$((installed_apps_ctr+1))
                         total_apps_ctr=$((total_apps_ctr+1))
@@ -1247,7 +1247,7 @@ function web_admin_create_installed_apps_category {
 
                         # four columns per row
                         if [ $installed_apps_ctr -eq 4 ]; then
-                            echo '    </div>' >> "$appslist_filename"
+                            echo '    </div>' >> "${appslist_filename}"
                             installed_apps_ctr=0
                         fi
                         files_checked="${files_checked}|${app_filename}|"
@@ -1266,16 +1266,16 @@ function web_admin_create_installed_apps_category {
             { echo '      <div class="column">';
               echo '        <div>';
               echo '        </div>';
-              echo '      </div>'; } >> "$appslist_filename"
+              echo '      </div>'; } >> "${appslist_filename}"
         done
-        echo '    </div>' >> "$appslist_filename"
+        echo '    </div>' >> "${appslist_filename}"
     fi
 
     if [ ${apps_in_category_ctr} -gt 0 ]; then
-        echo '    </fieldset>' >> "$appslist_filename"
+        echo '    </fieldset>' >> "${appslist_filename}"
     else
         # remove the header for this category
-        sed -i "/>$translated_category</d" "$appslist_filename"
+        sed -i "/>$translated_category</d" "${appslist_filename}"
     fi
 }
 
@@ -1285,8 +1285,8 @@ function web_admin_create_installed_apps {
     appslist_filename="${webadmin_install_dir}/apps.html"
     if [ -f "${webadmin_install_dir}/.setupscreenactive" ]; then
         if [ ! -f "${webadmin_install_dir}/.running_install_command" ]; then
-            if [ -f "$appslist_filename" ]; then
-                rm "$appslist_filename"
+            if [ -f "${appslist_filename}" ]; then
+                rm "${appslist_filename}"
             fi
             if [ ! -d "$INSTALL_DIR/tempwebadmin" ]; then
                 mkdir -p "$INSTALL_DIR/tempwebadmin"
@@ -1309,12 +1309,12 @@ function web_admin_create_installed_apps {
     if [ ! -f "$appslist_template_filename" ]; then
         return
     fi
-    cp "$appslist_template_filename" "$appslist_filename"
+    cp "$appslist_template_filename" "${appslist_filename}"
 
     # remove some lines from the template
-    sed -i '/<\/body>/d' "$appslist_filename"
-    sed -i '/<\/html>/d' "$appslist_filename"
-    sed -i '/<\/div>/d' "$appslist_filename"
+    sed -i '/<\/body>/d' "${appslist_filename}"
+    sed -i '/<\/html>/d' "${appslist_filename}"
+    sed -i '/<\/div>/d' "${appslist_filename}"
 
     get_app_categories
 
@@ -1330,14 +1330,14 @@ function web_admin_create_installed_apps {
 
     # remove the 'no apps are installed' message
     if [ $total_apps_ctr -gt 0 ]; then
-        sed -i "/\"appstext\"/d" "$appslist_filename"
+        sed -i "/\"appstext\"/d" "${appslist_filename}"
     fi
 
     { echo '      </div>';
       echo '    </div>';
       echo '    <br><br>';
       echo '  </body>';
-      echo '</html>'; } >> "$appslist_filename"
+      echo '</html>'; } >> "${appslist_filename}"
 
     chown -R www-data:www-data "${webadmin_install_dir}"
 }
@@ -1445,7 +1445,7 @@ function web_admin_setup_login {
 
     # if initial setup has not yet happened then create
     # a password file
-    if ! grep -q 'install_final' "$COMPLETION_FILE"; then
+    if ! grep -q 'install_final' "${COMPLETION_FILE}"; then
         echo -n "$webadmin_password" > /root/login.txt
     fi
 }
@@ -2354,7 +2354,7 @@ function install_web_admin {
 
     # whether or not to add authentication to libreserver.local
     basic_auth_str='#auth_basic'
-    if grep -q 'install_final' "$COMPLETION_FILE"; then
+    if grep -q 'install_final' "${COMPLETION_FILE}"; then
         # initial installation has completed
         if [ -f /etc/nginx/.webadminpasswd ]; then
             if [ ! -f "${webadmin_install_dir}/.setupscreenactive" ]; then
