@@ -701,13 +701,13 @@ function web_admin_create_add_apps_category {
                                             fi
                                             SHORT_DESCRIPTION="$(grep "${app_name_upper}_SHORT_DESCRIPTION=" "${add_app_filename}" | head -n 1 | sed 's|\$||g' | sed "s|'||g" | sed 's|\"||g' | awk -F '=' '{print $2}')"
                                             translated_short_description=$(web_admin_translate_text "$SHORT_DESCRIPTION")
-                                            SHORT_DESCRIPTION="$translated_short_description"
+                                            SHORT_DESCRIPTION="${translated_short_description}"
                                             app_title="${SHORT_DESCRIPTION}"
 
                                             if grep -q "${app_name_upper}_DESCRIPTION=" "${add_app_filename}"; then
                                                 DESCRIPTION="$(grep "${app_name_upper}_DESCRIPTION=" "${add_app_filename}" | head -n 1 | sed 's|\$||g' | sed "s|'||g" | sed 's|\"||g' | awk -F '=' '{print $2}')"
                                                 translated_description=$(web_admin_translate_text "$DESCRIPTION")
-                                                DESCRIPTION="$translated_description"
+                                                DESCRIPTION="${translated_description}"
                                                 app_title="${DESCRIPTION}"
                                             fi
 
@@ -958,13 +958,13 @@ function web_admin_create_installed_apps_category {
                         SHORT_DESCRIPTION="$(grep "${app_name_upper}_SHORT_DESCRIPTION=" "${app_filename}" | head -n 1 | sed 's|\$||g' | sed "s|'||g" | sed 's|\"||g' | awk -F '=' '{print $2}')"
 
                         translated_short_description=$(web_admin_translate_text "$SHORT_DESCRIPTION")
-                        SHORT_DESCRIPTION="$translated_short_description"
+                        SHORT_DESCRIPTION="${translated_short_description}"
                         app_title="${SHORT_DESCRIPTION}"
 
                         if grep -q "${app_name_upper}_DESCRIPTION=" "${app_filename}"; then
                             DESCRIPTION="$(grep "${app_name_upper}_DESCRIPTION=" "${app_filename}" | head -n 1 | sed 's|\$||g' | sed "s|'||g" | sed 's|\"||g' | awk -F '=' '{print $2}')"
                             translated_description=$(web_admin_translate_text "$DESCRIPTION")
-                            DESCRIPTION="$translated_description"
+                            DESCRIPTION="${translated_description}"
                             app_title="${DESCRIPTION}"
                         fi
 
@@ -974,7 +974,7 @@ function web_admin_create_installed_apps_category {
                         read_config_param ONION_ONLY
                         read_config_param I2P_ONLY
                         onion_app_name=${app_name}
-                        if [[ "$onion_app_name" == 'xmpp' || "$onion_app_name" == 'gemini' ]]; then
+                        if [[ "${onion_app_name}" == 'xmpp' || "${onion_app_name}" == 'gemini' ]]; then
                             onion_app_name='email'
                         fi
                         i2p_app_name="${onion_app_name}"
@@ -1006,8 +1006,8 @@ function web_admin_create_installed_apps_category {
                             onion_domain_name=$(cat "/var/lib/tor/hidden_service_${onion_app_name}/hostname")
                         fi
 
-                        if [ "$domain_name" ]; then
-                            if [[ "$domain_name" != *'.onion' ]]; then
+                        if [ "${domain_name}" ]; then
+                            if [[ "${domain_name}" != *'.onion' ]]; then
                                 if ! grep -q 'SHOW_DOMAIN_ONLY=1' "${app_filename}"; then
                                     domain_name="https://${domain_name}"
                                 fi
@@ -1022,7 +1022,7 @@ function web_admin_create_installed_apps_category {
 
                         if grep -q "SHOW_URL_PORT=" "${app_filename}"; then
                             domain_port_number=$(grep "SHOW_URL_PORT=" "${app_filename}" | head -n 1 | awk -F '=' '{print $2}')
-                            if [ "$domain_port_number" ]; then
+                            if [ "${domain_port_number}" ]; then
                                 if ! grep -q 'SHOW_DOMAIN_ONLY=1' "${app_filename}"; then
                                     domain_name="http://${local_hostname}:${domain_port_number}"
                                     onion_domain_name="http://${onion_domain_name}:${domain_port_number}"
@@ -1035,7 +1035,7 @@ function web_admin_create_installed_apps_category {
 
                         if grep -q "SHOW_APP_PORT=" "${app_filename}"; then
                             domain_port_number=$(grep "SHOW_APP_PORT=" "${app_filename}" | head -n 1 | awk -F '=' '{print $2}')
-                            if [ "$domain_port_number" ]; then
+                            if [ "${domain_port_number}" ]; then
                                 translated_port=$(web_admin_translate_text "port")
                                 if ! grep -q 'SHOW_DOMAIN_ONLY=1' "${app_filename}"; then
                                     domain_name="http://${domain_name} ${translated_port} ${domain_port_number}"
@@ -1065,7 +1065,7 @@ function web_admin_create_installed_apps_category {
                             fi
                         fi
 
-                        if [ $installed_apps_ctr -eq 0 ]; then
+                        if [ ${installed_apps_ctr} -eq 0 ]; then
                             echo '    <div class="row">' >> "${appslist_filename}"
                         fi
 
@@ -1246,7 +1246,7 @@ function web_admin_create_installed_apps_category {
                         apps_in_category_ctr=$((apps_in_category_ctr+1))
 
                         # four columns per row
-                        if [ $installed_apps_ctr -eq 4 ]; then
+                        if [ ${installed_apps_ctr} -eq 4 ]; then
                             echo '    </div>' >> "${appslist_filename}"
                             installed_apps_ctr=0
                         fi
@@ -1329,7 +1329,7 @@ function web_admin_create_installed_apps {
     done
 
     # remove the 'no apps are installed' message
-    if [ $total_apps_ctr -gt 0 ]; then
+    if [ ${total_apps_ctr} -gt 0 ]; then
         sed -i "/\"appstext\"/d" "${appslist_filename}"
     fi
 
