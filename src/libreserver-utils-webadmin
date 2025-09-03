@@ -1548,7 +1548,7 @@ function image_install_web_admin {
       echo '    index api.json /api.json;';
       echo "    error_page 405 = \$uri;";
       echo '  }';
-      echo '}'; } > "$nginx_file"
+      echo '}'; } > "${nginx_file}"
 
     # enable the webadmin site
     chroot "$rootdir" ln -s "/etc/nginx/sites-available/${local_hostname}" /etc/nginx/sites-enabled/
@@ -2340,7 +2340,7 @@ function web_admin_onion_config {
           echo '    index api.json /api.json;';
           echo "    error_page 405 = \$uri;";
           echo '  }';
-          echo '}'; } >> "$nginx_file"
+          echo '}'; } >> "${nginx_file}"
     fi
 }
 
@@ -2530,7 +2530,7 @@ function install_web_admin {
       echo '';
       echo '  access_log /dev/null;';
       echo '  error_log /dev/null;';
-      echo ''; } > "$nginx_file"
+      echo ''; } > "${nginx_file}"
 
     nginx_ssl "${local_hostname}"
     nginx_security_options "${local_hostname}"
@@ -2599,7 +2599,7 @@ function install_web_admin {
       echo '    index api.json /api.json;';
       echo "    error_page 405 = \$uri;";
       echo '  }';
-      echo '}'; } >> "$nginx_file"
+      echo '}'; } >> "${nginx_file}"
 
     web_admin_onion_config "${nginx_file}" "${WEBADMIN_ONION_PORT}" "${WEBADMIN_ONION_HOSTNAME}"
     web_admin_onion_config "${nginx_file}" "${WEBADMIN_SECONDARY_ONION_PORT}" "${WEBADMIN_SECONDARY_ONION_HOSTNAME}"
@@ -2608,8 +2608,8 @@ function install_web_admin {
         "${PROJECT_NAME}-addcert" -h "${local_hostname}" --dhkey "${DH_KEYLENGTH}"
     fi
 
-    sed -i "s|ssl_certificate .*|ssl_certificate /etc/ssl/certs/${local_hostname}.crt;|g" "$nginx_file"
-    sed -i "s|ssl_certificate_key .*|ssl_certificate_key /etc/ssl/private/${local_hostname}.key;|g" "$nginx_file"
+    sed -i "s|ssl_certificate .*|ssl_certificate /etc/ssl/certs/${local_hostname}.crt;|g" "${nginx_file}"
+    sed -i "s|ssl_certificate_key .*|ssl_certificate_key /etc/ssl/private/${local_hostname}.key;|g" "${nginx_file}"
 
     nginx_ensite "${local_hostname}"
 
@@ -2703,9 +2703,9 @@ function install_web_admin {
 
     webadmin_qrcode="${webadmin_install_dir}/images/webadmin_qrcode.png"
     if [ ! -f /usr/local/bin/myqr ]; then
-        echo -n "http://${WEBADMIN_ONION_HOSTNAME}/admin" | qrencode -t PNG -o "$webadmin_qrcode"
+        echo -n "http://${WEBADMIN_ONION_HOSTNAME}/admin" | qrencode -t PNG -o "${webadmin_qrcode}"
     else
-        myqr "http://${WEBADMIN_ONION_HOSTNAME}/admin" -p "/root/${PROJECT_NAME}/img/onion.png" -c -v 8 -n "$webadmin_qrcode"
+        myqr "http://${WEBADMIN_ONION_HOSTNAME}/admin" -p "/root/${PROJECT_NAME}/img/onion.png" -c -v 8 -n "${webadmin_qrcode}"
     fi
     echo "Web interface QR code generation took ${SECONDS} seconds"
     SECONDS=0
