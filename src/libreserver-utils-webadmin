@@ -631,7 +631,7 @@ function web_admin_create_add_apps_category {
                                         # shellcheck disable=SC2068
                                         for a in ${APPS_INSTALLED[@]}
                                         do
-                                            installed_app_name=${APPS_INSTALLED_NAMES[$app_index]}
+                                            installed_app_name=${APPS_INSTALLED_NAMES[${app_index}]}
                                             if [[ "$installed_app_name" == "$add_app_name" ]]; then
                                                 app_is_installed=1
                                                 break
@@ -902,7 +902,7 @@ function web_admin_create_installed_apps_category {
     # shellcheck disable=SC2068,SC2034
     for a in ${APPS_INSTALLED[@]}
     do
-        app_name=${APPS_INSTALLED_NAMES[$app_index]}
+        app_name=${APPS_INSTALLED_NAMES[${app_index}]}
         if [ "${app_name}" ]; then
             app_filename="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-${app_name}"
             if [[ "${files_checked}" != *"|${app_filename}|"* ]]; then
