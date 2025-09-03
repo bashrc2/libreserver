@@ -207,9 +207,6 @@ fi
 systemctl restart i2pd
 systemctl restart webadmin
 
-# if the kernel was upgraded then the options may also need to be changed
-firewall_kernel_options
-
 # upgrading file prevents USB canary from activating
 if [ -f /tmp/.upgrading ]; then
     rm /tmp/.upgrading
@@ -217,5 +214,12 @@ fi
 
 # If logging was left on then turn it off
 ${PROJECT_NAME}-logging off
+
+# if the kernel was upgraded then the options may also need to be changed
+ruleset=$(/usr/sbin/nft list ruleset)
+if [[ "${ruleset}" != *"portscan"* ]]; then
+    firewall_kernel_options
+    systemctl reboot -i
+fi
 
 # deliberately there is no 'exit 0' here
