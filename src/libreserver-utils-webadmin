@@ -853,8 +853,8 @@ function web_admin_create_add_apps {
     app_add_template_filename="${webadmin_install_dir}/app_add_template.html"
     FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
 
-    if [ ! -d "$icons_dir" ]; then
-        mkdir -p "$icons_dir"
+    if [ ! -d "${icons_dir}" ]; then
+        mkdir -p "${icons_dir}"
     fi
 
     if [ ! -f "$apps_add_template_filename" ]; then
@@ -903,7 +903,7 @@ function web_admin_create_installed_apps_category {
     for a in ${APPS_INSTALLED[@]}
     do
         app_name=${APPS_INSTALLED_NAMES[$app_index]}
-        if [ "$app_name" ]; then
+        if [ "${app_name}" ]; then
             app_filename="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-${app_name}"
             if [[ "${files_checked}" != *"|${app_filename}|"* ]]; then
                 if [ -f "${app_filename}" ]; then
@@ -925,7 +925,7 @@ function web_admin_create_installed_apps_category {
                             icon_filename=
                         fi
 
-                        app_name_upper=$(echo "$app_name" | awk '{print toupper($0)}')
+                        app_name_upper=$(echo "${app_name}" | awk '{print toupper($0)}')
                         SHORT_DESCRIPTION=
                         DESCRIPTION=
 
@@ -1048,7 +1048,7 @@ function web_admin_create_installed_apps_category {
                         fi
 
                         # special case for rsync
-                        if [[ "$app_name" == 'rsync' ]]; then
+                        if [[ "${app_name}" == 'rsync' ]]; then
                             RSYNC_HOSTNAME_ONION=$(cat /var/lib/tor/hidden_service_rsync/hostname)
                             read_config_param DEFAULT_DOMAIN_NAME
 
@@ -1088,18 +1088,18 @@ function web_admin_create_installed_apps_category {
                         cp "$app_template_filename" "${filename}"
 
                         # avoid showing the rsync command twice in APPURL and ONIONURL
-                        if [[ "$app_name" == 'rsync' ]]; then
+                        if [[ "${app_name}" == 'rsync' ]]; then
                             sed -i '/APPURL/d' "${filename}"
                         fi
 
                         # single icon, no qrcode
-                        if [[ "$app_name" == 'dlna' ]]; then
+                        if [[ "${app_name}" == 'dlna' ]]; then
                             cp "$app2_template_filename" "${filename}"
                         fi
 
                         if ! grep -q 'SHOW_DOMAIN_IN_WEBADMIN=0' "${app_filename}"; then
                             if [ ! -f "${webadmin_install_dir}/app_qrcode_${app_name}.png" ]; then
-                                if [[ "$app_name" != 'rsync' ]]; then
+                                if [[ "${app_name}" != 'rsync' ]]; then
                                     if [ ! -f /usr/local/bin/myqr ]; then
                                         if ! grep -q 'SHOW_DOMAIN_ONLY=1' "${app_filename}"; then
                                             echo -n "http://${onion_domain_name}" | qrencode -t PNG -o "${webadmin_install_dir}/app_qrcode_${app_name}.png"
@@ -1184,7 +1184,7 @@ function web_admin_create_installed_apps_category {
                         if grep -q 'SHOW_DOMAIN_IN_WEBADMIN=0' "${app_filename}"; then
                             sed -i '/ONIONURL/d' "${filename}"
                             sed -i '/I2PURL/d' "${filename}"
-                            if [[ "$app_name" == 'dlna' ]]; then
+                            if [[ "${app_name}" == 'dlna' ]]; then
                                 sed -i "s|\"APPURL\"|\"\"|g" "${filename}"
                             fi
                             sed -i '/app_qrcode_/d' "${filename}"
@@ -1193,7 +1193,7 @@ function web_admin_create_installed_apps_category {
                         sed -i "s|HOSTNAME|$(hostname)|g" "${filename}"
                         sed -i "s|APPNAME|${app_name}|g" "${filename}"
                         if [[ "${i2p_domain_name}" == *'.'* ]]; then
-                            if [[ "$app_name" != 'rsync' ]]; then
+                            if [[ "${app_name}" != 'rsync' ]]; then
                                 if ! grep -q 'SHOW_DOMAIN_ONLY=1' "${app_filename}"; then
                                     sed -i "s|I2PURL|http://${i2p_domain_name}|g" "${filename}"
                                 else
@@ -1211,7 +1211,7 @@ function web_admin_create_installed_apps_category {
                             sed -i "/I2PURL/d" "${filename}"
                         fi
                         if [[ "${onion_domain_name}" == *'.'* ]]; then
-                            if [[ "$app_name" != 'rsync' ]]; then
+                            if [[ "${app_name}" != 'rsync' ]]; then
                                 if ! grep -q 'SHOW_DOMAIN_ONLY=1' "${app_filename}"; then
                                     sed -i "s|ONIONURL|http://${onion_domain_name}|g" "${filename}"
                                 else
@@ -1302,14 +1302,14 @@ function web_admin_create_installed_apps {
     icons_dir="${webadmin_install_dir}/icons"
     pending_removes="${webadmin_install_dir}/pending_removes.txt"
 
-    if [ ! -d "$icons_dir" ]; then
-        mkdir -p "$icons_dir"
+    if [ ! -d "${icons_dir}" ]; then
+        mkdir -p "${icons_dir}"
     fi
 
-    if [ ! -f "$appslist_template_filename" ]; then
+    if [ ! -f "${appslist_template_filename}" ]; then
         return
     fi
-    cp "$appslist_template_filename" "${appslist_filename}"
+    cp "${appslist_template_filename}" "${appslist_filename}"
 
     # remove some lines from the template
     sed -i '/<\/body>/d' "${appslist_filename}"
@@ -1594,7 +1594,7 @@ function regenerate_bridges {
         cp "${webadmin_install_dir}/bridges_template.html" "${webadmin_install_dir}/bridges.html"
         bridgeslist=$(sed 's@[/\&]@\\&@g;s/$/\\/' /root/.webadmin_torbridges; echo .)
         bridgeslist=${bridgeslist%.}
-        sed -i "s|TORBRIDGES|$bridgeslist|g" "${webadmin_install_dir}/bridges.html"
+        sed -i "s|TORBRIDGES|${bridgeslist}|g" "${webadmin_install_dir}/bridges.html"
         chown www-data:www-data "${webadmin_install_dir}/bridges.html"
     fi
 }
@@ -1868,7 +1868,7 @@ function web_admin_create_app_descriptions {
     for filename in $FILES
     do
         app_name=$(echo "${filename}" | awk -F '-app-' '{print $2}')
-        app_name_upper=$(echo "$app_name" | awk '{print toupper($0)}')
+        app_name_upper=$(echo "${app_name}" | awk '{print toupper($0)}')
 
         if grep -q "${app_name_upper}_SHORT_DESCRIPTION=" "${filename}"; then
             app_short_description=$(grep "${app_name_upper}_SHORT_DESCRIPTION=" "${filename}" | head -n 1 | awk -F '=' '{print $2}' | sed 's/\$//g' | sed 's/"//g' | sed "s/'//g")
