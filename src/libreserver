@@ -589,8 +589,12 @@ fi
 
 INSTALL_STATE_COMMAND_SUCCESS=4
 install_state_file="/root/.install_state.txt"
-echo -n "$INSTALL_STATE_COMMAND_SUCCESS" > "$install_state_file"
-
-systemctl reboot -i
+if [ -f ${install_state_file} ]; then
+    if ! grep -q "${INSTALL_STATE_COMMAND_SUCCESS}" "${install_state_file}"; then
+        echo -n "${INSTALL_STATE_COMMAND_SUCCESS}" > "$install_state_file"
+        systemctl reboot -i
+    fi
+fi
+echo -n "${INSTALL_STATE_COMMAND_SUCCESS}" > "${install_state_file}"
 
 exit 0
