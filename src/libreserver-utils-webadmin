@@ -279,7 +279,7 @@ function web_admin_translate {
     if [[ "${ONION_ONLY}" != 'no' ]]; then
         cp EN/settings_onion.html settings.html
     else
-        if [[ "$I2P_ONLY" != 'no' ]]; then
+        if [[ "${I2P_ONLY}" != 'no' ]]; then
             cp EN/settings_i2p.html settings.html
         fi
     fi
@@ -293,7 +293,7 @@ function web_admin_translate {
     python3 /usr/local/bin/${PROJECT_NAME}-translate "${language}"
 
     webadmin_home_dir="/var/www/${local_hostname}/htdocs/home"
-    cd "$webadmin_home_dir" || return
+    cd "${webadmin_home_dir}" || return
     # shellcheck disable=SC2086
     python3 /usr/local/bin/${PROJECT_NAME}-translate "${language}"
 
@@ -304,8 +304,8 @@ function web_admin_translate {
         sed -i 's|"yes" lang="en">||g' "${filename}"
     done
     for filename in "${webadmin_install_dir}"/*.html; do
-        sed -i "s|<html>|<html lang=\"$langstr\">|g" "${filename}"
-        sed -i "s|<html lang=\"en\">|<html lang=\"$langstr\">|g" "${filename}"
+        sed -i "s|<html>|<html lang=\"${langstr}\">|g" "${filename}"
+        sed -i "s|<html lang=\"en\">|<html lang=\"${langstr}\">|g" "${filename}"
     done
 
     chown www-data:www-data "${webadmin_install_dir}"/*.html
@@ -316,8 +316,8 @@ function web_admin_translate {
     language_short="${language:0:2}"
     sed -i "s|\"search_language\".*|\"search_language\" value=\"${language_short}\">|g" "${webadmin_install_dir}/index.html"
     chown www-data:www-data "${webadmin_install_dir}/index.html"
-    sed -i "s|\"search_language\".*|\"search_language\" value=\"${language_short}\">|g" "$webadmin_home_dir/index.html"
-    chown www-data:www-data "$webadmin_home_dir/index.html"
+    sed -i "s|\"search_language\".*|\"search_language\" value=\"${language_short}\">|g" "${webadmin_home_dir}/index.html"
+    chown www-data:www-data "${webadmin_home_dir}/index.html"
 
     echo "Translations complete"
 }
@@ -401,10 +401,10 @@ function web_admin_create_users {
             if [ -f "${users_file}" ]; then
                 rm "${users_file}"
             fi
-            if [ ! -d "$INSTALL_DIR/tempwebadmin" ]; then
-                mkdir -p "$INSTALL_DIR/tempwebadmin"
+            if [ ! -d "${INSTALL_DIR}/tempwebadmin" ]; then
+                mkdir -p "${INSTALL_DIR}/tempwebadmin"
             fi
-            mv "${webadmin_install_dir}/userprofile_"*.html "$INSTALL_DIR/tempwebadmin"
+            mv "${webadmin_install_dir}/userprofile_"*.html "${INSTALL_DIR}/tempwebadmin"
             return
         fi
     fi
@@ -610,8 +610,8 @@ function web_admin_create_add_apps_category {
     category_str="$(tr '[:lower:]' '[:upper:]' <<< ${category:0:1})${category:1}"
     translated_category=$(web_admin_translate_text "${category_str}")
 
-    apps_header_str="<fieldset class=\"field_set\"><legend translate=\"yes\" class=\"category\">$translated_category</legend>"
-    echo "    $apps_header_str" >> "$appslist_add_filename"
+    apps_header_str="<fieldset class=\"field_set\"><legend translate=\"yes\" class=\"category\">${translated_category}</legend>"
+    echo "    $apps_header_str" >> "${appslist_add_filename}"
 
     FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
     for add_app_filename in $FILES
@@ -712,7 +712,7 @@ function web_admin_create_add_apps_category {
                                             fi
 
                                             if [ $available_apps_ctr -eq 0 ]; then
-                                                echo '    <div class="row">' >> "$appslist_add_filename"
+                                                echo '    <div class="row">' >> "${appslist_add_filename}"
                                             fi
 
                                             filename_app="${webadmin_install_dir}/app_${add_app_name}.html"
@@ -730,14 +730,14 @@ function web_admin_create_add_apps_category {
                                                   echo "            <center>${add_app_name}</center>";
                                                   echo '          </a>';
                                                   echo '        </div>';
-                                                  echo '      </div>'; } >> "$appslist_add_filename"
+                                                  echo '      </div>'; } >> "${appslist_add_filename}"
                                             else
                                                 { echo '      <div class="column">';
                                                   echo '        <div>';
                                                   echo "        <img src=\"icons/${add_app_name}.png\" style=\"width:40%\" loading=\"lazy\">";
                                                   echo "        <center class=\"installing\">${add_app_name}</center>";
                                                   echo '        </div>';
-                                                  echo '      </div>'; } >> "$appslist_add_filename"
+                                                  echo '      </div>'; } >> "${appslist_add_filename}"
                                             fi
 
                                             cp "$app_add_template_filename" "${filename_app}"
@@ -749,13 +749,13 @@ function web_admin_create_add_apps_category {
 
                                             # special case for xmpp and gemini where it is the same as the default domain
                                             if [[ "${add_app_name}" == 'xmpp' || "${add_app_name}" == 'gemini' ]]; then
-                                                if [[ "${ONION_ONLY}" == 'no' && "$I2P_ONLY" == 'no' ]]; then
+                                                if [[ "${ONION_ONLY}" == 'no' && "${I2P_ONLY}" == 'no' ]]; then
                                                     sed -i "s|<p><label translate=\"yes\">Domain:.*|<input type=\"hidden\" name=\"install_domain\" value=\"$(hostname)\">|g" "${filename_app}"
                                                 fi
                                             fi
 
                                             app_add_remove_domain=
-                                            if [[ "${ONION_ONLY}" != 'no' || "$I2P_ONLY" != 'no' ]]; then
+                                            if [[ "${ONION_ONLY}" != 'no' || "${I2P_ONLY}" != 'no' ]]; then
                                                 app_add_remove_domain=1
                                             fi
                                             webadmin_remove_domain=
@@ -791,7 +791,7 @@ function web_admin_create_add_apps_category {
 
                                             # four columns per row
                                             if [ $available_apps_ctr -eq 4 ]; then
-                                                echo '    </div>' >> "$appslist_add_filename"
+                                                echo '    </div>' >> "${appslist_add_filename}"
                                                 available_apps_ctr=0
                                             fi
                                             files_checked="${files_checked}|${add_app_filename}|"
@@ -814,16 +814,16 @@ function web_admin_create_add_apps_category {
             { echo '      <div class="column">';
               echo '        <div>';
               echo '        </div>';
-              echo '      </div>'; } >> "$appslist_add_filename"
+              echo '      </div>'; } >> "${appslist_add_filename}"
         done
-        echo '    </div>' >> "$appslist_add_filename"
+        echo '    </div>' >> "${appslist_add_filename}"
     fi
 
     if [ ${add_apps_ctr} -gt 0 ]; then
-        echo '    </fieldset>' >> "$appslist_add_filename"
+        echo '    </fieldset>' >> "${appslist_add_filename}"
     else
         # remove the header for this category
-        sed -i "/>$translated_category</d" "$appslist_add_filename"
+        sed -i "/>${translated_category}</d" "${appslist_add_filename}"
     fi
 }
 
@@ -833,13 +833,13 @@ function web_admin_create_add_apps {
     appslist_add_filename="${webadmin_install_dir}/apps_add.html"
     if [ -f "${webadmin_install_dir}/.setupscreenactive" ]; then
         if [ ! -f "${webadmin_install_dir}/.running_install_command" ]; then
-            if [ -f "$appslist_add_filename" ]; then
-                rm "$appslist_add_filename"
+            if [ -f "${appslist_add_filename}" ]; then
+                rm "${appslist_add_filename}"
             fi
-            if [ ! -d "$INSTALL_DIR/tempwebadmin" ]; then
-                mkdir -p "$INSTALL_DIR/tempwebadmin"
+            if [ ! -d "${INSTALL_DIR}/tempwebadmin" ]; then
+                mkdir -p "${INSTALL_DIR}/tempwebadmin"
             fi
-            mv "${webadmin_install_dir}/app_add_"*.html "$INSTALL_DIR/tempwebadmin"
+            mv "${webadmin_install_dir}/app_add_"*.html "${INSTALL_DIR}/tempwebadmin"
             return
         fi
     fi
@@ -860,10 +860,10 @@ function web_admin_create_add_apps {
     if [ ! -f "$apps_add_template_filename" ]; then
         return
     fi
-    cp "$apps_add_template_filename" "$appslist_add_filename"
-    sed -i '/<\/div>/d' "$appslist_add_filename"
-    sed -i '/<\/body>/d' "$appslist_add_filename"
-    sed -i '/<\/html>/d' "$appslist_add_filename"
+    cp "$apps_add_template_filename" "${appslist_add_filename}"
+    sed -i '/<\/div>/d' "${appslist_add_filename}"
+    sed -i '/<\/body>/d' "${appslist_add_filename}"
+    sed -i '/<\/html>/d' "${appslist_add_filename}"
 
     get_app_categories
 
@@ -877,7 +877,7 @@ function web_admin_create_add_apps {
     { echo '    </div>';
       echo '    <br><br>';
       echo '  </body>';
-      echo '</html>'; } >> "$appslist_add_filename"
+      echo '</html>'; } >> "${appslist_add_filename}"
 
     chown -R www-data:www-data "${webadmin_install_dir}"
 }
@@ -896,7 +896,7 @@ function web_admin_create_installed_apps_category {
     category_str="$(tr '[:lower:]' '[:upper:]' <<< ${category:0:1})${category:1}"
     translated_category=$(web_admin_translate_text "${category_str}")
 
-    apps_header_str="<fieldset class=\"field_set\"><legend translate=\"yes\" class=\"category\">$translated_category</legend>"
+    apps_header_str="<fieldset class=\"field_set\"><legend translate=\"yes\" class=\"category\">${translated_category}</legend>"
     echo "    ${apps_header_str}" >> "${appslist_filename}"
 
     # shellcheck disable=SC2068,SC2034
@@ -978,7 +978,7 @@ function web_admin_create_installed_apps_category {
                             onion_app_name='email'
                         fi
                         i2p_app_name="${onion_app_name}"
-                        if [[ "${ONION_ONLY}" == 'no' && "$I2P_ONLY" == 'no' ]]; then
+                        if [[ "${ONION_ONLY}" == 'no' && "${I2P_ONLY}" == 'no' ]]; then
                             if grep -q "INSTALLED_ON_DEFAULT_DOMAIN=1" "${app_filename}"; then
                                 read_config_param DEFAULT_DOMAIN_NAME
                                 domain_name=${DEFAULT_DOMAIN_NAME}
@@ -995,7 +995,7 @@ function web_admin_create_installed_apps_category {
                                     domain_name=${DEFAULT_DOMAIN_NAME}
                                 fi
                             else
-                                if [[ "$I2P_ONLY" != 'no' ]]; then
+                                if [[ "${I2P_ONLY}" != 'no' ]]; then
                                     domain_name=$(get_i2p_domain ${i2p_app_name})
                                 fi
                             fi
@@ -1155,7 +1155,7 @@ function web_admin_create_installed_apps_category {
                                 cp "$app_onion_help_screen" "$app_help_screen"
                             fi
                         fi
-                        if [[ "$I2P_ONLY" != 'no' ]]; then
+                        if [[ "${I2P_ONLY}" != 'no' ]]; then
                             # special version of help screen for onion version
                             app_i2p_help_screen="${webadmin_install_dir}/help_${app_name}_i2p.html"
                             if [ -f "$app_i2p_help_screen" ]; then
@@ -1169,7 +1169,7 @@ function web_admin_create_installed_apps_category {
                         else
                             # On onion only we don't need to forward ports, so
                             # that text can be removed from the help screen
-                            if [[ "${ONION_ONLY}" != 'no' || "$I2P_ONLY" != 'no' ]]; then
+                            if [[ "${ONION_ONLY}" != 'no' || "${I2P_ONLY}" != 'no' ]]; then
                                 sed -i '/"portstext"/d' "$app_help_screen"
                                 sed -i '/"subheaderports"/d' "$app_help_screen"
                             fi
@@ -1230,7 +1230,7 @@ function web_admin_create_installed_apps_category {
                             sed -i '/I2PURL/d' "${filename}"
                         fi
 
-                        if [[ "${ONION_ONLY}" != 'no' || "$I2P_ONLY" != 'no' ]]; then
+                        if [[ "${ONION_ONLY}" != 'no' || "${I2P_ONLY}" != 'no' ]]; then
                             sed -i '/APPURL/d' "${filename}"
                         else
                             if [[ "${domain_name}" != *'.local' ]]; then
@@ -1275,7 +1275,7 @@ function web_admin_create_installed_apps_category {
         echo '    </fieldset>' >> "${appslist_filename}"
     else
         # remove the header for this category
-        sed -i "/>$translated_category</d" "${appslist_filename}"
+        sed -i "/>${translated_category}</d" "${appslist_filename}"
     fi
 }
 
@@ -1288,10 +1288,10 @@ function web_admin_create_installed_apps {
             if [ -f "${appslist_filename}" ]; then
                 rm "${appslist_filename}"
             fi
-            if [ ! -d "$INSTALL_DIR/tempwebadmin" ]; then
-                mkdir -p "$INSTALL_DIR/tempwebadmin"
+            if [ ! -d "${INSTALL_DIR}/tempwebadmin" ]; then
+                mkdir -p "${INSTALL_DIR}/tempwebadmin"
             fi
-            mv "${webadmin_install_dir}/app_"*.html "$INSTALL_DIR/tempwebadmin"
+            mv "${webadmin_install_dir}/app_"*.html "${INSTALL_DIR}/tempwebadmin"
             return
         fi
     fi
@@ -1474,13 +1474,13 @@ function image_install_web_admin {
     if ! grep -q 'I2P_ONLY=' "$rootdir${CONFIGURATION_FILE}"; then
         echo "I2P_ONLY=${ONION_ONLY}" >> "$rootdir${CONFIGURATION_FILE}"
     else
-        sed -i "s|I2P_ONLY=.*|I2P_ONLY=$I2P_ONLY|g" "$rootdir${CONFIGURATION_FILE}"
+        sed -i "s|I2P_ONLY=.*|I2P_ONLY=${I2P_ONLY}|g" "$rootdir${CONFIGURATION_FILE}"
     fi
 
     if [[ "${ONION_ONLY}" != 'no' ]]; then
         web_admin_onion_only
     else
-        if [[ "$I2P_ONLY" != 'no' ]]; then
+        if [[ "${I2P_ONLY}" != 'no' ]]; then
             web_admin_i2p_only
         fi
     fi
@@ -1585,7 +1585,7 @@ function regenerate_bridges {
     if [[ "${ONION_ONLY}" != 'no' ]]; then
         cp "${webadmin_install_dir}/settings_onion.html" "${webadmin_install_dir}/settings.html"
     else
-        if [[ "$I2P_ONLY" != 'no' ]]; then
+        if [[ "${I2P_ONLY}" != 'no' ]]; then
             cp "${webadmin_install_dir}/settings_i2p.html" "${webadmin_install_dir}/settings.html"
         fi
     fi
@@ -1901,13 +1901,13 @@ function install_web_admin_webmail_translations {
     if [ -d "/var/www/${local_hostname}/htdocs/mail/locale/it_IT" ]; then
         return
     fi
-    cp "/root/${PROJECT_NAME}/image_build/squirrelmail-translations.tar.gz" "$INSTALL_DIR"
-    cd "$INSTALL_DIR" || return
+    cp "/root/${PROJECT_NAME}/image_build/squirrelmail-translations.tar.gz" "${INSTALL_DIR}"
+    cd "${INSTALL_DIR}" || return
     tar -xzvf squirrelmail-translations.tar.gz
-    if [ -d "$INSTALL_DIR/squirrelmail.locales" ]; then
-        cp -r "$INSTALL_DIR/squirrelmail.locales"/* "/var/www/${local_hostname}/htdocs/mail/"
-        rm -rf "$INSTALL_DIR/squirrelmail.locales"
-        rm "$INSTALL_DIR/squirrelmail-translations.tar.gz"
+    if [ -d "${INSTALL_DIR}/squirrelmail.locales" ]; then
+        cp -r "${INSTALL_DIR}/squirrelmail.locales"/* "/var/www/${local_hostname}/htdocs/mail/"
+        rm -rf "${INSTALL_DIR}/squirrelmail.locales"
+        rm "${INSTALL_DIR}/squirrelmail-translations.tar.gz"
     fi
 }
 
@@ -1946,10 +1946,10 @@ function web_admin_php_settings {
     php_upload_dir=/var/www/uploads
     php_max_upload='20M'
 
-    if [ ! -d $php_upload_dir ]; then
-        mkdir -p $php_upload_dir
+    if [ ! -d ${php_upload_dir} ]; then
+        mkdir -p ${php_upload_dir}
     fi
-    chown -R www-data:www-data $php_upload_dir
+    chown -R www-data:www-data ${php_upload_dir}
 
     if [ ! -d /var/local/squirrelmail/attach ]; then
         mkdir -p /var/local/squirrelmail/attach
@@ -1959,28 +1959,28 @@ function web_admin_php_settings {
     sed -i "s|;upload_tmp_dir =|upload_tmp_dir =|g" "/etc/php/${PHP_VERSION}/fpm/php.ini"
     sed -i "s|;upload_tmp_dir =|upload_tmp_dir =|g" "/etc/php/${PHP_VERSION}/cli/php.ini"
 
-    sed -i "s|upload_tmp_dir =.*|upload_tmp_dir = $php_upload_dir|g" "/etc/php/${PHP_VERSION}/fpm/php.ini"
-    sed -i "s|upload_tmp_dir =.*|upload_tmp_dir = $php_upload_dir|g" "/etc/php/${PHP_VERSION}/cli/php.ini"
-    sed -i "s|upload_max_filesize =.*|upload_max_filesize = $php_max_upload|g" "/etc/php/${PHP_VERSION}/fpm/php.ini"
-    sed -i "s|upload_max_filesize =.*|upload_max_filesize = $php_max_upload|g" "/etc/php/${PHP_VERSION}/cli/php.ini"
+    sed -i "s|upload_tmp_dir =.*|upload_tmp_dir = ${php_upload_dir}|g" "/etc/php/${PHP_VERSION}/fpm/php.ini"
+    sed -i "s|upload_tmp_dir =.*|upload_tmp_dir = ${php_upload_dir}|g" "/etc/php/${PHP_VERSION}/cli/php.ini"
+    sed -i "s|upload_max_filesize =.*|upload_max_filesize = ${php_max_upload}|g" "/etc/php/${PHP_VERSION}/fpm/php.ini"
+    sed -i "s|upload_max_filesize =.*|upload_max_filesize = ${php_max_upload}|g" "/etc/php/${PHP_VERSION}/cli/php.ini"
 }
 
 function install_web_admin_webmail {
     if [ ! -f "/root/${PROJECT_NAME}/image_build/squirrelmail.tar.gz" ]; then
         return
     fi
-    if [ ! -d "$INSTALL_DIR" ]; then
-        mkdir -p "$INSTALL_DIR"
+    if [ ! -d "${INSTALL_DIR}" ]; then
+        mkdir -p "${INSTALL_DIR}"
     fi
     if [ ! -d "/var/www/${local_hostname}/htdocs/mail" ]; then
-        cp "/root/${PROJECT_NAME}/image_build/squirrelmail.tar.gz" "$INSTALL_DIR"
-        cd "$INSTALL_DIR" || return
-        if [ -d "$INSTALL_DIR/squirrelmail" ]; then
-            rm -rf "$INSTALL_DIR/squirrelmail"
+        cp "/root/${PROJECT_NAME}/image_build/squirrelmail.tar.gz" "${INSTALL_DIR}"
+        cd "${INSTALL_DIR}" || return
+        if [ -d "${INSTALL_DIR}/squirrelmail" ]; then
+            rm -rf "${INSTALL_DIR}/squirrelmail"
         fi
         tar -xzvf squirrelmail.tar.gz
-        if [ -d "$INSTALL_DIR/squirrelmail" ]; then
-            mv "$INSTALL_DIR/squirrelmail" "/var/www/${local_hostname}/htdocs/mail"
+        if [ -d "${INSTALL_DIR}/squirrelmail" ]; then
+            mv "${INSTALL_DIR}/squirrelmail" "/var/www/${local_hostname}/htdocs/mail"
         fi
     fi
     if [ ! -d "/var/www/${local_hostname}/htdocs/mail" ]; then
@@ -2000,14 +2000,14 @@ function install_web_admin_webmail {
     read_config_param ONION_ONLY
     read_config_param I2P_ONLY
 
-    if [[ "${ONION_ONLY}" == 'no' && "$I2P_ONLY" == 'no' ]]; then
+    if [[ "${ONION_ONLY}" == 'no' && "${I2P_ONLY}" == 'no' ]]; then
         read_config_param DEFAULT_DOMAIN_NAME
         email_domain=$DEFAULT_DOMAIN_NAME
     else
         if [[ "${ONION_ONLY}" != 'no' ]]; then
             email_domain=$(cat /var/lib/tor/hidden_service_email/hostname)
         fi
-        if [[ "$I2P_ONLY" != 'no' ]]; then
+        if [[ "${I2P_ONLY}" != 'no' ]]; then
             email_domain=$(get_i2p_domain email)
         fi
     fi
@@ -2226,7 +2226,7 @@ function install_web_admin_webmail {
 
     web_admin_create_email_proxy_screen
 
-    if [[ "${ONION_ONLY}" == 'no' && "$I2P_ONLY" == 'no' ]]; then
+    if [[ "${ONION_ONLY}" == 'no' && "${I2P_ONLY}" == 'no' ]]; then
         # clearnet version goes to email proxy settings
         proxy_settings_str=$(web_admin_translate_text "Send email through a proxy")
         proxy_str="<a href=\"../../admin/email_proxy.html\" title=\"${proxy_settings_str}\">"
@@ -2392,7 +2392,7 @@ function install_web_admin {
             if [[ "${ONION_ONLY}" != 'no' ]]; then
                 web_admin_onion_only
             fi
-            if [[ "$I2P_ONLY" != 'no' ]]; then
+            if [[ "${I2P_ONLY}" != 'no' ]]; then
                 web_admin_i2p_only
             fi
 
