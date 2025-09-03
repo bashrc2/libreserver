@@ -135,9 +135,9 @@ if [[ "$command_options" == "menuconfig-full" ]]; then
 fi
 
 # generate a configuration file
-if [[ "$CONFIGURATION_FILE" != "/root/${PROJECT_NAME}.cfg" ]]; then
-    if [ -f "$CONFIGURATION_FILE" ]; then
-        cp "$CONFIGURATION_FILE" "/root/${PROJECT_NAME}.cfg"
+if [[ "${CONFIGURATION_FILE}" != "/root/${PROJECT_NAME}.cfg" ]]; then
+    if [ -f "${CONFIGURATION_FILE}" ]; then
+        cp "${CONFIGURATION_FILE}" "/root/${PROJECT_NAME}.cfg"
     fi
 fi
 CONFIGURATION_FILE="/root/${PROJECT_NAME}.cfg"
@@ -146,20 +146,20 @@ if [[ "$command_options" == "menuconfig-onion" ]]; then
     echo $"onion version"
     MINIMAL_INSTALL="yes"
     ONION_ONLY="yes"
-    if [ -f "$CONFIGURATION_FILE" ]; then
-        if grep -q "ONION_ONLY=" "$CONFIGURATION_FILE"; then
-            sed -i 's|ONION_ONLY=.*|ONION_ONLY=yes|g' "$CONFIGURATION_FILE"
+    if [ -f "${CONFIGURATION_FILE}" ]; then
+        if grep -q "ONION_ONLY=" "${CONFIGURATION_FILE}"; then
+            sed -i 's|ONION_ONLY=.*|ONION_ONLY=yes|g' "${CONFIGURATION_FILE}"
         else
-            echo "ONION_ONLY=yes" >> "$CONFIGURATION_FILE"
+            echo "ONION_ONLY=yes" >> "${CONFIGURATION_FILE}"
         fi
     else
-        echo "ONION_ONLY=yes" > "$CONFIGURATION_FILE"
+        echo "ONION_ONLY=yes" > "${CONFIGURATION_FILE}"
     fi
 fi
 
-if [[ "$COMPLETION_FILE" != "/root/${PROJECT_NAME}-completed.txt" ]]; then
-    if [ -f "$COMPLETION_FILE" ]; then
-        cp "$COMPLETION_FILE" "/root/${PROJECT_NAME}-completed.txt"
+if [[ "${COMPLETION_FILE}" != "/root/${PROJECT_NAME}-completed.txt" ]]; then
+    if [ -f "${COMPLETION_FILE}" ]; then
+        cp "${COMPLETION_FILE}" "/root/${PROJECT_NAME}-completed.txt"
     fi
 fi
 COMPLETION_FILE="/root/${PROJECT_NAME}-completed.txt"
@@ -170,11 +170,11 @@ COMPLETION_FILE="/root/${PROJECT_NAME}-completed.txt"
 
 if [[ "$command_options" == "menuconfig"* ]]; then
     if [[ "$2" == "--reset" ]]; then
-        if [ -f "$CONFIGURATION_FILE" ]; then
-            rm "$CONFIGURATION_FILE"
+        if [ -f "${CONFIGURATION_FILE}" ]; then
+            rm "${CONFIGURATION_FILE}"
         fi
-        if [ -f "$COMPLETION_FILE" ]; then
-            rm "$COMPLETION_FILE"
+        if [ -f "${COMPLETION_FILE}" ]; then
+            rm "${COMPLETION_FILE}"
         fi
         if [ -f "/usr/share/${PROJECT_NAME}/installed.txt" ]; then
             rm "/usr/share/${PROJECT_NAME}/installed.txt"
@@ -331,11 +331,11 @@ else
                 ;;
             # clear the config file
             --reset)
-                if [ -f "$CONFIGURATION_FILE" ]; then
-                    rm "$CONFIGURATION_FILE"
+                if [ -f "${CONFIGURATION_FILE}" ]; then
+                    rm "${CONFIGURATION_FILE}"
                 fi
-                if [ -f "$COMPLETION_FILE" ]; then
-                    rm "$COMPLETION_FILE"
+                if [ -f "${COMPLETION_FILE}" ]; then
+                    rm "${COMPLETION_FILE}"
                 fi
                 ;;
             # minimal install
@@ -367,29 +367,29 @@ function parse_args {
     read_config_param 'DDNS_USERNAME'
     read_config_param 'DDNS_PASSWORD'
 
-    if [ ! -d "/home/$MY_USERNAME" ]; then
-        echo $"There is no user '$MY_USERNAME' on the system. Use 'adduser $MY_USERNAME' to create the user."
+    if [ ! -d "/home/${MY_USERNAME}" ]; then
+        echo $"There is no user '${MY_USERNAME}' on the system. Use 'adduser ${MY_USERNAME}' to create the user."
         exit 1
     fi
-    if [ ! "$DEFAULT_DOMAIN_NAME" ]; then
-        if [[ $SYSTEM_TYPE != "mesh"* ]]; then
+    if [ ! "${DEFAULT_DOMAIN_NAME}" ]; then
+        if [[ "${SYSTEM_TYPE}" != "mesh"* ]]; then
             echo 'No default domain specified'
             show_help
             exit 2
         fi
     fi
-    if [ ! "$MY_USERNAME" ]; then
+    if [ ! "${MY_USERNAME}" ]; then
         echo 'No username specified'
         show_help
         exit 3
     fi
     if [[ $SYSTEM_TYPE != "mesh"* ]]; then
-        if [[ "$DDNS_PROVIDER" != 'none' ]]; then
+        if [[ "${DDNS_PROVIDER}" != 'none' ]]; then
             if [[ $ONION_ONLY == "no" ]]; then
-                if [ ! "$DDNS_USERNAME" ]; then
+                if [ ! "${DDNS_USERNAME}" ]; then
                     DDNS_USERNAME='none'
                 fi
-                if [ ! "$DDNS_PASSWORD" ]; then
+                if [ ! "${DDNS_PASSWORD}" ]; then
                     DDNS_USERNAME='none'
                 fi
             fi
@@ -398,7 +398,7 @@ function parse_args {
 
     if [ ! "$SYSTEM_TYPE" ]; then
         SYSTEM_TYPE=$'full'
-        write_config_param "SYSTEM_TYPE" "$SYSTEM_TYPE"
+        write_config_param "SYSTEM_TYPE" "${SYSTEM_TYPE}"
     fi
 
     if [[ $(is_valid_variant) == "0" ]]; then
@@ -416,19 +416,19 @@ function finish_manual_install {
     fi
     if [ -f /root/.manualinstall ]; then
         if [ -f /root/login.txt ]; then
-            if ! grep -q 'manual_install_changed_admin_password' "$COMPLETION_FILE"; then
+            if ! grep -q 'manual_install_changed_admin_password' "${COMPLETION_FILE}"; then
                 ADMIN_USER=$(get_completion_param "Admin user")
                 if [ ! "$ADMIN_USER" ]; then
                     ADMIN_USER='admin'
                 fi
                 echo -n "${ADMIN_USER}:$(cat /root/login.txt)" | /usr/sbin/chpasswd
                 echo $'Changed admin password'
-                echo 'manual_install_changed_admin_password' >> "$COMPLETION_FILE"
+                echo 'manual_install_changed_admin_password' >> "${COMPLETION_FILE}"
 
                 INSTALL_STATE_COMMAND_SUCCESS=4
                 echo $"Set install state to ${INSTALL_STATE_COMMAND_SUCCESS}"
                 install_state_file="/root/.install_state.txt"
-                echo -n "$INSTALL_STATE_COMMAND_SUCCESS" > "$install_state_file"
+                echo -n "${INSTALL_STATE_COMMAND_SUCCESS}" > "${install_state_file}"
                 touch /root/.doing_initial_upgrade.txt
 
                 echo $'Performing initial upgrade'
@@ -508,11 +508,11 @@ install_web_admin
 function_check install_wireguard
 install_wireguard
 
-if [ -f "$IMAGE_PASSWORD_FILE" ]; then
+if [ -f "${IMAGE_PASSWORD_FILE}" ]; then
     simplebackup_password=$(cat "$IMAGE_PASSWORD_FILE")
-    if [ "$simplebackup_password" ]; then
+    if [ "${simplebackup_password}" ]; then
         echo "Setting password for simple backup"
-        ${PROJECT_NAME}-pass -u admin -a simplebackup -p "$simplebackup_password"
+        ${PROJECT_NAME}-pass -u admin -a simplebackup -p "${simplebackup_password}"
         echo "password set"
     else
         echo "Backup password file found but not set"
@@ -591,7 +591,7 @@ INSTALL_STATE_COMMAND_SUCCESS=4
 install_state_file="/root/.install_state.txt"
 if [ -f ${install_state_file} ]; then
     if ! grep -q "${INSTALL_STATE_COMMAND_SUCCESS}" "${install_state_file}"; then
-        echo -n "${INSTALL_STATE_COMMAND_SUCCESS}" > "$install_state_file"
+        echo -n "${INSTALL_STATE_COMMAND_SUCCESS}" > "${install_state_file}"
         systemctl reboot -i
     fi
 fi
