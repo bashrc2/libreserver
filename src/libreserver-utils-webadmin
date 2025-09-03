@@ -231,7 +231,7 @@ function web_admin_background_color {
 function web_admin_translate_text {
     text="$1"
     DEFAULT_LANGUAGE=$(grep "DEFAULT_LANGUAGE=" "/root/${PROJECT_NAME}.cfg" | awk -F '=' '{print $2}')
-    if [[ "$DEFAULT_LANGUAGE" == "en_GB"* ]]; then
+    if [[ "${DEFAULT_LANGUAGE}" == "en_GB"* ]]; then
         echo "$text"
         return
     fi
@@ -1815,7 +1815,7 @@ function webadmin_update_system_monitor {
 
 function webadmin_change_language {
     read_config_param DEFAULT_LANGUAGE
-    language="$DEFAULT_LANGUAGE"
+    language="${DEFAULT_LANGUAGE}"
 
     local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
     webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
@@ -1860,10 +1860,10 @@ function web_admin_create_app_descriptions {
     FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
 
     app_descriptions_file="${webadmin_install_dir}/app_descriptions.txt"
-    if [ -f "$app_descriptions_file" ]; then
-        rm "$app_descriptions_file"
+    if [ -f "${app_descriptions_file}" ]; then
+        rm "${app_descriptions_file}"
     fi
-    touch "$app_descriptions_file"
+    touch "${app_descriptions_file}"
 
     for filename in $FILES
     do
@@ -1872,25 +1872,25 @@ function web_admin_create_app_descriptions {
 
         if grep -q "${app_name_upper}_SHORT_DESCRIPTION=" "${filename}"; then
             app_short_description=$(grep "${app_name_upper}_SHORT_DESCRIPTION=" "${filename}" | head -n 1 | awk -F '=' '{print $2}' | sed 's/\$//g' | sed 's/"//g' | sed "s/'//g")
-            if [ "$app_short_description" ]; then
-                if ! grep -Fxq "$app_short_description" "$app_descriptions_file"; then
-                    echo "$app_short_description" >> "$app_descriptions_file"
+            if [ "${app_short_description}" ]; then
+                if ! grep -Fxq "${app_short_description}" "${app_descriptions_file}"; then
+                    echo "${app_short_description}" >> "${app_descriptions_file}"
                 fi
             fi
         fi
 
         if grep -q "${app_name_upper}_DESCRIPTION=" "${filename}"; then
             app_description=$(grep "${app_name_upper}_DESCRIPTION=" "${filename}" | head -n 1 | awk -F '=' '{print $2}' | sed 's/\$//g' | sed 's/"//g' | sed "s/'//g")
-            if [ "$app_description" ]; then
-                if ! grep -Fxq "$app_description" "$app_descriptions_file"; then
-                    echo "$app_description" >> "$app_descriptions_file"
+            if [ "${app_description}" ]; then
+                if ! grep -Fxq "${app_description}" "${app_descriptions_file}"; then
+                    echo "${app_description}" >> "${app_descriptions_file}"
                 fi
             fi
         fi
     done
 
-    if [ -f "$app_descriptions_file" ]; then
-        chown www-data:www-data "$app_descriptions_file"
+    if [ -f "${app_descriptions_file}" ]; then
+        chown www-data:www-data "${app_descriptions_file}"
     fi
 }
 
@@ -2035,8 +2035,8 @@ function install_web_admin_webmail {
     cp -r "/root/${PROJECT_NAME}/webmail_themes/freedom_dark/default.css" "/var/www/${local_hostname}/htdocs/mail/css/freedom_dark/default.css"
 
     webmail_language='en_GB'
-    if [ "$DEFAULT_LANGUAGE" ]; then
-        webmail_language=$(echo "$DEFAULT_LANGUAGE" | awk -F '.' '{print $1}')
+    if [ "${DEFAULT_LANGUAGE}" ]; then
+        webmail_language=$(echo "${DEFAULT_LANGUAGE}" | awk -F '.' '{print $1}')
     fi
 
     sq_config_location_base=''
