@@ -233,8 +233,8 @@ function app_is_installed {
 
     # Why does this secondary file exist, apart from COMPLETION_FILE ?
     # It's so that it is visible to unprivileged users from the user control panel
-    if [ -f "$INSTALLED_APPS_LIST" ]; then
-        if ! grep -Fxq "install_${app_name}" "$INSTALLED_APPS_LIST"; then
+    if [ -f "${INSTALLED_APPS_LIST}" ]; then
+        if ! grep -Fxq "install_${app_name}" "${INSTALLED_APPS_LIST}"; then
             echo "0"
         else
             echo "1"
@@ -243,12 +243,12 @@ function app_is_installed {
     fi
 
     # check the completion file to see if it was installed
-    if [ ! -f "$COMPLETION_FILE" ]; then
+    if [ ! -f "${COMPLETION_FILE}" ]; then
         echo "0"
         return
     fi
 
-    if ! grep -Fxq "install_${app_name}" "$COMPLETION_FILE"; then
+    if ! grep -Fxq "install_${app_name}" "${COMPLETION_FILE}"; then
         echo "0"
     else
         echo "1"

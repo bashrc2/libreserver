@@ -218,8 +218,10 @@ ${PROJECT_NAME}-logging off
 # if the kernel was upgraded then the options may also need to be changed
 ruleset=$(/usr/sbin/nft list ruleset)
 if [[ "${ruleset}" != *"portscan"* ]]; then
-    firewall_kernel_options
-    systemctl reboot -i
+    if [[ "$(firewall_kernel_options)" == *"1" ]]; then
+        echo $'Rebooting for kernel options to take effect'
+        systemctl reboot -i
+    fi
 fi
 
 # deliberately there is no 'exit 0' here
