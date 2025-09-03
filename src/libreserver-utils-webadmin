@@ -41,34 +41,34 @@ function web_admin_set_icon_color {
         return
     fi
     icon_color=$(grep "WEBADMIN_ICON_COLOR=" "/root/${PROJECT_NAME}.cfg" | awk -F '=' '{print $2}')
-    if [[ "$icon_color" != *','* ]]; then
+    if [[ "${icon_color}" != *','* ]]; then
         return
     fi
     icon_color_red=$(echo "$icon_color" | awk -F ',' '{print $1}')
     icon_color_green=$(echo "$icon_color" | awk -F ',' '{print $2}')
     icon_color_blue=$(echo "$icon_color" | awk -F ',' '{print $3}')
 
-    if [ ! "$icon_color_red" ]; then
+    if [ ! "${icon_color_red}" ]; then
         return
     fi
-    if [ ! "$icon_color_green" ]; then
+    if [ ! "${icon_color_green}" ]; then
         return
     fi
-    if [ ! "$icon_color_blue" ]; then
+    if [ ! "${icon_color_blue}" ]; then
         return
     fi
 
     # check if the icon color has changed
     icon_color_file=/root/.icon_color
-    if [ -f "$icon_color_file" ]; then
+    if [ -f "${icon_color_file}" ]; then
         existing_icon_color=$(cat "$icon_color_file")
-        if [[ "$existing_icon_color" == "$icon_color" ]]; then
+        if [[ "${existing_icon_color}" == "${icon_color}" ]]; then
             return
         fi
     else
-        if [ "$icon_color_red" -eq 113 ]; then
-            if [ "$icon_color_green" -eq 167 ]; then
-                if [ "$icon_color_blue" -eq 207 ]; then
+        if [ "${icon_color_red}" -eq 113 ]; then
+            if [ "${icon_color_green}" -eq 167 ]; then
+                if [ "${icon_color_blue}" -eq 207 ]; then
                     return
                 fi
             fi
@@ -77,10 +77,10 @@ function web_admin_set_icon_color {
 
     for icon_file in "/var/www/${local_hostname}/htdocs/admin"/*.png
     do
-        convert "$icon_file" +level-colors "rgb(${icon_color_red},${icon_color_green},${icon_color_blue})" "$icon_file"
+        convert "$icon_file" +level-colors "rgb(${icon_color_red},${icon_color_green},${icon_color_blue})" "${icon_file}"
     done
 
-    echo "$icon_color" > "$icon_color_file"
+    echo "${icon_color}" > "${icon_color_file}"
 }
 
 function web_admin_background_color {
@@ -118,40 +118,40 @@ function web_admin_background_color {
         fi
     fi
     if ! grep -q 'WEBADMIN_SEARCH_BACKGROUND_COLOR=' "/root/${PROJECT_NAME}.cfg"; then
-        if [[ "$bg_color" == *'dddddd' ]]; then
+        if [[ "${bg_color}" == *'dddddd' ]]; then
             echo "WEBADMIN_SEARCH_BACKGROUND_COLOR=${search_background_light}" >> "/root/${PROJECT_NAME}.cfg"
         else
             echo "WEBADMIN_SEARCH_BACKGROUND_COLOR=${search_background_dark}" >> "/root/${PROJECT_NAME}.cfg"
         fi
     fi
     if ! grep -q 'WEBADMIN_SEARCH_BACKGROUND_COLOR_2=' "/root/${PROJECT_NAME}.cfg"; then
-        if [[ "$bg_color" == *'dddddd' ]]; then
+        if [[ "${bg_color}" == *'dddddd' ]]; then
             echo "WEBADMIN_SEARCH_BACKGROUND_COLOR_2=${search_background_light2}" >> "/root/${PROJECT_NAME}.cfg"
         else
             echo "WEBADMIN_SEARCH_BACKGROUND_COLOR_2=${search_background_dark2}" >> "/root/${PROJECT_NAME}.cfg"
         fi
     fi
     if ! grep -q 'WEBADMIN_LINK_COLOR=' "/root/${PROJECT_NAME}.cfg"; then
-        if [[ "$bg_color" == *'dddddd' ]]; then
+        if [[ "${bg_color}" == *'dddddd' ]]; then
             echo "WEBADMIN_LINK_COLOR=${link_light}" >> "/root/${PROJECT_NAME}.cfg"
         else
             echo "WEBADMIN_LINK_COLOR=${link_dark}" >> "/root/${PROJECT_NAME}.cfg"
         fi
     else
-        if [[ "$bg_color" == *'dddddd' ]]; then
+        if [[ "${bg_color}" == *'dddddd' ]]; then
             sed -i "s|WEBADMIN_LINK_COLOR=.*|WEBADMIN_LINK_COLOR=${link_light}|" "/root/${PROJECT_NAME}.cfg"
         else
             sed -i "s|WEBADMIN_LINK_COLOR=.*|WEBADMIN_LINK_COLOR=${link_dark}|" "/root/${PROJECT_NAME}.cfg"
         fi
     fi
     if ! grep -q 'WEBADMIN_VISITED_COLOR=' "/root/${PROJECT_NAME}.cfg"; then
-        if [[ "$bg_color" == *'dddddd' ]]; then
+        if [[ "${bg_color}" == *'dddddd' ]]; then
             echo "WEBADMIN_VISITED_COLOR=${visited_light}" >> "/root/${PROJECT_NAME}.cfg"
         else
             echo "WEBADMIN_VISITED_COLOR=${visited_dark}" >> "/root/${PROJECT_NAME}.cfg"
         fi
     else
-        if [[ "$bg_color" == *'dddddd' ]]; then
+        if [[ "${bg_color}" == *'dddddd' ]]; then
             sed -i "s|WEBADMIN_VISITED_COLOR=.*|WEBADMIN_VISITED_COLOR=${visited_light}|" "/root/${PROJECT_NAME}.cfg"
         else
             sed -i "s|WEBADMIN_VISITED_COLOR=.*|WEBADMIN_VISITED_COLOR=${visited_dark}|" "/root/${PROJECT_NAME}.cfg"
@@ -219,8 +219,8 @@ function web_admin_background_color {
 
         # remove the chosen theme parameter
         for filename in /var/local/squirrelmail/data/*.pref; do
-            if grep -q 'chosen_theme' "$filename"; then
-                sed -i '/chosen_theme/d' "$filename"
+            if grep -q 'chosen_theme' "${filename}"; then
+                sed -i '/chosen_theme/d' "${filename}"
             fi
         done
     fi
@@ -238,13 +238,13 @@ function web_admin_translate_text {
     local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
     translations_file="/var/www/${local_hostname}/htdocs/admin/translations/${DEFAULT_LANGUAGE}.txt"
 
-    if [ -f "$translations_file" ]; then
-        if grep -q "${text}|" "$translations_file"; then
-            grep "${text}|" "$translations_file" | head -n 1 | awk -F '|' '{print $2}'
+    if [ -f "${translations_file}" ]; then
+        if grep -q "${text}|" "${translations_file}"; then
+            grep "${text}|" "${translations_file}" | head -n 1 | awk -F '|' '{print $2}'
             return
         fi
     fi
-    echo "$text"
+    echo "${text}"
 }
 
 function web_admin_translations_from_upstream {
@@ -260,10 +260,10 @@ function web_admin_translations_from_upstream {
 }
 
 function web_admin_translate {
-    if ! grep -q 'DEFAULT_LANGUAGE=' "$CONFIGURATION_FILE"; then
+    if ! grep -q 'DEFAULT_LANGUAGE=' "${CONFIGURATION_FILE}"; then
         return
     fi
-    language=$(grep 'DEFAULT_LANGUAGE=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+    language=$(grep 'DEFAULT_LANGUAGE=' "${CONFIGURATION_FILE}" | head -n 1 | awk -F '=' '{print $2}')
     if [ ! "$language" ]; then
         return
     fi
@@ -273,10 +273,10 @@ function web_admin_translate {
 
     echo "Starting translations"
 
-    cd "$webadmin_install_dir" || return
+    cd "${webadmin_install_dir}" || return
     cp EN/*.html .
     cp "EN/${PROJECT_NAME}.css" .
-    if [[ "$ONION_ONLY" != 'no' ]]; then
+    if [[ "${ONION_ONLY}" != 'no' ]]; then
         cp EN/settings_onion.html settings.html
     else
         if [[ "$I2P_ONLY" != 'no' ]]; then
@@ -285,8 +285,8 @@ function web_admin_translate {
     fi
 
     # remove any unused screens which just slows translations down
-    if [ -f "$webadmin_install_dir/theme_waiting.html" ]; then
-        rm "$webadmin_install_dir/theme_waiting.html"
+    if [ -f "${webadmin_install_dir}/theme_waiting.html" ]; then
+        rm "${webadmin_install_dir}/theme_waiting.html"
     fi
 
     # shellcheck disable=SC2086
@@ -300,22 +300,22 @@ function web_admin_translate {
     echo "Translations complete"
     echo "Changing lang headers"
     langstr="${language:0:2}"
-    for filename in "$webadmin_install_dir"/*.html; do
+    for filename in "${webadmin_install_dir}"/*.html; do
         sed -i 's|"yes" lang="en">||g' "$filename"
     done
-    for filename in "$webadmin_install_dir"/*.html; do
+    for filename in "${webadmin_install_dir}"/*.html; do
         sed -i "s|<html>|<html lang=\"$langstr\">|g" "$filename"
         sed -i "s|<html lang=\"en\">|<html lang=\"$langstr\">|g" "$filename"
     done
 
-    chown www-data:www-data "$webadmin_install_dir"/*.html
-    chown www-data:www-data "$webadmin_install_dir/${PROJECT_NAME}.css"
+    chown www-data:www-data "${webadmin_install_dir}"/*.html
+    chown www-data:www-data "${webadmin_install_dir}/${PROJECT_NAME}.css"
 
     # set the language used for web searches
     webadmin_home_dir="/var/www/${local_hostname}/htdocs/home"
     language_short="${language:0:2}"
-    sed -i "s|\"search_language\".*|\"search_language\" value=\"${language_short}\">|g" "$webadmin_install_dir/index.html"
-    chown www-data:www-data "$webadmin_install_dir/index.html"
+    sed -i "s|\"search_language\".*|\"search_language\" value=\"${language_short}\">|g" "${webadmin_install_dir}/index.html"
+    chown www-data:www-data "${webadmin_install_dir}/index.html"
     sed -i "s|\"search_language\".*|\"search_language\" value=\"${language_short}\">|g" "$webadmin_home_dir/index.html"
     chown www-data:www-data "$webadmin_home_dir/index.html"
 
@@ -339,7 +339,7 @@ function web_admin_get_hostname {
 function web_admin_translation_strings {
     # returns all of the strings which can be translated
     web_admin_get_hostname
-    grep -h 'translate="yes"' "$webadmin_install_dir/EN"/*.html | sed -e 's/<[^>]*>//g' | sed -e 's/^[[:space:]]*//' | sed 's/^[0-9]\+. //' | sed '/^$/d' | sort -uf
+    grep -h 'translate="yes"' "${webadmin_install_dir}/EN"/*.html | sed -e 's/<[^>]*>//g' | sed -e 's/^[[:space:]]*//' | sed 's/^[0-9]\+. //' | sed '/^$/d' | sort -uf
 }
 
 function web_admin_configure_installer_daemon {
@@ -394,23 +394,23 @@ function web_admin_avahi {
 function web_admin_create_users {
     web_admin_get_hostname
 
-    users_file="$webadmin_install_dir/users.html"
+    users_file="${webadmin_install_dir}/users.html"
 
-    if [ -f "$webadmin_install_dir/.setupscreenactive" ]; then
-        if [ ! -f "$webadmin_install_dir/.running_install_command" ]; then
+    if [ -f "${webadmin_install_dir}/.setupscreenactive" ]; then
+        if [ ! -f "${webadmin_install_dir}/.running_install_command" ]; then
             if [ -f "$users_file" ]; then
                 rm "$users_file"
             fi
             if [ ! -d "$INSTALL_DIR/tempwebadmin" ]; then
                 mkdir -p "$INSTALL_DIR/tempwebadmin"
             fi
-            mv "$webadmin_install_dir/userprofile_"*.html "$INSTALL_DIR/tempwebadmin"
+            mv "${webadmin_install_dir}/userprofile_"*.html "$INSTALL_DIR/tempwebadmin"
             return
         fi
     fi
 
     ADMIN_USER=$(get_completion_param "Admin user")
-    cp "$webadmin_install_dir"/users_template.html "$users_file"
+    cp "${webadmin_install_dir}"/users_template.html "$users_file"
     sed -i '/users list/,/end of users/d' "$users_file"
     sed -i '/<\/body>/d' "$users_file"
     sed -i '/<\/html>/d' "$users_file"
@@ -418,7 +418,7 @@ function web_admin_create_users {
     echo "    <div class=\"row\">" >> "$users_file"
     echo "      <div class=\"column\">" >> "$users_file"
 
-    rm "$webadmin_install_dir/userprofile_"*
+    rm "${webadmin_install_dir}/userprofile_"*
 
     no_of_users=0
 
@@ -432,8 +432,8 @@ function web_admin_create_users {
 #        can_notify_by_matrix=1
 #    fi
     can_notify_by_nextcloud=
-    if grep -q "NEXTCLOUD_DOMAIN_NAME=" "$CONFIGURATION_FILE"; then
-        nextcloud_domain=$(grep "NEXTCLOUD_DOMAIN_NAME=" "$CONFIGURATION_FILE" | awk -F '=' '{print $2}')
+    if grep -q "NEXTCLOUD_DOMAIN_NAME=" "${CONFIGURATION_FILE}"; then
+        nextcloud_domain=$(grep "NEXTCLOUD_DOMAIN_NAME=" "${CONFIGURATION_FILE}" | awk -F '=' '{print $2}')
         if [ "${nextcloud_domain}" ]; then
             if [ -d "/var/www/${nextcloud_domain}" ]; then
                 can_notify_by_nextcloud=1
@@ -449,7 +449,7 @@ function web_admin_create_users {
     for d in /home/*/ ; do
         USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
         if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
-            userfile="$webadmin_install_dir/userprofile_${USERNAME}.html"
+            userfile="${webadmin_install_dir}/userprofile_${USERNAME}.html"
             useremail=${USERNAME}@${HOSTNAME}
             GPG_ID=$(su -c "gpg --list-keys '$useremail'" - "$USERNAME" | sed -n '2p' | sed 's/^[ \t]*//')
             if [ -f "/home/$USERNAME/.gnupg/gpg.conf" ]; then
@@ -463,14 +463,14 @@ function web_admin_create_users {
                     fi
                 fi
             fi
-            xmpp_qrcode="$webadmin_install_dir/images/userprofile_${USERNAME}_xmpp.png"
+            xmpp_qrcode="${webadmin_install_dir}/images/userprofile_${USERNAME}_xmpp.png"
             if [ ! -f /usr/local/bin/myqr ]; then
                 echo -n "${useremail}" | qrencode -t PNG -o "$xmpp_qrcode"
             else
                 myqr "${useremail}" -p /root/libreserver/img/android-app/xmpp.png -c -v 8 -n "$xmpp_qrcode"
             fi
 
-            #pubkey_qrcode="$webadmin_install_dir/images/userprofile_${USERNAME}.png"
+            #pubkey_qrcode="${webadmin_install_dir}/images/userprofile_${USERNAME}.png"
             #su -c "gpg --armor --export \"$GPG_ID\"" - "$USERNAME" | qrencode -t PNG -o "$pubkey_qrcode"
 
             user_image='user.png'
@@ -487,7 +487,7 @@ function web_admin_create_users {
 
             no_of_users=$((no_of_users+1))
 
-            cp "$webadmin_install_dir"/userprofile.html "$userfile"
+            cp "${webadmin_install_dir}"/userprofile.html "$userfile"
             sed -i "s|USERNAME|${USERNAME}|g" "$userfile"
             if [[ "$USERNAME" == "$ADMIN_USER" ]]; then
                 sed -i "s|USERTYPE|Admin|g" "$userfile"
@@ -675,18 +675,18 @@ function web_admin_create_add_apps_category {
                                             # get the icon for the app
                                             icon_filename="/usr/share/${PROJECT_NAME}/android-app/${add_app_name}.png"
                                             if [ -f "$icon_filename" ]; then
-                                                cp "$icon_filename" "$webadmin_install_dir/icons/${add_app_name}.png"
+                                                cp "$icon_filename" "${webadmin_install_dir}/icons/${add_app_name}.png"
                                             else
                                                 icon_filename=
                                                 continue
                                             fi
 
                                             # remove any qrcode images
-                                            if [ -f "$webadmin_install_dir/app_qrcode_${add_app_name}.png" ]; then
-                                                rm "$webadmin_install_dir/app_qrcode_${add_app_name}.png"
+                                            if [ -f "${webadmin_install_dir}/app_qrcode_${add_app_name}.png" ]; then
+                                                rm "${webadmin_install_dir}/app_qrcode_${add_app_name}.png"
                                             fi
-                                            if [ -f "$webadmin_install_dir/${add_app_name}_qrcode.png" ]; then
-                                                rm "$webadmin_install_dir/${add_app_name}_qrcode.png"
+                                            if [ -f "${webadmin_install_dir}/${add_app_name}_qrcode.png" ]; then
+                                                rm "${webadmin_install_dir}/${add_app_name}_qrcode.png"
                                             fi
 
                                             app_name_upper=$(echo "$add_app_name" | awk '{print toupper($0)}')
@@ -715,12 +715,12 @@ function web_admin_create_add_apps_category {
                                                 echo '    <div class="row">' >> "$appslist_add_filename"
                                             fi
 
-                                            filename_app="$webadmin_install_dir/app_${add_app_name}.html"
+                                            filename_app="${webadmin_install_dir}/app_${add_app_name}.html"
                                             if [ -f "$filename_app" ]; then
                                                 rm "$filename_app"
                                             fi
 
-                                            filename_app="$webadmin_install_dir/app_add_${add_app_name}.html"
+                                            filename_app="${webadmin_install_dir}/app_add_${add_app_name}.html"
 
                                             if [ ! $app_pending_install ]; then
                                                 { echo '      <div class="column">';
@@ -749,13 +749,13 @@ function web_admin_create_add_apps_category {
 
                                             # special case for xmpp and gemini where it is the same as the default domain
                                             if [[ "${add_app_name}" == 'xmpp' || "${add_app_name}" == 'gemini' ]]; then
-                                                if [[ "$ONION_ONLY" == 'no' && "$I2P_ONLY" == 'no' ]]; then
+                                                if [[ "${ONION_ONLY}" == 'no' && "$I2P_ONLY" == 'no' ]]; then
                                                     sed -i "s|<p><label translate=\"yes\">Domain:.*|<input type=\"hidden\" name=\"install_domain\" value=\"$(hostname)\">|g" "$filename_app"
                                                 fi
                                             fi
 
                                             app_add_remove_domain=
-                                            if [[ "$ONION_ONLY" != 'no' || "$I2P_ONLY" != 'no' ]]; then
+                                            if [[ "${ONION_ONLY}" != 'no' || "$I2P_ONLY" != 'no' ]]; then
                                                 app_add_remove_domain=1
                                             fi
                                             webadmin_remove_domain=
@@ -830,16 +830,16 @@ function web_admin_create_add_apps_category {
 function web_admin_create_add_apps {
     web_admin_get_hostname
 
-    appslist_add_filename="$webadmin_install_dir/apps_add.html"
-    if [ -f "$webadmin_install_dir/.setupscreenactive" ]; then
-        if [ ! -f "$webadmin_install_dir/.running_install_command" ]; then
+    appslist_add_filename="${webadmin_install_dir}/apps_add.html"
+    if [ -f "${webadmin_install_dir}/.setupscreenactive" ]; then
+        if [ ! -f "${webadmin_install_dir}/.running_install_command" ]; then
             if [ -f "$appslist_add_filename" ]; then
                 rm "$appslist_add_filename"
             fi
             if [ ! -d "$INSTALL_DIR/tempwebadmin" ]; then
                 mkdir -p "$INSTALL_DIR/tempwebadmin"
             fi
-            mv "$webadmin_install_dir/app_add_"*.html "$INSTALL_DIR/tempwebadmin"
+            mv "${webadmin_install_dir}/app_add_"*.html "$INSTALL_DIR/tempwebadmin"
             return
         fi
     fi
@@ -847,10 +847,10 @@ function web_admin_create_add_apps {
     read_config_param DDNS_PROVIDER
     read_config_param ONION_ONLY
     read_config_param I2P_ONLY
-    apps_add_template_filename="$webadmin_install_dir/apps_add_template.html"
-    pending_installs="$webadmin_install_dir/pending_installs.txt"
-    icons_dir="$webadmin_install_dir/icons"
-    app_add_template_filename="$webadmin_install_dir/app_add_template.html"
+    apps_add_template_filename="${webadmin_install_dir}/apps_add_template.html"
+    pending_installs="${webadmin_install_dir}/pending_installs.txt"
+    icons_dir="${webadmin_install_dir}/icons"
+    app_add_template_filename="${webadmin_install_dir}/app_add_template.html"
     FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
 
     if [ ! -d "$icons_dir" ]; then
@@ -879,7 +879,7 @@ function web_admin_create_add_apps {
       echo '  </body>';
       echo '</html>'; } >> "$appslist_add_filename"
 
-    chown -R www-data:www-data "$webadmin_install_dir"
+    chown -R www-data:www-data "${webadmin_install_dir}"
 }
 
 function web_admin_create_installed_apps_category {
@@ -920,7 +920,7 @@ function web_admin_create_installed_apps_category {
                         # get the icon for the app
                         icon_filename="/usr/share/${PROJECT_NAME}/android-app/${app_name}.png"
                         if [ -f "$icon_filename" ]; then
-                            cp "$icon_filename" "$webadmin_install_dir/icons/${app_name}.png"
+                            cp "$icon_filename" "${webadmin_install_dir}/icons/${app_name}.png"
                         else
                             icon_filename=
                         fi
@@ -978,7 +978,7 @@ function web_admin_create_installed_apps_category {
                             onion_app_name='email'
                         fi
                         i2p_app_name="${onion_app_name}"
-                        if [[ "$ONION_ONLY" == 'no' && "$I2P_ONLY" == 'no' ]]; then
+                        if [[ "${ONION_ONLY}" == 'no' && "$I2P_ONLY" == 'no' ]]; then
                             if grep -q "INSTALLED_ON_DEFAULT_DOMAIN=1" "$app_filename"; then
                                 read_config_param DEFAULT_DOMAIN_NAME
                                 domain_name=${DEFAULT_DOMAIN_NAME}
@@ -987,7 +987,7 @@ function web_admin_create_installed_apps_category {
                                 domain_name=${!test_domain_name}
                             fi
                         else
-                            if [[ "$ONION_ONLY" != 'no' ]]; then
+                            if [[ "${ONION_ONLY}" != 'no' ]]; then
                                 if [ -f "/var/lib/tor/hidden_service_${onion_app_name}/hostname" ]; then
                                     domain_name=$(cat "/var/lib/tor/hidden_service_${onion_app_name}/hostname")
                                 else
@@ -1069,12 +1069,12 @@ function web_admin_create_installed_apps_category {
                             echo '    <div class="row">' >> "$appslist_filename"
                         fi
 
-                        filename="$webadmin_install_dir/app_add_${app_name}.html"
+                        filename="${webadmin_install_dir}/app_add_${app_name}.html"
                         if [ -f "$filename" ]; then
                             rm "$filename"
                         fi
 
-                        filename="$webadmin_install_dir/app_${app_name}.html"
+                        filename="${webadmin_install_dir}/app_${app_name}.html"
 
                         { echo '      <div class="column">';
                           echo '        <div>';
@@ -1098,19 +1098,19 @@ function web_admin_create_installed_apps_category {
                         fi
 
                         if ! grep -q 'SHOW_DOMAIN_IN_WEBADMIN=0' "$app_filename"; then
-                            if [ ! -f "$webadmin_install_dir/app_qrcode_${app_name}.png" ]; then
+                            if [ ! -f "${webadmin_install_dir}/app_qrcode_${app_name}.png" ]; then
                                 if [[ "$app_name" != 'rsync' ]]; then
                                     if [ ! -f /usr/local/bin/myqr ]; then
                                         if ! grep -q 'SHOW_DOMAIN_ONLY=1' "$app_filename"; then
-                                            echo -n "http://${onion_domain_name}" | qrencode -t PNG -o "$webadmin_install_dir/app_qrcode_${app_name}.png"
+                                            echo -n "http://${onion_domain_name}" | qrencode -t PNG -o "${webadmin_install_dir}/app_qrcode_${app_name}.png"
                                         else
-                                            echo -n "${onion_domain_name}" | qrencode -t PNG -o "$webadmin_install_dir/app_qrcode_${app_name}.png"
+                                            echo -n "${onion_domain_name}" | qrencode -t PNG -o "${webadmin_install_dir}/app_qrcode_${app_name}.png"
                                         fi
                                     else
                                         if ! grep -q 'SHOW_DOMAIN_ONLY=1' "$app_filename"; then
-                                            myqr "http://${onion_domain_name}" -p /root/libreserver/img/onion.png -c -n "$webadmin_install_dir/app_qrcode_${app_name}.png"
+                                            myqr "http://${onion_domain_name}" -p /root/libreserver/img/onion.png -c -n "${webadmin_install_dir}/app_qrcode_${app_name}.png"
                                         else
-                                            myqr "${onion_domain_name}" -p /root/libreserver/img/onion.png -c -n "$webadmin_install_dir/app_qrcode_${app_name}.png"
+                                            myqr "${onion_domain_name}" -p /root/libreserver/img/onion.png -c -n "${webadmin_install_dir}/app_qrcode_${app_name}.png"
                                         fi
                                     fi
                                 else
@@ -1118,15 +1118,15 @@ function web_admin_create_installed_apps_category {
                                     RSYNC_HOSTNAME_ONION=$(cat /var/lib/tor/hidden_service_rsync/hostname)
                                     if grep -q 'read only = true' /etc/rsync/rsyncd.conf; then
                                         if [ ! -f /usr/local/bin/myqr ]; then
-                                            echo -n "${TORSOCKS} rsync -avmr --delete $RSYNC_HOSTNAME_ONION::files ~/your_directory/" | qrencode -t PNG -o "$webadmin_install_dir/app_qrcode_${app_name}.png"
+                                            echo -n "${TORSOCKS} rsync -avmr --delete $RSYNC_HOSTNAME_ONION::files ~/your_directory/" | qrencode -t PNG -o "${webadmin_install_dir}/app_qrcode_${app_name}.png"
                                         else
-                                            myqr "${TORSOCKS} rsync -avmr $RSYNC_HOSTNAME_ONION::files ~/your_directory/" -p /root/libreserver/img/onion.png -c -n "$webadmin_install_dir/app_qrcode_${app_name}.png"
+                                            myqr "${TORSOCKS} rsync -avmr $RSYNC_HOSTNAME_ONION::files ~/your_directory/" -p /root/libreserver/img/onion.png -c -n "${webadmin_install_dir}/app_qrcode_${app_name}.png"
                                         fi
                                     else
                                         if [ ! -f /usr/local/bin/myqr ]; then
-                                            echo -n "${TORSOCKS} rsync -avmr --delete $RSYNC_HOSTNAME_ONION::files ~/your_directory/ && torsocks rsync -avmr --delete ~/your_directory/ $RSYNC_HOSTNAME_ONION::files" | qrencode -t PNG -o "$webadmin_install_dir/app_qrcode_${app_name}.png"
+                                            echo -n "${TORSOCKS} rsync -avmr --delete $RSYNC_HOSTNAME_ONION::files ~/your_directory/ && torsocks rsync -avmr --delete ~/your_directory/ $RSYNC_HOSTNAME_ONION::files" | qrencode -t PNG -o "${webadmin_install_dir}/app_qrcode_${app_name}.png"
                                         else
-                                            myqr "${TORSOCKS} rsync -avmr $RSYNC_HOSTNAME_ONION::files ~/your_directory/ && torsocks rsync -avmr ~/your_directory/ $RSYNC_HOSTNAME_ONION::files" -p /root/libreserver/img/onion.png -c -n "$webadmin_install_dir/app_qrcode_${app_name}.png"
+                                            myqr "${TORSOCKS} rsync -avmr $RSYNC_HOSTNAME_ONION::files ~/your_directory/ && torsocks rsync -avmr ~/your_directory/ $RSYNC_HOSTNAME_ONION::files" -p /root/libreserver/img/onion.png -c -n "${webadmin_install_dir}/app_qrcode_${app_name}.png"
                                         fi
                                     fi
                                 fi
@@ -1134,9 +1134,9 @@ function web_admin_create_installed_apps_category {
                         fi
 
                         # remove settings button if there are no settings for this app
-                        app_settings_screen="$webadmin_install_dir/settings_${app_name}.html"
+                        app_settings_screen="${webadmin_install_dir}/settings_${app_name}.html"
                         if [ ! -f "$app_settings_screen" ]; then
-                            app_settings_screen_template="$webadmin_install_dir/settings_${app_name}_template.html"
+                            app_settings_screen_template="${webadmin_install_dir}/settings_${app_name}_template.html"
                             if [ ! -f "$app_settings_screen_template" ]; then
                                 sed -i '/submitappsettings/d' "$filename"
                             else
@@ -1146,18 +1146,18 @@ function web_admin_create_installed_apps_category {
                             fi
                         fi
 
-                        app_help_screen="$webadmin_install_dir/help_${app_name}.html"
+                        app_help_screen="${webadmin_install_dir}/help_${app_name}.html"
 
-                        if [[ "$ONION_ONLY" != 'no' ]]; then
+                        if [[ "${ONION_ONLY}" != 'no' ]]; then
                             # special version of help screen for onion version
-                            app_onion_help_screen="$webadmin_install_dir/help_${app_name}_onion.html"
+                            app_onion_help_screen="${webadmin_install_dir}/help_${app_name}_onion.html"
                             if [ -f "$app_onion_help_screen" ]; then
                                 cp "$app_onion_help_screen" "$app_help_screen"
                             fi
                         fi
                         if [[ "$I2P_ONLY" != 'no' ]]; then
                             # special version of help screen for onion version
-                            app_i2p_help_screen="$webadmin_install_dir/help_${app_name}_i2p.html"
+                            app_i2p_help_screen="${webadmin_install_dir}/help_${app_name}_i2p.html"
                             if [ -f "$app_i2p_help_screen" ]; then
                                 cp "$app_i2p_help_screen" "$app_help_screen"
                             fi
@@ -1169,7 +1169,7 @@ function web_admin_create_installed_apps_category {
                         else
                             # On onion only we don't need to forward ports, so
                             # that text can be removed from the help screen
-                            if [[ "$ONION_ONLY" != 'no' || "$I2P_ONLY" != 'no' ]]; then
+                            if [[ "${ONION_ONLY}" != 'no' || "$I2P_ONLY" != 'no' ]]; then
                                 sed -i '/"portstext"/d' "$app_help_screen"
                                 sed -i '/"subheaderports"/d' "$app_help_screen"
                             fi
@@ -1230,7 +1230,7 @@ function web_admin_create_installed_apps_category {
                             sed -i '/I2PURL/d' "$filename"
                         fi
 
-                        if [[ "$ONION_ONLY" != 'no' || "$I2P_ONLY" != 'no' ]]; then
+                        if [[ "${ONION_ONLY}" != 'no' || "$I2P_ONLY" != 'no' ]]; then
                             sed -i '/APPURL/d' "$filename"
                         else
                             if [[ "${domain_name}" != *'.local' ]]; then
@@ -1282,25 +1282,25 @@ function web_admin_create_installed_apps_category {
 function web_admin_create_installed_apps {
     web_admin_get_hostname
 
-    appslist_filename="$webadmin_install_dir/apps.html"
-    if [ -f "$webadmin_install_dir/.setupscreenactive" ]; then
-        if [ ! -f "$webadmin_install_dir/.running_install_command" ]; then
+    appslist_filename="${webadmin_install_dir}/apps.html"
+    if [ -f "${webadmin_install_dir}/.setupscreenactive" ]; then
+        if [ ! -f "${webadmin_install_dir}/.running_install_command" ]; then
             if [ -f "$appslist_filename" ]; then
                 rm "$appslist_filename"
             fi
             if [ ! -d "$INSTALL_DIR/tempwebadmin" ]; then
                 mkdir -p "$INSTALL_DIR/tempwebadmin"
             fi
-            mv "$webadmin_install_dir/app_"*.html "$INSTALL_DIR/tempwebadmin"
+            mv "${webadmin_install_dir}/app_"*.html "$INSTALL_DIR/tempwebadmin"
             return
         fi
     fi
 
-    appslist_template_filename="$webadmin_install_dir/apps_template.html"
-    app_template_filename="$webadmin_install_dir/app_template.html"
-    app2_template_filename="$webadmin_install_dir/app2_template.html"
-    icons_dir="$webadmin_install_dir/icons"
-    pending_removes="$webadmin_install_dir/pending_removes.txt"
+    appslist_template_filename="${webadmin_install_dir}/apps_template.html"
+    app_template_filename="${webadmin_install_dir}/app_template.html"
+    app2_template_filename="${webadmin_install_dir}/app2_template.html"
+    icons_dir="${webadmin_install_dir}/icons"
+    pending_removes="${webadmin_install_dir}/pending_removes.txt"
 
     if [ ! -d "$icons_dir" ]; then
         mkdir -p "$icons_dir"
@@ -1339,7 +1339,7 @@ function web_admin_create_installed_apps {
       echo '  </body>';
       echo '</html>'; } >> "$appslist_filename"
 
-    chown -R www-data:www-data "$webadmin_install_dir"
+    chown -R www-data:www-data "${webadmin_install_dir}"
 }
 
 function web_admin_onion_only {
@@ -1348,17 +1348,17 @@ function web_admin_onion_only {
     web_admin_get_hostname
 
     # shellcheck disable=SC2154
-    sed -i '/freedns_code/d' "$rootdir$webadmin_install_dir/app_add_template.html"
+    sed -i '/freedns_code/d' "$rootdir${webadmin_install_dir}/app_add_template.html"
     # shellcheck disable=SC2154
-    sed -i '/freedns_code/d' "$rootdir$webadmin_install_dir/add_app_confirm_template.html"
+    sed -i '/freedns_code/d' "$rootdir${webadmin_install_dir}/add_app_confirm_template.html"
 
-    sed -i '/install_domain/d' "$rootdir$webadmin_install_dir/app_add_template.html"
-    sed -i '/install_domain/d' "$rootdir$webadmin_install_dir/add_app_confirm_template.html"
+    sed -i '/install_domain/d' "$rootdir${webadmin_install_dir}/app_add_template.html"
+    sed -i '/install_domain/d' "$rootdir${webadmin_install_dir}/add_app_confirm_template.html"
 
-    sed -i 's|onion_only=false;|onion_only=true;|g' "$rootdir$webadmin_install_dir/installapp.php"
-    sed -i 's|onion_only=false;|onion_only=true;|g' "$rootdir$webadmin_install_dir/installappconfirm.php"
+    sed -i 's|onion_only=false;|onion_only=true;|g' "$rootdir${webadmin_install_dir}/installapp.php"
+    sed -i 's|onion_only=false;|onion_only=true;|g' "$rootdir${webadmin_install_dir}/installappconfirm.php"
 
-    sed -i 's|setup_domain.html|setup_installing.html|g' "$rootdir$webadmin_install_dir/setupconfirm.php"
+    sed -i 's|setup_domain.html|setup_installing.html|g' "$rootdir${webadmin_install_dir}/setupconfirm.php"
 }
 
 function web_admin_i2p_only {
@@ -1367,17 +1367,17 @@ function web_admin_i2p_only {
     web_admin_get_hostname
 
     # shellcheck disable=SC2154
-    sed -i '/freedns_code/d' "$rootdir$webadmin_install_dir/app_add_template.html"
+    sed -i '/freedns_code/d' "$rootdir${webadmin_install_dir}/app_add_template.html"
     # shellcheck disable=SC2154
-    sed -i '/freedns_code/d' "$rootdir$webadmin_install_dir/add_app_confirm_template.html"
+    sed -i '/freedns_code/d' "$rootdir${webadmin_install_dir}/add_app_confirm_template.html"
 
-    sed -i '/install_domain/d' "$rootdir$webadmin_install_dir/app_add_template.html"
-    sed -i '/install_domain/d' "$rootdir$webadmin_install_dir/add_app_confirm_template.html"
+    sed -i '/install_domain/d' "$rootdir${webadmin_install_dir}/app_add_template.html"
+    sed -i '/install_domain/d' "$rootdir${webadmin_install_dir}/add_app_confirm_template.html"
 
-    sed -i 's|i2p_only=false;|i2p_only=true;|g' "$rootdir$webadmin_install_dir/installapp.php"
-    sed -i 's|i2p_only=false;|i2p_only=true;|g' "$rootdir$webadmin_install_dir/installappconfirm.php"
+    sed -i 's|i2p_only=false;|i2p_only=true;|g' "$rootdir${webadmin_install_dir}/installapp.php"
+    sed -i 's|i2p_only=false;|i2p_only=true;|g' "$rootdir${webadmin_install_dir}/installappconfirm.php"
 
-    sed -i 's|setup_domain.html|setup_installing.html|g' "$rootdir$webadmin_install_dir/setupconfirm.php"
+    sed -i 's|setup_domain.html|setup_installing.html|g' "$rootdir${webadmin_install_dir}/setupconfirm.php"
 }
 
 function web_admin_reset {
@@ -1388,8 +1388,8 @@ function web_admin_reset {
         rm /etc/nginx/.webadminpasswd
     fi
 
-    if [ -d "$webadmin_install_dir" ]; then
-        touch "$webadmin_install_dir/.setupscreenactive"
+    if [ -d "${webadmin_install_dir}" ]; then
+        touch "${webadmin_install_dir}/.setupscreenactive"
     fi
 
     install_web_admin
@@ -1414,8 +1414,8 @@ function web_admin_setup_login {
 
     # this file indicates that the setup screen is active
     # and gets removed by libreserver-installer
-    if [ ! -f "$webadmin_install_dir/.setupscreenactive" ]; then
-        touch "$webadmin_install_dir/.setupscreenactive"
+    if [ ! -f "${webadmin_install_dir}/.setupscreenactive" ]; then
+        touch "${webadmin_install_dir}/.setupscreenactive"
     fi
 
     webadmin_password="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
@@ -1437,11 +1437,11 @@ function web_admin_setup_login {
 
     # create a setup page with the initial password inserted
     # and copy it to the index
-    cp "$webadmin_install_dir"/setup.html "$webadmin_install_dir"/setup.prev
-    cp "$webadmin_install_dir"/setup_confirm_template.html "$webadmin_install_dir"/setup_confirm.html
-    sed -i "s|WEBADMINPASSWORD|${webadmin_password}|g" "$webadmin_install_dir/setup.prev"
-    sed -i "s|WEBADMINPASSWORD|${webadmin_password}|g" "$webadmin_install_dir/setup_confirm.html"
-    cp "$webadmin_install_dir"/setup.prev "$webadmin_install_dir"/index.html
+    cp "${webadmin_install_dir}"/setup.html "${webadmin_install_dir}"/setup.prev
+    cp "${webadmin_install_dir}"/setup_confirm_template.html "${webadmin_install_dir}"/setup_confirm.html
+    sed -i "s|WEBADMINPASSWORD|${webadmin_password}|g" "${webadmin_install_dir}/setup.prev"
+    sed -i "s|WEBADMINPASSWORD|${webadmin_password}|g" "${webadmin_install_dir}/setup_confirm.html"
+    cp "${webadmin_install_dir}"/setup.prev "${webadmin_install_dir}"/index.html
 
     # if initial setup has not yet happened then create
     # a password file
@@ -1456,35 +1456,35 @@ function image_install_web_admin {
     fi
     web_admin_get_hostname
     # shellcheck disable=SC2154
-    mkdir -p "$rootdir$webadmin_install_dir"
-    cp -r "$rootdir/usr/share/${PROJECT_NAME}/webadmin"/* "$rootdir$webadmin_install_dir"
-    cp "$rootdir/usr/share/${PROJECT_NAME}/webadmin/EN"/*.html "$rootdir$webadmin_install_dir"
-    cp -r "$rootdir/usr/share/${PROJECT_NAME}/webadmin/EN/fonts" "$rootdir$webadmin_install_dir"
-    cp "$rootdir/usr/share/${PROJECT_NAME}/webadmin/EN/${PROJECT_NAME}.css" "$rootdir$webadmin_install_dir"
-    cp "$rootdir/usr/share/${PROJECT_NAME}/webadmin/EN"/*.txt "$rootdir$webadmin_install_dir"
-    cp "$rootdir$webadmin_install_dir/EN/index.html" "$rootdir$webadmin_install_dir"/index.prev
+    mkdir -p "$rootdir${webadmin_install_dir}"
+    cp -r "$rootdir/usr/share/${PROJECT_NAME}/webadmin"/* "$rootdir${webadmin_install_dir}"
+    cp "$rootdir/usr/share/${PROJECT_NAME}/webadmin/EN"/*.html "$rootdir${webadmin_install_dir}"
+    cp -r "$rootdir/usr/share/${PROJECT_NAME}/webadmin/EN/fonts" "$rootdir${webadmin_install_dir}"
+    cp "$rootdir/usr/share/${PROJECT_NAME}/webadmin/EN/${PROJECT_NAME}.css" "$rootdir${webadmin_install_dir}"
+    cp "$rootdir/usr/share/${PROJECT_NAME}/webadmin/EN"/*.txt "$rootdir${webadmin_install_dir}"
+    cp "$rootdir${webadmin_install_dir}/EN/index.html" "$rootdir${webadmin_install_dir}"/index.prev
 
     # include onion only status in the config file
     # because add/remove app screens alter depending upon this
-    if ! grep -q 'ONION_ONLY=' "$rootdir$CONFIGURATION_FILE"; then
-        echo "ONION_ONLY=$ONION_ONLY" >> "$rootdir$CONFIGURATION_FILE"
+    if ! grep -q 'ONION_ONLY=' "$rootdir${CONFIGURATION_FILE}"; then
+        echo "ONION_ONLY=${ONION_ONLY}" >> "$rootdir${CONFIGURATION_FILE}"
     else
-        sed -i "s|ONION_ONLY=.*|ONION_ONLY=$ONION_ONLY|g" "$rootdir$CONFIGURATION_FILE"
+        sed -i "s|ONION_ONLY=.*|ONION_ONLY=${ONION_ONLY}|g" "$rootdir${CONFIGURATION_FILE}"
     fi
-    if ! grep -q 'I2P_ONLY=' "$rootdir$CONFIGURATION_FILE"; then
-        echo "I2P_ONLY=$ONION_ONLY" >> "$rootdir$CONFIGURATION_FILE"
+    if ! grep -q 'I2P_ONLY=' "$rootdir${CONFIGURATION_FILE}"; then
+        echo "I2P_ONLY=${ONION_ONLY}" >> "$rootdir${CONFIGURATION_FILE}"
     else
-        sed -i "s|I2P_ONLY=.*|I2P_ONLY=$I2P_ONLY|g" "$rootdir$CONFIGURATION_FILE"
+        sed -i "s|I2P_ONLY=.*|I2P_ONLY=$I2P_ONLY|g" "$rootdir${CONFIGURATION_FILE}"
     fi
 
-    if [[ "$ONION_ONLY" != 'no' ]]; then
+    if [[ "${ONION_ONLY}" != 'no' ]]; then
         web_admin_onion_only
     else
         if [[ "$I2P_ONLY" != 'no' ]]; then
             web_admin_i2p_only
         fi
     fi
-    touch "$rootdir$webadmin_install_dir/.setupscreenactive"
+    touch "$rootdir${webadmin_install_dir}/.setupscreenactive"
 
     nginx_file=${rootdir}/etc/nginx/sites-available/${local_hostname}
     { echo 'server {';
@@ -1554,7 +1554,7 @@ function image_install_web_admin {
     chroot "$rootdir" ln -s "/etc/nginx/sites-available/${local_hostname}" /etc/nginx/sites-enabled/
     chroot "$rootdir" chown -R www-data:www-data "/var/www/${local_hostname}/htdocs"
     chroot "$rootdir" chmod g+w "/var/www/${local_hostname}/htdocs"
-    chroot "$rootdir" chmod a+w "$webadmin_install_dir"
+    chroot "$rootdir" chmod a+w "${webadmin_install_dir}"
 
     { echo '[Unit]';
       echo 'Description=Installer daemon for web admin';
@@ -1582,20 +1582,20 @@ function regenerate_bridges {
     # onion version of the webadmin settings screen
     read_config_param ONION_ONLY
     read_config_param I2P_ONLY
-    if [[ "$ONION_ONLY" != 'no' ]]; then
-        cp "$webadmin_install_dir/settings_onion.html" "$webadmin_install_dir/settings.html"
+    if [[ "${ONION_ONLY}" != 'no' ]]; then
+        cp "${webadmin_install_dir}/settings_onion.html" "${webadmin_install_dir}/settings.html"
     else
         if [[ "$I2P_ONLY" != 'no' ]]; then
-            cp "$webadmin_install_dir/settings_i2p.html" "$webadmin_install_dir/settings.html"
+            cp "${webadmin_install_dir}/settings_i2p.html" "${webadmin_install_dir}/settings.html"
         fi
     fi
 
-    if [ -f "$webadmin_install_dir/bridges_template.html" ]; then
-        cp "$webadmin_install_dir/bridges_template.html" "$webadmin_install_dir/bridges.html"
+    if [ -f "${webadmin_install_dir}/bridges_template.html" ]; then
+        cp "${webadmin_install_dir}/bridges_template.html" "${webadmin_install_dir}/bridges.html"
         bridgeslist=$(sed 's@[/\&]@\\&@g;s/$/\\/' /root/.webadmin_torbridges; echo .)
         bridgeslist=${bridgeslist%.}
-        sed -i "s|TORBRIDGES|$bridgeslist|g" "$webadmin_install_dir/bridges.html"
-        chown www-data:www-data "$webadmin_install_dir/bridges.html"
+        sed -i "s|TORBRIDGES|$bridgeslist|g" "${webadmin_install_dir}/bridges.html"
+        chown www-data:www-data "${webadmin_install_dir}/bridges.html"
     fi
 }
 
@@ -1608,10 +1608,10 @@ function regenerate_webadmin_dns_over_tls {
 
     local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
     webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
-    if [ -f "$webadmin_install_dir/dns_over_tls_template.html" ]; then
-        cp "$webadmin_install_dir/dns_over_tls_template.html" "$webadmin_install_dir/dns_over_tls.html"
-        sed -i "s|DNS_OVER_TLS|$DNS_OVER_TLS|g" "$webadmin_install_dir/dns_over_tls.html"
-        chown www-data:www-data "$webadmin_install_dir/dns_over_tls.html"
+    if [ -f "${webadmin_install_dir}/dns_over_tls_template.html" ]; then
+        cp "${webadmin_install_dir}/dns_over_tls_template.html" "${webadmin_install_dir}/dns_over_tls.html"
+        sed -i "s|DNS_OVER_TLS|$DNS_OVER_TLS|g" "${webadmin_install_dir}/dns_over_tls.html"
+        chown www-data:www-data "${webadmin_install_dir}/dns_over_tls.html"
     fi
 }
 
@@ -1623,8 +1623,8 @@ function regenerate_webadmin_dynamic_dns {
 
     local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
     webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
-    if [ -f "$webadmin_install_dir/dynamicdns_template.html" ]; then
-        cp "$webadmin_install_dir/dynamicdns_template.html" "$webadmin_install_dir/dynamicdns.html"
+    if [ -f "${webadmin_install_dir}/dynamicdns_template.html" ]; then
+        cp "${webadmin_install_dir}/dynamicdns_template.html" "${webadmin_install_dir}/dynamicdns.html"
         ddns="$DDNS_PROVIDER"
         if [[ "$ddns" == 'default@freedns.afraid.org' ]]; then
             ddns='freedns'
@@ -1632,13 +1632,13 @@ function regenerate_webadmin_dynamic_dns {
         if [[ "$ddns" == 'dyn.com' ]]; then
             ddns='dyn'
         fi
-        sed -i "s|\"$ddns\"|\"$ddns\" selected|g" "$webadmin_install_dir/dynamicdns.html"
-        sed -i "s|DDNS_USERNAME|$DDNS_USERNAME|g" "$webadmin_install_dir/dynamicdns.html"
-        sed -i "s|DDNS_CODE|$DEFAULT_DOMAIN_CODE|g" "$webadmin_install_dir/dynamicdns.html"
-        sed -i "s|CURRENT_IP_ADDRESS|$(get_external_ipv4_address)|g" "$webadmin_install_dir/dynamicdns.html"
+        sed -i "s|\"$ddns\"|\"$ddns\" selected|g" "${webadmin_install_dir}/dynamicdns.html"
+        sed -i "s|DDNS_USERNAME|$DDNS_USERNAME|g" "${webadmin_install_dir}/dynamicdns.html"
+        sed -i "s|DDNS_CODE|$DEFAULT_DOMAIN_CODE|g" "${webadmin_install_dir}/dynamicdns.html"
+        sed -i "s|CURRENT_IP_ADDRESS|$(get_external_ipv4_address)|g" "${webadmin_install_dir}/dynamicdns.html"
         # Note: For security don't populate the password
-        #sed -i "s|DDNS_PASSWORD|$DDNS_PASSWORD|g" "$webadmin_install_dir/dynamicdns.html"
-        chown www-data:www-data "$webadmin_install_dir/dynamicdns.html"
+        #sed -i "s|DDNS_PASSWORD|$DDNS_PASSWORD|g" "${webadmin_install_dir}/dynamicdns.html"
+        chown www-data:www-data "${webadmin_install_dir}/dynamicdns.html"
     fi
 }
 
@@ -1764,52 +1764,52 @@ function webadmin_update_system_monitor {
     local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
     webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
 
-    #spectre-meltdown-checker --no-color > "$webadmin_install_dir/spectre.txt"
-    #if [ -f "$webadmin_install_dir/spectre.txt" ]; then
-    #    spectre_vulnerabilities=$(grep "VULNERABLE" "$webadmin_install_dir/spectre.txt" | grep -vc "NOT ")
+    #spectre-meltdown-checker --no-color > "${webadmin_install_dir}/spectre.txt"
+    #if [ -f "${webadmin_install_dir}/spectre.txt" ]; then
+    #    spectre_vulnerabilities=$(grep "VULNERABLE" "${webadmin_install_dir}/spectre.txt" | grep -vc "NOT ")
     #else
     spectre_vulnerabilities=0
     #fi
 
-    if [ -f "$webadmin_install_dir/system_monitor_template.html" ]; then
-        cp "$webadmin_install_dir/system_monitor_template.html" "$webadmin_install_dir/system_monitor.html"
+    if [ -f "${webadmin_install_dir}/system_monitor_template.html" ]; then
+        cp "${webadmin_install_dir}/system_monitor_template.html" "${webadmin_install_dir}/system_monitor.html"
 
         # remove spectre warning
         # shellcheck disable=SC2086
         if [ $spectre_vulnerabilities -eq 0 ]; then
-            sed -i 's|images/spectre.png||g' "$webadmin_install_dir/system_monitor.html"
-            if [ -f "$webadmin_install_dir/spectre.txt" ]; then
-                rm "$webadmin_install_dir/spectre.txt"
+            sed -i 's|images/spectre.png||g' "${webadmin_install_dir}/system_monitor.html"
+            if [ -f "${webadmin_install_dir}/spectre.txt" ]; then
+                rm "${webadmin_install_dir}/spectre.txt"
             fi
         fi
 
         if [ "$cpu_usage" ]; then
-            sed -i "s|<div name=\"cpuusage\" class=\"w3-container.*|<div name=\"cpuusage\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:${cpu_usage}%\">${cpu_usage}%</div>|g" "$webadmin_install_dir/system_monitor.html"
+            sed -i "s|<div name=\"cpuusage\" class=\"w3-container.*|<div name=\"cpuusage\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:${cpu_usage}%\">${cpu_usage}%</div>|g" "${webadmin_install_dir}/system_monitor.html"
         fi
 
         if [[ "$disk_use_percent" == *'%'* ]]; then
-            sed -i "s|<div name=\"diskspace\" class=\"w3-container.*|<div name=\"diskspace\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:$disk_use_percent\">${disk_use_gb} / ${disk_size_gb}GB</div>|g" "$webadmin_install_dir/system_monitor.html"
+            sed -i "s|<div name=\"diskspace\" class=\"w3-container.*|<div name=\"diskspace\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:$disk_use_percent\">${disk_use_gb} / ${disk_size_gb}GB</div>|g" "${webadmin_install_dir}/system_monitor.html"
         fi
 
         if [ "$backup_disk_use_gb" ]; then
-            sed -i "s|<div name=\"backupspace\" class=\"w3-container.*|<div name=\"backupspace\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:$backup_disk_use_percent\">${backup_disk_use_gb} / ${backup_disk_size_gb}GB</div>|g" "$webadmin_install_dir/system_monitor.html"
+            sed -i "s|<div name=\"backupspace\" class=\"w3-container.*|<div name=\"backupspace\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:$backup_disk_use_percent\">${backup_disk_use_gb} / ${backup_disk_size_gb}GB</div>|g" "${webadmin_install_dir}/system_monitor.html"
         else
-            sed -i "/\"backupspace\"/d" "$webadmin_install_dir/system_monitor.html"
-            sed -i '/titletextbackupspace/d' "$webadmin_install_dir/system_monitor.html"
+            sed -i "/\"backupspace\"/d" "${webadmin_install_dir}/system_monitor.html"
+            sed -i '/titletextbackupspace/d' "${webadmin_install_dir}/system_monitor.html"
         fi
 
-        sed -i "s|<div name=\"memory\" class=\"w3-container.*|<div name=\"memory\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:${used_memory_percent}%\">${used_memory_gb} / ${total_memory_gb}GB</div>|g" "$webadmin_install_dir/system_monitor.html"
+        sed -i "s|<div name=\"memory\" class=\"w3-container.*|<div name=\"memory\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:${used_memory_percent}%\">${used_memory_gb} / ${total_memory_gb}GB</div>|g" "${webadmin_install_dir}/system_monitor.html"
 
         if [ $cpu_temperature -gt 0 ]; then
-            sed -i "s|<div name=\"cputemp\" class=\"w3-container.*|<div name=\"cputemp\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:${cpu_temperature}%\">${cpu_temperature}C</div>|g" "$webadmin_install_dir/system_monitor.html"
+            sed -i "s|<div name=\"cputemp\" class=\"w3-container.*|<div name=\"cputemp\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:${cpu_temperature}%\">${cpu_temperature}C</div>|g" "${webadmin_install_dir}/system_monitor.html"
         else
-            sed -i "/\"cputemp\"/d" "$webadmin_install_dir/system_monitor.html"
-            sed -i '/titletextcputemp/d' "$webadmin_install_dir/system_monitor.html"
+            sed -i "/\"cputemp\"/d" "${webadmin_install_dir}/system_monitor.html"
+            sed -i '/titletextcputemp/d' "${webadmin_install_dir}/system_monitor.html"
         fi
 
-        sed -i "s|<div name=\"diskio\" class=\"w3-container.*|<div name=\"diskio\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:${disk_io_speed_percent}%\">${disk_io_speed} MB/s</div>|g" "$webadmin_install_dir/system_monitor.html"
+        sed -i "s|<div name=\"diskio\" class=\"w3-container.*|<div name=\"diskio\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:${disk_io_speed_percent}%\">${disk_io_speed} MB/s</div>|g" "${webadmin_install_dir}/system_monitor.html"
 
-        chown www-data:www-data "$webadmin_install_dir/system_monitor.html"
+        chown www-data:www-data "${webadmin_install_dir}/system_monitor.html"
     fi
 }
 
@@ -1819,11 +1819,11 @@ function webadmin_change_language {
 
     local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
     webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
-    if [ -f "$webadmin_install_dir/language_template.html" ]; then
-        if grep -q "\"$language\"" "$webadmin_install_dir/language_template.html"; then
-            cp "$webadmin_install_dir/language_template.html" "$webadmin_install_dir/language.html"
-            sed -i "s|\"$language\"|\"$language\" selected|g" "$webadmin_install_dir/language.html"
-            chown www-data:www-data "$webadmin_install_dir/language.html"
+    if [ -f "${webadmin_install_dir}/language_template.html" ]; then
+        if grep -q "\"$language\"" "${webadmin_install_dir}/language_template.html"; then
+            cp "${webadmin_install_dir}/language_template.html" "${webadmin_install_dir}/language.html"
+            sed -i "s|\"$language\"|\"$language\" selected|g" "${webadmin_install_dir}/language.html"
+            chown www-data:www-data "${webadmin_install_dir}/language.html"
         fi
     fi
 }
@@ -1831,10 +1831,10 @@ function webadmin_change_language {
 function webadmin_update_version {
     local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
     webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
-    if [ -f "$webadmin_install_dir/about.html" ]; then
+    if [ -f "${webadmin_install_dir}/about.html" ]; then
         VERSION=$(grep "VERSION=" "/usr/local/bin/${PROJECT_NAME}-vars" | grep -v DEBIAN | awk -F '"' '{print $2}')
         versionstr=$"Version $VERSION"
-        sed -i "s|\"versiontext\".*|\"versiontext\">$versionstr</p>|g" "$webadmin_install_dir/about.html"
+        sed -i "s|\"versiontext\".*|\"versiontext\">$versionstr</p>|g" "${webadmin_install_dir}/about.html"
     fi
 }
 
@@ -1843,12 +1843,12 @@ function webadmin_remove_settings {
 
     web_admin_get_hostname
 
-    template_file="$webadmin_install_dir/settings_${app_name}_template.html"
+    template_file="${webadmin_install_dir}/settings_${app_name}_template.html"
     if [ ! -f "$template_file" ]; then
         return
     fi
 
-    settings_file="$webadmin_install_dir/settings_${app_name}.html"
+    settings_file="${webadmin_install_dir}/settings_${app_name}.html"
     if [ -f "$settings_file" ]; then
         rm "$settings_file"
     fi
@@ -1859,7 +1859,7 @@ function web_admin_create_app_descriptions {
     # them into a file which can then be used for translations
     FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
 
-    app_descriptions_file="$webadmin_install_dir/app_descriptions.txt"
+    app_descriptions_file="${webadmin_install_dir}/app_descriptions.txt"
     if [ -f "$app_descriptions_file" ]; then
         rm "$app_descriptions_file"
     fi
@@ -2000,11 +2000,11 @@ function install_web_admin_webmail {
     read_config_param ONION_ONLY
     read_config_param I2P_ONLY
 
-    if [[ "$ONION_ONLY" == 'no' && "$I2P_ONLY" == 'no' ]]; then
+    if [[ "${ONION_ONLY}" == 'no' && "$I2P_ONLY" == 'no' ]]; then
         read_config_param DEFAULT_DOMAIN_NAME
         email_domain=$DEFAULT_DOMAIN_NAME
     else
-        if [[ "$ONION_ONLY" != 'no' ]]; then
+        if [[ "${ONION_ONLY}" != 'no' ]]; then
             email_domain=$(cat /var/lib/tor/hidden_service_email/hostname)
         fi
         if [[ "$I2P_ONLY" != 'no' ]]; then
@@ -2226,7 +2226,7 @@ function install_web_admin_webmail {
 
     web_admin_create_email_proxy_screen
 
-    if [[ "$ONION_ONLY" == 'no' && "$I2P_ONLY" == 'no' ]]; then
+    if [[ "${ONION_ONLY}" == 'no' && "$I2P_ONLY" == 'no' ]]; then
         # clearnet version goes to email proxy settings
         proxy_settings_str=$(web_admin_translate_text "Send email through a proxy")
         proxy_str="<a href=\"../../admin/email_proxy.html\" title=\"${proxy_settings_str}\">"
@@ -2357,39 +2357,39 @@ function install_web_admin {
     if grep -q 'install_final' "$COMPLETION_FILE"; then
         # initial installation has completed
         if [ -f /etc/nginx/.webadminpasswd ]; then
-            if [ ! -f "$webadmin_install_dir/.setupscreenactive" ]; then
+            if [ ! -f "${webadmin_install_dir}/.setupscreenactive" ]; then
                 # a password was created
                 basic_auth_str='auth_basic'
             fi
         fi
     fi
 
-    if [ ! -d "$webadmin_install_dir" ]; then
-        mkdir -p "$webadmin_install_dir"
+    if [ ! -d "${webadmin_install_dir}" ]; then
+        mkdir -p "${webadmin_install_dir}"
     fi
 
     web_admin_installed=
     if [ -d "/usr/share/${PROJECT_NAME}/webadmin" ]; then
         if [ -d "/usr/share/${PROJECT_NAME}/webadmin/EN" ]; then
-            cp -r "/usr/share/${PROJECT_NAME}/webadmin"/* "$webadmin_install_dir"
-            cp -r "/usr/share/${PROJECT_NAME}/webadmin/EN/fonts" "$webadmin_install_dir"
-            cp "/usr/share/${PROJECT_NAME}/webadmin/EN"/*.html "$webadmin_install_dir"
-            cp "/usr/share/${PROJECT_NAME}/webadmin/EN/${PROJECT_NAME}.css" "$webadmin_install_dir"
-            cp "/usr/share/${PROJECT_NAME}/webadmin/EN"/*.txt "$webadmin_install_dir"
+            cp -r "/usr/share/${PROJECT_NAME}/webadmin"/* "${webadmin_install_dir}"
+            cp -r "/usr/share/${PROJECT_NAME}/webadmin/EN/fonts" "${webadmin_install_dir}"
+            cp "/usr/share/${PROJECT_NAME}/webadmin/EN"/*.html "${webadmin_install_dir}"
+            cp "/usr/share/${PROJECT_NAME}/webadmin/EN/${PROJECT_NAME}.css" "${webadmin_install_dir}"
+            cp "/usr/share/${PROJECT_NAME}/webadmin/EN"/*.txt "${webadmin_install_dir}"
 
-            cp "$webadmin_install_dir/EN/index.html" "$webadmin_install_dir"/index.prev
+            cp "${webadmin_install_dir}/EN/index.html" "${webadmin_install_dir}"/index.prev
 
-            if [ -f "$webadmin_install_dir/.setupscreenactive" ]; then
-                if [ -f "$webadmin_install_dir/setup.prev" ]; then
+            if [ -f "${webadmin_install_dir}/.setupscreenactive" ]; then
+                if [ -f "${webadmin_install_dir}/setup.prev" ]; then
                     # We are still waiting for initial setup to happen
-                    cp "$webadmin_install_dir"/setup.prev "$webadmin_install_dir"/index.html
+                    cp "${webadmin_install_dir}"/setup.prev "${webadmin_install_dir}"/index.html
                 fi
             fi
 
             # if this is an onion only install then modify some php scripts
             read_config_param ONION_ONLY
             read_config_param I2P_ONLY
-            if [[ "$ONION_ONLY" != 'no' ]]; then
+            if [[ "${ONION_ONLY}" != 'no' ]]; then
                 web_admin_onion_only
             fi
             if [[ "$I2P_ONLY" != 'no' ]]; then
@@ -2402,7 +2402,7 @@ function install_web_admin {
         echo $"Directory not found /usr/share/${PROJECT_NAME}/webadmin"
     fi
 
-    echo "Copying web interface files took $SECONDS seconds"
+    echo "Copying web interface files took ${SECONDS} seconds"
     SECONDS=0
 
     if [ ! $web_admin_installed ]; then
@@ -2411,7 +2411,7 @@ function install_web_admin {
           echo '  <body>';
           echo "  ${placeholderstr}";
           echo '  </body>';
-          echo '</html>'; } > "$webadmin_install_dir/index.html"
+          echo '</html>'; } > "${webadmin_install_dir}/index.html"
     fi
 
     WEBADMIN_ONION_HOSTNAME=$(add_onion_service webadmin 80 ${WEBADMIN_ONION_PORT})
@@ -2620,136 +2620,136 @@ function install_web_admin {
         mkdir -p "/var/www/${local_hostname}/htdocs/plinth"
     fi
 
-    echo "Setup of web interface web configuration took $SECONDS seconds"
+    echo "Setup of web interface web configuration took ${SECONDS} seconds"
     SECONDS=0
 
     web_admin_create_users
 
-    echo "Web interface members screen creation took $SECONDS seconds"
+    echo "Web interface members screen creation took ${SECONDS} seconds"
     SECONDS=0
 
     # make list of apps which can be added
     web_admin_create_add_apps
 
-    echo "Web interface creation of installable apps screen took $SECONDS seconds"
+    echo "Web interface creation of installable apps screen took ${SECONDS} seconds"
     SECONDS=0
 
     # make the list of apps
     web_admin_create_installed_apps
 
-    echo "Web interface creation of installed apps screen took $SECONDS seconds"
+    echo "Web interface creation of installed apps screen took ${SECONDS} seconds"
     SECONDS=0
 
     web_admin_setup_login
 
-    echo "Web interface creation of login screen took $SECONDS seconds"
+    echo "Web interface creation of login screen took ${SECONDS} seconds"
 
     chown -R www-data:www-data "/var/www/${local_hostname}/htdocs"
     chmod g+w "/var/www/${local_hostname}/htdocs"
-    chmod a+w "$webadmin_install_dir"
+    chmod a+w "${webadmin_install_dir}"
 
     web_admin_avahi
 
     SECONDS=0
     web_admin_configure_installer_daemon
 
-    echo "Creation of installer daemon took $SECONDS seconds"
+    echo "Creation of installer daemon took ${SECONDS} seconds"
     SECONDS=0
 
     regenerate_webadmin_blocklist
 
-    echo "Web interface creation of blocklist screen took $SECONDS seconds"
+    echo "Web interface creation of blocklist screen took ${SECONDS} seconds"
     SECONDS=0
 
     regenerate_webadmin_vpn
 
-    echo "Web interface creation of VPN screen took $SECONDS seconds"
+    echo "Web interface creation of VPN screen took ${SECONDS} seconds"
     SECONDS=0
 
     regenerate_webadmin_blocklist_muted_words
 
-    echo "Web interface creation of muted words screen took $SECONDS seconds"
+    echo "Web interface creation of muted words screen took ${SECONDS} seconds"
     SECONDS=0
 
     regenerate_webadmin_dynamic_dns
 
-    echo "Web interface creation of dynamic DNS screen took $SECONDS seconds"
+    echo "Web interface creation of dynamic DNS screen took ${SECONDS} seconds"
     SECONDS=0
 
     regenerate_webadmin_dns_over_tls
 
-    echo "Web interface creation of DNS over TLS screen took $SECONDS seconds"
+    echo "Web interface creation of DNS over TLS screen took ${SECONDS} seconds"
     SECONDS=0
 
     regenerate_bridges
 
-    echo "Web interface creation of Tor bridges screen took $SECONDS seconds"
+    echo "Web interface creation of Tor bridges screen took ${SECONDS} seconds"
     SECONDS=0
 
     webadmin_update_system_monitor
 
-    echo "Web interface creation of system monitor screen took $SECONDS seconds"
+    echo "Web interface creation of system monitor screen took ${SECONDS} seconds"
     SECONDS=0
 
     webadmin_change_language
 
-    echo "Web interface change of selected language took $SECONDS seconds"
+    echo "Web interface change of selected language took ${SECONDS} seconds"
     SECONDS=0
 
     webadmin_update_version
 
-    echo "Web interface version number update took $SECONDS seconds"
+    echo "Web interface version number update took ${SECONDS} seconds"
     SECONDS=0
 
-    webadmin_qrcode="$webadmin_install_dir/images/webadmin_qrcode.png"
+    webadmin_qrcode="${webadmin_install_dir}/images/webadmin_qrcode.png"
     if [ ! -f /usr/local/bin/myqr ]; then
         echo -n "http://${WEBADMIN_ONION_HOSTNAME}/admin" | qrencode -t PNG -o "$webadmin_qrcode"
     else
         myqr "http://${WEBADMIN_ONION_HOSTNAME}/admin" -p "/root/${PROJECT_NAME}/img/onion.png" -c -v 8 -n "$webadmin_qrcode"
     fi
-    echo "Web interface QR code generation took $SECONDS seconds"
+    echo "Web interface QR code generation took ${SECONDS} seconds"
     SECONDS=0
 
     web_admin_create_app_descriptions
 
-    echo "Web interface update of app descriptions took $SECONDS seconds"
+    echo "Web interface update of app descriptions took ${SECONDS} seconds"
     SECONDS=0
 
     install_web_admin_webmail
 
-    echo "Web interface update of webmail took $SECONDS seconds"
+    echo "Web interface update of webmail took ${SECONDS} seconds"
     SECONDS=0
 
     web_admin_php_settings
 
-    echo "Web interface update of php settings took $SECONDS seconds"
+    echo "Web interface update of php settings took ${SECONDS} seconds"
     SECONDS=0
 
     rootdir=
 
     web_create_homepage
 
-    echo "Web interface update of home page took $SECONDS seconds"
+    echo "Web interface update of home page took ${SECONDS} seconds"
 
     SECONDS=0
 
     web_admin_translations_from_upstream
 
-    echo "Web interface update of translations files took $SECONDS seconds"
+    echo "Web interface update of translations files took ${SECONDS} seconds"
     SECONDS=0
 
     web_admin_translate
 
-    echo "Web interface update of language took $SECONDS seconds"
+    echo "Web interface update of language took ${SECONDS} seconds"
 
     web_admin_background_color
 
-    echo "Web interface update of theme took $SECONDS seconds"
+    echo "Web interface update of theme took ${SECONDS} seconds"
     SECONDS=0
 
-    chmod 755 "$webadmin_install_dir"
+    chmod 755 "${webadmin_install_dir}"
 
-    sed -i "s|WEBADMINONIONADDRESS|$WEBADMIN_ONION_HOSTNAME|g" "$webadmin_install_dir/about.html"
+    sed -i "s|WEBADMINONIONADDRESS|$WEBADMIN_ONION_HOSTNAME|g" "${webadmin_install_dir}/about.html"
 }
 
 # NOTE: deliberately no exit 0
