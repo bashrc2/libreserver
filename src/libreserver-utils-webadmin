@@ -1602,15 +1602,15 @@ function regenerate_bridges {
 function regenerate_webadmin_dns_over_tls {
     read_config_param DNS_OVER_TLS
 
-    if [ ! "$DNS_OVER_TLS" ]; then
-        DNS_OVER_TLS="$LIBREDNS"
+    if [ ! "${DNS_OVER_TLS}" ]; then
+        DNS_OVER_TLS="${LIBREDNS}"
     fi
 
     local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
     webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
     if [ -f "${webadmin_install_dir}/dns_over_tls_template.html" ]; then
         cp "${webadmin_install_dir}/dns_over_tls_template.html" "${webadmin_install_dir}/dns_over_tls.html"
-        sed -i "s|DNS_OVER_TLS|$DNS_OVER_TLS|g" "${webadmin_install_dir}/dns_over_tls.html"
+        sed -i "s|DNS_OVER_TLS|${DNS_OVER_TLS}|g" "${webadmin_install_dir}/dns_over_tls.html"
         chown www-data:www-data "${webadmin_install_dir}/dns_over_tls.html"
     fi
 }
