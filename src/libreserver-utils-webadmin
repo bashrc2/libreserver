@@ -464,10 +464,14 @@ function web_admin_create_users {
                 fi
             fi
             xmpp_qrcode="${webadmin_install_dir}/images/userprofile_${USERNAME}_xmpp.png"
+            qr_email="${useremail}"
+            if [[ "$qr_email" != *'.onion' ]]; then
+                qr_email=${USERNAME}@$(cat /var/lib/tor/hidden_service_email/hostname)
+            fi
             if [ ! -f /usr/local/bin/myqr ]; then
-                echo -n "${useremail}" | qrencode -t PNG -o "${xmpp_qrcode}"
+                echo -n "${qr_email}" | qrencode -t PNG -o "${xmpp_qrcode}"
             else
-                myqr "${useremail}" -p /root/libreserver/img/android-app/xmpp.png -c -v 8 -n "${xmpp_qrcode}"
+                myqr "${qr_email}" -p /root/libreserver/img/android-app/xmpp.png -c -v 8 -n "${xmpp_qrcode}"
             fi
 
             #pubkey_qrcode="${webadmin_install_dir}/images/userprofile_${USERNAME}.png"
@@ -1833,7 +1837,7 @@ function webadmin_update_version {
     webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
     if [ -f "${webadmin_install_dir}/about.html" ]; then
         VERSION=$(grep "VERSION=" "/usr/local/bin/${PROJECT_NAME}-vars" | grep -v DEBIAN | awk -F '"' '{print $2}')
-        versionstr=$"Version $VERSION"
+        versionstr=$"Version ${VERSION}"
         sed -i "s|\"versiontext\".*|\"versiontext\">$versionstr</p>|g" "${webadmin_install_dir}/about.html"
     fi
 }
@@ -1844,13 +1848,13 @@ function webadmin_remove_settings {
     web_admin_get_hostname
 
     template_file="${webadmin_install_dir}/settings_${app_name}_template.html"
-    if [ ! -f "$template_file" ]; then
+    if [ ! -f "${template_file}" ]; then
         return
     fi
 
     settings_file="${webadmin_install_dir}/settings_${app_name}.html"
-    if [ -f "$settings_file" ]; then
-        rm "$settings_file"
+    if [ -f "${settings_file}" ]; then
+        rm "${settings_file}"
     fi
 }
 
