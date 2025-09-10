@@ -1,16 +1,16 @@
 <?php
 
-//  _    _ _            ___                      
-// | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+//  _    _ _            ___
+// | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
 // | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
-// |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+// |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 //
 // Option for if an app install has failed
 //
 // License
 // =======
 //
-// Copyright (C) 2018-2019 Bob Mottram <bob@libreserver.org>
+// Copyright (C) 2018-2025 Bob Mottram <bob@libreserver.org>
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -36,11 +36,11 @@ if (isset($_POST['submitinstallappfailedcontinue'])) {
 
     if(file_exists('index_app_installing.html')) {
         exec('cp index_app_installing.html index.html');
+        exec('rm index_app_installing.html');
     }
-    else {
-        if(file_exists('index.prev')) {
-            exec('cp index.prev index.html');
-        }
+
+    if(file_exists('index.prev')) {
+        exec('cp index.prev index.html');
     }
 
     if(file_exists('installing_progress.html')) {
