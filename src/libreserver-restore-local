@@ -1115,8 +1115,8 @@ increment_restore_progress
 restore_mariadb
 increment_restore_progress
 
-restore_postgresql
-increment_restore_progress
+#restore_postgresql
+#increment_restore_progress
 
 restore_letsencrypt
 increment_restore_progress
