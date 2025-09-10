@@ -648,7 +648,7 @@ function install_forgejo {
       echo 'Description=Forgejo (Go Git Service)';
       echo 'After=syslog.target';
       echo 'After=network.target';
-      echo 'After=mysqld.service';
+      echo 'After=mariadbd.service';
       echo '';
       echo '[Service]';
       echo '#LimitMEMLOCK=infinity';

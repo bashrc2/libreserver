@@ -155,13 +155,19 @@ function mariadb_kill_stone_dead {
     systemctl stop mariadb
     # shellcheck disable=SC2009
     kill_pid=$(ps aux | grep mariadbd-safe | grep -v grep | head -n 1 | awk -F ' ' '{print $2}')
-    kill -9 "$kill_pid"
+    if [ "${kill_pid}" ]; then
+        kill -9 "$kill_pid"
+    fi
     # shellcheck disable=SC2009
-    kill_pid=$(ps aux | grep mysqld | grep -v grep | head -n 1 | awk -F ' ' '{print $2}')
-    kill -9 "$kill_pid"
+    kill_pid=$(ps aux | grep mariadbd | grep -v grep | head -n 1 | awk -F ' ' '{print $2}')
+    if [ "${kill_pid}" ]; then
+        kill -9 "$kill_pid"
+    fi
     # shellcheck disable=SC2009
-    kill_pid=$(ps aux | grep mysqld | grep -v grep | head -n 1 | awk -F ' ' '{print $2}')
-    kill -9 "$kill_pid"
+    kill_pid=$(ps aux | grep mariadbd | grep -v grep | head -n 1 | awk -F ' ' '{print $2}')
+    if [ "${kill_pid}" ]; then
+        kill -9 "$kill_pid"
+    fi
 }
 
 function mariadb_change_user_password {
@@ -237,7 +243,7 @@ function install_mariadb {
         exit 34
     fi
 
-    sed -i 's|ExecStart=/usr/sbin/mysqld|ExecStart=/usr/sbin/mysqld --skip-grant-tables|g' /lib/systemd/system/mariadb.service
+    sed -i 's|ExecStart=/usr/sbin/mariadbd|ExecStart=/usr/sbin/mariadbd --skip-grant-tables|g' /lib/systemd/system/mariadb.service
     systemctl daemon-reload
     systemctl restart mariadb
 
