@@ -39,16 +39,6 @@ source "/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-vpn"
 # for firewall
 source "/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-firewall"
 
-# for map drawing
-source "/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-map"
-
-# Include mesh files so that we can update peer locations within the map
-MESH_FILES="/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-mesh-*"
-for f in $MESH_FILES
-do
-    source "$f"
-done
-
 SSH_PORT=2222
 PHP_VERSION='8.4'
 
