@@ -552,8 +552,11 @@ function set_login_umask {
 }
 
 function disable_deferred_execution {
-    systemctl stop atd
-    systemctl disable atd
+    atd_exists=$(systemctl list-units --full -all | grep -Fq "atd.service")
+    if [ "${atd_exists}" ]; then
+        systemctl stop atd
+        systemctl disable atd
+    fi
 }
 
 function set_shadow_permissions {
