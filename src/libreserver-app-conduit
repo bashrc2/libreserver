@@ -609,8 +609,9 @@ function install_conduit {
     if [[ "${ONION_ONLY}" == "no" ]]; then
         nginx_http_redirect "${CONDUIT_DOMAIN_NAME}" "index index.html"
         { echo 'server {';
-          echo '  listen 443 ssl http2;';
-          echo '  listen [::]:443 ssl http2;';
+          echo '  listen 443 ssl;';
+          echo '  listen [::]:443 ssl;';
+          echo '  http2 on;';
           echo "  server_name ${CONDUIT_DOMAIN_NAME};";
           echo '  merge_slashes off;';
           echo '  server_tokens off;';
