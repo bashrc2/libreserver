@@ -154,7 +154,7 @@ function get_mariadb_password {
 function mariadb_kill_stone_dead {
     systemctl stop mariadb
     # shellcheck disable=SC2009
-    kill_pid=$(ps aux | grep mysqld_safe | grep -v grep | head -n 1 | awk -F ' ' '{print $2}')
+    kill_pid=$(ps aux | grep mariadbd-safe | grep -v grep | head -n 1 | awk -F ' ' '{print $2}')
     kill -9 "$kill_pid"
     # shellcheck disable=SC2009
     kill_pid=$(ps aux | grep mysqld | grep -v grep | head -n 1 | awk -F ' ' '{print $2}')
@@ -178,7 +178,7 @@ function mariadb_fix_authentication {
     # See https://mariadb.com/kb/en/mariadb/unix_socket-authentication-plugin
     remove_watchdog_daemon mariadb
     mariadb_kill_stone_dead
-    mysqld_safe --skip-grant-tables &
+    mariadbd-safe --skip-grant-tables &
     sleep 5
     mariadb_change_user_password root "$MARIADB_PASSWORD"
     mariadb_kill_stone_dead
