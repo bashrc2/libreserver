@@ -202,7 +202,7 @@ function element_download {
     # download
     if [ ! -f "$INSTALL_DIR/${ELEMENT_FILENAME}.tar.gz" ]; then
         if [[ "$ONION_ONLY" == 'no' ]]; then
-            ${TORSOCKS} wget "${ELEMENT_DOWNLOAD_URL}/${ELEMENT_FILENAME}.tar.gz" -O "$INSTALL_DIR/${ELEMENT_FILENAME}.tar.gz"
+            wget "${ELEMENT_DOWNLOAD_URL}/${ELEMENT_FILENAME}.tar.gz" -O "$INSTALL_DIR/${ELEMENT_FILENAME}.tar.gz"
         else
             ${TORSOCKS} wget "${ELEMENT_DOWNLOAD_URL}/${ELEMENT_FILENAME}.tar.gz" -O "$INSTALL_DIR/${ELEMENT_FILENAME}.tar.gz"
             if [ ! -f "$INSTALL_DIR/${ELEMENT_FILENAME}.tar.gz" ]; then
