@@ -205,7 +205,9 @@ function upgrade_bludit {
 
     CURR_BLUDIT_VERSION=$(get_completion_param "bludit version")
     if [[ "$CURR_BLUDIT_VERSION" == "$BLUDIT_VERSION" ]]; then
-        return
+        if [ ! ${restoring_bludit} ]; then
+            return
+        fi
     fi
 
     if grep -q "bludit domain" "$COMPLETION_FILE"; then
@@ -251,6 +253,7 @@ function backup_local_bludit {
 
 function restore_local_bludit {
     if ! grep -q "bludit domain" "$COMPLETION_FILE"; then
+        restoring_bludit=
         return
     fi
     BLUDIT_DOMAIN_NAME=$(get_completion_param "bludit domain")
@@ -270,9 +273,14 @@ function restore_local_bludit {
             fi
             chown -R www-data:www-data "$bludit_dir"
             rm -rf $temp_restore_dir
+
+            # do an upgrade after restore
+            restoring_bludit=1
+            upgrade_bludit
         fi
 
     fi
+    restoring_bludit=
 }
 
 function backup_remote_bludit {
@@ -552,6 +560,9 @@ function install_bludit {
     chown -R www-data:www-data "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs"
 
     convert_blog_to_gemini
+
+    chmod g+w "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs"
+    chown -R www-data:www-data "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs"
 
     APP_INSTALLED=1
 }
