@@ -106,16 +106,17 @@ function conduit_setup_turn {
         echo "turnserver is not installed"
         return
     fi
+
     turn_url=${DEFAULT_DOMAIN_NAME}
     turn_secret=$(grep "static-auth-secret=" /etc/turnserver.conf | awk -F '=' '{print $2}')
 
-    if ! grep -q "turn_uris"; then
+    if ! grep -q "turn_uris" ${CONDUIT_CONFIG_FILENAME}; then
         echo "turn_uris = [\"turn:${turn_url}?transport=udp\", \"turn:${turn_url}?transport=tcp\"]" >> ${CONDUIT_CONFIG_FILENAME}
     else
         sed -i "s|turn_uris.*|turn_uris = [\"turn:${turn_url}?transport=udp\", \"turn:${turn_url}?transport=tcp\"]|g" ${CONDUIT_CONFIG_FILENAME}
     fi
 
-    if ! grep -q "turn_secret"; then
+    if ! grep -q "turn_secret" ${CONDUIT_CONFIG_FILENAME}; then
         echo "turn_secret = \"${turn_secret}\"" >> ${CONDUIT_CONFIG_FILENAME}
     else
         sed -i "s|turn_secret.*|turn_secret = \"${turn_secret}\"|g" ${CONDUIT_CONFIG_FILENAME}
