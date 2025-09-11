@@ -311,6 +311,7 @@ function upgrade_conduit {
     if ! cmp --silent -- "/usr/local/bin/matrix-conduit" "/usr/local/bin/matrix-conduit-new"; then
         mv /usr/local/bin/matrix-conduit-new /usr/local/bin/matrix-conduit
         chmod 755 /usr/local/bin/matrix-conduit
+        chmod -R 755 /etc/matrix-conduit
         systemctl restart conduit
         echo $'conduit binary upgraded'
     fi
@@ -842,6 +843,7 @@ function install_conduit {
     echo "Setting up turnserver"
     conduit_setup_turn
     echo "restarting daemon"
+    chmod -R 755 /etc/matrix-conduit
     systemctl restart conduit
 
     conduit_clear_log_files
