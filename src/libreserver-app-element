@@ -232,6 +232,7 @@ function element_download {
     tar -xzvf ${ELEMENT_FILENAME}.tar.gz
     if [ ! -d "$INSTALL_DIR/${ELEMENT_FILENAME}" ]; then
         echo $'Unable to extract Element Web tarball'
+        rm "$INSTALL_DIR/${ELEMENT_FILENAME}.tar.gz"
         exit 54
     fi
     cp -r "$INSTALL_DIR/${ELEMENT_FILENAME}/"* "/var/www/${ELEMENT_DOMAIN_NAME}/htdocs"
