@@ -1566,6 +1566,7 @@ function firewall_facebook {
 
 function firewall_microsoft {
     # github is on AS36459
+    echo $'Adding microsoft firewall'
     block_ips_from_asn AS12076 microsoft_corp_usa
     block_ips_from_asn AS35106 microsoft_live_meeting
     block_ips_from_asn AS3598 microsoft_corp_as_0
@@ -1580,6 +1581,7 @@ function firewall_microsoft {
 }
 
 function firewall_microsoft_undo {
+    echo $'undoing microsoft firewall'
     sed -i '/microsoft/d' /etc/nftables.conf
     reload_firewall
 }

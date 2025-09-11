@@ -200,9 +200,11 @@ function reconfigure_element {
 
 function element_download {
     # download
+    microsoft_firewall_undone=
     if [ ! -f "$INSTALL_DIR/${ELEMENT_FILENAME}.tar.gz" ]; then
         if [[ "$ONION_ONLY" == 'no' ]]; then
             firewall_microsoft_undo
+            microsoft_firewall_undone=1
             wget "${ELEMENT_DOWNLOAD_URL}/${ELEMENT_FILENAME}.tar.gz" -O "$INSTALL_DIR/${ELEMENT_FILENAME}.tar.gz"
         else
             ${TORSOCKS} wget "${ELEMENT_DOWNLOAD_URL}/${ELEMENT_FILENAME}.tar.gz" -O "$INSTALL_DIR/${ELEMENT_FILENAME}.tar.gz"
@@ -215,7 +217,7 @@ function element_download {
         echo $'Unable to download Element Web from releases'
         exit 62
     fi
-    if [[ "$ONION_ONLY" == 'no' ]]; then
+    if [ "${microsoft_firewall_undone}" ]; then
         firewall_microsoft
     fi
     cd "$INSTALL_DIR" || exit 24
