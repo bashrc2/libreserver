@@ -38,7 +38,7 @@ ELEMENT_MINIMUM_RAM_MB=900
 
 ELEMENT_VERSION='1.11.111'
 ELEMENT_FILENAME="element-v${ELEMENT_VERSION}"
-ELEMENT_DOWNLOAD_URL="https://github.com/element-hq/element-web/releases/download/v${ELEMENT_VERSION}"
+ELEMENT_DOWNLOAD_URL="https://github.com/element-hq/element-web/releases/download/v${ELEMENT_VERSION}/element-${ELEMENT_VERSION}.tar.gz"
 ELEMENT_ONION_PORT=8118
 ELEMENT_I2P_PORT=6563
 ELEMENT_ONION_HOSTNAME=
