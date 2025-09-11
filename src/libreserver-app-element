@@ -202,6 +202,7 @@ function element_download {
     # download
     if [ ! -f "$INSTALL_DIR/${ELEMENT_FILENAME}.tar.gz" ]; then
         if [[ "$ONION_ONLY" == 'no' ]]; then
+            firewall_microsoft_undo
             wget "${ELEMENT_DOWNLOAD_URL}/${ELEMENT_FILENAME}.tar.gz" -O "$INSTALL_DIR/${ELEMENT_FILENAME}.tar.gz"
         else
             ${TORSOCKS} wget "${ELEMENT_DOWNLOAD_URL}/${ELEMENT_FILENAME}.tar.gz" -O "$INSTALL_DIR/${ELEMENT_FILENAME}.tar.gz"
@@ -213,6 +214,9 @@ function element_download {
     if [ ! -f "$INSTALL_DIR/${ELEMENT_FILENAME}.tar.gz" ]; then
         echo $'Unable to download Element Web from releases'
         exit 62
+    fi
+    if [[ "$ONION_ONLY" == 'no' ]]; then
+        firewall_microsoft
     fi
     cd "$INSTALL_DIR" || exit 24
 

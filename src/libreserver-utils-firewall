@@ -1579,6 +1579,11 @@ function firewall_microsoft {
     block_ips_from_asn AS8075 microsoft_corp_msn_as_block_5
 }
 
+function firewall_microsoft_undo {
+    sed -i '/microsoft/d' /etc/nftables.conf
+    reload_firewall
+}
+
 function firewall_openai {
     block_ips_from_asn AS401864 openai_llc
 }
