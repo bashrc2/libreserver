@@ -429,7 +429,7 @@ function upgrade_nextcloud {
     sed -i '/appstore/d' "${NEXTCLOUD_WWW}/config/config.php"
     chown -R www-data:www-data "${NEXTCLOUD_WWW}"
     chown -R www-data:www-data "/var/www/${NEXTCLOUD_DOMAIN_NAME}/data"
-
+    chmod 755 /var/www/${NEXTCLOUD_DOMAIN_NAME}
     set_completion_param "nextcloud version" "${NEXTCLOUD_VERSION}"
 }
 
@@ -1077,6 +1077,7 @@ function install_nextcloud {
 
     mpd_nextcloud_integration
 
+    chmod 755 /var/www/${NEXTCLOUD_DOMAIN_NAME}
     sed -i '/appstore/d' "/var/www/$NEXTCLOUD_DOMAIN_NAME/htdocs/config/config.php"
 
     APP_INSTALLED=1
