@@ -4,7 +4,7 @@
 # | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
 # |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
 #
-# Test by visiting https://$CONDUIT_DOMAIN_NAME/_matrix/key/v2/server/auto
+# Test by visiting https://${CONDUIT_DOMAIN_NAME}/_matrix/key/v2/server/auto
 #
 # License
 # =======
@@ -241,9 +241,9 @@ function add_user_conduit {
 }
 
 function install_interactive_conduit {
-    if [[ $ONION_ONLY != "no" ]]; then
+    if [[ ${ONION_ONLY} != "no" ]]; then
         CONDUIT_DOMAIN_NAME='conduit.local'
-        write_config_param "CONDUIT_DOMAIN_NAME" "$CONDUIT_DOMAIN_NAME"
+        write_config_param "CONDUIT_DOMAIN_NAME" "${CONDUIT_DOMAIN_NAME}"
     else
         function_check interactive_site_details
         interactive_site_details "conduit" "CONDUIT_DOMAIN_NAME" "CONDUIT_CODE"
@@ -255,7 +255,7 @@ function change_password_conduit {
     curr_username="$1"
     new_user_password="$2"
 
-    "${PROJECT_NAME}-pass" -u "$curr_username" -a conduit -p "$new_user_password"
+    "${PROJECT_NAME}-pass" -u "${curr_username}" -a conduit -p "${new_user_password}"
 }
 
 function reconfigure_conduit {
@@ -333,19 +333,19 @@ function restore_local_conduit {
 
     conduit_dir=/home/conduit
 
-    restore_directory_from_usb $temp_restore_dir conduit
-    if [ -d $temp_restore_dir ]; then
-        if [ -d "$temp_restore_dir$conduit_dir" ]; then
-            cp -rp "$temp_restore_dir$conduit_dir"/* "$conduit_dir"/
+    restore_directory_from_usb ${temp_restore_dir} conduit
+    if [ -d ${temp_restore_dir} ]; then
+        if [ -d "${temp_restore_dir}${conduit_dir}" ]; then
+            cp -rp "${temp_restore_dir}${conduit_dir}"/* "${conduit_dir}"/
         else
-            if [ ! -d "$conduit_dir" ]; then
-                mkdir "$conduit_dir"
+            if [ ! -d "${conduit_dir}" ]; then
+                mkdir "${conduit_dir}"
             fi
-            cp -rp "$temp_restore_dir"/* "$conduit_dir"/
+            cp -rp "${temp_restore_dir}"/* "${conduit_dir}"/
         fi
         chown -R conduit:conduit ${CONDUIT_DATA_DIR}
-        chown -R conduit:conduit "$conduit_dir"
-        rm -rf $temp_restore_dir
+        chown -R conduit:conduit "${conduit_dir}"
+        rm -rf ${temp_restore_dir}
         chmod -R 755 /etc/matrix-conduit
     fi
 
@@ -361,7 +361,7 @@ function restore_remote_conduit {
 }
 
 function remove_conduit {
-    if [[ "$ONION_ONLY" == 'no' ]]; then
+    if [[ "${ONION_ONLY}" == 'no' ]]; then
         firewall_remove ${CONDUIT_HTTP_PORT}
         firewall_max_connections ${CONDUIT_PORT_INTERNAL} ${CONDUIT_FIREWALL_MAX_CONNECTIONS} remove
     fi
@@ -370,8 +370,8 @@ function remove_conduit {
         rm ${CONDUIT_COMPACT_FILENAME}
     fi
 
-    nginx_dissite "$CONDUIT_DOMAIN_NAME"
-    remove_certs "$CONDUIT_DOMAIN_NAME"
+    nginx_dissite "${CONDUIT_DOMAIN_NAME}"
+    remove_certs "${CONDUIT_DOMAIN_NAME}"
     remove_onion_service conduit ${CONDUIT_ONION_PORT} ${CONDUIT_HTTP_PORT}
 
     if [ -f /etc/systemd/system/conduit.service ]; then
@@ -472,7 +472,7 @@ function install_conduit {
     chmod 755 /usr/local/bin/matrix-conduit
 
     increment_app_install_progress
-    if [[ "$ONION_ONLY" == 'no' ]]; then
+    if [[ "${ONION_ONLY}" == 'no' ]]; then
         firewall_add conduit ${CONDUIT_HTTP_PORT}
         firewall_max_connections ${CONDUIT_PORT_INTERNAL} ${CONDUIT_FIREWALL_MAX_CONNECTIONS}
     fi
@@ -493,7 +493,7 @@ function install_conduit {
     increment_app_install_progress
 
     conduit_domain=${CONDUIT_DOMAIN_NAME}
-    if [[ $ONION_ONLY != "no" ]]; then
+    if [[ ${ONION_ONLY} != "no" ]]; then
         conduit_domain=$(cat /var/lib/tor/hidden_service_conduit/hostname)
     fi
 
