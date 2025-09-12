@@ -69,7 +69,7 @@ function upgrade_distro_nextcloud {
 
 function nextcloud_update_files {
     read_config_param NEXTCLOUD_DOMAIN_NAME
-    nextcloud_dir="/var/www/$NEXTCLOUD_DOMAIN_NAME/htdocs"
+    nextcloud_dir="/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs"
     if [ ! -d "$nextcloud_dir" ]; then
         return
     fi
@@ -84,7 +84,7 @@ function change_default_domain_name_nextcloud {
     read_config_param NEXTCLOUD_DOMAIN_NAME
     STUN_SERVERS_STRING="[\"$new_default_domain_name:$TURN_PORT\"]"
     TURN_SERVERS_STRING="[{\"server\":\"$new_default_domain_name:$TURN_PORT\",\"secret\":\"$turnkey\",\"protocols\":\"udp,tcp\"}]"
-    cd "/var/www/$NEXTCLOUD_DOMAIN_NAME/htdocs" || exit 36
+    cd "/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs" || exit 36
     chmod +x "${NEXTCLOUD_WWW}/occ"
     ${NEXTCLOUD_COMMAND} config:app:set spreed stun_servers --value="$STUN_SERVERS_STRING" --output json
     ${NEXTCLOUD_COMMAND} config:app:set spreed turn_servers --value="$TURN_SERVERS_STRING" --output json
@@ -134,8 +134,8 @@ function setup_nextcloud_turn {
 
     STUN_SERVERS_STRING="[\"$DEFAULT_DOMAIN_NAME:$TURN_PORT\"]"
     TURN_SERVERS_STRING="[{\"server\":\"$DEFAULT_DOMAIN_NAME:$TURN_PORT\",\"secret\":\"$turnkey\",\"protocols\":\"udp,tcp\"}]"
-    cd "/var/www/$NEXTCLOUD_DOMAIN_NAME/htdocs" || exit 36
-    chmod +x "/var/www/$NEXTCLOUD_DOMAIN_NAME/htdocs/occ"
+    cd "/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs" || exit 36
+    chmod +x "/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs/occ"
     ${NEXTCLOUD_COMMAND} config:app:set spreed stun_servers --value="$STUN_SERVERS_STRING" --output json
     ${NEXTCLOUD_COMMAND} config:app:set spreed turn_servers --value="$TURN_SERVERS_STRING" --output json
 }
@@ -152,8 +152,8 @@ function remove_user_nextcloud {
     remove_username="$1"
 
     read_config_param NEXTCLOUD_DOMAIN_NAME
-    cd "/var/www/$NEXTCLOUD_DOMAIN_NAME/htdocs" || exit 36
-    chmod +x "/var/www/$NEXTCLOUD_DOMAIN_NAME/htdocs/occ"
+    cd "/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs" || exit 36
+    chmod +x "/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs/occ"
     ${NEXTCLOUD_COMMAND} user:delete "${remove_username}"
     "${PROJECT_NAME}-pass" -u "$remove_username" --rmapp nextcloud
 }
@@ -173,7 +173,7 @@ function set_email_nextcloud {
     if [[ "$ONION_ONLY" != 'no' ]]; then
         email_domain=$(cat /var/lib/tor/hidden_service_email/hostname)
     fi
-    cd "/var/www/$NEXTCLOUD_DOMAIN_NAME/htdocs" || return
+    cd "/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs" || return
     nextcloud_password=$("${PROJECT_NAME}-pass" -u "$username" -a nextcloud)
     sudo -u www-data OC_PASS="${nextcloud_password}" ./occ user:setting "${username}" settings email "${username}@${email_domain}"
 }
@@ -227,8 +227,8 @@ function add_user_nextcloud {
     new_user_password="$2"
 
     read_config_param NEXTCLOUD_DOMAIN_NAME
-    cd "/var/www/$NEXTCLOUD_DOMAIN_NAME/htdocs" || exit 36
-    chmod +x "/var/www/$NEXTCLOUD_DOMAIN_NAME/htdocs/occ"
+    cd "/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs" || exit 36
+    chmod +x "/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs/occ"
     sudo -u www-data OC_PASS="${new_user_password}" ./occ user:add --password-from-env --display-name="${new_username}" "${new_username}"
 
     "${PROJECT_NAME}-pass" -u "$new_username" -a nextcloud -p "$new_user_password"
@@ -241,8 +241,8 @@ function change_password_nextcloud {
 
     export OC_PASS="$2"
     read_config_param NEXTCLOUD_DOMAIN_NAME
-    cd "/var/www/$NEXTCLOUD_DOMAIN_NAME/htdocs" || exit 36
-    chmod +x "/var/www/$NEXTCLOUD_DOMAIN_NAME/htdocs/occ"
+    cd "/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs" || exit 36
+    chmod +x "/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs/occ"
     ${NEXTCLOUD_COMMAND} user:resetpassword --password-from-env "${curr_username}"
     export OC_PASS=""
     "${PROJECT_NAME}-pass" -u "$curr_username" -a nextcloud -p "$OC_PASS"
@@ -284,15 +284,15 @@ function install_interactive_nextcloud {
                      exit 1;;
             esac
             NEXTCLOUD_DOMAIN_NAME=$(sed -n 1p < "$data")
-            if [ "$NEXTCLOUD_DOMAIN_NAME" ]; then
-                TEST_DOMAIN_NAME=$NEXTCLOUD_DOMAIN_NAME
+            if [ "${NEXTCLOUD_DOMAIN_NAME}" ]; then
+                TEST_DOMAIN_NAME=${NEXTCLOUD_DOMAIN_NAME}
                 validate_domain_name
-                if [[ "$TEST_DOMAIN_NAME" != "$NEXTCLOUD_DOMAIN_NAME" ]]; then
+                if [[ "$TEST_DOMAIN_NAME" != "${NEXTCLOUD_DOMAIN_NAME}" ]]; then
                     NEXTCLOUD_DOMAIN_NAME=
                     dialog --title $"Domain name validation" --msgbox "$TEST_DOMAIN_NAME" 15 50
                 fi
             fi
-            if [ $NEXTCLOUD_DOMAIN_NAME ]; then
+            if [ ${NEXTCLOUD_DOMAIN_NAME} ]; then
                 NEXTCLOUD_DETAILS_COMPLETE="yes"
             fi
             rm -f "$data"
@@ -304,7 +304,7 @@ function install_interactive_nextcloud {
             NEXTCLOUD_TITLE="$new_title"
         fi
     fi
-    write_config_param "NEXTCLOUD_DOMAIN_NAME" "$NEXTCLOUD_DOMAIN_NAME"
+    write_config_param "NEXTCLOUD_DOMAIN_NAME" "${NEXTCLOUD_DOMAIN_NAME}"
     APP_INSTALLED=1
 }
 
@@ -467,7 +467,7 @@ function restore_local_nextcloud {
     fi
     NEXTCLOUD_DOMAIN_NAME=$(get_completion_param "nextcloud domain")
     NEXTCLOUD_WWW="/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs"
-    if [ "$NEXTCLOUD_DOMAIN_NAME" ]; then
+    if [ "${NEXTCLOUD_DOMAIN_NAME}" ]; then
         suspend_site "${NEXTCLOUD_DOMAIN_NAME}"
 
         temp_restore_dir=/root/tempnextcloud
@@ -538,14 +538,14 @@ function remove_nextcloud {
 
     read_config_param "NEXTCLOUD_DOMAIN_NAME"
     read_config_param "MY_USERNAME"
-    echo "Removing $NEXTCLOUD_DOMAIN_NAME"
-    nginx_dissite "$NEXTCLOUD_DOMAIN_NAME"
-    remove_certs "$NEXTCLOUD_DOMAIN_NAME"
-    if [ -d "/var/www/$NEXTCLOUD_DOMAIN_NAME" ]; then
-        rm -rf "/var/www/$NEXTCLOUD_DOMAIN_NAME"
+    echo "Removing ${NEXTCLOUD_DOMAIN_NAME}"
+    nginx_dissite "${NEXTCLOUD_DOMAIN_NAME}"
+    remove_certs "${NEXTCLOUD_DOMAIN_NAME}"
+    if [ -d "/var/www/${NEXTCLOUD_DOMAIN_NAME}" ]; then
+        rm -rf "/var/www/${NEXTCLOUD_DOMAIN_NAME}"
     fi
-    if [ -f "/etc/nginx/sites-available/$NEXTCLOUD_DOMAIN_NAME" ]; then
-        rm "/etc/nginx/sites-available/$NEXTCLOUD_DOMAIN_NAME"
+    if [ -f "/etc/nginx/sites-available/${NEXTCLOUD_DOMAIN_NAME}" ]; then
+        rm "/etc/nginx/sites-available/${NEXTCLOUD_DOMAIN_NAME}"
     fi
     mpd_nextcloud_integration
     function_check drop_database
@@ -559,7 +559,7 @@ function remove_nextcloud {
     remove_backup_database_local nextcloud
 
     function_check remove_ddns_domain
-    remove_ddns_domain "$NEXTCLOUD_DOMAIN_NAME"
+    remove_ddns_domain "${NEXTCLOUD_DOMAIN_NAME}"
     systemctl restart nginx
     # shellcheck disable=SC2086
     systemctl restart php${PHP_VERSION}-fpm
@@ -681,7 +681,7 @@ function install_nextcloud_base {
     fi
 
     function_check add_ddns_domain
-    add_ddns_domain "$NEXTCLOUD_DOMAIN_NAME"
+    add_ddns_domain "${NEXTCLOUD_DOMAIN_NAME}"
 
     increment_app_install_progress
 
@@ -744,7 +744,7 @@ function install_nextcloud_base {
           echo '  # Location';
           echo '  location / {'; } >> "$nextcloud_nginx_site"
         function_check nginx_limits
-        nginx_limits "$NEXTCLOUD_DOMAIN_NAME" '1G'
+        nginx_limits "${NEXTCLOUD_DOMAIN_NAME}" '1G'
         { echo "    try_files \$uri \$uri/ @nextcloud;";
           echo '  }';
           echo '';
@@ -982,6 +982,7 @@ function install_nextcloud_base {
     echo "Checking /etc/php/${PHP_VERSION}/fpm/php.ini"
     nextcloud_check_php_init "/etc/php/${PHP_VERSION}/fpm/php.ini"
     chmod +x "${NEXTCLOUD_WWW}/occ"
+    chmod 755 /var/www/${NEXTCLOUD_DOMAIN_NAME}
 
     increment_app_install_progress
 
@@ -1023,12 +1024,13 @@ function install_nextcloud_base {
     chown -R www-data:www-data "${NEXTCLOUD_WWW}"
     chmod 0644 .htaccess
     chmod 0750 data
+    chmod 755 /var/www/${NEXTCLOUD_DOMAIN_NAME}
     chown -R www-data:www-data "/var/www/${NEXTCLOUD_DOMAIN_NAME}/data"
     increment_app_install_progress
     echo $'Setting trusted domains'
-    ${NEXTCLOUD_COMMAND} config:system:set trusted_domains 1 --value="$NEXTCLOUD_DOMAIN_NAME"
+    ${NEXTCLOUD_COMMAND} config:system:set trusted_domains 1 --value="${NEXTCLOUD_DOMAIN_NAME}"
     increment_app_install_progress
-    ${NEXTCLOUD_COMMAND} config:system:set trusted_domains 2 --value="$NEXTCLOUD_ONION_HOSTNAME"
+    ${NEXTCLOUD_COMMAND} config:system:set trusted_domains 2 --value="${NEXTCLOUD_ONION_HOSTNAME}"
     increment_app_install_progress
     ${NEXTCLOUD_COMMAND} maintenance:repair
     #echo $'Turning off maintenance mode'
@@ -1077,8 +1079,7 @@ function install_nextcloud {
 
     mpd_nextcloud_integration
 
-    chmod 755 /var/www/${NEXTCLOUD_DOMAIN_NAME}
-    sed -i '/appstore/d' "/var/www/$NEXTCLOUD_DOMAIN_NAME/htdocs/config/config.php"
+    sed -i '/appstore/d' "/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs/config/config.php"
 
     APP_INSTALLED=1
 }
