@@ -27,6 +27,8 @@
 PROJECT_NAME='libreserver'
 
 ADMIN_USERNAME=
+ADMIN_PASSWORD=
+ADMIN_EMAIL_ADDRESS=
 SUBJECT=
 MESSAGE=
 CONFIGURATION_FILE=/root/${PROJECT_NAME}.cfg
@@ -347,6 +349,18 @@ do
                 fi
             fi
             ;;
+        --setpass|--setpassword)
+            ADMIN_PASSWORD="$1"
+            if [ "$ADMIN_PASSWORD" ]; then
+                if grep -q 'Notifications password:' "$COMPLETION_FILE"; then
+                    sed -i "s|Notifications password:.*|Notifications password:$ADMIN_PASSWORD|g" "$COMPLETION_FILE"
+                else
+                    echo "Notifications password:$ADMIN_PASSWORD" >> "$COMPLETION_FILE"
+                fi
+                echo "Notifications password was set"
+                exit 0
+            fi
+            shift
         -s|--subject|--header)
             shift
             SUBJECT="$1"
@@ -391,6 +405,14 @@ if [ ! "$ADMIN_USERNAME" ]; then
         fi
     else
         ADMIN_USERNAME=$(grep "Admin user" "$COMPLETION_FILE" | awk -F ':' '{print $2}')
+    fi
+fi
+
+if [ ! "$ADMIN_PASSWORD" ]; then
+    if grep -q "Notifications password" "$COMPLETION_FILE"; then
+        if [ -d "/home/$ADMIN_USERNAME" ]; then
+            ADMIN_PASSWORD=$(grep "Notifications password" "$COMPLETION_FILE" | awk -F ':' '{print $2}')
+        fi
     fi
 fi
 
@@ -517,7 +539,11 @@ if [ -d /etc/prosody ]; then
             if [ -f "${sendxmpp_binary}" ]; then
                 # kill any existing send process
                 kill_sendxmpp_process
-                notification_user_password=$(cat /root/login.txt)
+                if [[ "${ADMIN_USERNAME}" == "admin" ]]; then
+                    notification_user_password=$(cat /root/login.txt)
+                else
+                    notification_user_password="${ADMIN_PASSWORD}"
+                fi
                 { echo "username: ${ADMIN_USERNAME}";
                   echo "jserver: ${local_domain}";
                   echo "password: ${notification_user_password}"; } > "${sendxmpp_config}"
