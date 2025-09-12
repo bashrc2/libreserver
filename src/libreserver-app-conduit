@@ -346,6 +346,7 @@ function restore_local_conduit {
         chown -R conduit:conduit ${CONDUIT_DATA_DIR}
         chown -R conduit:conduit "$conduit_dir"
         rm -rf $temp_restore_dir
+        chmod -R 755 /etc/matrix-conduit
     fi
 
     systemctl start conduit
