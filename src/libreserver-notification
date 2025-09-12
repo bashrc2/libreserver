@@ -350,6 +350,7 @@ do
             fi
             ;;
         --setpass|--setpassword)
+            shift
             ADMIN_PASSWORD="$1"
             if [ "$ADMIN_PASSWORD" ]; then
                 if grep -q 'Notifications password:' "$COMPLETION_FILE"; then
@@ -360,7 +361,7 @@ do
                 echo "Notifications password was set"
                 exit 0
             fi
-            shift
+            ;;
         -s|--subject|--header)
             shift
             SUBJECT="$1"
