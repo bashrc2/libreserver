@@ -276,6 +276,7 @@ function restore_local_bludit {
 
             # do an upgrade after restore
             restoring_bludit=1
+            echo $'Starting bludit upgrade after restore'
             upgrade_bludit
         fi
 
@@ -320,7 +321,7 @@ function remove_bludit {
 function install_bludit {
     increment_app_install_progress
 
-    INSTALL_PACKAGES php-curl php-gd php-mysql git curl wget unzip
+    INSTALL_PACKAGES php-curl php-gd php-mysql php-mbstring git curl wget unzip
 
     increment_app_install_progress
 
