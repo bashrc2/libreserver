@@ -6,6 +6,13 @@ if [ -d "/bin" ];then
     if [ $COUNT -eq 0 ];then
         :
     else
+        declare -a arr=$(find -L /bin  -type f  -perm  /022  -exec ls -l {} \; | awk -F ' ' '{print $NF}')
+        for i in "${arr[@]}"
+        do
+            if [ -f "$i" ]; then
+                chmod 755 "$i"
+            fi
+        done
         exit 1
     fi
 fi
@@ -16,6 +23,13 @@ if [ -d "/usr/bin" ];then
     if [ $COUNT -eq 0 ];then
         :
     else
+        declare -a arr=$(find -L /usr/bin  -type f  -perm  /022  -exec ls -l {} \; | awk -F ' ' '{print $NF}')
+        for i in "${arr[@]}"
+        do
+            if [ -f "$i" ]; then
+                chmod 755 "$i"
+            fi
+        done
         exit 1
     fi
 fi
@@ -26,6 +40,13 @@ if [ -d "/usr/local/bin" ];then
     if [ $COUNT -eq 0 ];then
         :
     else
+        declare -a arr=$(find -L /usr/local/bin  -type f  -perm  /022  -exec ls -l {} \; | awk -F ' ' '{print $NF}')
+        for i in "${arr[@]}"
+        do
+            if [ -f "$i" ]; then
+                chmod 755 "$i"
+            fi
+        done
         exit 1
     fi
 fi
@@ -36,6 +57,13 @@ if [ -d "/sbin" ];then
     if [ $COUNT -eq 0 ];then
         :
     else
+        declare -a arr=$(find -L /sbin  -type f  -perm  /022  -exec ls -l {} \; | awk -F ' ' '{print $NF}')
+        for i in "${arr[@]}"
+        do
+            if [ -f "$i" ]; then
+                chmod 755 "$i"
+            fi
+        done
         exit 1
     fi
 fi
@@ -46,6 +74,13 @@ if [ -d "/usr/sbin" ];then
     if [ $COUNT -eq 0 ];then
         :
     else
+        declare -a arr=$(find -L /usr/sbin  -type f  -perm  /022  -exec ls -l {} \; | awk -F ' ' '{print $NF}')
+        for i in "${arr[@]}"
+        do
+            if [ -f "$i" ]; then
+                chmod 755 "$i"
+            fi
+        done
         exit 1
     fi
 fi
@@ -56,6 +91,13 @@ if [ -d "/usr/local/sbin" ];then
     if [ $COUNT -eq 0 ];then
         :
     else
+        declare -a arr=$(find -L /usr/local/sbin  -type f  -perm  /022  -exec ls -l {} \; | awk -F ' ' '{print $NF}')
+        for i in "${arr[@]}"
+        do
+            if [ -f "$i" ]; then
+                chmod 755 "$i"
+            fi
+        done
         exit 1
     fi
 fi
