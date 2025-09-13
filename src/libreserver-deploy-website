@@ -28,6 +28,8 @@ PROJECT_NAME=libreserver
 
 lang=$2
 
+source "/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-web"
+
 CONFIGURATION_FILE=/root/${PROJECT_NAME}.cfg
 
 ONION_ONLY='no'
