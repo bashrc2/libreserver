@@ -11,6 +11,7 @@ if [ -d "/bin" ];then
         do
             if [ -f "$i" ]; then
                 chmod 755 "$i"
+                echo "chmod 755 \"$i\""
             fi
         done
         exit 1
