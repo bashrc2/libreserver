@@ -2125,7 +2125,7 @@ function install_web_admin_webmail {
       echo "\$allow_charset_search     = true;";
       echo "\$uid_support              = true;";
       echo '';
-      echo "\$disable_plugins          = false;";
+      echo "\$disable_plugins          = true;";
       echo "\$disable_plugins_user     = '';";
       echo '';
       echo "\$plugins[] = 'change_password';";
