@@ -2778,7 +2778,9 @@ function webadmin_change_password {
                     /usr/local/bin/${PROJECT_NAME}-chpasswd "$curr_username" "$new_password"
 
                     # change the backup password
-                    ${PROJECT_NAME}-pass -u admin -a simplebackup -p "$new_password"
+                    if [[ "$curr_username" == "$admin_username" ]]; then
+                        ${PROJECT_NAME}-pass -u admin -a simplebackup -p "$new_password"
+                    fi
 
                     new_password=
                 fi
