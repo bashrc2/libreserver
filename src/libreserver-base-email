@@ -167,6 +167,7 @@ function email_change_default_domain_name {
     update-exim4.conf
 
     dpkg-reconfigure --frontend noninteractive exim4-config
+    systemctl enable saslauthd
     systemctl restart saslauthd
     email_install_tls "${new_default_domain_name}"
     systemctl restart exim4
@@ -1060,6 +1061,7 @@ function email_repair_saslauthd {
         return
     fi
     echo 'START=yes' >> /etc/default/saslauthd
+    systemctl enable saslauthd
     systemctl restart saslauthd
 }
 

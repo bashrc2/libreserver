@@ -145,6 +145,7 @@ function add_email_hostname {
             sed -i "s|dc_other_hostnames=.*|dc_other_hostnames='$email_hostnames;$extra_email_hostname'|g" /etc/exim4/update-exim4.conf.conf
             update-exim4.conf
             dpkg-reconfigure --frontend noninteractive exim4-config
+            systemctl enable saslauthd
             systemctl restart saslauthd
         fi
     fi
