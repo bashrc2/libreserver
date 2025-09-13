@@ -771,6 +771,60 @@ function lockdown_permissions {
     chmod -R 644 /etc/torrc.d
     chown root:root /dev/null
     lockdown_ssh
+
+    # permissions on files in /bin
+    declare -a arr=$(find -L /bin  -type f  -perm  /022  -exec ls -l {} \; | awk -F ' ' '{print $NF}')
+    for i in "${arr[@]}"
+    do
+        if [ -f "$i" ]; then
+            chmod 755 "$i"
+        fi
+    done
+
+    # permissions on files in /usr/bin
+    declare -a arr=$(find -L /usr/bin  -type f  -perm  /022  -exec ls -l {} \; | awk -F ' ' '{print $NF}')
+    for i in "${arr[@]}"
+    do
+        if [ -f "$i" ]; then
+            chmod 755 "$i"
+        fi
+    done
+
+    # permissions on files in /usr/local/bin
+    declare -a arr=$(find -L /usr/local/bin  -type f  -perm  /022  -exec ls -l {} \; | awk -F ' ' '{print $NF}')
+    for i in "${arr[@]}"
+    do
+        if [ -f "$i" ]; then
+            chmod 755 "$i"
+        fi
+    done
+
+    # permissions on files in /sbin
+    declare -a arr=$(find -L /sbin  -type f  -perm  /022  -exec ls -l {} \; | awk -F ' ' '{print $NF}')
+    for i in "${arr[@]}"
+    do
+        if [ -f "$i" ]; then
+            chmod 755 "$i"
+        fi
+    done
+
+    # permissions on files in /usr/sbin
+    declare -a arr=$(find -L /usr/sbin  -type f  -perm  /022  -exec ls -l {} \; | awk -F ' ' '{print $NF}')
+    for i in "${arr[@]}"
+    do
+        if [ -f "$i" ]; then
+            chmod 755 "$i"
+        fi
+    done
+
+    # permissions on files in /usr/local/sbin
+    declare -a arr=$(find -L /usr/local/sbin  -type f  -perm  /022  -exec ls -l {} \; | awk -F ' ' '{print $NF}')
+    for i in "${arr[@]}"
+    do
+        if [ -f "$i" ]; then
+            chmod 755 "$i"
+        fi
+    done
 }
 
 function disable_core_dumps {
