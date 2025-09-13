@@ -1513,7 +1513,14 @@ function configure_imap {
         echo $'Unable to find /etc/dovecot/conf.d/10-mail.conf'
         exit 42
     fi
-    sed -i 's|mail_location =.*|mail_location = maildir:~/Maildir:LAYOUT=fs|g' /etc/dovecot/conf.d/10-mail.conf
+    if grep -q '#mail_location =' /etc/dovecot/conf.d/10-mail.conf; then
+        sed -i 's|#mail_location =|mail_location =|g' /etc/dovecot/conf.d/10-mail.conf
+    fi
+    if ! grep -q 'mail_location =' /etc/dovecot/conf.d/10-mail.conf; then
+        echo 'mail_location = maildir:~/Maildir:LAYOUT=fs' >> /etc/dovecot/conf.d/10-mail.conf
+    else
+        sed -i 's|mail_location =.*|mail_location = maildir:~/Maildir:LAYOUT=fs|g' /etc/dovecot/conf.d/10-mail.conf
+    fi
 
     # This long notify interval makes the system more suited for use with
     # battery powered mobile devices
