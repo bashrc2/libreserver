@@ -312,7 +312,7 @@ if [ -d "${rootdir}/var/gemini" ]; then
 fi
 
 if [ -d "${rootdir}${epicyon_dir}/website/EN" ]; then
-    dest_dir='/var/www/libreserver.org/htdocs'
+    dest_dir="$rootdir/var/www/${site_domain}/htdocs"
     if [ -d "$dest_dir" ]; then
 	      epicyon_dir=
 	      if [ -d "${rootdir}/etc/epicyon" ]; then
@@ -331,5 +331,6 @@ if [ -d "${rootdir}${epicyon_dir}/website/EN" ]; then
 	      fi
     fi
 fi
+chmod 755 "$rootdir/var/www/${site_domain}"
 echo "$site_domain"
 echo "$site_onion_domain"
