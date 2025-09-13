@@ -776,6 +776,7 @@ function lockdown_permissions {
     declare -a arr=$(find -L /bin  -type f  -perm  /022  -exec ls -l {} \; | awk -F ' ' '{print $NF}')
     for i in "${arr[@]}"
     do
+        echo "$i"
         if [ -f "$i" ]; then
             chmod 755 "$i"
         fi
