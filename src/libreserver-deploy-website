@@ -309,6 +309,8 @@ if [ -d "${rootdir}/var/gemini" ]; then
     fi
 
     chown -R gemini:gemini "${dest_dir}"
+    chmod 755 /etc/molly.conf
+    chmod -R 755 /var/gemini
     # shellcheck disable=SC2086
     echo "Gemini site deployed to $(cat ${rootdir}/var/lib/tor/hidden_service_email/hostname)"
 fi

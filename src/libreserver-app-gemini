@@ -208,6 +208,7 @@ function upgrade_gemini {
         systemctl daemon-reload
     fi
     chmod 755 /etc/molly.conf
+    chmod -R 755 /var/gemini
     systemctl restart gemini
 }
 
@@ -436,6 +437,7 @@ function install_gemini {
     systemctl enable gemini
     chown -R gemini:gemini "/home/gemini"
     chmod 755 /etc/molly.conf
+    chmod -R 755 /var/gemini
     systemctl start gemini
 
     increment_app_install_progress
