@@ -305,6 +305,8 @@ function test_stig {
 
     source "$STIG_TESTS_DIR/output.sh"
 
+    /sbin/sysctl -p -q
+
     ##RHEL-06-000001
     ##The system must use a separate file system for /tmp.
     if [ "$VERBOSE" ]; then
