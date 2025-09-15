@@ -1422,9 +1422,6 @@ function setup_utils {
     function_check install_password_generator
     install_password_generator
 
-    function_check enable_predictable_device_names
-    enable_predictable_device_names
-
     function_check turn_off_magic_sysrq
     turn_off_magic_sysrq
 

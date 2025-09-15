@@ -41,18 +41,6 @@ function default_network_config {
     echo 'source /etc/network/interfaces.d/*' >> /etc/network/interfaces
 }
 
-# Debian trixie has a problem where the formerly predictable wlan0 and eth0
-# device names get assigned random names. This is a hacky workaround.
-# Also adding net.ifnames=0 to kernel options on bootloader may work.
-function enable_predictable_device_names {
-    ln -sf /dev/null /etc/systemd/network/99-default.link
-#    test_predictable=$(ls -la /etc/udev/rules.d/80-net-setup-link.rules)
-#    if [[ "$test_predictable" != *"/dev/null" ]]; then
-#        ln -s /dev/null /etc/udev/rules.d/80-net-setup-link.rules
-#        update-initramfs -u
-#    fi
-}
-
 function wifi_is_running {
     wifi_state=$(wpa_cli status)
     if [[ "$wifi_state" == *"COMPLETED"* ]]; then
@@ -319,11 +307,16 @@ function hotspot_on {
     echo "allow-hotplug $WIFI_INTERFACE" > /etc/network/interfaces.d/wifi
     echo "iface $WIFI_INTERFACE inet manual" >> /etc/network/interfaces.d/wifi
 
-    echo 'allow-hotplug eth0' >> /etc/network/interfaces.d/static
-    echo 'iface eth0 inet manual' >> /etc/network/interfaces.d/static
+    network_device_name=$(ls /sys/class/net | grep "en" | head -n 1)
+    if [ ! "${network_device_name}" ]; then
+        network_device_name='enp3s0'
+    fi
+
+    echo "allow-hotplug ${network_device_name}" >> /etc/network/interfaces.d/static
+    echo "iface ${network_device_name} inet manual" >> /etc/network/interfaces.d/static
 
     echo 'iface br0 inet static' >> /etc/network/interfaces.d/bridge
-    echo "    bridge_ports $WIFI_INTERFACE eth0" >> /etc/network/interfaces.d/bridge
+    echo "    bridge_ports $WIFI_INTERFACE ${network_device_name}" >> /etc/network/interfaces.d/bridge
 
     systemctl restart network-manager
     ifup $WIFI_INTERFACE
@@ -357,8 +350,13 @@ function wifi_wpa2_psk {
 
     wifi_store_original_network_settings
 
-    echo 'allow-hotplug eth0' > /etc/network/interfaces.d/static
-    echo 'iface eth0 inet dhcp' >> /etc/network/interfaces.d/static
+    network_device_name=$(ls /sys/class/net | grep "en" | head -n 1)
+    if [ ! "${network_device_name}" ]; then
+        network_device_name='enp3s0'
+    fi
+
+    echo "allow-hotplug ${network_device_name}" > /etc/network/interfaces.d/static
+    echo "iface ${network_device_name} inet dhcp" >> /etc/network/interfaces.d/static
 
     echo "allow-hotplug ${WIFI_INTERFACE}" > /etc/network/interfaces.d/wifi
     echo "iface ${WIFI_INTERFACE} inet manual" >> /etc/network/interfaces.d/wifi
@@ -376,8 +374,13 @@ function wifi_none {
 
     wifi_store_original_network_settings
 
-    echo 'allow-hotplug eth0' > /etc/network/interfaces.d/static
-    echo 'iface eth0 inet dhcp' >> /etc/network/interfaces.d/static
+    network_device_name=$(ls /sys/class/net | grep "en" | head -n 1)
+    if [ ! "${network_device_name}" ]; then
+        network_device_name='enp3s0'
+    fi
+
+    echo "allow-hotplug ${network_device_name}" > /etc/network/interfaces.d/static
+    echo "iface ${network_device_name} inet dhcp" >> /etc/network/interfaces.d/static
 
     echo "allow-hotplug ${WIFI_INTERFACE}" > /etc/network/interfaces.d/wifi
     echo "iface ${WIFI_INTERFACE} inet manual" >> /etc/network/interfaces.d/wifi
@@ -412,8 +415,13 @@ function networks_from_file {
 
     wifi_store_original_network_settings
 
-    echo 'allow-hotplug eth0' > /etc/network/interfaces.d/static
-    echo 'iface eth0 inet dhcp' >> /etc/network/interfaces.d/static
+    network_device_name=$(ls /sys/class/net | grep "en" | head -n 1)
+    if [ ! "${network_device_name}" ]; then
+        network_device_name='enp3s0'
+    fi
+
+    echo "allow-hotplug ${network_device_name}" > /etc/network/interfaces.d/static
+    echo "iface ${network_device_name} inet dhcp" >> /etc/network/interfaces.d/static
 
     { echo "allow-hotplug ${WIFI_INTERFACE}";
       echo "iface ${WIFI_INTERFACE} inet manual";

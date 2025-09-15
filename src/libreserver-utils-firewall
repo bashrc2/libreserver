@@ -33,7 +33,13 @@ FIREWALL_DOMAINS=$HOME/${PROJECT_NAME}-firewall-domains.cfg
 FIREWALL_ALLOW_DOMAINS=$HOME/${PROJECT_NAME}-firewall-allowlist.cfg
 FIREWALL_DOMAINS_MASKED=$HOME/${PROJECT_NAME}-firewall-masked.cfg
 MUTED_WORDS=$HOME/${PROJECT_NAME}-firewall-words.cfg
-FIREWALL_EIFACE=eth0
+
+network_device_name=$(ls /sys/class/net | grep "en" | head -n 1)
+if [ ! "${network_device_name}" ]; then
+    network_device_name='enp3s0'
+fi
+
+FIREWALL_EIFACE=${network_device_name}
 EXTERNAL_IPV4_ADDRESS=
 FIREFOX_TELEMETRY_IP='52.88.27.118'
 FIREFOX_TELEMETRY_IPV6=

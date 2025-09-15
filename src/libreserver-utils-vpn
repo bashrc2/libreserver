@@ -301,14 +301,19 @@ function wireguard_enable {
     cp /etc/wireguard/publickey "$webadmin_install_dir/vpn_public_key.txt"
     chown www-data:www-data "$webadmin_install_dir/vpn_public_key.txt"
 
+    network_device_name=$(ls /sys/class/net | grep "en" | head -n 1)
+    if [ ! "${network_device_name}" ]; then
+        network_device_name='enp3s0'
+    fi
+
     { echo '[Interface]';
       echo 'Address = 10.100.100.1/24';
       echo 'SaveConfig = true';
       echo "PrivateKey = $(cat /etc/wireguard/privatekey)";
       echo "ListenPort = $WIREGUARD_PORT";
-      echo 'PostUp = /usr/sbin/nft add rule inet filter FORWARD iifname %i counter accept; nft add rule inet filter FORWARD oifname %i counter accept; nft add rule inet nat POSTROUTING oifname eth0 counter masquerade';
+      echo "PostUp = /usr/sbin/nft add rule inet filter FORWARD iifname %i counter accept; nft add rule inet filter FORWARD oifname %i counter accept; nft add rule inet nat POSTROUTING oifname ${network_device_name} counter masquerade";
       echo '';
-      echo 'PostDown = /usr/sbin/nft delete rule inet filter FORWARD iifname %i counter accept; nft delete rule inet filter FORWARD oifname %i counter accept; nft delete rule inet nat POSTROUTING oifname eth0 counter masquerade'; } > /tmp/wg0.conf
+      echo "PostDown = /usr/sbin/nft delete rule inet filter FORWARD iifname %i counter accept; nft delete rule inet filter FORWARD oifname %i counter accept; nft delete rule inet nat POSTROUTING oifname ${network_device_name} counter masquerade"; } > /tmp/wg0.conf
 
     vpn_file="$webadmin_install_dir/.vpn.txt"
     if [ -f "$vpn_file" ]; then

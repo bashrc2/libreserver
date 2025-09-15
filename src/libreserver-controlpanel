@@ -1266,12 +1266,18 @@ Enter a static local IP address for this system.\\n\\nIt will typically be ${IPv
                 # wired network
                 remove_wifi_startup_script
 
-                { echo 'auto eth0';
-                  echo 'allow-hotplug eth0';
-                  echo 'iface eth0 inet static';
+                network_device_name=$(ls /sys/class/net | grep "en" | head -n 1)
+                if [ ! "${network_device_name}" ]; then
+                    network_device_name='enp3s0'
+                fi
+
+                { echo "auto ${network_device_name}";
+                  echo "allow-hotplug ${network_device_name}";
+                  echo "iface ${network_device_name} inet static";
                   echo "    address ${NEW_STATIC_IP}";
                   echo '    netmask 255.255.255.0';
                   echo "    gateway ${NEW_STATIC_GATEWAY}"; } > /etc/network/interfaces.d/static
+
                 if [ -f /etc/network/interfaces.d/dynamic ]; then
                     rm /etc/network/interfaces.d/dynamic
                 fi

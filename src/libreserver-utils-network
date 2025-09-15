@@ -74,9 +74,14 @@ function install_static_network {
 
     if [ ! $LOCAL_NETWORK_STATIC_IP_ADDRESS ]; then
 
-        { echo 'auto eth0';
-          echo 'allow-hotplug eth0';
-          echo 'iface eth0 inet dhcp'; } > /etc/network/interfaces.d/dynamic
+        network_device_name=$(ls /sys/class/net | grep "en" | head -n 1)
+        if [ ! "${network_device_name}" ]; then
+            network_device_name='enp3s0'
+        fi
+
+        { echo "auto ${network_device_name}";
+          echo "allow-hotplug ${network_device_name}";
+          echo "iface ${network_device_name} inet dhcp"; } > /etc/network/interfaces.d/dynamic
 
         if [ -f /etc/network/interfaces.d/static ]; then
             rm /etc/network/interfaces.d/static
@@ -86,9 +91,14 @@ function install_static_network {
         return
     fi
 
-    { echo 'auto eth0';
-      echo 'allow-hotplug eth0';
-      echo 'iface eth0 inet static';
+    network_device_name=$(ls /sys/class/net | grep "en" | head -n 1)
+    if [ ! "${network_device_name}" ]; then
+        network_device_name='enp3s0'
+    fi
+
+    { echo "auto ${network_device_name}";
+      echo "allow-hotplug ${network_device_name}";
+      echo "iface ${network_device_name} inet static";
       echo "    address $LOCAL_NETWORK_STATIC_IP_ADDRESS";
       echo '    netmask 255.255.255.0';
       echo "    gateway $ROUTER_IP_ADDRESS"; } > /etc/network/interfaces.d/static

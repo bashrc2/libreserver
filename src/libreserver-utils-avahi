@@ -72,10 +72,12 @@ function mesh_avahi {
     #       *.local address will not resolve
 
     sed -i "s|#allow-interfaces|allow-interfaces|g" "$rootdir/etc/avahi/avahi-daemon.conf"
-    sed -i "s|allow-interfaces=.*|allow-interfaces=wlan0, wlan1, wlan2, wlan3, wlan4, wlan5, eth0, eth1|g" "$rootdir/etc/avahi/avahi-daemon.conf"
+    network_device_name=$(ls /sys/class/net | grep "en" | head -n 1)
+    if [ ! "${network_device_name}" ]; then
+        network_device_name='enp3s0'
+    fi
+    sed -i "s|allow-interfaces=.*|allow-interfaces=wlan0, wlan1, wlan2, wlan3, wlan4, wlan5, ${network_device_name}|g" "$rootdir/etc/avahi/avahi-daemon.conf"
 
-    #sed -i "s|#deny-interfaces=.*|deny-interfaces=eth0, eth1, eth2, eth3, eth4, eth5|g" "$rootdir/etc/avahi/avahi-daemon.conf"
-    #sed -i "s|deny-interfaces=.*|deny-interfaces=eth0, eth1, eth2, eth3, eth4, eth5|g" "$rootdir/etc/avahi/avahi-daemon.conf"
     sed -i "s|#disallow-other-stacks=.*|disallow-other-stacks=yes|g" "$rootdir/etc/avahi/avahi-daemon.conf"
     sed -i "s|disallow-other-stacks=.*|disallow-other-stacks=yes|g" "$rootdir/etc/avahi/avahi-daemon.conf"
     sed -i "s|#publish_addresses=.*|publish_addresses=yes|g" "$rootdir/etc/avahi/avahi-daemon.conf"
