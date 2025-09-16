@@ -33,7 +33,7 @@ textarea, pre {
 
 /* right links */
 a:link, a:visited, a:hover, a:active {
-    color: #2d4900;
+    color: #111;
 }
 
 /* left links */
@@ -41,7 +41,7 @@ a:link, a:visited, a:hover, a:active {
     color:  #555;
 }
 .leftunseen, .leftspecial, .leftspecial a:link, .leftspecial a:visited, .leftspecial a:hover, .leftspecial a:active {
-    color:  #c95d02;
+    color:  #222;
 }
 .leftnoselect a:link, .leftnoselect a:visited, .leftnoselect a:hover, .leftnoselect a:active {
     color:  #555;
@@ -53,8 +53,8 @@ a:link, a:visited, a:hover, a:active {
 }
 .error_table {
     color: #ff0000;
-    border: 2px solid #bb9d45;
-    background-color: #71360a;
+    border: 2px solid #bbb;
+    background-color: #ccc;
 }
 .error_thead {
     background-color: #76673e;
@@ -67,30 +67,30 @@ a:link, a:visited, a:hover, a:active {
 }
 .error_val {
     color: #000000;
-    border: 2px solid #bb9d45;
+    border: 2px solid #ccc;
 
 }
 .error_key {
-    border: 2px solid #bb9d45;
+    border: 2px solid #ccc;
     color: #ff0000;
-    background-color: #bb9d45;
+    background-color: #ccc;
 }
 
 /* Standard defs */
 table.table1    {
-    border: 1px solid #bb9d45;
+    border: 1px solid #ccc;
 }
 table.table2    {
-    border: 1px solid #9ca147;
+    border: 1px solid #bbb;
 }
 td.header1  {
-    background: #bb9d45;
+    background: #ccc;
 }
 td.header2  {
-    background: #9ca147;
+    background: #bbb;
 }
 td.header4  {
-    background: #c95d02;
+    background: #ccc;
 }
 tr.even {
     background: #ebebeb;
@@ -99,14 +99,14 @@ tr.odd  {
     background: #ffffff;
 }
 .table_standard {
-    border:1px solid #bb9d45;
+    border:1px solid #ccc;
 }
 
 .sqm_loginOrgName, .sqm_signoutBar {
-    background: #bb9d45;
+    background: #ccc;
 }
 .sqm_motd {
-    background: #9ca147;
+    background: #bbb;
 }
 .sqm_motd td {
     background: #ffffff;
@@ -114,7 +114,7 @@ tr.odd  {
 
 /* empty_folder.tpl defs */
 .sqm_emptyFolder {
-    background: #9ca147;
+    background: #bbb;
 }
 .sqm_emptyFolder td {
     background: #ffffff;
@@ -122,10 +122,10 @@ tr.odd  {
 
 /* error_box.tpl definitions */
 .table_errorBoxWrapper   {
-    background: #9ca147;
+    background: #bbb;
 }
 .table_errorBox  {
-    background: #bb9d45;
+    background: #ccc;
 }
 .error_message {
     background: #ffffff;
@@ -133,31 +133,31 @@ tr.odd  {
 
 /* page_header.tpl definitions */
 .sqm_currentFolder  {
-    background: #9ca147;
+    background: #bbb;
 }
 .sqm_headerSignout  {
-    background: #9ca147;
+    background: #bbb;
 }
 
 /* message_list.tpl definitions */
 .table_messageListWrapper   {
-    background: #9ca147;
+    background: #bbb;
 }
 
 .table_messageList  {
-    background: #c95d02;
+    background: #ccc;
 }
 .table_messageList td.spacer {
-    background: #bb9d45;
+    background: #ccc;
 }
 .table_messageList  tr.mouse_over   {
-    background: #c95d02;
+    background: #ccc;
 }
 .table_messageList  tr.clicked  {
-    background: #ff9933;
+    background: #eee;
 }
 .deleted    {
-    color: #9ca147;
+    color: #bbb;
 }
 .flagged    {
     color: #cc0000;
@@ -169,7 +169,7 @@ tr.odd  {
     color: #000000;
 }
 .message_list_controls {
-    background: #bb9d45;
+    background: #ccc;
 }
 .spacer {
     background: #ffffff;
@@ -177,58 +177,58 @@ tr.odd  {
 
 /* dialog box defs */
 .dialogbox   table.wrapper   {
-    border: 1px solid #bb9d45;
+    border: 1px solid #ccc;
 }
 .dialogbox   td.folderAction {
-    background: #bb9d45;
+    background: #ccc;
 }
 
 /* addressbook_list.tpl defs */
 #addressList    table   {
-    border: 1px solid #9ca147;
+    border: 1px solid #bbb;
 }
 #addressList    td.header1  {
-    background: #9ca147;
+    background: #bbb;
 }
 #addressList    td.abookSwitch  {
-    background: #bb9d45;
+    background: #ccc;
 }
 
 #addressList    td.abookButtons  {
-    background: #bb9d45;
+    background: #ccc;
 }
 #addressList    td.abookField   {
-    border-left: 1px solid #9ca147;
-    border-right: 1px solid #9ca147;
+    border-left: 1px solid #bbb;
+    border-right: 1px solid #bbb;
 }
 #addressList    td.colHeader {
-    background: #9ca147;
+    background: #bbb;
 }
 #addrBookSearch   table.wrapper   {
-    border: 1px solid #9ca147;
+    border: 1px solid #bbb;
 }
 #addrAddEdit    table   {
-    border: 1px solid #9ca147;
+    border: 1px solid #bbb;
 }
 #addrAddEdit    td.header   {
-    background: #9ca147;
+    background: #bbb;
 }
 
 /* options defs */
 #optionGroups   table   {
-    border: 1px solid #bb9d45;
+    border: 1px solid #ccc;
 }
 #optionGroups   td.title    {
-    background: #bb9d45;
+    background: #ccc;
 }
 #optionGroups   td.optionElement    table   {
-    border:1px solid #9ca147;
+    border:1px solid #bbb;
 }
 #optionGroups   td.optionName   {
-    background: #9ca147;
+    background: #bbb;
 }
 #optionGroups   td.optionDesc   {
-    background: #bb9d45;
+    background: #ccc;
 }
 #optionDisplay  table   {
     border: 1px solid #bb9d45
@@ -237,42 +237,42 @@ tr.odd  {
     border: 1px solid #bb9d45
 }
 #optionOrder    table.moveFields    td  {
-    border-left: 1px solid #bb9d45;
-    border-right: 1px solid #bb9d45;
+    border-left: 1px solid #ccc;
+    border-right: 1px solid #ccc;
 }
 #optionsIdentity    table.table2 tr  {
-    background: #bb9d45;
+    background: #ccc;
 }
 #optionsIdentity hr  {
     width: 95%;
-    border: 1px solid #9ca147;
+    border: 1px solid #bbb;
 }
 
 /* help defs */
 #help   td.nav  {
-    color: #bb9d45;
+    color: #ccc;
 }
 
 /* search defs */
 div.search td.header4  {
-    border-bottom: 1px solid #9ca147;
+    border-bottom: 1px solid #bbb;
 }
 div.search td.queryAction {
-    border-left: 1px solid #9ca147;
-    border-top: 1px solid #9ca147;
-    border-bottom: 1px solid #9ca147;
+    border-left: 1px solid #bbb;
+    border-top: 1px solid #bbb;
+    border-bottom: 1px solid #bbb;
 }
 
 div.search td.queryDesc  {
-    border-top: 1px solid #9ca147;
-    border-bottom: 1px solid #9ca147;
+    border-top: 1px solid #bbb;
+    border-bottom: 1px solid #bbb;
 }
 div.search span.error  {
     color: #cc0000;
 }
 div.search td.searchForm  {
-    border-right: 1px solid #bb9d45;
-    border-left: 1px solid #bb9d45;
+    border-right: 1px solid #ccc;
+    border-left: 1px solid #ccc;
 }
 div.search td.queryError {
     color: #cc0000;
@@ -283,15 +283,15 @@ div.search h2 {
 
 /* compse defs */
 div.compose tr.header {
-    background: #9ca147;
+    background: #bbb;
 }
 div.compose tr.attachment td {
-    background: #bb9d45;
-    border-top: 1px solid #9ca147;
-    border-bottom: 1px solid #9ca147;
+    background: #ccc;
+    border-top: 1px solid #bbb;
+    border-bottom: 1px solid #bbb;
 }
 
 div.compose table.close {
-    background: #bb9d45;
-    border:1px solid #9ca147;
+    background: #ccc;
+    border:1px solid #bbb;
 }
