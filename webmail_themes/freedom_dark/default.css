@@ -49,11 +49,11 @@ a:link, a:visited, a:hover, a:active {
 
 /* highlighted texts */
 .highlight {
-    color:  #ffffff;
+    color:  #bbb;
 }
 .error_table {
     color: #ff0000;
-    border: 2px solid #bb9d45;
+    border: 2px solid #444;
     background-color: #222;
 }
 .error_thead {
@@ -67,46 +67,46 @@ a:link, a:visited, a:hover, a:active {
 }
 .error_val {
     color: #000000;
-    border: 2px solid #bb9d45;
+    border: 2px solid #444;
 
 }
 .error_key {
-    border: 2px solid #bb9d45;
+    border: 2px solid #444;
     color: #ff0000;
     background-color: #222;
 }
 
 /* Standard defs */
 table.table1    {
-    border: 1px solid #bb9d45;
+    border: 1px solid #444;
 }
 table.table2    {
-    border: 1px solid #9ca147;
+    border: 1px solid #555;
 }
 td.header1  {
-    background: #bb9d45;
+    background: #444;
 }
 td.header2  {
-    background: #9ca147;
+    background: #555;
 }
 td.header4  {
-    background: #c95d02;
+    background: #666;
 }
 tr.even {
-    background: #ebebeb;
+    background: #222
 }
 tr.odd  {
-    background: #ffffff;
+    background: #222;
 }
 .table_standard {
-    border:1px solid #bb9d45;
+    border:1px solid #444;
 }
 
 .sqm_loginOrgName, .sqm_signoutBar {
-    background: #bb9d45;
+    background: #444;
 }
 .sqm_motd {
-    background: #9ca147;
+    background: #555;
 }
 .sqm_motd td {
     background: #ffffff;
@@ -122,10 +122,10 @@ tr.odd  {
 
 /* error_box.tpl definitions */
 .table_errorBoxWrapper   {
-    background: #9ca147;
+    background: #555;
 }
 .table_errorBox  {
-    background: #bb9d45;
+    background: #444;
 }
 .error_message {
     background: #ffffff;
@@ -133,7 +133,7 @@ tr.odd  {
 
 /* page_header.tpl definitions */
 .sqm_currentFolder  {
-    background: #aaa;
+    background: #777;
 }
 .sqm_headerSignout  {
     background: #aaa;
@@ -141,23 +141,23 @@ tr.odd  {
 
 /* message_list.tpl definitions */
 .table_messageListWrapper   {
-    background: #9ca147;
+    background: #555;
 }
 
 .table_messageList  {
-    background: #c95d02;
+    background: #666;
 }
 .table_messageList td.spacer {
-    background: #bb9d45;
+    background: #444;
 }
 .table_messageList  tr.mouse_over   {
-    background: #c95d02;
+    background: #666;
 }
 .table_messageList  tr.clicked  {
-    background: #ff9933;
+    background: #666;
 }
 .deleted    {
-    color: #9ca147;
+    color: #555;
 }
 .flagged    {
     color: #cc0000;
@@ -169,7 +169,7 @@ tr.odd  {
     color: #000000;
 }
 .message_list_controls {
-    background: #bb9d45;
+    background: #444;
 }
 .spacer {
     background: #ffffff;
@@ -177,102 +177,102 @@ tr.odd  {
 
 /* dialog box defs */
 .dialogbox   table.wrapper   {
-    border: 1px solid #bb9d45;
+    border: 1px solid #444;
 }
 .dialogbox   td.folderAction {
-    background: #bb9d45;
+    background: #444;
 }
 
 /* addressbook_list.tpl defs */
 #addressList    table   {
-    border: 1px solid #9ca147;
+    border: 1px solid #555;
 }
 #addressList    td.header1  {
-    background: #9ca147;
+    background: #555;
 }
 #addressList    td.abookSwitch  {
-    background: #bb9d45;
+    background: #444;
 }
 
 #addressList    td.abookButtons  {
-    background: #bb9d45;
+    background: #444;
 }
 #addressList    td.abookField   {
-    border-left: 1px solid #9ca147;
-    border-right: 1px solid #9ca147;
+    border-left: 1px solid #555;
+    border-right: 1px solid #555;
 }
 #addressList    td.colHeader {
-    background: #9ca147;
+    background: #555;
 }
 #addrBookSearch   table.wrapper   {
-    border: 1px solid #9ca147;
+    border: 1px solid #555;
 }
 #addrAddEdit    table   {
-    border: 1px solid #9ca147;
+    border: 1px solid #555;
 }
 #addrAddEdit    td.header   {
-    background: #9ca147;
+    background: #555;
 }
 
 /* options defs */
 #optionGroups   table   {
-    border: 1px solid #bb9d45;
+    border: 1px solid #444;
 }
 #optionGroups   td.title    {
     background: #222;
 }
 #optionGroups   td.optionElement    table   {
-    border:1px solid #9ca147;
+    border:1px solid #555;
 }
 #optionGroups   td.optionName   {
-    background: #9ca147;
+    background: #555;
 }
 #optionGroups   td.optionDesc   {
-    background: #bb9d45;
+    background: #444;
 }
 #optionDisplay  table   {
-    border: 1px solid #bb9d45
+    border: 1px solid #444
 }
 #optionOrder    table   {
-    border: 1px solid #bb9d45
+    border: 1px solid #444
 }
 #optionOrder    table.moveFields    td  {
-    border-left: 1px solid #bb9d45;
-    border-right: 1px solid #bb9d45;
+    border-left: 1px solid #444;
+    border-right: 1px solid #444;
 }
 #optionsIdentity    table.table2 tr  {
-    background: #bb9d45;
+    background: #444;
 }
 #optionsIdentity hr  {
     width: 95%;
-    border: 1px solid #9ca147;
+    border: 1px solid #555;
 }
 
 /* help defs */
 #help   td.nav  {
-    color: #bb9d45;
+    color: #444;
 }
 
 /* search defs */
 div.search td.header4  {
-    border-bottom: 1px solid #9ca147;
+    border-bottom: 1px solid #555;
 }
 div.search td.queryAction {
-    border-left: 1px solid #9ca147;
-    border-top: 1px solid #9ca147;
-    border-bottom: 1px solid #9ca147;
+    border-left: 1px solid #555;
+    border-top: 1px solid #555;
+    border-bottom: 1px solid #555;
 }
 
 div.search td.queryDesc  {
-    border-top: 1px solid #9ca147;
-    border-bottom: 1px solid #9ca147;
+    border-top: 1px solid #555;
+    border-bottom: 1px solid #555;
 }
 div.search span.error  {
     color: #cc0000;
 }
 div.search td.searchForm  {
-    border-right: 1px solid #bb9d45;
-    border-left: 1px solid #bb9d45;
+    border-right: 1px solid #444;
+    border-left: 1px solid #444;
 }
 div.search td.queryError {
     color: #cc0000;
@@ -283,15 +283,23 @@ div.search h2 {
 
 /* compse defs */
 div.compose tr.header {
-    background: #9ca147;
+    background: #555;
 }
 div.compose tr.attachment td {
-    background: #bb9d45;
-    border-top: 1px solid #9ca147;
-    border-bottom: 1px solid #9ca147;
+    background: #444;
+    border-top: 1px solid #555;
+    border-bottom: 1px solid #555;
 }
 
 div.compose table.close {
-    background: #bb9d45;
-    border:1px solid #9ca147;
+    background: #444;
+    border:1px solid #555;
+}
+
+div.readHeaders table.table2 {
+        background: #333;
+}
+
+div.readMenuBar td {
+        background: #333;
 }
