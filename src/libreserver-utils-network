@@ -132,10 +132,12 @@ function get_ipv4_address {
 function get_ipv6_address {
     retval=$(ip -6 addr | grep "inet6" | grep "fe80" | awk -F ' ' '{print $2}' 2> /dev/null)
     echo "$retval"
+}
 
 function get_external_ipv6_address {
     retval=$(ip -6 addr show scope global | grep "inet6" | tail -n 1 | awk -F ' ' '{print $2}' 2> /dev/null)
     echo "$retval"
+}
 
 function update_external_ip {
     if [ ! -f /usr/bin/curl ]; then
