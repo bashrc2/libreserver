@@ -125,14 +125,17 @@ function get_external_ipv4_address {
 }
 
 function get_ipv4_address {
-    IPv4dev=$(ip route get $IPV4_ADDRESS_TEST_DESTINATION | awk '{for(i=1;i<=NF;i++)if($i~/dev/)print $(i+1)}')
+    IPv4dev=$(ip route get ${IPV4_ADDRESS_TEST_DESTINATION} | awk '{for(i=1;i<=NF;i++)if($i~/dev/)print $(i+1)}')
     ip -o -f inet addr show dev "$IPv4dev" | awk '{print $4}' | awk 'END {print}' | awk -F '/' '{print $1}'
 }
 
 function get_ipv6_address {
-    retval=$(ip -6 route get $IPV6_ADDRESS_TEST_DESTINATION 2> /dev/null)
-    echo "$retval" | awk -F " " '{ for(i=1;i<=NF;i++) if ($i == "src") print $(i+1) }'
-}
+    retval=$(ip -6 addr | grep "inet6" | grep "fe80" | awk -F ' ' '{print $2}' 2> /dev/null)
+    echo "$retval"
+
+function get_external_ipv6_address {
+    retval=$(ip -6 addr show scope global | grep "inet6" | tail -n 1 | awk -F ' ' '{print $2}' 2> /dev/null)
+    echo "$retval"
 
 function update_external_ip {
     if [ ! -f /usr/bin/curl ]; then

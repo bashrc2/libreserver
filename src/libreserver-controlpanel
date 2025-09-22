@@ -216,8 +216,13 @@ function show_domains {
 
         W+=("IPv4" "$(get_ipv4_address) / $(get_external_ipv4_address)")
         ipv6_address="$(get_ipv6_address)"
+        ipv6_external_address="$(get_external_ipv6_address)"
         if [ ${#ipv6_address} -gt 0 ]; then
-            W+=("IPv6" "${ipv6_address}")
+            if [ ${#ipv6_external_address} -gt 0 ]; then
+                W+=("IPv6" "${ipv6_address} / ${ipv6_external_address}")
+            else
+                W+=("IPv6" "${ipv6_address}")
+            fi
         fi
 
         if [ ! -f /usr/bin/xxd ]; then
