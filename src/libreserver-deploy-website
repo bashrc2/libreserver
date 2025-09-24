@@ -326,11 +326,11 @@ if [ -d "${rootdir}${epicyon_dir}/website/EN" ]; then
 	          epicyon_dir="${rootdir}/opt/epicyon"
 	      fi
 	      if [ -d "$epicyon_dir" ]; then
-	          if [ ! -d "${dest_dir}/epicyon" ]; then
-		            mkdir "${dest_dir}/epicyon"
+	          if [ ! -d "${dest_dir}/epicyon/img" ]; then
+		            mkdir -p "${dest_dir}/epicyon/img"
 	          fi
 	          cp -r "${rootdir}${epicyon_dir}/website/EN"/* "${dest_dir}/epicyon"
-	          cp -r "${rootdir}${epicyon_dir}/img"/* "${dest_dir}/epicyon/"
+	          cp -r "${rootdir}${epicyon_dir}/img"/* "${dest_dir}/epicyon/img/"
 	          chown -R www-data:www-data $dest_dir
 	          echo "Epicyon website copied to https://libreserver.org/epicyon"
 	      fi
