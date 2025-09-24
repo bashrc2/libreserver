@@ -326,8 +326,8 @@ if [ -d "${rootdir}${epicyon_dir}/website/EN" ]; then
 	          epicyon_dir="${rootdir}/opt/epicyon"
 	      fi
 	      if [ -d "${epicyon_dir}" ]; then
-	          if [ ! -d "${dest_dir}/epicyon/img" ]; then
-		            mkdir -p "${dest_dir}/epicyon/img"
+	          if [ ! -d "${dest_dir}/epicyon/img/icons" ]; then
+		            mkdir -p "${dest_dir}/epicyon/img/icons"
 	          fi
 	          cp -r "${rootdir}${epicyon_dir}/website/EN"/* "${dest_dir}/epicyon"
 	          cp -r "${rootdir}${epicyon_dir}/img"/* "${dest_dir}/epicyon/img/"
