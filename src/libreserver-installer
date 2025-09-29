@@ -269,14 +269,14 @@ function check_resolvconf {
 function set_default_language {
     # If the language hasn't been set then create a default
     set_language=
-    if grep -q 'DEFAULT_LANGUAGE=C.UTF-8' "$CONFIGURATION_FILE"; then
+    if grep -q 'DEFAULT_LANGUAGE=C.UTF-8' "${CONFIGURATION_FILE}"; then
         set_language=1
     fi
-    if ! grep -q 'DEFAULT_LANGUAGE=' "$CONFIGURATION_FILE"; then
+    if ! grep -q 'DEFAULT_LANGUAGE=' "${CONFIGURATION_FILE}"; then
         set_language=1
     fi
     if [ $set_language ]; then
-        sed -i 's|DEFAULT_LANGUAGE=.*|DEFAULT_LANGUAGE=en_GB.UTF-8|g' "$CONFIGURATION_FILE"
+        sed -i 's|DEFAULT_LANGUAGE=.*|DEFAULT_LANGUAGE=en_GB.UTF-8|g' "${CONFIGURATION_FILE}"
         /usr/local/bin/${PROJECT_NAME}-language "en_GB.UTF-8"
     fi
 }
@@ -658,7 +658,7 @@ function web_admin_create_app_descriptions {
     for filename in $FILES
     do
         app_name=$(echo "${filename}" | awk -F '-app-' '{print $2}')
-        app_name_upper=$(echo "$app_name" | awk '{print toupper($0)}')
+        app_name_upper=$(echo "${app_name}" | awk '{print toupper($0)}')
 
         if grep -q "${app_name_upper}_SHORT_DESCRIPTION=" "${filename}"; then
             app_short_description=$(grep "${app_name_upper}_SHORT_DESCRIPTION=" "${filename}" | head -n 1 | awk -F '=' '{print $2}' | sed 's/\$//g' | sed 's/"//g' | sed "s/'//g")
@@ -850,10 +850,10 @@ function check_number_of_connections {
 }
 
 function web_admin_translate {
-    if ! grep -q 'DEFAULT_LANGUAGE=' "$CONFIGURATION_FILE"; then
+    if ! grep -q 'DEFAULT_LANGUAGE=' "${CONFIGURATION_FILE}"; then
         return
     fi
-    language=$(grep 'DEFAULT_LANGUAGE=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+    language=$(grep 'DEFAULT_LANGUAGE=' "${CONFIGURATION_FILE}" | head -n 1 | awk -F '=' '{print $2}')
     if [ ! "$language" ]; then
         return
     fi
@@ -1101,11 +1101,11 @@ function web_admin_onion_only {
     # In onion only mode domain names or ddns codes
     # don't need to be provided
 
-    if ! grep -q 'ONION_ONLY=' "$CONFIGURATION_FILE"; then
+    if ! grep -q 'ONION_ONLY=' "${CONFIGURATION_FILE}"; then
         return
     fi
 
-    ONION_ONLY=$(grep 'ONION_ONLY=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+    ONION_ONLY=$(grep 'ONION_ONLY=' "${CONFIGURATION_FILE}" | head -n 1 | awk -F '=' '{print $2}')
 
     if [ ! "$ONION_ONLY" ]; then
         ONION_ONLY='no'
@@ -1164,10 +1164,10 @@ function web_admin_create_add_apps_category {
     do
         app_name=$(echo "${filename}" | awk -F '-app-' '{print $2}')
 
-        if [[ $(enough_ram_for_app "$app_name") == "0" ]]; then
-            if [[ $(app_not_on_onion_only "$app_name") != "0" ]]; then
-                if [[ $(app_not_on_arm "$app_name") != "0" ]]; then
-                    if [[ $(app_not_in_webadmin "$app_name") != "0" ]]; then
+        if [[ $(enough_ram_for_app "${app_name}") == "0" ]]; then
+            if [[ $(app_not_on_onion_only "${app_name}") != "0" ]]; then
+                if [[ $(app_not_on_arm "${app_name}") != "0" ]]; then
+                    if [[ $(app_not_in_webadmin "${app_name}") != "0" ]]; then
 
                         app_is_installed=
 
@@ -1182,9 +1182,9 @@ function web_admin_create_add_apps_category {
 
                         if [ ! $app_is_installed ]; then
                             app_filename="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-${app_name}"
-                            if [ -f "$app_filename" ]; then
+                            if [ -f "${app_filename}" ]; then
                                 # does this app have a category?
-                                if ! grep -q 'APP_CATEGORY=' "$app_filename"; then
+                                if ! grep -q 'APP_CATEGORY=' "${app_filename}"; then
                                     if [[ "$category" != 'other' ]]; then
                                         app_index=$((app_index+1))
                                         continue
@@ -1192,15 +1192,15 @@ function web_admin_create_add_apps_category {
                                 fi
 
                                 # Does this app belong in the current category?
-                                if ! grep -q "APP_CATEGORY=$category" "$app_filename"; then
+                                if ! grep -q "APP_CATEGORY=$category" "${app_filename}"; then
                                     app_index=$((app_index+1))
                                     continue
                                 fi
 
-                                if grep -q "VARIANTS=''" "$app_filename"; then
+                                if grep -q "VARIANTS=''" "${app_filename}"; then
                                     continue
                                 fi
-                                if grep -q 'VARIANTS=""' "$app_filename"; then
+                                if grep -q 'VARIANTS=""' "${app_filename}"; then
                                     continue
                                 fi
                                 # get the icon for the app
@@ -1211,23 +1211,23 @@ function web_admin_create_add_apps_category {
                                     continue
                                 fi
 
-                                app_name_upper=$(echo "$app_name" | awk '{print toupper($0)}')
+                                app_name_upper=$(echo "${app_name}" | awk '{print toupper($0)}')
                                 DESCRIPTION=
 
-                                if ! grep -q "${app_name_upper}_SHORT_DESCRIPTION=" "$app_filename"; then
+                                if ! grep -q "${app_name_upper}_SHORT_DESCRIPTION=" "${app_filename}"; then
                                     continue
                                 fi
-                                if grep -q "#${app_name_upper}_SHORT_DESCRIPTION=" "$app_filename"; then
+                                if grep -q "#${app_name_upper}_SHORT_DESCRIPTION=" "${app_filename}"; then
                                     continue
                                 fi
 
-                                SHORT_DESCRIPTION="$(grep "${app_name_upper}_SHORT_DESCRIPTION=" "$app_filename" | head -n 1 | sed 's|\$||g' | sed "s|'||g" | sed 's|\"||g' | awk -F '=' '{print $2}')"
+                                SHORT_DESCRIPTION="$(grep "${app_name_upper}_SHORT_DESCRIPTION=" "${app_filename}" | head -n 1 | sed 's|\$||g' | sed "s|'||g" | sed 's|\"||g' | awk -F '=' '{print $2}')"
                                 translated_short_description=$(web_admin_translate_text "$SHORT_DESCRIPTION")
                                 SHORT_DESCRIPTION="$translated_short_description"
                                 app_title="${SHORT_DESCRIPTION}"
 
-                                if grep -q "${app_name_upper}_DESCRIPTION=" "$app_filename"; then
-                                    DESCRIPTION="$(grep "${app_name_upper}_DESCRIPTION=" "$app_filename" | head -n 1 | sed 's|\$||g' | sed "s|'||g" | sed 's|\"||g' | awk -F '=' '{print $2}')"
+                                if grep -q "${app_name_upper}_DESCRIPTION=" "${app_filename}"; then
+                                    DESCRIPTION="$(grep "${app_name_upper}_DESCRIPTION=" "${app_filename}" | head -n 1 | sed 's|\$||g' | sed "s|'||g" | sed 's|\"||g' | awk -F '=' '{print $2}')"
 
                                     translated_description=$(web_admin_translate_text "$DESCRIPTION")
                                     DESCRIPTION="$translated_description"
@@ -1346,8 +1346,8 @@ function web_admin_create_add_apps_category {
 }
 
 function web_admin_create_add_apps {
-    if grep -q 'ONION_ONLY=' "$CONFIGURATION_FILE"; then
-        ONION_ONLY=$(grep 'ONION_ONLY=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+    if grep -q 'ONION_ONLY=' "${CONFIGURATION_FILE}"; then
+        ONION_ONLY=$(grep 'ONION_ONLY=' "${CONFIGURATION_FILE}" | head -n 1 | awk -F '=' '{print $2}')
     else
         ONION_ONLY='no'
     fi
@@ -1631,10 +1631,10 @@ function web_admin_setup_login {
     web_admin_create_user "$webadmin_user" "$webadmin_password"
 
     # ensure that username is set
-    if ! grep -q "MY_USERNAME=$webadmin_user" "$CONFIGURATION_FILE"; then
-        echo "MY_USERNAME=$webadmin_user" >> "$CONFIGURATION_FILE"
+    if ! grep -q "MY_USERNAME=$webadmin_user" "${CONFIGURATION_FILE}"; then
+        echo "MY_USERNAME=$webadmin_user" >> "${CONFIGURATION_FILE}"
     else
-        sed -i "s|MY_USERNAME=.*|MY_USERNAME=$webadmin_user|g" "$CONFIGURATION_FILE"
+        sed -i "s|MY_USERNAME=.*|MY_USERNAME=$webadmin_user|g" "${CONFIGURATION_FILE}"
     fi
 
     # create a password for users
@@ -1662,7 +1662,7 @@ function web_admin_setup_login {
 
     # if initial setup has not yet happened then create
     # a password file
-    if ! grep -q 'install_final' "$COMPLETION_FILE"; then
+    if ! grep -q 'install_final' "${COMPLETION_FILE}"; then
         if [ ! -f /root/.manualinstall ]; then
             echo -n "$webadmin_password" > ${IMAGE_PASSWORD_FILE}
         fi
@@ -1808,8 +1808,8 @@ function run_setup_command {
       echo "echo \"Beginning install \$(date)\" > ${webadmin_install_dir}/log.txt";
       echo "chown www-data:www-data ${webadmin_install_dir}/log.txt";
       echo '';
-      echo "/usr/local/bin/${PROJECT_NAME} -c \"$CONFIGURATION_FILE\" >> ${webadmin_install_dir}/log.txt";
-      echo "if ! grep -q 'install_final' \"$COMPLETION_FILE\"; then";
+      echo "/usr/local/bin/${PROJECT_NAME} -c \"${CONFIGURATION_FILE}\" >> ${webadmin_install_dir}/log.txt";
+      echo "if ! grep -q 'install_final' \"${COMPLETION_FILE}\"; then";
       echo "    chown www-data:www-data ${webadmin_install_dir}/log.txt";
       echo "    echo '$INSTALL_STATE_COMMAND_FAIL' > ${install_state_file}";
       echo '    exit 36';
@@ -1890,7 +1890,7 @@ function before_setup_runs {
         return
     fi
 
-    if grep -q 'install_final' "$COMPLETION_FILE"; then
+    if grep -q 'install_final' "${COMPLETION_FILE}"; then
         return
     fi
 
@@ -1919,48 +1919,48 @@ function before_setup_runs {
     fi
 
     # change the username in the config file
-    if grep -q 'MY_USERNAME=' "$CONFIGURATION_FILE"; then
-        if ! grep -Fxq "MY_USERNAME=$MY_USERNAME" "$CONFIGURATION_FILE"; then
-            sed -i "s|MY_USERNAME=.*|MY_USERNAME=$MY_USERNAME|g" "$CONFIGURATION_FILE"
+    if grep -q 'MY_USERNAME=' "${CONFIGURATION_FILE}"; then
+        if ! grep -Fxq "MY_USERNAME=$MY_USERNAME" "${CONFIGURATION_FILE}"; then
+            sed -i "s|MY_USERNAME=.*|MY_USERNAME=$MY_USERNAME|g" "${CONFIGURATION_FILE}"
         fi
     else
-        echo "MY_USERNAME=$MY_USERNAME" >> "$CONFIGURATION_FILE"
+        echo "MY_USERNAME=$MY_USERNAME" >> "${CONFIGURATION_FILE}"
     fi
 
     # change the full name in the config file
-    if grep -q 'MY_NAME=' "$CONFIGURATION_FILE"; then
-        if ! grep -Fxq "MY_NAME=$MY_USERNAME" "$CONFIGURATION_FILE"; then
-            sed -i "s|MY_NAME=.*|MY_USERNAME=$MY_USERNAME|g" "$CONFIGURATION_FILE"
+    if grep -q 'MY_NAME=' "${CONFIGURATION_FILE}"; then
+        if ! grep -Fxq "MY_NAME=$MY_USERNAME" "${CONFIGURATION_FILE}"; then
+            sed -i "s|MY_NAME=.*|MY_USERNAME=$MY_USERNAME|g" "${CONFIGURATION_FILE}"
         fi
     else
-        echo "MY_NAME=$MY_USERNAME" >> "$CONFIGURATION_FILE"
+        echo "MY_NAME=$MY_USERNAME" >> "${CONFIGURATION_FILE}"
     fi
 
     # change the default domain in the config file
-    if grep -q 'DEFAULT_DOMAIN_NAME=' "$CONFIGURATION_FILE"; then
-        if ! grep -Fxq "DEFAULT_DOMAIN_NAME=$DEFAULT_DOMAIN_NAME" "$CONFIGURATION_FILE"; then
-            sed -i "s|DEFAULT_DOMAIN_NAME=.*|DEFAULT_DOMAIN_NAME=$DEFAULT_DOMAIN_NAME|g" "$CONFIGURATION_FILE"
+    if grep -q 'DEFAULT_DOMAIN_NAME=' "${CONFIGURATION_FILE}"; then
+        if ! grep -Fxq "DEFAULT_DOMAIN_NAME=$DEFAULT_DOMAIN_NAME" "${CONFIGURATION_FILE}"; then
+            sed -i "s|DEFAULT_DOMAIN_NAME=.*|DEFAULT_DOMAIN_NAME=$DEFAULT_DOMAIN_NAME|g" "${CONFIGURATION_FILE}"
         fi
     else
-        echo "DEFAULT_DOMAIN_NAME=$DEFAULT_DOMAIN_NAME" >> "$CONFIGURATION_FILE"
+        echo "DEFAULT_DOMAIN_NAME=$DEFAULT_DOMAIN_NAME" >> "${CONFIGURATION_FILE}"
     fi
 
     # ensure that minimal install is set
-    if grep -q 'MINIMAL_INSTALL=' "$CONFIGURATION_FILE"; then
-        if ! grep -Fxq "MINIMAL_INSTALL=yes" "$CONFIGURATION_FILE"; then
-            sed -i 's|MINIMAL_INSTALL=.*|MINIMAL_INSTALL=yes|g' "$CONFIGURATION_FILE"
+    if grep -q 'MINIMAL_INSTALL=' "${CONFIGURATION_FILE}"; then
+        if ! grep -Fxq "MINIMAL_INSTALL=yes" "${CONFIGURATION_FILE}"; then
+            sed -i 's|MINIMAL_INSTALL=.*|MINIMAL_INSTALL=yes|g' "${CONFIGURATION_FILE}"
         fi
     else
-        echo 'MINIMAL_INSTALL=yes' >> "$CONFIGURATION_FILE"
+        echo 'MINIMAL_INSTALL=yes' >> "${CONFIGURATION_FILE}"
     fi
 
     # ensure that no DDNS provider is specified
-    if grep -q 'DDNS_PROVIDER=' "$CONFIGURATION_FILE"; then
-        if ! grep -Fxq "DDNS_PROVIDER=none" "$CONFIGURATION_FILE"; then
-            sed -i 's|DDNS_PROVIDER=.*|DDNS_PROVIDER=none|g' "$CONFIGURATION_FILE"
+    if grep -q 'DDNS_PROVIDER=' "${CONFIGURATION_FILE}"; then
+        if ! grep -Fxq "DDNS_PROVIDER=none" "${CONFIGURATION_FILE}"; then
+            sed -i 's|DDNS_PROVIDER=.*|DDNS_PROVIDER=none|g' "${CONFIGURATION_FILE}"
         fi
     else
-        echo 'DDNS_PROVIDER=none' >> "$CONFIGURATION_FILE"
+        echo 'DDNS_PROVIDER=none' >> "${CONFIGURATION_FILE}"
     fi
 
     run_setup_command
@@ -2075,14 +2075,14 @@ function set_static_ip_address {
             cp "${webadmin_install_dir}/static_ip_template.html" "${webadmin_install_dir}/static_ip.html"
             sed -i "s|STATICIPADDRESS||g" "${webadmin_install_dir}/static_ip.html"
             sed -i "s|GATEWAYADDRESS||g" "${webadmin_install_dir}/static_ip.html"
-            if grep -q "NETWORK_IS_STATIC=" "$CONFIGURATION_FILE"; then
-                sed -i 's|NETWORK_IS_STATIC=.*|NETWORK_IS_STATIC=0|g' "$CONFIGURATION_FILE"
+            if grep -q "NETWORK_IS_STATIC=" "${CONFIGURATION_FILE}"; then
+                sed -i 's|NETWORK_IS_STATIC=.*|NETWORK_IS_STATIC=0|g' "${CONFIGURATION_FILE}"
             fi
-            if grep -q "LOCAL_NETWORK_STATIC_IP_ADDRESS=" "$CONFIGURATION_FILE"; then
-                sed -i '/LOCAL_NETWORK_STATIC_IP_ADDRESS=/d' "$CONFIGURATION_FILE"
+            if grep -q "LOCAL_NETWORK_STATIC_IP_ADDRESS=" "${CONFIGURATION_FILE}"; then
+                sed -i '/LOCAL_NETWORK_STATIC_IP_ADDRESS=/d' "${CONFIGURATION_FILE}"
             fi
-            if grep -q "ROUTER_IP_ADDRESS=" "$CONFIGURATION_FILE"; then
-                sed -i '/ROUTER_IP_ADDRESS=/d' "$CONFIGURATION_FILE"
+            if grep -q "ROUTER_IP_ADDRESS=" "${CONFIGURATION_FILE}"; then
+                sed -i '/ROUTER_IP_ADDRESS=/d' "${CONFIGURATION_FILE}"
             fi
             chown www-data:www-data "${webadmin_install_dir}/static_ip.html"
             systemctl restart network-manager
@@ -2116,20 +2116,20 @@ function set_static_ip_address {
                     cp "${webadmin_install_dir}/static_ip_template.html" "${webadmin_install_dir}/static_ip.html"
                     sed -i "s|STATICIPADDRESS|${new_ip_address}|g" "${webadmin_install_dir}/static_ip.html"
                     sed -i "s|GATEWAYADDRESS|${new_gateway}|g" "${webadmin_install_dir}/static_ip.html"
-                    if grep -q "NETWORK_IS_STATIC=" "$CONFIGURATION_FILE"; then
-                        sed -i 's|NETWORK_IS_STATIC=.*|NETWORK_IS_STATIC=1|g' "$CONFIGURATION_FILE"
+                    if grep -q "NETWORK_IS_STATIC=" "${CONFIGURATION_FILE}"; then
+                        sed -i 's|NETWORK_IS_STATIC=.*|NETWORK_IS_STATIC=1|g' "${CONFIGURATION_FILE}"
                     else
-                        echo 'NETWORK_IS_STATIC=1' >> "$CONFIGURATION_FILE"
+                        echo 'NETWORK_IS_STATIC=1' >> "${CONFIGURATION_FILE}"
                     fi
-                    if grep -q "LOCAL_NETWORK_STATIC_IP_ADDRESS=" "$CONFIGURATION_FILE"; then
-                        sed -i "s|LOCAL_NETWORK_STATIC_IP_ADDRESS=.*|LOCAL_NETWORK_STATIC_IP_ADDRESS=${new_ip_address}|g" "$CONFIGURATION_FILE"
+                    if grep -q "LOCAL_NETWORK_STATIC_IP_ADDRESS=" "${CONFIGURATION_FILE}"; then
+                        sed -i "s|LOCAL_NETWORK_STATIC_IP_ADDRESS=.*|LOCAL_NETWORK_STATIC_IP_ADDRESS=${new_ip_address}|g" "${CONFIGURATION_FILE}"
                     else
-                        echo "LOCAL_NETWORK_STATIC_IP_ADDRESS=${new_ip_address}" >> "$CONFIGURATION_FILE"
+                        echo "LOCAL_NETWORK_STATIC_IP_ADDRESS=${new_ip_address}" >> "${CONFIGURATION_FILE}"
                     fi
-                    if grep -q "ROUTER_IP_ADDRESS=" "$CONFIGURATION_FILE"; then
-                        sed -i "s|ROUTER_IP_ADDRESS=.*|ROUTER_IP_ADDRESS=${new_gateway}|g" "$CONFIGURATION_FILE"
+                    if grep -q "ROUTER_IP_ADDRESS=" "${CONFIGURATION_FILE}"; then
+                        sed -i "s|ROUTER_IP_ADDRESS=.*|ROUTER_IP_ADDRESS=${new_gateway}|g" "${CONFIGURATION_FILE}"
                     else
-                        echo "ROUTER_IP_ADDRESS=${new_gateway}" >> "$CONFIGURATION_FILE"
+                        echo "ROUTER_IP_ADDRESS=${new_gateway}" >> "${CONFIGURATION_FILE}"
                     fi
                     chown www-data:www-data "${webadmin_install_dir}/static_ip.html"
                     systemctl restart network-manager
@@ -2156,17 +2156,17 @@ function install_apps_from_webadmin {
             if [ ! "$app_domain" ]; then
                 app_domain=${app_name}.local
             fi
-            app_name_upper=$(echo "$app_name" | awk '{print toupper($0)}')
+            app_name_upper=$(echo "${app_name}" | awk '{print toupper($0)}')
             if [[ "${app_name_upper}" && "${app_name_upper}" != "DEFAULT" ]]; then
 
                 # indicate that we are installing
                 sed -i "s|${app_name}|${app_name}_running|g" "$pending_installs"
 
                 # Add domain name to the config
-                if grep -q "${app_name_upper}_DOMAIN_NAME=" "$CONFIGURATION_FILE"; then
-                    sed -i "/${app_name_upper}_DOMAIN_NAME=/d" "$CONFIGURATION_FILE"
+                if grep -q "${app_name_upper}_DOMAIN_NAME=" "${CONFIGURATION_FILE}"; then
+                    sed -i "/${app_name_upper}_DOMAIN_NAME=/d" "${CONFIGURATION_FILE}"
                 fi
-                echo "${app_name_upper}_DOMAIN_NAME=${app_domain}" >> "$CONFIGURATION_FILE"
+                echo "${app_name_upper}_DOMAIN_NAME=${app_domain}" >> "${CONFIGURATION_FILE}"
 
                 # remove app from the removed file
                 if grep -Fxq "_${app_name}_" "$REMOVED_APPS_FILE"; then
@@ -2187,7 +2187,7 @@ function install_apps_from_webadmin {
 
                 # Store the name and domain of the app being installed.
                 # This allows the correct nginx config to be removed if the install is cancelled
-                echo "$app_name" > "$currently_installing_app_name"
+                echo "${app_name}" > "$currently_installing_app_name"
                 echo "$app_domain" > "$currently_installing_app_domain"
 
                 # make a script to do the install
@@ -2320,10 +2320,10 @@ function increment_install_progress {
 
 function initiate_automatic_backup {
     backup_hour=3
-    if grep -q "BACKUP_HOUR=" "$CONFIGURATION_FILE"; then
-        backup_hour=$(grep "BACKUP_HOUR=" "$CONFIGURATION_FILE" | awk -F '=' '{print $2}')
+    if grep -q "BACKUP_HOUR=" "${CONFIGURATION_FILE}"; then
+        backup_hour=$(grep "BACKUP_HOUR=" "${CONFIGURATION_FILE}" | awk -F '=' '{print $2}')
     else
-        echo "BACKUP_HOUR=$backup_hour" >> "$CONFIGURATION_FILE"
+        echo "BACKUP_HOUR=$backup_hour" >> "${CONFIGURATION_FILE}"
     fi
 
     curr_hour=$(date +%H)
@@ -2458,7 +2458,7 @@ function restore_app_from_backup {
                     echo -n "$restore_app_password" > /tmp/backup_password.txt
                 fi
 
-                ADMIN_USERNAME=$(grep 'MY_USERNAME=' "$CONFIGURATION_FILE" | awk -F '=' '{print $2}')
+                ADMIN_USERNAME=$(grep 'MY_USERNAME=' "${CONFIGURATION_FILE}" | awk -F '=' '{print $2}')
 
                 webadmin_onion_address=$(cat /var/lib/tor/hidden_service_webadmin/hostname)
                 restore_title=$"Restore app: ${restore_app_name}"
@@ -2513,7 +2513,7 @@ function backup_and_restore {
     if [ -f "$restore_file" ]; then
         rm "$restore_file"
 
-        ADMIN_USERNAME=$(grep 'MY_USERNAME=' "$CONFIGURATION_FILE" | awk -F '=' '{print $2}')
+        ADMIN_USERNAME=$(grep 'MY_USERNAME=' "${CONFIGURATION_FILE}" | awk -F '=' '{print $2}')
 
         webadmin_onion_address=$(cat /var/lib/tor/hidden_service_webadmin/hostname)
         restore_title=$'Restore status'
@@ -2559,7 +2559,7 @@ function backup_and_restore {
         if [ -f "$backup_file" ]; then
             rm "$backup_file"
 
-            ADMIN_USERNAME=$(grep 'MY_USERNAME=' "$CONFIGURATION_FILE" | awk -F '=' '{print $2}')
+            ADMIN_USERNAME=$(grep 'MY_USERNAME=' "${CONFIGURATION_FILE}" | awk -F '=' '{print $2}')
 
             webadmin_onion_address=$(cat /var/lib/tor/hidden_service_webadmin/hostname)
             backup_title=$'Backup status'
@@ -2648,7 +2648,7 @@ function backup_and_restore {
 function backup_and_restore_keys {
     if [ -f "$restore_keys_file" ]; then
         rm "$restore_keys_file"
-        admin_username=$(grep 'MY_USERNAME=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+        admin_username=$(grep 'MY_USERNAME=' "${CONFIGURATION_FILE}" | head -n 1 | awk -F '=' '{print $2}')
         # check_for_existing_processes $restore_keys_script
         { echo "echo \"Beginning webadmin restore keys \$(date)\" > ${webadmin_install_dir}/restore.txt";
           echo "chown www-data:www-data ${webadmin_install_dir}/restore.txt";
@@ -2674,7 +2674,7 @@ function backup_and_restore_keys {
     else
         if [ -f "$backup_keys_file" ]; then
             rm "$backup_keys_file"
-            admin_username=$(grep 'MY_USERNAME=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+            admin_username=$(grep 'MY_USERNAME=' "${CONFIGURATION_FILE}" | head -n 1 | awk -F '=' '{print $2}')
             check_for_existing_processes $backup_keys_script
             { echo "echo \"Beginning webadmin backup keys \$(date)\" > ${webadmin_install_dir}/backup.txt";
               echo "chown www-data:www-data ${webadmin_install_dir}/backup.txt";
@@ -2753,7 +2753,7 @@ function add_remove_users {
                 if valid_username_characters "$remove_username"; then
                     if [ -d "/home/$remove_username" ]; then
                         if [[ $(is_valid_user "$remove_username") == "1" ]]; then
-                            admin_username=$(grep 'MY_USERNAME=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+                            admin_username=$(grep 'MY_USERNAME=' "${CONFIGURATION_FILE}" | head -n 1 | awk -F '=' '{print $2}')
                             if [[ "$remove_username" != "$admin_username" ]]; then
                                 check_for_existing_processes $remove_user_script
                                 { echo "/usr/local/bin/${PROJECT_NAME}-rmuser $remove_username -f > ${webadmin_install_dir}/log.txt";
@@ -2786,7 +2786,7 @@ function webadmin_change_password {
                 if [ -d "/home/$curr_username" ]; then
                     new_password=$(awk -F ',' '{print $2}' < "$temp_password_file")
 
-                    admin_username=$(grep 'MY_USERNAME=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+                    admin_username=$(grep 'MY_USERNAME=' "${CONFIGURATION_FILE}" | head -n 1 | awk -F '=' '{print $2}')
 
                     # change the webadmin login
                     if [[ "$curr_username" == "$admin_username" ]]; then
@@ -3056,7 +3056,7 @@ function update_icecast {
             icecast_genre=$(awk -F ',' '{print $3}' < "$icecast_file")
 
             if [[ "$ICECAST_TITLE" != '' && "$ICECAST_DESCRIPTION" != '' && "$icecast_genre" != '' ]]; then
-                ADMIN_USERNAME=$(grep 'MY_USERNAME=' "$CONFIGURATION_FILE" | awk -F '=' '{print $2}')
+                ADMIN_USERNAME=$(grep 'MY_USERNAME=' "${CONFIGURATION_FILE}" | awk -F '=' '{print $2}')
                 ICECAST_SOURCE_PASSWORD=$("${PROJECT_NAME}-pass" -u "$ADMIN_USERNAME" -a icecastsource)
                 ICECAST_USER_PASSWORD=$("${PROJECT_NAME}-pass" -u "$ADMIN_USERNAME" -a icecastuser)
 
@@ -3326,20 +3326,20 @@ function change_updates_settings {
         if [ "$updates_repo" ]; then
             PROJECT_REPO="$updates_repo"
         fi
-        if grep -q 'PROJECT_REPO=' "$CONFIGURATION_FILE"; then
-            sed -i "s|PROJECT_REPO=.*|PROJECT_REPO=$PROJECT_REPO|g" "$CONFIGURATION_FILE"
+        if grep -q 'PROJECT_REPO=' "${CONFIGURATION_FILE}"; then
+            sed -i "s|PROJECT_REPO=.*|PROJECT_REPO=$PROJECT_REPO|g" "${CONFIGURATION_FILE}"
         else
-            echo "PROJECT_REPO=$PROJECT_REPO" >> "$CONFIGURATION_FILE"
+            echo "PROJECT_REPO=$PROJECT_REPO" >> "${CONFIGURATION_FILE}"
         fi
 
         STABLE_BRANCH=
         if [ "$updates_branch" ]; then
             STABLE_BRANCH="$updates_branch"
         fi
-        if grep -q 'STABLE_BRANCH=' "$CONFIGURATION_FILE"; then
-            sed -i "s|STABLE_BRANCH=.*|STABLE_BRANCH=$STABLE_BRANCH|g" "$CONFIGURATION_FILE"
+        if grep -q 'STABLE_BRANCH=' "${CONFIGURATION_FILE}"; then
+            sed -i "s|STABLE_BRANCH=.*|STABLE_BRANCH=$STABLE_BRANCH|g" "${CONFIGURATION_FILE}"
         else
-            echo "STABLE_BRANCH=$STABLE_BRANCH" >> "$CONFIGURATION_FILE"
+            echo "STABLE_BRANCH=$STABLE_BRANCH" >> "${CONFIGURATION_FILE}"
         fi
 
         # change default checked state for radio button
@@ -3356,8 +3356,8 @@ function change_updates_settings {
         sed -i "s|name=\"updates_branch\".*|name=\"updates_branch\" value=\"$STABLE_BRANCH\">|g" "${webadmin_install_dir}/settings_updates.html"
 
         # if we are updating from the web UI then disable any development branch
-        if grep -q 'DEVELOPMENT_BRANCH=' "$CONFIGURATION_FILE"; then
-            sed '/DEVELOPMENT_BRANCH=/d' "$CONFIGURATION_FILE"
+        if grep -q 'DEVELOPMENT_BRANCH=' "${CONFIGURATION_FILE}"; then
+            sed '/DEVELOPMENT_BRANCH=/d' "${CONFIGURATION_FILE}"
         fi
 
         rm "$settings_updates_file"
@@ -3397,7 +3397,7 @@ function update_enable_ssh {
         fi
 
         ssh_active=$(awk -F ',' '{print $1}' < "$ssh_file")
-        ADMIN_USERNAME=$(grep 'MY_USERNAME=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+        ADMIN_USERNAME=$(grep 'MY_USERNAME=' "${CONFIGURATION_FILE}" | head -n 1 | awk -F '=' '{print $2}')
         if [[ "$ssh_active" != '1' ]]; then
             # disable ssh access
             if [ -f "/home/$ADMIN_USERNAME/.ssh/authorized_keys" ]; then
@@ -3576,27 +3576,27 @@ function update_vpn {
 
             # add VPN_DOMAIN to configuration file
             if [ "$VPN_DOMAIN" ]; then
-                if grep -q 'VPN_DOMAIN=' $CONFIGURATION_FILE; then
-                    sed -i "s|VPN_DOMAIN=.*|VPN_DOMAIN=$VPN_DOMAIN|g" $CONFIGURATION_FILE
+                if grep -q 'VPN_DOMAIN=' ${CONFIGURATION_FILE}; then
+                    sed -i "s|VPN_DOMAIN=.*|VPN_DOMAIN=$VPN_DOMAIN|g" ${CONFIGURATION_FILE}
                 else
-                    echo "VPN_DOMAIN=$VPN_DOMAIN" >> $CONFIGURATION_FILE
+                    echo "VPN_DOMAIN=$VPN_DOMAIN" >> ${CONFIGURATION_FILE}
                 fi
             else
-                if grep -q 'VPN_DOMAIN=' $CONFIGURATION_FILE; then
-                    sed -i '/VPN_DOMAIN=/d' $CONFIGURATION_FILE
+                if grep -q 'VPN_DOMAIN=' ${CONFIGURATION_FILE}; then
+                    sed -i '/VPN_DOMAIN=/d' ${CONFIGURATION_FILE}
                 fi
             fi
 
             # add VPN_PUBLIC_KEY to configuration file
             if [ "$VPN_PUBLIC_KEY" ]; then
-                if grep -q 'VPN_PUBLIC_KEY=' $CONFIGURATION_FILE; then
-                    sed -i "s|VPN_PUBLIC_KEY=.*|VPN_PUBLIC_KEY=$VPN_PUBLIC_KEY|g" $CONFIGURATION_FILE
+                if grep -q 'VPN_PUBLIC_KEY=' ${CONFIGURATION_FILE}; then
+                    sed -i "s|VPN_PUBLIC_KEY=.*|VPN_PUBLIC_KEY=$VPN_PUBLIC_KEY|g" ${CONFIGURATION_FILE}
                 else
-                    echo "VPN_PUBLIC_KEY=$VPN_PUBLIC_KEY" >> $CONFIGURATION_FILE
+                    echo "VPN_PUBLIC_KEY=$VPN_PUBLIC_KEY" >> ${CONFIGURATION_FILE}
                 fi
             else
-                if grep -q 'VPN_PUBLIC_KEY=' $CONFIGURATION_FILE; then
-                    sed -i '/VPN_PUBLIC_KEY=/d' $CONFIGURATION_FILE
+                if grep -q 'VPN_PUBLIC_KEY=' ${CONFIGURATION_FILE}; then
+                    sed -i '/VPN_PUBLIC_KEY=/d' ${CONFIGURATION_FILE}
                 fi
             fi
 
@@ -3941,20 +3941,20 @@ function change_default_domain {
         rm "$default_domain_file"
 
         # only applies to the standard server install, not onion
-        ONION_ONLY=$(grep 'ONION_ONLY=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+        ONION_ONLY=$(grep 'ONION_ONLY=' "${CONFIGURATION_FILE}" | head -n 1 | awk -F '=' '{print $2}')
         if [[ "$ONION_ONLY" == 'no' ]]; then
             if [ "$new_default_domain_name" ]; then
                 if [ ${#new_default_domain_name} -gt 5 ]; then
                     if [[ "$new_default_domain_name" == *'.'* ]]; then
 
                         # has the default domain changed ?
-                        DEFAULT_DOMAIN_NAME=$(grep 'DEFAULT_DOMAIN_NAME=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+                        DEFAULT_DOMAIN_NAME=$(grep 'DEFAULT_DOMAIN_NAME=' "${CONFIGURATION_FILE}" | head -n 1 | awk -F '=' '{print $2}')
                         if [[ "$DEFAULT_DOMAIN_NAME" != "$new_default_domain_name" ]]; then
                             # set the new default domain within the config file
-                            if ! grep -q "NEW_DEFAULT_DOMAIN_NAME=" $CONFIGURATION_FILE; then
-                                echo "NEW_DEFAULT_DOMAIN_NAME=$new_default_domain_name" >> $CONFIGURATION_FILE
+                            if ! grep -q "NEW_DEFAULT_DOMAIN_NAME=" ${CONFIGURATION_FILE}; then
+                                echo "NEW_DEFAULT_DOMAIN_NAME=$new_default_domain_name" >> ${CONFIGURATION_FILE}
                             else
-                                sed -i "s|NEW_DEFAULT_DOMAIN_NAME=.*|NEW_DEFAULT_DOMAIN_NAME=$new_default_domain_name|g" $CONFIGURATION_FILE
+                                sed -i "s|NEW_DEFAULT_DOMAIN_NAME=.*|NEW_DEFAULT_DOMAIN_NAME=$new_default_domain_name|g" ${CONFIGURATION_FILE}
                             fi
 
                             { echo '#!/bin/bash';
@@ -4149,10 +4149,10 @@ function update_dynamic_dns {
                                 ddns_code=$(echo "$ddns_code" | awk -F '?' '{print $2}' | awk -F '=' '{print $1}')
                             fi
                         fi
-                        if grep -q "DEFAULT_DOMAIN_CODE=" "$CONFIGURATION_FILE"; then
-                            sed -i "s|DEFAULT_DOMAIN_CODE=.*|DEFAULT_DOMAIN_CODE=${ddns_code}|g" "$CONFIGURATION_FILE"
+                        if grep -q "DEFAULT_DOMAIN_CODE=" "${CONFIGURATION_FILE}"; then
+                            sed -i "s|DEFAULT_DOMAIN_CODE=.*|DEFAULT_DOMAIN_CODE=${ddns_code}|g" "${CONFIGURATION_FILE}"
                         else
-                            echo "DEFAULT_DOMAIN_CODE=${ddns_code}" >> "$CONFIGURATION_FILE"
+                            echo "DEFAULT_DOMAIN_CODE=${ddns_code}" >> "${CONFIGURATION_FILE}"
                         fi
                     else
                         ddns_code=
@@ -4169,10 +4169,10 @@ function update_dynamic_dns {
 }
 
 function enable_dns_over_tls {
-    if ! grep -q 'DNS_OVER_TLS=' "$CONFIGURATION_FILE"; then
+    if ! grep -q 'DNS_OVER_TLS=' "${CONFIGURATION_FILE}"; then
         return
     fi
-    DNS_OVER_TLS_ADDRESS=$(grep 'DNS_OVER_TLS=' "$CONFIGURATION_FILE" | awk -F '=' '{print $2}')
+    DNS_OVER_TLS_ADDRESS=$(grep 'DNS_OVER_TLS=' "${CONFIGURATION_FILE}" | awk -F '=' '{print $2}')
     if [[ "$DNS_OVER_TLS_ADDRESS" != *'.'* ]]; then
         return
     fi
@@ -4185,8 +4185,8 @@ function enable_dns_over_tls {
 }
 
 function disable_dns_over_tls {
-    if grep -q 'DNS_OVER_TLS=' "$CONFIGURATION_FILE"; then
-        sed -i '/DNS_OVER_TLS=/d' "$CONFIGURATION_FILE"
+    if grep -q 'DNS_OVER_TLS=' "${CONFIGURATION_FILE}"; then
+        sed -i '/DNS_OVER_TLS=/d' "${CONFIGURATION_FILE}"
     fi
     echo '' > /etc/systemd/resolved.conf
     systemctl stop systemd-resolved
@@ -4207,10 +4207,10 @@ function update_dns_over_tls {
         rm "$dns_over_tls_file"
         return
     fi
-    if grep -q 'DNS_OVER_TLS=' "$CONFIGURATION_FILE"; then
-        sed -i "s|DNS_OVER_TLS=.*|DNS_OVER_TLS=${dns_over_tls_address}|g" "$CONFIGURATION_FILE"
+    if grep -q 'DNS_OVER_TLS=' "${CONFIGURATION_FILE}"; then
+        sed -i "s|DNS_OVER_TLS=.*|DNS_OVER_TLS=${dns_over_tls_address}|g" "${CONFIGURATION_FILE}"
     else
-        echo "DNS_OVER_TLS=${dns_over_tls_address}" >> "$CONFIGURATION_FILE"
+        echo "DNS_OVER_TLS=${dns_over_tls_address}" >> "${CONFIGURATION_FILE}"
     fi
     enable_dns_over_tls
     regenerate_dns_over_tls "$dns_over_tls_address"
@@ -4219,7 +4219,7 @@ function update_dns_over_tls {
 
 function webadmin_monitor_ip_changes {
     if [ -f "${webadmin_install_dir}/dynamicdns.html" ]; then
-        ONION_ONLY=$(grep 'ONION_ONLY=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+        ONION_ONLY=$(grep 'ONION_ONLY=' "${CONFIGURATION_FILE}" | head -n 1 | awk -F '=' '{print $2}')
         if [[ "$ONION_ONLY" == 'no' ]]; then
             webadmin_monitor_ip_ctr=$((webadmin_monitor_ip_ctr-1))
             if [ $webadmin_monitor_ip_ctr -le 0 ]; then
@@ -4253,7 +4253,7 @@ function webadmin_monitor_ip_changes {
 
                             # update dynamic dns
                             if grep -q 'freedns' /etc/crontab; then
-                                DEFAULT_DOMAIN_CODE=$(grep 'DEFAULT_DOMAIN_CODE=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
+                                DEFAULT_DOMAIN_CODE=$(grep 'DEFAULT_DOMAIN_CODE=' "${CONFIGURATION_FILE}" | head -n 1 | awk -F '=' '{print $2}')
                                 if [ "$DEFAULT_DOMAIN_CODE" ]; then
                                     # shellcheck disable=SC2086
                                     wget --no-check-certificate -O - https://freedns.afraid.org/dynamic/update.php?$DEFAULT_DOMAIN_CODE= >> /var/log/freedns_@_update.log 2>&1 &
@@ -4368,10 +4368,10 @@ function change_language {
         if [ -f "${webadmin_install_dir}/language_template.html" ]; then
             if grep -q "\"$language\"" "${webadmin_install_dir}/language_template.html"; then
 
-                if ! grep -q "DEFAULT_LANGUAGE=" "$CONFIGURATION_FILE"; then
-                    echo "DEFAULT_LANGUAGE=$language" >> "$CONFIGURATION_FILE"
+                if ! grep -q "DEFAULT_LANGUAGE=" "${CONFIGURATION_FILE}"; then
+                    echo "DEFAULT_LANGUAGE=$language" >> "${CONFIGURATION_FILE}"
                 else
-                    sed -i "s|DEFAULT_LANGUAGE=.*|DEFAULT_LANGUAGE=$language|g" "$CONFIGURATION_FILE"
+                    sed -i "s|DEFAULT_LANGUAGE=.*|DEFAULT_LANGUAGE=$language|g" "${CONFIGURATION_FILE}"
                 fi
 
                 /usr/local/bin/${PROJECT_NAME}-language "${language}" > "${webadmin_install_dir}/log.txt"
@@ -4600,7 +4600,7 @@ function update_notification_type {
                 if grep -q 'name="admin_notify" checked>' "$profile_screen_filename"; then
                     sed -i 's|name="admin_notify" checked>|name="admin_notify">|g' "$profile_screen_filename"
                     sed -i 's|name="admin_notify">|name="admin_notify" checked>|g' "$profile_screen_admin"
-                    sed -i '/Notifications user:/d' "$COMPLETION_FILE"
+                    sed -i '/Notifications user:/d' "${COMPLETION_FILE}"
                 fi
             else
                 if grep -q 'name="admin_notify">' "$profile_screen_filename"; then
@@ -4616,10 +4616,10 @@ function update_notification_type {
                     done
                     # set checked on the chosen member
                     sed -i 's|name="admin_notify">|name="admin_notify" checked>|g' "$profile_screen_filename"
-                    if grep -q 'Notifications user:' "$COMPLETION_FILE"; then
-                        sed -i "s|Notifications user:.*|Notifications user:${notify_username}|g" "$COMPLETION_FILE"
+                    if grep -q 'Notifications user:' "${COMPLETION_FILE}"; then
+                        sed -i "s|Notifications user:.*|Notifications user:${notify_username}|g" "${COMPLETION_FILE}"
                     else
-                        echo "Notifications user:${notify_username}" >> "$COMPLETION_FILE"
+                        echo "Notifications user:${notify_username}" >> "${COMPLETION_FILE}"
                     fi
                 fi
             fi
@@ -4630,39 +4630,39 @@ function update_notification_type {
 function update_app_settings_line {
     settings_data="$1"
 
-    echo "$settings_data" > "${webadmin_install_dir}/settingschange.txt"
+    echo "${settings_data}" > "${webadmin_install_dir}/settingschange.txt"
     echo '' >> "${webadmin_install_dir}/settingschange.txt"
     echo 'update_app_settings' >> "${webadmin_install_dir}/settingschange.txt"
-    if [[ "$settings_data" == *','* ]]; then
-        app_name=$(echo "$settings_data" | awk -F ',' '{print $1}')
+    if [[ "${settings_data}" == *','* ]]; then
+        app_name=$(echo "${settings_data}" | awk -F ',' '{print $1}')
         echo "app_name: ${app_name}" >> "${webadmin_install_dir}/settingschange.txt"
-        if [ "$app_name" ]; then
+        if [ "${app_name}" ]; then
             app_filename="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-${app_name}"
             echo "app_filename: ${app_filename}" >> "${webadmin_install_dir}/settingschange.txt"
-            if [ -f "$app_filename" ]; then
-                app_function=$(echo "$settings_data" | awk -F ',' '{print $2}')
+            if [ -f "${app_filename}" ]; then
+                app_function=$(echo "${settings_data}" | awk -F ',' '{print $2}')
                 echo "app_function: ${app_function}" >> "${webadmin_install_dir}/settingschange.txt"
                 if [ "$app_function" ]; then
-                    if grep -q "function ${app_name}_setting_${app_function} {" "$app_filename"; then
-                        app_value=$(echo "$settings_data" | awk -F ',' '{print $3}')
+                    if grep -q "function ${app_name}_setting_${app_function} {" "${app_filename}"; then
+                        app_value=$(echo "${settings_data}" | awk -F ',' '{print $3}')
 
-                        appsettings_script_filename="$appsettings_script"_${app_name}_${app_function}.sh
+                        appsettings_script_filename="${appsettings_script}"_${app_name}_${app_function}.sh
 
                         echo "app_value: ${app_value}" >> "${webadmin_install_dir}/settingschange.txt"
-                        echo "script: $appsettings_script_filename" >> "${webadmin_install_dir}/settingschange.txt"
+                        echo "script: ${appsettings_script_filename}" >> "${webadmin_install_dir}/settingschange.txt"
 
-                        check_for_existing_processes "$appsettings_script_filename"
+                        check_for_existing_processes "${appsettings_script_filename}"
 
                         { echo "echo \"Beginning webadmin ${app_name} app settings change \$(date)\" >> ${webadmin_install_dir}/settingschange.txt";
-                          echo "PROJECT_NAME=$PROJECT_NAME";
-                          echo "source $app_filename";
+                          echo "PROJECT_NAME=${PROJECT_NAME}";
+                          echo "source ${app_filename}";
                           echo "${app_name}_setting_${app_function} \"$app_value\"";
                           echo "chown www-data:www-data ${webadmin_install_dir}/settingschange.txt";
-                          echo "exit 0"; } >> "$appsettings_script_filename"
-                        chmod +x "$appsettings_script_filename"
+                          echo "exit 0"; } >> "${appsettings_script_filename}"
+                        chmod +x "${appsettings_script_filename}"
 
                         # run in a separate process
-                        /bin/bash "$appsettings_script_filename" &
+                        /bin/bash "${appsettings_script_filename}" &
                     fi
                 fi
             fi
@@ -4674,19 +4674,19 @@ function update_app_settings_line {
 }
 
 function update_app_settings {
-    if [ ! -f "$appsettings_file" ]; then
+    if [ ! -f "${appsettings_file}" ]; then
         return
     fi
-    settings_data=$(cat "$appsettings_file")
-    rm "$appsettings_file"
-    if [[ "$settings_data" != *$'\n'* ]]; then
+    settings_data=$(cat "${appsettings_file}")
+    rm "${appsettings_file}"
+    if [[ "${settings_data}" != *$'\n'* ]]; then
         # single line of settings
-        update_app_settings_line "$settings_data"
+        update_app_settings_line "${settings_data}"
     else
         IFS=$'\n'
         while IFS= read -r settings_data_line; do
-            update_app_settings_line "$settings_data_line"
-        done <<< "$settings_data"
+            update_app_settings_line "${settings_data_line}"
+        done <<< "${settings_data}"
     fi
 }
 
@@ -4696,7 +4696,7 @@ function get_previous_install_state {
         install_state=$(cat "${install_state_file}")
         # shellcheck disable=SC2086
         if [ ${install_state} -ne $INSTALL_STATE_COMMAND_SUCCESS ]; then
-            if grep -q 'install_final' "$COMPLETION_FILE"; then
+            if grep -q 'install_final' "${COMPLETION_FILE}"; then
                 install_state=$INSTALL_STATE_COMMAND_SUCCESS
             else
                 if [ -f "${webadmin_install_dir}/log.txt" ]; then
@@ -4714,7 +4714,7 @@ function get_previous_install_state {
             echo -n "${install_state}" > "${install_state_file}"
         fi
     else
-        if grep -q 'install_final' "$COMPLETION_FILE"; then
+        if grep -q 'install_final' "${COMPLETION_FILE}"; then
             install_state=$INSTALL_STATE_COMMAND_SUCCESS
         else
             install_state=$INSTALL_STATE_FIRST_BOOT
