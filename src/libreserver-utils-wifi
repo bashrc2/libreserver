@@ -307,7 +307,7 @@ function hotspot_on {
     echo "allow-hotplug $WIFI_INTERFACE" > /etc/network/interfaces.d/wifi
     echo "iface $WIFI_INTERFACE inet manual" >> /etc/network/interfaces.d/wifi
 
-    network_device_name=$(ls /sys/class/net | grep "en" | head -n 1)
+    network_device_name=$(ls /sys/class/net | grep "en\|eth0" | head -n 1)
     if [ ! "${network_device_name}" ]; then
         network_device_name='enp3s0'
     fi
@@ -350,7 +350,7 @@ function wifi_wpa2_psk {
 
     wifi_store_original_network_settings
 
-    network_device_name=$(ls /sys/class/net | grep "en" | head -n 1)
+    network_device_name=$(ls /sys/class/net | grep "en\|eth0" | head -n 1)
     if [ ! "${network_device_name}" ]; then
         network_device_name='enp3s0'
     fi
@@ -374,7 +374,7 @@ function wifi_none {
 
     wifi_store_original_network_settings
 
-    network_device_name=$(ls /sys/class/net | grep "en" | head -n 1)
+    network_device_name=$(ls /sys/class/net | grep "en\|eth0" | head -n 1)
     if [ ! "${network_device_name}" ]; then
         network_device_name='enp3s0'
     fi
@@ -415,7 +415,7 @@ function networks_from_file {
 
     wifi_store_original_network_settings
 
-    network_device_name=$(ls /sys/class/net | grep "en" | head -n 1)
+    network_device_name=$(ls /sys/class/net | grep "en\|eth0" | head -n 1)
     if [ ! "${network_device_name}" ]; then
         network_device_name='enp3s0'
     fi

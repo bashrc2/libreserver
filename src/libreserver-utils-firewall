@@ -34,7 +34,7 @@ FIREWALL_ALLOW_DOMAINS=$HOME/${PROJECT_NAME}-firewall-allowlist.cfg
 FIREWALL_DOMAINS_MASKED=$HOME/${PROJECT_NAME}-firewall-masked.cfg
 MUTED_WORDS=$HOME/${PROJECT_NAME}-firewall-words.cfg
 
-network_device_name=$(ls /sys/class/net | grep "en" | head -n 1)
+network_device_name=$(ls /sys/class/net | grep "en\|eth0" | head -n 1)
 if [ ! "${network_device_name}" ]; then
     network_device_name='enp3s0'
 fi

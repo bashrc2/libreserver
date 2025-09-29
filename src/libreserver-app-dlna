@@ -233,7 +233,7 @@ function install_dlna_main {
     sed -i 's/#root_container=./root_container=B/g' /etc/minidlna.conf
     if [[ $SYSTEM_TYPE != "mesh"* ]]; then
         if [[ $(config_param_exists WIFI_INTERFACE) == "0" ]]; then
-            network_device_name=$(ls /sys/class/net | grep "en" | head -n 1)
+            network_device_name=$(ls /sys/class/net | grep "en\|eth0" | head -n 1)
             if [ ! "${network_device_name}" ]; then
                 network_device_name='enp3s0'
             fi

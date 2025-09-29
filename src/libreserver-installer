@@ -2054,14 +2054,21 @@ function set_static_ip_address {
     if [ -f "$static_ip_address_file" ]; then
         new_ip_address=$(awk -F ',' '{print $1}' < "$static_ip_address_file")
         if [[ "$new_ip_address" == *'dynamic'* ]]; then
-            network_device_name=$(ls /sys/class/net | grep "en" | head -n 1)
+            network_device_name=$(ls /sys/class/net | grep "en\|eth0" | head -n 1)
             if [ ! "${network_device_name}" ]; then
                 network_device_name='enp3s0'
             fi
 
-            { echo "auto ${network_device_name}";
-              echo "allow-hotplug ${network_device_name}";
-              echo "iface ${network_device_name} inet dhcp"; } > /etc/network/interfaces.d/dynamic
+            if [[ "${network_device_name}" == *"eth0"* ]]; then
+                { echo "auto ${network_device_name}";
+                  echo "allow-hotplug ${network_device_name}";
+                  echo "iface ${network_device_name} inet dhcp"; } > /etc/network/interfaces.d/dynamic
+            else
+                { echo "auto ${network_device_name} eth0";
+                  echo "allow-hotplug ${network_device_name} eth0";
+                  echo "iface ${network_device_name} inet dhcp";
+                  echo "iface eth0 inet dhcp"; } > /etc/network/interfaces.d/dynamic
+            fi
             if [ -f /etc/network/interfaces.d/static ]; then
                 rm /etc/network/interfaces.d/static
             fi
@@ -2083,17 +2090,26 @@ function set_static_ip_address {
             new_gateway=$(awk -F ',' '{print $2}' < "$static_ip_address_file")
             if [ "$new_gateway" ]; then
                 if [[ "$new_gateway" == *'.'* ]]; then
-                    network_device_name=$(ls /sys/class/net | grep "en" | head -n 1)
+                    network_device_name=$(ls /sys/class/net | grep "en\|eth0" | head -n 1)
                     if [ ! "${network_device_name}" ]; then
                         network_device_name='enp3s0'
                     fi
 
-                    { echo "auto ${network_device_name}";
-                      echo "allow-hotplug ${network_device_name}";
-                      echo "iface ${network_device_name} inet static";
-                      echo "    address ${new_ip_address}";
-                      echo '    netmask 255.255.255.0';
-                      echo "    gateway ${new_gateway}"; } > /etc/network/interfaces.d/static
+                    if [[ "${network_device_name}" == *"eth0"* ]]; then
+                        { echo "auto ${network_device_name}";
+                          echo "allow-hotplug ${network_device_name}";
+                          echo "iface ${network_device_name} inet static";
+                          echo "    address ${new_ip_address}";
+                          echo '    netmask 255.255.255.0';
+                          echo "    gateway ${new_gateway}"; } > /etc/network/interfaces.d/static
+                    else
+                        { echo "auto ${network_device_name} eth0";
+                          echo "allow-hotplug ${network_device_name} eth0";
+                          echo "iface ${network_device_name} inet static";
+                          echo "    address ${new_ip_address}";
+                          echo '    netmask 255.255.255.0';
+                          echo "    gateway ${new_gateway}"; } > /etc/network/interfaces.d/static
+                    fi
                     if [ -f /etc/network/interfaces.d/dynamic ]; then
                         rm /etc/network/interfaces.d/dynamic
                     fi
@@ -4245,7 +4261,7 @@ function webadmin_monitor_ip_changes {
                             fi
 
                             # show local ip address at login
-                            network_device_name=$(ls /sys/class/net | grep "en" | head -n 1)
+                            network_device_name=$(ls /sys/class/net | grep "en\|eth0" | head -n 1)
                             if [ ! "${network_device_name}" ]; then
                                 network_device_name='enp3s0'
                             fi
@@ -4818,7 +4834,7 @@ remove_default_nginx_domain
 # show local ip address at login.
 # If you don't control the internet router and mdns isn't active
 # then this is a last resort method of knowing the local IP address
-network_device_name=$(ls /sys/class/net | grep "en" | head -n 1)
+network_device_name=$(ls /sys/class/net | grep "en\|eth0" | head -n 1)
 if [ ! "${network_device_name}" ]; then
     network_device_name='enp3s0'
 fi

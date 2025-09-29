@@ -301,7 +301,7 @@ function wireguard_enable {
     cp /etc/wireguard/publickey "$webadmin_install_dir/vpn_public_key.txt"
     chown www-data:www-data "$webadmin_install_dir/vpn_public_key.txt"
 
-    network_device_name=$(ls /sys/class/net | grep "en" | head -n 1)
+    network_device_name=$(ls /sys/class/net | grep "en\|eth0" | head -n 1)
     if [ ! "${network_device_name}" ]; then
         network_device_name='enp3s0'
     fi

@@ -72,7 +72,7 @@ function mesh_avahi {
     #       *.local address will not resolve
 
     sed -i "s|#allow-interfaces|allow-interfaces|g" "$rootdir/etc/avahi/avahi-daemon.conf"
-    network_device_name=$(ls /sys/class/net | grep "en" | head -n 1)
+    network_device_name=$(ls /sys/class/net | grep "en\|eth0" | head -n 1)
     if [ ! "${network_device_name}" ]; then
         network_device_name='enp3s0'
     fi
