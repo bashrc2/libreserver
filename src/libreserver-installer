@@ -988,25 +988,25 @@ function backup_mount_drive {
     fi
 
     # unmount if already mounted
-    umount -f "$USB_MOUNT"
-    if [ ! -d "$USB_MOUNT" ]; then
-        mkdir "$USB_MOUNT"
+    umount -f "${USB_MOUNT}"
+    if [ ! -d "${USB_MOUNT}" ]; then
+        mkdir "${USB_MOUNT}"
     fi
 
-    if ! mount "$USB_DRIVE" "$USB_MOUNT"; then
-        rm -rf "$USB_MOUNT"
+    if ! mount "$USB_DRIVE" "${USB_MOUNT}"; then
+        rm -rf "${USB_MOUNT}"
         return
     fi
     backup_drive_mounted=1
 }
 
 function backup_unmount_drive {
-    if ! umount "$USB_MOUNT"; then
+    if ! umount "${USB_MOUNT}"; then
         echo $"Unable to unmount the drive."
-        rm -rf "$USB_MOUNT"
+        rm -rf "${USB_MOUNT}"
         return
     fi
-    rm -rf "$USB_MOUNT"
+    rm -rf "${USB_MOUNT}"
     backup_drive_mounted=
 }
 
@@ -3049,18 +3049,18 @@ function update_mumble_password {
 }
 
 function update_icecast {
-    if [ -f "$icecast_file" ]; then
+    if [ -f "${icecast_file}" ]; then
         if [ -d /etc/icecast2 ]; then
-            ICECAST_TITLE=$(awk -F ',' '{print $1}' < "$icecast_file")
-            ICECAST_DESCRIPTION=$(awk -F ',' '{print $2}' < "$icecast_file")
-            icecast_genre=$(awk -F ',' '{print $3}' < "$icecast_file")
+            ICECAST_TITLE=$(awk -F ',' '{print $1}' < "${icecast_file}")
+            ICECAST_DESCRIPTION=$(awk -F ',' '{print $2}' < "${icecast_file}")
+            icecast_genre=$(awk -F ',' '{print $3}' < "${icecast_file}")
 
-            if [[ "$ICECAST_TITLE" != '' && "$ICECAST_DESCRIPTION" != '' && "$icecast_genre" != '' ]]; then
+            if [[ "${ICECAST_TITLE}" != '' && "${ICECAST_DESCRIPTION}" != '' && "${icecast_genre}" != '' ]]; then
                 ADMIN_USERNAME=$(grep 'MY_USERNAME=' "${CONFIGURATION_FILE}" | awk -F '=' '{print $2}')
                 ICECAST_SOURCE_PASSWORD=$("${PROJECT_NAME}-pass" -u "${ADMIN_USERNAME}" -a icecastsource)
                 ICECAST_USER_PASSWORD=$("${PROJECT_NAME}-pass" -u "${ADMIN_USERNAME}" -a icecastuser)
 
-                ICECAST_TITLE_MAIN="$ICECAST_DESCRIPTION"
+                ICECAST_TITLE_MAIN="${ICECAST_DESCRIPTION}"
 
                 { echo '#Settings';
                   echo '';
@@ -3069,10 +3069,10 @@ function update_icecast {
                   echo 'set("harbor.bind_addr","0.0.0.0")';
                   echo '';
                   echo '# Music playlists';
-                  echo "music1 = nrj(playlist.safe(\"$ICECAST_DIR\"))";
+                  echo "music1 = nrj(playlist.safe(\"${ICECAST_DIR}\"))";
                   echo '';
                   echo '# Some jingles';
-                  echo "jingles = nrj(playlist.safe(\"$ICECAST_JINGLES\"))";
+                  echo "jingles = nrj(playlist.safe(\"${ICECAST_JINGLES}\"))";
                   echo '';
                   echo '# If something goes wrong, well play this';
                   echo 'security = single("/etc/icecast2/default.ogg")';
@@ -3131,31 +3131,31 @@ function update_icecast {
                     icecast_playlist_updated=
                     backup_mount_drive "$icecast_usb_drive"
                     if [ $backup_drive_mounted ]; then
-                        icecast_import_dir="$USB_MOUNT/playlist"
+                        icecast_import_dir="${USB_MOUNT}/playlist"
                         # search some common directory names
-                        if [ ! -d "$icecast_import_dir" ]; then
-                            icecast_import_dir="$USB_MOUNT/icecast"
+                        if [ ! -d "${icecast_import_dir}" ]; then
+                            icecast_import_dir="${USB_MOUNT}/icecast"
                         fi
-                        if [ ! -d "$icecast_import_dir" ]; then
-                            icecast_import_dir="$USB_MOUNT/radio"
+                        if [ ! -d "${icecast_import_dir}" ]; then
+                            icecast_import_dir="${USB_MOUNT}/radio"
                         fi
-                        if [ ! -d "$icecast_import_dir" ]; then
-                            icecast_import_dir="$USB_MOUNT/stream"
+                        if [ ! -d "${icecast_import_dir}" ]; then
+                            icecast_import_dir="${USB_MOUNT}/stream"
                         fi
-                        if [ ! -d "$icecast_import_dir" ]; then
-                            icecast_import_dir="$USB_MOUNT/music"
+                        if [ ! -d "${icecast_import_dir}" ]; then
+                            icecast_import_dir="${USB_MOUNT}/music"
                         fi
-                        if [ -d "$icecast_import_dir" ]; then
-                            if [ -d "$ICECAST_DIR" ]; then
+                        if [ -d "${icecast_import_dir}" ]; then
+                            if [ -d "${ICECAST_DIR}" ]; then
                                 stop_icecast
                                 # remove any existing playlist
                                 # shellcheck disable=SC2115
-                                rm -rf $ICECAST_DIR/*
+                                rm -rf ${ICECAST_DIR}/*
                                 # shellcheck disable=SC2115
-                                rm -rf $ICECAST_JINGLES/*
+                                rm -rf ${ICECAST_JINGLES}/*
                                 # copy the new files
-                                cp -ru "$icecast_import_dir/"* "$ICECAST_DIR"
-                                cd "$ICECAST_DIR" || return
+                                cp -ru "${icecast_import_dir}/"* "${ICECAST_DIR}"
+                                cd "${ICECAST_DIR}" || return
                                 for name in *; do mv "$name" "${name// /_}"; done
                                 icecast_playlist_updated=1
                             fi
@@ -3164,17 +3164,17 @@ function update_icecast {
                     backup_unmount_drive
                     if [ $icecast_playlist_updated ]; then
                         # move default file
-                        if [ -f $ICECAST_DIR/default.ogg ]; then
-                            mv $ICECAST_DIR/default.ogg /etc/icecast2/default.ogg
+                        if [ -f ${ICECAST_DIR}/default.ogg ]; then
+                            mv ${ICECAST_DIR}/default.ogg /etc/icecast2/default.ogg
                             chown icecast2:icecast /etc/icecast2/default.ogg
                         fi
 
                         # move jingles
-                        mv $ICECAST_DIR/jingle* $ICECAST_JINGLES
-                        mv $ICECAST_DIR/Jingle* $ICECAST_JINGLES
+                        mv ${ICECAST_DIR}/jingle* ${ICECAST_JINGLES}
+                        mv ${ICECAST_DIR}/Jingle* ${ICECAST_JINGLES}
 
-                        chown -R liquidsoapuser:icecast $ICECAST_DIR
-                        chown -R liquidsoapuser:icecast $ICECAST_JINGLES
+                        chown -R liquidsoapuser:icecast ${ICECAST_DIR}
+                        chown -R liquidsoapuser:icecast ${ICECAST_JINGLES}
 
                         icecast_import_subject=$"[${PROJECT_NAME}] Playlist imported"
                         icecast_import_msg=$'Playlist was imported from USB drive'
@@ -3183,11 +3183,11 @@ function update_icecast {
 
                         icecast_notification_file=/root/.icecast_import_msg.sh
                         { echo '#!/bin/bash';
-                          echo "/usr/local/bin/${PROJECT_NAME}-notification -s '$icecast_import_subject' -m '$icecast_import_msg'"; } > "$icecast_notification_file"
-                        chmod +x "$icecast_notification_file"
-                        /bin/bash $icecast_notification_file &
+                          echo "/usr/local/bin/${PROJECT_NAME}-notification -s '$icecast_import_subject' -m '$icecast_import_msg'"; } > "${icecast_notification_file}"
+                        chmod +x "${icecast_notification_file}"
+                        /bin/bash ${icecast_notification_file} &
 
-                        rm "$icecast_file"
+                        rm "${icecast_file}"
                         return
                     fi
                 fi
@@ -3197,55 +3197,55 @@ function update_icecast {
             fi
         fi
 
-        rm "$icecast_file"
+        rm "${icecast_file}"
     fi
 }
 
 function update_dlna {
-    if [ -f "$dlna_file" ]; then
+    if [ -f "${dlna_file}" ]; then
         if [ ! -f /etc/minidlna.conf ]; then
             dlna_usb_drive=$(detect_connected_drives)
-            if [ "$dlna_usb_drive" ]; then
-                backup_mount_drive "$dlna_usb_drive"
+            if [ "${dlna_usb_drive}" ]; then
+                backup_mount_drive "${dlna_usb_drive}"
                 # shellcheck disable=SC2086
                 if [ $backup_drive_mounted ]; then
 
                     # music
-                    dlna_import_dir="$USB_MOUNT/Music"
-                    if [ ! -d "$dlna_import_dir" ]; then
-                        dlna_import_dir="$USB_MOUNT/music"
+                    dlna_import_dir="${USB_MOUNT}/Music"
+                    if [ ! -d "${dlna_import_dir}" ]; then
+                        dlna_import_dir="${USB_MOUNT}/music"
                     fi
-                    if [ -d "$dlna_import_dir" ]; then
-                        cp -ru "$dlna_import_dir/"* /music
+                    if [ -d "${dlna_import_dir}" ]; then
+                        cp -ru "${dlna_import_dir}/"* /music
                         chown -R minidlna:minidlna /music
                     fi
 
                     # pictures
-                    dlna_import_dir="$USB_MOUNT/Pictures"
-                    if [ ! -d "$dlna_import_dir" ]; then
-                        dlna_import_dir="$USB_MOUNT/pictures"
+                    dlna_import_dir="${USB_MOUNT}/Pictures"
+                    if [ ! -d "${dlna_import_dir}" ]; then
+                        dlna_import_dir="${USB_MOUNT}/pictures"
                     fi
-                    if [ ! -d "$dlna_import_dir" ]; then
-                        dlna_import_dir="$USB_MOUNT/Photos"
+                    if [ ! -d "${dlna_import_dir}" ]; then
+                        dlna_import_dir="${USB_MOUNT}/Photos"
                     fi
-                    if [ ! -d "$dlna_import_dir" ]; then
-                        dlna_import_dir="$USB_MOUNT/photos"
+                    if [ ! -d "${dlna_import_dir}" ]; then
+                        dlna_import_dir="${USB_MOUNT}/photos"
                     fi
-                    if [ ! -d "$dlna_import_dir" ]; then
-                        dlna_import_dir="$USB_MOUNT/DCIM"
+                    if [ ! -d "${dlna_import_dir}" ]; then
+                        dlna_import_dir="${USB_MOUNT}/DCIM"
                     fi
-                    if [ -d "$dlna_import_dir" ]; then
-                        cp -ru "$dlna_import_dir/"* /pictures
+                    if [ -d "${dlna_import_dir}" ]; then
+                        cp -ru "${dlna_import_dir}/"* /pictures
                         chown -R minidlna:minidlna /pictures
                     fi
 
                     # videos
-                    dlna_import_dir="$USB_MOUNT/Videos"
-                    if [ ! -d "$dlna_import_dir" ]; then
-                        dlna_import_dir="$USB_MOUNT/videos"
+                    dlna_import_dir="${USB_MOUNT}/Videos"
+                    if [ ! -d "${dlna_import_dir}" ]; then
+                        dlna_import_dir="${USB_MOUNT}/videos"
                     fi
-                    if [ -d "$dlna_import_dir" ]; then
-                        cp -ru "$dlna_import_dir/"* /videos
+                    if [ -d "${dlna_import_dir}" ]; then
+                        cp -ru "${dlna_import_dir}/"* /videos
                         chown -R minidlna:minidlna /videos
                     fi
 
@@ -3257,12 +3257,12 @@ function update_dlna {
             fi
         fi
 
-        rm "$dlna_file"
+        rm "${dlna_file}"
     fi
 }
 
 function update_dat_links {
-    if [ -f "$datlinks_file" ]; then
+    if [ -f "${datlinks_file}" ]; then
 
         cd "/etc/datserver" || return
 
@@ -3276,14 +3276,14 @@ function update_dat_links {
 
         datlinks_lines_ctr=0
         while read -r line; do
-            if [ $datlinks_lines_ctr -gt 1024 ]; then
+            if [ ${datlinks_lines_ctr} -gt 1024 ]; then
                 # This prevents someone copy-pasting a giant amount of text
                 # into the dat links
                 break
             fi
             datlinks_lines_ctr=$((datlinks_lines_ctr + 1))
 
-            if [ "$line" ]; then
+            if [ "${line}" ]; then
                 # remove leading and trailing spaces
                 newline="$(echo -e "${line}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
                 if [[ "${newline}" == 'dat://'* ]]; then
@@ -3294,7 +3294,7 @@ function update_dat_links {
 
         mv "feeds.new" feeds
 
-        rm "$datlinks_file"
+        rm "${datlinks_file}"
         datserver_update_settings_template
 
         chown -R datserver:datserver /etc/datserver/feeds
@@ -3365,7 +3365,7 @@ function change_updates_settings {
 }
 
 function update_enable_ssh {
-    if [ -f "$ssh_file" ]; then
+    if [ -f "${ssh_file}" ]; then
         SSH_CONFIG='/etc/ssh/sshd_config'
         if [ ! -d /run/sshd ]; then
             mkdir /run/sshd
@@ -3378,25 +3378,25 @@ function update_enable_ssh {
         if [ -f /etc/ssh/sshd_config.ucf-dist ]; then
             rm /etc/ssh/sshd_config.ucf-dist
         fi
-        if grep -q 'PrintMotd yes' $SSH_CONFIG; then
-            sed -i 's|PrintMotd yes|PrintMotd no|g' $SSH_CONFIG
+        if grep -q 'PrintMotd yes' ${SSH_CONFIG}; then
+            sed -i 's|PrintMotd yes|PrintMotd no|g' ${SSH_CONFIG}
         fi
-        if ! grep -q 'PasswordAuthentication' $SSH_CONFIG; then
-            echo 'PasswordAuthentication no' >> $SSH_CONFIG
+        if ! grep -q 'PasswordAuthentication' ${SSH_CONFIG}; then
+            echo 'PasswordAuthentication no' >> ${SSH_CONFIG}
         fi
-        if grep -q '#PasswordAuthentication' $SSH_CONFIG; then
-            sed -i "s|#PasswordAuthentication|PasswordAuthentication|g" $SSH_CONFIG
+        if grep -q '#PasswordAuthentication' ${SSH_CONFIG}; then
+            sed -i "s|#PasswordAuthentication|PasswordAuthentication|g" ${SSH_CONFIG}
         fi
-        if ! grep -q 'PasswordAuthentication no' $SSH_CONFIG; then
-            sed -i "s|PasswordAuthentication.*|PasswordAuthentication no|g" $SSH_CONFIG
+        if ! grep -q 'PasswordAuthentication no' ${SSH_CONFIG}; then
+            sed -i "s|PasswordAuthentication.*|PasswordAuthentication no|g" ${SSH_CONFIG}
         fi
-        if grep -q '#AuthorizedKeysFile' $SSH_CONFIG; then
-            sed -i 's|#AuthorizedKeysFile.*|AuthorizedKeysFile     .ssh/authorized_keys|g' $SSH_CONFIG
+        if grep -q '#AuthorizedKeysFile' ${SSH_CONFIG}; then
+            sed -i 's|#AuthorizedKeysFile.*|AuthorizedKeysFile     .ssh/authorized_keys|g' ${SSH_CONFIG}
         else
-            sed -i 's|AuthorizedKeysFile.*|AuthorizedKeysFile     .ssh/authorized_keys|g' $SSH_CONFIG
+            sed -i 's|AuthorizedKeysFile.*|AuthorizedKeysFile     .ssh/authorized_keys|g' ${SSH_CONFIG}
         fi
 
-        ssh_active=$(awk -F ',' '{print $1}' < "$ssh_file")
+        ssh_active=$(awk -F ',' '{print $1}' < "${ssh_file}")
         ADMIN_USERNAME=$(grep 'MY_USERNAME=' "${CONFIGURATION_FILE}" | head -n 1 | awk -F '=' '{print $2}')
         if [[ "${ssh_active}" != '1' ]]; then
             # disable ssh access
@@ -3442,7 +3442,7 @@ function rsync_deny_blocked_domains {
         if [ ${#blocked} -gt 4 ]; then
             if [[ "${blocked}" == *"."* && "${blocked}" != *"localhost"* && "${blocked}" != *"127.0."* ]]; then
                 if [[ "${blocked}" != *"@"* ]]; then
-                    if [ "$rsync_denied_hosts" ]; then
+                    if [ "${rsync_denied_hosts}" ]; then
                         rsync_denied_hosts="${rsync_denied_hosts},${blocked}"
                     else
                         rsync_denied_hosts="${blocked}"
@@ -3452,9 +3452,9 @@ function rsync_deny_blocked_domains {
         fi
     done <"${FIREWALL_DOMAINS}"
 
-    if [ "$rsync_denied_hosts" ]; then
-        if ! grep -q "hosts deny = $rsync_denied_hosts" /etc/rsync/rsyncd.conf; then
-            sed -i "s|hosts deny =.*|hosts deny = $rsync_denied_hosts|g" /etc/rsync/rsyncd.conf
+    if [ "${rsync_denied_hosts}" ]; then
+        if ! grep -q "hosts deny = ${rsync_denied_hosts}" /etc/rsync/rsyncd.conf; then
+            sed -i "s|hosts deny =.*|hosts deny = ${rsync_denied_hosts}|g" /etc/rsync/rsyncd.conf
             systemctl restart rsync
         fi
     fi
@@ -3464,14 +3464,14 @@ function update_email_blocklists {
     FIREWALL_DOMAINS_OLD="$1"
     FIREWALL_DOMAINS_NEW="${1}.new"
 
-    if [ -f "$FIREWALL_DOMAINS_OLD" ]; then
+    if [ -f "${FIREWALL_DOMAINS_OLD}" ]; then
         # remove email blocks
         for d in /home/*/ ; do
             USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
             if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
                 while read -r block_line; do
-                    if [ "$block_line" ]; then
-                        if [[ "$block_line" != *'@'* ]]; then
+                    if [ "${block_line}" ]; then
+                        if [[ "${block_line}" != *'@'* ]]; then
                             # line is a domain name
                             new_block_line="@${block_line}"
                             block_line="${new_block_line}"
@@ -3490,7 +3490,7 @@ function update_email_blocklists {
     # add email blocks
     for d in /home/*/ ; do
         USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
-        if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+        if [[ $(is_valid_user "${USERNAME}") == "1" ]]; then
             while read -r block_line; do
                 if [ "${block_line}" ]; then
                     if [[ "${block_line}" != *'@'* ]]; then
@@ -3518,7 +3518,7 @@ function update_email_muted_words {
     MUTED_WORDS_NEW="${1}.new"
     muted_words_changed=
 
-    if [ -f "$MUTED_WORDS_OLD" ]; then
+    if [ -f "${MUTED_WORDS_OLD}" ]; then
         # remove email blocks
         for d in /home/*/ ; do
             USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
@@ -4043,9 +4043,9 @@ function update_bridges {
                     fi
                fi
             fi
-        done < "$bridgeslist_file"
+        done < "${bridgeslist_file}"
 
-        rm "$bridgeslist_file"
+        rm "${bridgeslist_file}"
         regenerate_bridges
 
         systemctl restart tor
@@ -4058,7 +4058,7 @@ function cancel_app_installs {
         p_str=$(ps aux | grep 'addremove-base' | grep -v grep)
         if [[ "$p_str" == *'bash'* ]]; then
             kill_pid=$(echo "$p_str" | awk -F ' ' '{print $2}')
-            if [ "$kill_pid" ]; then
+            if [ "${kill_pid}" ]; then
 
                 # remove pending installs so that the app doesn't try to reinstall
                 if [ -f "${pending_installs}" ]; then
@@ -4115,11 +4115,11 @@ function update_email_proxy {
 }
 
 function update_dynamic_dns {
-    if [ -f "$dynamic_dns_file" ]; then
+    if [ -f "${dynamic_dns_file}" ]; then
         if [ -f "${dynamic_dns_password_file}" ]; then
-            ddns=$(awk -F ',' '{print $1}' < "$dynamic_dns_file")
-            ddns_username=$(awk -F ',' '{print $2}' < "$dynamic_dns_file")
-            ddns_code=$(awk -F ',' '{print $3}' < "$dynamic_dns_file")
+            ddns=$(awk -F ',' '{print $1}' < "${dynamic_dns_file}")
+            ddns_username=$(awk -F ',' '{print $2}' < "${dynamic_dns_file}")
+            ddns_code=$(awk -F ',' '{print $3}' < "${dynamic_dns_file}")
 
             ddns_password=$(head -n 1 "${dynamic_dns_password_file}")
 
@@ -4164,7 +4164,7 @@ function update_dynamic_dns {
             rm "${dynamic_dns_password_file}"
         fi
 
-        rm "$dynamic_dns_file"
+        rm "${dynamic_dns_file}"
     fi
 }
 
@@ -4230,7 +4230,7 @@ function webadmin_monitor_ip_changes {
                 # check if the local ip address has changed
                 if [ -f /etc/turnserver.conf ]; then
                     if [[ "${curr_ipv4}" && "${curr_local_ipv4}" ]]; then
-                        if [[ "$curr_ipv4" == "$webadmin_ipv4_address" ]]; then
+                        if [[ "${curr_ipv4}" == "${webadmin_ipv4_address}" ]]; then
                             if ! grep -q "${curr_local_ipv4}" /etc/turnserver.conf; then
                                 # update turn server config and restart
                                 sed -i "s|relay-ip=.*|relay-ip=${curr_ipv4}|g" /etc/turnserver.conf
@@ -4241,9 +4241,9 @@ function webadmin_monitor_ip_changes {
                     fi
                 fi
                 # check if the external IP address has changes
-                if [ "$curr_ipv4" ]; then
-                    if [[ "$curr_ipv4" != "$webadmin_ipv4_address" ]]; then
-                        if [ "$webadmin_ipv4_address" ]; then
+                if [ "${curr_ipv4}" ]; then
+                    if [[ "${curr_ipv4}" != "${webadmin_ipv4_address}" ]]; then
+                        if [ "${webadmin_ipv4_address}" ]; then
                             # update TURN server
                             if [ -f /etc/turnserver.conf ]; then
                                 sed -i "s|relay-ip=.*|relay-ip=${curr_ipv4}|g" /etc/turnserver.conf
@@ -4266,12 +4266,12 @@ function webadmin_monitor_ip_changes {
                                 network_device_name='enp3s0'
                             fi
                             ifconfig ${network_device_name} | awk '/inet / {print $2}' | cut -f2 -d: > /etc/issue
-                            /usr/local/bin/${PROJECT_NAME}-notification -s "[${PROJECT_NAME}] Dynamic DNS" -m "IP address changed from $webadmin_ipv4_address to $curr_ipv4" &
+                            /usr/local/bin/${PROJECT_NAME}-notification -s "[${PROJECT_NAME}] Dynamic DNS" -m "IP address changed from ${webadmin_ipv4_address} to ${curr_ipv4}" &
                             systemctl restart ssh
                             systemctl restart nginx
                             systemctl restart exim4
                         fi
-                        webadmin_ipv4_address="$curr_ipv4"
+                        webadmin_ipv4_address="${curr_ipv4}"
                         sed -i "s|<p class=\"ipaddress\".*|<p class=\"ipaddress\" translate=\"no\">${curr_ipv4}</p>|g" "${webadmin_install_dir}/dynamicdns.html"
                     fi
                 fi
@@ -4281,7 +4281,7 @@ function webadmin_monitor_ip_changes {
 }
 
 function change_theme {
-    if [ -f "$theme_file" ]; then
+    if [ -f "${theme_file}" ]; then
         bg_color=$(awk -F ',' '{print $1}' < "$theme_file")
         fg_color=$(awk -F ',' '{print $2}' < "$theme_file")
         apps_border=$(awk -F ',' '{print $3}' < "$theme_file")
@@ -4356,17 +4356,17 @@ function change_theme {
         cp "${webadmin_install_dir}/settings.html" "${webadmin_install_dir}/theme_waiting.html"
         chown www-data:www-data "${webadmin_install_dir}/theme_waiting.html"
 
-        rm "$theme_file"
+        rm "${theme_file}"
     fi
 }
 
 function change_language {
-    if [ -f "$language_file" ]; then
-        language=$(cat "$language_file")
+    if [ -f "${language_file}" ]; then
+        language=$(cat "${language_file}")
         local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
         webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
         if [ -f "${webadmin_install_dir}/language_template.html" ]; then
-            if grep -q "\"$language\"" "${webadmin_install_dir}/language_template.html"; then
+            if grep -q "\"${language}\"" "${webadmin_install_dir}/language_template.html"; then
 
                 if ! grep -q "DEFAULT_LANGUAGE=" "${CONFIGURATION_FILE}"; then
                     echo "DEFAULT_LANGUAGE=$language" >> "${CONFIGURATION_FILE}"
@@ -4378,13 +4378,13 @@ function change_language {
             fi
         fi
 
-        rm "$language_file"
+        rm "${language_file}"
     fi
 }
 
 function update_system_monitor {
-    if [ -f "$system_monitor_file" ]; then
-        rm "$system_monitor_file"
+    if [ -f "${system_monitor_file}" ]; then
+        rm "${system_monitor_file}"
 
         drives_list=$(df -h | grep "/dev/")
         test_drive=/dev/sda2
@@ -4409,50 +4409,50 @@ function update_system_monitor {
             fi
         fi
 
-        if [[ "$drives_list" != *"$test_drive"* ]]; then
+        if [[ "${drives_list}" != *"${test_drive}"* ]]; then
             test_drive=/dev/sda1
-            if [[ "$drives_list" != *"$test_drive"* ]]; then
+            if [[ "${drives_list}" != *"${test_drive}"* ]]; then
                 test_drive=/dev/mmcblk0p2
-                if [[ "$drives_list" != *"$test_drive"* ]]; then
+                if [[ "${drives_list}" != *"${test_drive}"* ]]; then
                     test_drive=/dev/mmcblk0p1
-                    if [[ "$drives_list" != *"$test_drive"* ]]; then
+                    if [[ "${drives_list}" != *"${test_drive}"* ]]; then
                         test_drive=/dev/sdb2
-                        if [[ "$drives_list" != *"$test_drive"* ]]; then
+                        if [[ "${drives_list}" != *"${test_drive}"* ]]; then
                             test_drive=/dev/sdb1
                         fi
                     fi
                 fi
             fi
         fi
-        if [ ! "$io_test_drive" ]; then
-            io_test_drive=$test_drive
+        if [ ! "${io_test_drive}" ]; then
+            io_test_drive=${test_drive}
         fi
 
         cpu_usage=$(grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage "%"}' | awk -F '.' '{print $1}')
 
-        disk_use=$(df -h | grep $test_drive)
+        disk_use=$(df -h | grep ${test_drive})
         disk_use_percent='0%'
         disk_use_gb='0'
         disk_size_gb='0'
-        if [[ "$disk_use" == *"$test_drive"* ]]; then
-            disk_use_percent=$(df -h | grep $test_drive | tail -n 1 | awk -F ' ' '{print $5}')
-            disk_use_gb=$(df -h | grep $test_drive | tail -n 1 | awk -F ' ' '{print $3}' | sed 's|G||g' | sed 's|M||g')
-            disk_size_gb=$(df -h | grep $test_drive | tail -n 1 | awk -F ' ' '{print $2}' | sed 's|G||g' | sed 's|M||g')
+        if [[ "$disk_use" == *"${test_drive}"* ]]; then
+            disk_use_percent=$(df -h | grep ${test_drive} | tail -n 1 | awk -F ' ' '{print $5}')
+            disk_use_gb=$(df -h | grep ${test_drive} | tail -n 1 | awk -F ' ' '{print $3}' | sed 's|G||g' | sed 's|M||g')
+            disk_size_gb=$(df -h | grep ${test_drive} | tail -n 1 | awk -F ' ' '{print $2}' | sed 's|G||g' | sed 's|M||g')
         fi
 
         backup_disk_use_percent=
         backup_disk_use_gb=
-        if [ -f "$DRIVES_BASELINE_FILE" ]; then
+        if [ -f "${DRIVES_BASELINE_FILE}" ]; then
             backup_device=$(detect_connected_drives)
-            if [ "$backup_device" ]; then
-                backup_mount_drive "$backup_device"
+            if [ "${backup_device}" ]; then
+                backup_mount_drive "${backup_device}"
                 # shellcheck disable=SC2086
                 if [ $backup_drive_mounted ]; then
                     backup_disk_use=$(df -h | grep "$backup_device")
                     backup_disk_use_percent='0%'
                     backup_disk_use_gb='0'
                     backup_disk_size_gb='0'
-                    if [[ "$backup_disk_use" == *"$backup_device"* ]]; then
+                    if [[ "${backup_disk_use}" == *"${backup_device}"* ]]; then
                         backup_disk_use_percent=$(df -h | grep "$backup_device" | tail -n 1 | awk -F ' ' '{print $5}')
                         backup_disk_use_gb=$(df -h | grep "$backup_device" | tail -n 1 | awk -F ' ' '{print $3}' | sed 's|G||g' | sed 's|M||g')
                         backup_disk_size_gb=$(df -h | grep "$backup_device" | tail -n 1 | awk -F ' ' '{print $2}' | sed 's|G||g' | sed 's|M||g')
@@ -4488,18 +4488,18 @@ function update_system_monitor {
         cpu_temperature=0
         if [ -f /sys/class/thermal/thermal_zone0/temp ]; then
             cpu_temp=$(cat /sys/class/thermal/thermal_zone*/temp | head -n 1)
-            if [ "$cpu_temp" ]; then
+            if [ "${cpu_temp}" ]; then
                 cpu_temperature=$((cpu_temp / 1000))
             fi
         fi
 
         disk_io_speed=20
         disk_io_speed_percent=10
-        if [ "$test_drive" ]; then
+        if [ "${test_drive}" ]; then
             disk_io_speed=$(hdparm -t $io_test_drive | awk -F '= ' '{print $2}' | awk -F ' ' '{print $1}' | tail -n 1 | awk -F '.' '{print $1}')
-            if [ "$disk_io_speed" ]; then
+            if [ "${disk_io_speed}" ]; then
                 disk_io_speed_percent=$((disk_io_speed * 100 / 500))
-                if [ $disk_io_speed_percent -gt 100 ]; then
+                if [ ${disk_io_speed}_percent -gt 100 ]; then
                     disk_io_speed_percent=100
                 fi
             fi
@@ -4527,15 +4527,15 @@ function update_system_monitor {
                 fi
             fi
 
-            if [ "$cpu_usage" ]; then
+            if [ "${cpu_usage}" ]; then
                 sed -i "s|<div name=\"cpuusage\" class=\"w3-container.*|<div name=\"cpuusage\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:${cpu_usage}%\">${cpu_usage}%</div>|g" "${webadmin_install_dir}/system_monitor.html"
             fi
 
-            if [ "$disk_use_percent" ]; then
+            if [ "${disk_use_percent}" ]; then
                 sed -i "s|<div name=\"diskspace\" class=\"w3-container.*|<div name=\"diskspace\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:$disk_use_percent\">${disk_use_gb} / ${disk_size_gb}GB</div>|g" "${webadmin_install_dir}/system_monitor.html"
             fi
 
-            if [ "$backup_disk_use_gb" ]; then
+            if [ "${backup_disk_use_gb}" ]; then
                 sed -i "s|<div name=\"backupspace\" class=\"w3-container.*|<div name=\"backupspace\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:$backup_disk_use_percent\">${backup_disk_use_gb} / ${backup_disk_size_gb}GB</div>|g" "${webadmin_install_dir}/system_monitor.html"
             else
                 sed -i "/\"backupspace\"/d" "${webadmin_install_dir}/system_monitor.html"
@@ -4544,7 +4544,7 @@ function update_system_monitor {
 
             sed -i "s|<div name=\"memory\" class=\"w3-container.*|<div name=\"memory\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:${used_memory_percent}%\">${used_memory_gb} / ${total_memory_gb}GB</div>|g" "${webadmin_install_dir}/system_monitor.html"
 
-            if [ $cpu_temperature -gt 0 ]; then
+            if [ ${cpu_temp}erature -gt 0 ]; then
                 sed -i "s|<div name=\"cputemp\" class=\"w3-container.*|<div name=\"cputemp\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:${cpu_temperature}%\">${cpu_temperature}C</div>|g" "${webadmin_install_dir}/system_monitor.html"
             else
                 sed -i "/\"cputemp\"/d" "${webadmin_install_dir}/system_monitor.html"
