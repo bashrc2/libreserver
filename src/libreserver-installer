@@ -87,46 +87,46 @@ ssh_sessions_high_count=0
 
 webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
 ssh_sessions_count_filename=/root/.ssh_sessions_count
-restore_app_file="$webadmin_install_dir/.restore_app.txt"
-static_ip_address_file="$webadmin_install_dir/.static_ip_address.txt"
-vpn_file="$webadmin_install_dir/.vpn.txt"
-vpn_remote_file="$webadmin_install_dir/.vpn_remote.txt"
-upgradeos_file="$webadmin_install_dir/.upgradeos.txt"
-cancel_install_file="$webadmin_install_dir/.cancel_install.txt"
-default_domain_file="$webadmin_install_dir/.default_domain.txt"
-email_proxy_file="$webadmin_install_dir/.emailproxy.txt"
-theme_file="$webadmin_install_dir/.theme.txt"
-translations_import_file="$webadmin_install_dir/.translations_import.txt"
-icecast_file="$webadmin_install_dir/.icecast.txt"
-koel_file="$webadmin_install_dir/.koel.txt"
-dlna_file="$webadmin_install_dir/.dlna.txt"
-datlinks_file="$webadmin_install_dir/.datlinks.txt"
-settings_updates_file="$webadmin_install_dir/.settingsupdates.txt"
-ssh_file="$webadmin_install_dir/.ssh.txt"
-appsettings_file="$webadmin_install_dir/.appsettings.txt"
-factoryreset_file="$webadmin_install_dir/.factoryreset.txt"
+restore_app_file="${webadmin_install_dir}/.restore_app.txt"
+static_ip_address_file="${webadmin_install_dir}/.static_ip_address.txt"
+vpn_file="${webadmin_install_dir}/.vpn.txt"
+vpn_remote_file="${webadmin_install_dir}/.vpn_remote.txt"
+upgradeos_file="${webadmin_install_dir}/.upgradeos.txt"
+cancel_install_file="${webadmin_install_dir}/.cancel_install.txt"
+default_domain_file="${webadmin_install_dir}/.default_domain.txt"
+email_proxy_file="${webadmin_install_dir}/.emailproxy.txt"
+theme_file="${webadmin_install_dir}/.theme.txt"
+translations_import_file="${webadmin_install_dir}/.translations_import.txt"
+icecast_file="${webadmin_install_dir}/.icecast.txt"
+koel_file="${webadmin_install_dir}/.koel.txt"
+dlna_file="${webadmin_install_dir}/.dlna.txt"
+datlinks_file="${webadmin_install_dir}/.datlinks.txt"
+settings_updates_file="${webadmin_install_dir}/.settingsupdates.txt"
+ssh_file="${webadmin_install_dir}/.ssh.txt"
+appsettings_file="${webadmin_install_dir}/.appsettings.txt"
+factoryreset_file="${webadmin_install_dir}/.factoryreset.txt"
 factoryreset_file_distro="/root/.factoryresetdistro"
-upgrade_file="$webadmin_install_dir/.upgrade.txt"
-language_file="$webadmin_install_dir/.language.txt"
-system_monitor_file="$webadmin_install_dir/.system_monitor.txt"
-dynamic_dns_file="$webadmin_install_dir/.dynamicdns.txt"
-dynamic_dns_password_file="$webadmin_install_dir/.dynamicdnspassword.txt"
-dns_over_tls_file="$webadmin_install_dir/.dns_over_tls.txt"
-reset_file="$webadmin_install_dir/.reset.txt"
-shutdown_file="$webadmin_install_dir/.shutdown.txt"
-setup_file="$webadmin_install_dir/setup.txt"
-notification_type_file="$webadmin_install_dir/.notification_type.txt"
-domain_file="$webadmin_install_dir/.temp_domain.txt"
-pending_removes="$webadmin_install_dir/pending_removes.txt"
-pending_installs="$webadmin_install_dir/pending_installs.txt"
-new_user_file="$webadmin_install_dir/.new_user.txt"
-remove_user_file="$webadmin_install_dir/.remove_user.txt"
-change_password_file="$webadmin_install_dir/changepassword.dat"
+upgrade_file="${webadmin_install_dir}/.upgrade.txt"
+language_file="${webadmin_install_dir}/.language.txt"
+system_monitor_file="${webadmin_install_dir}/.system_monitor.txt"
+dynamic_dns_file="${webadmin_install_dir}/.dynamicdns.txt"
+dynamic_dns_password_file="${webadmin_install_dir}/.dynamicdnspassword.txt"
+dns_over_tls_file="${webadmin_install_dir}/.dns_over_tls.txt"
+reset_file="${webadmin_install_dir}/.reset.txt"
+shutdown_file="${webadmin_install_dir}/.shutdown.txt"
+setup_file="${webadmin_install_dir}/setup.txt"
+notification_type_file="${webadmin_install_dir}/.notification_type.txt"
+domain_file="${webadmin_install_dir}/.temp_domain.txt"
+pending_removes="${webadmin_install_dir}/pending_removes.txt"
+pending_installs="${webadmin_install_dir}/pending_installs.txt"
+new_user_file="${webadmin_install_dir}/.new_user.txt"
+remove_user_file="${webadmin_install_dir}/.remove_user.txt"
+change_password_file="${webadmin_install_dir}/changepassword.dat"
 install_state_file="/root/.install_state.txt"
-blocklist_file="$webadmin_install_dir/.blocklist.txt"
-federationlist_file="$webadmin_install_dir/.federationlist.txt"
-muted_words_file="$webadmin_install_dir/.blocklistwords.txt"
-bridgeslist_file="$webadmin_install_dir/.bridgeslist.txt"
+blocklist_file="${webadmin_install_dir}/.blocklist.txt"
+federationlist_file="${webadmin_install_dir}/.federationlist.txt"
+muted_words_file="${webadmin_install_dir}/.blocklistwords.txt"
+bridgeslist_file="${webadmin_install_dir}/.bridgeslist.txt"
 INSTALL_DIR=/root/build
 webadmin_user='admin'
 webadmin_temp_password_file=/root/.temp_webadmin_password
@@ -153,12 +153,12 @@ remove_user_script=/root/.webadmin_remove_user.sh
 appsettings_script=/root/.webadmin_appsettings
 
 # Files used to initiate backup or restore manually from the web UI
-backup_file="$webadmin_install_dir/.start_backup"
-backup_keys_file="$webadmin_install_dir/.start_backup_keys"
-restore_file="$webadmin_install_dir/.start_restore"
-restore_keys_file="$webadmin_install_dir/.start_restore_keys"
-format_file="$webadmin_install_dir/.start_format"
-appslist_filename="$webadmin_install_dir/apps.html"
+backup_file="${webadmin_install_dir}/.start_backup"
+backup_keys_file="${webadmin_install_dir}/.start_backup_keys"
+restore_file="${webadmin_install_dir}/.start_restore"
+restore_keys_file="${webadmin_install_dir}/.start_restore_keys"
+format_file="${webadmin_install_dir}/.start_format"
+appslist_filename="${webadmin_install_dir}/apps.html"
 
 # These files contain the percentage progress
 backup_progress_file=/root/.backup_progress.txt
@@ -300,9 +300,9 @@ function remove_default_nginx_domain {
         restart_nginx=1
     fi
     if [ $restart_nginx ]; then
-        if [ -d "$webadmin_install_dir" ]; then
-            echo "Restarting nginx after removing default config" >> "$webadmin_install_dir/log.txt"
-            chown www-data:www-data "$webadmin_install_dir/log.txt"
+        if [ -d "${webadmin_install_dir}" ]; then
+            echo "Restarting nginx after removing default config" >> "${webadmin_install_dir}/log.txt"
+            chown www-data:www-data "${webadmin_install_dir}/log.txt"
         fi
         systemctl restart nginx
     fi
@@ -329,19 +329,19 @@ function reset_app_install_after_power_cut {
         rm "$pending_installs"
     fi
 
-    if [ -f "$webadmin_install_dir/index_domain_changing.html" ]; then
-        cp "$webadmin_install_dir/index_domain_changing.html" "$webadmin_install_dir/index.html"
-        rm "$webadmin_install_dir/index_domain_changing.html"
-        chown www-data:www-data "$webadmin_install_dir/index.html"
+    if [ -f "${webadmin_install_dir}/index_domain_changing.html" ]; then
+        cp "${webadmin_install_dir}/index_domain_changing.html" "${webadmin_install_dir}/index.html"
+        rm "${webadmin_install_dir}/index_domain_changing.html"
+        chown www-data:www-data "${webadmin_install_dir}/index.html"
     fi
 
-    if [ -f "$webadmin_install_dir/index_app_installing.html" ]; then
-        cp "$webadmin_install_dir/index_app_installing.html" "$webadmin_install_dir/index.html"
-        rm "$webadmin_install_dir/index_app_installing.html"
-        chown www-data:www-data "$webadmin_install_dir/index.html"
-        cp "$webadmin_install_dir/index_app_installing.html" "$webadmin_install_dir/installing_progress.html"
-        chown www-data:www-data "$webadmin_install_dir/installing_progress.html"
-        echo "Restored index screen" >> "$webadmin_install_dir/applog.txt";
+    if [ -f "${webadmin_install_dir}/index_app_installing.html" ]; then
+        cp "${webadmin_install_dir}/index_app_installing.html" "${webadmin_install_dir}/index.html"
+        rm "${webadmin_install_dir}/index_app_installing.html"
+        chown www-data:www-data "${webadmin_install_dir}/index.html"
+        cp "${webadmin_install_dir}/index_app_installing.html" "${webadmin_install_dir}/installing_progress.html"
+        chown www-data:www-data "${webadmin_install_dir}/installing_progress.html"
+        echo "Restored index screen" >> "${webadmin_install_dir}/applog.txt";
     fi
 
     if [ -f "$currently_installing_app_domain" ]; then
@@ -350,10 +350,10 @@ function reset_app_install_after_power_cut {
         # if an nginx config was added for the app then remove it
         # and restart the web server
         if [ -f "/etc/nginx/sites-available/${app_domain}" ]; then
-            echo "Removing /etc/nginx/sites-available/${app_domain}" >> "$webadmin_install_dir/applog.txt"
+            echo "Removing /etc/nginx/sites-available/${app_domain}" >> "${webadmin_install_dir}/applog.txt"
             nginx_dissite "${app_domain}"
             rm "/etc/nginx/sites-available/${app_domain}"
-            echo "Restarting nginx" >> "$webadmin_install_dir/applog.txt"
+            echo "Restarting nginx" >> "${webadmin_install_dir}/applog.txt"
             systemctl restart nginx
         fi
         rm "$currently_installing_app_domain"
@@ -376,7 +376,7 @@ function web_create_homepage {
     homepage_filename="$homepage_install_dir/index.html"
     homepage_about_filename="$homepage_install_dir/about.html"
 
-    homepage_template_filename="$webadmin_install_dir/homepage_template.html"
+    homepage_template_filename="${webadmin_install_dir}/homepage_template.html"
     icons_dir="$homepage_install_dir/icons"
 
     if [ ! -d "$homepage_install_dir" ]; then
@@ -392,23 +392,23 @@ function web_create_homepage {
     # can use the homepage the icons are copied over to the home directory
 
     # copy the icons
-    cp -r "$webadmin_install_dir/icons"/*.png "$icons_dir"
+    cp -r "${webadmin_install_dir}/icons"/*.png "$icons_dir"
 
     # copy the logo
     if [ ! -d "$homepage_install_dir/images" ]; then
         mkdir -p "$homepage_install_dir/images"
     fi
-    cp "$webadmin_install_dir/images/logo.png" "$homepage_install_dir/images"
+    cp "${webadmin_install_dir}/images/logo.png" "$homepage_install_dir/images"
 
     # copy the css
-    cp "$webadmin_install_dir/${PROJECT_NAME}.css" "$homepage_install_dir"
+    cp "${webadmin_install_dir}/${PROJECT_NAME}.css" "$homepage_install_dir"
 
     # copy search icon
-    cp "$webadmin_install_dir/images/search.png" "$homepage_install_dir/images"
+    cp "${webadmin_install_dir}/images/search.png" "$homepage_install_dir/images"
 
     # copy the script used for search
-    cp "$webadmin_install_dir/common.php" "$homepage_install_dir"
-    cp "$webadmin_install_dir/search.php" "$homepage_install_dir"
+    cp "${webadmin_install_dir}/common.php" "$homepage_install_dir"
+    cp "${webadmin_install_dir}/search.php" "$homepage_install_dir"
 
     if [ ! -f "$homepage_template_filename" ]; then
         return
@@ -416,7 +416,7 @@ function web_create_homepage {
     cp "$homepage_template_filename" "$homepage_filename"
 
     # copy the about screen for homepage
-    cp "$webadmin_install_dir/homepage_about.html" "$homepage_about_filename"
+    cp "${webadmin_install_dir}/homepage_about.html" "$homepage_about_filename"
 
     # show onion address for homepage
     webadmin_onion_domain=$(cat /var/lib/tor/hidden_service_webadmin/hostname)
@@ -649,7 +649,7 @@ function web_admin_create_app_descriptions {
     # them into a file which can then be used for translations
     FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
 
-    app_descriptions_file="$webadmin_install_dir/app_descriptions.txt"
+    app_descriptions_file="${webadmin_install_dir}/app_descriptions.txt"
     if [ -f "$app_descriptions_file" ]; then
         rm "$app_descriptions_file"
     fi
@@ -862,7 +862,7 @@ function web_admin_translate {
     webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
     webadmin_homepage_dir="/var/www/${local_hostname}/htdocs/home"
 
-    translations_file="$webadmin_install_dir/translations/${language}.txt"
+    translations_file="${webadmin_install_dir}/translations/${language}.txt"
     if [ ! -f "$translations_file" ]; then
         return
     fi
@@ -880,7 +880,7 @@ function web_admin_translate {
 
             # get the files containing this text
             # shellcheck disable=SC2207
-            webfiles=($(grep -l ">$english_text<" "$webadmin_install_dir"/*.html))
+            webfiles=($(grep -l ">$english_text<" "${webadmin_install_dir}"/*.html))
 
             # translate each file
             j=0
@@ -891,7 +891,7 @@ function web_admin_translate {
 
             # get the files containing this button text
             # shellcheck disable=SC2207
-            webfiles=($(grep -l "value=\"$english_text\"" "$webadmin_install_dir"/*.html))
+            webfiles=($(grep -l "value=\"$english_text\"" "${webadmin_install_dir}"/*.html))
 
             # translate each file
             j=0
@@ -902,7 +902,7 @@ function web_admin_translate {
 
             # get the alt text
             # shellcheck disable=SC2207
-            webfiles=($(grep -l " alt=\"$english_text\"" "$webadmin_install_dir"/*.html))
+            webfiles=($(grep -l " alt=\"$english_text\"" "${webadmin_install_dir}"/*.html))
 
             # translate each file
             j=0
@@ -913,7 +913,7 @@ function web_admin_translate {
 
             # get titles
             # shellcheck disable=SC2207
-            webfiles=($(grep -l " title=\"$english_text\">" "$webadmin_install_dir"/*.html))
+            webfiles=($(grep -l " title=\"$english_text\">" "${webadmin_install_dir}"/*.html))
 
             # translate each file
             j=0
@@ -960,15 +960,15 @@ function web_admin_translate {
     echo ''
     echo "Changing lang headers"
     langstr="${language:0:2}"
-    for filename in "$webadmin_install_dir"/*.html; do
+    for filename in "${webadmin_install_dir}"/*.html; do
         sed -i 's|"yes" lang="en">||g' "$filename"
     done
-    for filename in "$webadmin_install_dir"/*.html; do
+    for filename in "${webadmin_install_dir}"/*.html; do
         sed -i "s|<html>|<html lang=\"$langstr\">|g" "$filename"
         sed -i "s|<html lang=\"en\">|<html lang=\"$langstr\">|g" "$filename"
     done
 
-    chown www-data:www-data "$webadmin_install_dir"/*.html
+    chown www-data:www-data "${webadmin_install_dir}"/*.html
     echo "Translations complete"
 }
 
@@ -1091,9 +1091,9 @@ function enough_ram_for_app {
 function webadmin_update_version {
     local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
     webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
-    if [ -f "$webadmin_install_dir/about.html" ]; then
+    if [ -f "${webadmin_install_dir}/about.html" ]; then
         VERSION=$(grep "VERSION=" "/usr/local/bin/${PROJECT_NAME}-vars" | grep -v DEBIAN | awk -F '"' '{print $2}')
-        sed -i "s|\"versiontext\".*|\"versiontext\">$VERSION</p>|g" "$webadmin_install_dir/about.html"
+        sed -i "s|\"versiontext\".*|\"versiontext\">$VERSION</p>|g" "${webadmin_install_dir}/about.html"
     fi
 }
 
@@ -1116,17 +1116,17 @@ function web_admin_onion_only {
     fi
 
     # shellcheck disable=SC2154
-    sed -i '/freedns_code/d' "$webadmin_install_dir/app_add_template.html"
+    sed -i '/freedns_code/d' "${webadmin_install_dir}/app_add_template.html"
     # shellcheck disable=SC2154
-    sed -i '/freedns_code/d' "$webadmin_install_dir/add_app_confirm_template.html"
+    sed -i '/freedns_code/d' "${webadmin_install_dir}/add_app_confirm_template.html"
 
-    sed -i '/install_domain/d' "$webadmin_install_dir/app_add_template.html"
-    sed -i '/install_domain/d' "$webadmin_install_dir/add_app_confirm_template.html"
+    sed -i '/install_domain/d' "${webadmin_install_dir}/app_add_template.html"
+    sed -i '/install_domain/d' "${webadmin_install_dir}/add_app_confirm_template.html"
 
-    sed -i 's|onion_only=false;|onion_only=true;|g' "$webadmin_install_dir/installapp.php"
-    sed -i 's|onion_only=false;|onion_only=true;|g' "$webadmin_install_dir/installappconfirm.php"
+    sed -i 's|onion_only=false;|onion_only=true;|g' "${webadmin_install_dir}/installapp.php"
+    sed -i 's|onion_only=false;|onion_only=true;|g' "${webadmin_install_dir}/installappconfirm.php"
 
-    sed -i 's|setup_domain.html|setup_installing.html|g' "$webadmin_install_dir/setupconfirm.php"
+    sed -i 's|setup_domain.html|setup_installing.html|g' "${webadmin_install_dir}/setupconfirm.php"
 }
 
 function get_app_categories {
@@ -1206,7 +1206,7 @@ function web_admin_create_add_apps_category {
                                 # get the icon for the app
                                 icon_filename="/usr/share/${PROJECT_NAME}/android-app/${app_name}.png"
                                 if [ -f "$icon_filename" ]; then
-                                    cp "$icon_filename" "$webadmin_install_dir/icons/${app_name}.png"
+                                    cp "$icon_filename" "${webadmin_install_dir}/icons/${app_name}.png"
                                 else
                                     continue
                                 fi
@@ -1238,12 +1238,12 @@ function web_admin_create_add_apps_category {
                                     echo '    <div class="row">' >> "$appslist_add_filename"
                                 fi
 
-                                filename_app="$webadmin_install_dir/app_${app_name}.html"
+                                filename_app="${webadmin_install_dir}/app_${app_name}.html"
                                 if [ -f "$filename_app" ]; then
                                     rm "$filename_app"
                                 fi
 
-                                filename_app="$webadmin_install_dir/app_add_${app_name}.html"
+                                filename_app="${webadmin_install_dir}/app_add_${app_name}.html"
 
                                 if [ ! $app_pending_install ]; then
                                     { echo '      <div class="column">';
@@ -1352,12 +1352,12 @@ function web_admin_create_add_apps {
         ONION_ONLY='no'
     fi
 
-    appslist_add_filename="$webadmin_install_dir/apps_add.html"
+    appslist_add_filename="${webadmin_install_dir}/apps_add.html"
 
-    apps_add_template_filename="$webadmin_install_dir/apps_add_template.html"
-    pending_installs="$webadmin_install_dir/pending_installs.txt"
-    icons_dir="$webadmin_install_dir/icons"
-    app_add_template_filename="$webadmin_install_dir/app_add_template.html"
+    apps_add_template_filename="${webadmin_install_dir}/apps_add_template.html"
+    pending_installs="${webadmin_install_dir}/pending_installs.txt"
+    icons_dir="${webadmin_install_dir}/icons"
+    app_add_template_filename="${webadmin_install_dir}/app_add_template.html"
     FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
 
     if [ ! -d "$icons_dir" ]; then
@@ -1385,13 +1385,13 @@ function web_admin_create_add_apps {
       echo '  </body>';
       echo '</html>'; } >> "$appslist_add_filename"
 
-    chown -R www-data:www-data "$webadmin_install_dir"
+    chown -R www-data:www-data "${webadmin_install_dir}"
 }
 
 function web_admin_create_installed_apps {
-    appslist_template_filename="$webadmin_install_dir/apps_template.html"
-    icons_dir="$webadmin_install_dir/icons"
-    pending_removes="$webadmin_install_dir/pending_removes.txt"
+    appslist_template_filename="${webadmin_install_dir}/apps_template.html"
+    icons_dir="${webadmin_install_dir}/icons"
+    pending_removes="${webadmin_install_dir}/pending_removes.txt"
 
     if [ ! -d "$icons_dir" ]; then
         mkdir -p "$icons_dir"
@@ -1422,7 +1422,7 @@ function web_admin_create_installed_apps {
       echo '  </body>';
       echo '</html>'; } >> "$appslist_filename"
 
-    chown -R www-data:www-data "$webadmin_install_dir"
+    chown -R www-data:www-data "${webadmin_install_dir}"
 }
 
 function check_for_changed_email_domain {
@@ -1432,7 +1432,7 @@ function check_for_changed_email_domain {
         return
     fi
     # the members screen for admin should contain the email domain
-    userfile="$webadmin_install_dir/userprofile_admin.html"
+    userfile="${webadmin_install_dir}/userprofile_admin.html"
     if grep -q "$mailname" "$userfile"; then
         return
     fi
@@ -1440,7 +1440,7 @@ function check_for_changed_email_domain {
     email_onion_domain=$(cat /var/lib/tor/hidden_service_email/hostname)
     for d in /home/*/ ; do
         USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
-        userfile="$webadmin_install_dir/userprofile_${USERNAME}.html"
+        userfile="${webadmin_install_dir}/userprofile_${USERNAME}.html"
         if [ ! -f "$userfile" ]; then
             continue
         fi
@@ -1455,7 +1455,7 @@ function check_for_changed_email_domain {
         fi
         sed -i "s|<p class=\"email\".*|<p class=\"email\" translate=\"no\">${useremail}</p>|g" "$userfile"
         # generate the QR code
-        email_qrcode_image="$webadmin_install_dir/images/userprofile_${USERNAME}_xmpp.png"
+        email_qrcode_image="${webadmin_install_dir}/images/userprofile_${USERNAME}_xmpp.png"
         if [ ! -f /usr/local/bin/myqr ]; then
             echo -n "${qrcode_email}" | qrencode -t PNG -o "$email_qrcode_image"
         else
@@ -1469,9 +1469,9 @@ function web_admin_create_users {
         return
     fi
 
-    users_file="$webadmin_install_dir/users.html"
+    users_file="${webadmin_install_dir}/users.html"
 
-    cp "$webadmin_install_dir"/users_template.html "$users_file"
+    cp "${webadmin_install_dir}"/users_template.html "$users_file"
     sed -i '/users list/,/end of users/d' "$users_file"
     sed -i '/<\/body>/d' "$users_file"
     sed -i '/<\/html>/d' "$users_file"
@@ -1479,10 +1479,10 @@ function web_admin_create_users {
     echo "    <div class=\"row\">" >> "$users_file"
     echo "      <div class=\"column\">" >> "$users_file"
 
-    rm "$webadmin_install_dir/userprofile_"*
+    rm "${webadmin_install_dir}/userprofile_"*
 
     USERNAME="$webadmin_user"
-    userfile="$webadmin_install_dir/userprofile_${USERNAME}.html"
+    userfile="${webadmin_install_dir}/userprofile_${USERNAME}.html"
     useremail=${USERNAME}@${HOSTNAME}
     GPG_ID=$(su -c "gpg --list-keys '$useremail'" - "$USERNAME" | sed -n '2p' | sed 's/^[ \t]*//')
     if [ -f "/home/$USERNAME/.gnupg/gpg.conf" ]; then
@@ -1496,7 +1496,7 @@ function web_admin_create_users {
             fi
         fi
     fi
-    #pubkey_qrcode="$webadmin_install_dir/images/userprofile_${USERNAME}.png"
+    #pubkey_qrcode="${webadmin_install_dir}/images/userprofile_${USERNAME}.png"
     #su -c "gpg --armor --export \"$GPG_ID\"" - "$USERNAME" | qrencode -t PNG -o "$pubkey_qrcode"
 
     { echo '        <div class="chip">';
@@ -1506,7 +1506,7 @@ function web_admin_create_users {
       echo '          </a>';
       echo '        </div>'; } >> "$users_file"
 
-    cp "$webadmin_install_dir"/userprofile.html "$userfile"
+    cp "${webadmin_install_dir}"/userprofile.html "$userfile"
     sed -i "s|USERNAME|${USERNAME}|g" "$userfile"
     if [[ "$USERNAME" == "$webadmin_user" ]]; then
         sed -i "s|USERTYPE|Admin|g" "$userfile"
@@ -1588,7 +1588,7 @@ function web_admin_create_user {
 }
 
 function web_admin_setup_login {
-    if [ $install_state -ne $INSTALL_STATE_FIRST_BOOT ]; then
+    if [ ${install_state} -ne $INSTALL_STATE_FIRST_BOOT ]; then
         return
     fi
 
@@ -1609,8 +1609,8 @@ function web_admin_setup_login {
 
     # this file indicates that the setup screen is active
     # and gets removed by libreserver-installer
-    if [ ! -f "$webadmin_install_dir/.setupscreenactive" ]; then
-        touch "$webadmin_install_dir/.setupscreenactive"
+    if [ ! -f "${webadmin_install_dir}/.setupscreenactive" ]; then
+        touch "${webadmin_install_dir}/.setupscreenactive"
     fi
 
     if [ ! -f $webadmin_temp_password_file ]; then
@@ -1654,11 +1654,11 @@ function web_admin_setup_login {
 
     # create a setup page with the initial password inserted
     # and copy it to the index
-    cp "$webadmin_install_dir"/setup.html "$webadmin_install_dir"/setup.prev
-    cp "$webadmin_install_dir"/setup_confirm_template.html "$webadmin_install_dir"/setup_confirm.html
-    sed -i "s|WEBADMINPASSWORD|${webadmin_password}|g" "$webadmin_install_dir/setup.prev"
-    sed -i "s|WEBADMINPASSWORD|${webadmin_password}|g" "$webadmin_install_dir/setup_confirm.html"
-    cp "$webadmin_install_dir"/setup.prev "$webadmin_install_dir"/index.html
+    cp "${webadmin_install_dir}"/setup.html "${webadmin_install_dir}"/setup.prev
+    cp "${webadmin_install_dir}"/setup_confirm_template.html "${webadmin_install_dir}"/setup_confirm.html
+    sed -i "s|WEBADMINPASSWORD|${webadmin_password}|g" "${webadmin_install_dir}/setup.prev"
+    sed -i "s|WEBADMINPASSWORD|${webadmin_password}|g" "${webadmin_install_dir}/setup_confirm.html"
+    cp "${webadmin_install_dir}"/setup.prev "${webadmin_install_dir}"/index.html
 
     # if initial setup has not yet happened then create
     # a password file
@@ -1672,7 +1672,7 @@ function web_admin_setup_login {
     web_admin_create_app_descriptions
     web_admin_translate
 
-    echo -n "$INSTALL_STATE_WEBADMIN_PASSWORD_CREATED" > "$install_state_file"
+    echo -n "$INSTALL_STATE_WEBADMIN_PASSWORD_CREATED" > "${install_state_file}"
     install_state=$INSTALL_STATE_WEBADMIN_PASSWORD_CREATED
 }
 
@@ -1684,38 +1684,38 @@ function enable_webadmin_login {
 }
 
 function remove_initial_setup_page {
-    if [ -f "$webadmin_install_dir/index.prev" ]; then
+    if [ -f "${webadmin_install_dir}/index.prev" ]; then
         # Replace the installing screen with the main index page when done
         # It should reload by itself
-        if [ -f "$webadmin_install_dir/setup_installing.html" ]; then
-            cp "$webadmin_install_dir/EN/index.html" "$webadmin_install_dir/setup_installing.html"
+        if [ -f "${webadmin_install_dir}/setup_installing.html" ]; then
+            cp "${webadmin_install_dir}/EN/index.html" "${webadmin_install_dir}/setup_installing.html"
         fi
 
         # Replace the setup confirm screen with the main index
-        if [ -f "$webadmin_install_dir/setup_confirm.html" ]; then
-            cp "$webadmin_install_dir/EN/index.html" "$webadmin_install_dir/setup_confirm.html"
+        if [ -f "${webadmin_install_dir}/setup_confirm.html" ]; then
+            cp "${webadmin_install_dir}/EN/index.html" "${webadmin_install_dir}/setup_confirm.html"
         fi
 
         # Replace the setup domain screen with the main index
-        if [ -f "$webadmin_install_dir/setup_domain.html" ]; then
-            cp "$webadmin_install_dir/EN/index.html" "$webadmin_install_dir/setup_domain.html"
+        if [ -f "${webadmin_install_dir}/setup_domain.html" ]; then
+            cp "${webadmin_install_dir}/EN/index.html" "${webadmin_install_dir}/setup_domain.html"
         fi
 
         # Show the web admin index page (not the initial setup page)
-        cp "$webadmin_install_dir/EN/index.html" "$webadmin_install_dir/index.html"
-        rm "$webadmin_install_dir/index.prev"
+        cp "${webadmin_install_dir}/EN/index.html" "${webadmin_install_dir}/index.html"
+        rm "${webadmin_install_dir}/index.prev"
     fi
 
     # Remove the initial setup page
-    if [ -f "$webadmin_install_dir/setup.prev" ]; then
-        rm "$webadmin_install_dir/setup.prev"
+    if [ -f "${webadmin_install_dir}/setup.prev" ]; then
+        rm "${webadmin_install_dir}/setup.prev"
     fi
 }
 
 function remove_temporary_setup_files {
     # remove the file which indicates that the setup screen is active
-    if [ -f "$webadmin_install_dir/.setupscreenactive" ]; then
-        rm "$webadmin_install_dir/.setupscreenactive"
+    if [ -f "${webadmin_install_dir}/.setupscreenactive" ]; then
+        rm "${webadmin_install_dir}/.setupscreenactive"
     fi
 
     # remove the setup file created by setup.php
@@ -1732,14 +1732,14 @@ function remove_temporary_setup_files {
 function restore_webadmin_files {
     # restore files which were removed for the initial setup
     if [ -d "$INSTALL_DIR/tempwebadmin" ]; then
-        mv "$INSTALL_DIR/tempwebadmin"/* "$webadmin_install_dir"
+        mv "$INSTALL_DIR/tempwebadmin"/* "${webadmin_install_dir}"
         rm -rf "$INSTALL_DIR/tempwebadmin"
     fi
 }
 
 function set_webadmin_permissions {
     # set permissions for web admin site at libreserver.local
-    chown www-data:www-data "$webadmin_install_dir/*.html"
+    chown www-data:www-data "${webadmin_install_dir}/*.html"
 }
 
 function check_for_existing_processes {
@@ -1781,7 +1781,7 @@ function check_for_existing_processes {
 }
 
 function run_setup_command {
-    if [ $install_state -ne $INSTALL_STATE_WEBADMIN_PASSWORD_CREATED ]; then
+    if [ ${install_state} -ne $INSTALL_STATE_WEBADMIN_PASSWORD_CREATED ]; then
         return
     fi
 
@@ -1805,22 +1805,22 @@ function run_setup_command {
     fi
 
     { echo '#!/bin/bash';
-      echo "echo \"Beginning install \$(date)\" > $webadmin_install_dir/log.txt";
-      echo "chown www-data:www-data $webadmin_install_dir/log.txt";
+      echo "echo \"Beginning install \$(date)\" > ${webadmin_install_dir}/log.txt";
+      echo "chown www-data:www-data ${webadmin_install_dir}/log.txt";
       echo '';
-      echo "/usr/local/bin/${PROJECT_NAME} -c \"$CONFIGURATION_FILE\" >> $webadmin_install_dir/log.txt";
+      echo "/usr/local/bin/${PROJECT_NAME} -c \"$CONFIGURATION_FILE\" >> ${webadmin_install_dir}/log.txt";
       echo "if ! grep -q 'install_final' \"$COMPLETION_FILE\"; then";
-      echo "    chown www-data:www-data $webadmin_install_dir/log.txt";
-      echo "    echo '$INSTALL_STATE_COMMAND_FAIL' > $install_state_file";
+      echo "    chown www-data:www-data ${webadmin_install_dir}/log.txt";
+      echo "    echo '$INSTALL_STATE_COMMAND_FAIL' > ${install_state_file}";
       echo '    exit 36';
       echo 'fi';
       echo '';
-      echo "chown www-data:www-data $webadmin_install_dir/log.txt";
+      echo "chown www-data:www-data ${webadmin_install_dir}/log.txt";
       echo '';
       echo "exit 0"; } >> $installer_script
     chmod +x $installer_script
 
-    echo -n "$INSTALL_STATE_RUNNING_COMMAND" > "$install_state_file"
+    echo -n "$INSTALL_STATE_RUNNING_COMMAND" > "${install_state_file}"
     install_state=$INSTALL_STATE_RUNNING_COMMAND
 
     # run in a separate process
@@ -1828,14 +1828,14 @@ function run_setup_command {
 }
 
 function check_install_command_state {
-    if [ $install_state -ne $INSTALL_STATE_RUNNING_COMMAND ]; then
+    if [ ${install_state} -ne $INSTALL_STATE_RUNNING_COMMAND ]; then
         return
     fi
     reset_install_state=
-    if [ ! -f "$install_state_file" ]; then
+    if [ ! -f "${install_state_file}" ]; then
         reset_install_state=1
     else
-        curr_state=$(cat "$install_state_file")
+        curr_state=$(cat "${install_state_file}")
 
         # shellcheck disable=SC2086
         if [ $curr_state -eq $INSTALL_STATE_COMMAND_FAIL ]; then
@@ -1850,8 +1850,8 @@ function check_install_command_state {
         else
             # Also check the install log for a message
             # indicating completion has happened
-            if [ -f "$webadmin_install_dir/log.txt" ]; then
-                end_of_log=$(tail -n 10 "$webadmin_install_dir/log.txt" | grep ${PROJECT_NAME})
+            if [ -f "${webadmin_install_dir}/log.txt" ]; then
+                end_of_log=$(tail -n 10 "${webadmin_install_dir}/log.txt" | grep ${PROJECT_NAME})
                 end_of_log_message=$'installation is complete'
                 if [[ "$end_of_log" == *"$end_of_log_message"* ]]; then
                     install_has_finished=1
@@ -1860,14 +1860,14 @@ function check_install_command_state {
         fi
 
         if [ $install_has_finished ]; then
-            echo -n "$INSTALL_STATE_COMMAND_SUCCESS" > "$install_state_file"
+            echo -n "$INSTALL_STATE_COMMAND_SUCCESS" > "${install_state_file}"
             install_state=$INSTALL_STATE_COMMAND_SUCCESS
             restore_webadmin_files
         fi
     fi
 
     if [ $reset_install_state ]; then
-        chown www-data:www-data "$webadmin_install_dir/log.txt"
+        chown www-data:www-data "${webadmin_install_dir}/log.txt"
         # remove the setup file containing login details
         if [ -f "$setup_file" ]; then
             rm "$setup_file"
@@ -1876,13 +1876,13 @@ function check_install_command_state {
         if [ -f /etc/nginx/.webadminpasswd ]; then
             rm /etc/nginx/.webadminpasswd
         fi
-        echo -n "$INSTALL_STATE_FIRST_BOOT" > "$install_state_file"
+        echo -n "$INSTALL_STATE_FIRST_BOOT" > "${install_state_file}"
         install_state=$INSTALL_STATE_FIRST_BOOT
     fi
 }
 
 function before_setup_runs {
-    if [ $install_state -ne $INSTALL_STATE_WEBADMIN_PASSWORD_CREATED ]; then
+    if [ ${install_state} -ne $INSTALL_STATE_WEBADMIN_PASSWORD_CREATED ]; then
         return
     fi
 
@@ -1898,7 +1898,7 @@ function before_setup_runs {
         return
     fi
 
-    cp "/usr/share/${PROJECT_NAME}/webadmin/EN/setup_installing.html" "$webadmin_install_dir/index.html"
+    cp "/usr/share/${PROJECT_NAME}/webadmin/EN/setup_installing.html" "${webadmin_install_dir}/index.html"
 
     # get the username and domain from the .temp_setup.txt file
     # created by setup.php
@@ -1967,7 +1967,7 @@ function before_setup_runs {
 }
 
 function after_setup_has_finished {
-    if [ $install_state -ne $INSTALL_STATE_COMMAND_SUCCESS ]; then
+    if [ ${install_state} -ne $INSTALL_STATE_COMMAND_SUCCESS ]; then
         return
     fi
     if [ -f /root/.initial_setup ]; then
@@ -2026,7 +2026,7 @@ function after_setup_has_finished {
 
     increment_install_progress
 
-    chown -R www-data:www-data "$webadmin_install_dir"
+    chown -R www-data:www-data "${webadmin_install_dir}"
 
     enable_webadmin_login
     remove_initial_setup_page
@@ -2072,9 +2072,9 @@ function set_static_ip_address {
             if [ -f /etc/network/interfaces.d/static ]; then
                 rm /etc/network/interfaces.d/static
             fi
-            cp "$webadmin_install_dir/static_ip_template.html" "$webadmin_install_dir/static_ip.html"
-            sed -i "s|STATICIPADDRESS||g" "$webadmin_install_dir/static_ip.html"
-            sed -i "s|GATEWAYADDRESS||g" "$webadmin_install_dir/static_ip.html"
+            cp "${webadmin_install_dir}/static_ip_template.html" "${webadmin_install_dir}/static_ip.html"
+            sed -i "s|STATICIPADDRESS||g" "${webadmin_install_dir}/static_ip.html"
+            sed -i "s|GATEWAYADDRESS||g" "${webadmin_install_dir}/static_ip.html"
             if grep -q "NETWORK_IS_STATIC=" "$CONFIGURATION_FILE"; then
                 sed -i 's|NETWORK_IS_STATIC=.*|NETWORK_IS_STATIC=0|g' "$CONFIGURATION_FILE"
             fi
@@ -2084,7 +2084,7 @@ function set_static_ip_address {
             if grep -q "ROUTER_IP_ADDRESS=" "$CONFIGURATION_FILE"; then
                 sed -i '/ROUTER_IP_ADDRESS=/d' "$CONFIGURATION_FILE"
             fi
-            chown www-data:www-data "$webadmin_install_dir/static_ip.html"
+            chown www-data:www-data "${webadmin_install_dir}/static_ip.html"
             systemctl restart network-manager
         else
             new_gateway=$(awk -F ',' '{print $2}' < "$static_ip_address_file")
@@ -2113,9 +2113,9 @@ function set_static_ip_address {
                     if [ -f /etc/network/interfaces.d/dynamic ]; then
                         rm /etc/network/interfaces.d/dynamic
                     fi
-                    cp "$webadmin_install_dir/static_ip_template.html" "$webadmin_install_dir/static_ip.html"
-                    sed -i "s|STATICIPADDRESS|${new_ip_address}|g" "$webadmin_install_dir/static_ip.html"
-                    sed -i "s|GATEWAYADDRESS|${new_gateway}|g" "$webadmin_install_dir/static_ip.html"
+                    cp "${webadmin_install_dir}/static_ip_template.html" "${webadmin_install_dir}/static_ip.html"
+                    sed -i "s|STATICIPADDRESS|${new_ip_address}|g" "${webadmin_install_dir}/static_ip.html"
+                    sed -i "s|GATEWAYADDRESS|${new_gateway}|g" "${webadmin_install_dir}/static_ip.html"
                     if grep -q "NETWORK_IS_STATIC=" "$CONFIGURATION_FILE"; then
                         sed -i 's|NETWORK_IS_STATIC=.*|NETWORK_IS_STATIC=1|g' "$CONFIGURATION_FILE"
                     else
@@ -2131,7 +2131,7 @@ function set_static_ip_address {
                     else
                         echo "ROUTER_IP_ADDRESS=${new_gateway}" >> "$CONFIGURATION_FILE"
                     fi
-                    chown www-data:www-data "$webadmin_install_dir/static_ip.html"
+                    chown www-data:www-data "${webadmin_install_dir}/static_ip.html"
                     systemctl restart network-manager
                 fi
             fi
@@ -2174,8 +2174,8 @@ function install_apps_from_webadmin {
                 fi
 
                 # remove the qrcode for the app if it exists
-                if [ -f "$webadmin_install_dir/app_qrcode_${app_name}.png" ]; then
-                    rm "$webadmin_install_dir/app_qrcode_${app_name}.png"
+                if [ -f "${webadmin_install_dir}/app_qrcode_${app_name}.png" ]; then
+                    rm "${webadmin_install_dir}/app_qrcode_${app_name}.png"
                 fi
 
                 # remove from pending list so that if the install gets stuck
@@ -2196,20 +2196,20 @@ function install_apps_from_webadmin {
                   echo '# exit if an install is already happening';
                   echo "kill_pid=\$(ps aux | grep \"addremove add\" | grep -v grep | head -n 1 | awk -F ' ' '{print $2}')";
                   echo "if [ \"\$kill_pid\" ]; then";
-                  echo "    echo \"App install already in progress\" >> \"$webadmin_install_dir/applog.txt\"";
-                  echo "    grep \"addremove add\" | head -n 1 >> \"$webadmin_install_dir/applog.txt\"";
-                  echo "    chown www-data:www-data \"$webadmin_install_dir/applog.txt\"";
+                  echo "    echo \"App install already in progress\" >> \"${webadmin_install_dir}/applog.txt\"";
+                  echo "    grep \"addremove add\" | head -n 1 >> \"${webadmin_install_dir}/applog.txt\"";
+                  echo "    chown www-data:www-data \"${webadmin_install_dir}/applog.txt\"";
                   echo '    exit 0';
                   echo 'fi';
                   echo '';
-                  echo "if ! /usr/bin/timeout $APP_INSTALL_TIMEOUT_SEC /usr/local/bin/${PROJECT_NAME}-addremove add \"${app_name}\" > \"$webadmin_install_dir/applog.txt\"; then";
+                  echo "if ! /usr/bin/timeout $APP_INSTALL_TIMEOUT_SEC /usr/local/bin/${PROJECT_NAME}-addremove add \"${app_name}\" > \"${webadmin_install_dir}/applog.txt\"; then";
                   echo "    sed -i \"/$linestr/d\" \"$pending_installs\"";
                   echo "    notification_str=\"$translated_notification_failed\"";
                   echo "    if [ -f \"/etc/nginx/sites-available/${app_domain}\" ]; then";
-                  echo "        echo \"Removing /etc/nginx/sites-available/${app_domain}\" >> \"$webadmin_install_dir/applog.txt\"";
+                  echo "        echo \"Removing /etc/nginx/sites-available/${app_domain}\" >> \"${webadmin_install_dir}/applog.txt\"";
                   echo "        nginx_dissite \"${app_domain}\"";
                   echo "        rm \"/etc/nginx/sites-available/${app_domain}\"";
-                  echo "        echo \"Restarting nginx\" >> \"$webadmin_install_dir/applog.txt\"";
+                  echo "        echo \"Restarting nginx\" >> \"${webadmin_install_dir}/applog.txt\"";
                   echo '        systemctl restart nginx';
                   echo '    fi';
                   echo 'else';
@@ -2220,7 +2220,7 @@ function install_apps_from_webadmin {
                   echo 'fi';
                   echo "rm $currently_installing_app_name";
                   echo "/usr/local/bin/${PROJECT_NAME}-notification -s \"[${PROJECT_NAME}] ${app_name} ${translated_notification_str}\" -m \"${app_name} \${notification_str}\" &";
-                  echo "chown www-data:www-data \"$webadmin_install_dir/applog.txt\"";
+                  echo "chown www-data:www-data \"${webadmin_install_dir}/applog.txt\"";
                   echo "exit 0"; } > $install_app_script
                 chmod +x $install_app_script
                 /bin/bash $install_app_script &
@@ -2246,10 +2246,10 @@ function remove_apps_from_webadmin {
                     sed -i "s|${app_name}|${app_name}_running|g" "$pending_removes"
                 fi
 
-                /usr/bin/timeout $APP_INSTALL_TIMEOUT_SEC /usr/local/bin/${PROJECT_NAME}-addremove remove "${app_name}" > "$webadmin_install_dir/applog.txt"
-                chown www-data:www-data "$webadmin_install_dir/applog.txt"
-                if [ -f "$webadmin_install_dir/app_qrcode_${app_name}.png" ]; then
-                    rm "$webadmin_install_dir/app_qrcode_${app_name}.png"
+                /usr/bin/timeout $APP_INSTALL_TIMEOUT_SEC /usr/local/bin/${PROJECT_NAME}-addremove remove "${app_name}" > "${webadmin_install_dir}/applog.txt"
+                chown www-data:www-data "${webadmin_install_dir}/applog.txt"
+                if [ -f "${webadmin_install_dir}/app_qrcode_${app_name}.png" ]; then
+                    rm "${webadmin_install_dir}/app_qrcode_${app_name}.png"
                 fi
 
                 notification_str="removed"
@@ -2273,14 +2273,14 @@ function update_progress_bar {
         return
     fi
     # shellcheck disable=SC2086
-    if [ $install_state -gt $INSTALL_STATE_RUNNING_COMMAND ]; then
+    if [ ${install_state} -gt $INSTALL_STATE_RUNNING_COMMAND ]; then
         return
     fi
     if [ ! -f /root/.install_counter ]; then
         echo -n '1' > /root/.install_counter
     fi
     max_counter=385
-    installing_page="$webadmin_install_dir/setup_installing.html"
+    installing_page="${webadmin_install_dir}/setup_installing.html"
     progress_counter=$(cat /root/.install_counter)
     if [ ! "$progress_counter" ]; then
         echo -n '1' > /root/.install_counter
@@ -2294,10 +2294,10 @@ function update_progress_bar {
     fi
     progress_percent=$((progress_counter * 100 / max_counter))
     sed -i "s|<div class=\"w3-container.*|<div class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:${progress_percent}%\">${progress_percent}%</div>|g" "$installing_page"
-    if ! grep -q 'w3-container w3-dark-grey' "$webadmin_install_dir/index.html"; then
-        cp "$webadmin_install_dir/setup_installing.html" "$webadmin_install_dir/index.html"
+    if ! grep -q 'w3-container w3-dark-grey' "${webadmin_install_dir}/index.html"; then
+        cp "${webadmin_install_dir}/setup_installing.html" "${webadmin_install_dir}/index.html"
     fi
-    sed -i "s|<div class=\"w3-container.*|<div class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:${progress_percent}%\">${progress_percent}%</div>|g" "$webadmin_install_dir/index.html"
+    sed -i "s|<div class=\"w3-container.*|<div class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:${progress_percent}%\">${progress_percent}%</div>|g" "${webadmin_install_dir}/index.html"
 }
 
 function increment_install_progress {
@@ -2333,7 +2333,7 @@ function initiate_automatic_backup {
             backup_device=$(detect_connected_drives)
             if [[ "$backup_device" == 'sd'* ]]; then
                 touch "$backup_file"
-                autobackup_log_file="$webadmin_install_dir/autobackup.txt"
+                autobackup_log_file="${webadmin_install_dir}/autobackup.txt"
                 if [ -f "$autobackup_log_file" ]; then
                     # keep the number of lines in the autobackup log small
                     # we don't need to check things from ancient history
@@ -2375,7 +2375,7 @@ function update_backup_progress_bar {
     fi
 
     max_counter=57
-    progress_page="$webadmin_install_dir/backup_progress.html"
+    progress_page="${webadmin_install_dir}/backup_progress.html"
     progress_counter=$(cat $backup_progress_file)
     progress_percent=$((progress_counter * 100 / max_counter))
     if [ $progress_percent -gt 100 ]; then
@@ -2405,7 +2405,7 @@ function update_restore_progress_bar {
     fi
 
     max_counter=23
-    progress_page="$webadmin_install_dir/restore_progress.html"
+    progress_page="${webadmin_install_dir}/restore_progress.html"
     progress_counter=$(cat $restore_progress_file)
     progress_percent=$((progress_counter * 100 / max_counter))
     if [ $progress_percent -gt 100 ]; then
@@ -2435,7 +2435,7 @@ function update_format_progress_bar {
     fi
 
     max_counter=5
-    progress_page="$webadmin_install_dir/format_progress.html"
+    progress_page="${webadmin_install_dir}/format_progress.html"
     progress_counter=$(cat $format_progress_file)
     progress_percent=$((progress_counter * 100 / max_counter))
     if [ $progress_percent -gt 100 ]; then
@@ -2466,8 +2466,8 @@ function restore_app_from_backup {
                 restore_success_message=$"Restore app succeeded"
 
                 check_for_existing_processes $restore_script
-                { echo "echo \"Beginning webadmin restore app ${restore_app_name} \$(date)\" > $webadmin_install_dir/restore.txt";
-                  echo "chown www-data:www-data $webadmin_install_dir/restore.txt";
+                { echo "echo \"Beginning webadmin restore app ${restore_app_name} \$(date)\" > ${webadmin_install_dir}/restore.txt";
+                  echo "chown www-data:www-data ${webadmin_install_dir}/restore.txt";
                   echo '';
                   echo 'backup_password=';
                   echo 'if [ -f /tmp/backup_password.txt ]; then';
@@ -2478,16 +2478,16 @@ function restore_app_from_backup {
                   echo "    backup_password=\$(${PROJECT_NAME}-pass -u \"$ADMIN_USERNAME\" -a simplebackup)";
                   echo 'fi';
                   echo '';
-                  echo "if /usr/bin/timeout $BACKUP_TIMEOUT_SEC /usr/local/bin/${PROJECT_NAME}-restore-local simple \"\$backup_password\" \"${restore_app_name}\" >> $webadmin_install_dir/restore.txt; then";
-                  echo "    echo \"Completed \$(date)\" >> $webadmin_install_dir/restore.txt";
-                  echo "    cp $webadmin_install_dir/restore_app_complete.html $webadmin_install_dir/restore_app_progress.html";
+                  echo "if /usr/bin/timeout $BACKUP_TIMEOUT_SEC /usr/local/bin/${PROJECT_NAME}-restore-local simple \"\$backup_password\" \"${restore_app_name}\" >> ${webadmin_install_dir}/restore.txt; then";
+                  echo "    echo \"Completed \$(date)\" >> ${webadmin_install_dir}/restore.txt";
+                  echo "    cp ${webadmin_install_dir}/restore_app_complete.html ${webadmin_install_dir}/restore_app_progress.html";
                   echo "    /usr/local/bin/${PROJECT_NAME}-notification -m \"$restore_success_message\" -s \"[${PROJECT_NAME}] $restore_title\" &";
                   echo 'else';
-                  echo "    cp $webadmin_install_dir/restore_app_failed.html $webadmin_install_dir/restore_app_progress.html";
+                  echo "    cp ${webadmin_install_dir}/restore_app_failed.html ${webadmin_install_dir}/restore_app_progress.html";
                   echo "    /usr/local/bin/${PROJECT_NAME}-notification -m \"$restore_failed_message\" -s \"[${PROJECT_NAME}] $restore_title\" &";
                   echo 'fi';
                   echo '';
-                  echo "chown www-data:www-data $webadmin_install_dir/restore_app_progress.txt";
+                  echo "chown www-data:www-data ${webadmin_install_dir}/restore_app_progress.txt";
                   echo '';
                   echo "rm $restore_progress_file";
                   echo '';
@@ -2521,11 +2521,11 @@ function backup_and_restore {
         restore_success_message=$"Restore succeeded"
 
         check_for_existing_processes $restore_script
-        { echo "echo \"Beginning webadmin restore \$(date)\" > $webadmin_install_dir/restore.txt";
-          echo "chown www-data:www-data $webadmin_install_dir/restore.txt";
+        { echo "echo \"Beginning webadmin restore \$(date)\" > ${webadmin_install_dir}/restore.txt";
+          echo "chown www-data:www-data ${webadmin_install_dir}/restore.txt";
           echo '';
-          echo "cp $webadmin_install_dir/restore_progress_template.html $webadmin_install_dir/restore_progress.html";
-          echo "chown www-data:www-data $webadmin_install_dir/restore_progress.html";
+          echo "cp ${webadmin_install_dir}/restore_progress_template.html ${webadmin_install_dir}/restore_progress.html";
+          echo "chown www-data:www-data ${webadmin_install_dir}/restore_progress.html";
           echo '';
           echo 'backup_password=';
           echo 'if [ -f /tmp/backup_password.txt ]; then';
@@ -2536,17 +2536,17 @@ function backup_and_restore {
           echo "    backup_password=\$(${PROJECT_NAME}-pass -u \"$ADMIN_USERNAME\" -a simplebackup)";
           echo 'fi';
           echo '';
-          echo "if /usr/bin/timeout $BACKUP_TIMEOUT_SEC /usr/local/bin/${PROJECT_NAME}-restore-local simple \"\$backup_password\" >> $webadmin_install_dir/restore.txt; then";
-          echo "    echo \"Completed \$(date)\" >> $webadmin_install_dir/restore.txt";
-          echo "    cp $webadmin_install_dir/restore_complete.html $webadmin_install_dir/restore_progress.html";
+          echo "if /usr/bin/timeout $BACKUP_TIMEOUT_SEC /usr/local/bin/${PROJECT_NAME}-restore-local simple \"\$backup_password\" >> ${webadmin_install_dir}/restore.txt; then";
+          echo "    echo \"Completed \$(date)\" >> ${webadmin_install_dir}/restore.txt";
+          echo "    cp ${webadmin_install_dir}/restore_complete.html ${webadmin_install_dir}/restore_progress.html";
           echo "    /usr/local/bin/${PROJECT_NAME}-notification -m \"$restore_success_message\" -s \"[${PROJECT_NAME}] $restore_title\" &";
           echo 'else';
-          echo "    cp $webadmin_install_dir/restore_failed.html $webadmin_install_dir/restore_progress.html";
+          echo "    cp ${webadmin_install_dir}/restore_failed.html ${webadmin_install_dir}/restore_progress.html";
           echo "    /usr/local/bin/${PROJECT_NAME}-notification -m \"$restore_failed_message\" -s \"[${PROJECT_NAME}] $restore_title\" &";
           echo 'fi';
           echo '';
-          echo "chown www-data:www-data $webadmin_install_dir/restore.txt";
-          echo "chown www-data:www-data $webadmin_install_dir/restore_progress.html";
+          echo "chown www-data:www-data ${webadmin_install_dir}/restore.txt";
+          echo "chown www-data:www-data ${webadmin_install_dir}/restore_progress.html";
           echo '';
           echo "rm $restore_progress_file";
           echo '';
@@ -2569,43 +2569,43 @@ function backup_and_restore {
             backup_name='webadmin'
             if [ $running_auto_backup ]; then
                 backup_name=$'scheduled'
-                date >> "$webadmin_install_dir/autobackup.log"
-                chown www-data:www-data "$webadmin_install_dir/autobackup.log"
+                date >> "${webadmin_install_dir}/autobackup.log"
+                chown www-data:www-data "${webadmin_install_dir}/autobackup.log"
                 running_auto_backup=
             fi
 
             check_for_existing_processes $backup_script
-            { echo "echo \"Beginning $backup_name backup \$(date)\" > $webadmin_install_dir/backup.txt";
-              echo "chown www-data:www-data $webadmin_install_dir/backup.txt";
+            { echo "echo \"Beginning $backup_name backup \$(date)\" > ${webadmin_install_dir}/backup.txt";
+              echo "chown www-data:www-data ${webadmin_install_dir}/backup.txt";
               echo '';
-              echo "cp $webadmin_install_dir/backup_progress_template.html $webadmin_install_dir/backup_progress.html";
-              echo "chown www-data:www-data $webadmin_install_dir/backup_progress.html";
+              echo "cp ${webadmin_install_dir}/backup_progress_template.html ${webadmin_install_dir}/backup_progress.html";
+              echo "chown www-data:www-data ${webadmin_install_dir}/backup_progress.html";
               echo '';
               echo 'backup_password=';
               echo 'if [ -f /tmp/backup_password.txt ]; then';
               echo "    backup_password=\$(cat /tmp/backup_password.txt)";
               echo "    ${PROJECT_NAME}-pass -u \"$ADMIN_USERNAME\" -a simplebackup -p \"\$backup_password\"";
               echo '    rm /tmp/backup_password.txt';
-              echo "    sed -i \"s|\\\"backup_password\\\".*|\\\"backup_password\\\" value=\\\"\$backup_password\\\"></p>|g\" $webadmin_install_dir/backup_password.html";
-              echo "    sed -i \"s|\\\"backup_password_confirm\\\".*|\\\"backup_password_confirm\\\" value=\\\"\$backup_password\\\"></p>|g\" $webadmin_install_dir/backup_password.html";
-              echo "    chown www-data:www-data $webadmin_install_dir/backup_password.html";
-              echo "    sed -i \"s|\\\"backup_password\\\".*|\\\"backup_password\\\" value=\\\"\$backup_password\\\"></p>|g\" $webadmin_install_dir/restore_password.html";
-              echo "    chown www-data:www-data $webadmin_install_dir/restore_password.html";
+              echo "    sed -i \"s|\\\"backup_password\\\".*|\\\"backup_password\\\" value=\\\"\$backup_password\\\"></p>|g\" ${webadmin_install_dir}/backup_password.html";
+              echo "    sed -i \"s|\\\"backup_password_confirm\\\".*|\\\"backup_password_confirm\\\" value=\\\"\$backup_password\\\"></p>|g\" ${webadmin_install_dir}/backup_password.html";
+              echo "    chown www-data:www-data ${webadmin_install_dir}/backup_password.html";
+              echo "    sed -i \"s|\\\"backup_password\\\".*|\\\"backup_password\\\" value=\\\"\$backup_password\\\"></p>|g\" ${webadmin_install_dir}/restore_password.html";
+              echo "    chown www-data:www-data ${webadmin_install_dir}/restore_password.html";
               echo 'else';
               echo "    backup_password=\$(${PROJECT_NAME}-pass -u \"$ADMIN_USERNAME\" -a simplebackup)";
               echo 'fi';
               echo '';
-              echo "if /usr/bin/timeout $BACKUP_TIMEOUT_SEC /usr/local/bin/${PROJECT_NAME}-backup-local simple \"\$backup_password\" >> $webadmin_install_dir/backup.txt; then";
-              echo "    echo \"Completed \$(date)\" >> $webadmin_install_dir/backup.txt";
-              echo "    cp $webadmin_install_dir/backup_complete.html $webadmin_install_dir/backup_progress.html";
+              echo "if /usr/bin/timeout $BACKUP_TIMEOUT_SEC /usr/local/bin/${PROJECT_NAME}-backup-local simple \"\$backup_password\" >> ${webadmin_install_dir}/backup.txt; then";
+              echo "    echo \"Completed \$(date)\" >> ${webadmin_install_dir}/backup.txt";
+              echo "    cp ${webadmin_install_dir}/backup_complete.html ${webadmin_install_dir}/backup_progress.html";
               echo "    /usr/local/bin/${PROJECT_NAME}-notification -m \"$backup_success_message\" -s \"[${PROJECT_NAME}] $backup_title\" &";
               echo 'else';
-              echo "    cp $webadmin_install_dir/backup_failed.html $webadmin_install_dir/backup_progress.html";
+              echo "    cp ${webadmin_install_dir}/backup_failed.html ${webadmin_install_dir}/backup_progress.html";
               echo "    /usr/local/bin/${PROJECT_NAME}-notification -m \"$backup_failed_message\" -s \"[${PROJECT_NAME}] $backup_title\" &";
               echo 'fi';
               echo '';
-              echo "chown www-data:www-data $webadmin_install_dir/backup.txt";
-              echo "chown www-data:www-data $webadmin_install_dir/backup_progress.html";
+              echo "chown www-data:www-data ${webadmin_install_dir}/backup.txt";
+              echo "chown www-data:www-data ${webadmin_install_dir}/backup_progress.html";
               echo '';
               echo "rm $backup_progress_file";
               echo '';
@@ -2624,14 +2624,14 @@ function backup_and_restore {
                 format_success_message=$"USB format succeeded"
 
                 check_for_existing_processes $format_script
-                { echo "if /usr/bin/timeout $FORMAT_TIMEOUT_SEC /usr/local/bin/${PROJECT_NAME}-format simple > $webadmin_install_dir/format.txt; then";
-                  echo "    cp $webadmin_install_dir/format_complete.html $webadmin_install_dir/format_progress.html";
+                { echo "if /usr/bin/timeout $FORMAT_TIMEOUT_SEC /usr/local/bin/${PROJECT_NAME}-format simple > ${webadmin_install_dir}/format.txt; then";
+                  echo "    cp ${webadmin_install_dir}/format_complete.html ${webadmin_install_dir}/format_progress.html";
                   echo "    /usr/local/bin/${PROJECT_NAME}-notification -m \"$format_success_message\" -s \"[${PROJECT_NAME}] $format_title\" &";
                   echo 'else';
-                  echo "    cp $webadmin_install_dir/format_failed.html $webadmin_install_dir/format_progress.html";
+                  echo "    cp ${webadmin_install_dir}/format_failed.html ${webadmin_install_dir}/format_progress.html";
                   echo "    /usr/local/bin/${PROJECT_NAME}-notification -m \"$format_failed_message\" -s \"[${PROJECT_NAME}] $format_title\" &";
                   echo 'fi';
-                  echo "chown www-data:www-data $webadmin_install_dir/format_progress.html";
+                  echo "chown www-data:www-data ${webadmin_install_dir}/format_progress.html";
                   echo '';
                   echo "rm $format_progress_file";
                   echo '';
@@ -2650,21 +2650,21 @@ function backup_and_restore_keys {
         rm "$restore_keys_file"
         admin_username=$(grep 'MY_USERNAME=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
         # check_for_existing_processes $restore_keys_script
-        { echo "echo \"Beginning webadmin restore keys \$(date)\" > $webadmin_install_dir/restore.txt";
-          echo "chown www-data:www-data $webadmin_install_dir/restore.txt";
+        { echo "echo \"Beginning webadmin restore keys \$(date)\" > ${webadmin_install_dir}/restore.txt";
+          echo "chown www-data:www-data ${webadmin_install_dir}/restore.txt";
           echo '';
-          echo "cp $webadmin_install_dir/restore_keys_progress_template.html $webadmin_install_dir/restore_keys_progress.html";
-          echo "chown www-data:www-data $webadmin_install_dir/restore_keys_progress.html";
+          echo "cp ${webadmin_install_dir}/restore_keys_progress_template.html ${webadmin_install_dir}/restore_keys_progress.html";
+          echo "chown www-data:www-data ${webadmin_install_dir}/restore_keys_progress.html";
           echo '';
-          echo "if /usr/local/bin/${PROJECT_NAME}-recoverkey -u \"$admin_username\" -d \"simple\" >> $webadmin_install_dir/restore.txt; then";
-          echo "    echo \"Completed \$(date)\" >> $webadmin_install_dir/restore.txt";
-          echo "    cp $webadmin_install_dir/restore_keys_complete.html $webadmin_install_dir/restore_keys_progress.html";
+          echo "if /usr/local/bin/${PROJECT_NAME}-recoverkey -u \"$admin_username\" -d \"simple\" >> ${webadmin_install_dir}/restore.txt; then";
+          echo "    echo \"Completed \$(date)\" >> ${webadmin_install_dir}/restore.txt";
+          echo "    cp ${webadmin_install_dir}/restore_keys_complete.html ${webadmin_install_dir}/restore_keys_progress.html";
           echo 'else';
-          echo "    cp $webadmin_install_dir/restore_keys_failed.html $webadmin_install_dir/restore_keys_progress.html";
+          echo "    cp ${webadmin_install_dir}/restore_keys_failed.html ${webadmin_install_dir}/restore_keys_progress.html";
           echo 'fi';
           echo '';
-          echo "chown www-data:www-data $webadmin_install_dir/restore.txt";
-          echo "chown www-data:www-data $webadmin_install_dir/restore_keys_progress.html";
+          echo "chown www-data:www-data ${webadmin_install_dir}/restore.txt";
+          echo "chown www-data:www-data ${webadmin_install_dir}/restore_keys_progress.html";
           echo '';
           echo "exit 0"; } >> $restore_keys_script
         chmod +x $restore_keys_script
@@ -2676,21 +2676,21 @@ function backup_and_restore_keys {
             rm "$backup_keys_file"
             admin_username=$(grep 'MY_USERNAME=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
             check_for_existing_processes $backup_keys_script
-            { echo "echo \"Beginning webadmin backup keys \$(date)\" > $webadmin_install_dir/backup.txt";
-              echo "chown www-data:www-data $webadmin_install_dir/backup.txt";
+            { echo "echo \"Beginning webadmin backup keys \$(date)\" > ${webadmin_install_dir}/backup.txt";
+              echo "chown www-data:www-data ${webadmin_install_dir}/backup.txt";
               echo '';
-              echo "cp $webadmin_install_dir/backup_keys_progress_template.html $webadmin_install_dir/backup_keys_progress.html";
-              echo "chown www-data:www-data $webadmin_install_dir/backup_keys_progress.html";
+              echo "cp ${webadmin_install_dir}/backup_keys_progress_template.html ${webadmin_install_dir}/backup_keys_progress.html";
+              echo "chown www-data:www-data ${webadmin_install_dir}/backup_keys_progress.html";
               echo '';
-              echo "if /usr/local/bin/${PROJECT_NAME}-keydrive -u \"$admin_username\" --main 'yes' -d \"simple\" >> $webadmin_install_dir/backup.txt; then";
-              echo "    echo \"Completed \$(date)\" >> $webadmin_install_dir/backup.txt";
-              echo "    cp $webadmin_install_dir/backup_keys_complete.html $webadmin_install_dir/backup_keys_progress.html";
+              echo "if /usr/local/bin/${PROJECT_NAME}-keydrive -u \"$admin_username\" --main 'yes' -d \"simple\" >> ${webadmin_install_dir}/backup.txt; then";
+              echo "    echo \"Completed \$(date)\" >> ${webadmin_install_dir}/backup.txt";
+              echo "    cp ${webadmin_install_dir}/backup_keys_complete.html ${webadmin_install_dir}/backup_keys_progress.html";
               echo 'else';
-              echo "    cp $webadmin_install_dir/backup_keys_failed.html $webadmin_install_dir/backup_keys_progress.html";
+              echo "    cp ${webadmin_install_dir}/backup_keys_failed.html ${webadmin_install_dir}/backup_keys_progress.html";
               echo 'fi';
               echo '';
-              echo "chown www-data:www-data $webadmin_install_dir/backup.txt";
-              echo "chown www-data:www-data $webadmin_install_dir/backup_keys_progress.html";
+              echo "chown www-data:www-data ${webadmin_install_dir}/backup.txt";
+              echo "chown www-data:www-data ${webadmin_install_dir}/backup_keys_progress.html";
               echo '';
               echo "exit 0"; } >> $backup_keys_script
             chmod +x $backup_keys_script
@@ -2728,7 +2728,7 @@ function add_remove_users {
                             new_password=$(awk -F ',' '{print $2}' < "$new_user_file")
 
                             check_for_existing_processes $new_user_script
-                            { echo "/usr/local/bin/${PROJECT_NAME}-adduser $new_username password=$new_password > $webadmin_install_dir/log.txt";
+                            { echo "/usr/local/bin/${PROJECT_NAME}-adduser $new_username password=$new_password > ${webadmin_install_dir}/log.txt";
                               echo "exit 0"; } >> $new_user_script
                             chmod +x $new_user_script
 
@@ -2756,7 +2756,7 @@ function add_remove_users {
                             admin_username=$(grep 'MY_USERNAME=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
                             if [[ "$remove_username" != "$admin_username" ]]; then
                                 check_for_existing_processes $remove_user_script
-                                { echo "/usr/local/bin/${PROJECT_NAME}-rmuser $remove_username -f > $webadmin_install_dir/log.txt";
+                                { echo "/usr/local/bin/${PROJECT_NAME}-rmuser $remove_username -f > ${webadmin_install_dir}/log.txt";
                                   echo "exit 0"; } >> $remove_user_script
                                 chmod +x $remove_user_script
 
@@ -2825,12 +2825,12 @@ function webadmin_upgrade {
         rm "$upgrade_file"
 
         check_for_existing_processes $upgrade_script
-        { echo "echo \"Beginning webadmin upgrade \$(date)\" > $webadmin_install_dir/upgrade.txt";
-          echo "chown www-data:www-data $webadmin_install_dir/upgrade.txt";
+        { echo "echo \"Beginning webadmin upgrade \$(date)\" > ${webadmin_install_dir}/upgrade.txt";
+          echo "chown www-data:www-data ${webadmin_install_dir}/upgrade.txt";
           echo '';
-          echo "/usr/local/bin/${PROJECT_NAME}-upgrade >> $webadmin_install_dir/upgrade.txt";
+          echo "/usr/local/bin/${PROJECT_NAME}-upgrade >> ${webadmin_install_dir}/upgrade.txt";
           echo '';
-          echo "chown www-data:www-data $webadmin_install_dir/upgrade.txt";
+          echo "chown www-data:www-data ${webadmin_install_dir}/upgrade.txt";
           echo '';
           echo "exit 0"; } >> $upgrade_script
         chmod +x $upgrade_script
@@ -2854,16 +2854,16 @@ function distro_factory_reset {
     if [ ! -f "$factoryreset_file_distro" ]; then
         return
     fi
-    if [ ! -f "$webadmin_install_dir/.setupscreenactive" ]; then
-        touch "$webadmin_install_dir/.setupscreenactive"
+    if [ ! -f "${webadmin_install_dir}/.setupscreenactive" ]; then
+        touch "${webadmin_install_dir}/.setupscreenactive"
     fi
 
     { echo '#!/bin/bash';
-      echo "echo \"Beginning distro install \$(date)\" > $webadmin_install_dir/log.txt";
-      echo "chown www-data:www-data $webadmin_install_dir/log.txt";
+      echo "echo \"Beginning distro install \$(date)\" > ${webadmin_install_dir}/log.txt";
+      echo "chown www-data:www-data ${webadmin_install_dir}/log.txt";
       echo '';
-      echo "/usr/local/bin/${PROJECT_NAME}-factory-reset -f > $webadmin_install_dir/log.txt";
-      echo "chown www-data:www-data $webadmin_install_dir/log.txt";
+      echo "/usr/local/bin/${PROJECT_NAME}-factory-reset -f > ${webadmin_install_dir}/log.txt";
+      echo "chown www-data:www-data ${webadmin_install_dir}/log.txt";
       echo '';
       echo "exit 0"; } > $distro_factory_reset_script
     chmod +x $distro_factory_reset_script
@@ -2880,7 +2880,7 @@ function distro_factory_reset {
         # if this has been running for more than an hour then reboot
         factory_reset_ctr=$((factory_reset_ctr+1))
         if [ $factory_reset_ctr -gt 720 ]; then
-            echo "Factory reset timed out - rebooting" >> "$webadmin_install_dir/log.txt"
+            echo "Factory reset timed out - rebooting" >> "${webadmin_install_dir}/log.txt"
             break
         fi
     done
@@ -2893,12 +2893,12 @@ function webadmin_factory_reset {
         rm "$factoryreset_file"
 
         check_for_existing_processes $factoryreset_script
-        { echo "echo \"Beginning webadmin factory reset \$(date)\" > $webadmin_install_dir/factoryreset.txt";
-          echo "chown www-data:www-data $webadmin_install_dir/factoryreset.txt";
+        { echo "echo \"Beginning webadmin factory reset \$(date)\" > ${webadmin_install_dir}/factoryreset.txt";
+          echo "chown www-data:www-data ${webadmin_install_dir}/factoryreset.txt";
           echo '';
-          echo "/usr/local/bin/${PROJECT_NAME}-factory-reset -f >> $webadmin_install_dir/factoryreset.txt";
+          echo "/usr/local/bin/${PROJECT_NAME}-factory-reset -f >> ${webadmin_install_dir}/factoryreset.txt";
           echo '';
-          echo "chown www-data:www-data $webadmin_install_dir/factoryreset.txt";
+          echo "chown www-data:www-data ${webadmin_install_dir}/factoryreset.txt";
           echo '';
           echo "exit 0"; } >> $factoryreset_script
         chmod +x $factoryreset_script
@@ -2935,12 +2935,12 @@ function regenerate_blocklist {
     fi
     local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
     webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
-    if [ -f "$webadmin_install_dir/blocking_template.html" ]; then
-        cp "$webadmin_install_dir/blocking_template.html" "$webadmin_install_dir/blocking.html"
+    if [ -f "${webadmin_install_dir}/blocking_template.html" ]; then
+        cp "${webadmin_install_dir}/blocking_template.html" "${webadmin_install_dir}/blocking.html"
         blockedlist=$(sed 's@[/\&]@\\&@g;s/$/\\/' "$FIREWALL_DOMAINS"; echo .)
         blockedlist=${blockedlist%.}
-        sed -i "s|BLOCKEDLIST|$blockedlist|g" "$webadmin_install_dir/blocking.html"
-        chown www-data:www-data "$webadmin_install_dir/blocking.html"
+        sed -i "s|BLOCKEDLIST|$blockedlist|g" "${webadmin_install_dir}/blocking.html"
+        chown www-data:www-data "${webadmin_install_dir}/blocking.html"
     fi
 }
 
@@ -2959,12 +2959,12 @@ function regenerate_blocklist_muted_words {
     fi
     local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
     webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
-    if [ -f "$webadmin_install_dir/blocking_words_template.html" ]; then
-        cp "$webadmin_install_dir/blocking_words_template.html" "$webadmin_install_dir/blocking_words.html"
+    if [ -f "${webadmin_install_dir}/blocking_words_template.html" ]; then
+        cp "${webadmin_install_dir}/blocking_words_template.html" "${webadmin_install_dir}/blocking_words.html"
         blockedlistwords=$(sed 's@[/\&]@\\&@g;s/$/\\/' "$MUTED_WORDS"; echo .)
         blockedlistwords=${blockedlistwords%.}
-        sed -i "s|BLOCKEDWORDSLIST|$blockedlistwords|g" "$webadmin_install_dir/blocking_words.html"
-        chown www-data:www-data "$webadmin_install_dir/blocking_words.html"
+        sed -i "s|BLOCKEDWORDSLIST|$blockedlistwords|g" "${webadmin_install_dir}/blocking_words.html"
+        chown www-data:www-data "${webadmin_install_dir}/blocking_words.html"
     fi
 }
 
@@ -2974,12 +2974,12 @@ function regenerate_bridges {
     fi
     local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
     webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
-    if [ -f "$webadmin_install_dir/bridges_template.html" ]; then
-        cp "$webadmin_install_dir/bridges_template.html" "$webadmin_install_dir/bridges.html"
+    if [ -f "${webadmin_install_dir}/bridges_template.html" ]; then
+        cp "${webadmin_install_dir}/bridges_template.html" "${webadmin_install_dir}/bridges.html"
         bridgeslist=$(sed 's@[/\&]@\\&@g;s/$/\\/' /root/.webadmin_torbridges; echo .)
         bridgeslist=${bridgeslist%.}
-        sed -i "s|TORBRIDGES|$bridgeslist|g" "$webadmin_install_dir/bridges.html"
-        chown www-data:www-data "$webadmin_install_dir/bridges.html"
+        sed -i "s|TORBRIDGES|$bridgeslist|g" "${webadmin_install_dir}/bridges.html"
+        chown www-data:www-data "${webadmin_install_dir}/bridges.html"
     fi
 }
 
@@ -2991,19 +2991,19 @@ function regenerate_dynamic_dns {
 
     local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
     webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
-    if [ -f "$webadmin_install_dir/dynamicdns_template.html" ]; then
-        cp "$webadmin_install_dir/dynamicdns_template.html" "$webadmin_install_dir/dynamicdns.html"
+    if [ -f "${webadmin_install_dir}/dynamicdns_template.html" ]; then
+        cp "${webadmin_install_dir}/dynamicdns_template.html" "${webadmin_install_dir}/dynamicdns.html"
         if [[ "$ddns" == 'default@freedns.afraid.org' ]]; then
             ddns='freedns'
         fi
         if [[ "$ddns" == 'dyn.com' ]]; then
             ddns='dyn'
         fi
-        sed -i "s|\"$ddns\"|\"$ddns\" selected|g" "$webadmin_install_dir/dynamicdns.html"
-        sed -i "s|DDNS_USERNAME|$ddns_username|g" "$webadmin_install_dir/dynamicdns.html"
-        sed -i "s|DDNS_CODE|$ddns_code|g" "$webadmin_install_dir/dynamicdns.html"
-        sed -i "s|CURRENT_IP_ADDRESS|$(get_external_ipv4_address)|g" "$webadmin_install_dir/dynamicdns.html"
-        chown www-data:www-data "$webadmin_install_dir/dynamicdns.html"
+        sed -i "s|\"$ddns\"|\"$ddns\" selected|g" "${webadmin_install_dir}/dynamicdns.html"
+        sed -i "s|DDNS_USERNAME|$ddns_username|g" "${webadmin_install_dir}/dynamicdns.html"
+        sed -i "s|DDNS_CODE|$ddns_code|g" "${webadmin_install_dir}/dynamicdns.html"
+        sed -i "s|CURRENT_IP_ADDRESS|$(get_external_ipv4_address)|g" "${webadmin_install_dir}/dynamicdns.html"
+        chown www-data:www-data "${webadmin_install_dir}/dynamicdns.html"
     fi
 }
 
@@ -3012,18 +3012,18 @@ function regenerate_dns_over_tls {
 
     local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
     webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
-    if [ -f "$webadmin_install_dir/dns_over_tls_template.html" ]; then
-        cp "$webadmin_install_dir/dns_over_tls_template.html" "$webadmin_install_dir/dns_over_tls.html"
-        sed -i "s|DNS_OVER_TLS|$dns_over_tls_address|g" "$webadmin_install_dir/dns_over_tls.html"
-        chown www-data:www-data "$webadmin_install_dir/dns_over_tls.html"
+    if [ -f "${webadmin_install_dir}/dns_over_tls_template.html" ]; then
+        cp "${webadmin_install_dir}/dns_over_tls_template.html" "${webadmin_install_dir}/dns_over_tls.html"
+        sed -i "s|DNS_OVER_TLS|$dns_over_tls_address|g" "${webadmin_install_dir}/dns_over_tls.html"
+        chown www-data:www-data "${webadmin_install_dir}/dns_over_tls.html"
     fi
 }
 
 function datserver_update_settings_template {
     # Creates dat links list within the web UI
     # shellcheck disable=SC2154
-    app_settings_screen_template="$webadmin_install_dir/settings_datserver_template.html"
-    app_settings_screen="$webadmin_install_dir/settings_datserver.html"
+    app_settings_screen_template="${webadmin_install_dir}/settings_datserver_template.html"
+    app_settings_screen="${webadmin_install_dir}/settings_datserver.html"
     cp "$app_settings_screen_template" "$app_settings_screen"
     datlinks=$(sed 's@[/\&]@\\&@g;s/$/\\/' "/etc/datserver/feeds"; echo .)
     datlinks=${datlinks%.}
@@ -3122,9 +3122,9 @@ function update_icecast {
                   echo "output.icecast(%opus(vbr=\"unconstrained\",bitrate=20), description=\"$ICECAST_TITLE_MAIN\", host=\"localhost\", port=$ICECAST_PORT, password=\"$ICECAST_SOURCE_PASSWORD\", mount=\"stream.opus\", radio)"; } > "$liquidsoap_script"
                 chown liquidsoapuser:icecast "$liquidsoap_script"
 
-                sed -i "s|\"icecast_name\".*|\"icecast_name\" value=\"$ICECAST_TITLE\">|g" "$webadmin_install_dir/settings_icecast.html"
-                sed -i "s|\"icecast_description\".*|\"icecast_description\" value=\"$ICECAST_DESCRIPTION\">|g" "$webadmin_install_dir/settings_icecast.html"
-                sed -i "s|\"icecast_genre\".*|\"icecast_genre\" value=\"$icecast_genre\">|g" "$webadmin_install_dir/settings_icecast.html"
+                sed -i "s|\"icecast_name\".*|\"icecast_name\" value=\"$ICECAST_TITLE\">|g" "${webadmin_install_dir}/settings_icecast.html"
+                sed -i "s|\"icecast_description\".*|\"icecast_description\" value=\"$ICECAST_DESCRIPTION\">|g" "${webadmin_install_dir}/settings_icecast.html"
+                sed -i "s|\"icecast_genre\".*|\"icecast_genre\" value=\"$icecast_genre\">|g" "${webadmin_install_dir}/settings_icecast.html"
 
                 icecast_usb_drive=$(detect_connected_drives)
                 if [ "$icecast_usb_drive" ]; then
@@ -3344,16 +3344,16 @@ function change_updates_settings {
 
         # change default checked state for radio button
         if [[ "$updates_enabled" == '1' ]]; then
-            sed -i "s|value=\"1\">|value=\"1\" checked>|g" "$webadmin_install_dir/settings_updates.html"
-            sed -i "s|value=\"0\" checked>|value=\"0\">|g" "$webadmin_install_dir/settings_updates.html"
+            sed -i "s|value=\"1\">|value=\"1\" checked>|g" "${webadmin_install_dir}/settings_updates.html"
+            sed -i "s|value=\"0\" checked>|value=\"0\">|g" "${webadmin_install_dir}/settings_updates.html"
         else
-            sed -i "s|value=\"0\">|value=\"0\" checked>|g" "$webadmin_install_dir/settings_updates.html"
-            sed -i "s|value=\"1\" checked>|value=\"1\">|g" "$webadmin_install_dir/settings_updates.html"
+            sed -i "s|value=\"0\">|value=\"0\" checked>|g" "${webadmin_install_dir}/settings_updates.html"
+            sed -i "s|value=\"1\" checked>|value=\"1\">|g" "${webadmin_install_dir}/settings_updates.html"
         fi
 
         # update variables within updates settings screen
-        sed -i "s|name=\"updates_repo\".*|name=\"updates_repo\" value=\"$PROJECT_REPO\">|g" "$webadmin_install_dir/settings_updates.html"
-        sed -i "s|name=\"updates_branch\".*|name=\"updates_branch\" value=\"$STABLE_BRANCH\">|g" "$webadmin_install_dir/settings_updates.html"
+        sed -i "s|name=\"updates_repo\".*|name=\"updates_repo\" value=\"$PROJECT_REPO\">|g" "${webadmin_install_dir}/settings_updates.html"
+        sed -i "s|name=\"updates_branch\".*|name=\"updates_branch\" value=\"$STABLE_BRANCH\">|g" "${webadmin_install_dir}/settings_updates.html"
 
         # if we are updating from the web UI then disable any development branch
         if grep -q 'DEVELOPMENT_BRANCH=' "$CONFIGURATION_FILE"; then
@@ -3915,16 +3915,16 @@ function import_translations {
                 local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
                 webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
 
-                if [ ! -d "$webadmin_install_dir/translations" ]; then
-                    mkdir "$webadmin_install_dir/translations"
+                if [ ! -d "${webadmin_install_dir}/translations" ]; then
+                    mkdir "${webadmin_install_dir}/translations"
                 fi
-                mv "translations_import.new" "$webadmin_install_dir/translations/${translations_language}.txt"
-                chown -R www-data:www-data "$webadmin_install_dir/translations"
+                mv "translations_import.new" "${webadmin_install_dir}/translations/${translations_language}.txt"
+                chown -R www-data:www-data "${webadmin_install_dir}/translations"
 
                 # keep the imported translations
-                if [ ! -f "$webadmin_install_dir/.keep_translations.txt" ]; then
-                    touch "$webadmin_install_dir/.keep_translations.txt"
-                    chown www-data:www-data "$webadmin_install_dir/.keep_translations.txt"
+                if [ ! -f "${webadmin_install_dir}/.keep_translations.txt" ]; then
+                    touch "${webadmin_install_dir}/.keep_translations.txt"
+                    chown www-data:www-data "${webadmin_install_dir}/.keep_translations.txt"
                 fi
             fi
         fi
@@ -3959,20 +3959,20 @@ function change_default_domain {
 
                             { echo '#!/bin/bash';
                               echo '';
-                              echo "if ! /usr/local/bin/${PROJECT_NAME}-upgrade change_domain >> \"$webadmin_install_dir/upgrade.txt\"; then";
-                              echo "    if [ ! -f $webadmin_install_dir/index_domain_changing.html ]; then";
-                              echo "        cp $webadmin_install_dir/index.html $webadmin_install_dir/index_domain_changing.html";
-                              echo "        chown www-data:www-data $webadmin_install_dir/index_domain_changing.html";
+                              echo "if ! /usr/local/bin/${PROJECT_NAME}-upgrade change_domain >> \"${webadmin_install_dir}/upgrade.txt\"; then";
+                              echo "    if [ ! -f ${webadmin_install_dir}/index_domain_changing.html ]; then";
+                              echo "        cp ${webadmin_install_dir}/index.html ${webadmin_install_dir}/index_domain_changing.html";
+                              echo "        chown www-data:www-data ${webadmin_install_dir}/index_domain_changing.html";
                               echo "    fi";
-                              echo "    cp $webadmin_install_dir/domain_change_fail.html $webadmin_install_dir/index.html";
-                              echo "    chown www-data:www-data $webadmin_install_dir/index.html";
-                              echo "    echo 'Domain change failed' >> $webadmin_install_dir/upgrade.txt";
+                              echo "    cp ${webadmin_install_dir}/domain_change_fail.html ${webadmin_install_dir}/index.html";
+                              echo "    chown www-data:www-data ${webadmin_install_dir}/index.html";
+                              echo "    echo 'Domain change failed' >> ${webadmin_install_dir}/upgrade.txt";
                               echo '    if [ -f /tmp/.upgrading ]; then';
                               echo '        rm /tmp/.upgrading';
                               echo '    fi';
                               echo 'fi';
                               echo '';
-                              echo "chown www-data:www-data \"$webadmin_install_dir/upgrade.txt\"";
+                              echo "chown www-data:www-data \"${webadmin_install_dir}/upgrade.txt\"";
                               echo 'exit 0'; } > $changing_domain_script
                             chmod +x $changing_domain_script
                             /bin/bash $changing_domain_script &
@@ -4076,12 +4076,12 @@ function cancel_app_installs {
                     #shellcheck disable=SC2009
                     p_str=$(ps aux | grep 'addremove-base' | grep -v grep)
                     if [ ! "$p_str" ]; then
-                        echo "app install process was killed" >> "$webadmin_install_dir/applog.txt"
+                        echo "app install process was killed" >> "${webadmin_install_dir}/applog.txt"
                         break
                     fi
                     kill_ctr=$((kill_ctr+1))
                     if [ $kill_ctr -gt 20 ]; then
-                        echo "Timed out waiting for app install process to be killed" >> "$webadmin_install_dir/applog.txt"
+                        echo "Timed out waiting for app install process to be killed" >> "${webadmin_install_dir}/applog.txt"
                         return
                     fi
                 done
@@ -4090,11 +4090,11 @@ function cancel_app_installs {
                 if [ -f "$pending_installs" ]; then
                     rm "$pending_installs"
                 fi
-                echo "App did not begin installing" >> "$webadmin_install_dir/applog.txt";
+                echo "App did not begin installing" >> "${webadmin_install_dir}/applog.txt";
             fi
 
-            echo "App install manually cancelled" >> "$webadmin_install_dir/applog.txt";
-            chown www-data:www-data "$webadmin_install_dir/applog.txt"
+            echo "App install manually cancelled" >> "${webadmin_install_dir}/applog.txt";
+            chown www-data:www-data "${webadmin_install_dir}/applog.txt"
         fi
         rm "$cancel_install_file"
     fi
@@ -4218,7 +4218,7 @@ function update_dns_over_tls {
 }
 
 function webadmin_monitor_ip_changes {
-    if [ -f "$webadmin_install_dir/dynamicdns.html" ]; then
+    if [ -f "${webadmin_install_dir}/dynamicdns.html" ]; then
         ONION_ONLY=$(grep 'ONION_ONLY=' "$CONFIGURATION_FILE" | head -n 1 | awk -F '=' '{print $2}')
         if [[ "$ONION_ONLY" == 'no' ]]; then
             webadmin_monitor_ip_ctr=$((webadmin_monitor_ip_ctr-1))
@@ -4272,7 +4272,7 @@ function webadmin_monitor_ip_changes {
                             systemctl restart exim4
                         fi
                         webadmin_ipv4_address="$curr_ipv4"
-                        sed -i "s|<p class=\"ipaddress\".*|<p class=\"ipaddress\" translate=\"no\">${curr_ipv4}</p>|g" "$webadmin_install_dir/dynamicdns.html"
+                        sed -i "s|<p class=\"ipaddress\".*|<p class=\"ipaddress\" translate=\"no\">${curr_ipv4}</p>|g" "${webadmin_install_dir}/dynamicdns.html"
                     fi
                 fi
             fi
@@ -4353,8 +4353,8 @@ function change_theme {
         web_admin_background_color
 
         # change the waiting screen to settings
-        cp "$webadmin_install_dir/settings.html" "$webadmin_install_dir/theme_waiting.html"
-        chown www-data:www-data "$webadmin_install_dir/theme_waiting.html"
+        cp "${webadmin_install_dir}/settings.html" "${webadmin_install_dir}/theme_waiting.html"
+        chown www-data:www-data "${webadmin_install_dir}/theme_waiting.html"
 
         rm "$theme_file"
     fi
@@ -4365,8 +4365,8 @@ function change_language {
         language=$(cat "$language_file")
         local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
         webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
-        if [ -f "$webadmin_install_dir/language_template.html" ]; then
-            if grep -q "\"$language\"" "$webadmin_install_dir/language_template.html"; then
+        if [ -f "${webadmin_install_dir}/language_template.html" ]; then
+            if grep -q "\"$language\"" "${webadmin_install_dir}/language_template.html"; then
 
                 if ! grep -q "DEFAULT_LANGUAGE=" "$CONFIGURATION_FILE"; then
                     echo "DEFAULT_LANGUAGE=$language" >> "$CONFIGURATION_FILE"
@@ -4374,7 +4374,7 @@ function change_language {
                     sed -i "s|DEFAULT_LANGUAGE=.*|DEFAULT_LANGUAGE=$language|g" "$CONFIGURATION_FILE"
                 fi
 
-                /usr/local/bin/${PROJECT_NAME}-language "${language}" > "$webadmin_install_dir/log.txt"
+                /usr/local/bin/${PROJECT_NAME}-language "${language}" > "${webadmin_install_dir}/log.txt"
             fi
         fi
 
@@ -4508,59 +4508,59 @@ function update_system_monitor {
         local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
         webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
 
-        #spectre-meltdown-checker --no-color > "$webadmin_install_dir/spectre.txt"
-        #if [ -f "$webadmin_install_dir/spectre.txt" ]; then
-        #    spectre_vulnerabilities=$(grep "VULNERABLE" "$webadmin_install_dir/spectre.txt" | grep -vc "NOT ")
+        #spectre-meltdown-checker --no-color > "${webadmin_install_dir}/spectre.txt"
+        #if [ -f "${webadmin_install_dir}/spectre.txt" ]; then
+        #    spectre_vulnerabilities=$(grep "VULNERABLE" "${webadmin_install_dir}/spectre.txt" | grep -vc "NOT ")
         #else
         spectre_vulnerabilities=0
         #fi
 
-        if [ -f "$webadmin_install_dir/system_monitor_template.html" ]; then
-            cp "$webadmin_install_dir/system_monitor_template.html" "$webadmin_install_dir/system_monitor.html"
+        if [ -f "${webadmin_install_dir}/system_monitor_template.html" ]; then
+            cp "${webadmin_install_dir}/system_monitor_template.html" "${webadmin_install_dir}/system_monitor.html"
 
             # remove spectre warning
             # shellcheck disable=SC2086
             if [ $spectre_vulnerabilities -eq 0 ]; then
-                sed -i 's|images/spectre.png||g' "$webadmin_install_dir/system_monitor.html"
-                if [ -f "$webadmin_install_dir/spectre.txt" ]; then
-                    rm "$webadmin_install_dir/spectre.txt"
+                sed -i 's|images/spectre.png||g' "${webadmin_install_dir}/system_monitor.html"
+                if [ -f "${webadmin_install_dir}/spectre.txt" ]; then
+                    rm "${webadmin_install_dir}/spectre.txt"
                 fi
             fi
 
             if [ "$cpu_usage" ]; then
-                sed -i "s|<div name=\"cpuusage\" class=\"w3-container.*|<div name=\"cpuusage\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:${cpu_usage}%\">${cpu_usage}%</div>|g" "$webadmin_install_dir/system_monitor.html"
+                sed -i "s|<div name=\"cpuusage\" class=\"w3-container.*|<div name=\"cpuusage\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:${cpu_usage}%\">${cpu_usage}%</div>|g" "${webadmin_install_dir}/system_monitor.html"
             fi
 
             if [ "$disk_use_percent" ]; then
-                sed -i "s|<div name=\"diskspace\" class=\"w3-container.*|<div name=\"diskspace\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:$disk_use_percent\">${disk_use_gb} / ${disk_size_gb}GB</div>|g" "$webadmin_install_dir/system_monitor.html"
+                sed -i "s|<div name=\"diskspace\" class=\"w3-container.*|<div name=\"diskspace\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:$disk_use_percent\">${disk_use_gb} / ${disk_size_gb}GB</div>|g" "${webadmin_install_dir}/system_monitor.html"
             fi
 
             if [ "$backup_disk_use_gb" ]; then
-                sed -i "s|<div name=\"backupspace\" class=\"w3-container.*|<div name=\"backupspace\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:$backup_disk_use_percent\">${backup_disk_use_gb} / ${backup_disk_size_gb}GB</div>|g" "$webadmin_install_dir/system_monitor.html"
+                sed -i "s|<div name=\"backupspace\" class=\"w3-container.*|<div name=\"backupspace\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:$backup_disk_use_percent\">${backup_disk_use_gb} / ${backup_disk_size_gb}GB</div>|g" "${webadmin_install_dir}/system_monitor.html"
             else
-                sed -i "/\"backupspace\"/d" "$webadmin_install_dir/system_monitor.html"
-                sed -i '/titletextbackupspace/d' "$webadmin_install_dir/system_monitor.html"
+                sed -i "/\"backupspace\"/d" "${webadmin_install_dir}/system_monitor.html"
+                sed -i '/titletextbackupspace/d' "${webadmin_install_dir}/system_monitor.html"
             fi
 
-            sed -i "s|<div name=\"memory\" class=\"w3-container.*|<div name=\"memory\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:${used_memory_percent}%\">${used_memory_gb} / ${total_memory_gb}GB</div>|g" "$webadmin_install_dir/system_monitor.html"
+            sed -i "s|<div name=\"memory\" class=\"w3-container.*|<div name=\"memory\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:${used_memory_percent}%\">${used_memory_gb} / ${total_memory_gb}GB</div>|g" "${webadmin_install_dir}/system_monitor.html"
 
             if [ $cpu_temperature -gt 0 ]; then
-                sed -i "s|<div name=\"cputemp\" class=\"w3-container.*|<div name=\"cputemp\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:${cpu_temperature}%\">${cpu_temperature}C</div>|g" "$webadmin_install_dir/system_monitor.html"
+                sed -i "s|<div name=\"cputemp\" class=\"w3-container.*|<div name=\"cputemp\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:${cpu_temperature}%\">${cpu_temperature}C</div>|g" "${webadmin_install_dir}/system_monitor.html"
             else
-                sed -i "/\"cputemp\"/d" "$webadmin_install_dir/system_monitor.html"
-                sed -i '/titletextcputemp/d' "$webadmin_install_dir/system_monitor.html"
+                sed -i "/\"cputemp\"/d" "${webadmin_install_dir}/system_monitor.html"
+                sed -i '/titletextcputemp/d' "${webadmin_install_dir}/system_monitor.html"
             fi
 
-            sed -i "s|<div name=\"diskio\" class=\"w3-container.*|<div name=\"diskio\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:${disk_io_speed_percent}%\">${disk_io_speed} MB/s</div>|g" "$webadmin_install_dir/system_monitor.html"
+            sed -i "s|<div name=\"diskio\" class=\"w3-container.*|<div name=\"diskio\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:${disk_io_speed_percent}%\">${disk_io_speed} MB/s</div>|g" "${webadmin_install_dir}/system_monitor.html"
 
-            chown www-data:www-data "$webadmin_install_dir/system_monitor.html"
+            chown www-data:www-data "${webadmin_install_dir}/system_monitor.html"
         fi
     fi
 }
 
 function store_onion_domain {
     onion_domain_type="$1"
-    onion_domain_filename="$webadmin_install_dir/onion_domain_${onion_domain_type}.txt"
+    onion_domain_filename="${webadmin_install_dir}/onion_domain_${onion_domain_type}.txt"
     if [ ! -f "$onion_domain_filename" ]; then
         if [ -f "/var/lib/tor/hidden_service_${onion_domain_type}/hostname" ]; then
             onion_domain=$(cat "/var/lib/tor/hidden_service_${onion_domain_type}/hostname")
@@ -4585,8 +4585,8 @@ function update_notification_type {
             return
         fi
         notification_type=$(echo "$notification_type_data" | awk -F ',' '{print $2}')
-        profile_screen_filename="$webadmin_install_dir/userprofile_${notify_username}.html"
-        profile_screen_admin="$webadmin_install_dir/userprofile_admin.html"
+        profile_screen_filename="${webadmin_install_dir}/userprofile_${notify_username}.html"
+        profile_screen_admin="${webadmin_install_dir}/userprofile_admin.html"
         if [ -f "$profile_screen_filename" ]; then
             if [[ "$notification_type" == 'email' || "$notification_type" == 'xmpp' || "$notification_type" == 'matrix' || "$notification_type" == 'nextcloud' || "$notification_type" == 'ntfy' ]]; then
                 echo "$notification_type" > "/home/${notify_username}/.notify"
@@ -4607,7 +4607,7 @@ function update_notification_type {
                     # remove checked for all other members
                     for d in /home/*/ ; do
                         USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
-                        profile_screen_user="$webadmin_install_dir/userprofile_${USERNAME}.html"
+                        profile_screen_user="${webadmin_install_dir}/userprofile_${USERNAME}.html"
                         if [ -f "$profile_screen_user" ]; then
                             if grep -q 'name="admin_notify" checked>' "$profile_screen_user"; then
                                 sed -i 's|name="admin_notify" checked>|name="admin_notify">|g' "$profile_screen_user"
@@ -4630,34 +4630,34 @@ function update_notification_type {
 function update_app_settings_line {
     settings_data="$1"
 
-    echo "$settings_data" > "$webadmin_install_dir/settingschange.txt"
-    echo '' >> "$webadmin_install_dir/settingschange.txt"
-    echo 'update_app_settings' >> "$webadmin_install_dir/settingschange.txt"
+    echo "$settings_data" > "${webadmin_install_dir}/settingschange.txt"
+    echo '' >> "${webadmin_install_dir}/settingschange.txt"
+    echo 'update_app_settings' >> "${webadmin_install_dir}/settingschange.txt"
     if [[ "$settings_data" == *','* ]]; then
         app_name=$(echo "$settings_data" | awk -F ',' '{print $1}')
-        echo "app_name: ${app_name}" >> "$webadmin_install_dir/settingschange.txt"
+        echo "app_name: ${app_name}" >> "${webadmin_install_dir}/settingschange.txt"
         if [ "$app_name" ]; then
             app_filename="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-${app_name}"
-            echo "app_filename: ${app_filename}" >> "$webadmin_install_dir/settingschange.txt"
+            echo "app_filename: ${app_filename}" >> "${webadmin_install_dir}/settingschange.txt"
             if [ -f "$app_filename" ]; then
                 app_function=$(echo "$settings_data" | awk -F ',' '{print $2}')
-                echo "app_function: ${app_function}" >> "$webadmin_install_dir/settingschange.txt"
+                echo "app_function: ${app_function}" >> "${webadmin_install_dir}/settingschange.txt"
                 if [ "$app_function" ]; then
                     if grep -q "function ${app_name}_setting_${app_function} {" "$app_filename"; then
                         app_value=$(echo "$settings_data" | awk -F ',' '{print $3}')
 
                         appsettings_script_filename="$appsettings_script"_${app_name}_${app_function}.sh
 
-                        echo "app_value: ${app_value}" >> "$webadmin_install_dir/settingschange.txt"
-                        echo "script: $appsettings_script_filename" >> "$webadmin_install_dir/settingschange.txt"
+                        echo "app_value: ${app_value}" >> "${webadmin_install_dir}/settingschange.txt"
+                        echo "script: $appsettings_script_filename" >> "${webadmin_install_dir}/settingschange.txt"
 
                         check_for_existing_processes "$appsettings_script_filename"
 
-                        { echo "echo \"Beginning webadmin ${app_name} app settings change \$(date)\" >> $webadmin_install_dir/settingschange.txt";
+                        { echo "echo \"Beginning webadmin ${app_name} app settings change \$(date)\" >> ${webadmin_install_dir}/settingschange.txt";
                           echo "PROJECT_NAME=$PROJECT_NAME";
                           echo "source $app_filename";
                           echo "${app_name}_setting_${app_function} \"$app_value\"";
-                          echo "chown www-data:www-data $webadmin_install_dir/settingschange.txt";
+                          echo "chown www-data:www-data ${webadmin_install_dir}/settingschange.txt";
                           echo "exit 0"; } >> "$appsettings_script_filename"
                         chmod +x "$appsettings_script_filename"
 
@@ -4668,8 +4668,8 @@ function update_app_settings_line {
             fi
         fi
     else
-        echo 'No settings specified' >> "$webadmin_install_dir/settingschange.txt"
-        chown www-data:www-data "$webadmin_install_dir/settingschange.txt"
+        echo 'No settings specified' >> "${webadmin_install_dir}/settingschange.txt"
+        chown www-data:www-data "${webadmin_install_dir}/settingschange.txt"
     fi
 }
 
@@ -4692,15 +4692,15 @@ function update_app_settings {
 
 function get_previous_install_state {
     # get the current install state
-    if [ -f "$install_state_file" ]; then
-        install_state=$(cat "$install_state_file")
+    if [ -f "${install_state_file}" ]; then
+        install_state=$(cat "${install_state_file}")
         # shellcheck disable=SC2086
-        if [ $install_state -ne $INSTALL_STATE_COMMAND_SUCCESS ]; then
+        if [ ${install_state} -ne $INSTALL_STATE_COMMAND_SUCCESS ]; then
             if grep -q 'install_final' "$COMPLETION_FILE"; then
                 install_state=$INSTALL_STATE_COMMAND_SUCCESS
             else
-                if [ -f "$webadmin_install_dir/log.txt" ]; then
-                    chown www-data:www-data "$webadmin_install_dir/log.txt"
+                if [ -f "${webadmin_install_dir}/log.txt" ]; then
+                    chown www-data:www-data "${webadmin_install_dir}/log.txt"
                 fi
                 # remove the setup file containing login details
                 if [ -f "$setup_file" ]; then
@@ -4711,7 +4711,7 @@ function get_previous_install_state {
                 fi
                 install_state=$INSTALL_STATE_FIRST_BOOT
             fi
-            echo -n "$install_state" > "$install_state_file"
+            echo -n "${install_state}" > "${install_state_file}"
         fi
     else
         if grep -q 'install_final' "$COMPLETION_FILE"; then
@@ -4719,7 +4719,7 @@ function get_previous_install_state {
         else
             install_state=$INSTALL_STATE_FIRST_BOOT
         fi
-        echo -n "$install_state" > "$install_state_file"
+        echo -n "${install_state}" > "${install_state_file}"
     fi
 }
 
@@ -4729,8 +4729,8 @@ function check_nginx_initial_failure {
     fi
 
     nginx_status=$(systemctl status nginx -l)
-    if [[ "$nginx_status" == *"error:"* ]]; then
-        if [[ "$nginx_status" == *"BIO_new_file"* ]]; then
+    if [[ "${nginx_status}" == *"error:"* ]]; then
+        if [[ "${nginx_status}" == *"BIO_new_file"* ]]; then
             touch /root/.initial_nginx_reboot
             systemctl reboot -i
             reboot
@@ -4790,14 +4790,14 @@ function installer_main_loop {
 distro_factory_reset
 
 manual_install_completed=1
-if [ ! -f "$COMPLETION_FILE" ]; then
+if [ ! -f "${COMPLETION_FILE}" ]; then
     manual_install_completed=
 fi
-if ! grep -q 'setup_final' "$COMPLETION_FILE"; then
+if ! grep -q 'setup_final' "${COMPLETION_FILE}"; then
     manual_install_completed=
 fi
 
-if [ $manual_install_completed ]; then
+if [ ${manual_install_completed} ]; then
     if [ -f /etc/network/if-up.d/000resolvconf ]; then
         rm /etc/network/if-up.d/000resolvconf
         echo '000resolvconf removed. Rebooting to re-establish networking'
@@ -4840,7 +4840,7 @@ if [ ! "${network_device_name}" ]; then
 fi
 ifconfig ${network_device_name} | awk '/inet / {print $2}' | cut -f2 -d: > /etc/issue
 
-if [ $manual_install_completed ]; then
+if [ ${manual_install_completed} ]; then
     check_resolvconf
 fi
 
@@ -4860,15 +4860,15 @@ do
     else
         check_nginx_initial_failure
         web_admin_setup_login
-        if [ -d "$webadmin_install_dir" ]; then
-            if [ -f "$setup_file" ]; then
+        if [ -d "${webadmin_install_dir}" ]; then
+            if [ -f "${setup_file}" ]; then
                 update_progress_bar
                 before_setup_runs
                 check_install_command_state
                 after_setup_has_finished
                 sleep 1
             else
-                if [ $install_state -eq $INSTALL_STATE_COMMAND_SUCCESS ]; then
+                if [ ${install_state} -eq ${INSTALL_STATE_COMMAND_SUCCESS} ]; then
                     # do an upgrade after first reboot
                     if [ -f /root/.initial_reboot ]; then
                         libreserver-upgrade
@@ -4879,13 +4879,13 @@ do
                 fi
 
                 # create screens after first install
-                if [ ! -f "$appslist_filename" ]; then
+                if [ ! -f "${appslist_filename}" ]; then
                     web_admin_create_installed_apps
                 fi
-                if [ ! -f "$webadmin_install_dir/users.html" ]; then
+                if [ ! -f "${webadmin_install_dir}/users.html" ]; then
                     web_admin_create_users
                 fi
-                if [ ! -f "$webadmin_install_dir/apps_add.html" ]; then
+                if [ ! -f "${webadmin_install_dir}/apps_add.html" ]; then
                     web_admin_create_add_apps
                 fi
 
