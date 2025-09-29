@@ -650,10 +650,10 @@ function web_admin_create_app_descriptions {
     FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
 
     app_descriptions_file="${webadmin_install_dir}/app_descriptions.txt"
-    if [ -f "$app_descriptions_file" ]; then
-        rm "$app_descriptions_file"
+    if [ -f "${app_descriptions_file}" ]; then
+        rm "${app_descriptions_file}"
     fi
-    touch "$app_descriptions_file"
+    touch "${app_descriptions_file}"
 
     for filename in $FILES
     do
@@ -663,24 +663,24 @@ function web_admin_create_app_descriptions {
         if grep -q "${app_name_upper}_SHORT_DESCRIPTION=" "${filename}"; then
             app_short_description=$(grep "${app_name_upper}_SHORT_DESCRIPTION=" "${filename}" | head -n 1 | awk -F '=' '{print $2}' | sed 's/\$//g' | sed 's/"//g' | sed "s/'//g")
             if [ "$app_short_description" ]; then
-                if ! grep -Fxq "$app_short_description" "$app_descriptions_file"; then
-                    echo "$app_short_description" >> "$app_descriptions_file"
+                if ! grep -Fxq "$app_short_description" "${app_descriptions_file}"; then
+                    echo "$app_short_description" >> "${app_descriptions_file}"
                 fi
             fi
         fi
 
         if grep -q "${app_name_upper}_DESCRIPTION=" "${filename}"; then
             app_description=$(grep "${app_name_upper}_DESCRIPTION=" "${filename}" | head -n 1 | awk -F '=' '{print $2}' | sed 's/\$//g' | sed 's/"//g' | sed "s/'//g")
-            if [ "$app_description" ]; then
-                if ! grep -Fxq "$app_description" "$app_descriptions_file"; then
-                    echo "$app_description" >> "$app_descriptions_file"
+            if [ "${app_description}" ]; then
+                if ! grep -Fxq "${app_description}" "${app_descriptions_file}"; then
+                    echo "${app_description}" >> "${app_descriptions_file}"
                 fi
             fi
         fi
     done
 
-    if [ -f "$app_descriptions_file" ]; then
-        chown www-data:www-data "$app_descriptions_file"
+    if [ -f "${app_descriptions_file}" ]; then
+        chown www-data:www-data "${app_descriptions_file}"
     fi
 }
 
@@ -709,8 +709,8 @@ function drop_excessive_connections {
     do
         maxConnections=$(netstat -n | grep ESTABLISHED | grep ":${portNumber}" | awk -F' ' '{print $5}' | awk -F':' '{print$1}' | grep -v "127.0." | sort | uniq -c | sort -n | tail -n 1)
         noOfConnections=$(echo "${maxConnections}" | awk -F ' ' '{print $1}')
-        if [ "$noOfConnections" ]; then
-            if [ "$noOfConnections" -gt 2 ]; then
+        if [ "${noOfConnections}" ]; then
+            if [ "${noOfConnections}" -gt 2 ]; then
                 ipAddr=$(echo "${maxConnections}" | awk -F ' ' '{print $2}')
                 if [[ "${ipAddr}" ==  *'.'* ]]; then
                     echo "Dropping ${noOfConnections} connections from ${ipAddr}"
@@ -731,36 +731,36 @@ function check_number_of_connections {
 
     prevPort80=0
     last_http_high_warning=/tmp/.connections_80.txt
-    if [ -f "$last_http_high_warning" ]; then
-        prevPort80=$(cat "$last_http_high_warning")
+    if [ -f "${last_http_high_warning}" ]; then
+        prevPort80=$(cat "${last_http_high_warning}")
     fi
     # shellcheck disable=SC2126
     port80=$(netstat -anp | grep :80 | grep ESTABLISHED | wc -l)
     if [[ "$port80" == *' '* ]]; then
         port80=0
     else
-        if [ $port80 -gt $connectionsThreshold ]; then
+        if [ $port80 -gt ${connectionsThreshold} ]; then
             drop_excessive_connections 80
         fi
     fi
 
     # shellcheck disable=SC2086
-    if [ $prevPort80 -lt $connectionsThreshold ]; then
-        if [ $port80 -gt $connectionsThreshold ]; then
+    if [ $prevPort80 -lt ${connectionsThreshold} ]; then
+        if [ $port80 -gt ${connectionsThreshold} ]; then
             skip_warning=
             last_http_warning=/tmp/.warn_80.txt
-            if [ -f "$last_http_warning" ]; then
+            if [ -f "${last_http_warning}" ]; then
                 # don't warn too frequently
-                time_diff=$(($(date +%s) - $(date +%s -r "$last_http_warning")))
+                time_diff=$(($(date +%s) - $(date +%s -r "${last_http_warning}")))
                 if [ $time_diff -lt 3600 ]; then
                     skip_warning=1
                 fi
             fi
-            echo "$port80" > "$last_http_high_warning"
+            echo "$port80" > "${last_http_high_warning}"
             if [ ! $skip_warning ]; then
                 translated_max_connections=$(web_admin_translate_text "Number of connections on HTTP port is high")
                 ${PROJECT_NAME}-notification -s "${PROJECT_NAME}" -m "$translated_max_connections"
-                echo "\n" > "$last_http_warning"
+                echo "\n" > "${last_http_warning}"
             fi
             return
         fi
@@ -776,14 +776,14 @@ function check_number_of_connections {
     if [[ "$port443" == *' '* ]]; then
         port443=0
     else
-        if [ $port443 -gt $connectionsThreshold ]; then
+        if [ $port443 -gt ${connectionsThreshold} ]; then
             drop_excessive_connections 443
         fi
     fi
 
     # shellcheck disable=SC2086
-    if [ $prevPort443 -lt $connectionsThreshold ]; then
-        if [ $port443 -gt $connectionsThreshold ]; then
+    if [ $prevPort443 -lt ${connectionsThreshold} ]; then
+        if [ $port443 -gt ${connectionsThreshold} ]; then
             skip_warning=
             last_https_warning=/tmp/.warn_443.txt
             if [ -f "$last_https_warning" ]; then
@@ -814,8 +814,8 @@ function check_number_of_connections {
     fi
 
     # shellcheck disable=SC2086
-    if [ $prevPort5222 -lt $connectionsThreshold ]; then
-        if [ $port5222 -gt $connectionsThreshold ]; then
+    if [ $prevPort5222 -lt ${connectionsThreshold} ]; then
+        if [ $port5222 -gt ${connectionsThreshold} ]; then
             echo "$port5222" > /tmp/.connections_5222.txt
             translated_max_connections=$(web_admin_translate_text "Number of connections on XMPP port is high")
             ${PROJECT_NAME}-notification -s "${PROJECT_NAME}" -m "$translated_max_connections"
@@ -829,24 +829,24 @@ function check_number_of_connections {
     fi
     # shellcheck disable=SC2126
     port1965=$(netstat -anp | grep :1965 | grep ESTABLISHED | wc -l)
-    if [[ "$port1965" == *' '* ]]; then
+    if [[ "${port1965}" == *' '* ]]; then
         port1965=0
     fi
 
     # shellcheck disable=SC2086
-    if [ $prevPort1965 -lt $connectionsThreshold ]; then
-        if [ $port1965 -gt $connectionsThreshold ]; then
-            echo "$port1965" > /tmp/.connections_1965.txt
+    if [ ${prevPort1965} -lt ${connectionsThreshold} ]; then
+        if [ ${port1965} -gt ${connectionsThreshold} ]; then
+            echo "${port1965}" > /tmp/.connections_1965.txt
             translated_max_connections=$(web_admin_translate_text "Number of connections on Gemini port is high")
             ${PROJECT_NAME}-notification -s "${PROJECT_NAME}" -m "$translated_max_connections"
             return
         fi
     fi
 
-    echo "$port80" > /tmp/.connections_80.txt
-    echo "$port443" > /tmp/.connections_443.txt
-    echo "$port5222" > /tmp/.connections_5222.txt
-    echo "$port1965" > /tmp/.connections_1965.txt
+    echo "${port80}" > /tmp/.connections_80.txt
+    echo "${port443}" > /tmp/.connections_443.txt
+    echo "${port5222}" > /tmp/.connections_5222.txt
+    echo "${port1965}" > /tmp/.connections_1965.txt
 }
 
 function web_admin_translate {
@@ -2993,15 +2993,15 @@ function regenerate_dynamic_dns {
     webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
     if [ -f "${webadmin_install_dir}/dynamicdns_template.html" ]; then
         cp "${webadmin_install_dir}/dynamicdns_template.html" "${webadmin_install_dir}/dynamicdns.html"
-        if [[ "$ddns" == 'default@freedns.afraid.org' ]]; then
+        if [[ "${ddns}" == 'default@freedns.afraid.org' ]]; then
             ddns='freedns'
         fi
-        if [[ "$ddns" == 'dyn.com' ]]; then
+        if [[ "${ddns}" == 'dyn.com' ]]; then
             ddns='dyn'
         fi
-        sed -i "s|\"$ddns\"|\"$ddns\" selected|g" "${webadmin_install_dir}/dynamicdns.html"
+        sed -i "s|\"${ddns}\"|\"${ddns}\" selected|g" "${webadmin_install_dir}/dynamicdns.html"
         sed -i "s|DDNS_USERNAME|${ddns_username}|g" "${webadmin_install_dir}/dynamicdns.html"
-        sed -i "s|DDNS_CODE|$ddns_code|g" "${webadmin_install_dir}/dynamicdns.html"
+        sed -i "s|DDNS_CODE|${ddns_code}|g" "${webadmin_install_dir}/dynamicdns.html"
         sed -i "s|CURRENT_IP_ADDRESS|$(get_external_ipv4_address)|g" "${webadmin_install_dir}/dynamicdns.html"
         chown www-data:www-data "${webadmin_install_dir}/dynamicdns.html"
     fi
@@ -4138,7 +4138,7 @@ function update_dynamic_dns {
                 fi
             fi
 
-            if [ $ddns_is_valid ]; then
+            if [ ${ddns_is_valid} ]; then
                 /usr/local/bin/${PROJECT_NAME}-ddns "${ddns}" "${ddns_username}" "${ddns_password}"
 
                 if [ "${ddns_code}" ]; then
@@ -4146,7 +4146,7 @@ function update_dynamic_dns {
                         # if the whole cron line was pasted then parse that
                         if [[ "${ddns_code}" == *'freedns'* ]]; then
                             if [[ "${ddns_code}" == *'?'* && "${ddns_code}" == *'='* ]]; then
-                                ddns_code=$(echo "$ddns_code" | awk -F '?' '{print $2}' | awk -F '=' '{print $1}')
+                                ddns_code=$(echo "${ddns_code}" | awk -F '?' '{print $2}' | awk -F '=' '{print $1}')
                             fi
                         fi
                         if grep -q "DEFAULT_DOMAIN_CODE=" "${CONFIGURATION_FILE}"; then
