@@ -988,25 +988,25 @@ function backup_mount_drive {
     fi
 
     # unmount if already mounted
-    umount -f "$USB_MOUNT"
-    if [ ! -d "$USB_MOUNT" ]; then
-        mkdir "$USB_MOUNT"
+    umount -f "${USB_MOUNT}"
+    if [ ! -d "${USB_MOUNT}" ]; then
+        mkdir "${USB_MOUNT}"
     fi
 
-    if ! mount "$USB_DRIVE" "$USB_MOUNT"; then
-        rm -rf "$USB_MOUNT"
+    if ! mount "$USB_DRIVE" "${USB_MOUNT}"; then
+        rm -rf "${USB_MOUNT}"
         return
     fi
     backup_drive_mounted=1
 }
 
 function backup_unmount_drive {
-    if ! umount "$USB_MOUNT"; then
+    if ! umount "${USB_MOUNT}"; then
         echo $"Unable to unmount the drive."
-        rm -rf "$USB_MOUNT"
+        rm -rf "${USB_MOUNT}"
         return
     fi
-    rm -rf "$USB_MOUNT"
+    rm -rf "${USB_MOUNT}"
     backup_drive_mounted=
 }
 
@@ -1025,7 +1025,7 @@ function detect_connected_drives {
 function app_not_on_onion_only {
     app_name="$1"
 
-    if [[ "$ONION_ONLY" != 'no' ]]; then
+    if [[ "${ONION_ONLY}" != 'no' ]]; then
         if grep -q "NOT_ON_ONION=1" "/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-${app_name}"; then
             echo "0"
             return
@@ -1107,11 +1107,11 @@ function web_admin_onion_only {
 
     ONION_ONLY=$(grep 'ONION_ONLY=' "${CONFIGURATION_FILE}" | head -n 1 | awk -F '=' '{print $2}')
 
-    if [ ! "$ONION_ONLY" ]; then
+    if [ ! "${ONION_ONLY}" ]; then
         ONION_ONLY='no'
     fi
 
-    if [[ "$ONION_ONLY" == 'no' ]]; then
+    if [[ "${ONION_ONLY}" == 'no' ]]; then
         return
     fi
 
@@ -1273,13 +1273,13 @@ function web_admin_create_add_apps_category {
 
                                 # special case for xmpp and gemini where it is the same as the default domain
                                 if [[ "${app_name}" == 'xmpp' || "${app_name}" == 'gemini' ]]; then
-                                    if [[ "$ONION_ONLY" == 'no' ]]; then
+                                    if [[ "${ONION_ONLY}" == 'no' ]]; then
                                         sed -i "s|<p><label translate=\"yes\">Domain:.*|<input type=\"hidden\" name=\"install_domain\" value=\"$(hostname)\">|g" "${filename_app}"
                                     fi
                                 fi
 
                                 app_add_remove_domain=
-                                if [[ "$ONION_ONLY" != 'no' ]]; then
+                                if [[ "${ONION_ONLY}" != 'no' ]]; then
                                     app_add_remove_domain=1
                                 fi
                                 webadmin_remove_domain=
@@ -1484,31 +1484,31 @@ function web_admin_create_users {
     USERNAME="${webadmin_user}"
     userfile="${webadmin_install_dir}/userprofile_${USERNAME}.html"
     useremail=${USERNAME}@${HOSTNAME}
-    GPG_ID=$(su -c "gpg --list-keys '$useremail'" - "$USERNAME" | sed -n '2p' | sed 's/^[ \t]*//')
-    if [ -f "/home/$USERNAME/.gnupg/gpg.conf" ]; then
-        if grep -q "default-key" "/home/$USERNAME/.gnupg/gpg.conf"; then
-            default_gpg_key=$(grep "default-key" "/home/$USERNAME/.gnupg/gpg.conf")
+    GPG_ID=$(su -c "gpg --list-keys '$useremail'" - "${USERNAME}" | sed -n '2p' | sed 's/^[ \t]*//')
+    if [ -f "/home/${USERNAME}/.gnupg/gpg.conf" ]; then
+        if grep -q "default-key" "/home/${USERNAME}/.gnupg/gpg.conf"; then
+            default_gpg_key=$(grep "default-key" "/home/${USERNAME}/.gnupg/gpg.conf")
             if [[ "$default_gpg_key" != *'#'* ]]; then
-                default_gpg_key=$(grep "default-key" "/home/$USERNAME/.gnupg/gpg.conf" | awk -F ' ' '{print $2}')
+                default_gpg_key=$(grep "default-key" "/home/${USERNAME}/.gnupg/gpg.conf" | awk -F ' ' '{print $2}')
                 if [ ${#default_gpg_key} -gt 3 ]; then
-                    GPG_ID=$(su -c "gpg --list-keys '$default_gpg_key'" - "$USERNAME" | sed -n '2p' | sed 's/^[ \t]*//')
+                    GPG_ID=$(su -c "gpg --list-keys '$default_gpg_key'" - "${USERNAME}" | sed -n '2p' | sed 's/^[ \t]*//')
                 fi
             fi
         fi
     fi
     #pubkey_qrcode="${webadmin_install_dir}/images/userprofile_${USERNAME}.png"
-    #su -c "gpg --armor --export \"$GPG_ID\"" - "$USERNAME" | qrencode -t PNG -o "$pubkey_qrcode"
+    #su -c "gpg --armor --export \"$GPG_ID\"" - "${USERNAME}" | qrencode -t PNG -o "$pubkey_qrcode"
 
     { echo '        <div class="chip">';
       echo "          <a href=\"userprofile_${USERNAME}.html\" title=\"${USERNAME}\">";
       echo '            <img src="images/user_admin.png" alt="Person" width="96" height="96">';
-      echo "            $USERNAME";
+      echo "            ${USERNAME}";
       echo '          </a>';
       echo '        </div>'; } >> "$users_file"
 
     cp "${webadmin_install_dir}"/userprofile.html "$userfile"
     sed -i "s|USERNAME|${USERNAME}|g" "$userfile"
-    if [[ "$USERNAME" == "${webadmin_user}" ]]; then
+    if [[ "${USERNAME}" == "${webadmin_user}" ]]; then
         sed -i "s|USERTYPE|Admin|g" "$userfile"
         sed -i '/remove user button/,/end of remove/d' "$userfile"
     else
@@ -3024,11 +3024,11 @@ function datserver_update_settings_template {
     # shellcheck disable=SC2154
     app_settings_screen_template="${webadmin_install_dir}/settings_datserver_template.html"
     app_settings_screen="${webadmin_install_dir}/settings_datserver.html"
-    cp "$app_settings_screen_template" "$app_settings_screen"
+    cp "${app_settings_screen}_template" "${app_settings_screen}"
     datlinks=$(sed 's@[/\&]@\\&@g;s/$/\\/' "/etc/datserver/feeds"; echo .)
     datlinks=${datlinks%.}
-    sed -i "s|DATLINKS|$datlinks|g" "$app_settings_screen"
-    chown www-data:www-data "$app_settings_screen"
+    sed -i "s|DATLINKS|$datlinks|g" "${app_settings_screen}"
+    chown www-data:www-data "${app_settings_screen}"
 }
 
 function update_mumble_password {
@@ -3049,18 +3049,18 @@ function update_mumble_password {
 }
 
 function update_icecast {
-    if [ -f "$icecast_file" ]; then
+    if [ -f "${icecast_file}" ]; then
         if [ -d /etc/icecast2 ]; then
             ICECAST_TITLE=$(awk -F ',' '{print $1}' < "$icecast_file")
             ICECAST_DESCRIPTION=$(awk -F ',' '{print $2}' < "$icecast_file")
             icecast_genre=$(awk -F ',' '{print $3}' < "$icecast_file")
 
-            if [[ "$ICECAST_TITLE" != '' && "$ICECAST_DESCRIPTION" != '' && "$icecast_genre" != '' ]]; then
+            if [[ "${ICECAST_TITLE}" != '' && "${ICECAST_DESCRIPTION}" != '' && "${icecast_genre}" != '' ]]; then
                 ADMIN_USERNAME=$(grep 'MY_USERNAME=' "${CONFIGURATION_FILE}" | awk -F '=' '{print $2}')
                 ICECAST_SOURCE_PASSWORD=$("${PROJECT_NAME}-pass" -u "${ADMIN_USERNAME}" -a icecastsource)
                 ICECAST_USER_PASSWORD=$("${PROJECT_NAME}-pass" -u "${ADMIN_USERNAME}" -a icecastuser)
 
-                ICECAST_TITLE_MAIN="$ICECAST_DESCRIPTION"
+                ICECAST_TITLE_MAIN="${ICECAST_DESCRIPTION}"
 
                 { echo '#Settings';
                   echo '';
@@ -3103,47 +3103,47 @@ function update_icecast {
                   echo '';
                   echo '# Stream it out';
                   echo '#output.icecast(%mp3.vbr,';
-                  echo "#host = \"localhost\", port = $ICECAST_PORT, password = \"$ICECAST_SOURCE_PASSWORD\", mount = \"music.mp3\", name=\"$ICECAST_TITLE\", description=\"$ICECAST_DESCRIPTION\",radio)";
+                  echo "#host = \"localhost\", port = $ICECAST_PORT, password = \"$ICECAST_SOURCE_PASSWORD\", mount = \"music.mp3\", name=\"${ICECAST_TITLE}\", description=\"${ICECAST_DESCRIPTION}\",radio)";
                   echo '';
                   echo '#output.icecast(%vorbis,';
                   echo "#host = \"localhost\", port = $ICECAST_PORT,";
                   echo "#password = \"$ICECAST_SOURCE_PASSWORD\", mount = \"music.ogg\",";
-                  echo "#name=\"$ICECAST_TITLE\", description=\"$ICECAST_DESCRIPTION\",radio)";
+                  echo "#name=\"${ICECAST_TITLE}\", description=\"${ICECAST_DESCRIPTION}\",radio)";
                   echo '';
                   echo '#output.icecast(%opus(vbr="unconstrained",bitrate=5),';
                   echo "#host = \"localhost\", port = $ICECAST_PORT,";
                   echo "#password = \"$ICECAST_SOURCE_PASSWORD\", mount = \"music.opus\",";
-                  echo "#name=\"$ICECAST_TITLE\", description=\"$ICECAST_DESCRIPTION\",radio)";
+                  echo "#name=\"${ICECAST_TITLE}\", description=\"${ICECAST_DESCRIPTION}\",radio)";
                   echo '';
-                  echo "#output.icecast(%mp3.vbr, host = \"localhost\", port = $ICECAST_PORT, password = \"$ICECAST_SOURCE_PASSWORD\", mount = \"stream.mp3\", name=\"$ICECAST_TITLE_MAIN\", description=\"$ICECAST_TITLE_MAIN\", full)";
+                  echo "#output.icecast(%mp3.vbr, host = \"localhost\", port = $ICECAST_PORT, password = \"$ICECAST_SOURCE_PASSWORD\", mount = \"stream.mp3\", name=\"${ICECAST_TITLE}_MAIN\", description=\"${ICECAST_TITLE}_MAIN\", full)";
                   echo '';
-                  echo "#output.icecast(%vorbis(samplerate=8000, channels=2, quality=0.1), host=\"localhost\", port=$ICECAST_PORT, password=\"$ICECAST_SOURCE_PASSWORD\", mount=\"stream.ogg\", name=\"$ICECAST_TITLE_MAIN\", description=\"$ICECAST_TITLE_MAIN\",full)";
+                  echo "#output.icecast(%vorbis(samplerate=8000, channels=2, quality=0.1), host=\"localhost\", port=$ICECAST_PORT, password=\"$ICECAST_SOURCE_PASSWORD\", mount=\"stream.ogg\", name=\"${ICECAST_TITLE}_MAIN\", description=\"${ICECAST_TITLE}_MAIN\",full)";
                   echo '';
-                  echo "output.icecast(%opus(vbr=\"unconstrained\",bitrate=20), description=\"$ICECAST_TITLE_MAIN\", host=\"localhost\", port=$ICECAST_PORT, password=\"$ICECAST_SOURCE_PASSWORD\", mount=\"stream.opus\", radio)"; } > "$liquidsoap_script"
+                  echo "output.icecast(%opus(vbr=\"unconstrained\",bitrate=20), description=\"${ICECAST_TITLE}_MAIN\", host=\"localhost\", port=$ICECAST_PORT, password=\"$ICECAST_SOURCE_PASSWORD\", mount=\"stream.opus\", radio)"; } > "$liquidsoap_script"
                 chown liquidsoapuser:icecast "$liquidsoap_script"
 
-                sed -i "s|\"icecast_name\".*|\"icecast_name\" value=\"$ICECAST_TITLE\">|g" "${webadmin_install_dir}/settings_icecast.html"
-                sed -i "s|\"icecast_description\".*|\"icecast_description\" value=\"$ICECAST_DESCRIPTION\">|g" "${webadmin_install_dir}/settings_icecast.html"
-                sed -i "s|\"icecast_genre\".*|\"icecast_genre\" value=\"$icecast_genre\">|g" "${webadmin_install_dir}/settings_icecast.html"
+                sed -i "s|\"icecast_name\".*|\"icecast_name\" value=\"${ICECAST_TITLE}\">|g" "${webadmin_install_dir}/settings_icecast.html"
+                sed -i "s|\"icecast_description\".*|\"icecast_description\" value=\"${ICECAST_DESCRIPTION}\">|g" "${webadmin_install_dir}/settings_icecast.html"
+                sed -i "s|\"icecast_genre\".*|\"icecast_genre\" value=\"${icecast_genre}\">|g" "${webadmin_install_dir}/settings_icecast.html"
 
                 icecast_usb_drive=$(detect_connected_drives)
                 if [ "$icecast_usb_drive" ]; then
                     icecast_playlist_updated=
                     backup_mount_drive "$icecast_usb_drive"
                     if [ $backup_drive_mounted ]; then
-                        icecast_import_dir="$USB_MOUNT/playlist"
+                        icecast_import_dir="${USB_MOUNT}/playlist"
                         # search some common directory names
                         if [ ! -d "$icecast_import_dir" ]; then
-                            icecast_import_dir="$USB_MOUNT/icecast"
+                            icecast_import_dir="${USB_MOUNT}/icecast"
                         fi
                         if [ ! -d "$icecast_import_dir" ]; then
-                            icecast_import_dir="$USB_MOUNT/radio"
+                            icecast_import_dir="${USB_MOUNT}/radio"
                         fi
                         if [ ! -d "$icecast_import_dir" ]; then
-                            icecast_import_dir="$USB_MOUNT/stream"
+                            icecast_import_dir="${USB_MOUNT}/stream"
                         fi
                         if [ ! -d "$icecast_import_dir" ]; then
-                            icecast_import_dir="$USB_MOUNT/music"
+                            icecast_import_dir="${USB_MOUNT}/music"
                         fi
                         if [ -d "$icecast_import_dir" ]; then
                             if [ -d "$ICECAST_DIR" ]; then
@@ -3187,7 +3187,7 @@ function update_icecast {
                         chmod +x "$icecast_notification_file"
                         /bin/bash $icecast_notification_file &
 
-                        rm "$icecast_file"
+                        rm "${icecast_file}"
                         return
                     fi
                 fi
@@ -3197,55 +3197,55 @@ function update_icecast {
             fi
         fi
 
-        rm "$icecast_file"
+        rm "${icecast_file}"
     fi
 }
 
 function update_dlna {
-    if [ -f "$dlna_file" ]; then
+    if [ -f "${dlna_file}" ]; then
         if [ ! -f /etc/minidlna.conf ]; then
             dlna_usb_drive=$(detect_connected_drives)
-            if [ "$dlna_usb_drive" ]; then
-                backup_mount_drive "$dlna_usb_drive"
+            if [ "${dlna_usb_drive}" ]; then
+                backup_mount_drive "${dlna_usb_drive}"
                 # shellcheck disable=SC2086
                 if [ $backup_drive_mounted ]; then
 
                     # music
-                    dlna_import_dir="$USB_MOUNT/Music"
-                    if [ ! -d "$dlna_import_dir" ]; then
-                        dlna_import_dir="$USB_MOUNT/music"
+                    dlna_import_dir="${USB_MOUNT}/Music"
+                    if [ ! -d "${dlna_import_dir}" ]; then
+                        dlna_import_dir="${USB_MOUNT}/music"
                     fi
-                    if [ -d "$dlna_import_dir" ]; then
-                        cp -ru "$dlna_import_dir/"* /music
+                    if [ -d "${dlna_import_dir}" ]; then
+                        cp -ru "${dlna_import_dir}/"* /music
                         chown -R minidlna:minidlna /music
                     fi
 
                     # pictures
-                    dlna_import_dir="$USB_MOUNT/Pictures"
-                    if [ ! -d "$dlna_import_dir" ]; then
-                        dlna_import_dir="$USB_MOUNT/pictures"
+                    dlna_import_dir="${USB_MOUNT}/Pictures"
+                    if [ ! -d "${dlna_import_dir}" ]; then
+                        dlna_import_dir="${USB_MOUNT}/pictures"
                     fi
-                    if [ ! -d "$dlna_import_dir" ]; then
-                        dlna_import_dir="$USB_MOUNT/Photos"
+                    if [ ! -d "${dlna_import_dir}" ]; then
+                        dlna_import_dir="${USB_MOUNT}/Photos"
                     fi
-                    if [ ! -d "$dlna_import_dir" ]; then
-                        dlna_import_dir="$USB_MOUNT/photos"
+                    if [ ! -d "${dlna_import_dir}" ]; then
+                        dlna_import_dir="${USB_MOUNT}/photos"
                     fi
-                    if [ ! -d "$dlna_import_dir" ]; then
-                        dlna_import_dir="$USB_MOUNT/DCIM"
+                    if [ ! -d "${dlna_import_dir}" ]; then
+                        dlna_import_dir="${USB_MOUNT}/DCIM"
                     fi
-                    if [ -d "$dlna_import_dir" ]; then
-                        cp -ru "$dlna_import_dir/"* /pictures
+                    if [ -d "${dlna_import_dir}" ]; then
+                        cp -ru "${dlna_import_dir}/"* /pictures
                         chown -R minidlna:minidlna /pictures
                     fi
 
                     # videos
-                    dlna_import_dir="$USB_MOUNT/Videos"
-                    if [ ! -d "$dlna_import_dir" ]; then
-                        dlna_import_dir="$USB_MOUNT/videos"
+                    dlna_import_dir="${USB_MOUNT}/Videos"
+                    if [ ! -d "${dlna_import_dir}" ]; then
+                        dlna_import_dir="${USB_MOUNT}/videos"
                     fi
-                    if [ -d "$dlna_import_dir" ]; then
-                        cp -ru "$dlna_import_dir/"* /videos
+                    if [ -d "${dlna_import_dir}" ]; then
+                        cp -ru "${dlna_import_dir}/"* /videos
                         chown -R minidlna:minidlna /videos
                     fi
 
@@ -3257,12 +3257,12 @@ function update_dlna {
             fi
         fi
 
-        rm "$dlna_file"
+        rm "${dlna_file}"
     fi
 }
 
 function update_dat_links {
-    if [ -f "$datlinks_file" ]; then
+    if [ -f "${datlinks_file}" ]; then
 
         cd "/etc/datserver" || return
 
@@ -3283,7 +3283,7 @@ function update_dat_links {
             fi
             datlinks_lines_ctr=$((datlinks_lines_ctr + 1))
 
-            if [ "$line" ]; then
+            if [ "${line}" ]; then
                 # remove leading and trailing spaces
                 newline="$(echo -e "${line}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
                 if [[ "${newline}" == 'dat://'* ]]; then
@@ -3294,7 +3294,7 @@ function update_dat_links {
 
         mv "feeds.new" feeds
 
-        rm "$datlinks_file"
+        rm "${datlinks_file}"
         datserver_update_settings_template
 
         chown -R datserver:datserver /etc/datserver/feeds
@@ -3365,7 +3365,7 @@ function change_updates_settings {
 }
 
 function update_enable_ssh {
-    if [ -f "$ssh_file" ]; then
+    if [ -f "${ssh_file}" ]; then
         SSH_CONFIG='/etc/ssh/sshd_config'
         if [ ! -d /run/sshd ]; then
             mkdir /run/sshd
@@ -3378,25 +3378,25 @@ function update_enable_ssh {
         if [ -f /etc/ssh/sshd_config.ucf-dist ]; then
             rm /etc/ssh/sshd_config.ucf-dist
         fi
-        if grep -q 'PrintMotd yes' $SSH_CONFIG; then
-            sed -i 's|PrintMotd yes|PrintMotd no|g' $SSH_CONFIG
+        if grep -q 'PrintMotd yes' ${SSH_CONFIG}; then
+            sed -i 's|PrintMotd yes|PrintMotd no|g' ${SSH_CONFIG}
         fi
-        if ! grep -q 'PasswordAuthentication' $SSH_CONFIG; then
-            echo 'PasswordAuthentication no' >> $SSH_CONFIG
+        if ! grep -q 'PasswordAuthentication' ${SSH_CONFIG}; then
+            echo 'PasswordAuthentication no' >> ${SSH_CONFIG}
         fi
-        if grep -q '#PasswordAuthentication' $SSH_CONFIG; then
-            sed -i "s|#PasswordAuthentication|PasswordAuthentication|g" $SSH_CONFIG
+        if grep -q '#PasswordAuthentication' ${SSH_CONFIG}; then
+            sed -i "s|#PasswordAuthentication|PasswordAuthentication|g" ${SSH_CONFIG}
         fi
-        if ! grep -q 'PasswordAuthentication no' $SSH_CONFIG; then
-            sed -i "s|PasswordAuthentication.*|PasswordAuthentication no|g" $SSH_CONFIG
+        if ! grep -q 'PasswordAuthentication no' ${SSH_CONFIG}; then
+            sed -i "s|PasswordAuthentication.*|PasswordAuthentication no|g" ${SSH_CONFIG}
         fi
-        if grep -q '#AuthorizedKeysFile' $SSH_CONFIG; then
-            sed -i 's|#AuthorizedKeysFile.*|AuthorizedKeysFile     .ssh/authorized_keys|g' $SSH_CONFIG
+        if grep -q '#AuthorizedKeysFile' ${SSH_CONFIG}; then
+            sed -i 's|#AuthorizedKeysFile.*|AuthorizedKeysFile     .ssh/authorized_keys|g' ${SSH_CONFIG}
         else
-            sed -i 's|AuthorizedKeysFile.*|AuthorizedKeysFile     .ssh/authorized_keys|g' $SSH_CONFIG
+            sed -i 's|AuthorizedKeysFile.*|AuthorizedKeysFile     .ssh/authorized_keys|g' ${SSH_CONFIG}
         fi
 
-        ssh_active=$(awk -F ',' '{print $1}' < "$ssh_file")
+        ssh_active=$(awk -F ',' '{print $1}' < "${ssh_file}")
         ADMIN_USERNAME=$(grep 'MY_USERNAME=' "${CONFIGURATION_FILE}" | head -n 1 | awk -F '=' '{print $2}')
         if [[ "${ssh_active}" != '1' ]]; then
             # disable ssh access
@@ -3406,7 +3406,7 @@ function update_enable_ssh {
             delete_firewall_port_via_handle ${SSH_PORT}
         else
             # enable ssh access
-            ssh_public_key=$(awk -F ',' '{print $2}' < "$ssh_file")
+            ssh_public_key=$(awk -F ',' '{print $2}' < "${ssh_file}")
 
             if [ ${#ssh_public_key} -gt 20 ]; then
                 if [[ "$ssh_public_key" == 'ssh-'* ]]; then
@@ -3428,7 +3428,7 @@ function update_enable_ssh {
             fi
         fi
         systemctl restart ssh
-        rm "$ssh_file"
+        rm "${ssh_file}"
     fi
 }
 
@@ -3468,10 +3468,10 @@ function update_email_blocklists {
         # remove email blocks
         for d in /home/*/ ; do
             USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
-            if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+            if [[ $(is_valid_user "${USERNAME}") == "1" ]]; then
                 while read -r block_line; do
-                    if [ "$block_line" ]; then
-                        if [[ "$block_line" != *'@'* ]]; then
+                    if [ "${block_line}" ]; then
+                        if [[ "${block_line}" != *'@'* ]]; then
                             # line is a domain name
                             new_block_line="@${block_line}"
                             block_line="${new_block_line}"
@@ -3490,7 +3490,7 @@ function update_email_blocklists {
     # add email blocks
     for d in /home/*/ ; do
         USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
-        if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+        if [[ $(is_valid_user "${USERNAME}") == "1" ]]; then
             while read -r block_line; do
                 if [ "${block_line}" ]; then
                     if [[ "${block_line}" != *'@'* ]]; then
@@ -3665,9 +3665,9 @@ function update_blocklist {
                         newline=${line:1}
                         line="${newline}"
                     fi
-                    blocked_username=$(echo "$line" | awk -F '@' '{print $1}')
+                    blocked_username=$(echo "${line}" | awk -F '@' '{print $1}')
                     if valid_username_characters "${blocked_username}"; then
-                        blocked_domain=$(echo "$line" | awk -F '@' '{print $2}')
+                        blocked_domain=$(echo "${line}" | awk -F '@' '{print $2}')
                         if [[ "${blocked_domain}" == *'.'* ]]; then
                             if [ ${#blocked_domain} -gt 3 ]; then
                                 test_domain=$(echo "${blocked_domain}" | tr -dc a-z0-9.-)
@@ -3694,13 +3694,13 @@ function update_blocklist {
                     fi
                 else
                     # blocked domain
-                    if [[ "$line" == *'.'* ]]; then
-                        blocked_domain="$line"
-                        test_domain=$(echo "$blocked_domain" | tr -dc a-z0-9.-)
-                        if [[ "$blocked_domain" == "$test_domain" ]]; then
+                    if [[ "${line}" == *'.'* ]]; then
+                        blocked_domain="${line}"
+                        test_domain=$(echo "${blocked_domain}" | tr -dc a-z0-9.-)
+                        if [[ "${blocked_domain}" == "$test_domain" ]]; then
                             if [ ${#blocked_domain} -gt 3 ]; then
-                                if ! grep -q "$blocked_domain" "${FIREWALL_DOMAINS}.new"; then
-                                    echo "$blocked_domain" >> "${FIREWALL_DOMAINS}.new"
+                                if ! grep -q "${blocked_domain}" "${FIREWALL_DOMAINS}.new"; then
+                                    echo "${blocked_domain}" >> "${FIREWALL_DOMAINS}.new"
                                 fi
 
                                 # update the epicyon blocklist
@@ -3822,7 +3822,7 @@ function update_federationlist {
 }
 
 function update_muted_words {
-    if [ -f "$muted_words_file" ]; then
+    if [ -f "${muted_words_file}" ]; then
 
         if [ -f "${MUTED_WORDS}.new" ]; then
             rm "${MUTED_WORDS}.new"
@@ -3931,7 +3931,7 @@ function import_translations {
         if [ -f "translations_import.new" ]; then
             rm "translations_import.new"
         fi
-        rm "$translations_import_file"
+        rm "${translations_import_file}"
     fi
 }
 
@@ -3942,17 +3942,17 @@ function change_default_domain {
 
         # only applies to the standard server install, not onion
         ONION_ONLY=$(grep 'ONION_ONLY=' "${CONFIGURATION_FILE}" | head -n 1 | awk -F '=' '{print $2}')
-        if [[ "$ONION_ONLY" == 'no' ]]; then
-            if [ "$new_default_domain_name" ]; then
+        if [[ "${ONION_ONLY}" == 'no' ]]; then
+            if [ "${new_default_domain_name}" ]; then
                 if [ ${#new_default_domain_name} -gt 5 ]; then
-                    if [[ "$new_default_domain_name" == *'.'* ]]; then
+                    if [[ "${new_default_domain_name}" == *'.'* ]]; then
 
                         # has the default domain changed ?
                         DEFAULT_DOMAIN_NAME=$(grep 'DEFAULT_DOMAIN_NAME=' "${CONFIGURATION_FILE}" | head -n 1 | awk -F '=' '{print $2}')
-                        if [[ "$DEFAULT_DOMAIN_NAME" != "$new_default_domain_name" ]]; then
+                        if [[ "$DEFAULT_DOMAIN_NAME" != "${new_default_domain_name}" ]]; then
                             # set the new default domain within the config file
                             if ! grep -q "NEW_DEFAULT_DOMAIN_NAME=" ${CONFIGURATION_FILE}; then
-                                echo "NEW_DEFAULT_DOMAIN_NAME=$new_default_domain_name" >> ${CONFIGURATION_FILE}
+                                echo "NEW_DEFAULT_DOMAIN_NAME=${new_default_domain_name}" >> ${CONFIGURATION_FILE}
                             else
                                 sed -i "s|NEW_DEFAULT_DOMAIN_NAME=.*|NEW_DEFAULT_DOMAIN_NAME=$new_default_domain_name|g" ${CONFIGURATION_FILE}
                             fi
@@ -4009,23 +4009,23 @@ function update_bridges {
             fi
             bridges_lines_ctr=$((bridges_lines_ctr + 1))
 
-            if [ "$line" ]; then
+            if [ "${line}" ]; then
                 # remove leading and trailing spaces
                 newline="$(echo -e "${line}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
                 line="${newline}"
                 if [ ${#line} -gt 10 ]; then
-                    if [[ "$line" == '#'* ]]; then
-                        echo "$line" >> "/root/.webadmin_torbridges"
+                    if [[ "${line}" == '#'* ]]; then
+                        echo "${line}" >> "/root/.webadmin_torbridges"
                     else
                         # format is expected to be:
                         # obfs4 IP:port key cert mode
-                        bridge_type2=$(echo "$line" | awk -F ' ' '{print $1}')
+                        bridge_type2=$(echo "${line}" | awk -F ' ' '{print $1}')
                         if [[ "${bridge_type2}" == "${bridge_type}" ]]; then
-                            bridge_ip_address=$(echo "$line" | awk -F ' ' '{print $2}' | awk -F ':' '{print $1}')
-                            bridge_port=$(echo "$line" | awk -F ' ' '{print $2}' | awk -F ':' '{print $2}')
-                            bridge_key=$(echo "$line" | awk -F ' ' '{print $3}')
-                            bridge_cert=$(echo "$line" | awk -F ' ' '{print $4}')
-                            bridge_mode=$(echo "$line" | awk -F ' ' '{print $5}')
+                            bridge_ip_address=$(echo "${line}" | awk -F ' ' '{print $2}' | awk -F ':' '{print $1}')
+                            bridge_port=$(echo "${line}" | awk -F ' ' '{print $2}' | awk -F ':' '{print $2}')
+                            bridge_key=$(echo "${line}" | awk -F ' ' '{print $3}')
+                            bridge_cert=$(echo "${line}" | awk -F ' ' '{print $4}')
+                            bridge_mode=$(echo "${line}" | awk -F ' ' '{print $5}')
                             if [[ "${bridge_ip_address}" == *"."* && "${bridge_cert}" == "cert="* && "${bridge_mode}" == *"="* ]]; then
                                 if [ ! -f "/root/.webadmin_torbridges" ]; then
                                     touch "/root/.webadmin_torbridges"
@@ -4220,7 +4220,7 @@ function update_dns_over_tls {
 function webadmin_monitor_ip_changes {
     if [ -f "${webadmin_install_dir}/dynamicdns.html" ]; then
         ONION_ONLY=$(grep 'ONION_ONLY=' "${CONFIGURATION_FILE}" | head -n 1 | awk -F '=' '{print $2}')
-        if [[ "$ONION_ONLY" == 'no' ]]; then
+        if [[ "${ONION_ONLY}" == 'no' ]]; then
             webadmin_monitor_ip_ctr=$((webadmin_monitor_ip_ctr-1))
             if [ $webadmin_monitor_ip_ctr -le 0 ]; then
                 webadmin_monitor_ip_ctr=300
