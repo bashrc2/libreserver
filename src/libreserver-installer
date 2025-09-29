@@ -2149,10 +2149,10 @@ function install_apps_from_webadmin {
         return
     fi
     linestr=$(head -n 1 "${pending_installs}")
-    if [[ "$linestr" == "install_"* && "$linestr" != *'_running'* ]]; then
-        app_name=$(echo "$linestr" | awk -F '_' '{print $2}' | awk -F ',' '{print $1}')
+    if [[ "${linestr}" == "install_"* && "${linestr}" != *'_running'* ]]; then
+        app_name=$(echo "${linestr}" | awk -F '_' '{print $2}' | awk -F ',' '{print $1}')
         if [ -f "/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-${app_name}" ]; then
-            app_domain=$(echo "$linestr" | awk -F ',' '{print $2}')
+            app_domain=$(echo "${linestr}" | awk -F ',' '{print $2}')
             if [ ! "$app_domain" ]; then
                 app_domain=${app_name}.local
             fi
@@ -2180,7 +2180,7 @@ function install_apps_from_webadmin {
 
                 # remove from pending list so that if the install gets stuck
                 # it won't repeatedly try to install a bad app
-                sed -i "/$linestr/d" "${pending_installs}"
+                sed -i "/${linestr}/d" "${pending_installs}"
 
                 translated_notification_failed=$(web_admin_translate_text "Failed to install. For details see admin/applog.txt")
                 translated_notification_success=$(web_admin_translate_text "Installed successfully")
@@ -2203,7 +2203,7 @@ function install_apps_from_webadmin {
                   echo 'fi';
                   echo '';
                   echo "if ! /usr/bin/timeout $APP_INSTALL_TIMEOUT_SEC /usr/local/bin/${PROJECT_NAME}-addremove add \"${app_name}\" > \"${webadmin_install_dir}/applog.txt\"; then";
-                  echo "    sed -i \"/$linestr/d\" \"${pending_installs}\"";
+                  echo "    sed -i \"/${linestr}/d\" \"${pending_installs}\"";
                   echo "    notification_str=\"$translated_notification_failed\"";
                   echo "    if [ -f \"/etc/nginx/sites-available/${app_domain}\" ]; then";
                   echo "        echo \"Removing /etc/nginx/sites-available/${app_domain}\" >> \"${webadmin_install_dir}/applog.txt\"";
@@ -2227,7 +2227,7 @@ function install_apps_from_webadmin {
             fi
         else
             # remove from pending list
-            sed -i "/$linestr/d" "${pending_installs}"
+            sed -i "/${linestr}/d" "${pending_installs}"
         fi
     else
         # if any unusual line is found then remove the file
@@ -2236,14 +2236,14 @@ function install_apps_from_webadmin {
 }
 
 function remove_apps_from_webadmin {
-    if [ -f "$pending_removes" ]; then
-        linestr=$(head -n 1 "$pending_removes")
-        if [[ "$linestr" == "remove_"* ]]; then
-            app_name=$(echo "$linestr" | awk -F '_' '{print $2}')
+    if [ -f "${pending_removes}" ]; then
+        linestr=$(head -n 1 "${pending_removes}")
+        if [[ "${linestr}" == "remove_"* ]]; then
+            app_name=$(echo "${linestr}" | awk -F '_' '{print $2}')
             if [ -f "/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-${app_name}" ]; then
                 # indicate that we are removing
-                if [[ "$linestr" != *'_running'* ]]; then
-                    sed -i "s|${app_name}|${app_name}_running|g" "$pending_removes"
+                if [[ "${linestr}" != *'_running'* ]]; then
+                    sed -i "s|${app_name}|${app_name}_running|g" "${pending_removes}"
                 fi
 
                 /usr/bin/timeout $APP_INSTALL_TIMEOUT_SEC /usr/local/bin/${PROJECT_NAME}-addremove remove "${app_name}" > "${webadmin_install_dir}/applog.txt"
@@ -2260,10 +2260,10 @@ function remove_apps_from_webadmin {
                 # because that happens anyway as part of addremove
             fi
             # remove the line
-            sed -i "/$linestr/d" "$pending_removes"
+            sed -i "/${linestr}/d" "${pending_removes}"
         else
             # if any unusual line is found then remove the file
-            rm "$pending_removes"
+            rm "${pending_removes}"
         fi
     fi
 }
@@ -2472,10 +2472,10 @@ function restore_app_from_backup {
                   echo 'backup_password=';
                   echo 'if [ -f /tmp/backup_password.txt ]; then';
                   echo "    backup_password=\$(cat /tmp/backup_password.txt)";
-                  echo "    ${PROJECT_NAME}-pass -u \"$ADMIN_USERNAME\" -a simplebackup -p \"\$backup_password\"";
+                  echo "    ${PROJECT_NAME}-pass -u \"${ADMIN_USERNAME}\" -a simplebackup -p \"\$backup_password\"";
                   echo '    rm /tmp/backup_password.txt';
                   echo 'else';
-                  echo "    backup_password=\$(${PROJECT_NAME}-pass -u \"$ADMIN_USERNAME\" -a simplebackup)";
+                  echo "    backup_password=\$(${PROJECT_NAME}-pass -u \"${ADMIN_USERNAME}\" -a simplebackup)";
                   echo 'fi';
                   echo '';
                   echo "if /usr/bin/timeout $BACKUP_TIMEOUT_SEC /usr/local/bin/${PROJECT_NAME}-restore-local simple \"\$backup_password\" \"${restore_app_name}\" >> ${webadmin_install_dir}/restore.txt; then";
@@ -2530,10 +2530,10 @@ function backup_and_restore {
           echo 'backup_password=';
           echo 'if [ -f /tmp/backup_password.txt ]; then';
           echo "    backup_password=\$(cat /tmp/backup_password.txt)";
-          echo "    ${PROJECT_NAME}-pass -u \"$ADMIN_USERNAME\" -a simplebackup -p \"\$backup_password\"";
+          echo "    ${PROJECT_NAME}-pass -u \"${ADMIN_USERNAME}\" -a simplebackup -p \"\$backup_password\"";
           echo '    rm /tmp/backup_password.txt';
           echo 'else';
-          echo "    backup_password=\$(${PROJECT_NAME}-pass -u \"$ADMIN_USERNAME\" -a simplebackup)";
+          echo "    backup_password=\$(${PROJECT_NAME}-pass -u \"${ADMIN_USERNAME}\" -a simplebackup)";
           echo 'fi';
           echo '';
           echo "if /usr/bin/timeout $BACKUP_TIMEOUT_SEC /usr/local/bin/${PROJECT_NAME}-restore-local simple \"\$backup_password\" >> ${webadmin_install_dir}/restore.txt; then";
@@ -2584,7 +2584,7 @@ function backup_and_restore {
               echo 'backup_password=';
               echo 'if [ -f /tmp/backup_password.txt ]; then';
               echo "    backup_password=\$(cat /tmp/backup_password.txt)";
-              echo "    ${PROJECT_NAME}-pass -u \"$ADMIN_USERNAME\" -a simplebackup -p \"\$backup_password\"";
+              echo "    ${PROJECT_NAME}-pass -u \"${ADMIN_USERNAME}\" -a simplebackup -p \"\$backup_password\"";
               echo '    rm /tmp/backup_password.txt';
               echo "    sed -i \"s|\\\"backup_password\\\".*|\\\"backup_password\\\" value=\\\"\$backup_password\\\"></p>|g\" ${webadmin_install_dir}/backup_password.html";
               echo "    sed -i \"s|\\\"backup_password_confirm\\\".*|\\\"backup_password_confirm\\\" value=\\\"\$backup_password\\\"></p>|g\" ${webadmin_install_dir}/backup_password.html";
@@ -2592,7 +2592,7 @@ function backup_and_restore {
               echo "    sed -i \"s|\\\"backup_password\\\".*|\\\"backup_password\\\" value=\\\"\$backup_password\\\"></p>|g\" ${webadmin_install_dir}/restore_password.html";
               echo "    chown www-data:www-data ${webadmin_install_dir}/restore_password.html";
               echo 'else';
-              echo "    backup_password=\$(${PROJECT_NAME}-pass -u \"$ADMIN_USERNAME\" -a simplebackup)";
+              echo "    backup_password=\$(${PROJECT_NAME}-pass -u \"${ADMIN_USERNAME}\" -a simplebackup)";
               echo 'fi';
               echo '';
               echo "if /usr/bin/timeout $BACKUP_TIMEOUT_SEC /usr/local/bin/${PROJECT_NAME}-backup-local simple \"\$backup_password\" >> ${webadmin_install_dir}/backup.txt; then";
@@ -3057,8 +3057,8 @@ function update_icecast {
 
             if [[ "$ICECAST_TITLE" != '' && "$ICECAST_DESCRIPTION" != '' && "$icecast_genre" != '' ]]; then
                 ADMIN_USERNAME=$(grep 'MY_USERNAME=' "${CONFIGURATION_FILE}" | awk -F '=' '{print $2}')
-                ICECAST_SOURCE_PASSWORD=$("${PROJECT_NAME}-pass" -u "$ADMIN_USERNAME" -a icecastsource)
-                ICECAST_USER_PASSWORD=$("${PROJECT_NAME}-pass" -u "$ADMIN_USERNAME" -a icecastuser)
+                ICECAST_SOURCE_PASSWORD=$("${PROJECT_NAME}-pass" -u "${ADMIN_USERNAME}" -a icecastsource)
+                ICECAST_USER_PASSWORD=$("${PROJECT_NAME}-pass" -u "${ADMIN_USERNAME}" -a icecastuser)
 
                 ICECAST_TITLE_MAIN="$ICECAST_DESCRIPTION"
 
@@ -3286,11 +3286,11 @@ function update_dat_links {
             if [ "$line" ]; then
                 # remove leading and trailing spaces
                 newline="$(echo -e "${line}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
-                if [[ "$newline" == 'dat://'* ]]; then
-                    echo "$newline" >> "feeds.new"
+                if [[ "${newline}" == 'dat://'* ]]; then
+                    echo "${newline}" >> "feeds.new"
                 fi
             fi
-        done < "$datlinks_file"
+        done < "${datlinks_file}"
 
         mv "feeds.new" feeds
 
@@ -3303,47 +3303,47 @@ function update_dat_links {
 }
 
 function change_updates_settings {
-    if [ -f "$settings_updates_file" ]; then
-        updates_enabled=$(awk -F ',' '{print $1}' < "$settings_updates_file")
-        if [[ "$updates_enabled" != '0' && "$updates_enabled" != '1' ]]; then
-            rm "$settings_updates_file"
+    if [ -f "${settings_updates_file}" ]; then
+        updates_enabled=$(awk -F ',' '{print $1}' < "${settings_updates_file}")
+        if [[ "${updates_enabled}" != '0' && "${updates_enabled}" != '1' ]]; then
+            rm "${settings_updates_file}"
             return
         fi
 
-        updates_repo=$(awk -F ',' '{print $2}' < "$settings_updates_file")
-        if [[ "$updates_repo" != *'.'* || "$updates_repo" != 'http'* || "$updates_repo" == *' '* || "$updates_repo" == *'$'* || "$updates_repo" == *'`'* ]]; then
-            rm "$settings_updates_file"
+        updates_repo=$(awk -F ',' '{print $2}' < "${settings_updates_file}")
+        if [[ "${updates_repo}" != *'.'* || "${updates_repo}" != 'http'* || "${updates_repo}" == *' '* || "${updates_repo}" == *'$'* || "${updates_repo}" == *'`'* ]]; then
+            rm "${settings_updates_file}"
             return
         fi
 
-        updates_branch=$(awk -F ',' '{print $3}' < "$settings_updates_file")
-        if [[ "$updates_branch" == 'http'* || "$updates_branch" == *' '* || "$updates_branch" == *'$'* || "$updates_branch" == *'`'* ]]; then
-            rm "$settings_updates_file"
+        updates_branch=$(awk -F ',' '{print $3}' < "${settings_updates_file}")
+        if [[ "${updates_branch}" == 'http'* || "${updates_branch}" == *' '* || "${updates_branch}" == *'$'* || "${updates_branch}" == *'`'* ]]; then
+            rm "${settings_updates_file}"
             return
         fi
 
         PROJECT_REPO='none'
-        if [ "$updates_repo" ]; then
-            PROJECT_REPO="$updates_repo"
+        if [ "${updates_repo}" ]; then
+            PROJECT_REPO="${updates_repo}"
         fi
         if grep -q 'PROJECT_REPO=' "${CONFIGURATION_FILE}"; then
             sed -i "s|PROJECT_REPO=.*|PROJECT_REPO=$PROJECT_REPO|g" "${CONFIGURATION_FILE}"
         else
-            echo "PROJECT_REPO=$PROJECT_REPO" >> "${CONFIGURATION_FILE}"
+            echo "PROJECT_REPO=${PROJECT_REPO}" >> "${CONFIGURATION_FILE}"
         fi
 
         STABLE_BRANCH=
-        if [ "$updates_branch" ]; then
-            STABLE_BRANCH="$updates_branch"
+        if [ "${updates_branch}" ]; then
+            STABLE_BRANCH="${updates_branch}"
         fi
         if grep -q 'STABLE_BRANCH=' "${CONFIGURATION_FILE}"; then
-            sed -i "s|STABLE_BRANCH=.*|STABLE_BRANCH=$STABLE_BRANCH|g" "${CONFIGURATION_FILE}"
+            sed -i "s|STABLE_BRANCH=.*|STABLE_BRANCH=${STABLE_BRANCH}|g" "${CONFIGURATION_FILE}"
         else
-            echo "STABLE_BRANCH=$STABLE_BRANCH" >> "${CONFIGURATION_FILE}"
+            echo "STABLE_BRANCH=${STABLE_BRANCH}" >> "${CONFIGURATION_FILE}"
         fi
 
         # change default checked state for radio button
-        if [[ "$updates_enabled" == '1' ]]; then
+        if [[ "${updates_enabled}" == '1' ]]; then
             sed -i "s|value=\"1\">|value=\"1\" checked>|g" "${webadmin_install_dir}/settings_updates.html"
             sed -i "s|value=\"0\" checked>|value=\"0\">|g" "${webadmin_install_dir}/settings_updates.html"
         else
@@ -3360,7 +3360,7 @@ function change_updates_settings {
             sed '/DEVELOPMENT_BRANCH=/d' "${CONFIGURATION_FILE}"
         fi
 
-        rm "$settings_updates_file"
+        rm "${settings_updates_file}"
     fi
 }
 
@@ -3398,10 +3398,10 @@ function update_enable_ssh {
 
         ssh_active=$(awk -F ',' '{print $1}' < "$ssh_file")
         ADMIN_USERNAME=$(grep 'MY_USERNAME=' "${CONFIGURATION_FILE}" | head -n 1 | awk -F '=' '{print $2}')
-        if [[ "$ssh_active" != '1' ]]; then
+        if [[ "${ssh_active}" != '1' ]]; then
             # disable ssh access
-            if [ -f "/home/$ADMIN_USERNAME/.ssh/authorized_keys" ]; then
-                rm "/home/$ADMIN_USERNAME/.ssh/authorized_keys"
+            if [ -f "/home/${ADMIN_USERNAME}/.ssh/authorized_keys" ]; then
+                rm "/home/${ADMIN_USERNAME}/.ssh/authorized_keys"
             fi
             delete_firewall_port_via_handle ${SSH_PORT}
         else
@@ -3410,12 +3410,12 @@ function update_enable_ssh {
 
             if [ ${#ssh_public_key} -gt 20 ]; then
                 if [[ "$ssh_public_key" == 'ssh-'* ]]; then
-                    if [ ! -d "/home/$ADMIN_USERNAME/.ssh" ]; then
-                        mkdir "/home/$ADMIN_USERNAME/.ssh"
+                    if [ ! -d "/home/${ADMIN_USERNAME}/.ssh" ]; then
+                        mkdir "/home/${ADMIN_USERNAME}/.ssh"
                     fi
-                    echo "$ssh_public_key" > "/home/$ADMIN_USERNAME/.ssh/authorized_keys"
-                    echo "" >> "/home/$ADMIN_USERNAME/.ssh/authorized_keys"
-                    chown -R "$ADMIN_USERNAME":"$ADMIN_USERNAME" "/home/$ADMIN_USERNAME/.ssh"
+                    echo "$ssh_public_key" > "/home/${ADMIN_USERNAME}/.ssh/authorized_keys"
+                    echo "" >> "/home/${ADMIN_USERNAME}/.ssh/authorized_keys"
+                    chown -R "${ADMIN_USERNAME}":"${ADMIN_USERNAME}" "/home/${ADMIN_USERNAME}/.ssh"
                     configure_enable_ssh_access /etc/nftables.conf
                     #/usr/sbin/nft add rule inet filter INPUT tcp dport "${SSH_PORT}" accept
                 fi
@@ -3440,17 +3440,17 @@ function rsync_deny_blocked_domains {
     rsync_denied_hosts=
     while read -r blocked; do
         if [ ${#blocked} -gt 4 ]; then
-            if [[ "$blocked" == *"."* && "$blocked" != *"localhost"* && "$blocked" != *"127.0."* ]]; then
-                if [[ "$blocked" != *"@"* ]]; then
+            if [[ "${blocked}" == *"."* && "${blocked}" != *"localhost"* && "${blocked}" != *"127.0."* ]]; then
+                if [[ "${blocked}" != *"@"* ]]; then
                     if [ "$rsync_denied_hosts" ]; then
-                        rsync_denied_hosts="${rsync_denied_hosts},$blocked"
+                        rsync_denied_hosts="${rsync_denied_hosts},${blocked}"
                     else
-                        rsync_denied_hosts="$blocked"
+                        rsync_denied_hosts="${blocked}"
                     fi
                 fi
             fi
         fi
-    done <"$FIREWALL_DOMAINS"
+    done <"${FIREWALL_DOMAINS}"
 
     if [ "$rsync_denied_hosts" ]; then
         if ! grep -q "hosts deny = $rsync_denied_hosts" /etc/rsync/rsyncd.conf; then
@@ -3478,11 +3478,11 @@ function update_email_blocklists {
                         fi
 
                         # does not exist in the new version
-                        if ! grep -q "$block_line" "$FIREWALL_DOMAINS_NEW"; then
-                            "${PROJECT_NAME}-unignore" -u "$USERNAME" -e "$block_line"
+                        if ! grep -q "${block_line}" "${FIREWALL_DOMAINS_NEW}"; then
+                            "${PROJECT_NAME}-unignore" -u "${USERNAME}" -e "${block_line}"
                         fi
                     fi
-                done < "$FIREWALL_DOMAINS_OLD"
+                done < "${FIREWALL_DOMAINS_OLD}"
             fi
         done
     fi
@@ -3492,23 +3492,23 @@ function update_email_blocklists {
         USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
         if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
             while read -r block_line; do
-                if [ "$block_line" ]; then
-                    if [[ "$block_line" != *'@'* ]]; then
+                if [ "${block_line}" ]; then
+                    if [[ "${block_line}" != *'@'* ]]; then
                         # line is a domain name
                         new_block_line="@${block_line}"
                         block_line="${new_block_line}"
                     fi
 
-                    if [ -f "$FIREWALL_DOMAINS_OLD" ]; then
+                    if [ -f "${FIREWALL_DOMAINS_OLD}" ]; then
                         # does not exist in the old version
-                        if ! grep -q "$block_line" "$FIREWALL_DOMAINS_OLD"; then
-                            "${PROJECT_NAME}-ignore" -u "$USERNAME" -e "$block_line"
+                        if ! grep -q "${block_line}" "${FIREWALL_DOMAINS_OLD}"; then
+                            "${PROJECT_NAME}-ignore" -u "${USERNAME}" -e "${block_line}"
                         fi
                     else
-                        "${PROJECT_NAME}-ignore" -u "$USERNAME" -e "$block_line"
+                        "${PROJECT_NAME}-ignore" -u "${USERNAME}" -e "${block_line}"
                     fi
                 fi
-            done < "$FIREWALL_DOMAINS_NEW"
+            done < "${FIREWALL_DOMAINS_NEW}"
         fi
     done
 }
@@ -3522,16 +3522,16 @@ function update_email_muted_words {
         # remove email blocks
         for d in /home/*/ ; do
             USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
-            if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+            if [[ $(is_valid_user "${USERNAME}") == "1" ]]; then
                 while read -r block_line; do
-                    if [ "$block_line" ]; then
+                    if [ "${block_line}" ]; then
                         # does not exist in the new version
-                        if ! grep -q "$block_line" "$MUTED_WORDS_NEW"; then
-                            "${PROJECT_NAME}-unignore" -u "$USERNAME" -a "$block_line"
+                        if ! grep -q "${block_line}" "${MUTED_WORDS_NEW}"; then
+                            "${PROJECT_NAME}-unignore" -u "${USERNAME}" -a "${block_line}"
                             muted_words_changed=1
                         fi
                     fi
-                done < "$MUTED_WORDS_OLD"
+                done < "${MUTED_WORDS_OLD}"
             fi
         done
     fi
@@ -3830,11 +3830,11 @@ function update_muted_words {
         touch "${MUTED_WORDS}.new"
 
         # add an extra line, otherwise the last line may not parse
-        echo "" >> "$muted_words_file"
+        echo "" >> "${muted_words_file}"
 
         blocked_lines_ctr=0
         while read -r line; do
-            if [ $blocked_lines_ctr -gt 1024 ]; then
+            if [ ${blocked_lines_ctr} -gt 1024 ]; then
                 # This prevents someone copy-pasting a giant amount of text
                 # into the blocklist. If you're legitimately blocking more
                 # than this number then you probably have other problems to
@@ -4012,7 +4012,7 @@ function update_bridges {
             if [ "$line" ]; then
                 # remove leading and trailing spaces
                 newline="$(echo -e "${line}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
-                line="$newline"
+                line="${newline}"
                 if [ ${#line} -gt 10 ]; then
                     if [[ "$line" == '#'* ]]; then
                         echo "$line" >> "/root/.webadmin_torbridges"
