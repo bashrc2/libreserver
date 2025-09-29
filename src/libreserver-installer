@@ -325,8 +325,8 @@ function reset_app_install_after_power_cut {
     fi
 
     # remove from pending installs
-    if [ -f "$pending_installs" ]; then
-        rm "$pending_installs"
+    if [ -f "${pending_installs}" ]; then
+        rm "${pending_installs}"
     fi
 
     if [ -f "${webadmin_install_dir}/index_domain_changing.html" ]; then
@@ -1173,8 +1173,8 @@ function web_admin_create_add_apps_category {
 
                         # check if the app is pending installation
                         app_pending_install=
-                        if [ -f "$pending_installs" ]; then
-                            if grep -q "install_${app_name}" "$pending_installs"; then
+                        if [ -f "${pending_installs}" ]; then
+                            if grep -q "install_${app_name}" "${pending_installs}"; then
                                 app_is_installed=1
                                 app_pending_install=1
                             fi
@@ -2142,13 +2142,13 @@ function set_static_ip_address {
 
 # shellcheck disable=SC2120
 function install_apps_from_webadmin {
-    if [ ! -f "$pending_installs" ]; then
+    if [ ! -f "${pending_installs}" ]; then
         return
     fi
     if [ -f "$currently_installing_app_name" ]; then
         return
     fi
-    linestr=$(head -n 1 "$pending_installs")
+    linestr=$(head -n 1 "${pending_installs}")
     if [[ "$linestr" == "install_"* && "$linestr" != *'_running'* ]]; then
         app_name=$(echo "$linestr" | awk -F '_' '{print $2}' | awk -F ',' '{print $1}')
         if [ -f "/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-${app_name}" ]; then
@@ -2160,7 +2160,7 @@ function install_apps_from_webadmin {
             if [[ "${app_name_upper}" && "${app_name_upper}" != "DEFAULT" ]]; then
 
                 # indicate that we are installing
-                sed -i "s|${app_name}|${app_name}_running|g" "$pending_installs"
+                sed -i "s|${app_name}|${app_name}_running|g" "${pending_installs}"
 
                 # Add domain name to the config
                 if grep -q "${app_name_upper}_DOMAIN_NAME=" "${CONFIGURATION_FILE}"; then
@@ -2180,7 +2180,7 @@ function install_apps_from_webadmin {
 
                 # remove from pending list so that if the install gets stuck
                 # it won't repeatedly try to install a bad app
-                sed -i "/$linestr/d" "$pending_installs"
+                sed -i "/$linestr/d" "${pending_installs}"
 
                 translated_notification_failed=$(web_admin_translate_text "Failed to install. For details see admin/applog.txt")
                 translated_notification_success=$(web_admin_translate_text "Installed successfully")
@@ -2203,7 +2203,7 @@ function install_apps_from_webadmin {
                   echo 'fi';
                   echo '';
                   echo "if ! /usr/bin/timeout $APP_INSTALL_TIMEOUT_SEC /usr/local/bin/${PROJECT_NAME}-addremove add \"${app_name}\" > \"${webadmin_install_dir}/applog.txt\"; then";
-                  echo "    sed -i \"/$linestr/d\" \"$pending_installs\"";
+                  echo "    sed -i \"/$linestr/d\" \"${pending_installs}\"";
                   echo "    notification_str=\"$translated_notification_failed\"";
                   echo "    if [ -f \"/etc/nginx/sites-available/${app_domain}\" ]; then";
                   echo "        echo \"Removing /etc/nginx/sites-available/${app_domain}\" >> \"${webadmin_install_dir}/applog.txt\"";
@@ -2227,11 +2227,11 @@ function install_apps_from_webadmin {
             fi
         else
             # remove from pending list
-            sed -i "/$linestr/d" "$pending_installs"
+            sed -i "/$linestr/d" "${pending_installs}"
         fi
     else
         # if any unusual line is found then remove the file
-        rm "$pending_installs"
+        rm "${pending_installs}"
     fi
 }
 
@@ -3000,7 +3000,7 @@ function regenerate_dynamic_dns {
             ddns='dyn'
         fi
         sed -i "s|\"$ddns\"|\"$ddns\" selected|g" "${webadmin_install_dir}/dynamicdns.html"
-        sed -i "s|DDNS_USERNAME|$ddns_username|g" "${webadmin_install_dir}/dynamicdns.html"
+        sed -i "s|DDNS_USERNAME|${ddns_username}|g" "${webadmin_install_dir}/dynamicdns.html"
         sed -i "s|DDNS_CODE|$ddns_code|g" "${webadmin_install_dir}/dynamicdns.html"
         sed -i "s|CURRENT_IP_ADDRESS|$(get_external_ipv4_address)|g" "${webadmin_install_dir}/dynamicdns.html"
         chown www-data:www-data "${webadmin_install_dir}/dynamicdns.html"
@@ -3014,7 +3014,7 @@ function regenerate_dns_over_tls {
     webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
     if [ -f "${webadmin_install_dir}/dns_over_tls_template.html" ]; then
         cp "${webadmin_install_dir}/dns_over_tls_template.html" "${webadmin_install_dir}/dns_over_tls.html"
-        sed -i "s|DNS_OVER_TLS|$dns_over_tls_address|g" "${webadmin_install_dir}/dns_over_tls.html"
+        sed -i "s|DNS_OVER_TLS|${dns_over_tls_address}|g" "${webadmin_install_dir}/dns_over_tls.html"
         chown www-data:www-data "${webadmin_install_dir}/dns_over_tls.html"
     fi
 }
@@ -3539,25 +3539,25 @@ function update_email_muted_words {
     # add email blocks
     for d in /home/*/ ; do
         USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
-        if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
+        if [[ $(is_valid_user "${USERNAME}") == "1" ]]; then
             while read -r block_line; do
-                if [ "$block_line" ]; then
-                    if [ -f "$MUTED_WORDS_OLD" ]; then
+                if [ "${block_line}" ]; then
+                    if [ -f "${MUTED_WORDS_OLD}" ]; then
                         # does not exist in the old version
-                        if ! grep -q "$block_line" "$MUTED_WORDS_OLD"; then
-                            "${PROJECT_NAME}-ignore" -u "$USERNAME" -a "$block_line"
+                        if ! grep -q "${block_line}" "${MUTED_WORDS_OLD}"; then
+                            "${PROJECT_NAME}-ignore" -u "${USERNAME}" -a "${block_line}"
                             muted_words_changed=1
                         fi
                     else
-                        "${PROJECT_NAME}-ignore" -u "$USERNAME" -a "$block_line"
+                        "${PROJECT_NAME}-ignore" -u "${USERNAME}" -a "${block_line}"
                         muted_words_changed=1
                     fi
                 fi
-            done < "$MUTED_WORDS_NEW"
+            done < "${MUTED_WORDS_NEW}"
         fi
     done
 
-    if [ $muted_words_changed ]; then
+    if [ ${muted_words_changed} ]; then
         if [ -f /etc/prosody/prosody.cfg.lua ]; then
             systemctl restart prosody
         fi
@@ -3567,19 +3567,19 @@ function update_email_muted_words {
 function update_vpn {
     update_wireguard_client
 
-    if [ -f "$vpn_remote_file" ]; then
-        if [ -f "$vpn_file" ]; then
-            VPN_DOMAIN=$(awk -F ',' '{print $1}' < "$vpn_remote_file")
-            VPN_PUBLIC_KEY=$(awk -F ',' '{print $2}' < "$vpn_remote_file")
+    if [ -f "${vpn_remote_file}" ]; then
+        if [ -f "${vpn_file}" ]; then
+            VPN_DOMAIN=$(awk -F ',' '{print $1}' < "${vpn_remote_file}")
+            VPN_PUBLIC_KEY=$(awk -F ',' '{print $2}' < "${vpn_remote_file}")
 
-            cp "$vpn_remote_file" "/root/${PROJECT_NAME}-vpn-remote.cfg"
+            cp "${vpn_remote_file}" "/root/${PROJECT_NAME}-vpn-remote.cfg"
 
             # add VPN_DOMAIN to configuration file
-            if [ "$VPN_DOMAIN" ]; then
+            if [ "${VPN_DOMAIN}" ]; then
                 if grep -q 'VPN_DOMAIN=' ${CONFIGURATION_FILE}; then
-                    sed -i "s|VPN_DOMAIN=.*|VPN_DOMAIN=$VPN_DOMAIN|g" ${CONFIGURATION_FILE}
+                    sed -i "s|VPN_DOMAIN=.*|VPN_DOMAIN=${VPN_DOMAIN}|g" ${CONFIGURATION_FILE}
                 else
-                    echo "VPN_DOMAIN=$VPN_DOMAIN" >> ${CONFIGURATION_FILE}
+                    echo "VPN_DOMAIN=${VPN_DOMAIN}" >> ${CONFIGURATION_FILE}
                 fi
             else
                 if grep -q 'VPN_DOMAIN=' ${CONFIGURATION_FILE}; then
@@ -3588,11 +3588,11 @@ function update_vpn {
             fi
 
             # add VPN_PUBLIC_KEY to configuration file
-            if [ "$VPN_PUBLIC_KEY" ]; then
+            if [ "${VPN_PUBLIC_KEY}" ]; then
                 if grep -q 'VPN_PUBLIC_KEY=' ${CONFIGURATION_FILE}; then
-                    sed -i "s|VPN_PUBLIC_KEY=.*|VPN_PUBLIC_KEY=$VPN_PUBLIC_KEY|g" ${CONFIGURATION_FILE}
+                    sed -i "s|VPN_PUBLIC_KEY=.*|VPN_PUBLIC_KEY=${VPN_PUBLIC_KEY}|g" ${CONFIGURATION_FILE}
                 else
-                    echo "VPN_PUBLIC_KEY=$VPN_PUBLIC_KEY" >> ${CONFIGURATION_FILE}
+                    echo "VPN_PUBLIC_KEY=${VPN_PUBLIC_KEY}" >> ${CONFIGURATION_FILE}
                 fi
             else
                 if grep -q 'VPN_PUBLIC_KEY=' ${CONFIGURATION_FILE}; then
@@ -3600,7 +3600,7 @@ function update_vpn {
                 fi
             fi
 
-            if [ -s "$vpn_file" ]; then
+            if [ -s "${vpn_file}" ]; then
                 wireguard_enable
             else
                 # if the file is empty
@@ -3608,16 +3608,16 @@ function update_vpn {
                 if [ -f "/root/${PROJECT_NAME}-vpn-peers.cfg" ]; then
                     rm "/root/${PROJECT_NAME}-vpn-peers.cfg"
                 fi
-                rm "$vpn_file"
+                rm "${vpn_file}"
             fi
             regenerate_vpn
-            rm "$vpn_remote_file"
+            rm "${vpn_remote_file}"
         fi
     fi
 }
 
 function update_blocklist {
-    if [ -f "$blocklist_file" ]; then
+    if [ -f "${blocklist_file}" ]; then
 
         if [ -f "${FIREWALL_DOMAINS}.new" ]; then
             rm "${FIREWALL_DOMAINS}.new"
@@ -3641,11 +3641,11 @@ function update_blocklist {
         fi
 
         # add an extra line, otherwise the last line may not parse
-        echo "" >> "$blocklist_file"
+        echo "" >> "${blocklist_file}"
 
         blocked_lines_ctr=0
         while read -r line; do
-            if [ $blocked_lines_ctr -gt 1024 ]; then
+            if [ ${blocked_lines_ctr} -gt 1024 ]; then
                 # This prevents someone copy-pasting a giant amount of text
                 # into the blocklist. If you're legitimately blocking more
                 # than this number then you probably have other problems to
@@ -3654,24 +3654,24 @@ function update_blocklist {
             fi
             blocked_lines_ctr=$((blocked_lines_ctr + 1))
 
-            if [ "$line" ]; then
+            if [ "${line}" ]; then
                 # remove leading and trailing spaces
                 newline="$(echo -e "${line}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
-                line="$newline"
-                if [[ "$line" == *'@'* ]]; then
+                line="${newline}"
+                if [[ "${line}" == *'@'* ]]; then
                     # blocked user
                     # remove leading @
-                    if [[ "$line" == '@'* ]]; then
+                    if [[ "${line}" == '@'* ]]; then
                         newline=${line:1}
-                        line="$newline"
+                        line="${newline}"
                     fi
                     blocked_username=$(echo "$line" | awk -F '@' '{print $1}')
-                    if valid_username_characters "$blocked_username"; then
+                    if valid_username_characters "${blocked_username}"; then
                         blocked_domain=$(echo "$line" | awk -F '@' '{print $2}')
-                        if [[ "$blocked_domain" == *'.'* ]]; then
+                        if [[ "${blocked_domain}" == *'.'* ]]; then
                             if [ ${#blocked_domain} -gt 3 ]; then
-                                test_domain=$(echo "$blocked_domain" | tr -dc a-z0-9.-)
-                                if [[ "$blocked_domain" == "$test_domain" ]]; then
+                                test_domain=$(echo "${blocked_domain}" | tr -dc a-z0-9.-)
+                                if [[ "${blocked_domain}" == "${test_domain}" ]]; then
                                     blocked_address="${blocked_username}@${blocked_domain}"
                                     if ! grep -q "$blocked_address" "${FIREWALL_DOMAINS}.new"; then
                                         echo "${blocked_username}@${blocked_domain}" >> "${FIREWALL_DOMAINS}.new"
@@ -3772,7 +3772,7 @@ function block_evil_domains {
 }
 
 function update_federationlist {
-    if [ -f "$federationlist_file" ]; then
+    if [ -f "${federationlist_file}" ]; then
 
         if [ -f "${FIREWALL_ALLOW_DOMAINS}.new" ]; then
             rm "${FIREWALL_ALLOW_DOMAINS}.new"
@@ -3780,7 +3780,7 @@ function update_federationlist {
         touch "${FIREWALL_ALLOW_DOMAINS}.new"
 
         # add an extra line, otherwise the last line may not parse
-        echo "" >> "$federationlist_file"
+        echo "" >> "${federationlist_file}"
 
         allowed_lines_ctr=0
         while read -r line; do
@@ -3791,32 +3791,32 @@ function update_federationlist {
             fi
             allowed_lines_ctr=$((allowed_lines_ctr + 1))
 
-            if [ "$line" ]; then
+            if [ "${line}" ]; then
                 # remove leading and trailing spaces
                 newline="$(echo -e "${line}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
-                line="$newline"
+                line="${newline}"
                 # remove comments and other things
-                if [[ "$line" != *'@'* && "$line" == *'.'* && "$line" != *'#'* && "$line" != *'/'* ]]; then
-                    allowed_domain="$line"
+                if [[ "${line}" != *'@'* && "${line}" == *'.'* && "${line}" != *'#'* && "${line}" != *'/'* ]]; then
+                    allowed_domain="${line}"
                     # check that domains of this server are not included
-                    if [[ "$allowed_domain" != *"$local_hostname" && "$allowed_domain" != *"$HOSTNAME" ]]; then
+                    if [[ "${allowed_domain}" != *"${local_hostname}" && "${allowed_domain}" != *"${HOSTNAME}" ]]; then
                         test_domain=$(echo "$allowed_domain" | tr -dc a-z0-9.-)
                         # check for valid characters
-                        if [[ "$allowed_domain" == "$test_domain" ]]; then
+                        if [[ "${allowed_domain}" == "${test_domain}" ]]; then
                             if [ ${#allowed_domain} -gt 3 ]; then
-                                if ! grep -q "$allowed_domain" "${FIREWALL_ALLOW_DOMAINS}.new"; then
-                                    echo "$allowed_domain" >> "${FIREWALL_ALLOW_DOMAINS}.new"
+                                if ! grep -q "${allowed_domain}" "${FIREWALL_ALLOW_DOMAINS}.new"; then
+                                    echo "${allowed_domain}" >> "${FIREWALL_ALLOW_DOMAINS}.new"
                                 fi
                             fi
                         fi
                     fi
                 fi
             fi
-        done < "$federationlist_file"
+        done < "${federationlist_file}"
 
         mv "${FIREWALL_ALLOW_DOMAINS}" "${FIREWALL_ALLOW_DOMAINS}.backup"
         mv "${FIREWALL_ALLOW_DOMAINS}.new" "${FIREWALL_ALLOW_DOMAINS}"
-        rm "$federationlist_file"
+        rm "${federationlist_file}"
         regenerate_federationlist
     fi
 }
@@ -3843,31 +3843,31 @@ function update_muted_words {
             fi
             blocked_lines_ctr=$((blocked_lines_ctr + 1))
 
-            if [ "$line" ]; then
+            if [ "${line}" ]; then
                 # remove leading and trailing spaces
                 newline="$(echo -e "${line}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
-                line="$newline"
+                line="${newline}"
 
                 if [ ${#line} -gt 1 ]; then
-                    blocked_words_str="$line"
-                    if ! grep -q "$blocked_words_str" "${MUTED_WORDS}.new"; then
-                        echo "$blocked_words_str" >> "${MUTED_WORDS}.new"
+                    blocked_words_str="${line}"
+                    if ! grep -q "${blocked_words_str}" "${MUTED_WORDS}.new"; then
+                        echo "${blocked_words_str}" >> "${MUTED_WORDS}.new"
                     fi
                 fi
             fi
-        done < "$muted_words_file"
+        done < "${muted_words_file}"
 
         update_email_muted_words "${MUTED_WORDS}"
 
         mv "${MUTED_WORDS}" "${MUTED_WORDS}.backup"
         mv "${MUTED_WORDS}.new" "${MUTED_WORDS}"
-        rm "$muted_words_file"
+        rm "${muted_words_file}"
         regenerate_blocklist_muted_words
     fi
 }
 
 function import_translations {
-    if [ -f "$translations_import_file" ]; then
+    if [ -f "${translations_import_file}" ]; then
         translations_language=
 
         if [ -f "translations_import.new" ]; then
@@ -3876,7 +3876,7 @@ function import_translations {
         touch "translations_import.new"
 
         # add an extra line, otherwise the last line may not parse
-        echo "" >> "$translations_import_file"
+        echo "" >> "${translations_import_file}"
 
         import_lines_ctr=0
         translation_lines_ctr=0
@@ -3886,31 +3886,31 @@ function import_translations {
                 break
             fi
 
-            if [ "$line" ]; then
+            if [ "${line}" ]; then
                 import_lines_ctr=$((import_lines_ctr + 1))
 
                 # remove leading and trailing spaces
                 newline="$(echo -e "${line}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
-                line="$newline"
+                line="${newline}"
 
                 if [ $import_lines_ctr -eq 1 ]; then
-                    translations_language="$line"
+                    translations_language="${line}"
                 fi
 
-                if [ "$translations_language" ]; then
-                    if [[ "$line" == *'|'* ]]; then
+                if [ "${translations_language}" ]; then
+                    if [[ "${line}" == *'|'* ]]; then
                         no_of_separators=$(echo "${line}" | awk -F '|' '{print NF-1}')
                         # shellcheck disable=SC2086
                         if [ $no_of_separators -eq 1 ]; then
-                            echo "$line" >> "translations_import.new"
+                            echo "${line}" >> "translations_import.new"
                             translation_lines_ctr=$((translation_lines_ctr + 1))
                         fi
                     fi
                 fi
             fi
-        done < "$translations_import_file"
+        done < "${translations_import_file}"
 
-        if [ "$translations_language" ]; then
+        if [ "${translations_language}" ]; then
             if [ $translation_lines_ctr -gt 100 ]; then
                 local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
                 webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
@@ -3936,9 +3936,9 @@ function import_translations {
 }
 
 function change_default_domain {
-    if [ -f "$default_domain_file" ]; then
-        new_default_domain_name=$(cat "$default_domain_file")
-        rm "$default_domain_file"
+    if [ -f "${default_domain_file}" ]; then
+        new_default_domain_name=$(cat "${default_domain_file}")
+        rm "${default_domain_file}"
 
         # only applies to the standard server install, not onion
         ONION_ONLY=$(grep 'ONION_ONLY=' "${CONFIGURATION_FILE}" | head -n 1 | awk -F '=' '{print $2}')
@@ -3973,9 +3973,9 @@ function change_default_domain {
                               echo 'fi';
                               echo '';
                               echo "chown www-data:www-data \"${webadmin_install_dir}/upgrade.txt\"";
-                              echo 'exit 0'; } > $changing_domain_script
-                            chmod +x $changing_domain_script
-                            /bin/bash $changing_domain_script &
+                              echo 'exit 0'; } > ${changing_domain_script}
+                            chmod +x ${changing_domain_script}
+                            /bin/bash ${changing_domain_script} &
                         fi
                     fi
                 fi
@@ -4053,7 +4053,7 @@ function update_bridges {
 }
 
 function cancel_app_installs {
-    if [ -f "$cancel_install_file" ]; then
+    if [ -f "${cancel_install_file}" ]; then
         #shellcheck disable=SC2009
         p_str=$(ps aux | grep 'addremove-base' | grep -v grep)
         if [[ "$p_str" == *'bash'* ]]; then
@@ -4061,8 +4061,8 @@ function cancel_app_installs {
             if [ "$kill_pid" ]; then
 
                 # remove pending installs so that the app doesn't try to reinstall
-                if [ -f "$pending_installs" ]; then
-                    rm "$pending_installs"
+                if [ -f "${pending_installs}" ]; then
+                    rm "${pending_installs}"
                 fi
 
                 #shellcheck disable=SC2086
@@ -4087,8 +4087,8 @@ function cancel_app_installs {
                 done
             else
                 # remove pending installs so that the app doesn't try to reinstall
-                if [ -f "$pending_installs" ]; then
-                    rm "$pending_installs"
+                if [ -f "${pending_installs}" ]; then
+                    rm "${pending_installs}"
                 fi
                 echo "App did not begin installing" >> "${webadmin_install_dir}/applog.txt";
             fi
@@ -4096,36 +4096,36 @@ function cancel_app_installs {
             echo "App install manually cancelled" >> "${webadmin_install_dir}/applog.txt";
             chown www-data:www-data "${webadmin_install_dir}/applog.txt"
         fi
-        rm "$cancel_install_file"
+        rm "${cancel_install_file}"
     fi
 }
 
 function update_email_proxy {
     # This allows outgoing email to be proxied through your ISP or another SMTP server
-    if [ -f "$email_proxy_file" ]; then
-        isp_smtp_domain=$(awk -F ',' '{print $1}' < "$email_proxy_file")
-        isp_smtp_port=$(awk -F ',' '{print $2}' < "$email_proxy_file")
-        isp_smtp_username=$(awk -F ',' '{print $3}' < "$email_proxy_file")
-        isp_smtp_password=$(awk -F ',' '{print $4}' < "$email_proxy_file")
+    if [ -f "${email_proxy_file}" ]; then
+        isp_smtp_domain=$(awk -F ',' '{print $1}' < "${email_proxy_file}")
+        isp_smtp_port=$(awk -F ',' '{print $2}' < "${email_proxy_file}")
+        isp_smtp_username=$(awk -F ',' '{print $3}' < "${email_proxy_file}")
+        isp_smtp_password=$(awk -F ',' '{print $4}' < "${email_proxy_file}")
 
-        rm "$email_proxy_file"
+        rm "${email_proxy_file}"
 
-        email_smtp_proxy_through_isp "$isp_smtp_domain" "$isp_smtp_port" "$isp_smtp_username" "$isp_smtp_password"
+        email_smtp_proxy_through_isp "${isp_smtp_domain}" "${isp_smtp_port}" "${isp_smtp_username}" "${isp_smtp_password}"
     fi
 }
 
 function update_dynamic_dns {
     if [ -f "$dynamic_dns_file" ]; then
-        if [ -f "$dynamic_dns_password_file" ]; then
+        if [ -f "${dynamic_dns_password_file}" ]; then
             ddns=$(awk -F ',' '{print $1}' < "$dynamic_dns_file")
             ddns_username=$(awk -F ',' '{print $2}' < "$dynamic_dns_file")
             ddns_code=$(awk -F ',' '{print $3}' < "$dynamic_dns_file")
 
-            ddns_password=$(head -n 1 "$dynamic_dns_password_file")
+            ddns_password=$(head -n 1 "${dynamic_dns_password_file}")
 
             ddns_is_valid=
-            if [ "$ddns_username" ]; then
-                if [ "$ddns_password" ]; then
+            if [ "${ddns_username}" ]; then
+                if [ "${ddns_password}" ]; then
                     if [ ${#ddns_username} -gt 2 ]; then
                         if [ ${#ddns_username} -lt 512 ]; then
                             if [ ${#ddns_password} -gt 2 ]; then
@@ -4139,13 +4139,13 @@ function update_dynamic_dns {
             fi
 
             if [ $ddns_is_valid ]; then
-                /usr/local/bin/${PROJECT_NAME}-ddns "$ddns" "$ddns_username" "$ddns_password"
+                /usr/local/bin/${PROJECT_NAME}-ddns "${ddns}" "${ddns_username}" "${ddns_password}"
 
-                if [ "$ddns_code" ]; then
+                if [ "${ddns_code}" ]; then
                     if [ ${#ddns_code} -gt 30 ]; then
                         # if the whole cron line was pasted then parse that
-                        if [[ "$ddns_code" == *'freedns'* ]]; then
-                            if [[ "$ddns_code" == *'?'* && "$ddns_code" == *'='* ]]; then
+                        if [[ "${ddns_code}" == *'freedns'* ]]; then
+                            if [[ "${ddns_code}" == *'?'* && "${ddns_code}" == *'='* ]]; then
                                 ddns_code=$(echo "$ddns_code" | awk -F '?' '{print $2}' | awk -F '=' '{print $1}')
                             fi
                         fi
@@ -4159,9 +4159,9 @@ function update_dynamic_dns {
                     fi
                 fi
 
-                regenerate_dynamic_dns "$ddns" "$ddns_username" "$ddns_password" "$ddns_code"
+                regenerate_dynamic_dns "${ddns}" "${ddns_username}" "${ddns_password}" "${ddns_code}"
             fi
-            rm "$dynamic_dns_password_file"
+            rm "${dynamic_dns_password_file}"
         fi
 
         rm "$dynamic_dns_file"
@@ -4173,7 +4173,7 @@ function enable_dns_over_tls {
         return
     fi
     DNS_OVER_TLS_ADDRESS=$(grep 'DNS_OVER_TLS=' "${CONFIGURATION_FILE}" | awk -F '=' '{print $2}')
-    if [[ "$DNS_OVER_TLS_ADDRESS" != *'.'* ]]; then
+    if [[ "${DNS_OVER_TLS_ADDRESS}" != *'.'* ]]; then
         return
     fi
     { echo '[Resolve]';
@@ -4194,17 +4194,17 @@ function disable_dns_over_tls {
 }
 
 function update_dns_over_tls {
-    if [ ! -f "$dns_over_tls_file" ]; then
+    if [ ! -f "${dns_over_tls_file}" ]; then
         return
     fi
-    dns_over_tls_address=$(cat "$dns_over_tls_file")
-    if [ ! "$dns_over_tls_address" ]; then
+    dns_over_tls_address=$(cat "${dns_over_tls_file}")
+    if [ ! "${dns_over_tls_address}" ]; then
         disable_dns_over_tls
-        rm "$dns_over_tls_file"
+        rm "${dns_over_tls_file}"
         return
     fi
-    if [[ "$dns_over_tls_address" != *'.'* || "$dns_over_tls_address" == *' '* ]]; then
-        rm "$dns_over_tls_file"
+    if [[ "${dns_over_tls_address}" != *'.'* || "${dns_over_tls_address}" == *' '* ]]; then
+        rm "${dns_over_tls_file}"
         return
     fi
     if grep -q 'DNS_OVER_TLS=' "${CONFIGURATION_FILE}"; then
@@ -4213,8 +4213,8 @@ function update_dns_over_tls {
         echo "DNS_OVER_TLS=${dns_over_tls_address}" >> "${CONFIGURATION_FILE}"
     fi
     enable_dns_over_tls
-    regenerate_dns_over_tls "$dns_over_tls_address"
-    rm "$dns_over_tls_file"
+    regenerate_dns_over_tls "${dns_over_tls_address}"
+    rm "${dns_over_tls_file}"
 }
 
 function webadmin_monitor_ip_changes {
@@ -4254,7 +4254,7 @@ function webadmin_monitor_ip_changes {
                             # update dynamic dns
                             if grep -q 'freedns' /etc/crontab; then
                                 DEFAULT_DOMAIN_CODE=$(grep 'DEFAULT_DOMAIN_CODE=' "${CONFIGURATION_FILE}" | head -n 1 | awk -F '=' '{print $2}')
-                                if [ "$DEFAULT_DOMAIN_CODE" ]; then
+                                if [ "${DEFAULT_DOMAIN_CODE}" ]; then
                                     # shellcheck disable=SC2086
                                     wget --no-check-certificate -O - https://freedns.afraid.org/dynamic/update.php?$DEFAULT_DOMAIN_CODE= >> /var/log/freedns_@_update.log 2>&1 &
                                 fi
