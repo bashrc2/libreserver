@@ -344,8 +344,8 @@ function reset_app_install_after_power_cut {
         echo "Restored index screen" >> "${webadmin_install_dir}/applog.txt";
     fi
 
-    if [ -f "$currently_installing_app_domain" ]; then
-        app_domain=$(cat "$currently_installing_app_domain")
+    if [ -f "${currently_installing_app_domain}" ]; then
+        app_domain=$(cat "${currently_installing_app_domain}")
 
         # if an nginx config was added for the app then remove it
         # and restart the web server
@@ -356,7 +356,7 @@ function reset_app_install_after_power_cut {
             echo "Restarting nginx" >> "${webadmin_install_dir}/applog.txt"
             systemctl restart nginx
         fi
-        rm "$currently_installing_app_domain"
+        rm "${currently_installing_app_domain}"
     fi
 }
 
@@ -1719,8 +1719,8 @@ function remove_temporary_setup_files {
     fi
 
     # remove the setup file created by setup.php
-    if [ -f "$setup_file" ]; then
-        rm "$setup_file"
+    if [ -f "${setup_file}" ]; then
+        rm "${setup_file}"
     fi
 
     # remove the file containing the domain name
@@ -1731,9 +1731,9 @@ function remove_temporary_setup_files {
 
 function restore_webadmin_files {
     # restore files which were removed for the initial setup
-    if [ -d "$INSTALL_DIR/tempwebadmin" ]; then
-        mv "$INSTALL_DIR/tempwebadmin"/* "${webadmin_install_dir}"
-        rm -rf "$INSTALL_DIR/tempwebadmin"
+    if [ -d "${INSTALL_DIR}/tempwebadmin" ]; then
+        mv "${INSTALL_DIR}/tempwebadmin"/* "${webadmin_install_dir}"
+        rm -rf "${INSTALL_DIR}/tempwebadmin"
     fi
 }
 
@@ -1791,10 +1791,10 @@ function run_setup_command {
     install_is_running=
     #shellcheck disable=SC2009
     install_process=$(ps aux | grep "/usr/local/bin/${PROJECT_NAME} -c" | grep -v 'grep')
-    if [ "$install_process" ]; then
-        if [[ "$install_process" != *'grep'* ]]; then
-            install_pid=$(echo "$install_process" | awk -F ' ' '{print $2}')
-            if [ "$install_pid" ]; then
+    if [ "${install_process}" ]; then
+        if [[ "${install_process}" != *'grep'* ]]; then
+            install_pid=$(echo "${install_process}" | awk -F ' ' '{print $2}')
+            if [ "${install_pid}" ]; then
                 install_is_running=1
             fi
         fi
@@ -1828,7 +1828,7 @@ function run_setup_command {
 }
 
 function check_install_command_state {
-    if [ ${install_state} -ne $INSTALL_STATE_RUNNING_COMMAND ]; then
+    if [ ${install_state} -ne ${INSTALL_STATE_RUNNING_COMMAND} ]; then
         return
     fi
     reset_install_state=
@@ -1838,14 +1838,14 @@ function check_install_command_state {
         curr_state=$(cat "${install_state_file}")
 
         # shellcheck disable=SC2086
-        if [ $curr_state -eq $INSTALL_STATE_COMMAND_FAIL ]; then
+        if [ ${curr_state} -eq ${INSTALL_STATE_COMMAND_FAIL} ]; then
             reset_install_state=1
         fi
 
         install_has_finished=
 
         # shellcheck disable=SC2086
-        if [ $curr_state -eq $INSTALL_STATE_COMMAND_SUCCESS ]; then
+        if [ ${curr_state} -eq ${INSTALL_STATE_COMMAND_SUCCESS} ]; then
             install_has_finished=1
         else
             # Also check the install log for a message
@@ -1853,7 +1853,7 @@ function check_install_command_state {
             if [ -f "${webadmin_install_dir}/log.txt" ]; then
                 end_of_log=$(tail -n 10 "${webadmin_install_dir}/log.txt" | grep ${PROJECT_NAME})
                 end_of_log_message=$'installation is complete'
-                if [[ "$end_of_log" == *"$end_of_log_message"* ]]; then
+                if [[ "${end_of_log}" == *"${end_of_log_message}"* ]]; then
                     install_has_finished=1
                 fi
             fi
@@ -1869,8 +1869,8 @@ function check_install_command_state {
     if [ $reset_install_state ]; then
         chown www-data:www-data "${webadmin_install_dir}/log.txt"
         # remove the setup file containing login details
-        if [ -f "$setup_file" ]; then
-            rm "$setup_file"
+        if [ -f "${setup_file}" ]; then
+            rm "${setup_file}"
         fi
         # remove the webadmin password file
         if [ -f /etc/nginx/.webadminpasswd ]; then
@@ -1902,14 +1902,14 @@ function before_setup_runs {
 
     # get the username and domain from the .temp_setup.txt file
     # created by setup.php
-    MY_USERNAME=$(cat "$setup_file")
-    if [ ! "$MY_USERNAME" ]; then
+    MY_USERNAME=$(cat "${setup_file}")
+    if [ ! "${MY_USERNAME}" ]; then
         MY_USERNAME="$webadmin_user"
     else
-        if [[ "$MY_USERNAME" != "$webadmin_user" ]]; then
+        if [[ "${MY_USERNAME}" != "$webadmin_user" ]]; then
             temp_webadmin_password=$(cat $webadmin_temp_password_file)
             web_admin_create_user "$webadmin_user" "$temp_webadmin_password"
-            webadmin_user="$MY_USERNAME"
+            webadmin_user="${MY_USERNAME}"
         fi
     fi
     DEFAULT_DOMAIN_NAME=${local_hostname}
@@ -1920,20 +1920,20 @@ function before_setup_runs {
 
     # change the username in the config file
     if grep -q 'MY_USERNAME=' "${CONFIGURATION_FILE}"; then
-        if ! grep -Fxq "MY_USERNAME=$MY_USERNAME" "${CONFIGURATION_FILE}"; then
-            sed -i "s|MY_USERNAME=.*|MY_USERNAME=$MY_USERNAME|g" "${CONFIGURATION_FILE}"
+        if ! grep -Fxq "MY_USERNAME=${MY_USERNAME}" "${CONFIGURATION_FILE}"; then
+            sed -i "s|MY_USERNAME=.*|MY_USERNAME=${MY_USERNAME}|g" "${CONFIGURATION_FILE}"
         fi
     else
-        echo "MY_USERNAME=$MY_USERNAME" >> "${CONFIGURATION_FILE}"
+        echo "MY_USERNAME=${MY_USERNAME}" >> "${CONFIGURATION_FILE}"
     fi
 
     # change the full name in the config file
     if grep -q 'MY_NAME=' "${CONFIGURATION_FILE}"; then
-        if ! grep -Fxq "MY_NAME=$MY_USERNAME" "${CONFIGURATION_FILE}"; then
-            sed -i "s|MY_NAME=.*|MY_USERNAME=$MY_USERNAME|g" "${CONFIGURATION_FILE}"
+        if ! grep -Fxq "MY_NAME=${MY_USERNAME}" "${CONFIGURATION_FILE}"; then
+            sed -i "s|MY_NAME=.*|MY_USERNAME=${MY_USERNAME}|g" "${CONFIGURATION_FILE}"
         fi
     else
-        echo "MY_NAME=$MY_USERNAME" >> "${CONFIGURATION_FILE}"
+        echo "MY_NAME=${MY_USERNAME}" >> "${CONFIGURATION_FILE}"
     fi
 
     # change the default domain in the config file
@@ -2051,8 +2051,8 @@ function after_setup_has_finished {
 }
 
 function set_static_ip_address {
-    if [ -f "$static_ip_address_file" ]; then
-        new_ip_address=$(awk -F ',' '{print $1}' < "$static_ip_address_file")
+    if [ -f "${static_ip_address_file}" ]; then
+        new_ip_address=$(awk -F ',' '{print $1}' < "${static_ip_address_file}")
         if [[ "$new_ip_address" == *'dynamic'* ]]; then
             network_device_name=$(ls /sys/class/net | grep "en\|eth0" | head -n 1)
             if [ ! "${network_device_name}" ]; then
@@ -2087,9 +2087,9 @@ function set_static_ip_address {
             chown www-data:www-data "${webadmin_install_dir}/static_ip.html"
             systemctl restart network-manager
         else
-            new_gateway=$(awk -F ',' '{print $2}' < "$static_ip_address_file")
-            if [ "$new_gateway" ]; then
-                if [[ "$new_gateway" == *'.'* ]]; then
+            new_gateway=$(awk -F ',' '{print $2}' < "${static_ip_address_file}")
+            if [ "${new_gateway}" ]; then
+                if [[ "${new_gateway}" == *'.'* ]]; then
                     network_device_name=$(ls /sys/class/net | grep "en\|eth0" | head -n 1)
                     if [ ! "${network_device_name}" ]; then
                         network_device_name='enp3s0'
@@ -2136,7 +2136,7 @@ function set_static_ip_address {
                 fi
             fi
         fi
-        rm "$static_ip_address_file"
+        rm "${static_ip_address_file}"
     fi
 }
 
@@ -2153,7 +2153,7 @@ function install_apps_from_webadmin {
         app_name=$(echo "${linestr}" | awk -F '_' '{print $2}' | awk -F ',' '{print $1}')
         if [ -f "/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-${app_name}" ]; then
             app_domain=$(echo "${linestr}" | awk -F ',' '{print $2}')
-            if [ ! "$app_domain" ]; then
+            if [ ! "${app_domain}" ]; then
                 app_domain=${app_name}.local
             fi
             app_name_upper=$(echo "${app_name}" | awk '{print toupper($0)}')
@@ -2188,7 +2188,7 @@ function install_apps_from_webadmin {
                 # Store the name and domain of the app being installed.
                 # This allows the correct nginx config to be removed if the install is cancelled
                 echo "${app_name}" > "$currently_installing_app_name"
-                echo "$app_domain" > "$currently_installing_app_domain"
+                echo "${app_domain}" > "${currently_installing_app_domain}"
 
                 # make a script to do the install
                 { echo "#!/bin/bash";
@@ -2213,10 +2213,10 @@ function install_apps_from_webadmin {
                   echo '        systemctl restart nginx';
                   echo '    fi';
                   echo 'else';
-                  echo "    notification_str=\"$translated_notification_success\"";
+                  echo "    notification_str=\"${translated_notification_success}\"";
                   echo 'fi';
-                  echo "if [ -f $currently_installing_app_domain ]; then";
-                  echo "    rm $currently_installing_app_domain";
+                  echo "if [ -f ${currently_installing_app_domain} ]; then";
+                  echo "    rm ${currently_installing_app_domain}";
                   echo 'fi';
                   echo "rm $currently_installing_app_name";
                   echo "/usr/local/bin/${PROJECT_NAME}-notification -s \"[${PROJECT_NAME}] ${app_name} ${translated_notification_str}\" -m \"${app_name} \${notification_str}\" &";
@@ -2269,7 +2269,7 @@ function remove_apps_from_webadmin {
 }
 
 function update_progress_bar {
-    if [ ! -f "$setup_file" ]; then
+    if [ ! -f "${setup_file}" ]; then
         return
     fi
     # shellcheck disable=SC2086
@@ -4561,23 +4561,23 @@ function update_system_monitor {
 function store_onion_domain {
     onion_domain_type="$1"
     onion_domain_filename="${webadmin_install_dir}/onion_domain_${onion_domain_type}.txt"
-    if [ ! -f "$onion_domain_filename" ]; then
+    if [ ! -f "${onion_domain_filename}" ]; then
         if [ -f "/var/lib/tor/hidden_service_${onion_domain_type}/hostname" ]; then
             onion_domain=$(cat "/var/lib/tor/hidden_service_${onion_domain_type}/hostname")
-            if [[ "$onion_domain" == *'.onion' ]]; then
-                echo -n "$onion_domain" > "$onion_domain_filename"
-                chown www-data:www-data "$onion_domain_filename"
+            if [[ "${onion_domain}" == *'.onion' ]]; then
+                echo -n "${onion_domain}" > "${onion_domain_filename}"
+                chown www-data:www-data "${onion_domain_filename}"
             fi
         fi
     fi
 }
 
 function update_notification_type {
-    if [ ! -f "$notification_type_file" ]; then
+    if [ ! -f "${notification_type_file}" ]; then
         return
     fi
-    notification_type_data=$(cat "$notification_type_file")
-    rm "$notification_type_file"
+    notification_type_data=$(cat "${notification_type_file}")
+    rm "${notification_type_file}"
 
     if [[ "$notification_type_data" == *','* ]]; then
         notify_username=$(echo "$notification_type_data" | awk -F ',' '{print $1}')
@@ -4703,8 +4703,8 @@ function get_previous_install_state {
                     chown www-data:www-data "${webadmin_install_dir}/log.txt"
                 fi
                 # remove the setup file containing login details
-                if [ -f "$setup_file" ]; then
-                    rm "$setup_file"
+                if [ -f "${setup_file}" ]; then
+                    rm "${setup_file}"
                 fi
                 if [ -f /etc/nginx/.webadminpasswd ]; then
                     rm /etc/nginx/.webadminpasswd
