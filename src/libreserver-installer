@@ -60,7 +60,7 @@ IMAGE_PASSWORD_FILE=/root/login.txt
 # This is used to detect drives later connected
 DRIVES_BASELINE_FILE=/root/.drives_baseline
 
-install_state=$INSTALL_STATE_FIRST_BOOT
+install_state=${INSTALL_STATE_FIRST_BOOT}
 
 CONFIGURATION_FILE="/root/${PROJECT_NAME}.cfg"
 COMPLETION_FILE="/root/${PROJECT_NAME}-completed.txt"
@@ -693,9 +693,9 @@ function web_admin_translate_text {
     fi
     local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
     translations_file="/var/www/${local_hostname}/htdocs/admin/translations/${DEFAULT_LANGUAGE}.txt"
-    if [ -f "$translations_file" ]; then
-        if grep -q "${text}|" "$translations_file"; then
-            grep "${text}|" "$translations_file" | head -n 1 | awk -F '|' '{print $2}'
+    if [ -f "${translations_file}" ]; then
+        if grep -q "${text}|" "${translations_file}"; then
+            grep "${text}|" "${translations_file}" | head -n 1 | awk -F '|' '{print $2}'
             return
         fi
     fi
@@ -736,17 +736,17 @@ function check_number_of_connections {
     fi
     # shellcheck disable=SC2126
     port80=$(netstat -anp | grep :80 | grep ESTABLISHED | wc -l)
-    if [[ "$port80" == *' '* ]]; then
+    if [[ "${port80}" == *' '* ]]; then
         port80=0
     else
-        if [ $port80 -gt ${connectionsThreshold} ]; then
+        if [ ${port80} -gt ${connectionsThreshold} ]; then
             drop_excessive_connections 80
         fi
     fi
 
     # shellcheck disable=SC2086
-    if [ $prevPort80 -lt ${connectionsThreshold} ]; then
-        if [ $port80 -gt ${connectionsThreshold} ]; then
+    if [ ${prevPort80} -lt ${connectionsThreshold} ]; then
+        if [ ${port80} -gt ${connectionsThreshold} ]; then
             skip_warning=
             last_http_warning=/tmp/.warn_80.txt
             if [ -f "${last_http_warning}" ]; then
@@ -773,17 +773,17 @@ function check_number_of_connections {
     fi
     # shellcheck disable=SC2126
     port443=$(netstat -anp | grep :443 | grep ESTABLISHED | wc -l)
-    if [[ "$port443" == *' '* ]]; then
+    if [[ "${port443}" == *' '* ]]; then
         port443=0
     else
-        if [ $port443 -gt ${connectionsThreshold} ]; then
+        if [ ${port443} -gt ${connectionsThreshold} ]; then
             drop_excessive_connections 443
         fi
     fi
 
     # shellcheck disable=SC2086
-    if [ $prevPort443 -lt ${connectionsThreshold} ]; then
-        if [ $port443 -gt ${connectionsThreshold} ]; then
+    if [ ${prevPort443} -lt ${connectionsThreshold} ]; then
+        if [ ${port443} -gt ${connectionsThreshold} ]; then
             skip_warning=
             last_https_warning=/tmp/.warn_443.txt
             if [ -f "${last_https_warning}" ]; then
@@ -863,12 +863,12 @@ function web_admin_translate {
     webadmin_homepage_dir="/var/www/${local_hostname}/htdocs/home"
 
     translations_file="${webadmin_install_dir}/translations/${language}.txt"
-    if [ ! -f "$translations_file" ]; then
+    if [ ! -f "${translations_file}" ]; then
         return
     fi
 
     declare -a translations_array
-    readarray translations_array < "$translations_file"
+    readarray translations_array < "${translations_file}"
 
     echo "Starting translations"
     i=0
@@ -983,7 +983,7 @@ function backup_mount_drive {
     fi
 
     # check that the backup destination is available
-    if [ ! -b "$USB_DRIVE" ]; then
+    if [ ! -b "${USB_DRIVE}" ]; then
         return
     fi
 
@@ -993,7 +993,7 @@ function backup_mount_drive {
         mkdir "${USB_MOUNT}"
     fi
 
-    if ! mount "$USB_DRIVE" "${USB_MOUNT}"; then
+    if ! mount "${USB_DRIVE}" "${USB_MOUNT}"; then
         rm -rf "${USB_MOUNT}"
         return
     fi
@@ -1081,7 +1081,7 @@ function enough_ram_for_app {
     minimum_ram_bytes=$((minimum_ram_MB * 1024))
 
     ram_available=$(grep MemTotal /proc/meminfo | awk '{print $2}')
-    if [ "$ram_available" -lt "$minimum_ram_bytes" ]; then
+    if [ "${ram_available}" -lt "${minimum_ram_bytes}" ]; then
         echo "1"
         return
     fi
@@ -1364,10 +1364,10 @@ function web_admin_create_add_apps {
         mkdir -p "${icons_dir}"
     fi
 
-    if [ ! -f "$apps_add_template_filename" ]; then
+    if [ ! -f "${apps_add_template_filename}" ]; then
         return
     fi
-    cp "$apps_add_template_filename" "${appslist_add_filename}"
+    cp "${apps_add_template_filename}" "${appslist_add_filename}"
     sed -i '/<\/div>/d' "${appslist_add_filename}"
     sed -i '/<\/body>/d' "${appslist_add_filename}"
     sed -i '/<\/html>/d' "${appslist_add_filename}"
@@ -1397,13 +1397,13 @@ function web_admin_create_installed_apps {
         mkdir -p "${icons_dir}"
     fi
 
-    if [ ! -f "$appslist_template_filename" ]; then
+    if [ ! -f "${appslist_template_filename}" ]; then
         return
     fi
-    cp "$appslist_template_filename" "$appslist_filename"
-    sed -i '/<\/body>/d' "$appslist_filename"
-    sed -i '/<\/html>/d' "$appslist_filename"
-    sed -i '/<\/div>/d' "$appslist_filename"
+    cp "${appslist_template_filename}" "${appslist_filename}"
+    sed -i '/<\/body>/d' "${appslist_filename}"
+    sed -i '/<\/html>/d' "${appslist_filename}"
+    sed -i '/<\/div>/d' "${appslist_filename}"
 
     installed_apps_ctr=0
 
@@ -1414,13 +1414,13 @@ function web_admin_create_installed_apps {
         { echo '      <div class="column">';
           echo '        <div>';
           echo '        </div>';
-          echo '      </div>'; } >> "$appslist_filename"
+          echo '      </div>'; } >> "${appslist_filename}"
     done
 
     { echo '    </div>';
       echo '  </div>';
       echo '  </body>';
-      echo '</html>'; } >> "$appslist_filename"
+      echo '</html>'; } >> "${appslist_filename}"
 
     chown -R www-data:www-data "${webadmin_install_dir}"
 }
@@ -1428,12 +1428,12 @@ function web_admin_create_installed_apps {
 function check_for_changed_email_domain {
     # the expected domain name for email
     mailname=$(cat /etc/mailname)
-    if [ ! "$mailname" ]; then
+    if [ ! "${mailname}" ]; then
         return
     fi
     # the members screen for admin should contain the email domain
     userfile="${webadmin_install_dir}/userprofile_admin.html"
-    if grep -q "$mailname" "$userfile"; then
+    if grep -q "${mailname}" "${userfile}"; then
         return
     fi
     # There is a difference between the email domain and the domain in the web interface
@@ -1441,19 +1441,19 @@ function check_for_changed_email_domain {
     for d in /home/*/ ; do
         USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
         userfile="${webadmin_install_dir}/userprofile_${USERNAME}.html"
-        if [ ! -f "$userfile" ]; then
+        if [ ! -f "${userfile}" ]; then
             continue
         fi
-        if grep -q "$mailname" "$userfile"; then
+        if grep -q "${mailname}" "${userfile}"; then
             continue
         fi
         useremail="${USERNAME}@${mailname}"
         qrcode_email="${useremail}"
-        if [[ "$useremail" != *'.onion' ]]; then
+        if [[ "${useremail}" != *'.onion' ]]; then
             useremail="${USERNAME}@${mailname}<br><br>${USERNAME}@${email_onion_domain}"
             qrcode_email="${USERNAME}@${email_onion_domain}"
         fi
-        sed -i "s|<p class=\"email\".*|<p class=\"email\" translate=\"no\">${useremail}</p>|g" "$userfile"
+        sed -i "s|<p class=\"email\".*|<p class=\"email\" translate=\"no\">${useremail}</p>|g" "${userfile}"
         # generate the QR code
         email_qrcode_image="${webadmin_install_dir}/images/userprofile_${USERNAME}_xmpp.png"
         if [ ! -f /usr/local/bin/myqr ]; then
@@ -1471,13 +1471,13 @@ function web_admin_create_users {
 
     users_file="${webadmin_install_dir}/users.html"
 
-    cp "${webadmin_install_dir}"/users_template.html "$users_file"
-    sed -i '/users list/,/end of users/d' "$users_file"
-    sed -i '/<\/body>/d' "$users_file"
-    sed -i '/<\/html>/d' "$users_file"
+    cp "${webadmin_install_dir}"/users_template.html "${users_file}"
+    sed -i '/users list/,/end of users/d' "${users_file}"
+    sed -i '/<\/body>/d' "${users_file}"
+    sed -i '/<\/html>/d' "${users_file}"
 
-    echo "    <div class=\"row\">" >> "$users_file"
-    echo "      <div class=\"column\">" >> "$users_file"
+    echo "    <div class=\"row\">" >> "${users_file}"
+    echo "      <div class=\"column\">" >> "${users_file}"
 
     rm "${webadmin_install_dir}/userprofile_"*
 
@@ -1497,35 +1497,35 @@ function web_admin_create_users {
         fi
     fi
     #pubkey_qrcode="${webadmin_install_dir}/images/userprofile_${USERNAME}.png"
-    #su -c "gpg --armor --export \"$GPG_ID\"" - "${USERNAME}" | qrencode -t PNG -o "$pubkey_qrcode"
+    #su -c "gpg --armor --export \"$GPG_ID\"" - "${USERNAME}" | qrencode -t PNG -o "${pubkey_qrcode}"
 
     { echo '        <div class="chip">';
       echo "          <a href=\"userprofile_${USERNAME}.html\" title=\"${USERNAME}\">";
       echo '            <img src="images/user_admin.png" alt="Person" width="96" height="96">';
       echo "            ${USERNAME}";
       echo '          </a>';
-      echo '        </div>'; } >> "$users_file"
+      echo '        </div>'; } >> "${users_file}"
 
-    cp "${webadmin_install_dir}"/userprofile.html "$userfile"
-    sed -i "s|USERNAME|${USERNAME}|g" "$userfile"
+    cp "${webadmin_install_dir}"/userprofile.html "${userfile}"
+    sed -i "s|USERNAME|${USERNAME}|g" "${userfile}"
     if [[ "${USERNAME}" == "${webadmin_user}" ]]; then
-        sed -i "s|USERTYPE|Admin|g" "$userfile"
-        sed -i '/remove user button/,/end of remove/d' "$userfile"
+        sed -i "s|USERTYPE|Admin|g" "${userfile}"
+        sed -i '/remove user button/,/end of remove/d' "${userfile}"
     else
-        sed -i "s|USERTYPE|User|g" "$userfile"
+        sed -i "s|USERTYPE|User|g" "${userfile}"
     fi
 
-    if [[ "$useremail" != *'.onion' ]]; then
+    if [[ "${useremail}" != *'.onion' ]]; then
         useronionemail=${USERNAME}@$(cat /var/lib/tor/hidden_service_email/hostname)
-        sed -i "s|USEREMAIL|${useremail}<br><br>${useronionemail}|g" "$userfile"
+        sed -i "s|USEREMAIL|${useremail}<br><br>${useronionemail}|g" "${userfile}"
     else
-        sed -i "s|USEREMAIL|${useremail}|g" "$userfile"
+        sed -i "s|USEREMAIL|${useremail}|g" "${userfile}"
     fi
 
-    sed -i "s|USERGPG|${GPG_ID}|g" "$userfile"
+    sed -i "s|USERGPG|${GPG_ID}|g" "${userfile}"
 
-    chown www-data:www-data "$userfile"
-    #chown www-data:www-data "$pubkey_qrcode"
+    chown www-data:www-data "${userfile}"
+    #chown www-data:www-data "${pubkey_qrcode}"
 
     translated_add_user=$(web_admin_translate_text "Add a new member")
 
@@ -1538,9 +1538,9 @@ function web_admin_create_users {
       echo '      </div>';
       echo '    </div>';
       echo '  </body>';
-      echo '</html>'; } >> "$users_file"
+      echo '</html>'; } >> "${users_file}"
 
-    chown www-data:www-data "$users_file"
+    chown www-data:www-data "${users_file}"
 }
 
 function wait_for_enough_entropy {
@@ -1554,7 +1554,7 @@ function wait_for_enough_entropy {
     do
         ENTROPY=$(cat /proc/sys/kernel/random/entropy_avail)
         # shellcheck disable=SC2086
-        if [ $ENTROPY -gt 255 ]; then
+        if [ ${ENTROPY} -gt 255 ]; then
             break
         fi
         sleep 2
@@ -1570,16 +1570,16 @@ function web_admin_create_user {
     username="$1"
     password="$2"
 
-    if [ ! "$username" ]; then
+    if [ ! "${username}" ]; then
         return
     fi
 
     chmod 600 /etc/shadow
     chmod 600 /etc/gshadow
-    if [ ! -d "/home/$username" ]; then
-        useradd -m -p "$password" -s /bin/bash "$username"
+    if [ ! -d "/home/${username}" ]; then
+        useradd -m -p "${password}" -s /bin/bash "${username}"
         if ! grep -q "${username}:" /etc/group; then
-            groupadd "$username"
+            groupadd "${username}"
         fi
     fi
     echo -n "${username}:${password}" | /usr/sbin/chpasswd
@@ -1588,7 +1588,7 @@ function web_admin_create_user {
 }
 
 function web_admin_setup_login {
-    if [ ${install_state} -ne $INSTALL_STATE_FIRST_BOOT ]; then
+    if [ ${install_state} -ne ${INSTALL_STATE_FIRST_BOOT} ]; then
         return
     fi
 
@@ -1603,8 +1603,8 @@ function web_admin_setup_login {
     fi
 
     # remove detected drives file used by backup system
-    if [ -f $DRIVES_BASELINE_FILE ]; then
-        rm $DRIVES_BASELINE_FILE
+    if [ -f ${DRIVES_BASELINE_FILE} ]; then
+        rm ${DRIVES_BASELINE_FILE}
     fi
 
     # this file indicates that the setup screen is active
@@ -1617,18 +1617,18 @@ function web_admin_setup_login {
         wait_for_enough_entropy
         if [ -f /usr/share/dict/words ]; then
             webadmin_password=$(diceware)
-            if [ ! "$webadmin_password" ]; then
+            if [ ! "${webadmin_password}" ]; then
                 webadmin_password="$(openssl rand -base64 32 | tr -dc A-Za-z0-9 | head -c 10 ; echo -n '')"
             fi
         else
             webadmin_password="$(openssl rand -base64 32 | tr -dc A-Za-z0-9 | head -c 10 ; echo -n '')"
         fi
-        echo -n "$webadmin_password" > ${webadmin_temp_password_file}
+        echo -n "${webadmin_password}" > ${webadmin_temp_password_file}
     else
         webadmin_password=$(cat ${webadmin_temp_password_file})
     fi
 
-    web_admin_create_user "${webadmin_user}" "$webadmin_password"
+    web_admin_create_user "${webadmin_user}" "${webadmin_password}"
 
     # ensure that username is set
     if ! grep -q "MY_USERNAME=${webadmin_user}" "${CONFIGURATION_FILE}"; then
@@ -1643,7 +1643,7 @@ function web_admin_setup_login {
     fi
 
     # create a password file used by nginx
-    echo -n "$webadmin_password" | htpasswd -i -s -c /etc/nginx/.webadminpasswd "${webadmin_user}"
+    echo -n "${webadmin_password}" | htpasswd -i -s -c /etc/nginx/.webadminpasswd "${webadmin_user}"
     if ! grep -q "${webadmin_user}:" /etc/nginx/.webadminpasswd; then
         echo $"/etc/nginx/.webadminpasswd password not created for ${webadmin_user}"
         if [ -f /etc/nginx/.webadminpasswd ]; then
@@ -1821,7 +1821,7 @@ function run_setup_command {
     chmod +x ${installer_script}
 
     echo -n "${INSTALL_STATE_RUNNING_COMMAND}" > "${install_state_file}"
-    install_state=$INSTALL_STATE_RUNNING_COMMAND
+    install_state=${INSTALL_STATE_RUNNING_COMMAND}
 
     # run in a separate process
     /bin/bash ${installer_script} &
@@ -1859,9 +1859,9 @@ function check_install_command_state {
             fi
         fi
 
-        if [ $install_has_finished ]; then
-            echo -n "$INSTALL_STATE_COMMAND_SUCCESS" > "${install_state_file}"
-            install_state=$INSTALL_STATE_COMMAND_SUCCESS
+        if [ ${install_has_finished} ]; then
+            echo -n "${INSTALL_STATE_COMMAND_SUCCESS}" > "${install_state_file}"
+            install_state=${INSTALL_STATE_COMMAND_SUCCESS}
             restore_webadmin_files
         fi
     fi
@@ -1869,20 +1869,20 @@ function check_install_command_state {
     if [ $reset_install_state ]; then
         chown www-data:www-data "${webadmin_install_dir}/log.txt"
         # remove the setup file containing login details
-        if [ -f "$setup_file" ]; then
-            rm "$setup_file"
+        if [ -f "${setup_file}" ]; then
+            rm "${setup_file}"
         fi
         # remove the webadmin password file
         if [ -f /etc/nginx/.webadminpasswd ]; then
             rm /etc/nginx/.webadminpasswd
         fi
-        echo -n "$INSTALL_STATE_FIRST_BOOT" > "${install_state_file}"
-        install_state=$INSTALL_STATE_FIRST_BOOT
+        echo -n "${INSTALL_STATE_FIRST_BOOT}" > "${install_state_file}"
+        install_state=${INSTALL_STATE_FIRST_BOOT}
     fi
 }
 
 function before_setup_runs {
-    if [ ${install_state} -ne $INSTALL_STATE_WEBADMIN_PASSWORD_CREATED ]; then
+    if [ ${install_state} -ne ${INSTALL_STATE_WEBADMIN_PASSWORD_CREATED} ]; then
         return
     fi
 
@@ -1914,8 +1914,8 @@ function before_setup_runs {
     fi
     DEFAULT_DOMAIN_NAME=${local_hostname}
 
-    if [ -f "$domain_file" ]; then
-        DEFAULT_DOMAIN_NAME=$(cat "$domain_file")
+    if [ -f "${domain_file}" ]; then
+        DEFAULT_DOMAIN_NAME=$(cat "${domain_file}")
     fi
 
     # change the username in the config file
@@ -1967,7 +1967,7 @@ function before_setup_runs {
 }
 
 function after_setup_has_finished {
-    if [ ${install_state} -ne $INSTALL_STATE_COMMAND_SUCCESS ]; then
+    if [ ${install_state} -ne ${INSTALL_STATE_COMMAND_SUCCESS} ]; then
         return
     fi
     if [ -f /root/.initial_setup ]; then
@@ -4695,9 +4695,9 @@ function get_previous_install_state {
     if [ -f "${install_state_file}" ]; then
         install_state=$(cat "${install_state_file}")
         # shellcheck disable=SC2086
-        if [ ${install_state} -ne $INSTALL_STATE_COMMAND_SUCCESS ]; then
+        if [ ${install_state} -ne ${INSTALL_STATE_COMMAND_SUCCESS} ]; then
             if grep -q 'install_final' "${COMPLETION_FILE}"; then
-                install_state=$INSTALL_STATE_COMMAND_SUCCESS
+                install_state=${INSTALL_STATE_COMMAND_SUCCESS}
             else
                 if [ -f "${webadmin_install_dir}/log.txt" ]; then
                     chown www-data:www-data "${webadmin_install_dir}/log.txt"
@@ -4709,15 +4709,15 @@ function get_previous_install_state {
                 if [ -f /etc/nginx/.webadminpasswd ]; then
                     rm /etc/nginx/.webadminpasswd
                 fi
-                install_state=$INSTALL_STATE_FIRST_BOOT
+                install_state=${INSTALL_STATE_FIRST_BOOT}
             fi
             echo -n "${install_state}" > "${install_state_file}"
         fi
     else
         if grep -q 'install_final' "${COMPLETION_FILE}"; then
-            install_state=$INSTALL_STATE_COMMAND_SUCCESS
+            install_state=${INSTALL_STATE_COMMAND_SUCCESS}
         else
-            install_state=$INSTALL_STATE_FIRST_BOOT
+            install_state=${INSTALL_STATE_FIRST_BOOT}
         fi
         echo -n "${install_state}" > "${install_state_file}"
     fi
@@ -4847,8 +4847,8 @@ fi
 stop_dhcpcd
 
 # remove ssh sessions count file
-if [ -f "$ssh_sessions_count_filename" ]; then
-    rm "$ssh_sessions_count_filename"
+if [ -f "${ssh_sessions_count_filename}" ]; then
+    rm "${ssh_sessions_count_filename}"
 fi
 
 while true
