@@ -2574,7 +2574,7 @@ function backup_and_restore {
                 running_auto_backup=
             fi
 
-            check_for_existing_processes $backup_script
+            check_for_existing_processes ${backup_script}
             { echo "echo \"Beginning $backup_name backup \$(date)\" > ${webadmin_install_dir}/backup.txt";
               echo "chown www-data:www-data ${webadmin_install_dir}/backup.txt";
               echo '';
@@ -2595,7 +2595,7 @@ function backup_and_restore {
               echo "    backup_password=\$(${PROJECT_NAME}-pass -u \"${ADMIN_USERNAME}\" -a simplebackup)";
               echo 'fi';
               echo '';
-              echo "if /usr/bin/timeout $BACKUP_TIMEOUT_SEC /usr/local/bin/${PROJECT_NAME}-backup-local simple \"\$backup_password\" >> ${webadmin_install_dir}/backup.txt; then";
+              echo "if /usr/bin/timeout ${BACKUP_TIMEOUT_SEC} /usr/local/bin/${PROJECT_NAME}-backup-local simple \"\$backup_password\" >> ${webadmin_install_dir}/backup.txt; then";
               echo "    echo \"Completed \$(date)\" >> ${webadmin_install_dir}/backup.txt";
               echo "    cp ${webadmin_install_dir}/backup_complete.html ${webadmin_install_dir}/backup_progress.html";
               echo "    /usr/local/bin/${PROJECT_NAME}-notification -m \"$backup_success_message\" -s \"[${PROJECT_NAME}] $backup_title\" &";
@@ -2609,22 +2609,22 @@ function backup_and_restore {
               echo '';
               echo "rm $backup_progress_file";
               echo '';
-              echo "exit 0"; } >> $backup_script
-            chmod +x $backup_script
+              echo "exit 0"; } >> ${backup_script}
+            chmod +x ${backup_script}
 
             # run in a separate process
-            /bin/bash $backup_script &
+            /bin/bash ${backup_script} &
         else
-            if [ -f "$format_file" ]; then
-                rm "$format_file"
+            if [ -f "${format_file}" ]; then
+                rm "${format_file}"
 
                 webadmin_onion_address=$(cat /var/lib/tor/hidden_service_webadmin/hostname)
                 format_title=$'USB format status'
                 format_failed_message=$"USB format failed. See http://${webadmin_onion_address}/admin/format.txt for details"
                 format_success_message=$"USB format succeeded"
 
-                check_for_existing_processes $format_script
-                { echo "if /usr/bin/timeout $FORMAT_TIMEOUT_SEC /usr/local/bin/${PROJECT_NAME}-format simple > ${webadmin_install_dir}/format.txt; then";
+                check_for_existing_processes ${format_script}
+                { echo "if /usr/bin/timeout ${FORMAT_TIMEOUT_SEC} /usr/local/bin/${PROJECT_NAME}-format simple > ${webadmin_install_dir}/format.txt; then";
                   echo "    cp ${webadmin_install_dir}/format_complete.html ${webadmin_install_dir}/format_progress.html";
                   echo "    /usr/local/bin/${PROJECT_NAME}-notification -m \"$format_success_message\" -s \"[${PROJECT_NAME}] $format_title\" &";
                   echo 'else';
@@ -2635,28 +2635,28 @@ function backup_and_restore {
                   echo '';
                   echo "rm $format_progress_file";
                   echo '';
-                  echo "exit 0"; } >> $format_script
-                chmod +x $format_script
+                  echo "exit 0"; } >> ${format_script}
+                chmod +x ${format_script}
 
                 # run in a separate process
-                /bin/bash $format_script &
+                /bin/bash ${format_script} &
             fi
         fi
     fi
 }
 
 function backup_and_restore_keys {
-    if [ -f "$restore_keys_file" ]; then
-        rm "$restore_keys_file"
+    if [ -f "${restore_keys_file}" ]; then
+        rm "${restore_keys_file}"
         admin_username=$(grep 'MY_USERNAME=' "${CONFIGURATION_FILE}" | head -n 1 | awk -F '=' '{print $2}')
-        # check_for_existing_processes $restore_keys_script
+        # check_for_existing_processes ${restore_keys_script}
         { echo "echo \"Beginning webadmin restore keys \$(date)\" > ${webadmin_install_dir}/restore.txt";
           echo "chown www-data:www-data ${webadmin_install_dir}/restore.txt";
           echo '';
           echo "cp ${webadmin_install_dir}/restore_keys_progress_template.html ${webadmin_install_dir}/restore_keys_progress.html";
           echo "chown www-data:www-data ${webadmin_install_dir}/restore_keys_progress.html";
           echo '';
-          echo "if /usr/local/bin/${PROJECT_NAME}-recoverkey -u \"$admin_username\" -d \"simple\" >> ${webadmin_install_dir}/restore.txt; then";
+          echo "if /usr/local/bin/${PROJECT_NAME}-recoverkey -u \"${admin_username}\" -d \"simple\" >> ${webadmin_install_dir}/restore.txt; then";
           echo "    echo \"Completed \$(date)\" >> ${webadmin_install_dir}/restore.txt";
           echo "    cp ${webadmin_install_dir}/restore_keys_complete.html ${webadmin_install_dir}/restore_keys_progress.html";
           echo 'else';
@@ -2666,23 +2666,23 @@ function backup_and_restore_keys {
           echo "chown www-data:www-data ${webadmin_install_dir}/restore.txt";
           echo "chown www-data:www-data ${webadmin_install_dir}/restore_keys_progress.html";
           echo '';
-          echo "exit 0"; } >> $restore_keys_script
-        chmod +x $restore_keys_script
+          echo "exit 0"; } >> ${restore_keys_script}
+        chmod +x ${restore_keys_script}
 
         # run in a separate process
-        /bin/bash $restore_keys_script &
+        /bin/bash ${restore_keys_script} &
     else
-        if [ -f "$backup_keys_file" ]; then
-            rm "$backup_keys_file"
+        if [ -f "${backup_keys_file}" ]; then
+            rm "${backup_keys_file}"
             admin_username=$(grep 'MY_USERNAME=' "${CONFIGURATION_FILE}" | head -n 1 | awk -F '=' '{print $2}')
-            check_for_existing_processes $backup_keys_script
+            check_for_existing_processes ${backup_keys_script}
             { echo "echo \"Beginning webadmin backup keys \$(date)\" > ${webadmin_install_dir}/backup.txt";
               echo "chown www-data:www-data ${webadmin_install_dir}/backup.txt";
               echo '';
               echo "cp ${webadmin_install_dir}/backup_keys_progress_template.html ${webadmin_install_dir}/backup_keys_progress.html";
               echo "chown www-data:www-data ${webadmin_install_dir}/backup_keys_progress.html";
               echo '';
-              echo "if /usr/local/bin/${PROJECT_NAME}-keydrive -u \"$admin_username\" --main 'yes' -d \"simple\" >> ${webadmin_install_dir}/backup.txt; then";
+              echo "if /usr/local/bin/${PROJECT_NAME}-keydrive -u \"${admin_username}\" --main 'yes' -d \"simple\" >> ${webadmin_install_dir}/backup.txt; then";
               echo "    echo \"Completed \$(date)\" >> ${webadmin_install_dir}/backup.txt";
               echo "    cp ${webadmin_install_dir}/backup_keys_complete.html ${webadmin_install_dir}/backup_keys_progress.html";
               echo 'else';
@@ -2692,18 +2692,18 @@ function backup_and_restore_keys {
               echo "chown www-data:www-data ${webadmin_install_dir}/backup.txt";
               echo "chown www-data:www-data ${webadmin_install_dir}/backup_keys_progress.html";
               echo '';
-              echo "exit 0"; } >> $backup_keys_script
-            chmod +x $backup_keys_script
+              echo "exit 0"; } >> ${backup_keys_script}
+            chmod +x ${backup_keys_script}
 
             # run in a separate process
-            /bin/bash $backup_keys_script &
+            /bin/bash ${backup_keys_script} &
         fi
     fi
 }
 
 function is_valid_user {
     USRNAME="$1"
-    if [[ "$USRNAME" != "znc" && "$USRNAME" != "conduit" && "$USRNAME" != "${PROJECT_NAME}" && "$USRNAME" != "go" && "$USRNAME" != "gemini" && "$USRNAME" != "git" && "$USRNAME" != "sync" && "$USRNAME" != "pi" && "$USRNAME" != "forgejo" ]]; then
+    if [[ "${USRNAME}" != "znc" && "${USRNAME}" != "conduit" && "${USRNAME}" != "${PROJECT_NAME}" && "${USRNAME}" != "go" && "${USRNAME}" != "gemini" && "${USRNAME}" != "git" && "${USRNAME}" != "sync" && "${USRNAME}" != "pi" && "${USRNAME}" != "forgejo" ]]; then
         echo "1"
     else
         echo "0"
@@ -2717,23 +2717,23 @@ function valid_username_characters {
 }
 
 function add_remove_users {
-    if [ -f "$new_user_file" ]; then
-        new_username=$(awk -F ',' '{print $1}' < "$new_user_file")
+    if [ -f "${new_user_file}" ]; then
+        new_username=$(awk -F ',' '{print $1}' < "${new_user_file}")
 
         if [ ${#new_username} -ge 3 ]; then
             if [ ${#new_username} -le 32 ]; then
-                if valid_username_characters "$new_username"; then
-                    if [ ! -d "/home/$new_username" ]; then
-                        if [[ $(is_valid_user "$new_username") == "1" ]]; then
-                            new_password=$(awk -F ',' '{print $2}' < "$new_user_file")
+                if valid_username_characters "${new_username}"; then
+                    if [ ! -d "/home/${new_username}" ]; then
+                        if [[ $(is_valid_user "${new_username}") == "1" ]]; then
+                            new_password=$(awk -F ',' '{print $2}' < "${new_user_file}")
 
-                            check_for_existing_processes $new_user_script
-                            { echo "/usr/local/bin/${PROJECT_NAME}-adduser $new_username password=$new_password > ${webadmin_install_dir}/log.txt";
-                              echo "exit 0"; } >> $new_user_script
-                            chmod +x $new_user_script
+                            check_for_existing_processes ${new_user_script}
+                            { echo "/usr/local/bin/${PROJECT_NAME}-adduser ${new_username} password=${new_password} > ${webadmin_install_dir}/log.txt";
+                              echo "exit 0"; } >> ${new_user_script}
+                            chmod +x ${new_user_script}
 
                             # run in a separate process
-                            /bin/bash $new_user_script &
+                            /bin/bash ${new_user_script} &
 
                             new_password=
                         fi
@@ -2742,26 +2742,26 @@ function add_remove_users {
             fi
         fi
 
-        rm "$new_user_file"
+        rm "${new_user_file}"
     fi
 
-    if [ -f "$remove_user_file" ]; then
-        remove_username=$(cat "$remove_user_file")
+    if [ -f "${remove_user_file}" ]; then
+        remove_username=$(cat "${remove_user_file}")
 
         if [ ${#remove_username} -ge 3 ]; then
             if [ ${#remove_username} -le 32 ]; then
-                if valid_username_characters "$remove_username"; then
-                    if [ -d "/home/$remove_username" ]; then
-                        if [[ $(is_valid_user "$remove_username") == "1" ]]; then
+                if valid_username_characters "${remove_username}"; then
+                    if [ -d "/home/${remove_username}" ]; then
+                        if [[ $(is_valid_user "${remove_username}") == "1" ]]; then
                             admin_username=$(grep 'MY_USERNAME=' "${CONFIGURATION_FILE}" | head -n 1 | awk -F '=' '{print $2}')
-                            if [[ "$remove_username" != "$admin_username" ]]; then
-                                check_for_existing_processes $remove_user_script
-                                { echo "/usr/local/bin/${PROJECT_NAME}-rmuser $remove_username -f > ${webadmin_install_dir}/log.txt";
-                                  echo "exit 0"; } >> $remove_user_script
-                                chmod +x $remove_user_script
+                            if [[ "${remove_username}" != "${admin_username}" ]]; then
+                                check_for_existing_processes ${remove_user_script}
+                                { echo "/usr/local/bin/${PROJECT_NAME}-rmuser ${remove_username} -f > ${webadmin_install_dir}/log.txt";
+                                  echo "exit 0"; } >> ${remove_user_script}
+                                chmod +x ${remove_user_script}
 
                                 # run in a separate process
-                                /bin/bash $remove_user_script &
+                                /bin/bash ${remove_user_script} &
                             fi
                         fi
                     fi
@@ -2769,62 +2769,62 @@ function add_remove_users {
             fi
         fi
 
-        rm "$remove_user_file"
+        rm "${remove_user_file}"
     fi
 }
 
 function webadmin_change_password {
-    if [ ! -f "$change_password_file" ]; then
+    if [ ! -f "${change_password_file}" ]; then
         return
     fi
 
-    temp_password_file=$(cat "$change_password_file")
-    if [ -f "$temp_password_file" ]; then
-        curr_username=$(awk -F ',' '{print $1}' < "$temp_password_file")
+    temp_password_file=$(cat "${change_password_file}")
+    if [ -f "${temp_password_file}" ]; then
+        curr_username=$(awk -F ',' '{print $1}' < "${temp_password_file}")
         if [ ${#curr_username} -ge 3 ]; then
-            if [[ $(is_valid_user "$curr_username") == "1" ]]; then
-                if [ -d "/home/$curr_username" ]; then
-                    new_password=$(awk -F ',' '{print $2}' < "$temp_password_file")
+            if [[ $(is_valid_user "${curr_username}") == "1" ]]; then
+                if [ -d "/home/${curr_username}" ]; then
+                    new_password=$(awk -F ',' '{print $2}' < "${temp_password_file}")
 
                     admin_username=$(grep 'MY_USERNAME=' "${CONFIGURATION_FILE}" | head -n 1 | awk -F '=' '{print $2}')
 
                     # change the webadmin login
-                    if [[ "$curr_username" == "$admin_username" ]]; then
+                    if [[ "${curr_username}" == "${admin_username}" ]]; then
                         if [ -f /etc/nginx/.webadminpasswd ]; then
                             sed -i "/${curr_username}:/d" /etc/nginx/.webadminpasswd
                         fi
-                        echo -n "$new_password" | htpasswd -i -s -c /etc/nginx/.webadminpasswd "$curr_username"
-                        echo -n "$new_password" > ${IMAGE_PASSWORD_FILE}
+                        echo -n "${new_password}" | htpasswd -i -s -c /etc/nginx/.webadminpasswd "${curr_username}"
+                        echo -n "${new_password}" > ${IMAGE_PASSWORD_FILE}
                     fi
 
                     # change the login for the user
                     echo -n "${curr_username}:${new_password}" | /usr/sbin/chpasswd
 
                     # change passwords for each installed app
-                    /usr/local/bin/${PROJECT_NAME}-chpasswd "$curr_username" "$new_password"
+                    /usr/local/bin/${PROJECT_NAME}-chpasswd "${curr_username}" "${new_password}"
 
                     # change dovecot password
-                    # doveadm pw -s SHA512-CRYPT -p "$new_password" -u "$curr_username"
+                    # doveadm pw -s SHA512-CRYPT -p "${new_password}" -u "${curr_username}"
 
                     # change the backup password
-                    if [[ "$curr_username" == "$admin_username" ]]; then
-                        ${PROJECT_NAME}-pass -u admin -a simplebackup -p "$new_password"
+                    if [[ "${curr_username}" == "${admin_username}" ]]; then
+                        ${PROJECT_NAME}-pass -u admin -a simplebackup -p "${new_password}"
                     fi
 
                     new_password=
                 fi
             fi
         fi
-        rm "$temp_password_file"
+        rm "${temp_password_file}"
     fi
-    rm "$change_password_file"
+    rm "${change_password_file}"
 }
 
 function webadmin_upgrade {
-    if [ -f "$upgrade_file" ]; then
-        rm "$upgrade_file"
+    if [ -f "${upgrade_file}" ]; then
+        rm "${upgrade_file}"
 
-        check_for_existing_processes $upgrade_script
+        check_for_existing_processes ${upgrade_script}
         { echo "echo \"Beginning webadmin upgrade \$(date)\" > ${webadmin_install_dir}/upgrade.txt";
           echo "chown www-data:www-data ${webadmin_install_dir}/upgrade.txt";
           echo '';
@@ -2832,26 +2832,26 @@ function webadmin_upgrade {
           echo '';
           echo "chown www-data:www-data ${webadmin_install_dir}/upgrade.txt";
           echo '';
-          echo "exit 0"; } >> $upgrade_script
-        chmod +x $upgrade_script
+          echo "exit 0"; } >> ${upgrade_script}
+        chmod +x ${upgrade_script}
 
         # run in a separate process
-        /bin/bash $upgrade_script &
+        /bin/bash ${upgrade_script} &
     fi
 }
 
 function webadmin_upgrade_operating_system {
-    if [ -f "$upgradeos_file" ]; then
+    if [ -f "${upgradeos_file}" ]; then
         cp /usr/local/bin/${PROJECT_NAME}-distro-upgrade /usr/bin/temp-distro-upgrade
         /bin/bash /usr/bin/temp-distro-upgrade trixie &
-        rm "$upgradeos_file"
+        rm "${upgradeos_file}"
     fi
 }
 
 function distro_factory_reset {
     # libreserver-distro command requests that a factory reset
     # happen prior to the webadmin daemon starting
-    if [ ! -f "$factoryreset_file_distro" ]; then
+    if [ ! -f "${factoryreset_file_distro}" ]; then
         return
     fi
     if [ ! -f "${webadmin_install_dir}/.setupscreenactive" ]; then
@@ -2865,16 +2865,16 @@ function distro_factory_reset {
       echo "/usr/local/bin/${PROJECT_NAME}-factory-reset -f > ${webadmin_install_dir}/log.txt";
       echo "chown www-data:www-data ${webadmin_install_dir}/log.txt";
       echo '';
-      echo "exit 0"; } > $distro_factory_reset_script
-    chmod +x $distro_factory_reset_script
+      echo "exit 0"; } > ${distro_factory_reset_script}
+    chmod +x ${distro_factory_reset_script}
     # run in a separate process
-    /bin/bash $distro_factory_reset_script &
+    /bin/bash ${distro_factory_reset_script} &
     # The factory-reset command should reboot
     factory_reset_ctr=0
     while true
     do
         sleep 5
-        if [ ! -f "$factoryreset_file_distro" ]; then
+        if [ ! -f "${factoryreset_file_distro}" ]; then
             break
         fi
         # if this has been running for more than an hour then reboot
@@ -2889,10 +2889,10 @@ function distro_factory_reset {
 }
 
 function webadmin_factory_reset {
-    if [ -f "$factoryreset_file" ]; then
-        rm "$factoryreset_file"
+    if [ -f "${factoryreset_file}" ]; then
+        rm "${factoryreset_file}"
 
-        check_for_existing_processes $factoryreset_script
+        check_for_existing_processes ${factoryreset_script}
         { echo "echo \"Beginning webadmin factory reset \$(date)\" > ${webadmin_install_dir}/factoryreset.txt";
           echo "chown www-data:www-data ${webadmin_install_dir}/factoryreset.txt";
           echo '';
@@ -2900,28 +2900,28 @@ function webadmin_factory_reset {
           echo '';
           echo "chown www-data:www-data ${webadmin_install_dir}/factoryreset.txt";
           echo '';
-          echo "exit 0"; } >> $factoryreset_script
-        chmod +x $factoryreset_script
+          echo "exit 0"; } >> ${factoryreset_script}
+        chmod +x ${factoryreset_script}
 
         # run in a separate process
-        /bin/bash $factoryreset_script &
+        /bin/bash ${factoryreset_script} &
     fi
 }
 
 function reset_shutdown {
-    if [ -f "$shutdown_file" ]; then
-        rm "$shutdown_file"
-        if [ -f "$reset_file" ]; then
-            rm "$reset_file"
+    if [ -f "${shutdown_file}" ]; then
+        rm "${shutdown_file}"
+        if [ -f "${reset_file}" ]; then
+            rm "${reset_file}"
         fi
         sleep 2
         systemctl poweroff
     fi
 
-    if [ -f "$reset_file" ]; then
-        rm "$reset_file"
-        if [ -f "$shutdown_file" ]; then
-            rm "$shutdown_file"
+    if [ -f "${reset_file}" ]; then
+        rm "${reset_file}"
+        if [ -f "${shutdown_file}" ]; then
+            rm "${shutdown_file}"
         fi
         sleep 2
         systemctl reboot -i
@@ -2930,23 +2930,23 @@ function reset_shutdown {
 }
 
 function regenerate_blocklist {
-    if [ ! -f "$FIREWALL_DOMAINS" ]; then
-        touch "$FIREWALL_DOMAINS"
+    if [ ! -f "${FIREWALL_DOMAINS}" ]; then
+        touch "${FIREWALL_DOMAINS}"
     fi
     local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
     webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
     if [ -f "${webadmin_install_dir}/blocking_template.html" ]; then
         cp "${webadmin_install_dir}/blocking_template.html" "${webadmin_install_dir}/blocking.html"
-        blockedlist=$(sed 's@[/\&]@\\&@g;s/$/\\/' "$FIREWALL_DOMAINS"; echo .)
+        blockedlist=$(sed 's@[/\&]@\\&@g;s/$/\\/' "${FIREWALL_DOMAINS}"; echo .)
         blockedlist=${blockedlist%.}
-        sed -i "s|BLOCKEDLIST|$blockedlist|g" "${webadmin_install_dir}/blocking.html"
+        sed -i "s|BLOCKEDLIST|${blockedlist}|g" "${webadmin_install_dir}/blocking.html"
         chown www-data:www-data "${webadmin_install_dir}/blocking.html"
     fi
 }
 
 function regenerate_federationlist {
-    if [ ! -f "$FIREWALL_ALLOW_DOMAINS" ]; then
-        touch "$FIREWALL_ALLOW_DOMAINS"
+    if [ ! -f "${FIREWALL_ALLOW_DOMAINS}" ]; then
+        touch "${FIREWALL_ALLOW_DOMAINS}"
     fi
     local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
     webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
@@ -3714,7 +3714,7 @@ function update_blocklist {
                     fi
                 fi
             fi
-        done < "$blocklist_file"
+        done < "${blocklist_file}"
 
         # update the prosody firewall
         if [ -d /var/lib/prosody ]; then
@@ -3745,7 +3745,7 @@ function update_blocklist {
         mv "${FIREWALL_DOMAINS}" "${FIREWALL_DOMAINS}.backup"
         mv "${FIREWALL_DOMAINS}.new" "${FIREWALL_DOMAINS}"
 
-        rm "$blocklist_file"
+        rm "${blocklist_file}"
         rsync_deny_blocked_domains
         regenerate_blocklist
     fi
@@ -4043,9 +4043,9 @@ function update_bridges {
                     fi
                fi
             fi
-        done < "$bridgeslist_file"
+        done < "${bridgeslist_file}"
 
-        rm "$bridgeslist_file"
+        rm "${bridgeslist_file}"
         regenerate_bridges
 
         systemctl restart tor
@@ -4056,9 +4056,9 @@ function cancel_app_installs {
     if [ -f "${cancel_install_file}" ]; then
         #shellcheck disable=SC2009
         p_str=$(ps aux | grep 'addremove-base' | grep -v grep)
-        if [[ "$p_str" == *'bash'* ]]; then
-            kill_pid=$(echo "$p_str" | awk -F ' ' '{print $2}')
-            if [ "$kill_pid" ]; then
+        if [[ "${p_str}" == *'bash'* ]]; then
+            kill_pid=$(echo "${p_str}" | awk -F ' ' '{print $2}')
+            if [ "${kill_pid}" ]; then
 
                 # remove pending installs so that the app doesn't try to reinstall
                 if [ -f "${pending_installs}" ]; then
@@ -4066,7 +4066,7 @@ function cancel_app_installs {
                 fi
 
                 #shellcheck disable=SC2086
-                kill -9 $kill_pid
+                kill -9 ${kill_pid}
 
                 # wait for the kill to happen
                 kill_ctr=0
@@ -4075,12 +4075,12 @@ function cancel_app_installs {
                     sleep 1
                     #shellcheck disable=SC2009
                     p_str=$(ps aux | grep 'addremove-base' | grep -v grep)
-                    if [ ! "$p_str" ]; then
+                    if [ ! "${p_str}" ]; then
                         echo "app install process was killed" >> "${webadmin_install_dir}/applog.txt"
                         break
                     fi
                     kill_ctr=$((kill_ctr+1))
-                    if [ $kill_ctr -gt 20 ]; then
+                    if [ ${kill_ctr} -gt 20 ]; then
                         echo "Timed out waiting for app install process to be killed" >> "${webadmin_install_dir}/applog.txt"
                         return
                     fi
@@ -4115,11 +4115,11 @@ function update_email_proxy {
 }
 
 function update_dynamic_dns {
-    if [ -f "$dynamic_dns_file" ]; then
+    if [ -f "${dynamic_dns_file}" ]; then
         if [ -f "${dynamic_dns_password_file}" ]; then
-            ddns=$(awk -F ',' '{print $1}' < "$dynamic_dns_file")
-            ddns_username=$(awk -F ',' '{print $2}' < "$dynamic_dns_file")
-            ddns_code=$(awk -F ',' '{print $3}' < "$dynamic_dns_file")
+            ddns=$(awk -F ',' '{print $1}' < "${dynamic_dns_file}")
+            ddns_username=$(awk -F ',' '{print $2}' < "${dynamic_dns_file}")
+            ddns_code=$(awk -F ',' '{print $3}' < "${dynamic_dns_file}")
 
             ddns_password=$(head -n 1 "${dynamic_dns_password_file}")
 
@@ -4164,7 +4164,7 @@ function update_dynamic_dns {
             rm "${dynamic_dns_password_file}"
         fi
 
-        rm "$dynamic_dns_file"
+        rm "${dynamic_dns_file}"
     fi
 }
 
@@ -4230,7 +4230,7 @@ function webadmin_monitor_ip_changes {
                 # check if the local ip address has changed
                 if [ -f /etc/turnserver.conf ]; then
                     if [[ "${curr_ipv4}" && "${curr_local_ipv4}" ]]; then
-                        if [[ "$curr_ipv4" == "$webadmin_ipv4_address" ]]; then
+                        if [[ "${curr_ipv4}" == "$webadmin_ipv4_address" ]]; then
                             if ! grep -q "${curr_local_ipv4}" /etc/turnserver.conf; then
                                 # update turn server config and restart
                                 sed -i "s|relay-ip=.*|relay-ip=${curr_ipv4}|g" /etc/turnserver.conf
@@ -4241,8 +4241,8 @@ function webadmin_monitor_ip_changes {
                     fi
                 fi
                 # check if the external IP address has changes
-                if [ "$curr_ipv4" ]; then
-                    if [[ "$curr_ipv4" != "$webadmin_ipv4_address" ]]; then
+                if [ "${curr_ipv4}" ]; then
+                    if [[ "${curr_ipv4}" != "$webadmin_ipv4_address" ]]; then
                         if [ "$webadmin_ipv4_address" ]; then
                             # update TURN server
                             if [ -f /etc/turnserver.conf ]; then
@@ -4266,12 +4266,12 @@ function webadmin_monitor_ip_changes {
                                 network_device_name='enp3s0'
                             fi
                             ifconfig ${network_device_name} | awk '/inet / {print $2}' | cut -f2 -d: > /etc/issue
-                            /usr/local/bin/${PROJECT_NAME}-notification -s "[${PROJECT_NAME}] Dynamic DNS" -m "IP address changed from $webadmin_ipv4_address to $curr_ipv4" &
+                            /usr/local/bin/${PROJECT_NAME}-notification -s "[${PROJECT_NAME}] Dynamic DNS" -m "IP address changed from $webadmin_ipv4_address to ${curr_ipv4}" &
                             systemctl restart ssh
                             systemctl restart nginx
                             systemctl restart exim4
                         fi
-                        webadmin_ipv4_address="$curr_ipv4"
+                        webadmin_ipv4_address="${curr_ipv4}"
                         sed -i "s|<p class=\"ipaddress\".*|<p class=\"ipaddress\" translate=\"no\">${curr_ipv4}</p>|g" "${webadmin_install_dir}/dynamicdns.html"
                     fi
                 fi
@@ -4281,19 +4281,19 @@ function webadmin_monitor_ip_changes {
 }
 
 function change_theme {
-    if [ -f "$theme_file" ]; then
-        bg_color=$(awk -F ',' '{print $1}' < "$theme_file")
-        fg_color=$(awk -F ',' '{print $2}' < "$theme_file")
-        apps_border=$(awk -F ',' '{print $3}' < "$theme_file")
-        search_background_a=$(awk -F ',' '{print $4}' < "$theme_file")
-        search_background_b=$(awk -F ',' '{print $5}' < "$theme_file")
-        link_color=$(awk -F ',' '{print $6}' < "$theme_file")
-        visited_color=$(awk -F ',' '{print $7}' < "$theme_file")
-        text_entry_foreground_color=$(awk -F ',' '{print $8}' < "$theme_file")
-        text_entry_background_color=$(awk -F ',' '{print $9}' < "$theme_file")
-        icon_color_red=$(awk -F ',' '{print $10}' < "$theme_file")
-        icon_color_green=$(awk -F ',' '{print $11}' < "$theme_file")
-        icon_color_blue=$(awk -F ',' '{print $12}' < "$theme_file")
+    if [ -f "${theme_file}" ]; then
+        bg_color=$(awk -F ',' '{print $1}' < "${theme_file}")
+        fg_color=$(awk -F ',' '{print $2}' < "${theme_file}")
+        apps_border=$(awk -F ',' '{print $3}' < "${theme_file}")
+        search_background_a=$(awk -F ',' '{print $4}' < "${theme_file}")
+        search_background_b=$(awk -F ',' '{print $5}' < "${theme_file}")
+        link_color=$(awk -F ',' '{print $6}' < "${theme_file}")
+        visited_color=$(awk -F ',' '{print $7}' < "${theme_file}")
+        text_entry_foreground_color=$(awk -F ',' '{print $8}' < "${theme_file}")
+        text_entry_background_color=$(awk -F ',' '{print $9}' < "${theme_file}")
+        icon_color_red=$(awk -F ',' '{print $10}' < "${theme_file}")
+        icon_color_green=$(awk -F ',' '{print $11}' < "${theme_file}")
+        icon_color_blue=$(awk -F ',' '{print $12}' < "${theme_file}")
 
         if ! grep -q 'WEBADMIN_BACKGROUND_COLOR=' "${CONFIGURATION_FILE}"; then
             echo "WEBADMIN_BACKGROUND_COLOR=${bg_color}" >> "${CONFIGURATION_FILE}"
@@ -4356,35 +4356,35 @@ function change_theme {
         cp "${webadmin_install_dir}/settings.html" "${webadmin_install_dir}/theme_waiting.html"
         chown www-data:www-data "${webadmin_install_dir}/theme_waiting.html"
 
-        rm "$theme_file"
+        rm "${theme_file}"
     fi
 }
 
 function change_language {
-    if [ -f "$language_file" ]; then
-        language=$(cat "$language_file")
+    if [ -f "${language_file}" ]; then
+        language=$(cat "${language_file}")
         local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
         webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
         if [ -f "${webadmin_install_dir}/language_template.html" ]; then
             if grep -q "\"$language\"" "${webadmin_install_dir}/language_template.html"; then
 
                 if ! grep -q "DEFAULT_LANGUAGE=" "${CONFIGURATION_FILE}"; then
-                    echo "DEFAULT_LANGUAGE=$language" >> "${CONFIGURATION_FILE}"
+                    echo "DEFAULT_LANGUAGE=${language}" >> "${CONFIGURATION_FILE}"
                 else
-                    sed -i "s|DEFAULT_LANGUAGE=.*|DEFAULT_LANGUAGE=$language|g" "${CONFIGURATION_FILE}"
+                    sed -i "s|DEFAULT_LANGUAGE=.*|DEFAULT_LANGUAGE=${language}|g" "${CONFIGURATION_FILE}"
                 fi
 
                 /usr/local/bin/${PROJECT_NAME}-language "${language}" > "${webadmin_install_dir}/log.txt"
             fi
         fi
 
-        rm "$language_file"
+        rm "${language_file}"
     fi
 }
 
 function update_system_monitor {
-    if [ -f "$system_monitor_file" ]; then
-        rm "$system_monitor_file"
+    if [ -f "${system_monitor_file}" ]; then
+        rm "${system_monitor_file}"
 
         drives_list=$(df -h | grep "/dev/")
         test_drive=/dev/sda2
@@ -4409,50 +4409,50 @@ function update_system_monitor {
             fi
         fi
 
-        if [[ "$drives_list" != *"$test_drive"* ]]; then
+        if [[ "${drives_list}" != *"${test_drive}"* ]]; then
             test_drive=/dev/sda1
-            if [[ "$drives_list" != *"$test_drive"* ]]; then
+            if [[ "${drives_list}" != *"${test_drive}"* ]]; then
                 test_drive=/dev/mmcblk0p2
-                if [[ "$drives_list" != *"$test_drive"* ]]; then
+                if [[ "${drives_list}" != *"${test_drive}"* ]]; then
                     test_drive=/dev/mmcblk0p1
-                    if [[ "$drives_list" != *"$test_drive"* ]]; then
+                    if [[ "${drives_list}" != *"${test_drive}"* ]]; then
                         test_drive=/dev/sdb2
-                        if [[ "$drives_list" != *"$test_drive"* ]]; then
+                        if [[ "${drives_list}" != *"${test_drive}"* ]]; then
                             test_drive=/dev/sdb1
                         fi
                     fi
                 fi
             fi
         fi
-        if [ ! "$io_test_drive" ]; then
-            io_test_drive=$test_drive
+        if [ ! "${io_test_drive}" ]; then
+            io_test_drive=${test_drive}
         fi
 
         cpu_usage=$(grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage "%"}' | awk -F '.' '{print $1}')
 
-        disk_use=$(df -h | grep $test_drive)
+        disk_use=$(df -h | grep ${test_drive})
         disk_use_percent='0%'
         disk_use_gb='0'
         disk_size_gb='0'
-        if [[ "$disk_use" == *"$test_drive"* ]]; then
-            disk_use_percent=$(df -h | grep $test_drive | tail -n 1 | awk -F ' ' '{print $5}')
-            disk_use_gb=$(df -h | grep $test_drive | tail -n 1 | awk -F ' ' '{print $3}' | sed 's|G||g' | sed 's|M||g')
-            disk_size_gb=$(df -h | grep $test_drive | tail -n 1 | awk -F ' ' '{print $2}' | sed 's|G||g' | sed 's|M||g')
+        if [[ "${disk_use}" == *"${test_drive}"* ]]; then
+            disk_use_percent=$(df -h | grep ${test_drive} | tail -n 1 | awk -F ' ' '{print $5}')
+            disk_use_gb=$(df -h | grep ${test_drive} | tail -n 1 | awk -F ' ' '{print $3}' | sed 's|G||g' | sed 's|M||g')
+            disk_size_gb=$(df -h | grep ${test_drive} | tail -n 1 | awk -F ' ' '{print $2}' | sed 's|G||g' | sed 's|M||g')
         fi
 
         backup_disk_use_percent=
         backup_disk_use_gb=
-        if [ -f "$DRIVES_BASELINE_FILE" ]; then
+        if [ -f "${DRIVES_BASELINE_FILE}" ]; then
             backup_device=$(detect_connected_drives)
-            if [ "$backup_device" ]; then
-                backup_mount_drive "$backup_device"
+            if [ "${backup_device}" ]; then
+                backup_mount_drive "${backup_device}"
                 # shellcheck disable=SC2086
-                if [ $backup_drive_mounted ]; then
+                if [ ${backup_drive_mounted} ]; then
                     backup_disk_use=$(df -h | grep "$backup_device")
                     backup_disk_use_percent='0%'
                     backup_disk_use_gb='0'
                     backup_disk_size_gb='0'
-                    if [[ "$backup_disk_use" == *"$backup_device"* ]]; then
+                    if [[ "${backup_disk_use}" == *"${backup_device}"* ]]; then
                         backup_disk_use_percent=$(df -h | grep "$backup_device" | tail -n 1 | awk -F ' ' '{print $5}')
                         backup_disk_use_gb=$(df -h | grep "$backup_device" | tail -n 1 | awk -F ' ' '{print $3}' | sed 's|G||g' | sed 's|M||g')
                         backup_disk_size_gb=$(df -h | grep "$backup_device" | tail -n 1 | awk -F ' ' '{print $2}' | sed 's|G||g' | sed 's|M||g')
@@ -4488,18 +4488,18 @@ function update_system_monitor {
         cpu_temperature=0
         if [ -f /sys/class/thermal/thermal_zone0/temp ]; then
             cpu_temp=$(cat /sys/class/thermal/thermal_zone*/temp | head -n 1)
-            if [ "$cpu_temp" ]; then
+            if [ "${cpu_temp}" ]; then
                 cpu_temperature=$((cpu_temp / 1000))
             fi
         fi
 
         disk_io_speed=20
         disk_io_speed_percent=10
-        if [ "$test_drive" ]; then
+        if [ "${test_drive}" ]; then
             disk_io_speed=$(hdparm -t $io_test_drive | awk -F '= ' '{print $2}' | awk -F ' ' '{print $1}' | tail -n 1 | awk -F '.' '{print $1}')
-            if [ "$disk_io_speed" ]; then
+            if [ "${disk_io_speed}" ]; then
                 disk_io_speed_percent=$((disk_io_speed * 100 / 500))
-                if [ $disk_io_speed_percent -gt 100 ]; then
+                if [ ${disk_io_speed_percent} -gt 100 ]; then
                     disk_io_speed_percent=100
                 fi
             fi
@@ -4520,22 +4520,22 @@ function update_system_monitor {
 
             # remove spectre warning
             # shellcheck disable=SC2086
-            if [ $spectre_vulnerabilities -eq 0 ]; then
+            if [ ${spectre_vulnerabilities} -eq 0 ]; then
                 sed -i 's|images/spectre.png||g' "${webadmin_install_dir}/system_monitor.html"
                 if [ -f "${webadmin_install_dir}/spectre.txt" ]; then
                     rm "${webadmin_install_dir}/spectre.txt"
                 fi
             fi
 
-            if [ "$cpu_usage" ]; then
+            if [ "${cpu_usage}" ]; then
                 sed -i "s|<div name=\"cpuusage\" class=\"w3-container.*|<div name=\"cpuusage\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:${cpu_usage}%\">${cpu_usage}%</div>|g" "${webadmin_install_dir}/system_monitor.html"
             fi
 
-            if [ "$disk_use_percent" ]; then
+            if [ "${disk_use_percent}" ]; then
                 sed -i "s|<div name=\"diskspace\" class=\"w3-container.*|<div name=\"diskspace\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:$disk_use_percent\">${disk_use_gb} / ${disk_size_gb}GB</div>|g" "${webadmin_install_dir}/system_monitor.html"
             fi
 
-            if [ "$backup_disk_use_gb" ]; then
+            if [ "${backup_disk_use_gb}" ]; then
                 sed -i "s|<div name=\"backupspace\" class=\"w3-container.*|<div name=\"backupspace\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:$backup_disk_use_percent\">${backup_disk_use_gb} / ${backup_disk_size_gb}GB</div>|g" "${webadmin_install_dir}/system_monitor.html"
             else
                 sed -i "/\"backupspace\"/d" "${webadmin_install_dir}/system_monitor.html"
@@ -4544,7 +4544,7 @@ function update_system_monitor {
 
             sed -i "s|<div name=\"memory\" class=\"w3-container.*|<div name=\"memory\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:${used_memory_percent}%\">${used_memory_gb} / ${total_memory_gb}GB</div>|g" "${webadmin_install_dir}/system_monitor.html"
 
-            if [ $cpu_temperature -gt 0 ]; then
+            if [ ${cpu_temperature} -gt 0 ]; then
                 sed -i "s|<div name=\"cputemp\" class=\"w3-container.*|<div name=\"cputemp\" class=\"w3-container w3-dark-grey w3-round-xlarge\" style=\"width:${cpu_temperature}%\">${cpu_temperature}C</div>|g" "${webadmin_install_dir}/system_monitor.html"
             else
                 sed -i "/\"cputemp\"/d" "${webadmin_install_dir}/system_monitor.html"
@@ -4561,12 +4561,12 @@ function update_system_monitor {
 function store_onion_domain {
     onion_domain_type="$1"
     onion_domain_filename="${webadmin_install_dir}/onion_domain_${onion_domain_type}.txt"
-    if [ ! -f "$onion_domain_filename" ]; then
+    if [ ! -f "${onion_domain_filename}" ]; then
         if [ -f "/var/lib/tor/hidden_service_${onion_domain_type}/hostname" ]; then
             onion_domain=$(cat "/var/lib/tor/hidden_service_${onion_domain_type}/hostname")
-            if [[ "$onion_domain" == *'.onion' ]]; then
-                echo -n "$onion_domain" > "$onion_domain_filename"
-                chown www-data:www-data "$onion_domain_filename"
+            if [[ "${onion_domain}" == *'.onion' ]]; then
+                echo -n "${onion_domain}" > "${onion_domain_filename}"
+                chown www-data:www-data "${onion_domain_filename}"
             fi
         fi
     fi
@@ -4587,35 +4587,35 @@ function update_notification_type {
         notification_type=$(echo "$notification_type_data" | awk -F ',' '{print $2}')
         profile_screen_filename="${webadmin_install_dir}/userprofile_${notify_username}.html"
         profile_screen_admin="${webadmin_install_dir}/userprofile_admin.html"
-        if [ -f "$profile_screen_filename" ]; then
+        if [ -f "${profile_screen_filename}" ]; then
             if [[ "$notification_type" == 'email' || "$notification_type" == 'xmpp' || "$notification_type" == 'matrix' || "$notification_type" == 'nextcloud' || "$notification_type" == 'ntfy' ]]; then
                 echo "$notification_type" > "/home/${notify_username}/.notify"
                 chown "${notify_username}":"${notify_username}" "/home/${notify_username}/.notify"
                 # mark as selected within user profile screen
-                sed -i 's|" selected>|">|g' "$profile_screen_filename"
-                sed -i "s|\"${notification_type}\">|\"${notification_type}\" selected>|g" "$profile_screen_filename"
+                sed -i 's|" selected>|">|g' "${profile_screen_filename}"
+                sed -i "s|\"${notification_type}\">|\"${notification_type}\" selected>|g" "${profile_screen_filename}"
             fi
             admin_notify=$(echo "$notification_type_data" | awk -F ',' '{print $3}')
             if [[ "$admin_notify" == '0' ]]; then
-                if grep -q 'name="admin_notify" checked>' "$profile_screen_filename"; then
-                    sed -i 's|name="admin_notify" checked>|name="admin_notify">|g' "$profile_screen_filename"
+                if grep -q 'name="admin_notify" checked>' "${profile_screen_filename}"; then
+                    sed -i 's|name="admin_notify" checked>|name="admin_notify">|g' "${profile_screen_filename}"
                     sed -i 's|name="admin_notify">|name="admin_notify" checked>|g' "$profile_screen_admin"
                     sed -i '/Notifications user:/d' "${COMPLETION_FILE}"
                 fi
             else
-                if grep -q 'name="admin_notify">' "$profile_screen_filename"; then
+                if grep -q 'name="admin_notify">' "${profile_screen_filename}"; then
                     # remove checked for all other members
                     for d in /home/*/ ; do
                         USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
                         profile_screen_user="${webadmin_install_dir}/userprofile_${USERNAME}.html"
-                        if [ -f "$profile_screen_user" ]; then
-                            if grep -q 'name="admin_notify" checked>' "$profile_screen_user"; then
-                                sed -i 's|name="admin_notify" checked>|name="admin_notify">|g' "$profile_screen_user"
+                        if [ -f "${profile_screen_user}" ]; then
+                            if grep -q 'name="admin_notify" checked>' "${profile_screen_user}"; then
+                                sed -i 's|name="admin_notify" checked>|name="admin_notify">|g' "${profile_screen_user}"
                             fi
                         fi
                     done
                     # set checked on the chosen member
-                    sed -i 's|name="admin_notify">|name="admin_notify" checked>|g' "$profile_screen_filename"
+                    sed -i 's|name="admin_notify">|name="admin_notify" checked>|g' "${profile_screen_filename}"
                     if grep -q 'Notifications user:' "${COMPLETION_FILE}"; then
                         sed -i "s|Notifications user:.*|Notifications user:${notify_username}|g" "${COMPLETION_FILE}"
                     else
