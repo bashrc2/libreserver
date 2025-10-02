@@ -2331,7 +2331,7 @@ function initiate_automatic_backup {
         if [ "$webadmin_prev_hour" -ne "$backup_hour" ]; then
             # check that backup drive is plugged in
             backup_device=$(detect_connected_drives)
-            if [[ "$backup_device" == 'sd'* ]]; then
+            if [[ "${backup_device}" == 'sd'* ]]; then
                 touch "$backup_file"
                 autobackup_log_file="${webadmin_install_dir}/autobackup.txt"
                 if [ -f "$autobackup_log_file" ]; then
@@ -2575,7 +2575,7 @@ function backup_and_restore {
             fi
 
             check_for_existing_processes ${backup_script}
-            { echo "echo \"Beginning $backup_name backup \$(date)\" > ${webadmin_install_dir}/backup.txt";
+            { echo "echo \"Beginning ${backup_name} backup \$(date)\" > ${webadmin_install_dir}/backup.txt";
               echo "chown www-data:www-data ${webadmin_install_dir}/backup.txt";
               echo '';
               echo "cp ${webadmin_install_dir}/backup_progress_template.html ${webadmin_install_dir}/backup_progress.html";
@@ -3027,7 +3027,7 @@ function datserver_update_settings_template {
     cp "${app_settings_screen}_template" "${app_settings_screen}"
     datlinks=$(sed 's@[/\&]@\\&@g;s/$/\\/' "/etc/datserver/feeds"; echo .)
     datlinks=${datlinks%.}
-    sed -i "s|DATLINKS|$datlinks|g" "${app_settings_screen}"
+    sed -i "s|DATLINKS|${datlinks}|g" "${app_settings_screen}"
     chown www-data:www-data "${app_settings_screen}"
 }
 
@@ -3127,25 +3127,25 @@ function update_icecast {
                 sed -i "s|\"icecast_genre\".*|\"icecast_genre\" value=\"${icecast_genre}\">|g" "${webadmin_install_dir}/settings_icecast.html"
 
                 icecast_usb_drive=$(detect_connected_drives)
-                if [ "$icecast_usb_drive" ]; then
+                if [ "${icecast_usb_drive}" ]; then
                     icecast_playlist_updated=
-                    backup_mount_drive "$icecast_usb_drive"
+                    backup_mount_drive "${icecast_usb_drive}"
                     if [ $backup_drive_mounted ]; then
                         icecast_import_dir="${USB_MOUNT}/playlist"
                         # search some common directory names
-                        if [ ! -d "$icecast_import_dir" ]; then
+                        if [ ! -d "${icecast_import_dir}" ]; then
                             icecast_import_dir="${USB_MOUNT}/icecast"
                         fi
-                        if [ ! -d "$icecast_import_dir" ]; then
+                        if [ ! -d "${icecast_import_dir}" ]; then
                             icecast_import_dir="${USB_MOUNT}/radio"
                         fi
-                        if [ ! -d "$icecast_import_dir" ]; then
+                        if [ ! -d "${icecast_import_dir}" ]; then
                             icecast_import_dir="${USB_MOUNT}/stream"
                         fi
-                        if [ ! -d "$icecast_import_dir" ]; then
+                        if [ ! -d "${icecast_import_dir}" ]; then
                             icecast_import_dir="${USB_MOUNT}/music"
                         fi
-                        if [ -d "$icecast_import_dir" ]; then
+                        if [ -d "${icecast_import_dir}" ]; then
                             if [ -d "$ICECAST_DIR" ]; then
                                 stop_icecast
                                 # remove any existing playlist
@@ -3154,7 +3154,7 @@ function update_icecast {
                                 # shellcheck disable=SC2115
                                 rm -rf $ICECAST_JINGLES/*
                                 # copy the new files
-                                cp -ru "$icecast_import_dir/"* "$ICECAST_DIR"
+                                cp -ru "${icecast_import_dir}/"* "$ICECAST_DIR"
                                 cd "$ICECAST_DIR" || return
                                 for name in *; do mv "$name" "${name// /_}"; done
                                 icecast_playlist_updated=1
@@ -4448,14 +4448,14 @@ function update_system_monitor {
                 backup_mount_drive "${backup_device}"
                 # shellcheck disable=SC2086
                 if [ ${backup_drive_mounted} ]; then
-                    backup_disk_use=$(df -h | grep "$backup_device")
+                    backup_disk_use=$(df -h | grep "${backup_device}")
                     backup_disk_use_percent='0%'
                     backup_disk_use_gb='0'
                     backup_disk_size_gb='0'
                     if [[ "${backup_disk_use}" == *"${backup_device}"* ]]; then
-                        backup_disk_use_percent=$(df -h | grep "$backup_device" | tail -n 1 | awk -F ' ' '{print $5}')
-                        backup_disk_use_gb=$(df -h | grep "$backup_device" | tail -n 1 | awk -F ' ' '{print $3}' | sed 's|G||g' | sed 's|M||g')
-                        backup_disk_size_gb=$(df -h | grep "$backup_device" | tail -n 1 | awk -F ' ' '{print $2}' | sed 's|G||g' | sed 's|M||g')
+                        backup_disk_use_percent=$(df -h | grep "${backup_device}" | tail -n 1 | awk -F ' ' '{print $5}')
+                        backup_disk_use_gb=$(df -h | grep "${backup_device}" | tail -n 1 | awk -F ' ' '{print $3}' | sed 's|G||g' | sed 's|M||g')
+                        backup_disk_size_gb=$(df -h | grep "${backup_device}" | tail -n 1 | awk -F ' ' '{print $2}' | sed 's|G||g' | sed 's|M||g')
                     fi
                 fi
                 backup_unmount_drive
