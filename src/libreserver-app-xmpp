@@ -824,10 +824,11 @@ function update_prosody_modules {
         prosody_add_module 's2s_blacklist' muc
         prosody_add_module 'admin_shell'
         prosody_add_module 'firewall'
-        prosody_add_module 'block_strangers'
+        prosody_add_module 'poke_strangers'
         prosody_add_module 'file_share'
         prosody_remove_module 'http_upload'
         prosody_remove_module 'server_contact_info'
+        prosody_remove_module 'block_strangers'
     else
         echo "Prosody modules directory not found ${XMPP_DIRECTORY}/prosody-modules"
     fi
@@ -1275,7 +1276,7 @@ function xmpp_modules {
       echo '  "s2s_blacklist"; -- Blacklist particular servers';
       echo '  "privacy_lists"; -- Privacy lists';
       echo '  "blocking"; -- Blocking command';
-      echo '  "block_strangers"; -- Dont allow messages from strangers';
+      echo '  "poke_strangers"; -- extra info about strangers';
       echo '  "roster"; -- Roster versioning';
       echo '  "offline_email"; -- If offline send to email';
       echo '  "offline"; -- Store offline messages';
