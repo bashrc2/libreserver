@@ -139,7 +139,11 @@ function epicyon_notifications {
                 epicyonCalendarmessage=$(notification_translate_text 'New calendar event')
                 epicyonCalendarfileContent=$(echo "$epicyonCalendarmessage")" "$(cat "$epicyonCalendarfile")
                 if [[ "$epicyonCalendarfileContent" == '/calendar'* ]]; then
-                    epicyonCalendarmessage="Epicyon: ${EPICYON_DOMAIN_NAME}/users/${USERNAME}${epicyonCalendarfileContent}"
+                    if [[ "${EPICYON_DOMAIN_NAME}" != *".onion" && "${EPICYON_DOMAIN_NAME}" != *".i2p" ]]; then
+                        epicyonCalendarmessage="Epicyon: https://${EPICYON_DOMAIN_NAME}/users/${USERNAME}${epicyonCalendarfileContent}"
+                    else
+                        epicyonCalendarmessage="Epicyon: http://${EPICYON_DOMAIN_NAME}/users/${USERNAME}${epicyonCalendarfileContent}"
+                    fi
                 fi
                 "${PROJECT_NAME}-notification" -u "$USERNAME" -s "Epicyon" -m "$epicyonCalendarmessage" --sensitive yes
                 echo "##sent##" >> "$epicyonCalendarfile"
