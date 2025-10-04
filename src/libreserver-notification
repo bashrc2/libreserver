@@ -360,11 +360,11 @@ do
         --setpass|--setpassword)
             shift
             ADMIN_PASSWORD="$1"
-            if [ "$ADMIN_PASSWORD" ]; then
+            if [ "${ADMIN_PASSWORD}" ]; then
                 if grep -q 'Notifications password:' "${COMPLETION_FILE}"; then
-                    sed -i "s|Notifications password:.*|Notifications password:$ADMIN_PASSWORD|g" "${COMPLETION_FILE}"
+                    sed -i "s|Notifications password:.*|Notifications password:${ADMIN_PASSWORD}|g" "${COMPLETION_FILE}"
                 else
-                    echo "Notifications password:$ADMIN_PASSWORD" >> "${COMPLETION_FILE}"
+                    echo "Notifications password:${ADMIN_PASSWORD}" >> "${COMPLETION_FILE}"
                 fi
                 echo "Notifications password was set"
                 exit 0
@@ -385,7 +385,7 @@ do
             if [[ "${MESSAGE}" == *'"'* ]]; then
                 # shellcheck disable=SC2001
                 NEW_MESSAGE=$(echo "${MESSAGE}" | sed 's|"||g')
-                MESSAGE="$NEW_MESSAGE"
+                MESSAGE="${NEW_MESSAGE}"
             fi
             ;;
         -d|--debug)
@@ -417,7 +417,7 @@ if [ ! "${ADMIN_USERNAME}" ]; then
     fi
 fi
 
-if [ ! "$ADMIN_PASSWORD" ]; then
+if [ ! "${ADMIN_PASSWORD}" ]; then
     if grep -q "Notifications password" "${COMPLETION_FILE}"; then
         if [ -d "/home/${ADMIN_USERNAME}" ]; then
             ADMIN_PASSWORD=$(grep "Notifications password" "${COMPLETION_FILE}" | awk -F ':' '{print $2}')
