@@ -294,7 +294,11 @@ function epicyon_notifications {
                     cp "$epicyonFollowFile" "$epicyonFollowNotificationsFile"
                     chown epicyon:epicyon "$epicyonFollowNotificationsFile"
 
-                    epicyonFollowMessage=$(notification_translate_text "New follow request")" ${EPICYON_DOMAIN_NAME}/users/${USERNAME}/followers#buttonheader"
+                    if [[ "${EPICYON_DOMAIN_NAME}" != *".onion" && "${EPICYON_DOMAIN_NAME}" != *".i2p" ]]; then
+                        epicyonFollowMessage=$(notification_translate_text "New follow request")" https://${EPICYON_DOMAIN_NAME}/users/${USERNAME}/followers#buttonheader"
+                    else
+                        epicyonFollowMessage=$(notification_translate_text "New follow request")" http://${EPICYON_DOMAIN_NAME}/users/${USERNAME}/followers#buttonheader"
+                    fi
                     "${PROJECT_NAME}-notification" -u "$USERNAME" -s "Epicyon" -m "$epicyonFollowMessage" --sensitive yes
                 fi
             fi
