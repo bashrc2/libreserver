@@ -94,13 +94,13 @@ function add_user_enigma {
 }
 
 function install_interactive_enigma {
-    if [ ! "$ONION_ONLY" ]; then
+    if [ ! "${ONION_ONLY}" ]; then
         ONION_ONLY='no'
     fi
 
-    if [[ "$ONION_ONLY" != "no" ]]; then
+    if [[ "${ONION_ONLY}" != "no" ]]; then
         ENIGMA_DOMAIN_NAME='enigma.local'
-        write_config_param "ENIGMA_DOMAIN_NAME" "$ENIGMA_DOMAIN_NAME"
+        write_config_param "ENIGMA_DOMAIN_NAME" "${ENIGMA_DOMAIN_NAME}"
     else
         interactive_site_details "enigma" "ENIGMA_DOMAIN_NAME" "ENIGMA_CODE"
     fi
@@ -172,7 +172,7 @@ function upgrade_enigma {
 
 function backup_local_enigma {
     ENIGMA_DOMAIN_NAME='enigma'
-    if grep -q "enigma domain" "$COMPLETION_FILE"; then
+    if grep -q "enigma domain" "${COMPLETION_FILE}"; then
         ENIGMA_DOMAIN_NAME=$(get_completion_param "enigma domain")
     fi
 
@@ -181,35 +181,35 @@ function backup_local_enigma {
     suspend_site "${ENIGMA_DOMAIN_NAME}"
 
     dest_directory=enigma
-    backup_directory_to_usb "$source_directory" $dest_directory
+    backup_directory_to_usb "${source_directory}" $dest_directory
 
     restart_site
 }
 
 function restore_local_enigma {
-    if ! grep -q "enigma domain" "$COMPLETION_FILE"; then
+    if ! grep -q "enigma domain" "${COMPLETION_FILE}"; then
         return
     fi
     ENIGMA_DOMAIN_NAME=$(get_completion_param "enigma domain")
-    if [ ! "$ENIGMA_DOMAIN_NAME" ]; then
+    if [ ! "${ENIGMA_DOMAIN_NAME}" ]; then
         return
     fi
     suspend_site "${ENIGMA_DOMAIN_NAME}"
     temp_restore_dir=/root/tempenigma
     enigma_dir=/var/www/${ENIGMA_DOMAIN_NAME}/htdocs
 
-    restore_directory_from_usb $temp_restore_dir enigma
-    if [ -d $temp_restore_dir ]; then
-        if [ -d "$temp_restore_dir$enigma_dir" ]; then
-            cp -rp "$temp_restore_dir$enigma_dir"/* "$enigma_dir"/
+    restore_directory_from_usb ${temp_restore_dir} enigma
+    if [ -d ${temp_restore_dir} ]; then
+        if [ -d "${temp_restore_dir}${enigma_dir}" ]; then
+            cp -rp "${temp_restore_dir}${enigma_dir}"/* "${enigma_dir}"/
         else
-            if [ ! -d "$enigma_dir" ]; then
-                mkdir "$enigma_dir"
+            if [ ! -d "${enigma_dir}" ]; then
+                mkdir "${enigma_dir}"
             fi
-            cp -rp "$temp_restore_dir"/* "$enigma_dir"/
+            cp -rp "${temp_restore_dir}"/* "${enigma_dir}"/
         fi
-        chown -R www-data:www-data "$enigma_dir"
-        rm -rf $temp_restore_dir
+        chown -R www-data:www-data "${enigma_dir}"
+        rm -rf ${temp_restore_dir}
     fi
     restart_site
 }
@@ -223,8 +223,8 @@ function restore_remote_enigma {
 }
 
 function remove_enigma {
-    nginx_dissite "$ENIGMA_DOMAIN_NAME"
-    remove_certs "$ENIGMA_DOMAIN_NAME"
+    nginx_dissite "${ENIGMA_DOMAIN_NAME}"
+    remove_certs "${ENIGMA_DOMAIN_NAME}"
 
     if [ -f "${INSTALL_DIR}/enigma.zip" ]; then
         rm "${INSTALL_DIR}/enigma.zip"
@@ -233,19 +233,19 @@ function remove_enigma {
         rm -rf "${INSTALL_DIR}/enigma-reloaded-gh-pages"
     fi
 
-    if [ -d "/var/www/$ENIGMA_DOMAIN_NAME" ]; then
-        rm -rf "/var/www/$ENIGMA_DOMAIN_NAME"
+    if [ -d "/var/www/${ENIGMA_DOMAIN_NAME}" ]; then
+        rm -rf "/var/www/${ENIGMA_DOMAIN_NAME}"
     fi
-    if [ -f "/etc/nginx/sites-available/$ENIGMA_DOMAIN_NAME" ]; then
-        rm "/etc/nginx/sites-available/$ENIGMA_DOMAIN_NAME"
+    if [ -f "/etc/nginx/sites-available/${ENIGMA_DOMAIN_NAME}" ]; then
+        rm "/etc/nginx/sites-available/${ENIGMA_DOMAIN_NAME}"
     fi
     remove_onion_service enigma "${ENIGMA_ONION_PORT}"
     remove_app enigma
     remove_i2p_service enigma
     remove_completion_param install_enigma
-    sed -i '/enigma/d' "$COMPLETION_FILE"
+    sed -i '/enigma/d' "${COMPLETION_FILE}"
 
-    remove_ddns_domain "$ENIGMA_DOMAIN_NAME"
+    remove_ddns_domain "${ENIGMA_DOMAIN_NAME}"
 }
 
 function install_enigma {
@@ -254,21 +254,21 @@ function install_enigma {
 
     increment_app_install_progress
 
-    if [ ! "$ENIGMA_DOMAIN_NAME" ]; then
+    if [ ! "${ENIGMA_DOMAIN_NAME}" ]; then
         echo $'No domain name was given for enigma'
         exit 35
     fi
 
-    if [ -d "/var/www/$ENIGMA_DOMAIN_NAME/htdocs" ]; then
-        rm -rf "/var/www/$ENIGMA_DOMAIN_NAME/htdocs"
+    if [ -d "/var/www/${ENIGMA_DOMAIN_NAME}/htdocs" ]; then
+        rm -rf "/var/www/${ENIGMA_DOMAIN_NAME}/htdocs"
     fi
-    mkdir -p "/var/www/$ENIGMA_DOMAIN_NAME/htdocs"
-    cd "/var/www/$ENIGMA_DOMAIN_NAME/htdocs" || exit 36
+    mkdir -p "/var/www/${ENIGMA_DOMAIN_NAME}/htdocs"
+    cd "/var/www/${ENIGMA_DOMAIN_NAME}/htdocs" || exit 36
 
-    chmod g+w "/var/www/$ENIGMA_DOMAIN_NAME/htdocs"
-    chown -R www-data:www-data "/var/www/$ENIGMA_DOMAIN_NAME/htdocs"
+    chmod g+w "/var/www/${ENIGMA_DOMAIN_NAME}/htdocs"
+    chown -R www-data:www-data "/var/www/${ENIGMA_DOMAIN_NAME}/htdocs"
 
-    add_ddns_domain "$ENIGMA_DOMAIN_NAME"
+    add_ddns_domain "${ENIGMA_DOMAIN_NAME}"
 
     ENIGMA_ONION_HOSTNAME=$(add_onion_service enigma 80 "${ENIGMA_ONION_PORT}")
 
@@ -283,111 +283,111 @@ function install_enigma {
     fi
 
     crawlers_list=$(get_web_crawlers)
-    enigma_nginx_site=/etc/nginx/sites-available/$ENIGMA_DOMAIN_NAME
-    if [[ "$ONION_ONLY" == "no" ]]; then
-        nginx_http_redirect "$ENIGMA_DOMAIN_NAME" "index index.html"
+    enigma_nginx_site=/etc/nginx/sites-available/${ENIGMA_DOMAIN_NAME}
+    if [[ "${ONION_ONLY}" == "no" ]]; then
+        nginx_http_redirect "${ENIGMA_DOMAIN_NAME}" "index index.html"
         { echo 'server {';
           echo '  listen 443 ssl;';
           echo '  listen [::]:443 ssl;';
-          echo "  server_name $ENIGMA_DOMAIN_NAME;";
+          echo "  server_name ${ENIGMA_DOMAIN_NAME};";
           echo "  server_tokens off;";
           echo '';
           echo "  if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
-          echo ''; } >> "$enigma_nginx_site"
-        nginx_compress "$ENIGMA_DOMAIN_NAME"
-        echo '' >> "$enigma_nginx_site"
-        echo '  # Security' >> "$enigma_nginx_site"
-        nginx_ssl "$ENIGMA_DOMAIN_NAME"
+          echo ''; } >> "${enigma_nginx_site}"
+        nginx_compress "${ENIGMA_DOMAIN_NAME}"
+        echo '' >> "${enigma_nginx_site}"
+        echo '  # Security' >> "${enigma_nginx_site}"
+        nginx_ssl "${ENIGMA_DOMAIN_NAME}"
 
-        nginx_security_options "$ENIGMA_DOMAIN_NAME"
-        nginx_robots "$ENIGMA_DOMAIN_NAME"
+        nginx_security_options "${ENIGMA_DOMAIN_NAME}"
+        nginx_robots "${ENIGMA_DOMAIN_NAME}"
 
         { echo "  add_header Strict-Transport-Security \"max-age=15768000; includeSubDomains\" always;";
           echo '';
           echo '  access_log /dev/null;';
           echo '  error_log /dev/null;';
           echo '';
-          echo "  root /var/www/$ENIGMA_DOMAIN_NAME/htdocs;";
+          echo "  root /var/www/${ENIGMA_DOMAIN_NAME}/htdocs;";
           echo '';
-          echo '  location / {'; } >> "$enigma_nginx_site"
-        nginx_limits "$ENIGMA_DOMAIN_NAME" '15m'
+          echo '  location / {'; } >> "${enigma_nginx_site}"
+        nginx_limits "${ENIGMA_DOMAIN_NAME}" '15m'
         { echo "    index index.html;";
           echo "    auth_basic \"${ENIGMA_LOGIN_TEXT}\";";
           echo "    auth_basic_user_file ${ALLPASS_FILENAME};";
           echo "    error_page 405 = $uri;";
           echo '  }';
-          echo '}'; } >> "$enigma_nginx_site"
+          echo '}'; } >> "${enigma_nginx_site}"
     else
-        echo -n '' > "$enigma_nginx_site"
+        echo -n '' > "${enigma_nginx_site}"
     fi
     { echo 'server {';
-      echo "    listen 127.0.0.1:$ENIGMA_ONION_PORT default_server;";
-      echo "    server_name $ENIGMA_ONION_HOSTNAME;";
+      echo "    listen 127.0.0.1:${ENIGMA_ONION_PORT} default_server;";
+      echo "    server_name ${ENIGMA_ONION_HOSTNAME};";
       echo "    server_tokens off;";
       echo '';
       echo "    if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
-      echo ''; } >> "$enigma_nginx_site"
-    nginx_compress "$ENIGMA_DOMAIN_NAME"
-    echo '' >> "$enigma_nginx_site"
-    nginx_security_options "$ENIGMA_DOMAIN_NAME"
+      echo ''; } >> "${enigma_nginx_site}"
+    nginx_compress "${ENIGMA_DOMAIN_NAME}"
+    echo '' >> "${enigma_nginx_site}"
+    nginx_security_options "${ENIGMA_DOMAIN_NAME}"
     { echo '';
       echo '  access_log /dev/null;';
       echo '  error_log /dev/null;';
       echo '';
-      echo "  root /var/www/$ENIGMA_DOMAIN_NAME/htdocs;";
+      echo "  root /var/www/${ENIGMA_DOMAIN_NAME}/htdocs;";
       echo '';
       echo '  # Location';
-      echo '  location / {'; } >> "$enigma_nginx_site"
-    nginx_limits "$ENIGMA_DOMAIN_NAME" '15m'
+      echo '  location / {'; } >> "${enigma_nginx_site}"
+    nginx_limits "${ENIGMA_DOMAIN_NAME}" '15m'
     { echo "    index index.html;";
       echo "    auth_basic \"${ENIGMA_LOGIN_TEXT}\";";
       echo "    auth_basic_user_file ${ALLPASS_FILENAME};";
       echo "    error_page 405 = $uri;";
       echo '  }';
-      echo '}'; } >> "$enigma_nginx_site"
+      echo '}'; } >> "${enigma_nginx_site}"
 
-    add_i2p_service enigma 80 $ENIGMA_I2P_PORT
+    add_i2p_service enigma 80 ${ENIGMA_I2P_PORT}
     ENIGMA_I2P_HOSTNAME=$(get_i2p_domain enigma)
-    if [ "$ENIGMA_I2P_HOSTNAME" ]; then
+    if [ "${ENIGMA_I2P_HOSTNAME}" ]; then
         { echo 'server {';
-          echo "    listen 127.0.0.1:$ENIGMA_I2P_PORT;";
-          echo "    server_name $ENIGMA_I2P_HOSTNAME;";
+          echo "    listen 127.0.0.1:${ENIGMA_I2P_PORT};";
+          echo "    server_name ${ENIGMA_I2P_HOSTNAME};";
           echo "    server_tokens off;";
           echo '';
           echo "    if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
-          echo ''; } >> "$enigma_nginx_site"
-        nginx_compress "$ENIGMA_DOMAIN_NAME"
-        echo '' >> "$enigma_nginx_site"
-        nginx_security_options "$ENIGMA_DOMAIN_NAME"
+          echo ''; } >> "${enigma_nginx_site}"
+        nginx_compress "${ENIGMA_DOMAIN_NAME}"
+        echo '' >> "${enigma_nginx_site}"
+        nginx_security_options "${ENIGMA_DOMAIN_NAME}"
         { echo '';
           echo '  access_log /dev/null;';
           echo '  error_log /dev/null;';
           echo '';
-          echo "  root /var/www/$ENIGMA_DOMAIN_NAME/htdocs;";
+          echo "  root /var/www/${ENIGMA_DOMAIN_NAME}/htdocs;";
           echo '';
           echo '  # Location';
-          echo '  location / {'; } >> "$enigma_nginx_site"
-        nginx_limits "$ENIGMA_DOMAIN_NAME" '15m'
+          echo '  location / {'; } >> "${enigma_nginx_site}"
+        nginx_limits "${ENIGMA_DOMAIN_NAME}" '15m'
         { echo "    index index.html;";
           echo "    auth_basic \"${ENIGMA_LOGIN_TEXT}\";";
           echo "    auth_basic_user_file ${ALLPASS_FILENAME};";
           echo "    error_page 405 = $uri;";
           echo '  }';
-          echo '}'; } >> "$enigma_nginx_site"
+          echo '}'; } >> "${enigma_nginx_site}"
     fi
 
     increment_app_install_progress
 
-    create_site_certificate "$ENIGMA_DOMAIN_NAME" 'yes'
+    create_site_certificate "${ENIGMA_DOMAIN_NAME}" 'yes'
 
-    nginx_ensite "$ENIGMA_DOMAIN_NAME"
+    nginx_ensite "${ENIGMA_DOMAIN_NAME}"
 
     increment_app_install_progress
 
     write_config_param ENIGMA_HASH "installing"
     upgrade_enigma
 
-    if [ ! -f "/var/www/$ENIGMA_DOMAIN_NAME/htdocs/index.html" ]; then
+    if [ ! -f "/var/www/${ENIGMA_DOMAIN_NAME}/htdocs/index.html" ]; then
         echo $"enigma files were not installed"
         exit 24
     fi
@@ -396,7 +396,7 @@ function install_enigma {
 
     increment_app_install_progress
 
-    set_completion_param "enigma domain" "$ENIGMA_DOMAIN_NAME"
+    set_completion_param "enigma domain" "${ENIGMA_DOMAIN_NAME}"
 
     APP_INSTALLED=1
 }
