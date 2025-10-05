@@ -164,6 +164,7 @@ function upgrade_enigma {
         fi
         cp -r "${INSTALL_DIR}/enigma-reloaded-gh-pages"/* "/var/www/${ENIGMA_DOMAIN_NAME}/htdocs/enigma-reloaded"
         chown -R www-data:www-data "/var/www/${ENIGMA_DOMAIN_NAME}/htdocs"
+        chmod 755 "/var/www/${ENIGMA_DOMAIN_NAME}"
         write_config_param ENIGMA_HASH "${curr_hash}"
         rm "${INSTALL_DIR}/enigma.zip"
         rm -rf "${INSTALL_DIR}/enigma-reloaded-gh-pages"
@@ -391,6 +392,8 @@ function install_enigma {
         echo $"enigma files were not installed"
         exit 24
     fi
+
+    chmod 755 "/var/www/${ENIGMA_DOMAIN_NAME}"
 
     systemctl restart nginx
 
