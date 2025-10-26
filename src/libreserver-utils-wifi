@@ -55,7 +55,7 @@ function wifi_static_network_interface {
     read_config_param "NETWORK_IS_STATIC"
     if [ ${NETWORK_IS_STATIC} -eq 0 ]; then
         echo '#this line must always be here' > /etc/network/interfaces.d/static
-        echo 'iface default inet dhcp' >> /etc/network/interfaces.d/static
+        echo 'iface default inet inet6 dhcp' >> /etc/network/interfaces.d/static
     else
         read_config_param "LOCAL_NETWORK_STATIC_IP_ADDRESS"
         read_config_param "ROUTER_IP_ADDRESS"
@@ -356,7 +356,7 @@ function wifi_wpa2_psk {
     fi
 
     echo "allow-hotplug ${network_device_name}" > /etc/network/interfaces.d/static
-    echo "iface ${network_device_name} inet dhcp" >> /etc/network/interfaces.d/static
+    echo "iface ${network_device_name} inet inet6 dhcp" >> /etc/network/interfaces.d/static
 
     echo "allow-hotplug ${WIFI_INTERFACE}" > /etc/network/interfaces.d/wifi
     echo "iface ${WIFI_INTERFACE} inet manual" >> /etc/network/interfaces.d/wifi
@@ -380,7 +380,7 @@ function wifi_none {
     fi
 
     echo "allow-hotplug ${network_device_name}" > /etc/network/interfaces.d/static
-    echo "iface ${network_device_name} inet dhcp" >> /etc/network/interfaces.d/static
+    echo "iface ${network_device_name} inet inet6 dhcp" >> /etc/network/interfaces.d/static
 
     echo "allow-hotplug ${WIFI_INTERFACE}" > /etc/network/interfaces.d/wifi
     echo "iface ${WIFI_INTERFACE} inet manual" >> /etc/network/interfaces.d/wifi
@@ -421,7 +421,7 @@ function networks_from_file {
     fi
 
     echo "allow-hotplug ${network_device_name}" > /etc/network/interfaces.d/static
-    echo "iface ${network_device_name} inet dhcp" >> /etc/network/interfaces.d/static
+    echo "iface ${network_device_name} inet inet6 dhcp" >> /etc/network/interfaces.d/static
 
     { echo "allow-hotplug ${WIFI_INTERFACE}";
       echo "iface ${WIFI_INTERFACE} inet manual";

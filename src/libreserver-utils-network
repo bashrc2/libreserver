@@ -82,12 +82,12 @@ function install_static_network {
         if [[ "${network_device_name}" == *"eth0"* ]]; then
             { echo "auto ${network_device_name}";
               echo "allow-hotplug ${network_device_name}";
-              echo "iface ${network_device_name} inet dhcp"; } > /etc/network/interfaces.d/dynamic
+              echo "iface ${network_device_name} inet inet6 dhcp"; } > /etc/network/interfaces.d/dynamic
         else
             { echo "auto ${network_device_name} eth0";
               echo "allow-hotplug ${network_device_name} eth0";
-              echo "iface ${network_device_name} inet dhcp";
-              echo "iface eth0 inet dhcp"; } > /etc/network/interfaces.d/dynamic
+              echo "iface ${network_device_name} inet inet6 dhcp";
+              echo "iface eth0 inet inet6 dhcp"; } > /etc/network/interfaces.d/dynamic
         fi
 
         if [ -f /etc/network/interfaces.d/static ]; then
