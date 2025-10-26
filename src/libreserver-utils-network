@@ -64,7 +64,7 @@ function install_static_network {
     if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
         return
     fi
-    if [[ $INSTALLING_ON_BBB == "yes" ]]; then
+    if [[ ${INSTALLING_ON_BBB} == "yes" ]]; then
         return
     fi
 
@@ -72,7 +72,7 @@ function install_static_network {
     echo '# and how to activate them. For more information, see interfaces(5).' >> /etc/network/interfaces
     echo 'source /etc/network/interfaces.d/*' >> /etc/network/interfaces
 
-    if [ ! $LOCAL_NETWORK_STATIC_IP_ADDRESS ]; then
+    if [ ! ${LOCAL_NETWORK_STATIC_IP_ADDRESS} ]; then
 
         network_device_name=$(ls /sys/class/net | grep "en\|eth0" | head -n 1)
         if [ ! "${network_device_name}" ]; then
