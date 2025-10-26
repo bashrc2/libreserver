@@ -639,9 +639,18 @@ function configure_firewall {
 
     ruleset=$(/usr/sbin/nft list ruleset)
     if [ "${ruleset}" ]; then
-        # DHCPv6
-        # https://en.wikipedia.org/wiki/DHCPv6
-        firewall_add dhcpv6 546 udp
+        enable_dhcpv6=
+        if ! grep -q 'net.ipv6.conf.all.disable_ipv6' /etc/sysctl.conf; then
+            enable_dhcpv6=1
+        fi
+        if grep -q 'net.ipv6.conf.all.disable_ipv6 = 0' /etc/sysctl.conf; then
+            enable_dhcpv6=1
+        fi
+        if [ ${enable_dhcpv6} ]; then
+            # DHCPv6 client
+            # https://en.wikipedia.org/wiki/DHCPv6
+            firewall_add dhcpv6 546 udp
+        fi
 
         echo $'Firewall configured'
         mark_completed "${FUNCNAME[0]}"
