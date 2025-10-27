@@ -1188,8 +1188,8 @@ function set_static_IP {
     STATIC_IP="${IPv4_address_base}.60"
     STATIC_GATEWAY="${IPv4_address_base}.1"
 
-    NEW_STATIC_IP=
-    NEW_STATIC_GATEWAY=
+    NEW_STATIC_IPv4=
+    NEW_STATIC_GATEWAY_IPv4=
     if [ -f /etc/network/interfaces.d/static ]; then
         STATIC_IP=$(grep "address " /etc/network/interfaces.d/static | head -n 1 | awk -F ' ' '{print $2}')
         STATIC_GATEWAY=$(grep "gateway " /etc/network/interfaces.d/static | head -n 1 | awk -F ' ' '{print $2}')
@@ -1197,14 +1197,14 @@ function set_static_IP {
 
     # get the IP for the box
     data=$(mktemp 2>/dev/null)
-    dialog --title $"Set a static local IP address" \
+    dialog --title $"Set a static local IPv4 address" \
            --backtitle $"LibreServer Control Panel" \
-           --inputbox $"In order to forward incoming internet traffic to this system most internet routers need to know a static local IP address to send the data to.\\n\\n
-Enter a static local IP address for this system.\\n\\nIt will typically be ${IPv4_address_base}.x\\n\\nIf you leave this field blank then the system will revert to using a dynamic IP address." 18 60 "$STATIC_IP" 2>"$data"
+           --inputbox $"In order to forward incoming internet traffic to this system most internet routers need to know a static local IPv4 address to send the data to.\\n\\n
+Enter a static local IP address for this system.\\n\\nIt will typically be ${IPv4_address_base}.x\\n\\nIf you leave this field blank then the system will revert to using a dynamic IP address." 18 60 "${STATIC_IP}" 2>"$data"
     sel=$?
     case $sel in
-        0) NEW_STATIC_IP=$(<"$data")
-           if [[ "$NEW_STATIC_IP" != *"."* ]]; then
+        0) NEW_STATIC_IPv4=$(<"$data")
+           if [[ "${NEW_STATIC_IPv4}" != *"."* ]]; then
                set_dynamic_IP
                rm -f "$data"
                return
@@ -1217,42 +1217,43 @@ Enter a static local IP address for this system.\\n\\nIt will typically be ${IPv
 
     # get the gateway
     data=$(mktemp 2>/dev/null)
-    dialog --title $"Set the IP address of your internet router/modem" \
+    dialog --title $"Set the IPv4 address of your internet router/modem" \
            --backtitle $"LibreServer Control Panel" \
-           --inputbox $"Set the local IP address for your internet router or ADSL modem.\\n\\nIt will typically be ${IPv4_address_base}.1, ${IPv4_address_base}.254, or similar" 12 60 "$STATIC_GATEWAY" 2>"$data"
+           --inputbox $"Set the local IPv4 address for your internet router or ADSL modem.\\n\\nIt will typically be ${IPv4_address_base}.1, ${IPv4_address_base}.254, or similar" 12 60 "${STATIC_GATEWAY}" 2>"$data"
     sel=$?
     case $sel in
-        0) NEW_STATIC_GATEWAY=$(<"$data")
-           if [[ "$NEW_STATIC_GATEWAY" != *"."* ]]; then
-               rm -f "$data"
+        0) NEW_STATIC_GATEWAY_IPv4=$(<"$data")
+           if [[ "${NEW_STATIC_GATEWAY_IPv4}" != *"."* ]]; then
+               rm -f "${data}"
                return
            fi
            ;;
-        1) rm -f "$data"
+        1) rm -f "${data}"
            return;;
     esac
 
-    if [[ "$NEW_STATIC_GATEWAY" == *"."* && "$NEW_STATIC_IP" == *"."* ]]; then
+    if [[ "$NEW_STATIC_GATEWAY_IPv4" == *"."* && "$NEW_STATIC_IPv4" == *"."* ]]; then
         ip_addresses_have_changed=1
         if [ -f /etc/network/interfaces.d/static ]; then
             ip_addresses_have_changed=
-            if ! grep -q "address ${NEW_STATIC_IP}" /etc/network/interfaces.d/static; then
+            if ! grep -q "address ${NEW_STATIC_IPv4}" /etc/network/interfaces.d/static; then
                 ip_addresses_have_changed=1
             fi
-            if ! grep -q "gateway ${NEW_STATIC_GATEWAY}" /etc/network/interfaces.d/static; then
+            if ! grep -q "gateway ${NEW_STATIC_GATEWAY_IPv4}" /etc/network/interfaces.d/static; then
                 ip_addresses_have_changed=1
             fi
         fi
         if [ $ip_addresses_have_changed ]; then
             write_config_param "NETWORK_IS_STATIC" "1"
-            write_config_param "LOCAL_NETWORK_STATIC_IP_ADDRESS" "$NEW_STATIC_IP"
-            write_config_param "ROUTER_IP_ADDRESS" "$NEW_STATIC_GATEWAY"
+            write_config_param "LOCAL_NETWORK_STATIC_IPv4_ADDRESS" "$NEW_STATIC_IPv4"
+            write_config_param "LOCAL_NETWORK_STATIC_IP_ADDRESS" "$NEW_STATIC_IPv4"
+            write_config_param "ROUTER_IPv4_ADDRESS" "$NEW_STATIC_GATEWAY_IPv4"
 
-            email_change_relay "$NEW_STATIC_IP"
+            email_change_relay "$NEW_STATIC_IPv4"
 
             static_wifi_address=
             if [[ $(config_param_exists "WIFI_INTERFACE") == "1" ]]; then
-                dialog --title $"Static local IP address" \
+                dialog --title $"Static local IPv4 address" \
                        --backtitle $"LibreServer Control Panel" \
                        --yesno $"\\nSet a static address for the wifi adapter?\\n\\nIf you select 'no' then wired ethernet will be used." 10 60
                 sel=$?
@@ -1263,9 +1264,9 @@ Enter a static local IP address for this system.\\n\\nIt will typically be ${IPv
                 esac
             fi
 
-            echo '# This file describes the network interfaces available on your system' > /etc/network/interfaces
-            echo '# and how to activate them. For more information, see interfaces(5).' >> /etc/network/interfaces
-            echo 'source /etc/network/interfaces.d/*' >> /etc/network/interfaces
+            { echo '# This file describes the network interfaces available on your system';
+              echo '# and how to activate them. For more information, see interfaces(5).';
+              echo 'source /etc/network/interfaces.d/*'; } > /etc/network/interfaces
 
             if [ ! $static_wifi_address ]; then
                 # wired network
@@ -1279,16 +1280,16 @@ Enter a static local IP address for this system.\\n\\nIt will typically be ${IPv
                     { echo "auto ${network_device_name}";
                       echo "allow-hotplug ${network_device_name}";
                       echo "iface ${network_device_name} inet static";
-                      echo "    address ${NEW_STATIC_IP}";
+                      echo "    address ${NEW_STATIC_IPv4}";
                       echo '    netmask 255.255.255.0';
-                      echo "    gateway ${NEW_STATIC_GATEWAY}"; } > /etc/network/interfaces.d/static
+                      echo "    gateway ${NEW_STATIC_GATEWAY_IPv4}"; } > /etc/network/interfaces.d/static
                 else
                     { echo "auto ${network_device_name} eth0";
                       echo "allow-hotplug ${network_device_name} eth0";
                       echo "iface ${network_device_name} inet static";
-                      echo "    address ${NEW_STATIC_IP}";
+                      echo "    address ${NEW_STATIC_IPv4}";
                       echo '    netmask 255.255.255.0';
-                      echo "    gateway ${NEW_STATIC_GATEWAY}"; } > /etc/network/interfaces.d/static
+                      echo "    gateway ${NEW_STATIC_GATEWAY_IPv4}"; } > /etc/network/interfaces.d/static
                 fi
 
                 if [ -f /etc/network/interfaces.d/dynamic ]; then
@@ -1303,9 +1304,9 @@ Enter a static local IP address for this system.\\n\\nIt will typically be ${IPv
             echo ''
             echo $'Restarting the network daemon.'
             echo ''
-            echo $'If you logged in using the previous IP address then you may need to close this terminal and log in again on the new one.'
+            echo $'If you logged in using the previous IPv4 address then you may need to close this terminal and log in again on the new one.'
 
-            dialog --title $"Static local IP address" \
+            dialog --title $"Static local IPv4 address" \
                    --backtitle $"LibreServer Control Panel" \
                    --yesno $"\\nFor the change to take effect your system will now need to reboot. Do this now?" 8 60
             sel=$?

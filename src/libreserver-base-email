@@ -986,10 +986,10 @@ function install_email_basic {
     IPv4_address=$(get_ipv4_address)
     IPv4_address_base=$(echo "$IPv4_address" | awk -F '.' '{print $1"."$2"."$3}')
     RELAY_NETS="${IPv4_address_base}.0/24"
-    if [ "$LOCAL_NETWORK_STATIC_IP_ADDRESS" ]; then
-        RELAY_NETS=$(awk "$LOCAL_NETWORK_STATIC_IP_ADDRESS" -F '.' '{print $1 "." $2 "." $3 ".0/24"}')
+    if [ "$LOCAL_NETWORK_STATIC_IPv4_ADDRESS" ]; then
+        RELAY_NETS=$(awk "${LOCAL_NETWORK_STATIC_IPv4_ADDRESS}" -F '.' '{print $1 "." $2 "." $3 ".0/24"}')
     fi
-    { echo "dc_relay_nets='$RELAY_NETS'";
+    { echo "dc_relay_nets='${RELAY_NETS}'";
       echo "dc_smarthost=''";
       echo "CFILEMODE='644'";
       echo "dc_use_split_config='false'";

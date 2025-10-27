@@ -2081,11 +2081,11 @@ function set_static_ip_address {
             if grep -q "NETWORK_IS_STATIC=" "${CONFIGURATION_FILE}"; then
                 sed -i 's|NETWORK_IS_STATIC=.*|NETWORK_IS_STATIC=0|g' "${CONFIGURATION_FILE}"
             fi
-            if grep -q "LOCAL_NETWORK_STATIC_IP_ADDRESS=" "${CONFIGURATION_FILE}"; then
-                sed -i '/LOCAL_NETWORK_STATIC_IP_ADDRESS=/d' "${CONFIGURATION_FILE}"
+            if grep -q "LOCAL_NETWORK_STATIC_IPv4_ADDRESS=" "${CONFIGURATION_FILE}"; then
+                sed -i '/LOCAL_NETWORK_STATIC_IPv4_ADDRESS=/d' "${CONFIGURATION_FILE}"
             fi
-            if grep -q "ROUTER_IP_ADDRESS=" "${CONFIGURATION_FILE}"; then
-                sed -i '/ROUTER_IP_ADDRESS=/d' "${CONFIGURATION_FILE}"
+            if grep -q "ROUTER_IPv4_ADDRESS=" "${CONFIGURATION_FILE}"; then
+                sed -i '/ROUTER_IPv4_ADDRESS=/d' "${CONFIGURATION_FILE}"
             fi
             chown www-data:www-data "${webadmin_install_dir}/static_ip.html"
             systemctl restart network-manager
@@ -2124,15 +2124,15 @@ function set_static_ip_address {
                     else
                         echo 'NETWORK_IS_STATIC=1' >> "${CONFIGURATION_FILE}"
                     fi
-                    if grep -q "LOCAL_NETWORK_STATIC_IP_ADDRESS=" "${CONFIGURATION_FILE}"; then
-                        sed -i "s|LOCAL_NETWORK_STATIC_IP_ADDRESS=.*|LOCAL_NETWORK_STATIC_IP_ADDRESS=${new_ip_address}|g" "${CONFIGURATION_FILE}"
+                    if grep -q "LOCAL_NETWORK_STATIC_IPv4_ADDRESS=" "${CONFIGURATION_FILE}"; then
+                        sed -i "s|LOCAL_NETWORK_STATIC_IPv4_ADDRESS=.*|LOCAL_NETWORK_STATIC_IPv4_ADDRESS=${new_ip_address}|g" "${CONFIGURATION_FILE}"
                     else
-                        echo "LOCAL_NETWORK_STATIC_IP_ADDRESS=${new_ip_address}" >> "${CONFIGURATION_FILE}"
+                        echo "LOCAL_NETWORK_STATIC_IPv4_ADDRESS=${new_ip_address}" >> "${CONFIGURATION_FILE}"
                     fi
-                    if grep -q "ROUTER_IP_ADDRESS=" "${CONFIGURATION_FILE}"; then
-                        sed -i "s|ROUTER_IP_ADDRESS=.*|ROUTER_IP_ADDRESS=${new_gateway}|g" "${CONFIGURATION_FILE}"
+                    if grep -q "ROUTER_IPv4_ADDRESS=" "${CONFIGURATION_FILE}"; then
+                        sed -i "s|ROUTER_IPv4_ADDRESS=.*|ROUTER_IPv4_ADDRESS=${new_gateway}|g" "${CONFIGURATION_FILE}"
                     else
-                        echo "ROUTER_IP_ADDRESS=${new_gateway}" >> "${CONFIGURATION_FILE}"
+                        echo "ROUTER_IPv4_ADDRESS=${new_gateway}" >> "${CONFIGURATION_FILE}"
                     fi
                     chown www-data:www-data "${webadmin_install_dir}/static_ip.html"
                     systemctl restart network-manager

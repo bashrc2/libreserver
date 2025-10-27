@@ -58,12 +58,12 @@ function wifi_static_network_interface {
           echo 'iface default inet dhcp';
           echo 'iface default inet6 dhcp'; } > /etc/network/interfaces.d/static
     else
-        read_config_param "LOCAL_NETWORK_STATIC_IP_ADDRESS"
-        read_config_param "ROUTER_IP_ADDRESS"
+        read_config_param "LOCAL_NETWORK_STATIC_IPv4_ADDRESS"
+        read_config_param "ROUTER_IPv4_ADDRESS"
         { echo 'iface default inet static';
-          echo "    address ${LOCAL_NETWORK_STATIC_IP_ADDRESS}";
+          echo "    address ${LOCAL_NETWORK_STATIC_IPv4_ADDRESS}";
           echo '    netmask 255.255.255.0';
-          echo "    gateway ${ROUTER_IP_ADDRESS}"; } > /etc/network/interfaces.d/static
+          echo "    gateway ${ROUTER_IPv4_ADDRESS}"; } > /etc/network/interfaces.d/static
         read_config_param "LOCAL_NETWORK_STATIC_IPv6_ADDRESS"
         read_config_param "ROUTER_IPv6_ADDRESS"
         if [[ "${LOCAL_NETWORK_STATIC_IPv6_ADDRESS}" && "${ROUTER_IPv6_ADDRESS}" ]]; then

@@ -51,8 +51,8 @@ configuration_variables=(SYSTEM_TYPE
                          DDNS_PROVIDER
                          DDNS_USERNAME
                          DDNS_PASSWORD
-                         LOCAL_NETWORK_STATIC_IP_ADDRESS
-                         ROUTER_IP_ADDRESS
+                         LOCAL_NETWORK_STATIC_IPv4_ADDRESS
+                         ROUTER_IPv4_ADDRESS
                          CPU_CORES
                          WEBSERVER_LOG_LEVEL
                          ROUTE_THROUGH_TOR
@@ -189,6 +189,21 @@ function read_config_param {
                 if grep -q "${param_name}=" "$CONFIGURATION_FILE"; then
                     param_value=$(grep "${param_name}=" "$CONFIGURATION_FILE" | head -n 1 | sed "s|${param_name}=||g")
                     export "${param_name}"="${param_value}"
+                fi
+            fi
+        fi
+    fi
+}
+
+function rename_config_param {
+    param_name="$1"
+    new_param_name="$2"
+
+    if [ ${#param_name} -gt 0 ]; then
+        if [ "${CONFIGURATION_FILE}" ]; then
+            if [ -f "${CONFIGURATION_FILE}" ]; then
+                if grep -q "${param_name}=" "${CONFIGURATION_FILE}"; then
+                    sed -i "s|${param_name}=|${new_param_name}=|g" "${CONFIGURATION_FILE}"
                 fi
             fi
         fi

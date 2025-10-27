@@ -35,10 +35,12 @@ IPV6_ADDRESS_TEST_DESTINATION='2620:0:ccc::2'
 
 # The static IP address of the system within the local network
 # By default the IP address is dynamic within your LAN
-LOCAL_NETWORK_STATIC_IP_ADDRESS=
+LOCAL_NETWORK_STATIC_IPv4_ADDRESS=
+LOCAL_NETWORK_STATIC_IPv6_ADDRESS=
 
 # IP address of the router (gateway)
-ROUTER_IP_ADDRESS="192.168.1.254"
+ROUTER_IPv4_ADDRESS="192.168.1.254"
+ROUTER_IPv6_ADDRESS=
 
 MESH_INSTALL_DIR=/var/lib
 
@@ -72,7 +74,7 @@ function install_static_network {
     echo '# and how to activate them. For more information, see interfaces(5).' >> /etc/network/interfaces
     echo 'source /etc/network/interfaces.d/*' >> /etc/network/interfaces
 
-    if [ ! ${LOCAL_NETWORK_STATIC_IP_ADDRESS} ]; then
+    if [ ! ${LOCAL_NETWORK_STATIC_IPv4_ADDRESS} ]; then
 
         network_device_name=$(ls /sys/class/net | grep "en\|eth0" | head -n 1)
         if [ ! "${network_device_name}" ]; then
@@ -110,16 +112,21 @@ function install_static_network {
         { echo "auto ${network_device_name}";
           echo "allow-hotplug ${network_device_name}";
           echo "iface ${network_device_name} inet static";
-          echo "    address $LOCAL_NETWORK_STATIC_IP_ADDRESS";
+          echo "    address ${LOCAL_NETWORK_STATIC_IPv4_ADDRESS}";
           echo '    netmask 255.255.255.0';
-          echo "    gateway $ROUTER_IP_ADDRESS"; } > /etc/network/interfaces.d/static
+          echo "    gateway ${ROUTER_IPv4_ADDRESS}"; } > /etc/network/interfaces.d/static
     else
         { echo "auto ${network_device_name} eth0";
           echo "allow-hotplug ${network_device_name} eth0";
           echo "iface ${network_device_name} inet static";
-          echo "    address $LOCAL_NETWORK_STATIC_IP_ADDRESS";
+          echo "    address ${LOCAL_NETWORK_STATIC_IPv4_ADDRESS}";
           echo '    netmask 255.255.255.0';
-          echo "    gateway $ROUTER_IP_ADDRESS"; } > /etc/network/interfaces.d/static
+          echo "    gateway ${ROUTER_IPv4_ADDRESS}"; } > /etc/network/interfaces.d/static
+    fi
+    if [[ "${LOCAL_NETWORK_STATIC_IPv6_ADDRESS}" && "${ROUTER_IPv6_ADDRESS}" ]]; then
+        { echo "    address ${LOCAL_NETWORK_STATIC_IPv6_ADDRESS}";
+          echo '    netmask 64';
+          echo "    gateway ${ROUTER_IPv6_ADDRESS}"; } >> /etc/network/interfaces.d/static
     fi
 
     if [ -f /etc/network/interfaces.d/dynamic ]; then
