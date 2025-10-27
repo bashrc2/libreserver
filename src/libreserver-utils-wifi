@@ -54,8 +54,9 @@ function wifi_static_network_interface {
     NETWORK_IS_STATIC=0
     read_config_param "NETWORK_IS_STATIC"
     if [ ${NETWORK_IS_STATIC} -eq 0 ]; then
-        echo '#this line must always be here' > /etc/network/interfaces.d/static
-        echo 'iface default inet dhcp' >> /etc/network/interfaces.d/static
+        { echo '#this line must always be here';
+          echo 'iface default inet dhcp';
+          echo 'iface default inet6 dhcp'; } > /etc/network/interfaces.d/static
     else
         read_config_param "LOCAL_NETWORK_STATIC_IP_ADDRESS"
         read_config_param "ROUTER_IP_ADDRESS"
@@ -63,6 +64,14 @@ function wifi_static_network_interface {
           echo "    address ${LOCAL_NETWORK_STATIC_IP_ADDRESS}";
           echo '    netmask 255.255.255.0';
           echo "    gateway ${ROUTER_IP_ADDRESS}"; } > /etc/network/interfaces.d/static
+        read_config_param "LOCAL_NETWORK_STATIC_IPv6_ADDRESS"
+        read_config_param "ROUTER_IPv6_ADDRESS"
+        if [[ "${LOCAL_NETWORK_STATIC_IPv6_ADDRESS}" && "${ROUTER_IPv6_ADDRESS}" ]]; then
+            { echo 'iface default inet6 static';
+              echo "    address ${LOCAL_NETWORK_STATIC_IPv6_ADDRESS}";
+              echo '    netmask 64';
+              echo "    gateway ${ROUTER_IPv6_ADDRESS}"; } >> /etc/network/interfaces.d/static
+        fi
     fi
 }
 
@@ -355,12 +364,15 @@ function wifi_wpa2_psk {
         network_device_name='enp3s0'
     fi
 
-    echo "allow-hotplug ${network_device_name}" > /etc/network/interfaces.d/static
-    echo "iface ${network_device_name} inet dhcp" >> /etc/network/interfaces.d/static
+    { echo "allow-hotplug ${network_device_name}";
+      echo "iface ${network_device_name} inet dhcp";
+      echo "iface ${network_device_name} inet6 dhcp"; } > /etc/network/interfaces.d/static
 
-    echo "allow-hotplug ${WIFI_INTERFACE}" > /etc/network/interfaces.d/wifi
-    echo "iface ${WIFI_INTERFACE} inet manual" >> /etc/network/interfaces.d/wifi
-    echo "  wpa-roam $WIFI_CONFIG" >> /etc/network/interfaces.d/wifi
+    { echo "allow-hotplug ${WIFI_INTERFACE}";
+      echo "iface ${WIFI_INTERFACE} inet manual";
+      echo "  wpa-roam $WIFI_CONFIG";
+      echo "iface ${WIFI_INTERFACE} inet6 manual";
+      echo "  wpa-roam $WIFI_CONFIG"; } > /etc/network/interfaces.d/wifi
     wifi_static_network_interface
 
     wpa_passphrase "$ssid" "$passphrase" > "$WIFI_CONFIG"
@@ -379,12 +391,15 @@ function wifi_none {
         network_device_name='enp3s0'
     fi
 
-    echo "allow-hotplug ${network_device_name}" > /etc/network/interfaces.d/static
-    echo "iface ${network_device_name} inet dhcp" >> /etc/network/interfaces.d/static
+    { echo "allow-hotplug ${network_device_name}";
+      echo "iface ${network_device_name} inet dhcp";
+      echo "iface ${network_device_name} inet6 dhcp"; } > /etc/network/interfaces.d/static
 
-    echo "allow-hotplug ${WIFI_INTERFACE}" > /etc/network/interfaces.d/wifi
-    echo "iface ${WIFI_INTERFACE} inet manual" >> /etc/network/interfaces.d/wifi
-    echo "  wpa-roam $WIFI_CONFIG" >> /etc/network/interfaces.d/wifi
+    { echo "allow-hotplug ${WIFI_INTERFACE}";
+      echo "iface ${WIFI_INTERFACE} inet manual";
+      echo "  wpa-roam $WIFI_CONFIG";
+      echo "iface ${WIFI_INTERFACE} inet6 manual";
+      echo "  wpa-roam $WIFI_CONFIG"; } > /etc/network/interfaces.d/wifi
 
     wifi_static_network_interface
 
@@ -420,11 +435,14 @@ function networks_from_file {
         network_device_name='enp3s0'
     fi
 
-    echo "allow-hotplug ${network_device_name}" > /etc/network/interfaces.d/static
-    echo "iface ${network_device_name} inet dhcp" >> /etc/network/interfaces.d/static
+    { echo "allow-hotplug ${network_device_name}";
+      echo "iface ${network_device_name} inet dhcp";
+      echo "iface ${network_device_name} inet6 dhcp"; } > /etc/network/interfaces.d/static
 
     { echo "allow-hotplug ${WIFI_INTERFACE}";
       echo "iface ${WIFI_INTERFACE} inet manual";
+      echo "  wpa-roam $WIFI_CONFIG";
+      echo "iface ${WIFI_INTERFACE} inet6 manual";
       echo "  wpa-roam $WIFI_CONFIG"; } > /etc/network/interfaces.d/wifi
 
     wifi_static_network_interface
