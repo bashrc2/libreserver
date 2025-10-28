@@ -286,6 +286,12 @@ function enable_ipv6 {
     # https://en.wikipedia.org/wiki/DHCPv6
     firewall_add dhcpv6 546 udp
 
+    # allow icmp for ipv6
+    if grep -q 'drop icmp ipv6' /etc/nftables.conf; then
+        sed -i '/drop icmp ipv6/d' /etc/nftables.conf
+        reload_firewall
+    fi
+
     # endure that ipv6 is enabled and can route
     if grep -q 'net.ipv6.conf.all.disable_ipv6' /etc/sysctl.conf; then
         sed -i 's/net.ipv6.conf.all.disable_ipv6.*/net.ipv6.conf.all.disable_ipv6 = 0/g' /etc/sysctl.conf
@@ -310,6 +316,11 @@ function disable_ipv6 {
     sed -i "s/net.ipv6.conf.all.forwarding.*/net.ipv6.conf.all.forwarding=0/g" /etc/sysctl.conf
     echo 0 > /proc/sys/net/ipv6/conf/all/forwarding
     firewall_remove dhcpv6 546
+    # drop icmp for ipv6
+    if ! grep -q 'drop icmp ipv6' /etc/nftables.conf; then
+        sed -i '/ip protocol icmp counter drop/a ip6 nexthdr icmpv6 icmpv6 type echo-request drop comment "drop icmp ipv6"' /etc/nftables.conf
+        reload_firewall
+    fi
 }
 
 function firewall_disable_vpn {
@@ -524,7 +535,6 @@ function configure_firewall_base {
       echo '        ct state invalid counter drop comment "drop invalid packets"';
       echo '';
       echo '        ip protocol icmp counter drop comment "drop icmp ipv4"';
-      echo '        ip6 nexthdr icmpv6 icmpv6 type echo-request drop comment "drop icmp ipv6"';
       echo '';
       echo '        tcp dport { 80, 443 } ct state new accept';
       echo '        tcp dport { 2222 } ip saddr { 192.168.1.0/24, 192.168.2.0/24, 192.168.10.0/24 } ct state new accept comment "allow local ssh ipv4"';

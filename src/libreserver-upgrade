@@ -75,6 +75,12 @@ source "/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-xmpp"
 rename_config_param "LOCAL_NETWORK_STATIC_IP_ADDRESS" "LOCAL_NETWORK_STATIC_IPv4_ADDRESS"
 rename_config_param "ROUTER_IP_ADDRESS" "ROUTER_IPv4_ADDRESS"
 
+# allow icmp for ipv6
+if grep -q 'drop icmp ipv6' /etc/nftables.conf; then
+    sed -i '/drop icmp ipv6/d' /etc/nftables.conf
+    reload_firewall
+fi
+
 read_config_param PROJECT_REPO
 if [[ "$PROJECT_REPO" == *"github.com/bashrc2/${PROJECT_NAME}" || "$PROJECT_REPO" == *"libreserver.org"* ]]; then
     PROJECT_REPO=$DEFAULT_PROJECT_REPO
