@@ -53,6 +53,8 @@ configuration_variables=(SYSTEM_TYPE
                          DDNS_PASSWORD
                          LOCAL_NETWORK_STATIC_IPv4_ADDRESS
                          ROUTER_IPv4_ADDRESS
+                         LOCAL_NETWORK_STATIC_IPv6_ADDRESS
+                         ROUTER_IPv6_ADDRESS
                          CPU_CORES
                          WEBSERVER_LOG_LEVEL
                          ROUTE_THROUGH_TOR
