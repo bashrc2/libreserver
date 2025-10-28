@@ -11,7 +11,7 @@
 // License
 // =======
 //
-// Copyright (C) 2019 Bob Mottram <bob@libreserver.org>
+// Copyright (C) 2019-2025 Bob Mottram <bob@libreserver.org>
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -28,7 +28,7 @@
 
 include dirname(__FILE__)."/common.php";
 
-$output_filename = "settings_communitynetwork.html";
+$output_filename = "";
 
 if (php_sapi_name()!=='fpm-fcgi') exit('php script must be run from the web interface');
 
@@ -42,13 +42,27 @@ if (isset($_POST['submitip'])) {
         if($confirm == "1") {
             if(filter_string('ip_address')) {
                 $ip_address = trim(htmlspecialchars($_POST['ip_address']));
-                if (filter_var($ip_address, FILTER_VALIDATE_IP)) {
+                if (filter_var($ip_address, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
                     if(filter_string('gateway_ip')) {
                         $gateway_ip = trim(htmlspecialchars($_POST['gateway_ip']));
-                        if (filter_var($ip_address, FILTER_VALIDATE_IP)) {
+                        if (filter_var($ip_address, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
                             $ip_address_file = fopen(".static_ip_address.txt", "w") or die("Unable to create static_ip_address file");
                             fwrite($ip_address_file, $ip_address.",".$gateway_ip);
                             fclose($ip_address_file);
+                        }
+                    }
+                }
+            }
+
+            if(filter_string('ipv6_address')) {
+                $ipv6_address = trim(htmlspecialchars($_POST['ipv6_address']));
+                if (filter_var($ipv6_address, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+                    if(filter_string('gateway_ipv6')) {
+                        $gateway_ipv6 = trim(htmlspecialchars($_POST['gateway_ipv6']));
+                        if (filter_var($ipv6_address, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+                            $ipv6_address_file = fopen(".static_ip_address.txt", "w") or die("Unable to create static_ip_address file");
+                            fwrite($ipv6_address_file, $ipv6_address.",".$gateway_ipv6);
+                            fclose($ipv6_address_file);
                         }
                     }
                 }
