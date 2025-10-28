@@ -81,6 +81,13 @@ if grep -q 'drop icmp ipv6' /etc/nftables.conf; then
     reload_firewall
 fi
 
+# remove static interfaces settings if dynamic exists
+if [ -f /etc/network/interfaces.d/dynamic ]; then
+    if [ -f /etc/network/interfaces.d/static ]; then
+        rm /etc/network/interfaces.d/static
+    fi
+fi
+
 read_config_param PROJECT_REPO
 if [[ "$PROJECT_REPO" == *"github.com/bashrc2/${PROJECT_NAME}" || "$PROJECT_REPO" == *"libreserver.org"* ]]; then
     PROJECT_REPO=$DEFAULT_PROJECT_REPO
