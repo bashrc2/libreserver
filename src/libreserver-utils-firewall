@@ -309,7 +309,7 @@ function enable_ipv6 {
 }
 
 function disable_ipv6 {
-    # endure that ipv6 is enabled and can route
+    # ensure that ipv6 is disabled and can't route
     sed -i 's/net.ipv6.conf.all.disable_ipv6.*/net.ipv6.conf.all.disable_ipv6 = 1/g' /etc/sysctl.conf
     # sed -i "s/net.ipv6.conf.all.accept_redirects.*/net.ipv6.conf.all.accept_redirects = 0/g" /etc/sysctl.conf
     # sed -i "s/net.ipv6.conf.all.accept_source_route.*/net.ipv6.conf.all.accept_source_route = 0/g" /etc/sysctl.conf
@@ -534,7 +534,8 @@ function configure_firewall_base {
       echo '';
       echo '        ct state invalid counter drop comment "drop invalid packets"';
       echo '';
-      echo '        ip protocol icmp counter drop comment "drop icmp ipv4"';
+      echo '        icmp type { echo-request, echo-reply } limit rate 4/second accept';
+      echo '        icmpv6 type { echo-request, echo-reply } limit rate 4/second accept';
       echo '';
       echo '        tcp dport { 80, 443 } ct state new accept';
       echo '        tcp dport { 2222 } ip saddr { 192.168.1.0/24, 192.168.2.0/24, 192.168.10.0/24 } ct state new accept comment "allow local ssh ipv4"';
@@ -732,15 +733,15 @@ function configure_internet_protocol {
     fi
 
     if grep -q "net.ipv6.conf.all.accept_ra" /etc/sysctl.conf; then
-        sed -i "s/net.ipv6.conf.all.accept_ra.*/net.ipv6.conf.all.accept_ra=0/g" /etc/sysctl.conf
+        sed -i "s/net.ipv6.conf.all.accept_ra.*/net.ipv6.conf.all.accept_ra=1/g" /etc/sysctl.conf
     else
-        echo "net.ipv6.conf.all.accept_ra=0" >> /etc/sysctl.conf
+        echo "net.ipv6.conf.all.accept_ra=1" >> /etc/sysctl.conf
     fi
 
     if grep -q "net.ipv6.conf.default.accept_ra" /etc/sysctl.conf; then
-        sed -i "s/net.ipv6.conf.default.accept_ra.*/net.ipv6.conf.default.accept_ra=0/g" /etc/sysctl.conf
+        sed -i "s/net.ipv6.conf.default.accept_ra.*/net.ipv6.conf.default.accept_ra=1/g" /etc/sysctl.conf
     else
-        echo "net.ipv6.conf.default.accept_ra=0" >> /etc/sysctl.conf
+        echo "net.ipv6.conf.default.accept_ra=1" >> /etc/sysctl.conf
     fi
 
     # ipv6 privacy mode
@@ -769,9 +770,9 @@ function configure_internet_protocol {
     fi
 
     if grep -q "net.ipv6.icmp.ratelimit" /etc/sysctl.conf; then
-        sed -i "s/net.ipv6.icmp.ratelimit.*/net.ipv6.icmp.ratelimit=1/g" /etc/sysctl.conf
+        sed -i "s/net.ipv6.icmp.ratelimit.*/net.ipv6.icmp.ratelimit=1000/g" /etc/sysctl.conf
     else
-        echo "net.ipv6.icmp.ratelimit=1" >> /etc/sysctl.conf
+        echo "net.ipv6.icmp.ratelimit=1000" >> /etc/sysctl.conf
     fi
 
     # ipv6 routing
@@ -974,10 +975,14 @@ function configure_internet_protocol {
         echo "net.ipv6.conf.all.forwarding=1" >> /etc/sysctl.conf
     fi
 
-    if ! grep -q "ignore pings" /etc/sysctl.conf; then
-        echo '# ignore pings' >> /etc/sysctl.conf
-        echo 'net.ipv4.icmp_echo_ignore_all = 1' >> /etc/sysctl.conf
-        #echo 'net.ipv6.icmp_echo_ignore_all = 1' >> /etc/sysctl.conf
+    if ! grep -q "net.ipv4.icmp_echo_ignore_all" /etc/sysctl.conf; then
+        echo '# allow pings' >> /etc/sysctl.conf
+        echo 'net.ipv4.icmp_echo_ignore_all = 0' >> /etc/sysctl.conf
+    else
+        if grep -q "ignore pings" /etc/sysctl.conf; then
+            sed -i '/ignore pings/d' /etc/sysctl.conf
+        fi
+        sed -i 's|net.ipv4.icmp_echo_ignore_all.*|net.ipv4.icmp_echo_ignore_all = 0|g' /etc/sysctl.conf
     fi
     if ! grep -q "net.ipv6.conf.all.disable_ipv6" /etc/sysctl.conf; then
         echo '# enable ipv6' >> /etc/sysctl.conf
