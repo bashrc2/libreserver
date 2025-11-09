@@ -50,14 +50,14 @@ done
 USERNAME="$1"
 NEW_PASSWORD="$2"
 
-if [ ! "$USERNAME" ]; then
+if [ ! "${USERNAME}" ]; then
     exit 63
 fi
-if [ ! -d "/home/$USERNAME" ]; then
-    echo $"User $USERNAME not found"
+if [ ! -d "/home/${USERNAME}" ]; then
+    echo $"User ${USERNAME} not found"
     exit 54
 fi
-if [ ! "$NEW_PASSWORD" ]; then
+if [ ! "${NEW_PASSWORD}" ]; then
     echo $"No password was given for ${PROJECT_NAME}-chpasswd"
     exit 56
 fi
@@ -69,9 +69,11 @@ app_index=0
 for app_name in ${APPS_INSTALLED[@]}
 do
     if [[ ${APPS_INSTALLED[$app_index]} == "1" ]]; then
-        "change_password_${app_name}" "$USERNAME" "$NEW_PASSWORD"
+        "change_password_${app_name}" "${USERNAME}" "${NEW_PASSWORD}"
     fi
     app_index=$((app_index+1))
 done
+
+echo -n "${USERNAME}:${NEW_PASSWORD}" | /usr/sbin/chpasswd
 
 exit 0
