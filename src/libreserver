@@ -65,13 +65,13 @@ else
     fi
 fi
 
-if [ ! $installing_on_debian ]; then
+if [ ! ${installing_on_debian} ]; then
     if [ -f /etc/apt/sources.list.d/armbian.sources ]; then
         installing_on_debian=1
     fi
 fi
 
-if [ ! $installing_on_debian ]; then
+if [ ! ${installing_on_debian} ]; then
     if [ ! -f /etc/apt/sources.list ]; then
         echo $'/etc/apt/sources.list is missing.'
     fi
@@ -125,7 +125,7 @@ else
 fi
 
 if [[ "$command_options" == "menuconfig"* ]]; then
-    if [[ $MENUCONFIG_NONINTERACTIVE == 'no' ]]; then
+    if [[ ${MENUCONFIG_NONINTERACTIVE} == 'no' ]]; then
         if [ ! -d /home/admin ]; then
             echo $"First create an admin account with '/usr/sbin/adduser admin'."
             exit 0
@@ -133,7 +133,7 @@ if [[ "$command_options" == "menuconfig"* ]]; then
     fi
 fi
 
-if [[ "$command_options" == "menuconfig-full" ]]; then
+if [[ "${command_options}" == "menuconfig-full" ]]; then
     MINIMAL_INSTALL="no"
 fi
 
@@ -145,7 +145,7 @@ if [[ "${CONFIGURATION_FILE}" != "/root/${PROJECT_NAME}.cfg" ]]; then
 fi
 CONFIGURATION_FILE="/root/${PROJECT_NAME}.cfg"
 
-if [[ "$command_options" == "menuconfig-onion" ]]; then
+if [[ "${command_options}" == "menuconfig-onion" ]]; then
     echo $"onion version"
     MINIMAL_INSTALL="yes"
     ONION_ONLY="yes"
@@ -174,7 +174,7 @@ COMPLETION_FILE="/root/${PROJECT_NAME}-completed.txt"
 #function_check setup_wifi_atheros
 #setup_wifi_atheros
 
-if [[ "$command_options" == "menuconfig"* ]]; then
+if [[ "${command_options}" == "menuconfig"* ]]; then
     if [[ "$2" == "--reset" ]]; then
         if [ -f "${CONFIGURATION_FILE}" ]; then
             rm "${CONFIGURATION_FILE}"
@@ -192,18 +192,18 @@ if [[ "$command_options" == "menuconfig"* ]]; then
 
     # clear the interactive file which indicates configuration success
     interactive_file="$HOME/.${PROJECT_NAME}-interactive"
-    if [ -f "$interactive_file" ]; then
-        rm "$interactive_file"
+    if [ -f "${interactive_file}" ]; then
+        rm "${interactive_file}"
     fi
 
     function_check interactive_configuration
     interactive_configuration
 
     # check that the interactive file was created
-    if [ ! -f "$interactive_file" ]; then
+    if [ ! -f "${interactive_file}" ]; then
         exit 63
     fi
-    rm "$interactive_file"
+    rm "${interactive_file}"
 else
     while [ $# -gt 0 ]
     do
@@ -368,7 +368,7 @@ else
 fi
 
 function parse_args {
-    if [[ $NO_OF_ARGS == 0 ]]; then
+    if [[ ${NO_OF_ARGS} == 0 ]]; then
         echo 'no_of_args = 0'
         show_help
         exit 0
@@ -412,13 +412,13 @@ function parse_args {
         fi
     fi
 
-    if [ ! "$SYSTEM_TYPE" ]; then
+    if [ ! "${SYSTEM_TYPE}" ]; then
         SYSTEM_TYPE=$'full'
         write_config_param "SYSTEM_TYPE" "${SYSTEM_TYPE}"
     fi
 
     if [[ $(is_valid_variant) == "0" ]]; then
-        echo $"'$SYSTEM_TYPE' is an unrecognised ${PROJECT_NAME} variant. Possible variants are:"
+        echo $"'${SYSTEM_TYPE}' is an unrecognised ${PROJECT_NAME} variant. Possible variants are:"
         show_available_variants
         exit 36
     fi
@@ -434,7 +434,7 @@ function finish_manual_install {
         if [ -f /root/login.txt ]; then
             if ! grep -q 'manual_install_changed_admin_password' "${COMPLETION_FILE}"; then
                 ADMIN_USER=$(get_completion_param "Admin user")
-                if [ ! "$ADMIN_USER" ]; then
+                if [ ! "${ADMIN_USER}" ]; then
                     ADMIN_USER='admin'
                 fi
                 echo -n "${ADMIN_USER}:$(cat /root/login.txt)" | /usr/sbin/chpasswd
@@ -516,7 +516,7 @@ function_check setup_web
 setup_web
 
 function_check setup_apps
-setup_apps "$command_options"
+setup_apps "${command_options}"
 
 function_check install_web_admin
 install_web_admin
@@ -525,7 +525,7 @@ function_check install_wireguard
 install_wireguard
 
 if [ -f "${IMAGE_PASSWORD_FILE}" ]; then
-    simplebackup_password=$(cat "$IMAGE_PASSWORD_FILE")
+    simplebackup_password=$(cat "${IMAGE_PASSWORD_FILE}")
     if [ "${simplebackup_password}" ]; then
         echo "Setting password for simple backup"
         ${PROJECT_NAME}-pass -u admin -a simplebackup -p "${simplebackup_password}"
@@ -561,11 +561,11 @@ store_drives_baseline
 
 # add basic authentication to webadmin
 nginx_config_filename=/etc/nginx/sites-available/foo.local
-if [ -f "$nginx_config_filename" ]; then
-    if grep -q "#auth_basic" "$nginx_config_filename"; then
+if [ -f "${nginx_config_filename}" ]; then
+    if grep -q "#auth_basic" "${nginx_config_filename}"; then
         echo "Enabling basic auth on webadmin"
         cat /root/login.txt | htpasswd -i -s -c /etc/nginx/.webadminpasswd admin
-        sed -i 's|#auth_basic|auth_basic|g' "$nginx_config_filename"
+        sed -i 's|#auth_basic|auth_basic|g' "${nginx_config_filename}"
         systemctl restart nginx
     fi
 fi
