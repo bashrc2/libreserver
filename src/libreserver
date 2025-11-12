@@ -92,7 +92,7 @@ fi
 source $PROJECT_INSTALL_DIR/${PROJECT_NAME}-vars
 
 UTILS_FILES="/usr/share/${PROJECT_NAME}/utils/${PROJECT_NAME}-utils-*"
-for f in $UTILS_FILES
+for f in ${UTILS_FILES}
 do
     source "$f"
 done
@@ -100,7 +100,7 @@ done
 increment_install_progress "Running ${PROJECT_NAME} command"
 
 APP_FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
-for f in $APP_FILES
+for f in ${APP_FILES}
 do
     source "$f"
     increment_install_progress "source $f"
