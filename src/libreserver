@@ -72,6 +72,9 @@ if [ ! $installing_on_debian ]; then
 fi
 
 if [ ! $installing_on_debian ]; then
+    if [ ! -f /etc/apt/sources.list ]; then
+        echo $'/etc/apt/sources.list is missing.'
+    fi
     echo $'You should only run this on a Debian Trixie based system'
     exit 0
 fi
