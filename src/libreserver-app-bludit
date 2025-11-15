@@ -64,7 +64,7 @@ function bludit_update_domain_name_users {
 function run_client_bludit {
     BLUDITDOMAIN=
     if [ ! -f ~/.bludit_domain_name ]; then
-        if [ ! "$BLUDIT_DOMAIN_NAME" ]; then
+        if [ ! "${BLUDIT_DOMAIN_NAME}" ]; then
             read_config_param 'BLUDIT_DOMAIN_NAME'
             BLUDITDOMAIN="${BLUDIT_DOMAIN_NAME}"
         fi
@@ -92,12 +92,12 @@ function upgrade_distro_bludit {
 }
 
 function bludit_remove_bad_links {
-    bludit_domain=$BLUDIT_DOMAIN_NAME
+    bludit_domain=${BLUDIT_DOMAIN_NAME}
     if [[ "$ONION_ONLY" != 'no' ]]; then
         bludit_domain=$(cat /var/lib/tor/hidden_service_bludit/hostname)
     fi
 
-    if [ ! "$BLUDIT_DOMAIN_NAME" ]; then
+    if [ ! "${BLUDIT_DOMAIN_NAME}" ]; then
         read_config_param BLUDIT_DOMAIN_NAME
     fi
     bludit_path="/var/www/${BLUDIT_DOMAIN_NAME}/htdocs"
@@ -130,7 +130,7 @@ function add_user_bludit {
     new_username="$1"
     new_user_password="$2"
 
-    if [ ! "$BLUDIT_DOMAIN_NAME" ]; then
+    if [ ! "${BLUDIT_DOMAIN_NAME}" ]; then
         read_config_param 'BLUDIT_DOMAIN_NAME'
     fi
 
@@ -161,7 +161,7 @@ function install_interactive_bludit {
 
     if [[ "$ONION_ONLY" != "no" ]]; then
         BLUDIT_DOMAIN_NAME='bludit.local'
-        write_config_param "BLUDIT_DOMAIN_NAME" "$BLUDIT_DOMAIN_NAME"
+        write_config_param "BLUDIT_DOMAIN_NAME" "${BLUDIT_DOMAIN_NAME}"
     else
         interactive_site_details "bludit" "BLUDIT_DOMAIN_NAME" "BLUDIT_CODE"
     fi
@@ -312,7 +312,7 @@ function restore_local_bludit {
         return
     fi
     BLUDIT_DOMAIN_NAME=$(get_completion_param "bludit domain")
-    if [ "$BLUDIT_DOMAIN_NAME" ]; then
+    if [ "${BLUDIT_DOMAIN_NAME}" ]; then
         temp_restore_dir=/root/tempbludit
         bludit_dir=/var/www/${BLUDIT_DOMAIN_NAME}/htdocs
 
@@ -352,14 +352,14 @@ function remove_bludit {
         rm /etc/cron.hourly/gemini-blog
     fi
 
-    nginx_dissite "$BLUDIT_DOMAIN_NAME"
-    remove_certs "$BLUDIT_DOMAIN_NAME"
+    nginx_dissite "${BLUDIT_DOMAIN_NAME}"
+    remove_certs "${BLUDIT_DOMAIN_NAME}"
 
-    if [ -d "/var/www/$BLUDIT_DOMAIN_NAME" ]; then
-        rm -rf "/var/www/$BLUDIT_DOMAIN_NAME"
+    if [ -d "/var/www/${BLUDIT_DOMAIN_NAME}" ]; then
+        rm -rf "/var/www/${BLUDIT_DOMAIN_NAME}"
     fi
-    if [ -f "/etc/nginx/sites-available/$BLUDIT_DOMAIN_NAME" ]; then
-        rm "/etc/nginx/sites-available/$BLUDIT_DOMAIN_NAME"
+    if [ -f "/etc/nginx/sites-available/${BLUDIT_DOMAIN_NAME}" ]; then
+        rm "/etc/nginx/sites-available/${BLUDIT_DOMAIN_NAME}"
     fi
     remove_onion_service bludit ${BLUDIT_ONION_PORT}
     if grep -q "bludit" /etc/crontab; then
@@ -370,7 +370,7 @@ function remove_bludit {
     remove_completion_param install_bludit
     sed -i '/bludit/d' "$COMPLETION_FILE"
 
-    remove_ddns_domain "$BLUDIT_DOMAIN_NAME"
+    remove_ddns_domain "${BLUDIT_DOMAIN_NAME}"
 }
 
 function install_bludit {
@@ -382,7 +382,7 @@ function install_bludit {
 
     INSTALL_PACKAGES memcached php-memcached php-intl ruby-mini-exiftool libfcgi0t64
 
-    if [ ! "$BLUDIT_DOMAIN_NAME" ]; then
+    if [ ! "${BLUDIT_DOMAIN_NAME}" ]; then
         echo $'No domain name was given for bludit'
         exit 35
     fi
@@ -396,7 +396,7 @@ function install_bludit {
 
     bludit_install_from_download
 
-    add_ddns_domain "$BLUDIT_DOMAIN_NAME"
+    add_ddns_domain "${BLUDIT_DOMAIN_NAME}"
 
     increment_app_install_progress
 
@@ -405,21 +405,21 @@ function install_bludit {
     increment_app_install_progress
 
     crawlers_list=$(get_web_crawlers)
-    bludit_nginx_site=/etc/nginx/sites-available/$BLUDIT_DOMAIN_NAME
+    bludit_nginx_site=/etc/nginx/sites-available/${BLUDIT_DOMAIN_NAME}
     if [[ "$ONION_ONLY" == "no" ]]; then
-        nginx_http_redirect "$BLUDIT_DOMAIN_NAME" "index index.php"
+        nginx_http_redirect "${BLUDIT_DOMAIN_NAME}" "index index.php"
         { echo 'server {';
           echo '  listen 443 ssl;';
           echo '  listen [::]:443 ssl;';
-          echo "  server_name $BLUDIT_DOMAIN_NAME;";
+          echo "  server_name ${BLUDIT_DOMAIN_NAME};";
           echo '  server_tokens off;';
           echo ''; } >> "$bludit_nginx_site"
-        nginx_compress "$BLUDIT_DOMAIN_NAME"
+        nginx_compress "${BLUDIT_DOMAIN_NAME}"
         echo '' >> "$bludit_nginx_site"
         echo '  # Security' >> "$bludit_nginx_site"
-        nginx_ssl "$BLUDIT_DOMAIN_NAME"
+        nginx_ssl "${BLUDIT_DOMAIN_NAME}"
 
-        nginx_security_options "$BLUDIT_DOMAIN_NAME"
+        nginx_security_options "${BLUDIT_DOMAIN_NAME}"
 
         { echo '  add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
           echo "  add_header Onion-Location http://${BLUDIT_ONION_HOSTNAME}\$request_uri;";
@@ -441,7 +441,7 @@ function install_bludit {
           echo '  error_log /dev/null;';
           echo '';
           echo '  # Root';
-          echo "  root /var/www/$BLUDIT_DOMAIN_NAME/htdocs;";
+          echo "  root /var/www/${BLUDIT_DOMAIN_NAME}/htdocs;";
           echo '';
           echo '  location ~ \.(jpg|jpeg|gif|png|css|js|ico|svg|eot|ttf|woff|woff2|otf)$ {';
           echo '    access_log        off;';
@@ -457,7 +457,7 @@ function install_bludit {
           echo '';
           echo '  # Location';
           echo '  location / {'; } >> "$bludit_nginx_site"
-        nginx_limits "$BLUDIT_DOMAIN_NAME" '15m'
+        nginx_limits "${BLUDIT_DOMAIN_NAME}" '15m'
         { echo "    try_files \$uri \$uri/ /index.php?\$args;";
           echo '  }';
           echo '';
@@ -475,9 +475,9 @@ function install_bludit {
       echo "    server_name $BLUDIT_ONION_HOSTNAME;";
       echo '    server_tokens off;';
       echo ''; } >> "$bludit_nginx_site"
-    nginx_compress "$BLUDIT_DOMAIN_NAME"
+    nginx_compress "${BLUDIT_DOMAIN_NAME}"
     echo '' >> "$bludit_nginx_site"
-    nginx_security_options "$BLUDIT_DOMAIN_NAME"
+    nginx_security_options "${BLUDIT_DOMAIN_NAME}"
     { echo '';
       echo '  # Logs';
       echo '  access_log /dev/null;';
@@ -496,7 +496,7 @@ function install_bludit {
       echo '  }';
       echo '';
       echo '  # Root';
-      echo "  root /var/www/$BLUDIT_DOMAIN_NAME/htdocs;";
+      echo "  root /var/www/${BLUDIT_DOMAIN_NAME}/htdocs;";
       echo '';
       echo '  location ~ \.(jpg|jpeg|gif|png|css|js|ico|svg|eot|ttf|woff|woff2|otf)$ {';
       echo '    access_log        off;';
@@ -512,7 +512,7 @@ function install_bludit {
       echo '';
       echo '  # Location';
       echo '  location / {'; } >> "$bludit_nginx_site"
-    nginx_limits "$BLUDIT_DOMAIN_NAME" '15m'
+    nginx_limits "${BLUDIT_DOMAIN_NAME}" '15m'
     { echo "    try_files \$uri \$uri/ index.php?\$args;";
       echo '  }';
       echo '';
@@ -531,9 +531,9 @@ function install_bludit {
           echo "    server_name $BLUDIT_I2P_HOSTNAME;";
           echo '    server_tokens off;';
           echo ''; } >> "$bludit_nginx_site"
-        nginx_compress "$BLUDIT_DOMAIN_NAME"
+        nginx_compress "${BLUDIT_DOMAIN_NAME}"
         echo '' >> "$bludit_nginx_site"
-        nginx_security_options "$BLUDIT_DOMAIN_NAME"
+        nginx_security_options "${BLUDIT_DOMAIN_NAME}"
         { echo '';
           echo '  # Logs';
           echo '  access_log /dev/null;';
@@ -552,7 +552,7 @@ function install_bludit {
           echo '  }';
           echo '';
           echo '  # Root';
-          echo "  root /var/www/$BLUDIT_DOMAIN_NAME/htdocs;";
+          echo "  root /var/www/${BLUDIT_DOMAIN_NAME}/htdocs;";
           echo '';
           echo '  location ~ \.(jpg|jpeg|gif|png|css|js|ico|svg|eot|ttf|woff|woff2|otf)$ {';
           echo '    access_log        off;';
@@ -568,7 +568,7 @@ function install_bludit {
           echo '';
           echo '  # Location';
           echo '  location / {'; } >> "$bludit_nginx_site"
-        nginx_limits "$BLUDIT_DOMAIN_NAME" '15m'
+        nginx_limits "${BLUDIT_DOMAIN_NAME}" '15m'
         { echo "    try_files \$uri \$uri/ index.php?\$args;";
           echo '  }';
           echo '';
@@ -586,9 +586,9 @@ function install_bludit {
 
     increment_app_install_progress
 
-    create_site_certificate "$BLUDIT_DOMAIN_NAME" 'yes'
+    create_site_certificate "${BLUDIT_DOMAIN_NAME}" 'yes'
 
-    nginx_ensite "$BLUDIT_DOMAIN_NAME"
+    nginx_ensite "${BLUDIT_DOMAIN_NAME}"
 
     # shellcheck disable=SC2086
     systemctl restart php${PHP_VERSION}-fpm
@@ -596,8 +596,8 @@ function install_bludit {
 
     increment_app_install_progress
 
-    "${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a bludit -p "$BLUDIT_ADMIN_PASSWORD"
-    set_completion_param "bludit domain" "$BLUDIT_DOMAIN_NAME"
+    "${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a bludit -p "${BLUDIT_ADMIN_PASSWORD}"
+    set_completion_param "bludit domain" "${BLUDIT_DOMAIN_NAME}"
 
     increment_app_install_progress
 
