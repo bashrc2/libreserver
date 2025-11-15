@@ -77,9 +77,9 @@ function run_client_bludit {
     fi
     clear
     if [[ "${BLUDITDOMAIN}" != *".onion" && "${BLUDITDOMAIN}" != *".i2p" ]]; then
-        lynx -socks5_proxy=127.0.0.1:9050 "https://${BLUDITDOMAIN}/admin"
+        lynx -socks5_proxy=127.0.0.1:9050 "https://${BLUDITDOMAIN}"
     else
-        lynx -socks5_proxy=127.0.0.1:9050 "http://${BLUDITDOMAIN}/admin"
+        lynx -socks5_proxy=127.0.0.1:9050 "http://${BLUDITDOMAIN}"
     fi
 }
 
