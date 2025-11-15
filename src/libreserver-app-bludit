@@ -51,7 +51,7 @@ function bludit_update_domain_name_users {
     # updates the domain name for each user account
     # so that the desktop client knows its domain
     bludit_domain=${BLUDIT_DOMAIN_NAME}
-    if [[ "${ONION_ONLY}" != 'no' ]]; then
+    if [ -f /var/lib/tor/hidden_service_bludit/hostname ]; then
         bludit_domain=$(cat /var/lib/tor/hidden_service_bludit/hostname)
     fi
     for d in /home/*/ ; do
@@ -139,10 +139,8 @@ function add_user_bludit {
     fi
 
     bludit_domain=${BLUDIT_DOMAIN_NAME}
-    extraParams=
-    if [[ "$ONION_ONLY" != 'no' ]]; then
+    if [ -f /var/lib/tor/hidden_service_bludit/hostname ]; then
         bludit_domain=$(cat /var/lib/tor/hidden_service_bludit/hostname)
-        extraParams='--http'
     fi
 
     echo "${bludit_domain}" > "/home/${new_username}/.bludit_domain_name"
