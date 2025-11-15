@@ -76,7 +76,7 @@ function run_client_epicyon {
     fi
     EPICYONDOMAIN=$(cat ~/.epicyon_domain_name)
     clear
-    if [[ "${EPICYONDOMAIN}" != *".onion" ]]; then
+    if [[ "${EPICYONDOMAIN}" != *".onion" && "${EPICYONDOMAIN}" != *".i2p" ]]; then
         lynx -socks5_proxy=127.0.0.1:9050 "https://${EPICYONDOMAIN}"
     else
         lynx -socks5_proxy=127.0.0.1:9050 "http://${EPICYONDOMAIN}"

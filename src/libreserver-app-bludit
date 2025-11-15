@@ -47,6 +47,42 @@ bludit_variables=(ONION_ONLY
                   DDNS_PROVIDER
                   MY_USERNAME)
 
+function bludit_update_domain_name_users {
+    # updates the domain name for each user account
+    # so that the desktop client knows its domain
+    bludit_domain=${BLUDIT_DOMAIN_NAME}
+    if [[ "${ONION_ONLY}" != 'no' ]]; then
+        bludit_domain=$(cat /var/lib/tor/hidden_service_bludit/hostname)
+    fi
+    for d in /home/*/ ; do
+        USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+        echo -n "${bludit_domain}" > "/home/${USERNAME}/.bludit_domain_name"
+        chown "${USERNAME}":"${USERNAME}" "/home/${USERNAME}/.bludit_domain_name"
+    done
+}
+
+function run_client_bludit {
+    BLUDITDOMAIN=
+    if [ ! -f ~/.bludit_domain_name ]; then
+        if [ ! "$BLUDIT_DOMAIN_NAME" ]; then
+            read_config_param 'BLUDIT_DOMAIN_NAME'
+            BLUDITDOMAIN="${BLUDIT_DOMAIN_NAME}"
+        fi
+        return
+    else
+        BLUDITDOMAIN=$(cat ~/.bludit_domain_name)
+    fi
+    if [ ! "${BLUDITDOMAIN}" ]; then
+        return
+    fi
+    clear
+    if [[ "${BLUDITDOMAIN}" != *".onion" && "${BLUDITDOMAIN}" != *".i2p" ]]; then
+        lynx -socks5_proxy=127.0.0.1:9050 "https://${BLUDITDOMAIN}/admin"
+    else
+        lynx -socks5_proxy=127.0.0.1:9050 "http://${BLUDITDOMAIN}/admin"
+    fi
+}
+
 function upgrade_distro_bludit {
     target_distro="$1"
 
@@ -94,9 +130,29 @@ function add_user_bludit {
     new_username="$1"
     new_user_password="$2"
 
-    # TODO: add user
+    if [ ! "$BLUDIT_DOMAIN_NAME" ]; then
+        read_config_param 'BLUDIT_DOMAIN_NAME'
+    fi
+
+    if [ ! "$ONION_ONLY" ]; then
+        read_config_param 'ONION_ONLY'
+    fi
+
+    bludit_domain=${BLUDIT_DOMAIN_NAME}
+    extraParams=
+    if [[ "$ONION_ONLY" != 'no' ]]; then
+        bludit_domain=$(cat /var/lib/tor/hidden_service_bludit/hostname)
+        extraParams='--http'
+    fi
+
+    echo "${bludit_domain}" > "/home/${new_username}/.bludit_domain_name"
+    chown "${new_username}":"${new_username}" "/home/${new_username}/.bludit_domain_name"
+
+    # TODO: add user within bludit
+
     # See users.class.php function add($args)
     "${PROJECT_NAME}-pass" -u "$new_username" -a bludit -p "$new_user_password"
+
     echo '0'
 }
 
@@ -196,6 +252,7 @@ function upgrade_bludit {
     fi
 
     convert_blog_to_gemini
+    bludit_update_domain_name_users
 
     if [ ! "$BLUDIT_VERSION" ]; then
         return
@@ -561,6 +618,7 @@ function install_bludit {
     chown -R www-data:www-data "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs"
 
     convert_blog_to_gemini
+    bludit_update_domain_name_users
 
     chmod g+w "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs"
     chown -R www-data:www-data "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs"
