@@ -24,6 +24,20 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# add a title to the accounts list page
+if [ -f "/var/gemini/blog/accounts/title.txt" ]; then
+    # use a custom title for the accounts list page
+    cp "/var/gemini/blog/accounts/title.txt" "/var/gemini/blog/accounts/index.gmi"
+else
+    { echo '``` title';
+      echo ' ___ ___ _____| |___ ___';
+      echo '| . | -_|     | | . | . |';
+      echo '|_  |___|_|_|_|_|___|_  |';
+      echo '|___|               |___|';
+      echo '';
+      echo '```'; } > "/var/gemini/blog/accounts/index.gmi"
+fi
+
 for d in /etc/epicyon/accounts/*/ ; do
     handle=$(echo "$d" | awk -F '/' '{print $5}')
     if [[ "$handle" != *"@"* ]]; then
@@ -39,12 +53,15 @@ for d in /etc/epicyon/accounts/*/ ; do
     if [ ! -d "/var/gemini/blog/accounts/$USERNAME" ]; then
         mkdir -p "/var/gemini/blog/accounts/$USERNAME"
     fi
+    # update the accounts list page
+    echo "=> $USERNAME/index.gmi $USERNAME" >> "/var/gemini/blog/accounts/index.gmi"
+
     # copy blog files for this account
     cp -r "/etc/epicyon/accounts/$handle/gemini"/* "/var/gemini/blog/accounts/$USERNAME"
 
-    # add a title
+    # add a title for the account
     if [ -f "/var/gemini/blog/accounts/$USERNAME/title.txt" ]; then
-        # use a custom title
+        # use a custom title for the account
         cp "/var/gemini/blog/accounts/$USERNAME/title.txt" "/var/gemini/blog/accounts/$USERNAME/index.gmi"
     else
         { echo '``` title';
@@ -56,7 +73,7 @@ for d in /etc/epicyon/accounts/*/ ; do
           echo '```'; } > "/var/gemini/blog/accounts/$USERNAME/index.gmi"
     fi
 
-    # create an index
+    # create an index for the account
     blog_files=$(ls -1 "/var/gemini/blog/accounts/$USERNAME" | sort -r)
     while IFS= read -r line; do
         if [[ "$line" == "index.gmi" || "$line" == "title.txt" ]]; then

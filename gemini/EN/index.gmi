@@ -20,7 +20,8 @@ Reclaim the internet, one server at a time.
 => apps.gmi ► Apps
 => devguide.gmi ► Developer Guide
 => faq.gmi ► FAQ
-=> blog/index.gmi ► Gemlog
+=> blog/index.gmi ► Main Gemlog
+=> blog/accounts/index.gmi ► Account Gemlogs
 => sites.gmi ► Various gemini sites
 
 Want to keep this project going? Donate!
