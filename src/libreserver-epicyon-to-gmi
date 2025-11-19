@@ -1,0 +1,62 @@
+#!/bin/bash
+#  _    _ _            ___
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|
+#
+# Script to copy epicyon gemini blogs to the gemini server main site
+#
+# License
+# =======
+#
+# Copyright (C) 2025 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+for d in /etc/epicyon/accounts/*/ ; do
+    handle=$(echo "$d" | awk -F '/' '{print $5}')
+    if [[ "$handle" != *"@"* ]]; then
+        continue
+    fi
+    if [[ "$handle" == "news@"* || "$handle" == "inbox@"* ]]; then
+        continue
+    fi
+    USERNAME=$(echo "$handle" | awk -F '@' '{print $1}')
+    if [ ! -d "/etc/epicyon/accounts/$handle/gemini" ]; then
+        continue
+    fi
+    if [ ! -d "/var/gemini/blog/accounts/$USERNAME" ]; then
+        mkdir -p "/var/gemini/blog/accounts/$USERNAME"
+    fi
+    # copy blog files for this account
+    cp -r "/etc/epicyon/accounts/$handle/gemini"/* "/var/gemini/blog/accounts/$USERNAME"
+
+    { echo '``` title';
+      echo ' ___ ___ _____| |___ ___';
+      echo '| . | -_|     | | . | . |';
+      echo '|_  |___|_|_|_|_|___|_  |';
+      echo '|___|               |___|';
+      echo '';
+      echo '```'; } > "/var/gemini/blog/accounts/$USERNAME/index.gmi"
+
+    # create an index
+    blog_files=$(ls -1 "/var/gemini/blog/accounts/$USERNAME" | sort -r)
+    while IFS= read -r line; do
+        if [[ "$line" == "index.gmi" ]]; then
+            continue
+        fi
+        description=$(echo "$line" | sed "s|.gmi||g" | sed "s|_| |g" | cut -d' ' -f2-)
+        echo "=> $line ${description^}" >> "/var/gemini/blog/accounts/$USERNAME/index.gmi"
+    done <<< "$blog_files"
+done

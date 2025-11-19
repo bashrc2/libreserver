@@ -138,6 +138,27 @@ function convert_blog_to_gemini {
     fi
 }
 
+function convert_epicyon_to_gemini {
+    if [ -d /etc/epicyon ]; then
+        if [ ! -d /var/gemini/blog/accounts ]; then
+            mkdir -p /var/gemini/blog/accounts
+            chown -R gemini:gemini /var/gemini
+        fi
+        { echo '#!/bin/bash';
+          echo "/usr/bin/python3 /usr/local/bin/libreserver-epicyon-to-gmi";
+          echo 'chown -R gemini:gemini /var/gemini'; } > /etc/cron.hourly/gemini-epicyon
+        chmod +x /etc/cron.hourly/gemini-epicyon
+        /etc/cron.hourly/gemini-epicyon
+    else
+        if [ -f /etc/cron.hourly/gemini-epicyon ]; then
+            rm /etc/cron.hourly/gemini-epicyon
+        fi
+        if [ -d /var/gemini/blog/accounts ]; then
+            rm -rf /var/gemini/blog/accounts
+        fi
+    fi
+}
+
 function change_default_domain_name_gemini {
     # shellcheck disable=SC2034
     new_default_domain_name="$1"
@@ -200,6 +221,7 @@ function upgrade_distro_gemini {
 function upgrade_gemini {
     install_gemini_client
     convert_blog_to_gemini
+    convert_epicyon_to_gemini
     cd "/home/gemini" || return
     GOROOT=/home/go/go${GO_VERSION} GOPATH=/home/gemini PATH=$PATH:/home/gemini:/home/go/go${GO_VERSION}/bin go install ${GEMINI_PATH}@latest
     chown -R gemini:gemini /home/gemini
@@ -264,6 +286,9 @@ function restore_remote_gemini {
 function remove_gemini {
     if [ -f /etc/cron.hourly/gemini-blog ]; then
         rm /etc/cron.hourly/gemini-blog
+    fi
+    if [ -f /etc/cron.hourly/gemini-epicyon ]; then
+        rm /etc/cron.hourly/gemini-epicyon
     fi
     if [ -f /etc/systemd/system/gemini.service ]; then
         systemctl stop gemini
@@ -458,6 +483,7 @@ function install_gemini {
     increment_app_install_progress
 
     convert_blog_to_gemini
+    convert_epicyon_to_gemini
 
     install_gemini_client
 
