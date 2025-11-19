@@ -42,18 +42,24 @@ for d in /etc/epicyon/accounts/*/ ; do
     # copy blog files for this account
     cp -r "/etc/epicyon/accounts/$handle/gemini"/* "/var/gemini/blog/accounts/$USERNAME"
 
-    { echo '``` title';
-      echo ' ___ ___ _____| |___ ___';
-      echo '| . | -_|     | | . | . |';
-      echo '|_  |___|_|_|_|_|___|_  |';
-      echo '|___|               |___|';
-      echo '';
-      echo '```'; } > "/var/gemini/blog/accounts/$USERNAME/index.gmi"
+    # add a title
+    if [ -f "/var/gemini/blog/accounts/$USERNAME/title.txt" ]; then
+        # use a custom title
+        cp "/var/gemini/blog/accounts/$USERNAME/title.txt" "/var/gemini/blog/accounts/$USERNAME/index.gmi"
+    else
+        { echo '``` title';
+          echo ' ___ ___ _____| |___ ___';
+          echo '| . | -_|     | | . | . |';
+          echo '|_  |___|_|_|_|_|___|_  |';
+          echo '|___|               |___|';
+          echo '';
+          echo '```'; } > "/var/gemini/blog/accounts/$USERNAME/index.gmi"
+    fi
 
     # create an index
     blog_files=$(ls -1 "/var/gemini/blog/accounts/$USERNAME" | sort -r)
     while IFS= read -r line; do
-        if [[ "$line" == "index.gmi" ]]; then
+        if [[ "$line" == "index.gmi" || "$line" == "title.txt" ]]; then
             continue
         fi
         description=$(echo "$line" | sed "s|.gmi||g" | sed "s|_| |g" | cut -d' ' -f2-)
