@@ -57,6 +57,7 @@ for d in /etc/epicyon/accounts/*/ ; do
     echo "=> $USERNAME/index.gmi $USERNAME" >> "/var/gemini/blog/accounts/index.gmi"
 
     # copy blog files for this account
+    rm "/var/gemini/blog/accounts/$USERNAME"/*.gmi
     cp -r "/etc/epicyon/accounts/$handle/gemini"/* "/var/gemini/blog/accounts/$USERNAME"
 
     # add a title for the account
