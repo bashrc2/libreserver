@@ -132,6 +132,7 @@ function convert_blog_to_gemini {
     if [ "$BLUDIT_DOMAIN_NAME" ]; then
         { echo '#!/bin/bash';
           echo "/usr/bin/python3 /usr/local/bin/libreserver-blog-to-gmi --geminidomain \$HOSTNAME --blogdomain $BLUDIT_DOMAIN_NAME";
+          echo 'chmod -R 755 /var/gemini';
           echo 'chown -R gemini:gemini /var/gemini'; } > /etc/cron.hourly/gemini-blog
         chmod +x /etc/cron.hourly/gemini-blog
         /etc/cron.hourly/gemini-blog
@@ -145,8 +146,7 @@ function convert_epicyon_to_gemini {
             chown -R gemini:gemini /var/gemini
         fi
         { echo '#!/bin/bash';
-          echo "/bin/bash /usr/local/bin/libreserver-epicyon-to-gmi";
-          echo 'chown -R gemini:gemini /var/gemini'; } > /etc/cron.hourly/gemini-epicyon
+          echo "/bin/bash /usr/local/bin/libreserver-epicyon-to-gmi"; } > /etc/cron.hourly/gemini-epicyon
         chmod +x /etc/cron.hourly/gemini-epicyon
         /etc/cron.hourly/gemini-epicyon
     else
@@ -477,7 +477,8 @@ function install_gemini {
       echo '';
       echo '=> gemini://geminiprotocol.net Gemini protocol';
       echo '=> gemini://libreserver.org LibreServer site';
-      echo '=> gemini://libreserver.org/blog/index.gmi LibreServer Blog'; } > /var/gemini/index.gmi
+      echo '=> gemini://libreserver.org/blog/index.gmi LibreServer Blog';
+      echo '=> blog/accounts/index.gmi Account blogs'; } > /var/gemini/index.gmi
     chown -R gemini:gemini "/var/gemini"
 
     increment_app_install_progress

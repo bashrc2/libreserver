@@ -83,3 +83,7 @@ for d in /etc/epicyon/accounts/*/ ; do
         echo "=> $line ${description^}" >> "/var/gemini/blog/accounts/$USERNAME/index.gmi"
     done <<< "$blog_files"
 done
+
+chmod -R 755 "/var/gemini"
+chown -R gemini:gemini "/var/gemini"
+
