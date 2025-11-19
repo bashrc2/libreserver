@@ -145,7 +145,7 @@ function convert_epicyon_to_gemini {
             chown -R gemini:gemini /var/gemini
         fi
         { echo '#!/bin/bash';
-          echo "/usr/bin/python3 /usr/local/bin/libreserver-epicyon-to-gmi";
+          echo "/bin/bash /usr/local/bin/libreserver-epicyon-to-gmi";
           echo 'chown -R gemini:gemini /var/gemini'; } > /etc/cron.hourly/gemini-epicyon
         chmod +x /etc/cron.hourly/gemini-epicyon
         /etc/cron.hourly/gemini-epicyon
