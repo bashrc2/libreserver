@@ -288,6 +288,9 @@ function upgrade_bludit {
     fi
 
     bludit_install_from_download
+
+    chmod -R 755 "/var/www/${BLUDIT_DOMAIN_NAME}"
+    chown -R www-data:www-data "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs"
 }
 
 function backup_local_bludit {
@@ -381,6 +384,7 @@ function install_bludit {
     increment_app_install_progress
 
     INSTALL_PACKAGES memcached php-memcached php-intl ruby-mini-exiftool libfcgi0t64
+    INSTALL_PACKAGES php-symfony-dom-crawler
 
     if [ ! "${BLUDIT_DOMAIN_NAME}" ]; then
         echo $'No domain name was given for bludit'
@@ -618,7 +622,7 @@ function install_bludit {
     convert_blog_to_gemini
     bludit_update_domain_name_users
 
-    chmod g+w "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs"
+    chmod -R 755 "/var/www/${BLUDIT_DOMAIN_NAME}"
     chown -R www-data:www-data "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs"
 
     APP_INSTALLED=1
