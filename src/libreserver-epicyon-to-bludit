@@ -104,9 +104,16 @@ def _copy_files_to_blog(markdown_dir: str, blog_dir: str,
             }
         break
 
+    # add prefix
+    prefix = "<?php defined('BLUDIT') or die('Bludit CMS.'); ?>\n"
+    try:
+        with open(pages_dict_filename, 'w+', encoding='utf8') as fp_database:
+            fp_database.write(prefix)
+    except OSError:
+        pass
     # save the dictionary
     try:
-        with open('data.json', 'w+', encoding='utf8') as fp_database:
+        with open(pages_dict_filename, 'a', encoding='utf8') as fp_database:
             json.dump(pages_dict, fp_database)
     except OSError:
         pass
