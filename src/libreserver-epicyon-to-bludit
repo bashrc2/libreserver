@@ -33,7 +33,8 @@ import json
 from shutil import copyfile
 
 
-def _copy_files_to_blog(markdown_dir: str, blog_dir: str) -> None:
+def _copy_files_to_blog(markdown_dir: str, blog_dir: str,
+                        username: str) -> None:
     """Save markdown files to bludit database
     """
     pages_dict = {}
@@ -82,7 +83,7 @@ def _copy_files_to_blog(markdown_dir: str, blog_dir: str) -> None:
             pages_dict[blog_subdir] = {
                 "title": "",
                 "description": "",
-                "username": "admin",
+                "username": username,
                 "tags": [],
                 "type": "published",
                 "date": blog_date,
@@ -125,8 +126,10 @@ def _copy_markdown_to_blog(epicyon_accounts_dir: str,
             markdown_dir = acct_dir + '/markdown'
             if not os.path.isdir(markdown_dir):
                 continue
-            _copy_files_to_blog(markdown_dir, blog_dir)
+            username = account_dir.split('@')[0]
+            _copy_files_to_blog(markdown_dir, blog_dir, username)
         break
+
 
 PARSER = \
     argparse.ArgumentParser(description='Epicyon blog to Bludit converter')
