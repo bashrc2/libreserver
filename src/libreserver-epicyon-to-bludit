@@ -56,7 +56,7 @@ def _copy_files_to_blog(markdown_dir: str, blog_dir: str,
             pages_dict_str = pages_dict_str.split('>', 1)[1]
             pages_dict = json.loads(pages_dict_str)
 
-    for files, _, _ in os.walk(markdown_dir):
+    for _, _, files in os.walk(markdown_dir):
         for mkdown_file in files:
             if not mkdown_file.endswith('.md'):
                 continue
