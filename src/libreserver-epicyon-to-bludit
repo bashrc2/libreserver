@@ -31,6 +31,7 @@ import uuid
 import hashlib
 import json
 from shutil import copyfile
+from collections import OrderedDict
 
 
 def _copy_files_to_blog(markdown_dir: str, blog_dir: str,
@@ -45,7 +46,7 @@ def _copy_files_to_blog(markdown_dir: str, blog_dir: str,
         try:
             os.mkdir(databases_dir)
         except OSError:
-            pass
+            return
     pages_dict_filename = databases_dir + '/pages.php'
 
     # load the dictionary
@@ -54,7 +55,11 @@ def _copy_files_to_blog(markdown_dir: str, blog_dir: str,
         with open(pages_dict_filename, 'r', encoding='utf8') as fp_database:
             pages_dict_str = fp_database.read()
             pages_dict_str = pages_dict_str.split('>', 1)[1]
-            pages_dict = json.loads(pages_dict_str)
+        try:
+            pages_dict2 = json.loads(pages_dict_str)
+            pages_dict = pages_dict2
+        except BaseException:
+            return
 
     for _, _, files in os.walk(markdown_dir):
         for mkdown_file in files:
@@ -92,7 +97,7 @@ def _copy_files_to_blog(markdown_dir: str, blog_dir: str,
                 "coverImage": "",
                 "category": "",
                 "md5file": md5_str,
-                "uuid": uuid.uuid4(),
+                "uuid": str(uuid.uuid4()),
                 "allowComments": True,
                 "template": "",
                 "noindex": False,
@@ -104,6 +109,12 @@ def _copy_files_to_blog(markdown_dir: str, blog_dir: str,
             }
         break
 
+    # latest blog post should appear at the top
+    pages_dict_descending = \
+        OrderedDict(sorted(pages_dict.items(),
+                           key=lambda kv: kv[1]['date'],
+                           reverse=True))
+
     # add prefix
     prefix = "<?php defined('BLUDIT') or die('Bludit CMS.'); ?>\n"
     try:
@@ -114,7 +125,7 @@ def _copy_files_to_blog(markdown_dir: str, blog_dir: str,
     # save the dictionary
     try:
         with open(pages_dict_filename, 'a', encoding='utf8') as fp_database:
-            json.dump(pages_dict, fp_database)
+            fp_database.write(json.dumps(pages_dict_descending))
     except OSError:
         pass
 
