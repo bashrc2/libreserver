@@ -294,7 +294,22 @@ function upgrade_distro_epicyon {
     # include anything here needed to upgrade to the target distro
 }
 
+function epicyon_blog_to_bludit {
+    read_config_param BLUDIT_DOMAIN_NAME
+    if [ "${BLUDIT_DOMAIN_NAME}" ]; then
+        if [ -d "/var/www/${BLUDIT_DOMAIN_NAME}" ]; then
+            { echo '#!/bin/bash';
+              echo "/usr/bin/python3 /usr/local/bin/libreserver-epicyon-to-bludit --blogdomain ${BLUDIT_DOMAIN_NAME}";
+              echo "chmod -R 755 /var/www/${BLUDIT_DOMAIN_NAME}";
+              echo "chown -R www-data:www-data /var/www/${BLUDIT_DOMAIN_NAME}"; } > /etc/cron.hourly/epicyon-blog
+            chmod +x /etc/cron.hourly/epicyon-blog
+            /etc/cron.hourly/epicyon-blog
+        fi
+    fi
+}
+
 function upgrade_epicyon {
+    epicyon_blog_to_bludit
     epicyon_clear_browser_cache
     if [ -d "/usr/local/lib/${PYTHON_VERSION}/dist-packages/six.py" ]; then
         pip3 uninstall -y six
@@ -411,6 +426,10 @@ function restore_remote_epicyon {
 function remove_epicyon {
     nginx_dissite "$EPICYON_DOMAIN_NAME"
     remove_certs "$EPICYON_DOMAIN_NAME"
+
+    if [ -f /etc/cron.hourly/epicyon-blog ]; then
+        rm /etc/cron.hourly/epicyon-blog
+    fi
 
     if [ -f /etc/systemd/system/epicyon.service ]; then
         systemctl stop epicyon
@@ -790,6 +809,10 @@ function install_epicyon {
 
     cron_add_mins 1 "/usr/local/bin/${PROJECT_NAME}-notification --epicyon yes"
     epicyon_clear_browser_cache
+
+    increment_app_install_progress
+
+    epicyon_blog_to_bludit
 
     "${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a epicyon -p "$EPICYON_ADMIN_PASSWORD"
     set_completion_param "epicyon domain" "$EPICYON_DOMAIN_NAME"
