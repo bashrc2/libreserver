@@ -115,17 +115,24 @@ def _copy_files_to_blog(markdown_dir: str, blog_dir: str,
                            key=lambda kv: kv[1]['date'],
                            reverse=True))
 
-    # add prefix
+    # add new database header
     prefix = "<?php defined('BLUDIT') or die('Bludit CMS.'); ?>\n"
     try:
-        with open(pages_dict_filename, 'w+', encoding='utf8') as fp_database:
+        with open(pages_dict_filename + '.new',
+                  'w+', encoding='utf8') as fp_database:
             fp_database.write(prefix)
     except OSError:
         pass
-    # save the dictionary
+    # save the dictionary to the new database
     try:
-        with open(pages_dict_filename, 'a', encoding='utf8') as fp_database:
+        with open(pages_dict_filename + '.new',
+                  'a', encoding='utf8') as fp_database:
             fp_database.write(json.dumps(pages_dict_descending))
+    except OSError:
+        pass
+    # replace the existing database
+    try:
+        copyfile(pages_dict_filename + '.new', pages_dict_filename)
     except OSError:
         pass
 
