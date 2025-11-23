@@ -122,14 +122,14 @@ def _copy_files_to_blog(markdown_dir: str, blog_dir: str,
                   'w+', encoding='utf8') as fp_database:
             fp_database.write(prefix)
     except OSError:
-        pass
+        return
     # save the dictionary to the new database
     try:
         with open(pages_dict_filename + '.new',
                   'a', encoding='utf8') as fp_database:
             fp_database.write(json.dumps(pages_dict_descending))
     except OSError:
-        pass
+        return
     # replace the existing database
     try:
         copyfile(pages_dict_filename + '.new', pages_dict_filename)
