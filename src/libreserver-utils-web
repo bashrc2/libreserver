@@ -1093,7 +1093,7 @@ function get_web_crawlers {
 function block_web_crawlers {
     crawlers_list=$(get_web_crawlers)
 
-    sed -i "s|if (\$http_user_agent .*|if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }|g" /etc/nginx/sites-available/*
+    sed -i "s@if (\$http_user_agent .*@if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }@g" /etc/nginx/sites-available/*
 }
 
 function create_default_web_site {
