@@ -565,8 +565,11 @@ function encrypt_all_email {
 function setup_shell_browser {
     LYNX_CONFIG=/etc/lynx/lynx.cfg
     if [ -f "$LYNX_CONFIG" ]; then
-        if grep -q "#ACCEPT_ALL_COOKIES:FALSE" "$LYNX_CONFIG"; then
-            sed -i 's|#ACCEPT_ALL_COOKIES:FALSE|ACCEPT_ALL_COOKIES:TRUE|g' "$LYNX_CONFIG"
+        if grep -q "#ACCEPT_ALL_COOKIES:" "$LYNX_CONFIG"; then
+            sed -i 's|#ACCEPT_ALL_COOKIES:.*|ACCEPT_ALL_COOKIES:TRUE|g' "$LYNX_CONFIG"
+        fi
+        if grep -q "#ALWAYS_RESUBMIT_POSTS:" "$LYNX_CONFIG"; then
+            sed -i 's|#ALWAYS_RESUBMIT_POSTS:.*|ALWAYS_RESUBMIT_POSTS:TRUE|g' "$LYNX_CONFIG"
         fi
     fi
 
@@ -580,8 +583,11 @@ function setup_shell_browser {
         exit 48
     fi
 
-    if grep -q "#ACCEPT_ALL_COOKIES:FALSE" "$LYNX_CONFIG"; then
-        sed -i 's|#ACCEPT_ALL_COOKIES:FALSE|ACCEPT_ALL_COOKIES:TRUE|g' "$LYNX_CONFIG"
+    if grep -q "#ACCEPT_ALL_COOKIES:" "$LYNX_CONFIG"; then
+        sed -i 's|#ACCEPT_ALL_COOKIES:.*|ACCEPT_ALL_COOKIES:TRUE|g' "$LYNX_CONFIG"
+    fi
+    if grep -q "#ALWAYS_RESUBMIT_POSTS:" "$LYNX_CONFIG"; then
+        sed -i 's|#ALWAYS_RESUBMIT_POSTS:.*|ALWAYS_RESUBMIT_POSTS:TRUE|g' "$LYNX_CONFIG"
     fi
     mark_completed "${FUNCNAME[0]}"
 }
