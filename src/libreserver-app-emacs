@@ -161,8 +161,6 @@ function remove_emacs {
 function install_emacs {
     INSTALL_PACKAGES emacs-nox ispell ibritish ifrench ispanish iitalian irussian iswedish inorwegian iirish ingerman iswiss iogerman idutch idanish ibrazilian ibulgarian ipolish iczech iestonian ilithuanian icatalan python3-jedi elpa-flycheck elpa-use-package pylint elpa-php-mode python3-flake8 elpa-diminish elpa-nov elpa-pdf-tools elpa-solarized-theme
 
-linum-mode
-
     update-alternatives --set editor /usr/bin/emacs
 
     if [ ! -d /root/.emacs_backups ]; then
@@ -294,7 +292,9 @@ linum-mode
 	  echo '(setq inhibit-startup-screen t)';
 	  echo ';;; (setq initial-buffer-choice "~/some-initial-file.txt")';
 	  echo '(setq initial-scratch-message nil)';
-	  echo '(setq inhibit-startup-message t)'; } > "/home/$MY_USERNAME/.emacs"
+	  echo '(setq inhibit-startup-message t)';
+	  echo '';
+	  echo "(add-hook 'prog-mode-hook 'display-line-numbers-mode)"; } > "/home/$MY_USERNAME/.emacs"
     cp "/home/$MY_USERNAME/.emacs" /root/.emacs
     chown "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME/.emacs"
 
