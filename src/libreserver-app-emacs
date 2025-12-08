@@ -281,7 +281,15 @@ linum-mode
       echo '(use-package flycheck';
       echo '  :ensure t';
       echo '  :init';
-      echo '  (global-flycheck-mode t))'; } > "/home/$MY_USERNAME/.emacs"
+      echo '  (global-flycheck-mode t))';
+	  echo '';
+	  echo "(let ((default-directory "~/")) (eshell '(4)))";
+	  echo '';
+	  echo ";;; don't show startup screen";
+	  echo '(setq inhibit-startup-screen t)';
+	  echo ';;; (setq initial-buffer-choice "~/some-initial-file.txt")';
+	  echo '(setq initial-scratch-message nil)';
+	  echo '(setq inhibit-startup-message t)'; } > "/home/$MY_USERNAME/.emacs"
     cp "/home/$MY_USERNAME/.emacs" /root/.emacs
     chown "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME/.emacs"
 
