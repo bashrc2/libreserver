@@ -161,7 +161,8 @@ function remove_emacs {
 function install_emacs {
     INSTALL_PACKAGES emacs-nox ispell ibritish ifrench ispanish iitalian irussian iswedish inorwegian iirish ingerman iswiss iogerman idutch idanish ibrazilian ibulgarian ipolish iczech iestonian ilithuanian icatalan python3-jedi elpa-flycheck elpa-use-package pylint elpa-php-mode python3-flake8 elpa-diminish elpa-nov elpa-pdf-tools elpa-solarized-theme
 
-    update-alternatives --set editor /usr/bin/emacs
+    update-alternatives --install /usr/bin/editor editor /usr/bin/emacs-nox 0
+    update-alternatives --set editor /usr/bin/emacs-nox
 
     if [ ! -d /root/.emacs_backups ]; then
         mkdir /root/.emacs_backups
@@ -188,7 +189,7 @@ function install_emacs {
       echo '';
       echo '(custom-set-variables';
       echo "  '(flycheck-checker-error-threshold 2000)";
-	  echo "  '(eshell-banner-message \"Welcome to ${PROJECT_NAME} eshell\\n\")";
+      echo "  '(eshell-banner-message \"Welcome to ${PROJECT_NAME} eshell\\n\")";
       echo "  '(package-selected-packages '(use-package flycheck diminish)))";
       echo $';; ===== Remove trailing whitepace ======================================';
       echo '';
@@ -281,20 +282,20 @@ function install_emacs {
       echo '  :ensure t';
       echo '  :init';
       echo '  (global-flycheck-mode t))';
-	  echo '';
-	  echo "(load-theme 'solarized-dark t)";
-	  echo '(setq solarized-scale-org-headlines nil)';
-	  echo '(setq solarized-scale-markdown-headlines t)';
-	  echo '';
-	  echo "(let ((default-directory "~/")) (eshell '(4)))";
-	  echo '';
-	  echo ";;; don't show startup screen";
-	  echo '(setq inhibit-startup-screen t)';
-	  echo ';;; (setq initial-buffer-choice "~/some-initial-file.txt")';
-	  echo '(setq initial-scratch-message nil)';
-	  echo '(setq inhibit-startup-message t)';
-	  echo '';
-	  echo "(add-hook 'prog-mode-hook 'display-line-numbers-mode)"; } > "/home/$MY_USERNAME/.emacs"
+      echo '';
+      echo "(load-theme 'solarized-dark t)";
+      echo '(setq solarized-scale-org-headlines nil)';
+      echo '(setq solarized-scale-markdown-headlines t)';
+      echo '';
+      echo "(let ((default-directory "~/")) (eshell '(4)))";
+      echo '';
+      echo ";;; don't show startup screen";
+      echo '(setq inhibit-startup-screen t)';
+      echo ';;; (setq initial-buffer-choice "~/some-initial-file.txt")';
+      echo '(setq initial-scratch-message nil)';
+      echo '(setq inhibit-startup-message t)';
+      echo '';
+      echo "(add-hook 'prog-mode-hook 'display-line-numbers-mode)"; } > "/home/$MY_USERNAME/.emacs"
     cp "/home/$MY_USERNAME/.emacs" /root/.emacs
     chown "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME/.emacs"
 
