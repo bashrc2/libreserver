@@ -190,6 +190,7 @@ linum-mode
       echo '';
       echo '(custom-set-variables';
       echo "  '(flycheck-checker-error-threshold 2000)";
+	  echo "  '(eshell-banner-message \"Welcome to ${PROJECT_NAME} eshell\\n\")";
       echo "  '(package-selected-packages '(use-package flycheck diminish)))";
       echo $';; ===== Remove trailing whitepace ======================================';
       echo '';
