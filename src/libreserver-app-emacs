@@ -295,7 +295,10 @@ function install_emacs {
       echo '(setq initial-scratch-message nil)';
       echo '(setq inhibit-startup-message t)';
       echo '';
-      echo "(add-hook 'prog-mode-hook 'display-line-numbers-mode)"; } > "/home/$MY_USERNAME/.emacs"
+      echo "(add-hook 'prog-mode-hook 'display-line-numbers-mode)";
+      echo '';
+      echo ';;; show the time';
+      echo '(display-time-mode 1)'; } > "/home/$MY_USERNAME/.emacs"
     cp "/home/$MY_USERNAME/.emacs" /root/.emacs
     chown "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME/.emacs"
 
