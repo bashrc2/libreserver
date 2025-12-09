@@ -298,7 +298,7 @@ function install_emacs {
       echo "(add-hook 'prog-mode-hook 'display-line-numbers-mode)";
       echo '';
       echo ';;; show the time in 24 hour format';
-      echo '(setq display-time-format "%I:%M")';
+      echo '(setq display-time-format "%d/%m/%Y %I:%M")';
       echo '(display-time-mode 1)'; } > "/home/$MY_USERNAME/.emacs"
     cp "/home/$MY_USERNAME/.emacs" /root/.emacs
     chown "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME/.emacs"
