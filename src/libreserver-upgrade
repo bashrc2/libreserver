@@ -128,7 +128,7 @@ touch /tmp/.upgrading
 if [ -f /usr/bin/backupdatabases ]; then
     if grep -q "cat /root/dbpass" /usr/bin/backupdatabases; then
         # update to using the password manager
-		echo "Backup databases" >> ${UPGRADE_LOG}
+        echo "Backup databases" >> ${UPGRADE_LOG}
         sed -i "s|cat /root/dbpass|${PROJECT_NAME}-pass -u root -a mariadb|g" /usr/bin/backupdatabases
     fi
 fi
@@ -146,7 +146,7 @@ if [ -d "$PROJECT_DIR" ]; then
                 change_default_domain_name
                 ;;
             *)
-				echo "PROJECT_DIR ${PROJECT_DIR}" >> ${UPGRADE_LOG}
+                echo "PROJECT_DIR ${PROJECT_DIR}" >> ${UPGRADE_LOG}
                 cd "${PROJECT_DIR}" || exit 24
                 git config pull.rebase false
                 if [[ "$CURRENT_BRANCH" == *'master' ]]; then
@@ -157,88 +157,88 @@ if [ -d "$PROJECT_DIR" ]; then
                 git checkout "${CURRENT_BRANCH}"
                 git pull
                 make install
-				echo "Installed" >> ${UPGRADE_LOG}
+                echo "Installed" >> ${UPGRADE_LOG}
                 if [ -d /usr/share/${PROJECT_NAME} ]; then
                     chown -R root:root /usr/share/${PROJECT_NAME}
                     chmod -R +r /usr/share/${PROJECT_NAME}
-					echo "Set permissions" >> ${UPGRADE_LOG}
+                    echo "Set permissions" >> ${UPGRADE_LOG}
                 fi
 
                 if ! ${PROJECT_NAME} -c "$CONFIGURATION_FILE"; then
                     if [ -f /tmp/.upgrading ]; then
                         rm /tmp/.upgrading
                     fi
-					echo "Upgrade failed" >> ${UPGRADE_LOG}
+                    echo "Upgrade failed" >> ${UPGRADE_LOG}
                     /bin/bash /usr/local/bin/${PROJECT_NAME}-notification -s "LibreServer upgrade" -m "Upgrade failed"
                     exit 45
                 fi
 
-				echo "journalctl vacuum" >> ${UPGRADE_LOG}
+                echo "journalctl vacuum" >> ${UPGRADE_LOG}
                 journalctl --vacuum-size=200M
-				echo "update port scan defense" >> ${UPGRADE_LOG}
+                echo "update port scan defense" >> ${UPGRADE_LOG}
                 update_portscan_defense
-				echo "install dynamic dns" >> ${UPGRADE_LOG}
+                echo "install dynamic dns" >> ${UPGRADE_LOG}
                 install_dynamicdns
-				echo "migrate torrc" >> ${UPGRADE_LOG}
+                echo "migrate torrc" >> ${UPGRADE_LOG}
                 torrc_migrate
-				echo "email remove frozen" >> ${UPGRADE_LOG}
+                echo "email remove frozen" >> ${UPGRADE_LOG}
                 email_remove_frozen
-				echo "exim enable tls" >> ${UPGRADE_LOG}
+                echo "exim enable tls" >> ${UPGRADE_LOG}
                 exim_enable_tls
-				echo "add xmpp onion to email" >> ${UPGRADE_LOG}
+                echo "add xmpp onion to email" >> ${UPGRADE_LOG}
                 add_xmpp_onion_to_email
-				echo "add xmpp onion to http upload" >> ${UPGRADE_LOG}
+                echo "add xmpp onion to http upload" >> ${UPGRADE_LOG}
                 add_xmpp_onion_http_upload
-				echo "configure dkim" >> ${UPGRADE_LOG}
+                echo "configure dkim" >> ${UPGRADE_LOG}
                 configure_dkim
-				echo "email add xmpp headers" >> ${UPGRADE_LOG}
+                echo "email add xmpp headers" >> ${UPGRADE_LOG}
                 email_add_xmpp_headers
-				echo "email update riseup" >> ${UPGRADE_LOG}
+                echo "email update riseup" >> ${UPGRADE_LOG}
                 email_update_riseup_onion_domain
-				echo "upgrade nodejs" >> ${UPGRADE_LOG}
+                echo "upgrade nodejs" >> ${UPGRADE_LOG}
                 upgrade_nodejs
                 # if [[ "$ONION_ONLY" == 'no' ]]; then
-					# echo "Reinstalling python packages" >> ${UPGRADE_LOG}
+                    # echo "Reinstalling python packages" >> ${UPGRADE_LOG}
                     # REINSTALL_PACKAGES python3-pkg-resources python3-setuptools python3-openssl python3-cryptography
-					# echo "Install certbot" >> ${UPGRADE_LOG}
+                    # echo "Install certbot" >> ${UPGRADE_LOG}
                     # INSTALL_PACKAGES certbot
                 # fi
-				echo "Email install tls" >> ${UPGRADE_LOG}
+                echo "Email install tls" >> ${UPGRADE_LOG}
                 email_install_tls
-				echo "Email disable chunking" >> ${UPGRADE_LOG}
+                echo "Email disable chunking" >> ${UPGRADE_LOG}
                 email_disable_chunking
-				echo "Remove IP addresses from email logs" >> ${UPGRADE_LOG}
+                echo "Remove IP addresses from email logs" >> ${UPGRADE_LOG}
                 remove_ip_addresses_from_email_logs
-				echo "Remove exim backups" >> ${UPGRADE_LOG}
+                echo "Remove exim backups" >> ${UPGRADE_LOG}
                 rm /etc/exim4/exim4.conf.template.bak*
-				echo "Email upgrade onion domain" >> ${UPGRADE_LOG}
+                echo "Email upgrade onion domain" >> ${UPGRADE_LOG}
                 email_update_onion_domain
-				echo "Prevent mail process overrun" >> ${UPGRADE_LOG}
+                echo "Prevent mail process overrun" >> ${UPGRADE_LOG}
                 prevent_mail_process_overrun
-				echo "Android update apps" >> ${UPGRADE_LOG}
+                echo "Android update apps" >> ${UPGRADE_LOG}
                 android_update_apps nowebadmin
-				echo "Populate keyservers" >> ${UPGRADE_LOG}
+                echo "Populate keyservers" >> ${UPGRADE_LOG}
                 populate_keyservers
-				echo "Disable email encryption at rest" >> ${UPGRADE_LOG}
+                echo "Disable email encryption at rest" >> ${UPGRADE_LOG}
                 disable_email_encryption_at_rest
-				echo "Email remove html" >> ${UPGRADE_LOG}
+                echo "Email remove html" >> ${UPGRADE_LOG}
                 email_remove_html
-				echo "Email flooding defense" >> ${UPGRADE_LOG}
+                echo "Email flooding defense" >> ${UPGRADE_LOG}
                 email_flooding_defense
-				echo "Email repair saslauthd" >> ${UPGRADE_LOG}
+                echo "Email repair saslauthd" >> ${UPGRADE_LOG}
                 email_repair_saslauthd
-				echo "Email configure i2p" >> ${UPGRADE_LOG}
+                echo "Email configure i2p" >> ${UPGRADE_LOG}
                 configure_email_i2p
                 if [ -f /var/log/freedns_@_update.log ]; then
-					echo "Remove freedns log" >> ${UPGRADE_LOG}
+                    echo "Remove freedns log" >> ${UPGRADE_LOG}
                     rm /var/log/freedns_@_update.log
                 fi
-				echo "Upgrade iptables" >> ${UPGRADE_LOG}
+                echo "Upgrade iptables" >> ${UPGRADE_LOG}
                 upgrade_iptables
-				echo "Update email onion dns" >> ${UPGRADE_LOG}
+                echo "Update email onion dns" >> ${UPGRADE_LOG}
                 update_email_onion_dns
                 if [ -d /home/pi ]; then
-					echo "Removing default raspberry pi user account" >> ${UPGRADE_LOG}
+                    echo "Removing default raspberry pi user account" >> ${UPGRADE_LOG}
                     echo $'Removing default raspberry pi user account'
                     chmod 600 /etc/shadow
                     chmod 600 /etc/gshadow
@@ -248,15 +248,15 @@ if [ -d "$PROJECT_DIR" ]; then
                     chmod 0000 /etc/gshadow
                 fi
                 if [ -f ${ssh_sessions_count_filename} ]; then
-					echo "Removing sessions count" >> ${UPGRADE_LOG}
+                    echo "Removing sessions count" >> ${UPGRADE_LOG}
                     rm ${ssh_sessions_count_filename}
                 fi
                 # enable ipv6 on websites
-				echo "enable ipv6 on websites" >> ${UPGRADE_LOG}
+                echo "enable ipv6 on websites" >> ${UPGRADE_LOG}
                 sed -i 's|#listen \[::|listen \[::|g' /etc/nginx/sites-available/*
-				echo "Block web crawlers" >> ${UPGRADE_LOG}
+                echo "Block web crawlers" >> ${UPGRADE_LOG}
                 block_web_crawlers
-				echo "Restart web server" >> ${UPGRADE_LOG}
+                echo "Restart web server" >> ${UPGRADE_LOG}
                 systemctl restart nginx
                 #defrag_filesystem
                 ;;
@@ -271,7 +271,7 @@ systemctl restart webadmin
 
 # upgrading file prevents USB canary from activating
 if [ -f /tmp/.upgrading ]; then
-	echo "Remove upgrading flag" >> ${UPGRADE_LOG}
+    echo "Remove upgrading flag" >> ${UPGRADE_LOG}
     rm /tmp/.upgrading
 fi
 
@@ -283,7 +283,7 @@ ${PROJECT_NAME}-logging off
 ruleset=$(/usr/sbin/nft list ruleset)
 if [[ "${ruleset}" != *"portscan"* ]]; then
     if [[ "$(firewall_kernel_options)" == *"1" ]]; then
-		echo "Rebooting for kernel options to take effect" >> ${UPGRADE_LOG}
+        echo "Rebooting for kernel options to take effect" >> ${UPGRADE_LOG}
         echo $'Rebooting for kernel options to take effect'
         systemctl reboot -i
     fi
