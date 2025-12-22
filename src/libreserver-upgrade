@@ -197,12 +197,12 @@ if [ -d "$PROJECT_DIR" ]; then
                 email_update_riseup_onion_domain
 				echo "upgrade nodejs" >> ${UPGRADE_LOG}
                 upgrade_nodejs
-                if [[ "$ONION_ONLY" == 'no' ]]; then
-					echo "Reinstalling python packages" >> ${UPGRADE_LOG}
-                    REINSTALL_PACKAGES python3-pkg-resources python3-setuptools python3-openssl python3-cryptography
-					echo "Install certbot" >> ${UPGRADE_LOG}
-                    INSTALL_PACKAGES certbot
-                fi
+                # if [[ "$ONION_ONLY" == 'no' ]]; then
+					# echo "Reinstalling python packages" >> ${UPGRADE_LOG}
+                    # REINSTALL_PACKAGES python3-pkg-resources python3-setuptools python3-openssl python3-cryptography
+					# echo "Install certbot" >> ${UPGRADE_LOG}
+                    # INSTALL_PACKAGES certbot
+                # fi
 				echo "Email install tls" >> ${UPGRADE_LOG}
                 email_install_tls
 				echo "Email disable chunking" >> ${UPGRADE_LOG}
