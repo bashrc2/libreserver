@@ -153,7 +153,7 @@ if [ -d "$PROJECT_DIR" ]; then
                 echo "PROJECT_DIR ${PROJECT_DIR}" >> ${UPGRADE_LOG}
                 cd "${PROJECT_DIR}" || exit 24
                 git config pull.rebase false
-                if [[ "$CURRENT_BRANCH" == *'master' ]]; then
+                if [[ "${CURRENT_BRANCH}" == *'main' ]]; then
                     git_pull ${PROJECT_REPO}
                 else
                     git_pull ${PROJECT_REPO} "origin/${CURRENT_BRANCH}"
