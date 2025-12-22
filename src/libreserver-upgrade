@@ -89,11 +89,11 @@ if [ -f /etc/network/interfaces.d/dynamic ]; then
 fi
 
 read_config_param PROJECT_REPO
-if [[ "$PROJECT_REPO" == *"github.com/bashrc2/${PROJECT_NAME}" || "$PROJECT_REPO" == *"libreserver.org"* ]]; then
-    PROJECT_REPO=$DEFAULT_PROJECT_REPO
-    write_config_param PROJECT_REPO "$PROJECT_REPO"
+if [[ "${PROJECT_REPO}" == *"github.com/bashrc2/${PROJECT_NAME}" || "${PROJECT_REPO}" == *"libreserver.org"* ]]; then
+    PROJECT_REPO=${DEFAULT_PROJECT_REPO}
+    write_config_param PROJECT_REPO "${PROJECT_REPO}"
 fi
-if [[ "$PROJECT_REPO" == 'none' ]]; then
+if [[ "${PROJECT_REPO}" == 'none' ]]; then
     if [ -f /tmp/.upgrading ]; then
         rm /tmp/.upgrading
     fi
@@ -104,16 +104,16 @@ read_config_param ONION_ONLY
 read_config_param DEFAULT_DOMAIN_NAME
 
 read_config_param STABLE_BRANCH
-if [ "$STABLE_BRANCH" ]; then
+if [ "${STABLE_BRANCH}" ]; then
     if [ ${#STABLE_BRANCH} -gt 0 ]; then
-        CURRENT_BRANCH="$STABLE_BRANCH"
+        CURRENT_BRANCH="${STABLE_BRANCH}"
     fi
 fi
 
 read_config_param DEVELOPMENT_BRANCH
-if [ "$DEVELOPMENT_BRANCH" ]; then
+if [ "${DEVELOPMENT_BRANCH}" ]; then
     if [ ${#DEVELOPMENT_BRANCH} -gt 0 ]; then
-        CURRENT_BRANCH="$DEVELOPMENT_BRANCH"
+        CURRENT_BRANCH="${DEVELOPMENT_BRANCH}"
     fi
 fi
 
@@ -138,13 +138,13 @@ fi
 
 #update-ca-certificates
 
-if [ ! -d "$PROJECT_DIR" ]; then
-    git_clone "$PROJECT_REPO" "$PROJECT_DIR"
+if [ ! -d "${PROJECT_DIR}" ]; then
+    git_clone "${PROJECT_REPO}" "${PROJECT_DIR}"
 fi
 
-if [ -d "$PROJECT_DIR" ]; then
-    if [ -f "$CONFIGURATION_FILE" ]; then
-        case "$UPGRADE_PARAM" in
+if [ -d "${PROJECT_DIR}" ]; then
+    if [ -f "${CONFIGURATION_FILE}" ]; then
+        case "${UPGRADE_PARAM}" in
             "change_domain")
                 change_default_domain_name
                 ;;
