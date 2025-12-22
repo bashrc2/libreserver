@@ -75,15 +75,25 @@ source "/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-xmpp"
 rename_config_param "LOCAL_NETWORK_STATIC_IP_ADDRESS" "LOCAL_NETWORK_STATIC_IPv4_ADDRESS"
 rename_config_param "ROUTER_IP_ADDRESS" "ROUTER_IPv4_ADDRESS"
 
+UPGRADE_LOG=/var/log/libreserver_upgrade.log
+echo "Upgrade $(date)" > ${UPGRADE_LOG}
+echo "Upgrade $(date)"
+
 # allow icmp for ipv6
 if grep -q 'drop icmp ipv6' /etc/nftables.conf; then
     sed -i '/drop icmp ipv6/d' /etc/nftables.conf
+    echo "Allowing ipv6" >> ${UPGRADE_LOG}
+    echo ''
+    echo "Allowing ipv6"
     reload_firewall
 fi
 
 # remove static interfaces settings if dynamic exists
 if [ -f /etc/network/interfaces.d/dynamic ]; then
     if [ -f /etc/network/interfaces.d/static ]; then
+        echo "Removing static network interfaces" >> ${UPGRADE_LOG}
+        echo ''
+        echo "Removing static network interfaces"
         rm /etc/network/interfaces.d/static
     fi
 fi
@@ -95,6 +105,9 @@ if [[ "${PROJECT_REPO}" == *"github.com/bashrc2/${PROJECT_NAME}" || "${PROJECT_R
 fi
 if [[ "${PROJECT_REPO}" == 'none' ]]; then
     if [ -f /tmp/.upgrading ]; then
+        echo "Removing upgrading flag and exiting" >> ${UPGRADE_LOG}
+        echo ''
+        echo "Removing upgrading flag and exiting"
         rm /tmp/.upgrading
     fi
     exit 0
@@ -117,12 +130,12 @@ if [ "${DEVELOPMENT_BRANCH}" ]; then
     fi
 fi
 
-UPGRADE_LOG=/var/log/libreserver_upgrade.log
-echo "Upgrade $(date)" > ${UPGRADE_LOG}
-echo "Upgrade $(date)"
-
 # upgrading file prevents USB canary or other jobs from activating
+echo "Removing temporary files" >> ${UPGRADE_LOG}
+echo ''
+echo "Removing temporary files"
 rm -rf /tmp/*
+
 echo ''
 echo "Set upgrading flag"
 echo "Set upgrading flag" >> ${UPGRADE_LOG}
