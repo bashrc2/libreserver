@@ -69,6 +69,8 @@ def _copy_files_to_blog(markdown_dir: str, blog_dir: str,
             if not os.path.isfile(filename):
                 continue
             # create a pages directory
+            blog_title = mkdown_file.replace('.md', '').split('_', 1)[1]
+            blog_title = blog_title.replace('_', ' ').title()
             blog_subdir = mkdown_file.replace('.md', '').replace(' ', '_')
             blog_date = blog_subdir.split('_')[0]
             blog_pages_dir = blog_dir + '/bl-content/pages/' + blog_subdir
@@ -86,7 +88,7 @@ def _copy_files_to_blog(markdown_dir: str, blog_dir: str,
             # update the dictionary
             md5_str = hashlib.md5(open(filename, 'rb').read()).hexdigest()
             pages_dict[blog_subdir] = {
-                "title": "",
+                "title": blog_title,
                 "description": "",
                 "username": username,
                 "tags": [],
