@@ -6,6 +6,8 @@
 #
 # XMPP server
 # NOTE do not disable TLS for onion only versions
+# Test compatibility with https://codeberg.org/iNPUTmice/caas
+# Test port 5223 with https://salsa.debian.org/mdosch/xmpp-dns
 #
 # Don't use the upstream debian package. It moves fast and breaks things.
 # python-xmpp has been removed from debian. A python3 version is not yet available
@@ -946,7 +948,7 @@ function xmpp_update_certs {
 }
 
 function upgrade_xmpp {
-	configure_firewall_for_xmpp
+    configure_firewall_for_xmpp
 
     if [[ $ONION_ONLY == "no" ]]; then
         # copy dhparams with correct permissions
@@ -1194,13 +1196,13 @@ function configure_firewall_for_xmpp {
         return
     fi
     if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
-		if grep -q "5222" /etc/nftables.conf; then
-			return
-		else
-			if grep -q 'XMPP=' ${FIREWALL_CONFIG}; then
-				sed -i '/XMPP=/d' ${FIREWALL_CONFIG}
-			fi
-		fi
+        if grep -q "5222" /etc/nftables.conf; then
+            return
+        else
+            if grep -q 'XMPP=' ${FIREWALL_CONFIG}; then
+                sed -i '/XMPP=/d' ${FIREWALL_CONFIG}
+            fi
+        fi
     fi
     if [[ $INSTALLED_WITHIN_DOCKER == "yes" ]]; then
         # docker does its own firewalling
