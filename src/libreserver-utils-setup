@@ -909,8 +909,8 @@ function setup_firewall {
     function_check firewall_block_bad_ip_ranges
     firewall_block_bad_ip_ranges
 
-    function_check firewall_google
-    firewall_google
+    # function_check firewall_google
+    # firewall_google
 
     #function_check firewall_block_cloudflare
     #firewall_block_cloudflare
