@@ -847,7 +847,7 @@ function update_prosody_modules {
         prosody_add_module 'admin_shell'
         prosody_add_module 'firewall'
         prosody_add_module 'poke_strangers'
-        prosody_add_module 'file_share'
+        prosody_add_module 'http_file_share'
         prosody_remove_module 'http_upload'
         prosody_remove_module 'server_contact_info'
         prosody_remove_module 'block_strangers'
