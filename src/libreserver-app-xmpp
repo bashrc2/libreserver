@@ -946,6 +946,16 @@ function xmpp_update_certs {
 }
 
 function upgrade_xmpp {
+    if [[ $ONION_ONLY == "no" ]]; then
+        # copy dhparams with correct permissions
+        if [ -f /etc/ssl/certs/${DEFAULT_DOMAIN_NAME}.dhparam ]; then
+            chown root:ssl-cert /etc/ssl/certs/${DEFAULT_DOMAIN_NAME}.dhparam
+            cp /etc/ssl/certs/${DEFAULT_DOMAIN_NAME}.dhparam /etc/prosody/xmpp.dhparam
+            chown prosody:prosody /etc/prosody/xmpp.dhparam
+            sed -i 's|/etc/ssl/certs/xmpp.dhparam|/etc/prosody/xmpp.dhparam|g' /etc/prosody/prosody.cfg.lua
+        fi
+    fi
+
     prosody_fix_broken_modules
     remove_upstream_xmpp_package
 
