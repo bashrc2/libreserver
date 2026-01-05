@@ -70,7 +70,7 @@ XMPP_FIREWALL_MAX_CONNECTIONS=16
 XMPP_FIREWALL_MAX_CONNECTIONS_S2S=64
 
 # rate limits in kilobytes per second
-XMPP_MAX_S2S_RATE=10
+XMPP_MAX_S2S_RATE=30
 XMPP_MAX_C2S_RATE=10
 
 PROFANITY_BINARY=/usr/bin/profanity
@@ -1534,7 +1534,7 @@ function xmpp_create_config {
       echo '';
       echo 'pidfile = "/var/run/prosody/prosody.pid";';
       echo '';
-      echo 'https_ports = { 5281 }';
+      echo 'https_ports = { 5223, 5281 }';
       echo 'http_interfaces = { "*", "::" }';
       echo 'https_interfaces = { "*", "::" }';
       echo 'https_ssl = {'; } >> /etc/prosody/prosody.cfg.lua
