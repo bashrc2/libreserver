@@ -1192,7 +1192,9 @@ function configure_firewall_for_xmpp {
         return
     fi
     if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
-        return
+		if ! grep -q "5222" /etc/nftables.conf; then
+           return
+		fi
     fi
     if [[ $INSTALLED_WITHIN_DOCKER == "yes" ]]; then
         # docker does its own firewalling
