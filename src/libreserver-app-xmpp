@@ -946,6 +946,8 @@ function xmpp_update_certs {
 }
 
 function upgrade_xmpp {
+	configure_firewall_for_xmpp
+
     if [[ $ONION_ONLY == "no" ]]; then
         # copy dhparams with correct permissions
         if [ -f /etc/ssl/certs/${DEFAULT_DOMAIN_NAME}.dhparam ]; then
