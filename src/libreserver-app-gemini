@@ -60,7 +60,7 @@ GEMINI_MOBILE_APP_URL=
 # Any ports which should be added to the firewall, separated by commas
 GEMINI_FIREWALL_PORTS="${GEMINI_PORT}"
 
-GEMINI_CLIENT_REPO='https://github.com/bashrc2/leo'
+GEMINI_CLIENT_REPO='https://gitlab.com/bashrc2/leo'
 DEFAULT_GEMINI_URL='geminiprotocol.net'
 
 gemini_variables=(ONION_ONLY
