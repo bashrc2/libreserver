@@ -1107,6 +1107,7 @@ function upgrade_xmpp {
     prosody_remove_module "pep_vcard_avatar"
     prosody_remove_module "profile"
     prosody_add_module "vcard_legacy"
+    prosody_add_module "vcard_muc"
 
     xmpp_update_certs
 
@@ -1337,6 +1338,7 @@ function xmpp_modules {
       echo '  "http_file_share";';
       echo '  "websocket";';
       echo '  "vcard_legacy";';
+      echo '  "vcard_muc";';
       echo '  -- "groups_internal";';
       echo '  -- "groups_migration";';
       echo '  -- "groups_muc_bookmarks";';
