@@ -45,30 +45,30 @@ backup_progress_file=/root/.backup_progress.txt
 restore_progress_file=/root/.restore_progress.txt
 
 function create_backups_temp_directory {
-    if [ ! -d $BACKUP_TEMP_DIRECTORY ]; then
-        mkdir $BACKUP_TEMP_DIRECTORY
+    if [ ! -d ${BACKUP_TEMP_DIRECTORY} ]; then
+        mkdir ${BACKUP_TEMP_DIRECTORY}
     fi
 }
 
 function remove_backups_temp_directory {
-    if [ -d $BACKUP_TEMP_DIRECTORY ]; then
-        rm -rf $BACKUP_TEMP_DIRECTORY
+    if [ -d ${BACKUP_TEMP_DIRECTORY} ]; then
+        rm -rf ${BACKUP_TEMP_DIRECTORY}
     fi
 }
 
 function suspend_site {
     # suspends a given website
     SUSPENDED_SITE="$1"
-    nginx_dissite "$SUSPENDED_SITE"
+    nginx_dissite "${SUSPENDED_SITE}"
     systemctl reload nginx
 }
 
 function restart_site {
     # restarts a given website
-    if [ ! "$SUSPENDED_SITE" ]; then
+    if [ ! "${SUSPENDED_SITE}" ]; then
         return
     fi
-    nginx_ensite "$SUSPENDED_SITE"
+    nginx_ensite "${SUSPENDED_SITE}"
     systemctl reload nginx
     SUSPENDED_SITE=
 }
@@ -80,12 +80,12 @@ function configure_backup_key {
     INSTALL_PACKAGES gnupg dirmngr
     printf '%%Assuan%%\nsocket=/dev/shm/S.dirmngr\n' > ~/.gnupg/S.dirmngr
 
-    if [ ! "$MY_NAME" ]; then
-        MY_NAME="$MY_USERNAME"
+    if [ ! "${MY_NAME}" ]; then
+        MY_NAME="${MY_USERNAME}"
     fi
 
     BACKUP_KEY_EXISTS=$(gpg_key_exists "root" "${MY_NAME} (backup key)" | tail -n 1)
-    if [[ "$BACKUP_KEY_EXISTS" == "yes" ]]; then
+    if [[ "${BACKUP_KEY_EXISTS}" == "yes" ]]; then
         return
     fi
 
@@ -104,7 +104,7 @@ function configure_backup_key {
     gpg_agent_setup "${MY_USERNAME}"
 
     # Generate a GPG key for backups
-    MY_BACKUP_KEY_ID=$(su -c "gpg --list-keys \"$MY_NAME (backup key)\"" - "$MY_USERNAME" | sed -n '2p' | sed 's/^[ \t]*//')
+    MY_BACKUP_KEY_ID=$(su -c "gpg --list-keys \"$MY_NAME (backup key)\"" - "${MY_USERNAME}" | sed -n '2p' | sed 's/^[ \t]*//')
     if [ ! "${MY_BACKUP_KEY_ID}" ]; then
         { echo 'Key-Type: rsa';
           echo 'Key-Length: 2048';
@@ -192,20 +192,20 @@ function backup_mount_drive {
     fi
 
     # check that the backup destination is available
-    if [ ! -b "$USB_DRIVE" ]; then
+    if [ ! -b "${USB_DRIVE}" ]; then
         echo $"Please attach a USB drive"
         exit 1
     fi
 
     # unmount if already mounted
-    umount -f "$USB_MOUNT"
-    if [ ! -d "$USB_MOUNT" ]; then
-        mkdir "$USB_MOUNT"
+    umount -f "${USB_MOUNT}"
+    if [ ! -d "${USB_MOUNT}" ]; then
+        mkdir "${USB_MOUNT}"
     fi
 
-    if ! mount "$USB_DRIVE" "$USB_MOUNT"; then
-        echo $"There was a problem mounting the USB drive to $USB_MOUNT"
-        rm -rf "$USB_MOUNT"
+    if ! mount "${USB_DRIVE}" "${USB_MOUNT}"; then
+        echo $"There was a problem mounting the USB drive to ${USB_MOUNT}"
+        rm -rf "${USB_MOUNT}"
         exit 78
     fi
 }
@@ -218,12 +218,12 @@ function backup_unmount_drive {
     #    fi
     #fi
     sync
-    if ! umount "$USB_MOUNT"; then
+    if ! umount "${USB_MOUNT}"; then
         echo $"Unable to unmount the drive."
-        rm -rf "$USB_MOUNT"
+        rm -rf "${USB_MOUNT}"
         exit 9
     fi
-    rm -rf "$USB_MOUNT"
+    rm -rf "${USB_MOUNT}"
 }
 
 function backup_database_local_usb {
@@ -233,11 +233,11 @@ function backup_database_local_usb {
         restart_site
         exit 10
     fi
-    if [ ! -d "$USB_MOUNT/backup/${1}" ]; then
-        mkdir -p "$USB_MOUNT/backup/${1}"
+    if [ ! -d "${USB_MOUNT}/backup/${1}" ]; then
+        mkdir -p "${USB_MOUNT}/backup/${1}"
     fi
-    if [ ! -d "$USB_MOUNT/backup/${1}data" ]; then
-        mkdir -p "$USB_MOUNT/backup/${1}data"
+    if [ ! -d "${USB_MOUNT}/backup/${1}data" ]; then
+        mkdir -p "${USB_MOUNT}/backup/${1}data"
     fi
     local_database_dir=/root/temp${1}data
     if [ ! -d "${local_database_dir}" ]; then
@@ -253,23 +253,23 @@ function backup_database_local_usb {
         sudo -u postgres pg_dump "${1}" > "${local_database_filename}"
     else
         if [ ! -f "${local_database_filename}" ]; then
-            mysqldump --password="$DATABASE_PASSWORD" "${1}" > "${local_database_filename}"
+            mysqldump --password="${DATABASE_PASSWORD}" "${1}" > "${local_database_filename}"
         fi
     fi
     if [ -f "${local_database_filename}" ]; then
         if [ ! -s "${local_database_filename}" ]; then
             echo $"${1} database could not be saved"
             rm -rf "${local_database_dir}"
-            umount "$USB_MOUNT"
-            rm -rf "$USB_MOUNT"
+            umount "${USB_MOUNT}"
+            rm -rf "${USB_MOUNT}"
             restart_site
             exit 68
         fi
     else
         echo $"${1} database could not be dumped ${local_database_filename}"
         rm -rf "${local_database_dir}"
-        umount "$USB_MOUNT"
-        rm -rf "$USB_MOUNT"
+        umount "${USB_MOUNT}"
+        rm -rf "${USB_MOUNT}"
         restart_site
         exit 73
     fi
@@ -278,11 +278,11 @@ function backup_database_local_usb {
 
 function backup_directory_to_usb_duplicity {
     create_backups_temp_directory
-    echo "$BACKUP_DUMMY_PASSWORD" | duplicity full --use-agent --gpg-options "$BACKUP_GPG_OPTIONS" --tempdir "$BACKUP_TEMP_DIRECTORY" --encrypt-key "$MY_BACKUP_KEY_ID" --full-if-older-than 4W --exclude-other-filesystems "${1}" "file://$USB_MOUNT/backup/${2}"
+    echo "${BACKUP_DUMMY_PASSWORD}" | duplicity full --use-agent --gpg-options "${BACKUP_GPG_OPTIONS}" --tempdir "${BACKUP_TEMP_DIRECTORY}" --encrypt-key "${MY_BACKUP_KEY_ID}" --full-if-older-than 4W --exclude-other-filesystems "${1}" "file://$USB_MOUNT/backup/${2}"
     # shellcheck disable=SC2181
     if [ ! "$?" = "0" ]; then
-        umount "$USB_MOUNT"
-        rm -rf "$USB_MOUNT"
+        umount "${USB_MOUNT}"
+        rm -rf "${USB_MOUNT}"
         if [[ ${1} == "/root/temp"* || ${1} == *"tempbackup" ]]; then
             rm -rf "${1}"
         fi
@@ -291,12 +291,12 @@ function backup_directory_to_usb_duplicity {
         remove_backups_temp_directory
         exit 83
     fi
-    if [[ $ENABLE_BACKUP_VERIFICATION == "yes" ]]; then
-        echo "$BACKUP_DUMMY_PASSWORD" | duplicity verify --use-agent --gpg-options "$BACKUP_GPG_OPTIONS" --tempdir "$BACKUP_TEMP_DIRECTORY" --encrypt-key "$MY_BACKUP_KEY_ID" --full-if-older-than 4W --exclude-other-filesystems "${1}" "file://$USB_MOUNT/backup/${2}"
+    if [[ ${ENABLE_BACKUP_VERIFICATION} == "yes" ]]; then
+        echo "${BACKUP_DUMMY_PASSWORD}" | duplicity verify --use-agent --gpg-options "${BACKUP_GPG_OPTIONS}" --tempdir "${BACKUP_TEMP_DIRECTORY}" --encrypt-key "${MY_BACKUP_KEY_ID}" --full-if-older-than 4W --exclude-other-filesystems "${1}" "file://$USB_MOUNT/backup/${2}"
         # shellcheck disable=SC2181
         if [ ! "$?" = "0" ]; then
-            umount "$USB_MOUNT"
-            rm -rf "$USB_MOUNT"
+            umount "${USB_MOUNT}"
+            rm -rf "${USB_MOUNT}"
             if [[ ${1} == "/root/temp"* || ${1} == *"tempbackup" ]]; then
                 rm -rf "${1}"
             fi
@@ -311,12 +311,12 @@ function backup_directory_to_usb_duplicity {
 
 function increment_backup_progress {
     backup_counter=$((backup_counter + 1))
-    echo -n "$backup_counter" > "$backup_progress_file"
+    echo -n "${backup_counter}" > "${backup_progress_file}"
 }
 
 function increment_restore_progress {
     restore_counter=$((restore_counter + 1))
-    echo -n "$restore_counter" > "$restore_progress_file"
+    echo -n "${restore_counter}" > "${restore_progress_file}"
 }
 
 function backup_tor_config_to_usb {
@@ -343,8 +343,8 @@ function backup_directory_to_usb {
         fi
 
         MY_BACKUP_KEY_ID=$(gpg --list-keys "$ADMIN_NAME (backup key)" | sed -n '2p' | sed 's/^[ \t]*//')
-        if [ ! -d "$USB_MOUNT/backup/${2}" ]; then
-            mkdir -p "$USB_MOUNT/backup/${2}"
+        if [ ! -d "${USB_MOUNT}/backup/${2}" ]; then
+            mkdir -p "${USB_MOUNT}/backup/${2}"
         fi
 
         backup_directory_to_usb_duplicity "${1}" "${2}"
@@ -359,10 +359,10 @@ function backup_directory_to_usb {
 
 function restore_directory_from_usb_duplicity {
     create_backups_temp_directory
-    PASSPHRASE="$BACKUP_DUMMY_PASSWORD" duplicity restore --gpg-options "$BACKUP_GPG_OPTIONS" --tempdir "$BACKUP_TEMP_DIRECTORY" --force "file://$USB_MOUNT/backup/${2}" "${1}"
+    PASSPHRASE="${BACKUP_DUMMY_PASSWORD}" duplicity restore --gpg-options "${BACKUP_GPG_OPTIONS}" --tempdir "${BACKUP_TEMP_DIRECTORY}" --force "file://${USB_MOUNT}/backup/${2}" "${1}"
     # shellcheck disable=SC2181
     if [ ! "$?" = "0" ]; then
-        echo "WARNING: failed to restore $USB_MOUNT/backup/${2} to ${1}"
+        echo "WARNING: failed to restore ${USB_MOUNT}/backup/${2} to ${1}"
     fi
     remove_backups_temp_directory
 }
@@ -375,27 +375,27 @@ function restore_tor_config_from_usb {
 
     restore_directory_from_usb ${temp_restore_dir} ${app_name}-tor
     if [ -d $temp_restore_dir ]; then
-        if [ -d "$temp_restore_dir$local_dir" ]; then
-            cp -rp "$temp_restore_dir$epicyon_dir"/* "$local_dir"/
+        if [ -d "${temp_restore_dir}${local_dir}" ]; then
+            cp -rp "${temp_restore_dir}${epicyon_dir}"/* "${local_dir}"/
         else
-            if [ ! -d "$local_dir" ]; then
-                mkdir "$local_dir"
+            if [ ! -d "${local_dir}" ]; then
+                mkdir "${local_dir}"
             fi
-            cp -rp "$temp_restore_dir"/* "$local_dir"/
+            cp -rp "${temp_restore_dir}"/* "${local_dir}"/
         fi
-        chown -R debian-tor:debian-tor "$epicyon_dir"
-        rm -rf $temp_restore_dir
+        chown -R debian-tor:debian-tor "${epicyon_dir}"
+        rm -rf ${temp_restore_dir}
     fi
 }
 
 function restore_directory_from_usb {
     if [ ! "${1}" ]; then
-        echo "$USB_MOUNT/backup/${2} -> ${1}"
+        echo "${USB_MOUNT}/backup/${2} -> ${1}"
         echo $'No restore destination given'
         return
     fi
     if [ ! "${2}" ]; then
-        echo "$USB_MOUNT/backup/${2} -> ${1}"
+        echo "${USB_MOUNT}/backup/${2} -> ${1}"
         echo $'No restore source given'
         return
     fi
@@ -424,8 +424,8 @@ function set_user_permissions {
     echo $"Setting permissions"
     for d in /home/*/ ; do
         USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
-        if [[ $(is_valid_user "$USERNAME") == "1" ]]; then
-            chown -R "$USERNAME":"$USERNAME" "/home/$USERNAME"
+        if [[ $(is_valid_user "${USERNAME}") == "1" ]]; then
+            chown -R "${USERNAME}":"${USERNAME}" "/home/${USERNAME}"
         fi
     done
 }
@@ -437,11 +437,11 @@ function backup_database_remote {
         restart_site
         exit 57
     fi
-    if [ ! -d "$SERVER_DIRECTORY/backup/${1}" ]; then
-        mkdir -p "$SERVER_DIRECTORY/backup/${1}"
+    if [ ! -d "${SERVER_DIRECTORY}/backup/${1}" ]; then
+        mkdir -p "${SERVER_DIRECTORY}/backup/${1}"
     fi
-    if [ ! -d "$SERVER_DIRECTORY/backup/${1}data" ]; then
-        mkdir -p "$SERVER_DIRECTORY/backup/${1}data"
+    if [ ! -d "${SERVER_DIRECTORY}/backup/${1}data" ]; then
+        mkdir -p "${SERVER_DIRECTORY}/backup/${1}data"
     fi
     local_database_dir=/root/temp${1}data
     if [ ! -d "${local_database_dir}" ]; then
@@ -450,7 +450,7 @@ function backup_database_remote {
 
     echo "Obtaining ${1} database backup"
     database_file_extension='sql'
-    if [ $USE_POSTGRESQL ]; then
+    if [ ${USE_POSTGRESQL} ]; then
         USE_POSTGRESQL=
         cd /etc/postgresql || exit 78
         # shellcheck disable=SC2024
@@ -514,7 +514,7 @@ function restore_apps {
         if [ ! "$2" ]; then
             confirm_restore=1
         else
-            if [[ "$RESTORE_APP" == "$app_name" || "$RESTORE_APP" == "all" ]]; then
+            if [[ "${RESTORE_APP}" == "${app_name}" || "${RESTORE_APP}" == "all" ]]; then
                 confirm_restore=1
             fi
         fi
@@ -534,7 +534,7 @@ function restore_database {
     restore_app_name=$1
     restore_app_domain=$2
 
-    if [ -d "$USB_MOUNT/backup/${restore_app_name}data" ]; then
+    if [ -d "${USB_MOUNT}/backup/${restore_app_name}data" ]; then
         echo $"Restoring ${restore_app_name} database"
         local_database_dir=/root/temp${restore_app_name}data
         if [ -d "${local_database_dir}" ]; then
@@ -544,10 +544,10 @@ function restore_database {
         restore_directory_from_usb "${local_database_dir}" "${restore_app_name}data"
         database_file_extension='sql'
         database_file="${local_database_dir}/${RESTORE_SUBDIR}/temp${restore_app_name}data/${restore_app_name}.${database_file_extension}"
-        if [ ! -f "$database_file" ]; then
+        if [ ! -f "${database_file}" ]; then
             database_file="${local_database_dir}/${restore_app_name}.${database_file_extension}"
         fi
-        if [ ! -f "$database_file" ]; then
+        if [ ! -f "${database_file}" ]; then
             echo $"Unable to restore ${restore_app_name} database"
             rm -rf "${local_database_dir}"
             function_check set_user_permissions
@@ -556,14 +556,14 @@ function restore_database {
             backup_unmount_drive
             exit 78
         fi
-        if [ $USE_POSTGRESQL ]; then
+        if [ ${USE_POSTGRESQL} ]; then
             USE_POSTGRESQL=
             cd /etc/postgresql || exit 63
             mysqlsuccess=$(sudo -u postgres pg_restore "$database_file")
         fi
         # shellcheck disable=SC2181
         if [ ! "$?" = "0" ]; then
-            echo "$mysqlsuccess"
+            echo "${mysqlsuccess}"
             function_check set_user_permissions
             set_user_permissions
             function_check set_user_permissions
@@ -593,16 +593,16 @@ function restore_database {
 
             if [ -d "/var/www/${restore_app_domain}/htdocs" ]; then
                 restore_from_dir="/root/temp${restore_app_name}/${RESTORE_SUBDIR}/www/${restore_app_domain}/htdocs"
-                if [ ! -d "$restore_from_dir" ]; then
+                if [ ! -d "${restore_from_dir}" ]; then
                     restore_from_dir=/root/temp${restore_app_name}
                 fi
-                if [ -d "$restore_from_dir" ]; then
+                if [ -d "${restore_from_dir}" ]; then
                     if [ -d "/root/temp${restore_app_name}/${RESTORE_SUBDIR}/www/${restore_app_domain}/htdocs" ]; then
                         rm -rf "/var/www/${restore_app_domain}/htdocs"
                         # shellcheck disable=SC2086
-                        mv $restore_from_dir /var/www/${restore_app_domain}/
+                        mv ${restore_from_dir} /var/www/${restore_app_domain}/
                     else
-                        cp -r "$restore_from_dir/"* "/var/www/${restore_app_domain}/htdocs/"
+                        cp -r "${restore_from_dir}/"* "/var/www/${restore_app_domain}/htdocs/"
                     fi
                     # shellcheck disable=SC2181
                     if [ ! "$?" = "0" ]; then
@@ -648,7 +648,7 @@ function valid_backup_destination {
 }
 
 function backup_extra_directories {
-    if [ ! -f "$BACKUP_EXTRA_DIRECTORIES" ]; then
+    if [ ! -f "${BACKUP_EXTRA_DIRECTORIES}" ]; then
         return
     fi
 
@@ -658,11 +658,11 @@ function backup_extra_directories {
     while read -r backup_line
     do
         backup_dir=$(echo "$backup_line" | awk -F ',' '{print $1}' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
-        if [ -d "$backup_dir" ]; then
+        if [ -d "${backup_dir}" ]; then
             destination_dir=$(echo "$backup_line" | awk -F ',' '{print $2}' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
             if [[ $(valid_backup_destination "$destination_dir") == "yes" ]]; then
-                if [[ $backup_type == "local" ]]; then
-                    backup_directory_to_usb "$backup_dir" "$destination_dir"
+                if [[ ${backup_type} == "local" ]]; then
+                    backup_directory_to_usb "${backup_dir}" "${destination_dir}"
                 fi
             else
                 echo $"WARNING: The backup directory $destination_dir is already used."
@@ -671,21 +671,21 @@ function backup_extra_directories {
         else
             echo $"WARNING: Directory $backup_dir does not exist"
         fi
-    done <"$BACKUP_EXTRA_DIRECTORIES"
+    done <"${BACKUP_EXTRA_DIRECTORIES}"
 }
 
 function store_drives_baseline {
-    if [ -f $DRIVES_BASELINE_FILE ]; then
+    if [ -f ${DRIVES_BASELINE_FILE} ]; then
         return
     fi
     # shellcheck disable=SC2012
-    ls -gA /dev/sd* | awk -F '/dev/' '{print $2}' > $DRIVES_BASELINE_FILE
+    ls -gA /dev/sd* | awk -F '/dev/' '{print $2}' > ${DRIVES_BASELINE_FILE}
 }
 
 function detect_connected_drives {
-    if [ ! -f $DRIVES_BASELINE_FILE ]; then
+    if [ ! -f ${DRIVES_BASELINE_FILE} ]; then
         # shellcheck disable=SC2012
-        ls -gA /dev/sd* | awk -F '/dev/' '{print $2}' > $DRIVES_BASELINE_FILE
+        ls -gA /dev/sd* | awk -F '/dev/' '{print $2}' > ${DRIVES_BASELINE_FILE}
         return
     fi
     # shellcheck disable=SC2012

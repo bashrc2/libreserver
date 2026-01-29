@@ -362,7 +362,7 @@ function upgrade_epicyon {
 
 function backup_local_epicyon {
     EPICYON_DOMAIN_NAME='epicyon'
-    if grep -q "epicyon domain" "$COMPLETION_FILE"; then
+    if grep -q "epicyon domain" "${COMPLETION_FILE}"; then
         EPICYON_DOMAIN_NAME=$(get_completion_param "epicyon domain")
     fi
 
@@ -373,7 +373,7 @@ function backup_local_epicyon {
     systemctl stop epicyon
 
     dest_directory=epicyon
-    backup_directory_to_usb "$source_directory" $dest_directory
+    backup_directory_to_usb "${source_directory}" ${dest_directory}
     backup_tor_config_to_usb epicyon
 
     restart_site
