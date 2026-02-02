@@ -1371,49 +1371,49 @@ function configure_journalctl {
     fi
 
     # ensure that journalctl does not get too large
-    if grep -q "#SystemMaxUse="; then
+    if grep -q "#SystemMaxUse=" /etc/systemd/journald.conf; then
         sed -i "s|#SystemMaxUse=.*|SystemMaxUse=${JOURNALD_MAX_USE}|g" /etc/systemd/journald.conf
     else
-        if grep -q "SystemMaxUse="; then
+        if grep -q "SystemMaxUse=" /etc/systemd/journald.conf; then
             sed -i "s|SystemMaxUse=.*|SystemMaxUse=${JOURNALD_MAX_USE}|g" /etc/systemd/journald.conf
         fi
     fi
-    if ! grep -q "SystemMaxUse="; then
+    if ! grep -q "SystemMaxUse=" /etc/systemd/journald.conf; then
         echo "SystemMaxUse=${JOURNALD_MAX_USE}" >> /etc/systemd/journald.conf
     fi
 
     # only keep journal files for a limited time
-    if grep -q "#MaxFileSec="; then
+    if grep -q "#MaxFileSec=" /etc/systemd/journald.conf; then
         sed -i "s|#MaxFileSec=.*|MaxFileSec=${JOURNALD_MAX_TIME}|g" /etc/systemd/journald.conf
     else
-        if grep -q "MaxFileSec="; then
+        if grep -q "MaxFileSec=" /etc/systemd/journald.conf; then
             sed -i "s|MaxFileSec=.*|MaxFileSec=${JOURNALD_MAX_TIME}|g" /etc/systemd/journald.conf
         fi
     fi
-    if ! grep -q "MaxFileSec="; then
+    if ! grep -q "MaxFileSec=" /etc/systemd/journald.conf; then
         echo "MaxFileSec=${JOURNALD_MAX_TIME}" >> /etc/systemd/journald.conf
     fi
 
     # apply rate limiting to journalctl
-    if grep -q "#RateLimitBurst="; then
+    if grep -q "#RateLimitBurst=" /etc/systemd/journald.conf; then
         sed -i "s|#RateLimitBurst=.*|RateLimitBurst=${JOURNALD_RATE_LIMIT}|g" /etc/systemd/journald.conf
     else
-        if grep -q "RateLimitBurst="; then
+        if grep -q "RateLimitBurst=" /etc/systemd/journald.conf; then
             sed -i "s|RateLimitBurst=.*|RateLimitBurst=${JOURNALD_RATE_LIMIT}|g" /etc/systemd/journald.conf
         fi
     fi
-    if ! grep -q "RateLimitBurst="; then
+    if ! grep -q "RateLimitBurst=" /etc/systemd/journald.conf; then
         echo "RateLimitBurst=${JOURNALD_RATE_LIMIT}" >> /etc/systemd/journald.conf
     fi
 
-    if grep -q "#RateLimitIntervalSec="; then
+    if grep -q "#RateLimitIntervalSec=" /etc/systemd/journald.conf; then
         sed -i "s|#RateLimitIntervalSec=.*|RateLimitIntervalSec=${JOURNALD_RATE_DURATION}|g" /etc/systemd/journald.conf
     else
-        if grep -q "RateLimitIntervalSec="; then
+        if grep -q "RateLimitIntervalSec=" /etc/systemd/journald.conf; then
             sed -i "s|RateLimitIntervalSec=.*|RateLimitIntervalSec=${JOURNALD_RATE_DURATION}|g" /etc/systemd/journald.conf
         fi
     fi
-    if ! grep -q "RateLimitIntervalSec="; then
+    if ! grep -q "RateLimitIntervalSec=" /etc/systemd/journald.conf; then
         echo "RateLimitIntervalSec=${JOURNALD_RATE_DURATION}" >> /etc/systemd/journald.conf
     fi
 
