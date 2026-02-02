@@ -543,7 +543,7 @@ function remove_management_engine_interface {
 
 function set_login_umask {
     if ! grep -q "UMASK" /etc/login.defs; then
-        echo "UMASK		077" >> /etc/login.defs
+        echo "UMASK     077" >> /etc/login.defs
     fi
     logindefs_umask=$(grep UMASK /etc/login.defs | grep -v '#')
     if [[ "$logindefs_umask" != *'077' ]]; then
@@ -1364,7 +1364,66 @@ function install_qrencode {
     fi
 }
 
+function configure_journalctl {
+    if [ ! -f /etc/systemd/journald.conf ]; then
+        echo $'journald configuration file not found'
+        return
+    fi
+
+    # ensure that journalctl does not get too large
+    if grep -q "#SystemMaxUse="; then
+        sed -i "s|#SystemMaxUse=.*|SystemMaxUse=${JOURNALD_MAX_USE}|g" /etc/systemd/journald.conf
+    else
+        if grep -q "SystemMaxUse="; then
+            sed -i "s|SystemMaxUse=.*|SystemMaxUse=${JOURNALD_MAX_USE}|g" /etc/systemd/journald.conf
+        fi
+    fi
+    if ! grep -q "SystemMaxUse="; then
+        echo "SystemMaxUse=${JOURNALD_MAX_USE}" >> /etc/systemd/journald.conf
+    fi
+
+    # only keep journal files for a limited time
+    if grep -q "#MaxFileSec="; then
+        sed -i "s|#MaxFileSec=.*|MaxFileSec=${JOURNALD_MAX_TIME}|g" /etc/systemd/journald.conf
+    else
+        if grep -q "MaxFileSec="; then
+            sed -i "s|MaxFileSec=.*|MaxFileSec=${JOURNALD_MAX_TIME}|g" /etc/systemd/journald.conf
+        fi
+    fi
+    if ! grep -q "MaxFileSec="; then
+        echo "MaxFileSec=${JOURNALD_MAX_TIME}" >> /etc/systemd/journald.conf
+    fi
+
+    # apply rate limiting to journalctl
+    if grep -q "#RateLimitBurst="; then
+        sed -i "s|#RateLimitBurst=.*|RateLimitBurst=${JOURNALD_RATE_LIMIT}|g" /etc/systemd/journald.conf
+    else
+        if grep -q "RateLimitBurst="; then
+            sed -i "s|RateLimitBurst=.*|RateLimitBurst=${JOURNALD_RATE_LIMIT}|g" /etc/systemd/journald.conf
+        fi
+    fi
+    if ! grep -q "RateLimitBurst="; then
+        echo "RateLimitBurst=${JOURNALD_RATE_LIMIT}" >> /etc/systemd/journald.conf
+    fi
+
+    if grep -q "#RateLimitIntervalSec="; then
+        sed -i "s|#RateLimitIntervalSec=.*|RateLimitIntervalSec=${JOURNALD_RATE_DURATION}|g" /etc/systemd/journald.conf
+    else
+        if grep -q "RateLimitIntervalSec="; then
+            sed -i "s|RateLimitIntervalSec=.*|RateLimitIntervalSec=${JOURNALD_RATE_DURATION}|g" /etc/systemd/journald.conf
+        fi
+    fi
+    if ! grep -q "RateLimitIntervalSec="; then
+        echo "RateLimitIntervalSec=${JOURNALD_RATE_DURATION}" >> /etc/systemd/journald.conf
+    fi
+
+    systemctl force-reload systemd-journald
+}
+
 function setup_utils {
+    function_check configure_journalctl
+    configure_journalctl
+
     function_check install_duf
     install_duf
 

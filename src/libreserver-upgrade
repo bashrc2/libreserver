@@ -197,9 +197,13 @@ if [ -d "${PROJECT_DIR}" ]; then
                 fi
 
                 echo ''
+                echo "configure_journalctl"
+                echo "configure_journalctl" >> ${UPGRADE_LOG}
+				configure_journalctl
+                echo ''
                 echo "journalctl vacuum"
                 echo "journalctl vacuum" >> ${UPGRADE_LOG}
-                journalctl --vacuum-size=200M
+                journalctl --vacuum-size=${JOURNALD_MAX_USE}
                 echo ''
                 echo "update port scan defense"
                 echo "update port scan defense" >> ${UPGRADE_LOG}

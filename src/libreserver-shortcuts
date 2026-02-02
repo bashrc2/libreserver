@@ -137,4 +137,9 @@ PACKAGE_UNHOLD='apt-mark -q unhold'
 CLEAN_PACKAGES='apt-get clean'
 REMOVE_UNUSED_PACKAGES='apt-get -yq autoremove'
 
+JOURNALD_MAX_USE='200M'
+JOURNALD_MAX_TIME='1week'
+JOURNALD_RATE_LIMIT=100
+JOURNALD_RATE_DURATION='30s'
+
 # NOTE: deliberately there is no "exit 0"
