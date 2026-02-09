@@ -278,6 +278,7 @@ function upgrade_conduit {
             sed -i "/conduit=${CONDUIT_HTTP_PORT}/d" "${FIREWALL_CONFIG}"
         fi
         firewall_add conduit ${CONDUIT_HTTP_PORT} tcp 5
+        firewall_max_connections ${CONDUIT_PORT_INTERNAL} ${CONDUIT_FIREWALL_MAX_CONNECTIONS}
     fi
 
     # remove old way of managing retained media
