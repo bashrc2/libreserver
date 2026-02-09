@@ -272,6 +272,14 @@ function upgrade_distro_conduit {
 function upgrade_conduit {
     conduit_clear_log_files
 
+    # add firewall entry if needed
+    if ! grep -q "${CONDUIT_HTTP_PORT}" /etc/nftables.conf; then
+        if grep -q "conduit=${CONDUIT_HTTP_PORT}" "${FIREWALL_CONFIG}"; then
+            sed -i '/conduit=${CONDUIT_HTTP_PORT}/d' "${FIREWALL_CONFIG}"
+        fi
+        firewall_add conduit ${CONDUIT_HTTP_PORT} tcp 5
+    fi
+
     # remove old way of managing retained media
     if [ -f ${CONDUIT_COMPACT_FILENAME} ]; then
         rm ${CONDUIT_COMPACT_FILENAME}
