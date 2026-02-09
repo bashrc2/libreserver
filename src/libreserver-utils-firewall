@@ -1825,13 +1825,23 @@ function upgrade_iptables {
     if [ -f "${FIREWALL_CONFIG}" ]; then
         if grep -q '=587$' "${FIREWALL_CONFIG}"; then
             if ! grep -q "465" /etc/nftables.conf; then
+                echo $'Adding email firewall ports 25, 465'
+                echo "Adding email firewall ports 25, 465" >> ${UPGRADE_LOG}
+                sed -i '/=25$/d' "${FIREWALL_CONFIG}"
+                sed -i '/=465$/d' "${FIREWALL_CONFIG}"
                 firewall_add Email 25 tcp 5
                 firewall_add Email 465 tcp 5
             fi
             if ! grep -q "587" /etc/nftables.conf; then
+                echo $'Adding email firewall port 587'
+                echo "Adding email firewall port 587" >> ${UPGRADE_LOG}
+                sed -i '/=587$/d' "${FIREWALL_CONFIG}"
                 firewall_add Email 587 tcp 5
             fi
             if ! grep -q "993" /etc/nftables.conf; then
+                echo $'Adding email firewall port 993'
+                echo "Adding email firewall port 993" >> ${UPGRADE_LOG}
+                sed -i '/=993$/d' "${FIREWALL_CONFIG}"
                 firewall_add Imap 993 tcp 5
             fi
         fi
