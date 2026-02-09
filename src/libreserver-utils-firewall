@@ -574,6 +574,16 @@ function firewall_max_connections {
     firewall_port="$1"
     firewall_connections="$2"
     firewall_remove_connections="$3"
+
+    if [ ! "${firewall_port}" ]; then
+        echo $"No firewall port specified"
+        return
+    fi
+    if [ ! "${firewall_connections}" ]; then
+        echo $"No firewall connections specified for port ${firewall_port}"
+        return
+    fi
+    
     if [ ! "${firewall_remove_connections}" ]; then
         # shellcheck disable=SC2086
         /usr/sbin/nft add rule inet filter INPUT tcp dport ${firewall_port} meter test-${firewall_port}-count-meter "{ ip saddr & 255.255.255.0 ct count over ${firewall_connections} }" counter reject with tcp reset
@@ -1830,19 +1840,23 @@ function upgrade_iptables {
                 sed -i '/=25$/d' "${FIREWALL_CONFIG}"
                 sed -i '/=465$/d' "${FIREWALL_CONFIG}"
                 firewall_add Email 25 tcp 5
+                firewall_max_connections 25 ${EMAIL_FIREWALL_MAX_CONNECTIONS}
                 firewall_add Email 465 tcp 5
+                firewall_max_connections 465 ${EMAIL_FIREWALL_MAX_CONNECTIONS}
             fi
             if ! grep -q "587" /etc/nftables.conf; then
                 echo $'Adding email firewall port 587'
                 echo "Adding email firewall port 587" >> ${UPGRADE_LOG}
                 sed -i '/=587$/d' "${FIREWALL_CONFIG}"
                 firewall_add Email 587 tcp 5
+                firewall_max_connections 587 ${EMAIL_FIREWALL_MAX_CONNECTIONS}
             fi
             if ! grep -q "993" /etc/nftables.conf; then
                 echo $'Adding email firewall port 993'
                 echo "Adding email firewall port 993" >> ${UPGRADE_LOG}
                 sed -i '/=993$/d' "${FIREWALL_CONFIG}"
                 firewall_add Imap 993 tcp 5
+                firewall_max_connections 993 ${EMAIL_FIREWALL_MAX_CONNECTIONS}
             fi
         fi
     fi

@@ -50,6 +50,10 @@ MY_GPG_PUBLIC_KEY_ID=
 GPGIT_REPO="https://gitlab.com/mikecardwell/gpgit"
 GPGIT_COMMIT='583dc76119f19420f8a33f606744faa7c8922738'
 
+# email max connections
+EMAIL_FIREWALL_MAX_CONNECTIONS=100
+IMAP_FIREWALL_MAX_CONNECTIONS=100
+
 # refresh gpg keys every few hours
 REFRESH_GPG_KEYS_HOURS=2
 
@@ -406,9 +410,13 @@ function configure_firewall_for_email {
     fi
 
     firewall_add Email 25 tcp 5
+    firewall_max_connections 25 ${EMAIL_FIREWALL_MAX_CONNECTIONS}
     firewall_add Email 587 tcp 5
+    firewall_max_connections 587 ${EMAIL_FIREWALL_MAX_CONNECTIONS}
     firewall_add Email 465 tcp 5
+    firewall_max_connections 465 ${EMAIL_FIREWALL_MAX_CONNECTIONS}
     firewall_add Imap 993 tcp 5
+    firewall_max_connections 993 ${IMAP_FIREWALL_MAX_CONNECTIONS}
 }
 
 function encrypt_incoming_email {
