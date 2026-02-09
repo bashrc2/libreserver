@@ -444,8 +444,8 @@ function configure_firewall_for_dns {
         # docker does its own firewalling
         return
     fi
-    /usr/sbin/nft add rule inet filter INPUT udp dport 1024-65535 accept
-    /usr/sbin/nft add rule inet filter INPUT tcp sport 53 accept
+    /usr/sbin/nft add rule inet filter INPUT udp dport 1024-65535 ct state new limit rate 4/second burst 5 packets accept
+    /usr/sbin/nft add rule inet filter INPUT tcp sport 53 ct state new limit rate 4/second burst 5 packets accept
     function_check save_firewall_settings
     save_firewall_settings
     mark_completed "${FUNCNAME[0]}"
