@@ -277,7 +277,7 @@ function install_flightgear {
 
     increment_app_install_progress
 
-    firewall_add flightgear ${FLIGHTGEAR_PORT}
+    firewall_add flightgear ${FLIGHTGEAR_PORT} tcp 5
 
     increment_app_install_progress
 

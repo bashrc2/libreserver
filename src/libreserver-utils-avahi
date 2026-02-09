@@ -190,8 +190,10 @@ function configure_firewall_for_avahi {
         return
     fi
 
-    firewall_add avahi1 548
-    firewall_add_range avahi2 5353 5354
+    firewall_add avahi1 548 tcp 5
+    firewall_add avahi1 548 udp 5
+    firewall_add_range avahi2 5353 5354 tcp "avahi range" 5
+    firewall_add_range avahi2 5353 5354 udp "avahi range" 5
 
     function_check save_firewall_settings
     save_firewall_settings

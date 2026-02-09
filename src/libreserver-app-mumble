@@ -244,7 +244,8 @@ function configure_firewall_for_mumble {
     if [[ $ONION_ONLY != "no" ]]; then
         return
     fi
-    firewall_add Mumble ${MUMBLE_PORT}
+    firewall_add Mumble ${MUMBLE_PORT} tcp 5
+    firewall_add Mumble ${MUMBLE_PORT} udp 5
     mark_completed "${FUNCNAME[0]}"
 }
 

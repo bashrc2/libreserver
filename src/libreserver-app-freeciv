@@ -204,7 +204,7 @@ function install_freeciv {
 
     increment_app_install_progress
 
-    firewall_add freeciv ${FREECIV_PORT}
+    firewall_add freeciv ${FREECIV_PORT} tcp 5
 
     chown -R freeciv:freeciv "$FREECIV_DIR"
 

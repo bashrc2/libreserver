@@ -105,8 +105,8 @@ function configure_firewall_for_dlna {
         return
     fi
 
-    firewall_add DLNAP $DLNA_PRESENTATION_PORT tcp
-    firewall_add DLNA $DLNA_PORT udp
+    firewall_add DLNAP $DLNA_PRESENTATION_PORT tcp 5
+    firewall_add DLNA $DLNA_PORT udp 5
 
     { echo '<?xml version="1.0" standalone="no"?><!--*-nxml-*-->';
       echo '<!DOCTYPE service-group SYSTEM "avahi-service.dtd">';

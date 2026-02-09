@@ -145,7 +145,7 @@ function configure_firewall_for_git {
         return
     fi
 
-    firewall_add Git 9418 tcp
+    firewall_add Git 9418 tcp 5
     mark_completed "${FUNCNAME[0]}"
 }
 

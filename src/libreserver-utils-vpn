@@ -247,7 +247,7 @@ function wireguard_enable_client {
         if grep -q "Endpoint = ${VPN_IP_ADDRESS}" /etc/wireguard/wg0-client.conf; then
             # Configuration hasn't changed
             wg-quick up wg0-client
-            firewall_add wireguard ${WIREGUARD_PORT} udp
+            firewall_add wireguard ${WIREGUARD_PORT} udp 5
             firewall_max_connections ${WIREGUARD_PORT} ${WIREGUARD_MAX_CONNECTIONS}
             return
         else
@@ -269,7 +269,7 @@ function wireguard_enable_client {
     chmod 600 /etc/wireguard/wg0-client.conf
 
     wg-quick up wg0-client
-    firewall_add wireguard ${WIREGUARD_PORT} udp
+    firewall_add wireguard ${WIREGUARD_PORT} udp 5
     firewall_max_connections ${WIREGUARD_PORT} $WIREGUARD_MAX_CONNECTIONS
 }
 
@@ -350,7 +350,7 @@ function wireguard_enable {
         fi
 
         if [ $vpn_peers_ctr -gt 0 ]; then
-            firewall_add wireguard ${WIREGUARD_PORT} udp
+            firewall_add wireguard ${WIREGUARD_PORT} udp 5
             firewall_max_connections ${WIREGUARD_PORT} $WIREGUARD_MAX_CONNECTIONS
             wireguard_allow_forwarding 1
             mv /tmp/wg0.conf /etc/wireguard/wg0.conf

@@ -1212,11 +1212,11 @@ function configure_firewall_for_xmpp {
     if [[ $ONION_ONLY != "no" ]]; then
         return
     fi
-    firewall_add XMPP 5222 tcp
-    firewall_add XMPP 5223 tcp
-    firewall_add XMPP 5269 tcp
-    firewall_add XMPP 5280 tcp
-    firewall_add XMPP 5281 tcp
+    firewall_add XMPP 5222 tcp 5
+    firewall_add XMPP 5223 tcp 5
+    firewall_add XMPP 5269 tcp 5
+    firewall_add XMPP 5280 tcp 5
+    firewall_add XMPP 5281 tcp 5
     # netstat -an | grep :5222 | wc -l
     firewall_max_connections 5222 $XMPP_FIREWALL_MAX_CONNECTIONS
     firewall_max_connections 5223 $XMPP_FIREWALL_MAX_CONNECTIONS

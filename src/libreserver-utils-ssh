@@ -432,7 +432,7 @@ function configure_firewall_for_ssh {
         return
     fi
 
-    firewall_add SSH ${SSH_PORT} tcp
+    firewall_add SSH ${SSH_PORT} tcp 5
     mark_completed "${FUNCNAME[0]}"
 }
 

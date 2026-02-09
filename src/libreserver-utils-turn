@@ -46,9 +46,11 @@ function install_turn {
     fi
 
     INSTALL_PACKAGES coturn
-    firewall_add turn ${TURN_PORT}
-    firewall_add turntls ${TURN_TLS_PORT}
-    firewall_add_range turnrange 49152 65535 udp
+    firewall_add turn ${TURN_PORT} tcp 5
+    firewall_add turn ${TURN_PORT} udp 5
+    firewall_add turntls ${TURN_TLS_PORT} tcp 5
+    firewall_add turntls ${TURN_TLS_PORT} udp 5
+    firewall_add_range turnrange 49152 65535 udp "turn range" 5
 
     curr_ipv4=$(get_external_ipv4_address)
     { echo "listening-port=${TURN_PORT}";

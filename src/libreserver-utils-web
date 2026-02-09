@@ -982,8 +982,8 @@ function configure_firewall_for_web_access {
     if [[ ${ONION_ONLY} != "no" || ${I2P_ONLY} != "no" ]]; then
         return
     fi
-    firewall_add HTTP 80 tcp
-    firewall_add HTTPS 443 tcp
+    firewall_add HTTP 80 tcp 5
+    firewall_add HTTPS 443 tcp 5
     mark_completed "${FUNCNAME[0]}"
 }
 

@@ -283,7 +283,7 @@ function global_rate_limit {
 function enable_ipv6 {
     # DHCPv6
     # https://en.wikipedia.org/wiki/DHCPv6
-    firewall_add dhcpv6 546 udp
+    firewall_add dhcpv6 546 udp 5
 
     # allow icmp for ipv6
     if grep -q 'drop icmp ipv6' /etc/nftables.conf; then
@@ -392,7 +392,7 @@ function firewall_add {
 }
 
 function firewall_enable_vpn {
-    firewall_add VPN 1194 tcp
+    firewall_add VPN 1194 tcp 5
     save_firewall_settings
 }
 
@@ -669,7 +669,7 @@ function configure_firewall {
         if [ ${enable_dhcpv6} ]; then
             # DHCPv6 client
             # https://en.wikipedia.org/wiki/DHCPv6
-            firewall_add dhcpv6 546 udp
+            firewall_add dhcpv6 546 udp 5
         fi
 
         echo $'Firewall configured'
@@ -1068,6 +1068,7 @@ function firewall_add_range {
     firewall_port_end=$3
     firewall_protocol="$4"
     add_range_comment="$5"
+    add_range_rate_limit="$6"
 
     # generate the firewall if needed
     generate_firewall=
@@ -1096,9 +1097,9 @@ function firewall_add_range {
         if [ ! "${firewall_protocol}" ]; then
             if [ "$add_range_comment" ]; then
                 # shellcheck disable=SC2086
-                /usr/sbin/nft add rule inet filter INPUT tcp dport "${firewall_port_start}"-"${firewall_port_end}" accept comment \"$add_range_comment\"
+                /usr/sbin/nft add rule inet filter INPUT tcp dport "${firewall_port_start}"-"${firewall_port_end}" limit rate "${add_range_rate_limit}"/second burst 5 packets accept comment \"$add_range_comment\"
                 # shellcheck disable=SC2086
-                /usr/sbin/nft add rule inet filter INPUT udp dport "${firewall_port_start}"-"${firewall_port_end}" accept comment \"$add_range_comment\"
+                /usr/sbin/nft add rule inet filter INPUT udp dport "${firewall_port_start}"-"${firewall_port_end}" limit rate "${add_range_rate_limit}"/second burst 5 packets accept comment \"$add_range_comment\"
             else
                 /usr/sbin/nft add rule inet filter INPUT tcp dport "${firewall_port_start}"-"${firewall_port_end}" accept
                 /usr/sbin/nft add rule inet filter INPUT udp dport "${firewall_port_start}"-"${firewall_port_end}" accept
@@ -1107,7 +1108,7 @@ function firewall_add_range {
             if [[ "${firewall_protocol}" == *"udp"* ]]; then
                 if [ "$add_range_comment" ]; then
                     # shellcheck disable=SC2086
-                    /usr/sbin/nft add rule inet filter INPUT udp dport "${firewall_port_start}"-"${firewall_port_end}" accept comment \"$add_range_comment\"
+                    /usr/sbin/nft add rule inet filter INPUT udp dport "${firewall_port_start}"-"${firewall_port_end}" limit rate "${add_range_rate_limit}"/second burst 5 packets accept comment \"$add_range_comment\"
                 else
                     /usr/sbin/nft add rule inet filter INPUT udp dport "${firewall_port_start}"-"${firewall_port_end}" accept
                 fi
@@ -1115,7 +1116,7 @@ function firewall_add_range {
             if [[ "${firewall_protocol}" == *"tcp"* ]]; then
                 if [ "$add_range_comment" ]; then
                     # shellcheck disable=SC2086
-                    /usr/sbin/nft add rule inet filter INPUT tcp dport "${firewall_port_start}"-"${firewall_port_end}" accept comment \"$add_range_comment\"
+                    /usr/sbin/nft add rule inet filter INPUT tcp dport "${firewall_port_start}"-"${firewall_port_end}" limit rate "${add_range_rate_limit}"/second burst 5 packets accept comment \"$add_range_comment\"
                 else
                     /usr/sbin/nft add rule inet filter INPUT tcp dport "${firewall_port_start}"-"${firewall_port_end}" accept
                 fi
@@ -1840,19 +1841,19 @@ function upgrade_iptables {
     if grep -q '=25$' "${FIREWALL_CONFIG}"; then
         sed -i '/=25$/d' "${FIREWALL_CONFIG}"
     fi
-    firewall_add Email 25 tcp
+    firewall_add Email 25 tcp 5
     if grep -q '=587$' "${FIREWALL_CONFIG}"; then
         sed -i '/=587$/d' "${FIREWALL_CONFIG}"
     fi
-    firewall_add Email 587 tcp
+    firewall_add Email 587 tcp 5
     if grep -q '=465$' "${FIREWALL_CONFIG}"; then
         sed -i '/=465$/d' "${FIREWALL_CONFIG}"
     fi
-    firewall_add Email 465 tcp
+    firewall_add Email 465 tcp 5
     if grep -q '=993$' "${FIREWALL_CONFIG}"; then
         sed -i '/=993$/d' "${FIREWALL_CONFIG}"
     fi
-    firewall_add Imap 993 tcp
+    firewall_add Imap 993 tcp 5
 
     # upgrade firewall ports each app
     FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"

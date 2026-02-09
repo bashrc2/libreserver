@@ -79,7 +79,8 @@ function open_i2p_listen_port {
         fi
     fi
     if [ $i2p_port_opened ]; then
-        firewall_add i2p $I2P_LISTEN_PORT
+        firewall_add i2p ${I2P_LISTEN_PORT} tcp 5
+        firewall_add i2p ${I2P_LISTEN_PORT} udp 5
         if [ ! "${rootdir}" ]; then
             systemctl restart i2pd
         fi
@@ -124,7 +125,8 @@ function i2p_base_config {
     chmod 755 "${rootdir}${i2p_tunnels_dir}"
     chmod 755 ${rootdir}/etc/i2pd/tunnels.d
 
-    firewall_add i2p ${I2P_LISTEN_PORT}
+    firewall_add i2p ${I2P_LISTEN_PORT} tcp 5
+    firewall_add i2p ${I2P_LISTEN_PORT} udp 5
 
     enable_ipv6
     /sbin/sysctl -p -q

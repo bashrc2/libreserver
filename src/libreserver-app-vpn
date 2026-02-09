@@ -201,7 +201,7 @@ function vpn_change_tls_port {
                     else
                         if [[ "$PREVIOUS_VPN_TLS_PORT" != "$VPN_TLS_PORT" ]]; then
                             firewall_remove VPN-TLS "${EXISTING_VPN_TLS_PORT}"
-                            firewall_add VPN-TLS "${VPN_TLS_PORT}" tcp
+                            firewall_add VPN-TLS "${VPN_TLS_PORT}" tcp 5
                         fi
                         systemctl enable nginx
                         systemctl restart nginx
@@ -726,7 +726,7 @@ function install_vpn {
         firewall_enable_vpn
 
         if [ ${VPN_TLS_PORT} -ne 443 ]; then
-            firewall_add VPN-TLS ${VPN_TLS_PORT} tcp
+            firewall_add VPN-TLS ${VPN_TLS_PORT} tcp 5
         fi
 
         systemctl start openvpn

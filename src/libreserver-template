@@ -1006,7 +1006,7 @@ if [ "$app_webui" ]; then
 fi
 if [ "$app_port" ]; then
     echo ''
-    echo "    firewall_add ${app_name} ${app_port} tcp"
+    echo "    firewall_add ${app_name} ${app_port} tcp 5"
 fi
 echo ''
 echo '    APP_INSTALLED=1'

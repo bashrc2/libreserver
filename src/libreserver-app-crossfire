@@ -257,7 +257,7 @@ function install_crossfire {
 
     increment_app_install_progress
 
-    firewall_add crossfire ${CROSSFIRE_PORT}
+    firewall_add crossfire ${CROSSFIRE_PORT} tcp 5
 
     crossfire_metaserver_filename=/etc/crossfire/metaserver2
     if [[ $ONION_ONLY == "no" ]]; then

@@ -189,7 +189,7 @@ function install_poker {
 
     increment_app_install_progress
 
-    firewall_add poker ${POKER_PORT}
+    firewall_add poker ${POKER_PORT} tcp 5
 
     sed -i "s|ServerPassword.*|ServerPassword value=\"\" />|g" $poker_config_filename
     sed -i "s|<ServerPort.*|<ServerPort value=\"${POKER_PORT}\" />|g" $poker_config_filename

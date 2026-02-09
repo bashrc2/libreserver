@@ -342,7 +342,7 @@ function install_rsync {
 
     increment_app_install_progress
 
-    firewall_add rsync $RSYNC_PORT tcp
+    firewall_add rsync $RSYNC_PORT tcp 5
 
     increment_app_install_progress
 

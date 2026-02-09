@@ -542,7 +542,7 @@ function tor_create_bridge_relay {
       echo "ContactInfo $MY_EMAIL_ADDRESS";
       echo "Nickname $TOR_BRIDGE_NICKNAME"; } > /etc/torrc.d/bridgerelay
 
-    firewall_add tor_bridge "$TOR_BRIDGE_PORT" tcp
+    firewall_add tor_bridge "$TOR_BRIDGE_PORT" tcp 5
 
     restart_tor_daemon
 }

@@ -261,10 +261,10 @@ function install_mpd {
 
     increment_app_install_progress
 
-    firewall_add mpd $MPD_PORT_HTTP tcp
-    firewall_add mpd $MPD_PORT_HTTP udp
-    firewall_add mpd $MPD_PORT tcp
-    firewall_add mpd $MPD_PORT udp
+    firewall_add mpd $MPD_PORT_HTTP tcp 5
+    firewall_add mpd $MPD_PORT_HTTP udp 5
+    firewall_add mpd $MPD_PORT tcp 5
+    firewall_add mpd $MPD_PORT udp 5
 
     mpd_create_configuration
 

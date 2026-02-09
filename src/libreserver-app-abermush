@@ -528,8 +528,8 @@ function install_abermush {
     ssh_enable_tty yes
     systemctl restart ssh
 
-    # firewall_add abermush_telnet ${ABERMUSH_PORT}
-    firewall_add abermush_ssh ${ABERMUSH_SSH_PORT}
+    # firewall_add abermush_telnet ${ABERMUSH_PORT} tcp 5
+    firewall_add abermush_ssh ${ABERMUSH_SSH_PORT} tcp 5
 
     increment_app_install_progress
 

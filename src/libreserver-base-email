@@ -405,10 +405,10 @@ function configure_firewall_for_email {
         return
     fi
 
-    firewall_add Email 25 tcp
-    firewall_add Email 587 tcp
-    firewall_add Email 465 tcp
-    firewall_add Imap 993 tcp
+    firewall_add Email 25 tcp 5
+    firewall_add Email 587 tcp 5
+    firewall_add Email 465 tcp 5
+    firewall_add Imap 993 tcp 5
 }
 
 function encrypt_incoming_email {

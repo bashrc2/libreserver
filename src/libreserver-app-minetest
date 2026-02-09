@@ -240,7 +240,7 @@ function install_minetest {
 
     increment_app_install_progress
 
-    firewall_add minetest ${MINETEST_PORT} udp
+    firewall_add minetest ${MINETEST_PORT} udp 5
 
     increment_app_install_progress
 
