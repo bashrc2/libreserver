@@ -1821,6 +1821,22 @@ function regenerate_webadmin_blocklist_muted_words {
 }
 
 function upgrade_iptables {
+    # enable email firewall if it is missing from nftables
+    if [ -f "${FIREWALL_CONFIG}" ]; then
+        if grep -q '=587$' "${FIREWALL_CONFIG}"; then
+            if ! grep -q "465" /etc/nftables.conf; then
+                firewall_add Email 25 tcp 5
+                firewall_add Email 465 tcp 5
+            fi
+            if ! grep -q "587" /etc/nftables.conf; then
+                firewall_add Email 587 tcp 5
+            fi
+            if ! grep -q "993" /etc/nftables.conf; then
+                firewall_add Imap 993 tcp 5
+            fi
+        fi
+    fi
+
     if [ ! -f /etc/network/if-up.d/iptables ]; then
         return
     fi
