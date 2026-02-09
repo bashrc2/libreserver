@@ -372,10 +372,10 @@ function firewall_add {
         else
             if [ "${firewall_rate_limit}" ]; then
                 if [[ "${firewall_protocol}" == *"udp"* ]]; then
-                    /usr/sbin/nft add rule inet filter INPUT udp dport "${firewall_port}" limit rate "${firewall_rate_limit}"/second burst 5 packets accept comment \""${firewall_name}"\"
+                    /usr/sbin/nft add rule inet filter INPUT udp dport "${firewall_port}" ct state new limit rate "${firewall_rate_limit}"/second burst 5 packets accept comment \""${firewall_name}"\"
                 fi
                 if [[ "${firewall_protocol}" == *"tcp"* ]]; then
-                    /usr/sbin/nft add rule inet filter INPUT tcp dport "${firewall_port}" limit rate "${firewall_rate_limit}"/second burst 5 packets accept comment \""${firewall_name}"\"
+                    /usr/sbin/nft add rule inet filter INPUT tcp dport "${firewall_port}" ct state new limit rate "${firewall_rate_limit}"/second burst 5 packets accept comment \""${firewall_name}"\"
                 fi
             else
                 if [[ "${firewall_protocol}" == *"udp"* ]]; then
