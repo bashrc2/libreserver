@@ -392,13 +392,13 @@ function configure_enable_ssh_access {
         return
     fi
     if ! grep -q "tcp dport ${SSH_PORT} meter" "${filename}"; then
-        sed -i "/ icmpv6 type /a tcp dport ${SSH_PORT} meter test-${SSH_PORT}-count-meter size 65535 { ip saddr & 255.255.255.0 ct count over 3 } counter packets 0 bytes 0 reject with tcp reset" "${filename}"
-        sed -i "/ icmpv6 type /a tcp dport ${SSH_PORT} meter test-${SSH_PORT}-count-meter6 size 65535 { ip6 saddr ct count over 3 } counter packets 0 bytes 0 reject with tcp reset" "${filename}"
+        sed -i "/ 80, 443 /a tcp dport ${SSH_PORT} meter test-${SSH_PORT}-count-meter size 65535 { ip saddr & 255.255.255.0 ct count over 3 } counter packets 0 bytes 0 reject with tcp reset" "${filename}"
+        sed -i "/ 80, 443 /a tcp dport ${SSH_PORT} meter test-${SSH_PORT}-count-meter6 size 65535 { ip6 saddr ct count over 3 } counter packets 0 bytes 0 reject with tcp reset" "${filename}"
         reload_firewall
     fi
     if ! grep -q "tcp dport { ${SSH_PORT} }" "${filename}"; then
-        sed -i "/ icmpv6 type /a tcp dport { ${SSH_PORT} } ip saddr { 192.168.1.0/24, 192.168.2.0/24, 192.168.10.0/24 } ct state new accept" "${filename}"
-        sed -i "/ icmpv6 type /a tcp dport { ${SSH_PORT} } ip6 saddr { fc00::/7 } ct state new accept" "${filename}"
+        sed -i "/ 80, 443 /a tcp dport { ${SSH_PORT} } ip saddr { 192.168.1.0/24, 192.168.2.0/24, 192.168.10.0/24 } ct state new accept" "${filename}"
+        sed -i "/ 80, 443 /a tcp dport { ${SSH_PORT} } ip6 saddr { fc00::/7 } ct state new accept" "${filename}"
         reload_firewall
     fi
 }
@@ -536,7 +536,7 @@ function configure_firewall_base {
       echo '        icmp type { echo-request, echo-reply } limit rate 4/second accept';
       echo '        icmpv6 type { echo-request, echo-reply } limit rate 4/second accept';
       echo '';
-      echo '        tcp dport { 80, 443 } ct state new accept';
+      echo '        tcp dport { 80, 443 } ct state new limit rate 10/second accept';
       echo '        tcp dport { 2222 } ip saddr { 192.168.1.0/24, 192.168.2.0/24, 192.168.10.0/24 } ct state new accept comment "allow local ssh ipv4"';
       echo '        tcp dport 2222 ip6 saddr { fc00::/7 } ct state new accept comment "allow local ssh ipv6"';
       echo '';
