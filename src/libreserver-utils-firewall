@@ -331,6 +331,7 @@ function firewall_add {
     firewall_name=$(string="$1" ; echo "${string// /-}")
     firewall_port=$2
     firewall_protocol="$3"
+    firewall_rate_limit="$4"
 
     if [ ! -f /usr/sbin/nft ]; then
         if ! grep -q "crontab:" /etc/group; then
@@ -369,11 +370,20 @@ function firewall_add {
             /usr/sbin/nft add rule inet filter INPUT tcp dport "${firewall_port}" accept comment \""${firewall_name}"\"
             /usr/sbin/nft add rule inet filter INPUT udp dport "${firewall_port}" accept comment \""${firewall_name}"\"
         else
-            if [[ "${firewall_protocol}" == *"udp"* ]]; then
-                /usr/sbin/nft add rule inet filter INPUT udp dport "${firewall_port}" accept comment \""${firewall_name}"\"
-            fi
-            if [[ "${firewall_protocol}" == *"tcp"* ]]; then
-                /usr/sbin/nft add rule inet filter INPUT tcp dport "${firewall_port}" accept comment \""${firewall_name}"\"
+            if [ "${firewall_rate_limit}" ]; then
+                if [[ "${firewall_protocol}" == *"udp"* ]]; then
+                    /usr/sbin/nft add rule inet filter INPUT udp dport "${firewall_port}" limit rate "${firewall_rate_limit}"/second burst 5 accept comment \""${firewall_name}"\"
+                fi
+                if [[ "${firewall_protocol}" == *"tcp"* ]]; then
+                    /usr/sbin/nft add rule inet filter INPUT tcp dport "${firewall_port}" limit rate "${firewall_rate_limit}"/second burst 5 accept comment \""${firewall_name}"\"
+                fi
+            else
+                if [[ "${firewall_protocol}" == *"udp"* ]]; then
+                    /usr/sbin/nft add rule inet filter INPUT udp dport "${firewall_port}" accept comment \""${firewall_name}"\"
+                fi
+                if [[ "${firewall_protocol}" == *"tcp"* ]]; then
+                    /usr/sbin/nft add rule inet filter INPUT tcp dport "${firewall_port}" accept comment \""${firewall_name}"\"
+                fi
             fi
         fi
         echo "${firewall_name}=${firewall_port}" >> "${FIREWALL_CONFIG}"
