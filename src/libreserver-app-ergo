@@ -44,15 +44,15 @@ NOT_ON_API=0
 NOT_ON_HOMEPAGE=0
 
 # show port number within the URL on app screens
-SHOW_URL_PORT=6667
+SHOW_URL_PORT=6697
 
 # Whether another app is required to be installed before this one
 REQUIRES_APP=
 
 ERGO_DOMAIN_NAME=
 ERGO_CODE=
-ERGO_PORT=6667
-ERGO_ONION_PORT=6667
+ERGO_PORT=6697
+ERGO_ONION_PORT=6697
 ERGO_REPO="https://github.com/ergochat/ergo"
 ERGO_COMMIT=
 ERGO_PORT_INTERNAL=
@@ -65,7 +65,7 @@ ERGO_DESCRIPTION='A modern IRC server'
 ERGO_MOBILE_APP_URL=
 
 # Any ports which should be added to the firewall, separated by commas
-ERGO_FIREWALL_PORTS="6667"
+ERGO_FIREWALL_PORTS="6697"
 
 ERGO_DIRECTORY=/etc/ergo
 ERGO_CONFIG=${ERGO_DIRECTORY}/ircd.yaml
@@ -113,12 +113,118 @@ function remove_user_ergo {
     "${PROJECT_NAME}-pass" -u "$remove_username" --rmapp ergo
 }
 
+function add_user_ergo_client {
+    new_username="$1"
+    new_user_password="$2"
+
+    create_ergo_client_config "${new_username}" "${new_user_password}"
+}
+
 function add_user_ergo {
     new_username="$1"
     new_user_password="$2"
 
-    "${PROJECT_NAME}-pass" -u "$new_username" -a ergo -p "$new_user_password"
+    "${PROJECT_NAME}-pass" -u "${new_username}" -a ergo -p "${new_user_password}"
+    add_user_ergo_client "${new_username}" "${new_user_password}"
     echo '0'
+}
+
+function create_ergo_client_config {
+    ergo_client_username="$1"
+    ergo_client_password="$2"
+
+    if [ ! -d /home/${ergo_client_username}/.irssi ]; then
+        mkdir /home/${ergo_client_username}/.irssi
+    fi
+    if [ ! -f /home/${ergo_client_username}/.irssi/config ]; then
+        { echo "servers = (";
+          echo "  {";
+          echo "    address = \"${DEFAULT_DOMAIN_NAME}\";";
+          echo "    chatnet = \"LibreServer\";";
+          echo "    port = \"6697\";";
+          echo "    tls_verify = \"no\";";
+          echo "    use_tls = \"yes\";";
+          echo "    autoconnect = \"yes\";";
+          echo "  },";
+          echo "  {";
+          echo "    address = \"irc.hackint.org\";";
+          echo "    chatnet = \"Hackint\";";
+          echo "    port = \"6697\";";
+          echo "    use_tls = \"yes\";";
+          echo "    autoconnect = \"no\";";
+          echo "  },";
+          echo "  {";
+          echo "    address = \"irc.oftc.net\";";
+          echo "    chatnet = \"OFTC\";";
+          echo "    port = \"6697\";";
+          echo "    use_tls = \"yes\";";
+          echo "    tls_verify = \"yes\";";
+          echo "    autoconnect = \"no\";";
+          echo "  }";
+          echo ");";
+          echo "";
+          echo "chatnets = {";
+          echo "  LibreServer = {";
+          echo "    type = \"IRC\";";
+          echo "    nick = \"${ergo_client_username}\";";
+          echo "    autosendcmd = \"/quote identify ${ergo_client_username} ${ergo_client_password};wait 2000\";";
+          echo "    max_kicks = \"4\";";
+          echo "    max_msgs = \"20\";";
+          echo "    max_whois = \"30\";";
+          echo "  };";
+          echo "  Hackint = {";
+          echo "    type = \"IRC\";";
+          echo "    max_kicks = \"1\";";
+          echo "    max_msgs = \"4\";";
+          echo "    max_whois = \"1\";";
+          echo "  };";
+          echo "  OFTC = {";
+          echo "    type = \"IRC\";";
+          echo "    max_kicks = \"1\";";
+          echo "    max_msgs = \"4\";";
+          echo "    max_whois = \"1\";";
+          echo "  };";
+          echo "};";
+          echo "";
+          echo "channels = (";
+          echo "  { name = \"#libreserver\"; chatnet = \"LibreServer\"; autojoin = \"Yes\"; },";
+          echo "  { name = \"#oftc\"; chatnet = \"OFTC\"; autojoin = \"No\"; },";
+          echo "  { name = \"#debconf\"; chatnet = \"OFTC\"; autojoin = \"No\"; },";
+          echo "  { name = \"#oftc\"; chatnet = \"OFTC\"; autojoin = \"No\"; },";
+          echo "  { name = \"#debconf\"; chatnet = \"OFTC\"; autojoin = \"No\"; }";
+          echo ");";
+          echo "";
+          echo "aliases = {";
+          echo "};";
+          echo "";
+          echo "statusbar = {";
+          echo "};";
+          echo "settings = {";
+          echo "  core = {";
+          echo "    real_name = \"${ergo_client_username}\";";
+          echo "    user_name = \"${ergo_client_username}\";";
+          echo "    nick = \"${ergo_client_username}\";";
+          echo "  };";
+          echo "  \"fe-text\" = { actlist_sort = \"refnum\"; };";
+          echo "  \"fe-common/core\" = { theme = \"elho\"; };";
+          echo "};"; } > /home/${ergo_client_username}/.irssi/config
+        chown -R ${ergo_client_username}:${ergo_client_username} /home/${ergo_client_username}/.irssi
+        # copy the admin setting to the root
+        if [[ "${ergo_client_username}" == "admin" ]]; then
+            cp -r /home/admin/.irssi /root
+        fi
+    fi
+}
+
+function install_ergo_client {
+    INSTALL_PACKAGES irssi
+    # create configuration files for all accounts
+    for d in /home/*/ ; do
+        USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+        if [[ $(is_valid_user "${USERNAME}") == "1" ]]; then
+            create_ergo_client_config "$USERNAME"
+        fi
+    done
 }
 
 function install_interactive_ergo {
@@ -292,6 +398,8 @@ function restore_remote_ergo {
 }
 
 function remove_ergo {
+    $REMOVE_PACKAGES irssi
+
     nginx_dissite "$ERGO_DOMAIN_NAME"
     remove_certs "$ERGO_DOMAIN_NAME"
 
@@ -467,6 +575,10 @@ function install_ergo {
 
     firewall_add ergo ${ERGO_PORT} tcp 5
     firewall_max_connections ${ERGO_PORT} ${ERGO_FIREWALL_MAX_CONNECTIONS}
+
+    increment_app_install_progress
+
+    install_ergo_client
 
     set_completion_param "ergo version" "${ERGO_VERSION}"
 
