@@ -243,7 +243,7 @@ function change_password_ergo {
     "${PROJECT_NAME}-pass" -u "${curr_username}" -a ergo -p "${new_user_password}"
 
     if [[ "${curr_username}" == "admin" ]]; then
-        ERGO_PASSWORD_HASHED=$(echo -n "${new_user_password}\n${new_user_password}\n" | ${ERGO_DIRECTORY}/ergo genpasswd)
+        ERGO_PASSWORD_HASHED=$(echo -n "${new_user_password}" | ${ERGO_DIRECTORY}/ergo genpasswd)
         if [[ "${ERGO_PASSWORD_HASHED}" == "$"* ]]; then
             sed -i "s|password: \".*|password: \"${ERGO_PASSWORD_HASHED}\"|g" ${ERGO_CONFIG}
             chown -R ergo:ergo ${ERGO_DIRECTORY}
@@ -525,7 +525,7 @@ function install_ergo {
             ERGO_PASSWORD="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
         fi
     fi
-    ERGO_PASSWORD_HASHED=$(echo -n "${ERGO_PASSWORD}\n${ERGO_PASSWORD}\n" | ${ERGO_DIRECTORY}/ergo genpasswd)
+    ERGO_PASSWORD_HASHED=$(echo -n "${ERGO_PASSWORD}" | ${ERGO_DIRECTORY}/ergo genpasswd)
     if [[ "${ERGO_PASSWORD_HASHED}" != "$"* ]]; then
         echo $"Unable to generate ergo hashed password"
         exit 87
