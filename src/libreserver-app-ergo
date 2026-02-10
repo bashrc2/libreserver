@@ -114,7 +114,7 @@ function remove_user_ergo {
 }
 
 function run_client_ergo {
-    TORSOCKS_CONF_FILE=~/torsocks.conf torify irssi
+    irssi
 }
 
 function add_user_ergo_client {
