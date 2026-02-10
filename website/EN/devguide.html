@@ -205,6 +205,7 @@ To create a script for a generic PHP plus MySql/MariaDB web app with a couple of
 
 <pre>
 libreserver-template --app [name] -e [email] -r [repo url] \
+  --name "My name" \
   --packages "cowsay libssl-dev" \
   -c [commit] --php yes -d mariadb > \
   src/libreserver-app-myappname</pre>
@@ -215,6 +216,7 @@ For a Nodejs app with MySql/MariaDB database:
 
 <pre>
 libreserver-template --app [name] -e [email] -r [repo url] \
+  --name "My name" \
   -c [commit] --node yes -d mariadb \
   --dir /etc/myappname --daemon yes > \
   src/libreserver-app-myappname</pre>
@@ -225,6 +227,7 @@ For a Python app with Postgresql database:
 
 <pre>
 libreserver-template --app [name] -e [email] -r [repo url] \
+  --name "My name" \
   -c [commit] -d postgresql \
   --dir /etc/myappname --daemon yes > \
   src/libreserver-app-myappname</pre>
@@ -234,6 +237,7 @@ For a Python app without any database, communicating between the daemon and the 
 </p>
 
 <pre>libreserver-template --app [name] -e [email] -r [repo url] \
+  --name "My name" \
   -c [commit] --dir /etc/myappname \
   --daemon yes --portinternal 1234 > \
   src/libreserver-app-myappname</pre>
@@ -243,6 +247,7 @@ For an app without any database which communicates directly on a particular port
 </p>
 
 <pre>libreserver-template --app [name] -e [email] -r [repo url] \
+  --name "My name" \
   -c [commit] --dir /etc/myappname \
   --daemon yes --port 5000 > \
   src/libreserver-app-myappname</pre>
@@ -253,6 +258,7 @@ A generic PHP plus MySql/MariaDB web app which is only available on an onion add
 
 <pre>
 libreserver-template --app [name] -e [email] -r [repo url] \
+  --name "My name" \
   -c [commit] --php yes -d mariadb \
   --onion yes > \
   src/libreserver-app-myappname</pre>
