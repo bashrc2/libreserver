@@ -1,0 +1,476 @@
+#!/bin/bash
+#
+#  _    _ _            ___                      
+# | |  (_) |__ _ _ ___/ __| ___ _ ___ _____ _ _ 
+# | |__| | '_ \ '_/ -_)__ \/ -_) '_\ V / -_) '_|
+# |____|_|_.__/_| \___|___/\___|_|  \_/\___|_|  
+#
+# License
+# =======
+#
+# Copyright (C) 2026 Bob Mottram <bob@libreserver.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VARIANTS='full full-vim full-micro'
+
+APP_CATEGORY=chat
+
+IN_DEFAULT_INSTALL=0
+INSTALLED_ON_DEFAULT_DOMAIN=1
+SHOW_ON_ABOUT=1
+
+# whether to show the domain name in the web UI
+SHOW_DOMAIN_IN_WEBADMIN=0
+
+# whether to show https://domain or just the domain on its own on app screen
+SHOW_DOMAIN_ONLY=1
+
+# whether this app will be included in the json API for the FreedomBox android app
+NOT_ON_API=0
+
+# Whether to show on http://libreserver/home
+NOT_ON_HOMEPAGE=0
+
+# show port number within the URL on app screens
+SHOW_URL_PORT=6667
+
+# Whether another app is required to be installed before this one
+REQUIRES_APP=
+
+ERGO_DOMAIN_NAME=
+ERGO_CODE=
+ERGO_PORT=6667
+ERGO_ONION_PORT=6667
+ERGO_REPO="https://github.com/ergochat/ergo"
+ERGO_COMMIT=
+ERGO_PORT_INTERNAL=
+
+ERGO_FIREWALL_MAX_CONNECTIONS=200
+
+# These parameters are used by the FreedomBox mobile app and web UI
+ERGO_SHORT_DESCRIPTION='IRC server'
+ERGO_DESCRIPTION='A modern IRC server'
+ERGO_MOBILE_APP_URL=
+
+# Any ports which should be added to the firewall, separated by commas
+ERGO_FIREWALL_PORTS="6667"
+
+ERGO_DIRECTORY=/etc/ergo
+ERGO_CONFIG=${ERGO_DIRECTORY}/ircd.yaml
+
+ERGO_VERSION="2.17.0"
+ERGO_DOWNLOAD_BASE="${ERGO_REPO}/releases/download/v${ERGO_VERSION}/ergo-${ERGO_VERSION}-linux"
+ERGO_ARCH_X86="x86_64"
+ERGO_DOWNLOAD_X86="${ERGO_DOWNLOAD_BASE}-${ERGO_ARCH_X86}.tar.gz"
+ERGO_ARCH_ARM64="arm64"
+ERGO_DOWNLOAD_ARM64="${ERGO_DOWNLOAD_BASE}-${ERGO_ARCH_ARM64}.tar.gz"
+ERGO_ARCH_ARMV6="armv6"
+ERGO_DOWNLOAD_ARM6="${ERGO_DOWNLOAD_BASE}-${ERGO_ARCH_ARMV6}.tar.gz"
+
+ergo_variables=(ONION_ONLY
+                DEFAULT_DOMAIN_NAME
+                ERGO_CODE
+                ERGO_PASSWORD
+                DDNS_PROVIDER
+                MY_USERNAME)
+
+function change_default_domain_name_ergo {
+    new_default_domain_name="$1"
+    # If anything references DEFAULT_DOMAIN_NAME then change it here
+    curr_default_domain=$(cat ${ERGO_DIRECTORY}/domain_name)
+    sed -i "s|name: ${curr_default_domain}|name: ${new_default_domain_name}|g" ${ERGO_CONFIG}
+    chown -R ergo:ergo ${ERGO_DIRECTORY}
+    systemctl restart ergo
+}
+
+function logging_on_ergo {
+    sed -i "s|level: .*|level: debug|g" ${ERGO_CONFIG}
+    chown -R ergo:ergo ${ERGO_DIRECTORY}
+    systemctl restart ergo
+}
+
+function logging_off_ergo {
+    sed -i "s|level: .*|level: error|g" ${ERGO_CONFIG}
+    chown -R ergo:ergo ${ERGO_DIRECTORY}
+    systemctl restart ergo
+}
+
+function remove_user_ergo {
+    remove_username="$1"
+
+    "${PROJECT_NAME}-pass" -u "$remove_username" --rmapp ergo
+}
+
+function add_user_ergo {
+    new_username="$1"
+    new_user_password="$2"
+
+    "${PROJECT_NAME}-pass" -u "$new_username" -a ergo -p "$new_user_password"
+    echo '0'
+}
+
+function install_interactive_ergo {
+    echo -n ''
+    APP_INSTALLED=1
+}
+
+function change_password_ergo {
+    curr_username="$1"
+    new_user_password="$2"
+
+    "${PROJECT_NAME}-pass" -u "${curr_username}" -a ergo -p "${new_user_password}"
+
+    if [[ "${curr_username}" == "admin" ]]; then
+        ERGO_PASSWORD_HASHED=$(echo -n "${new_user_password}\n${new_user_password}\n" | ${ERGO_DIRECTORY}/ergo genpasswd)
+        if [[ "${ERGO_PASSWORD_HASHED}" == "$"* ]]; then
+            sed -i "s|password: \".*|password: \"${ERGO_PASSWORD_HASHED}\"|g" ${ERGO_CONFIG}
+            chown -R ergo:ergo ${ERGO_DIRECTORY}
+            systemctl restart ergo
+        fi
+    fi
+}
+
+function reconfigure_ergo {
+    # This is used if you need to switch identity. Dump old keys and generate new ones
+    echo -n ''
+}
+
+function configure_interactive_ergo {
+    W=(1 $"Option 1"
+       2 $"Option 2")
+
+    while true
+    do
+        # shellcheck disable=SC2068
+        selection=$(dialog --backtitle $"LibreServer Administrator Control Panel" --title $"ergo" --menu $"Choose an operation, or ESC for main menu:" 14 70 3 "${W[@]}" 3>&2 2>&1 1>&3)
+
+        if [ ! "$selection" ]; then
+           break
+        fi
+        case $selection in
+            1) # call some function for option 1
+               ;;
+            2) # call some function for option 2
+               ;;
+        esac
+    done
+}
+
+function upgrade_distro_ergo {
+    target_distro="$1"
+    # include anything here needed to upgrade to the target distro
+}
+
+function upgrade_ergo {
+    # has the version number changed?
+    CURR_ERGO_VERSION=$(get_completion_param "ergo version")
+    if [[ "${CURR_ERGO_VERSION}" == "${ERGO_VERSION}" ]]; then
+        if [ ! ${restoring_ergo} ]; then
+            return
+        fi
+    fi
+
+    # choose the appropriate binary tarball
+    ARCHITECTURE=$(uname -m)
+    ERGO_ARCHITECTURE="${ERGO_ARCH_X86}"
+    ERGO_DOWNLOAD=${ERGO_DOWNLOAD_X86}
+    if [[ ${ARCHITECTURE} == *"aarch"* ]]; then
+        ERGO_DOWNLOAD=${ERGO_DOWNLOAD_ARM64}
+        ERGO_ARCHITECTURE="${ERGO_ARCH_ARM64}"
+    else
+        if [[ ${ARCHITECTURE} == *"arm"* ]]; then
+            ERGO_DOWNLOAD=${ERGO_DOWNLOAD_ARM6}
+            ERGO_ARCHITECTURE="${ERGO_ARCH_ARMV6}"
+        fi
+    fi
+    
+    # download the install tarball
+    if [ -f ${INSTALL_DIR}/ergo.tar.gz ]; then
+        rm ${INSTALL_DIR}/ergo.tar.gz
+    fi
+    wget -O ${INSTALL_DIR}/ergo.tar.gz ${ERGO_DOWNLOAD}
+    if [ ! -f ${INSTALL_DIR}/ergo.tar.gz ]; then
+        echo $"Unable to download ergo tarball ${ERGO_DOWNLOAD}"
+        return
+    fi
+    if [ ! -s ${INSTALL_DIR}/ergo.tar.gz ]; then
+        echo $"Unable to download ergo tarball (zero size) ${ERGO_DOWNLOAD}"
+        rm ${INSTALL_DIR}/ergo.tar.gz
+        return
+    fi
+    cd ${INSTALL_DIR} || return
+
+    # extract the tarball
+    ERGO_EXTRACT_DIRECTORY=${INSTALL_DIR}/ergo-${ERGO_VERSION}-linux-${ERGO_ARCHITECTURE}
+    if [ -d ${ERGO_EXTRACT_DIRECTORY} ]; then
+        rm -rf ${ERGO_EXTRACT_DIRECTORY}
+    fi
+    tar -xzf ${INSTALL_DIR}/ergo.tar.gz
+    if [ ! -d ${ERGO_EXTRACT_DIRECTORY} ]; then
+        echo $"Unable to extract ergo download ${INSTALL_DIR}/ergo.tar.gz"
+        return
+    fi
+
+    cp -r ${ERGO_EXTRACT_DIRECTORY}/* ${ERGO_DIRECTORY}/
+    chmod +x ${ERGO_DIRECTORY}/ergo
+    
+    set_completion_param "ergo version" "${ERGO_VERSION}"
+    chown -R ergo:ergo ${ERGO_DIRECTORY}
+    systemctl restart ergo
+}
+
+function backup_local_ergo {
+    ERGO_DOMAIN_NAME='ergo'
+    if grep -q "ergo domain" "$COMPLETION_FILE"; then
+        ERGO_DOMAIN_NAME=$(get_completion_param "ergo domain")
+    fi
+
+    source_directory=${ERGO_DIRECTORY}
+
+    suspend_site "${ERGO_DOMAIN_NAME}"
+
+    systemctl stop ergo
+
+    dest_directory=ergo
+    backup_directory_to_usb "$source_directory" $dest_directory
+
+    restart_site
+    systemctl start ergo
+}
+
+function restore_local_ergo {
+    if ! grep -q "ergo domain" "${COMPLETION_FILE}"; then
+        restoring_ergo=
+        return
+    fi
+    ERGO_DOMAIN_NAME=$(get_completion_param "ergo domain")
+    if [ ! "${ERGO_DOMAIN_NAME}" ]; then
+        return
+    fi
+    systemctl stop ergo
+
+    temp_restore_dir=/root/tempergo
+    ergo_dir=${ERGO_DIRECTORY}
+
+    restore_directory_from_usb ${temp_restore_dir} ergo
+    if [ -d ${temp_restore_dir} ]; then
+        if [ -d "${temp_restore_dir$ergo_dir}" ]; then
+            cp -rp "${temp_restore_dir$ergo_dir}"/* "${ergo_dir}"/
+        else
+            if [ ! -d "${ergo_dir}" ]; then
+                mkdir "${ergo_dir}"
+            fi
+            cp -rp "${temp_restore_dir}"/* "${ergo_dir}"/
+        fi
+        chown -R ergo:ergo "${ergo_dir}"
+        rm -rf ${temp_restore_dir}
+        restoring_ergo=1
+    fi
+    systemctl start ergo
+
+    restoring_ergo=
+}
+
+function backup_remote_ergo {
+    echo -n ''
+}
+
+function restore_remote_ergo {
+    echo -n ''
+}
+
+function remove_ergo {
+    nginx_dissite "$ERGO_DOMAIN_NAME"
+    remove_certs "$ERGO_DOMAIN_NAME"
+
+    if [ -f /etc/systemd/system/ergo.service ]; then
+        systemctl stop ergo
+        systemctl disable ergo
+        rm /etc/systemd/system/ergo.service
+    fi
+    userdel -r ergo
+
+    if [ -d "/var/www/$ERGO_DOMAIN_NAME" ]; then
+        rm -rf "/var/www/$ERGO_DOMAIN_NAME"
+    fi
+    if [ -f "/etc/nginx/sites-available/$ERGO_DOMAIN_NAME" ]; then
+        rm "/etc/nginx/sites-available/$ERGO_DOMAIN_NAME"
+    fi
+    remove_onion_service ergo "${ERGO_ONION_PORT}"
+    if grep -q "ergo" /etc/crontab; then
+        sed -i "/ergo/d" /etc/crontab
+    fi
+    remove_app ergo
+    remove_completion_param install_ergo
+    sed -i '/ergo/d' "$COMPLETION_FILE"
+
+    firewall_remove 6667 tcp
+
+    remove_ddns_domain "$ERGO_DOMAIN_NAME"
+}
+
+function install_ergo {
+    increment_app_install_progress
+
+    # choose the appropriate binary tarball
+    ARCHITECTURE=$(uname -m)
+    ERGO_ARCHITECTURE="${ERGO_ARCH_X86}"
+    ERGO_DOWNLOAD=${ERGO_DOWNLOAD_X86}
+    if [[ ${ARCHITECTURE} == *"aarch"* ]]; then
+        ERGO_DOWNLOAD=${ERGO_DOWNLOAD_ARM64}
+        ERGO_ARCHITECTURE="${ERGO_ARCH_ARM64}"
+    else
+        if [[ ${ARCHITECTURE} == *"arm"* ]]; then
+            ERGO_DOWNLOAD=${ERGO_DOWNLOAD_ARM6}
+            ERGO_ARCHITECTURE="${ERGO_ARCH_ARMV6}"
+        fi
+    fi
+    if [ ! -d "${INSTALL_DIR}" ]; then
+        mkdir -p "${INSTALL_DIR}"
+    fi
+
+    increment_app_install_progress
+    
+    # download the install tarball
+    if [ -f ${INSTALL_DIR}/ergo.tar.gz ]; then
+        rm ${INSTALL_DIR}/ergo.tar.gz
+    fi
+    wget -O ${INSTALL_DIR}/ergo.tar.gz ${ERGO_DOWNLOAD}
+    if [ ! -f ${INSTALL_DIR}/ergo.tar.gz ]; then
+        echo $"Unable to download ergo tarball ${ERGO_DOWNLOAD}"
+        exit 39
+    fi
+    if [ ! -s ${INSTALL_DIR}/ergo.tar.gz ]; then
+        echo $"Unable to download ergo tarball (zero size) ${ERGO_DOWNLOAD}"
+        rm ${INSTALL_DIR}/ergo.tar.gz
+        exit 39
+    fi
+    cd ${INSTALL_DIR} || exit 87
+
+    increment_app_install_progress
+
+    # extract the tarball
+    tar -xzf ${INSTALL_DIR}/ergo.tar.gz
+    ERGO_EXTRACT_DIRECTORY=${INSTALL_DIR}/ergo-${ERGO_VERSION}-linux-${ERGO_ARCHITECTURE}
+    if [ ! -d ${ERGO_EXTRACT_DIRECTORY} ]; then
+        echo $"Unable to extract ergo download ${INSTALL_DIR}/ergo.tar.gz"
+        exit 88
+    fi
+
+    increment_app_install_progress
+
+    # move the directory
+    if [ -f ${ERGO_DIRECTORY} ]; then
+        rm -rf ${ERGO_DIRECTORY}
+    fi
+    mv ${ERGO_EXTRACT_DIRECTORY} ${ERGO_DIRECTORY}
+    chmod +x ${ERGO_DIRECTORY}/ergo
+    cp ${ERGO_DIRECTORY}/default.yaml ${ERGO_CONFIG}
+
+    increment_app_install_progress
+
+    # get onion address, same as for email
+    ERGO_ONION_HOSTNAME=$(cat /var/lib/tor/hidden_service_email/hostname)
+
+    increment_app_install_progress
+
+    # change the configuration file
+    sed -i "s|name: ErgoTest|name: LibreServer|g" ${ERGO_CONFIG}
+    sed -i "s|name: ergo.test|name: ${DEFAULT_DOMAIN_NAME}|g" ${ERGO_CONFIG}
+    sed -i "s|tor-network.onion|${ERGO_ONION_HOSTNAME}|g" ${ERGO_CONFIG}
+    sed -i "s|level: .*|level: error|g" ${ERGO_CONFIG}
+    echo -n "${DEFAULT_DOMAIN_NAME}" > ${ERGO_DIRECTORY}/domain_name
+
+    increment_app_install_progress
+
+    # generate certificates
+    cd ${ERGO_DIRECTORY} || exit 87
+    ${ERGO_DIRECTORY}/ergo mkcerts
+
+    increment_app_install_progress
+
+    # create an admin/oper password
+    if [ ! "${ERGO_PASSWORD}" ]; then
+        if [ -f "${IMAGE_PASSWORD_FILE}" ]; then
+            ERGO_PASSWORD="$(printf "%s" "$(cat "$IMAGE_PASSWORD_FILE")")"
+        else
+            ERGO_PASSWORD="$(create_password "${MINIMUM_PASSWORD_LENGTH}")"
+        fi
+    fi
+    ERGO_PASSWORD_HASHED=$(echo -n "${ERGO_PASSWORD}\n${ERGO_PASSWORD}\n" | ${ERGO_DIRECTORY}/ergo genpasswd)
+    if [[ "${ERGO_PASSWORD_HASHED}" != "$"* ]]; then
+        echo $"Unable to generate ergo hashed password"
+        exit 87
+    fi
+    sed -i "s|password: \".*|password: \"${ERGO_PASSWORD_HASHED}\"|g" ${ERGO_CONFIG}
+    "${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a ergo -p "${ERGO_PASSWORD}"
+
+    increment_app_install_progress
+
+    # create systemd daemon
+    adduser --system --home="${ERGO_DIRECTORY}" --group ergo
+
+    { echo '[Unit]';
+      echo 'Description=ergo';
+      echo 'After=network.target';
+      echo "Documentation=${ERGO_REPO}/blob/stable/docs/MANUAL.md";
+      echo '';
+      echo '[Service]';
+      echo 'Type=simple';
+      echo 'User=ergo';
+      echo 'Group=ergo';
+      echo "WorkingDirectory=${ERGO_DIRECTORY}";
+      echo 'ExecStart=${ERGO_DIRECTORY}/ergo run';
+      echo 'Environment=USER=ergo';
+      echo 'Restart=always';
+      echo 'ProtectHome=true';
+      echo 'ProtectKernelTunables=true';
+      echo 'ProtectKernelModules=true';
+      echo 'ProtectControlGroups=true';
+      echo 'ProtectKernelLogs=true';
+      echo 'ProtectHostname=true';
+      echo 'ProtectClock=true';
+      echo 'ProtectProc=invisible';
+      echo 'ProcSubset=pid';
+      echo 'PrivateTmp=true';
+      echo 'PrivateUsers=true';
+      echo 'PrivateDevices=true';
+      echo 'PrivateIPC=true';
+      echo 'MemoryDenyWriteExecute=true';
+      echo 'NoNewPrivileges=true';
+      echo 'LockPersonality=true';
+      echo 'RestrictRealtime=true';
+      echo 'RestrictSUIDSGID=true';
+      echo 'RestrictAddressFamilies=AF_INET';
+      echo 'RestrictNamespaces=true';
+      echo 'SystemCallArchitectures=native';
+      echo '';
+      echo '[Install]';
+      echo 'WantedBy=multi-user.target'; } > "/etc/systemd/system/ergo.service"
+    systemctl enable ergo
+    chown -R ergo:ergo ${ERGO_DIRECTORY}
+    systemctl start ergo
+
+    increment_app_install_progress
+
+    firewall_add ergo ${ERGO_PORT} tcp 5
+    firewall_max_connections ${ERGO_PORT} ${ERGO_FIREWALL_MAX_CONNECTIONS}
+
+    set_completion_param "ergo version" "${ERGO_VERSION}"
+
+    APP_INSTALLED=1
+}
+
+# NOTE: deliberately there is no "exit 0"

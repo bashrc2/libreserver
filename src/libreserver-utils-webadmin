@@ -752,7 +752,7 @@ function web_admin_create_add_apps_category {
                                             sed -i "s|APPDESCRIPTION|${DESCRIPTION}|g" "${filename_app}"
 
                                             # special case for xmpp and gemini where it is the same as the default domain
-                                            if [[ "${add_app_name}" == 'xmpp' || "${add_app_name}" == 'gemini' ]]; then
+                                            if [[ "${add_app_name}" == 'xmpp' || "${add_app_name}" == 'gemini' || "${add_app_name}" == 'ergo' ]]; then
                                                 if [[ "${ONION_ONLY}" == 'no' && "${I2P_ONLY}" == 'no' ]]; then
                                                     sed -i "s|<p><label translate=\"yes\">Domain:.*|<input type=\"hidden\" name=\"install_domain\" value=\"$(hostname)\">|g" "${filename_app}"
                                                 fi
@@ -978,7 +978,7 @@ function web_admin_create_installed_apps_category {
                         read_config_param ONION_ONLY
                         read_config_param I2P_ONLY
                         onion_app_name=${app_name}
-                        if [[ "${onion_app_name}" == 'xmpp' || "${onion_app_name}" == 'gemini' ]]; then
+                        if [[ "${onion_app_name}" == 'xmpp' || "${onion_app_name}" == 'gemini' || "${onion_app_name}" == 'ergo' ]]; then
                             onion_app_name='email'
                         fi
                         i2p_app_name="${onion_app_name}"

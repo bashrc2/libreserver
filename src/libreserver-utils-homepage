@@ -146,7 +146,7 @@ function web_create_homepage {
                     read_config_param ONION_ONLY
                     read_config_param I2P_ONLY
                     onion_app_name=${app_name}
-                    if [[ "$onion_app_name" == 'xmpp' ]]; then
+                    if [[ "$onion_app_name" == 'xmpp' || "$onion_app_name" == 'ergo' ]]; then
                         onion_app_name='email'
                     fi
 		                i2p_app_name="${onion_app_name}"

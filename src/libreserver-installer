@@ -1293,7 +1293,7 @@ function web_admin_create_add_apps_category {
                                 sed -i "s|APPDESCRIPTION|${DESCRIPTION}|g" "${filename_app}"
 
                                 # special case for xmpp and gemini where it is the same as the default domain
-                                if [[ "${app_name}" == 'xmpp' || "${app_name}" == 'gemini' ]]; then
+                                if [[ "${app_name}" == 'xmpp' || "${app_name}" == 'gemini' || "${app_name}" == 'ergo' ]]; then
                                     if [[ "${ONION_ONLY}" == 'no' ]]; then
                                         sed -i "s|<p><label translate=\"yes\">Domain:.*|<input type=\"hidden\" name=\"install_domain\" value=\"$(hostname)\">|g" "${filename_app}"
                                     fi

@@ -171,7 +171,7 @@ fi
 CERTFILE=$HOSTNAME
 
 # xmpp special case
-if [[ "${HOSTNAME}" == "xmpp" ]]; then
+if [[ "${HOSTNAME}" == "xmpp" || "${HOSTNAME}" == "ergo" ]]; then
     read_config_param ONION_ONLY
     if [ "$ONION_ONLY" != 'no' ]; then
         HOSTNAME=$(cat /var/lib/tor/hidden_service_email/hostname)
