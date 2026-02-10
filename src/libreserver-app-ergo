@@ -143,7 +143,7 @@ function create_ergo_client_config {
     if [ ! -f /home/${ergo_client_username}/.irssi/config ]; then
         { echo "servers = (";
           echo "  {";
-          echo "    address = \"${DEFAULT_DOMAIN_NAME}\";";
+          echo '    address = "localhost";';
           echo "    chatnet = \"LibreServer\";";
           echo "    port = \"6697\";";
           echo "    tls_verify = \"no\";";
