@@ -113,6 +113,10 @@ function remove_user_ergo {
     "${PROJECT_NAME}-pass" -u "$remove_username" --rmapp ergo
 }
 
+function run_client_ergo {
+    TORSOCKS_CONF_FILE=~/torsocks.conf torify irssi
+}
+
 function add_user_ergo_client {
     new_username="$1"
     new_user_password="$2"
