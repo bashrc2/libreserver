@@ -548,7 +548,7 @@ function install_ergo {
       echo 'User=ergo';
       echo 'Group=ergo';
       echo "WorkingDirectory=${ERGO_DIRECTORY}";
-      echo 'ExecStart=${ERGO_DIRECTORY}/ergo run';
+      echo "ExecStart=${ERGO_DIRECTORY}/ergo run";
       echo 'Environment=USER=ergo';
       echo 'Restart=always';
       echo 'ProtectHome=true';
