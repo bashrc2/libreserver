@@ -310,7 +310,9 @@ function upgrade_ergo {
     if [ -f ${INSTALL_DIR}/ergo.tar.gz ]; then
         rm ${INSTALL_DIR}/ergo.tar.gz
     fi
+    firewall_microsoft_undo
     wget -O ${INSTALL_DIR}/ergo.tar.gz ${ERGO_DOWNLOAD}
+    firewall_microsoft
     if [ ! -f ${INSTALL_DIR}/ergo.tar.gz ]; then
         echo $"Unable to download ergo tarball ${ERGO_DOWNLOAD}"
         return
@@ -459,7 +461,9 @@ function install_ergo {
     if [ -f ${INSTALL_DIR}/ergo.tar.gz ]; then
         rm ${INSTALL_DIR}/ergo.tar.gz
     fi
+    firewall_microsoft_undo
     wget -O ${INSTALL_DIR}/ergo.tar.gz ${ERGO_DOWNLOAD}
+    firewall_microsoft
     if [ ! -f ${INSTALL_DIR}/ergo.tar.gz ]; then
         echo $"Unable to download ergo tarball ${ERGO_DOWNLOAD}"
         exit 39
