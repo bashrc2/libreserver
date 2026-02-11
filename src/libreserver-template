@@ -446,7 +446,9 @@ if [ ! "$app_repo" ]; then
 else
     echo "    CURR_${app_name_upper}_COMMIT=\$(get_completion_param \"${app_name} commit\")"
     echo "    if [[ \"\$CURR_${app_name_upper}_COMMIT\" == \"\$${app_name_upper}_COMMIT\" ]]; then"
-    echo '        return'
+    echo "        if [ ! \${restoring_${app_name}} ]; then"
+    echo '            return'
+    echo '        fi'
     echo '    fi'
     if [ "$app_webui" ]; then
         echo ''
@@ -515,6 +517,7 @@ echo ''
 echo "function restore_local_${app_name} {"
 if [ "$app_webui" ]; then
     echo "    if ! grep -q \"${app_name} domain\" \"\$COMPLETION_FILE\"; then"
+    echo "        restoring_${app_name}="
     echo '        return'
     echo '    fi'
     echo "    ${app_name_upper}_DOMAIN_NAME=\$(get_completion_param \"${app_name} domain\")"
@@ -571,6 +574,7 @@ else
     echo "        chown -R ${app_name}:${app_name} \"\$${app_name}_dir\""
 fi
 echo "        rm -rf \$temp_restore_dir"
+echo "        restoring_${app_name}=1"
 echo '    fi'
 if [ $app_daemon ]; then
     echo "    systemctl start ${app_name}"
@@ -579,6 +583,7 @@ fi
 if [ "$app_webui" ]; then
     echo '    restart_site'
 fi
+echo "    restoring_${app_name}="
 echo '}'
 echo ''
 echo "function backup_remote_${app_name} {"
