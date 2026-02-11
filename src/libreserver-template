@@ -64,6 +64,7 @@ function show_help {
     echo $'  -r --repo [url]                             Git repo url for the app'
     echo $'  -c --commit [hash]                          Git commit'
     echo $'     --port [number]                          Port number for the app'
+    echo $'     --maxconnections [number]                Maximum number of connections on the port'
     echo $'     --portinternal [number]                  Internal port between a daemon and the web server'
     echo $'     --node [yes|no]                          Is this a nodejs app?'
     echo $'     --nodeapp [package]                      Specify a nodejs package to install'
