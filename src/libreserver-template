@@ -39,6 +39,7 @@ app_nodeapp=
 app_onion_only=
 app_port=
 app_port_internal=
+app_firewall_max_connections=200
 app_daemon=
 app_dir=
 app_webui=1
@@ -118,6 +119,10 @@ do
         -i|--internal|--internalport)
             shift
             app_port_internal="$1"
+            ;;
+        --maxconnections|--maxconn)
+            shift
+            app_firewall_max_connections="$1"
             ;;
         -p|--php)
             shift
@@ -1007,6 +1012,7 @@ fi
 if [ "$app_port" ]; then
     echo ''
     echo "    firewall_add ${app_name} ${app_port} tcp 5"
+    echo "    firewall_max_connections ${app_port} ${app_firewall_max_connections}"
 fi
 echo ''
 echo '    APP_INSTALLED=1'
