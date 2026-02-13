@@ -507,7 +507,7 @@ function install_ergo {
     sed -i "s|name: ergo.test|name: ${DEFAULT_DOMAIN_NAME}|g" ${ERGO_CONFIG}
     sed -i "s|tor-network.onion|${ERGO_ONION_HOSTNAME}|g" ${ERGO_CONFIG}
     sed -i "s|level: .*|level: error|g" ${ERGO_CONFIG}
-	sed -i 's|"[::1]:6667"|# "[::1]:6667"|g' ${ERGO_CONFIG}
+	sed -i "s|\"\[::1]:6667\"|# \"\[::1]:6667\"|g" ${ERGO_CONFIG}
     echo -n "${DEFAULT_DOMAIN_NAME}" > ${ERGO_DIRECTORY}/domain_name
 
     increment_app_install_progress
