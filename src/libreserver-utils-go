@@ -170,7 +170,7 @@ function mesh_upgrade_golang {
         echo "uname reports: $(uname -m)"
         exit 63
     fi
-    GO_SOURCE=https://storage.googleapis.com/golang/go${GO_VERSION}.linux-${GOARCH}.tar.gz
+    GO_SOURCE=https://go.dev/dl/go${GO_VERSION}.linux-${GOARCH}.tar.gz
 
     if [ ! -d "${rootdir}${INSTALL_DIR}" ]; then
         chroot "$rootdir" mkdir -p "${INSTALL_DIR}"
