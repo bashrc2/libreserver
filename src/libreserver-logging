@@ -120,11 +120,11 @@ if [[ "$1" == "on" || "$1" == "On" || "$1" == "ON" ]]; then
     turn_logging_on
 
     if [ -f /etc/mosquitto/mosquitto.conf ]; then
-	      if grep -q 'log_dest ' /etc/mosquitto/mosquitto.conf; then
-	          sed -i 's|log_dest .*|log_dest stderr|g' /etc/mosquitto/mosquitto.conf
-	      else
-	          echo 'log_dest stderr' >> /etc/mosquitto/mosquitto.conf
-	      fi
+        if grep -q 'log_dest ' /etc/mosquitto/mosquitto.conf; then
+            sed -i 's|log_dest .*|log_dest stderr|g' /etc/mosquitto/mosquitto.conf
+        else
+            echo 'log_dest stderr' >> /etc/mosquitto/mosquitto.conf
+        fi
     fi
 
     if [ -f /etc/turnserver.conf ]; then
@@ -134,16 +134,16 @@ if [[ "$1" == "on" || "$1" == "On" || "$1" == "ON" ]]; then
     if [ -d /etc/tor ]; then
         if [ ! -d /var/log/tor ]; then
             mkdir /var/log/tor
-	          if ! grep -q "adm:" /etc/group; then
-		            groupadd adm
-	          fi
+            if ! grep -q "adm:" /etc/group; then
+                groupadd adm
+            fi
             chown -R debian-tor:adm /var/log/tor
         fi
         if [ ! -f /var/log/tor/notices.log ]; then
             touch /var/log/tor/notices.log
-	          if ! grep -q "adm:" /etc/group; then
-		            groupadd adm
-	          fi
+            if ! grep -q "adm:" /etc/group; then
+                groupadd adm
+            fi
             chown debian-tor:adm /var/log/tor/notices.log
         fi
         echo 'Log debug file /var/log/tor/debug.log' > /etc/torrc.d/logging
@@ -193,9 +193,9 @@ else
     turn_logging_off
 
     if [ -f /etc/mosquitto/mosquitto.conf ]; then
-	      if grep -q 'log_dest ' /etc/mosquitto/mosquitto.conf; then
-	          sed -i '/log_dest /d' /etc/mosquitto/mosquitto.conf
-	      fi
+        if grep -q 'log_dest ' /etc/mosquitto/mosquitto.conf; then
+            sed -i '/log_dest /d' /etc/mosquitto/mosquitto.conf
+        fi
     fi
 
     if [ -f /etc/turnserver.conf ]; then
@@ -302,7 +302,7 @@ fi
 systemctl restart syslog
 if [ -d /etc/tor ]; then
     if [[ "$2" != "--onion" ]]; then
-	      restart_tor_daemon
+        restart_tor_daemon
     fi
 fi
 if [ -f /etc/init.d/spamassassin ]; then

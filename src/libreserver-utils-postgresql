@@ -145,7 +145,7 @@ function drop_database_postgresql {
     database_owner_name="$2"
     cd /etc/postgresql || exit 24
     if [ ${#database_owner_name} -gt 0 ]; then
-	remove_postgresql_user "${database_owner_name}"
+        remove_postgresql_user "${database_owner_name}"
     fi
     sudo -u postgres psql -c "drop database ${database_name}"
 }

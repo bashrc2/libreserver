@@ -30,13 +30,13 @@ function install_rust {
     RUSTUP_HOME=/rust
     CARGO_HOME=/cargo
     if [ ! -d /rust ]; then
-	mkdir /rust
+        mkdir /rust
     fi
     if [ ! -d /cargo ]; then
-	mkdir /cargo
+        mkdir /cargo
     fi
     if [ ! -d "${INSTALL_DIR}/rust" ]; then
-	mkdir "${INSTALL_DIR}/rust"
+        mkdir "${INSTALL_DIR}/rust"
     fi
     PATH=/cargo/bin:/rust/bin:$PATH
 

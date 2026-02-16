@@ -48,7 +48,7 @@ POKER_DESCRIPTION=$'PokerTH'
 POKER_MOBILE_APP_URL=""
 
 poker_variables=(ONION_ONLY
-		             SYSTEM_TYPE
+                 SYSTEM_TYPE
                  MY_USERNAME)
 
 function poker_setting_serverpassword {
@@ -56,12 +56,12 @@ function poker_setting_serverpassword {
     server_password="$1"
 
     if [ ! "$server_password" ]; then
-	      return
+        return
     fi
 
     if ! grep -q "ServerPassword value=\"${server_password}\"" $poker_config_filename; then
-	      sed -i "s|ServerPassword.*|ServerPassword value=\"${server_password}\" />|g" $poker_config_filename
-	      systemctl restart pokerth-server
+        sed -i "s|ServerPassword.*|ServerPassword value=\"${server_password}\" />|g" $poker_config_filename
+        systemctl restart pokerth-server
     fi
 }
 
@@ -157,7 +157,7 @@ function remove_poker {
         rm -rf /usr/share/doc/pokerth-server
     fi
     if [ -d /usr/share/games/pokerth ]; then
-	      rm -rf /usr/share/games/pokerth
+        rm -rf /usr/share/games/pokerth
     fi
     firewall_remove ${POKER_PORT}
 }
@@ -196,9 +196,9 @@ function install_poker {
     sed -i "s|InternetGameAllowSpectators.*|InternetGameAllowSpectators value=\"0\" />|g" $poker_config_filename
     sed -i "s|InternetGameName.*|InternetGameName value=\"${PROJECT_NAME} poker\" />|g" $poker_config_filename
     if [[ "$ONION_ONLY" == 'no' ]]; then
-	      sed -i "s|InternetServerAddress.*|InternetServerAddress value=\"${POKER_DOMAIN_NAME}\" />|g" $poker_config_filename
+        sed -i "s|InternetServerAddress.*|InternetServerAddress value=\"${POKER_DOMAIN_NAME}\" />|g" $poker_config_filename
     else
-	      sed -i "s|InternetServerAddress.*|InternetServerAddress value=\"${POKER_ONION_HOSTNAME}\" />|g" $poker_config_filename
+        sed -i "s|InternetServerAddress.*|InternetServerAddress value=\"${POKER_ONION_HOSTNAME}\" />|g" $poker_config_filename
     fi
     sed -i "s|ServerRestrictGuestLogin.*|ServerRestrictGuestLogin value=\"1\" />|g" $poker_config_filename
 

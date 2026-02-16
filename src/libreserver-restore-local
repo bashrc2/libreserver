@@ -213,14 +213,14 @@ function restore_dkim {
 
     if [ -d $USB_MOUNT/backup/dkim ]; then
         echo $'Restoring DKIM keys'
-	      TEMP_DKIM_BACKUP_DIR=/root/tempdkim
+        TEMP_DKIM_BACKUP_DIR=/root/tempdkim
         restore_directory_from_usb "${TEMP_DKIM_BACKUP_DIR}" dkim
         echo "$TEMP_DKIM_BACKUP_DIR"
         ls -la $TEMP_DKIM_BACKUP_DIR
         echo "$USB_MOUNT/backup/dkim:"
         ls -la $USB_MOUNT/backup/dkim
-	      if [ -f "${TEMP_DKIM_BACKUP_DIR}/dkim_privkey.pem" ]; then
-	          cp "${TEMP_DKIM_BACKUP_DIR}/dkim_privkey.pem" /etc/exim4/dkim_privkey.pem
+        if [ -f "${TEMP_DKIM_BACKUP_DIR}/dkim_privkey.pem" ]; then
+            cp "${TEMP_DKIM_BACKUP_DIR}/dkim_privkey.pem" /etc/exim4/dkim_privkey.pem
             DKIM_PUBKEY=$(openssl rsa -in /etc/exim4dkim_privkey.pem -pubout -outform der 2>/dev/null | openssl base64 -A)
             { echo 'Email Domain Keys Setup';
               echo '=======================';
@@ -248,13 +248,13 @@ function restore_dkim {
               echo 'Subdomain: _dmarc';
               echo "Domain: ${HOSTNAME}";
               echo "Destination: \"v=DMARC1; p=reject; adkim=r; aspf=r; fo=1; rua=mailto:admin@${HOSTNAME}\""; } > /etc/exim4/dkim_dnskey.txt
-	          local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
-	          webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
-	          cp "${TEMP_DKIM_BACKUP_DIR}/dkim_dnskey.txt" "${webadmin_install_dir}/dmarc.txt"
-	          chown www-data:www-data "${webadmin_install_dir}/dmarc.txt"
+            local_hostname=$(grep 'host-name' /etc/avahi/avahi-daemon.conf | awk -F '=' '{print $2}').local
+            webadmin_install_dir="/var/www/${local_hostname}/htdocs/admin"
+            cp "${TEMP_DKIM_BACKUP_DIR}/dkim_dnskey.txt" "${webadmin_install_dir}/dmarc.txt"
+            chown www-data:www-data "${webadmin_install_dir}/dmarc.txt"
         else
             echo 'No backup DKIM key found'
-	      fi
+        fi
         if [ -d "$TEMP_DKIM_BACKUP_DIR" ]; then
             rm -rf "$TEMP_DKIM_BACKUP_DIR"
         fi

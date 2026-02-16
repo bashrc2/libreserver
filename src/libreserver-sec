@@ -83,8 +83,8 @@ function ping_enable_disable {
         /usr/sbin/nft add rule inet filter OUTPUT icmp type echo-reply counter accept
         echo "0" >  /proc/sys/net/ipv4/icmp_echo_ignore_all
     else
-	delete_firewall_port_via_handle "type echo-request"
-	delete_firewall_port_via_handle "type echo-reply"
+        delete_firewall_port_via_handle "type echo-request"
+        delete_firewall_port_via_handle "type echo-reply"
         echo "1" >  /proc/sys/net/ipv4/icmp_echo_ignore_all
     fi
 }
@@ -1035,12 +1035,12 @@ function menu_security_settings {
     cloudflare_option=$'Block Cloudflare'
     ruleset=$(/usr/sbin/nft list ruleset)
     if [ "$ruleset" ]; then
-	cf_comment="MITM(cloudflare)"
-	# is cloudflare already configured?
-	if [[ "$ruleset" == *"$cf_comment"* ]]; then
-	    cloudflare_option=$'Unblock Cloudflare'
-	    cloudflare_is_blocked=1
-	fi
+        cf_comment="MITM(cloudflare)"
+        # is cloudflare already configured?
+        if [[ "$ruleset" == *"$cf_comment"* ]]; then
+            cloudflare_option=$'Unblock Cloudflare'
+            cloudflare_is_blocked=1
+        fi
     fi
 
     W=(1 $"Passwords"
@@ -1111,7 +1111,7 @@ function menu_security_settings {
             ;;
         5)
             reset_tripwire
-	    any_key
+            any_key
             exit 0
             ;;
 
@@ -1164,19 +1164,19 @@ function menu_security_settings {
             show_firewall
             exit 0
             ;;
-	19)
-	    clear
-	    if [ ! "$cloudflare_is_blocked" ]; then
-		echo $'Blocking Cloudflare'
-		echo ''
-		firewall_block_cloudflare
-	    else
-		echo $'Unblocking Cloudflare'
-		echo ''
-		firewall_unblock_cloudflare
-	    fi
-	    exit 0
-	    ;;
+        19)
+            clear
+            if [ ! "$cloudflare_is_blocked" ]; then
+                echo $'Blocking Cloudflare'
+                echo ''
+                firewall_block_cloudflare
+            else
+                echo $'Unblocking Cloudflare'
+                echo ''
+                firewall_unblock_cloudflare
+            fi
+            exit 0
+            ;;
     esac
 
     change_website_settings

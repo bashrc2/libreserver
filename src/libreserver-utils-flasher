@@ -44,7 +44,7 @@ function beaglebone_flasher {
         check_eeprom='check_am57xx_eeprom'
     fi
     if [ "${beaglebone_variant}" = "beagleboneai" ]; then
-	# TODO this might be wrong
+        # TODO this might be wrong
         device_eeprom='x15/X15_B1-eeprom'
         check_eeprom='check_am57xx_eeprom'
     fi

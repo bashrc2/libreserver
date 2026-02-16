@@ -151,7 +151,7 @@ function test_static_analysis {
     for filename in $FILES
     do
         if [[ "$filename" == *"-config-qtox" || "$filename" == *"-image-make"* ]]; then
-           continue
+            continue
         fi
 
         if ! shellcheck --exclude "$STATIC_ANALYSIS_EXCLUDED" "$filename"; then
@@ -1526,7 +1526,7 @@ function test_stig {
         if [ "$device_count" -eq 1 ];then
             # we expect rpi to be running from a usb drive
             if [ -f /proc/device-tree/model ]; then
-	              if ! grep -q 'Raspberry' /proc/device-tree/model; then
+                if ! grep -q 'Raspberry' /proc/device-tree/model; then
                     unexpected_removables=1
                 fi
             fi

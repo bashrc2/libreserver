@@ -91,7 +91,7 @@ if [ ! "$rootdir" ]; then
           echo '    listen 80;';
           echo '    listen [::]:80;';
           echo "    server_name ${site_domain};";
-	        echo '    server_tokens off;';
+          echo '    server_tokens off;';
           echo "    root ${dest_dir};";
           echo '    access_log /dev/null;';
           echo '    error_log /dev/null;';
@@ -108,7 +108,7 @@ if [ ! "$rootdir" ]; then
           echo 'server {';
           echo '  listen 443 ssl;';
           echo "  server_name ${site_domain};";
-	        echo '  server_tokens off;';
+          echo '  server_tokens off;';
           echo '';
           echo "    if (\$http_user_agent ~* \"${crawlers_list}\") { return 403; }";
           echo '';
@@ -128,7 +128,7 @@ if [ ! "$rootdir" ]; then
           echo '    ssl_prefer_server_ciphers on;';
           echo '    ssl_session_cache shared:SSL:10m;';
           echo '    ssl_session_tickets off;';
-	        echo '';
+          echo '';
           echo "    add_header Content-Security-Policy \"default-src https:; script-src https: 'unsafe-inline'; style-src https: 'unsafe-inline'\";";
           echo '    add_header X-XSS-Protection "1; mode=block";';
           echo '    add_header X-Permitted-Cross-Domain-Policies none;';
@@ -136,7 +136,7 @@ if [ ! "$rootdir" ]; then
           echo '    add_header X-Content-Type-Options nosniff;';
           echo "    add_header Onion-Location http://${site_onion_domain}\$request_uri;";
           echo '';
-	        echo '  add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
+          echo '  add_header Strict-Transport-Security "max-age=15768000; includeSubDomains" always;';
           echo '';
           echo '  access_log /dev/null;';
           echo '  error_log /dev/null;';
@@ -296,16 +296,16 @@ if [ -d "${rootdir}/var/gemini" ]; then
     # copy epicyon gemini site
     epicyon_dir=
     if [ -d "${rootdir}/etc/epicyon" ]; then
-	      epicyon_dir="${rootdir}/etc/epicyon"
+        epicyon_dir="${rootdir}/etc/epicyon"
     fi
     if [ -d "${rootdir}/opt/epicyon" ]; then
-	      epicyon_dir="${rootdir}/opt/epicyon"
+        epicyon_dir="${rootdir}/opt/epicyon"
     fi
     if [ -d "${rootdir}${epicyon_dir}/gemini/EN" ]; then
-	      if [ ! -d "${dest_dir}/epicyon" ]; then
-	          mkdir "${dest_dir}/epicyon"
-	      fi
-	      cp -r "${rootdir}${epicyon_dir}/gemini/EN"/* "${dest_dir}/epicyon"
+        if [ ! -d "${dest_dir}/epicyon" ]; then
+            mkdir "${dest_dir}/epicyon"
+        fi
+        cp -r "${rootdir}${epicyon_dir}/gemini/EN"/* "${dest_dir}/epicyon"
     fi
 
     chown -R gemini:gemini "${dest_dir}"
@@ -318,24 +318,24 @@ fi
 if [ -d "${rootdir}${epicyon_dir}/website/EN" ]; then
     dest_dir="$rootdir/var/www/${site_domain}/htdocs"
     if [ -d "${dest_dir}" ]; then
-	      epicyon_dir=
-	      if [ -d "${rootdir}/etc/epicyon" ]; then
-	          epicyon_dir="${rootdir}/etc/epicyon"
-	      fi
-	      if [ -d "${rootdir}/opt/epicyon" ]; then
-	          epicyon_dir="${rootdir}/opt/epicyon"
-	      fi
-	      if [ -d "${epicyon_dir}" ]; then
-	          if [ ! -d "${dest_dir}/epicyon/img/icons" ]; then
-		            mkdir -p "${dest_dir}/epicyon/img/icons"
-	          fi
-	          cp -r "${rootdir}${epicyon_dir}/website/EN"/* "${dest_dir}/epicyon"
-	          cp -r "${rootdir}${epicyon_dir}/img"/* "${dest_dir}/epicyon/img/"
+        epicyon_dir=
+        if [ -d "${rootdir}/etc/epicyon" ]; then
+            epicyon_dir="${rootdir}/etc/epicyon"
+        fi
+        if [ -d "${rootdir}/opt/epicyon" ]; then
+            epicyon_dir="${rootdir}/opt/epicyon"
+        fi
+        if [ -d "${epicyon_dir}" ]; then
+            if [ ! -d "${dest_dir}/epicyon/img/icons" ]; then
+                mkdir -p "${dest_dir}/epicyon/img/icons"
+            fi
+            cp -r "${rootdir}${epicyon_dir}/website/EN"/* "${dest_dir}/epicyon"
+            cp -r "${rootdir}${epicyon_dir}/img"/* "${dest_dir}/epicyon/img/"
             cp -r "${rootdir}${epicyon_dir}/theme/default/icons/logorss.png" "${dest_dir}/epicyon/img/icons/"
-	          chown -R www-data:www-data "${dest_dir}"
+            chown -R www-data:www-data "${dest_dir}"
             chmod -R 755 "${dest_dir}/epicyon"
-	          echo "Epicyon website copied to https://${PROJECT_NAME}/epicyon"
-	      fi
+            echo "Epicyon website copied to https://${PROJECT_NAME}/epicyon"
+        fi
     fi
 fi
 chmod 755 "$rootdir/var/www/${site_domain}"

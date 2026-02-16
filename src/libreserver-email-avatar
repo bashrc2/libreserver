@@ -35,40 +35,40 @@ fi
 if [ ! -f /usr/bin/ffmpeg ]; then
     sudo apt-get install -y ffmpeg
     if [ ! -f /usr/bin/ffmpeg ]; then
-	echo 'Failed to install ffmpeg'
-	exit 2
+        echo 'Failed to install ffmpeg'
+        exit 2
     fi
 fi
 
 if [ ! -f /usr/bin/compface ]; then
     sudo apt-get install -y compface
     if [ ! -f /usr/bin/compface ]; then
-	echo 'Failed to install compface'
-	exit 3
+        echo 'Failed to install compface'
+        exit 3
     fi
 fi
 
 if [[ "$SOURCE_IMAGE" == 'http'* ]]; then
     temp_image=~/.avatar_temp
     if [[ "$SOURCE_IMAGE" == *'.jpg' || "$SOURCE_IMAGE" == *'.jpeg' ]]; then
-	temp_image=~/.avatar_temp.jpg
+        temp_image=~/.avatar_temp.jpg
     fi
     if [[ "$SOURCE_IMAGE" == *'.gif' ]]; then
-	temp_image=~/.avatar_temp.gif
+        temp_image=~/.avatar_temp.gif
     fi
     if [[ "$SOURCE_IMAGE" == *'.png' ]]; then
-	temp_image=~/.avatar_temp.png
+        temp_image=~/.avatar_temp.png
     fi
     if [[ "$SOURCE_IMAGE" == *'.webp' ]]; then
-	temp_image=~/.avatar_temp.webp
+        temp_image=~/.avatar_temp.webp
     fi
     if [ -f $temp_image ]; then
-	rm $temp_image
+        rm $temp_image
     fi
     wget "$SOURCE_IMAGE" -O $temp_image
     if [ ! -f $temp_image ]; then
-	echo "Failed to get $SOURCE_IMAGE"
-	exit 6
+        echo "Failed to get $SOURCE_IMAGE"
+        exit 6
     fi
     SOURCE_IMAGE=$temp_image
 fi
@@ -99,18 +99,18 @@ fi
 
 if [ -f ~/.muttrc ]; then    
     if grep -q 'X-Face:' ~/.muttrc; then
-	sed -i '/X-Face:/d' ~/.muttrc
+        sed -i '/X-Face:/d' ~/.muttrc
     fi
     echo -n "my_hdr X-Face: $(compface $AVATAR_IMAGE | muttquote-x-face )" >> ~/.muttrc
     echo 'Avatar added to mutt header'
 
     if ! grep -q 'unignore x-face' ~/.muttrc; then
-	echo 'unignore x-face' >> ~/.muttrc
-	echo 'Show x-face header in mutt'
+        echo 'unignore x-face' >> ~/.muttrc
+        echo 'Show x-face header in mutt'
     fi
     if ! grep -q 'view-x-face' ~/.muttrc; then
-	echo "macro pager \ef \"|/usr/local/bin/view-x-face<enter>\" \"display the X-Face included in the mail\"" >> ~/.muttrc
-	echo 'Added avatar display to mutt'
+        echo "macro pager \ef \"|/usr/local/bin/view-x-face<enter>\" \"display the X-Face included in the mail\"" >> ~/.muttrc
+        echo 'Added avatar display to mutt'
     fi
 fi
 

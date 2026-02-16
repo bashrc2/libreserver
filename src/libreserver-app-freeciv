@@ -49,7 +49,7 @@ FREECIV_DESCRIPTION=$'Freeciv Server'
 FREECIV_MOBILE_APP_URL=""
 
 freeciv_variables=(ONION_ONLY
-		   SYSTEM_TYPE
+                   SYSTEM_TYPE
                    MY_USERNAME)
 
 function upgrade_distro_freeciv {
@@ -62,23 +62,23 @@ function upgrade_distro_freeciv {
 
 function logging_on_freeciv {
     if [ ! -f /etc/systemd/system/freeciv-server.service ]; then
-	return
+        return
     fi
     if ! grep -q "l $FREECIV_DIR/logfile" /etc/systemd/system/freeciv-server.service; then
-	sed -i "s|ExecStart=.*|ExecStart=/usr/games/freeciv-server -q 60 -p ${FREECIV_PORT} -d 2 -l $FREECIV_DIR/logfile -s ${FREECIV_DIR}/saves|g" /etc/systemd/system/freeciv-server.service
-	systemctl daemon-reload
-	systemctl restart freeciv-server
+        sed -i "s|ExecStart=.*|ExecStart=/usr/games/freeciv-server -q 60 -p ${FREECIV_PORT} -d 2 -l $FREECIV_DIR/logfile -s ${FREECIV_DIR}/saves|g" /etc/systemd/system/freeciv-server.service
+        systemctl daemon-reload
+        systemctl restart freeciv-server
     fi
 }
 
 function logging_off_freeciv {
     if [ ! -f /etc/systemd/system/freeciv-server.service ]; then
-	return
+        return
     fi
     if ! grep -q "l /dev/null" /etc/systemd/system/freeciv-server.service; then
-	sed -i "s|ExecStart=.*|ExecStart=/usr/games/freeciv-server -q 60 -p ${FREECIV_PORT} -d 2 -l /dev/null -s ${FREECIV_DIR}/saves|g" /etc/systemd/system/freeciv-server.service
-	systemctl daemon-reload
-	systemctl restart freeciv-server
+        sed -i "s|ExecStart=.*|ExecStart=/usr/games/freeciv-server -q 60 -p ${FREECIV_PORT} -d 2 -l /dev/null -s ${FREECIV_DIR}/saves|g" /etc/systemd/system/freeciv-server.service
+        systemctl daemon-reload
+        systemctl restart freeciv-server
     fi
 }
 
@@ -116,7 +116,7 @@ function restore_local_freeciv {
             else
                 cp -r $temp_restore_dir/* $FREECIV_DIR/
             fi
-	    chown -R freeciv:freeciv "$FREECIV_DIR"
+            chown -R freeciv:freeciv "$FREECIV_DIR"
             # shellcheck disable=SC2181
             if [ ! "$?" = "0" ]; then
                 rm -rf $temp_restore_dir
@@ -165,17 +165,17 @@ function remove_freeciv {
 
 function install_freeciv {
     if ! grep -q "freeciv:" /etc/group; then
-	groupadd freeciv
+        groupadd freeciv
     fi
     useradd -c "Freeciv Server" -d "$FREECIV_DIR" -m -r -g freeciv freeciv
 
     increment_app_install_progress
 
     if [ ! -d "$FREECIV_DIR" ]; then
-	mkdir "$FREECIV_DIR"
+        mkdir "$FREECIV_DIR"
     fi
     if [ ! -d "$FREECIV_DIR/saves" ]; then
-	mkdir "$FREECIV_DIR/saves"
+        mkdir "$FREECIV_DIR/saves"
     fi
 
     increment_app_install_progress

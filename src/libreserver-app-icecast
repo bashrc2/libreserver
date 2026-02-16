@@ -773,7 +773,7 @@ function install_icecast {
     "${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a icecastuser -p "$ICECAST_USER_PASSWORD"
 
     if ! grep -q "icecast:" /etc/group; then
-	groupadd icecast
+        groupadd icecast
     fi
     useradd -c "Icecast system account" -d /etc/icecast2 -m -r -g icecast icecast2
 

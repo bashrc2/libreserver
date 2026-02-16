@@ -41,8 +41,8 @@ fi
 nginx_config_filename=/etc/nginx/sites-available/${local_hostname}
 if [ -f "$nginx_config_filename" ]; then
     if ! grep -q "#auth_basic" "$nginx_config_filename"; then
-	sed -i 's|auth_basic|#auth_basic|g' "$nginx_config_filename"
-	systemctl restart nginx
+        sed -i 's|auth_basic|#auth_basic|g' "$nginx_config_filename"
+        systemctl restart nginx
     fi
 fi
 

@@ -44,11 +44,11 @@ function remove_nodejs {
     fi
     sed -i "/install_${1}/d" "$NODEJS_INSTALLED_APPS_FILE"
     if ! grep -q "install_" "$NODEJS_INSTALLED_APPS_FILE"; then
-	      $REMOVE_PACKAGES nodejs
-	      if [ -f /etc/apt/sources.list.d/nodesource.list ]; then
-	          rm /etc/apt/sources.list.d/nodesource.list
-	          $UPDATE_PACKAGES
-	      fi
+        $REMOVE_PACKAGES nodejs
+        if [ -f /etc/apt/sources.list.d/nodesource.list ]; then
+            rm /etc/apt/sources.list.d/nodesource.list
+            $UPDATE_PACKAGES
+        fi
         remove_app nodejs
         rm "$NODEJS_INSTALLED_APPS_FILE"
         $REMOVE_UNUSED_PACKAGES
@@ -57,66 +57,66 @@ function remove_nodejs {
 
 function upgrade_nodejs {
     if [ ! -f /usr/bin/node ]; then
-	      install_nodejs
-	      return
+        install_nodejs
+        return
     fi
     if [[ "$(node -v)" == "v${NODEJS_VERSION}."* ]]; then
-	      return
+        return
     fi
     install_nodejs
 }
 
 function install_nodejs {
     if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
-	      if [[ "$(node -v)" == "v${NODEJS_VERSION}."* ]]; then
-	          echo "nodejs is installed, trying upgrade"
+        if [[ "$(node -v)" == "v${NODEJS_VERSION}."* ]]; then
+            echo "nodejs is installed, trying upgrade"
             upgrade_nodejs
             return
-	      fi
+        fi
     fi
 
     # remove the completion entry if it exists
     if grep -q 'install_nodejs' $COMPLETION_FILE; then
-	      remove_app nodejs
+        remove_app nodejs
     fi
 
     if [ ! -d "${rootdir}${INSTALL_DIR}" ]; then
-	      mkdir -p "${rootdir}${INSTALL_DIR}"
+        mkdir -p "${rootdir}${INSTALL_DIR}"
     fi
     if [ ! ${rootdir} ]; then
-	      INSTALL_PACKAGES curl
-	      curl -sL https://deb.nodesource.com/setup_${NODEJS_VERSION}.x > "${INSTALL_DIR}/nodejs_download"
-	      /usr/bin/bash "${INSTALL_DIR}/nodejs_download"
+        INSTALL_PACKAGES curl
+        curl -sL https://deb.nodesource.com/setup_${NODEJS_VERSION}.x > "${INSTALL_DIR}/nodejs_download"
+        /usr/bin/bash "${INSTALL_DIR}/nodejs_download"
     else
-	      chroot $rootdir INSTALL_PACKAGES curl
-	      chroot $rootdir curl -sL https://deb.nodesource.com/setup_${NODEJS_VERSION}.x > "${INSTALL_DIR}/nodejs_download"
-	      chroot $rootdir /usr/bin/bash "${INSTALL_DIR}/nodejs_download"
+        chroot $rootdir INSTALL_PACKAGES curl
+        chroot $rootdir curl -sL https://deb.nodesource.com/setup_${NODEJS_VERSION}.x > "${INSTALL_DIR}/nodejs_download"
+        chroot $rootdir /usr/bin/bash "${INSTALL_DIR}/nodejs_download"
     fi
 
     if [ ! -f $rootdir/etc/apt/sources.list.d/nodesource.list ]; then
-	      echo "nodejs package sources not installed via curl"
-	      exit 34
+        echo "nodejs package sources not installed via curl"
+        exit 34
     fi
 
     if ! grep -q "/node_${NODEJS_VERSION}." $rootdir/etc/apt/sources.list.d/nodesource.list; then
-	      echo "nodejs package sources not added"
-	      exit 35
+        echo "nodejs package sources not added"
+        exit 35
     fi
 
     if [ ! $rootdir ]; then
-	      INSTALL_PACKAGES nodejs
+        INSTALL_PACKAGES nodejs
     else
-	      chroot $rootdir INSTALL_PACKAGES nodejs
+        chroot $rootdir INSTALL_PACKAGES nodejs
     fi
 
     if [ ! -f /usr/bin/node ]; then
-	      echo "/usr/bin/node was not installed"
-	      exit 36
+        echo "/usr/bin/node was not installed"
+        exit 36
     fi
 
     if [[ "$(node -v)" != "v${NODEJS_VERSION}."* ]]; then
-	      echo "nodejs was not installed"
-	      exit 37
+        echo "nodejs was not installed"
+        exit 37
     fi
 
     mark_completed "${FUNCNAME[0]}"

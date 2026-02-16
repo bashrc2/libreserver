@@ -57,13 +57,13 @@ function INSTALL_PACKAGES {
         done
         if [ $install_tries -ge $install_max_tries ]; then
             echo "Failed to install package $arg"
-	    if [ -f /tmp/.upgrading ]; then
-		# exiting during an upgrade could leave the
-		# webadmin in a half updated state
-		return
-	    else
-		exit 7
-	    fi
+            if [ -f /tmp/.upgrading ]; then
+                # exiting during an upgrade could leave the
+                # webadmin in a half updated state
+                return
+            else
+                exit 7
+            fi
         fi
     done;
 }
@@ -82,13 +82,13 @@ function REINSTALL_PACKAGES {
         done
         if [ $install_tries -ge $install_max_tries ]; then
             echo "Failed to reinstall package $arg"
-	    if [ -f /tmp/.upgrading ]; then
-		# exiting during an upgrade could leave the
-		# webadmin in a half updated state
-		return
-	    else
-		exit 7
-	    fi
+            if [ -f /tmp/.upgrading ]; then
+                # exiting during an upgrade could leave the
+                # webadmin in a half updated state
+                return
+            else
+                exit 7
+            fi
         fi
     done;
 }
@@ -107,13 +107,13 @@ function INSTALL_PACKAGES_BACKPORTS {
         done
         if [ $install_tries -ge $install_max_tries ]; then
             echo "Failed to install backports package $arg"
-	    if [ -f /tmp/.upgrading ]; then
-		# exiting during an upgrade could leave the
-		# webadmin in a half updated state
-		return
-	    else
-		exit 7
-	    fi
+            if [ -f /tmp/.upgrading ]; then
+                # exiting during an upgrade could leave the
+                # webadmin in a half updated state
+                return
+            else
+                exit 7
+            fi
         fi
     done;
 }

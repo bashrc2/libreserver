@@ -46,15 +46,15 @@ function install_final {
     store_drives_baseline
 
     if [ -f /etc/nginx/sites-enabled/default ]; then
-	rm /etc/nginx/sites-enabled/default
-	systemctl restart nginx
+        rm /etc/nginx/sites-enabled/default
+        systemctl restart nginx
     fi
 
     # remove initial install instructions
     if grep -q '# start firstboot' /home/admin/.bashrc; then
-	if grep -q '# end firstboot' /home/admin/.bashrc; then
-	    sed -i '/# start firstboot/,/# end firstboot/d' /home/admin/.bashrc
-	fi
+        if grep -q '# end firstboot' /home/admin/.bashrc; then
+            sed -i '/# start firstboot/,/# end firstboot/d' /home/admin/.bashrc
+        fi
     fi
 
     mark_completed "${FUNCNAME[0]}"

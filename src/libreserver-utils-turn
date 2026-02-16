@@ -31,18 +31,18 @@ TURN_TLS_PORT=5349
 function install_turn {
     # since this depends on udp, it's not going to work through Tor
     if [[ "$ONION_ONLY" != 'no' ]]; then
-	      return
+        return
     fi
 
     domain=$DEFAULT_DOMAIN_NAME
 
     turn_cert="/etc/letsencrypt/live/${domain}/fullchain.pem"
     if [ ! -f "$turn_cert" ]; then
-	      return
+        return
     fi
     turn_pkey="/etc/letsencrypt/live/${domain}/privkey.pem"
     if [ ! -f "$turn_pkey" ]; then
-	      return
+        return
     fi
 
     INSTALL_PACKAGES coturn
@@ -115,7 +115,7 @@ function install_turn {
 
 function remove_turn {
     if [[ "$ONION_ONLY" != 'no' ]]; then
-	      return
+        return
     fi
     firewall_remove ${TURN_TLS_PORT}
     firewall_remove ${TURN_PORT}
