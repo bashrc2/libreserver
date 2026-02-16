@@ -41,6 +41,11 @@ fi
 # check that this is installing on an appropriate
 # debian system. If you try to install on an ubuntu
 # base then that will definitely fail
+if [ -f /tmp/.upgrading ]; then
+    echo ''
+    echo 'Checking if installing on Debian'
+    echo 'Checking if installing on Debian' >> ${UPGRADE_LOG}
+fi
 installing_on_debian=1
 if [ ! -f /usr/bin/apt-get ]; then
     installing_on_debian=
@@ -79,6 +84,12 @@ if [ ! ${installing_on_debian} ]; then
     exit 0
 fi
 
+if [ -f /tmp/.upgrading ]; then
+    echo ''
+    echo 'Checking completions file'
+    echo 'Checking completions file' >> ${UPGRADE_LOG}
+fi
+
 # create the completions file if it doesn't already exist
 if [ ! -f /root/${PROJECT_NAME}-completed.txt ]; then
     touch /root/${PROJECT_NAME}-completed.txt
@@ -87,6 +98,12 @@ fi
 PROJECT_INSTALL_DIR=/usr/local/bin
 if [ -f /usr/bin/${PROJECT_NAME} ]; then
     PROJECT_INSTALL_DIR=/usr/bin
+fi
+
+if [ -f /tmp/.upgrading ]; then
+    echo ''
+    echo 'Adding utils sources'
+    echo 'Adding utils sources' >> ${UPGRADE_LOG}
 fi
 
 source $PROJECT_INSTALL_DIR/${PROJECT_NAME}-vars
@@ -98,6 +115,12 @@ do
 done
 
 increment_install_progress "Running ${PROJECT_NAME} command"
+
+if [ -f /tmp/.upgrading ]; then
+    echo ''
+    echo 'Adding app sources'
+    echo 'Adding app sources' >> ${UPGRADE_LOG}
+fi
 
 APP_FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
 for f in ${APP_FILES}
@@ -137,6 +160,12 @@ if [[ "${command_options}" == "menuconfig-full" ]]; then
     MINIMAL_INSTALL="no"
 fi
 
+if [ -f /tmp/.upgrading ]; then
+    echo ''
+    echo 'Check configuration file'
+    echo 'Check configuration file' >> ${UPGRADE_LOG}
+fi
+
 # generate a configuration file
 if [[ "${CONFIGURATION_FILE}" != "/root/${PROJECT_NAME}.cfg" ]]; then
     if [ -f "${CONFIGURATION_FILE}" ]; then
@@ -160,6 +189,12 @@ if [[ "${command_options}" == "menuconfig-onion" ]]; then
     fi
 fi
 
+if [ -f /tmp/.upgrading ]; then
+    echo ''
+    echo 'Rename some configuration options'
+    echo 'Rename some configuration options' >> ${UPGRADE_LOG}
+fi
+
 rename_config_param "LOCAL_NETWORK_STATIC_IP_ADDRESS" "LOCAL_NETWORK_STATIC_IPv4_ADDRESS"
 rename_config_param "ROUTER_IP_ADDRESS" "ROUTER_IPv4_ADDRESS"
 
@@ -175,6 +210,12 @@ COMPLETION_FILE="/root/${PROJECT_NAME}-completed.txt"
 #setup_wifi_atheros
 
 if [[ "${command_options}" == "menuconfig"* ]]; then
+    if [ -f /tmp/.upgrading ]; then
+        echo ''
+        echo 'Interactive configuration'
+        echo 'Interactive configuration' >> ${UPGRADE_LOG}
+    fi
+
     if [[ "$2" == "--reset" ]]; then
         if [ -f "${CONFIGURATION_FILE}" ]; then
             rm "${CONFIGURATION_FILE}"
@@ -205,6 +246,12 @@ if [[ "${command_options}" == "menuconfig"* ]]; then
     fi
     rm "${interactive_file}"
 else
+    if [ -f /tmp/.upgrading ]; then
+        echo ''
+        echo 'Parsing command options'
+        echo 'Parsing command options' >> ${UPGRADE_LOG}
+    fi
+
     while [ $# -gt 0 ]
     do
         key="$1"
@@ -368,6 +415,11 @@ else
 fi
 
 function parse_args {
+    if [ -f /tmp/.upgrading ]; then
+        echo ''
+        echo 'parse_args'
+        echo 'parse_args' >> ${UPGRADE_LOG}
+    fi
     if [[ ${NO_OF_ARGS} == 0 ]]; then
         echo 'no_of_args = 0'
         show_help
@@ -470,6 +522,11 @@ function finish_manual_install {
 }
 
 # run some initial tests
+if [ -f /tmp/.upgrading ]; then
+    echo ''
+    echo 'Initial tests'
+    echo 'Initial tests' >> ${UPGRADE_LOG}
+fi
 clear
 if ! "${PROJECT_NAME}-tests"; then
     exit 76
@@ -477,6 +534,11 @@ fi
 
 clear
 
+if [ -f /tmp/.upgrading ]; then
+    echo ''
+    echo 'Whether to avoid kernel upgrades'
+    echo 'Whether to avoid kernel upgrades' >> ${UPGRADE_LOG}
+fi
 if [[ "$(uname -a)" == *"odroidc4"* ]]; then
     echo ''
     echo $'Avoid kernel upgrades for Odroid C4'
@@ -485,6 +547,11 @@ if [[ "$(uname -a)" == *"odroidc4"* ]]; then
 fi
 
 if [ -f /etc/apt/sources.list.d/armbian.list ]; then
+    if [ -f /tmp/.upgrading ]; then
+        echo ''
+        echo 'Armbian configuration'
+        echo 'Armbian configuration' >> ${UPGRADE_LOG}
+    fi
     if ! grep -q 'beta' /etc/apt/sources.list.d/armbian.list; then
         echo ''
         echo $'Use nightly Armbian builds'
@@ -497,33 +564,76 @@ fi
 
 echo ''
 echo $'Setting up the base installation'
+if [ -f /tmp/.upgrading ]; then
+    echo $'Setting up the base installation' >> ${UPGRADE_LOG}
+fi
 echo ''
 
 export DEBIAN_FRONTEND=noninteractive
 
 install_counter=0
 
+if [ -f /tmp/.upgrading ]; then
+    echo ''
+    echo 'upgrade_installation_from_previous_versions'
+    echo 'upgrade_installation_from_previous_versions' >> ${UPGRADE_LOG}
+fi
 function_check upgrade_installation_from_previous_versions
 upgrade_installation_from_previous_versions
 
+if [ -f /tmp/.upgrading ]; then
+    echo ''
+    echo 'setup_utils'
+    echo 'setup_utils' >> ${UPGRADE_LOG}
+fi
 function_check setup_utils
 setup_utils
 
+if [ -f /tmp/.upgrading ]; then
+    echo ''
+    echo 'setup_email'
+    echo 'setup_email' >> ${UPGRADE_LOG}
+fi
 function_check setup_email
 setup_email
 
+if [ -f /tmp/.upgrading ]; then
+    echo ''
+    echo 'setup_web'
+    echo 'setup_web' >> ${UPGRADE_LOG}
+fi
 function_check setup_web
 setup_web
 
+if [ -f /tmp/.upgrading ]; then
+    echo ''
+    echo 'setup_apps'
+    echo 'setup_apps' >> ${UPGRADE_LOG}
+fi
 function_check setup_apps
 setup_apps "${command_options}"
 
+if [ -f /tmp/.upgrading ]; then
+    echo ''
+    echo 'install_web_admin'
+    echo 'install_web_admin' >> ${UPGRADE_LOG}
+fi
 function_check install_web_admin
 install_web_admin
 
+if [ -f /tmp/.upgrading ]; then
+    echo ''
+    echo 'install_wireguard'
+    echo 'install_wireguard' >> ${UPGRADE_LOG}
+fi
 function_check install_wireguard
 install_wireguard
 
+if [ -f /tmp/.upgrading ]; then
+    echo ''
+    echo 'Password handling'
+    echo 'Password handling' >> ${UPGRADE_LOG}
+fi
 if [ -f "${IMAGE_PASSWORD_FILE}" ]; then
     simplebackup_password=$(cat "${IMAGE_PASSWORD_FILE}")
     if [ "${simplebackup_password}" ]; then
@@ -535,31 +645,66 @@ if [ -f "${IMAGE_PASSWORD_FILE}" ]; then
     fi
 fi
 
+if [ -f /tmp/.upgrading ]; then
+    echo ''
+    echo 'hostname_check'
+    echo 'hostname_check' >> ${UPGRADE_LOG}
+fi
 function_check hostname_check
 echo $'hostname_check'
 hostname_check
 
+if [ -f /tmp/.upgrading ]; then
+    echo ''
+    echo 'notify_logins'
+    echo 'notify_logins' >> ${UPGRADE_LOG}
+fi
 function_check notify_logins
 echo $'notify_logins'
 notify_logins
 
+if [ -f /tmp/.upgrading ]; then
+    echo ''
+    echo 'tor_daemon_watchdog'
+    echo 'tor_daemon_watchdog' >> ${UPGRADE_LOG}
+fi
 function_check tor_daemon_watchdog
 echo $'tor_daemon_watchdog'
 tor_daemon_watchdog
 
+if [ -f /tmp/.upgrading ]; then
+    echo ''
+    echo 'tor_entry_node_watchdog'
+    echo 'tor_entry_node_watchdog' >> ${UPGRADE_LOG}
+fi
 function_check tor_entry_node_watchdog
 echo $'tor_entry_node_watchdog'
 tor_entry_node_watchdog
 
+if [ -f /tmp/.upgrading ]; then
+    echo ''
+    echo 'setup_final'
+    echo 'setup_final' >> ${UPGRADE_LOG}
+fi
 function_check setup_final
 echo $'setup_final'
 setup_final
 
+if [ -f /tmp/.upgrading ]; then
+    echo ''
+    echo 'store_drives_baseline'
+    echo 'store_drives_baseline' >> ${UPGRADE_LOG}
+fi
 function_check store_drives_baseline
 echo $'store_drives_baseline'
 store_drives_baseline
 
 # add basic authentication to webadmin
+if [ -f /tmp/.upgrading ]; then
+    echo ''
+    echo 'add basic authentication to webadmin'
+    echo 'add basic authentication to webadmin' >> ${UPGRADE_LOG}
+fi
 nginx_config_filename=/etc/nginx/sites-available/foo.local
 if [ -f "${nginx_config_filename}" ]; then
     if grep -q "#auth_basic" "${nginx_config_filename}"; then
@@ -570,10 +715,18 @@ if [ -f "${nginx_config_filename}" ]; then
     fi
 fi
 
+if [ -f /tmp/.upgrading ]; then
+    echo ''
+    echo 'finish_manual_install'
+    echo 'finish_manual_install' >> ${UPGRADE_LOG}
+fi
 finish_manual_install
 
 echo ''
 echo $"${PROJECT_NAME} installation is complete."
+if [ -f /tmp/.upgrading ]; then
+    echo $"${PROJECT_NAME} installation is complete." >> ${UPGRADE_LOG}
+fi
 echo ''
 date
 echo ''

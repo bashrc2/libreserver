@@ -185,9 +185,9 @@ if [ -d "${PROJECT_DIR}" ]; then
                     echo "Set permissions" >> ${UPGRADE_LOG}
                 fi
 
-				echo ''
-				echo "${PROJECT_NAME} -c \"${CONFIGURATION_FILE}\""
-				echo "${PROJECT_NAME} -c \"${CONFIGURATION_FILE}\"" >> ${UPGRADE_LOG}
+                echo ''
+                echo "${PROJECT_NAME} -c \"${CONFIGURATION_FILE}\""
+                echo "${PROJECT_NAME} -c \"${CONFIGURATION_FILE}\"" >> ${UPGRADE_LOG}
                 if ! ${PROJECT_NAME} -c "${CONFIGURATION_FILE}"; then
                     if [ -f /tmp/.upgrading ]; then
                         rm /tmp/.upgrading
@@ -202,7 +202,7 @@ if [ -d "${PROJECT_DIR}" ]; then
                 echo ''
                 echo "configure_journalctl"
                 echo "configure_journalctl" >> ${UPGRADE_LOG}
-				configure_journalctl
+                configure_journalctl
                 echo ''
                 echo "journalctl vacuum"
                 echo "journalctl vacuum" >> ${UPGRADE_LOG}
