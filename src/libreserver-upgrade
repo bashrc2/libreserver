@@ -185,7 +185,10 @@ if [ -d "${PROJECT_DIR}" ]; then
                     echo "Set permissions" >> ${UPGRADE_LOG}
                 fi
 
-                if ! ${PROJECT_NAME} -c "$CONFIGURATION_FILE"; then
+				echo ''
+				echo "${PROJECT_NAME} -c \"${CONFIGURATION_FILE}\""
+				echo "${PROJECT_NAME} -c \"${CONFIGURATION_FILE}\"" >> ${UPGRADE_LOG}
+                if ! ${PROJECT_NAME} -c "${CONFIGURATION_FILE}"; then
                     if [ -f /tmp/.upgrading ]; then
                         rm /tmp/.upgrading
                     fi
