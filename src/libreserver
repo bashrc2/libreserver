@@ -574,59 +574,24 @@ export DEBIAN_FRONTEND=noninteractive
 
 install_counter=0
 
-if [ -f /tmp/.upgrading ]; then
-    echo ''
-    echo 'upgrade_installation_from_previous_versions'
-    echo 'upgrade_installation_from_previous_versions' >> ${UPGRADE_LOG}
-fi
 function_check upgrade_installation_from_previous_versions
 upgrade_installation_from_previous_versions
 
-if [ -f /tmp/.upgrading ]; then
-    echo ''
-    echo 'setup_utils'
-    echo 'setup_utils' >> ${UPGRADE_LOG}
-fi
 function_check setup_utils
 setup_utils
 
-if [ -f /tmp/.upgrading ]; then
-    echo ''
-    echo 'setup_email'
-    echo 'setup_email' >> ${UPGRADE_LOG}
-fi
 function_check setup_email
 setup_email
 
-if [ -f /tmp/.upgrading ]; then
-    echo ''
-    echo 'setup_web'
-    echo 'setup_web' >> ${UPGRADE_LOG}
-fi
 function_check setup_web
 setup_web
 
-if [ -f /tmp/.upgrading ]; then
-    echo ''
-    echo 'setup_apps'
-    echo 'setup_apps' >> ${UPGRADE_LOG}
-fi
 function_check setup_apps
 setup_apps "${command_options}"
 
-if [ -f /tmp/.upgrading ]; then
-    echo ''
-    echo 'install_web_admin'
-    echo 'install_web_admin' >> ${UPGRADE_LOG}
-fi
 function_check install_web_admin
 install_web_admin
 
-if [ -f /tmp/.upgrading ]; then
-    echo ''
-    echo 'install_wireguard'
-    echo 'install_wireguard' >> ${UPGRADE_LOG}
-fi
 function_check install_wireguard
 install_wireguard
 
@@ -646,56 +611,26 @@ if [ -f "${IMAGE_PASSWORD_FILE}" ]; then
     fi
 fi
 
-if [ -f /tmp/.upgrading ]; then
-    echo ''
-    echo 'hostname_check'
-    echo 'hostname_check' >> ${UPGRADE_LOG}
-fi
 function_check hostname_check
 echo $'hostname_check'
 hostname_check
 
-if [ -f /tmp/.upgrading ]; then
-    echo ''
-    echo 'notify_logins'
-    echo 'notify_logins' >> ${UPGRADE_LOG}
-fi
 function_check notify_logins
 echo $'notify_logins'
 notify_logins
 
-if [ -f /tmp/.upgrading ]; then
-    echo ''
-    echo 'tor_daemon_watchdog'
-    echo 'tor_daemon_watchdog' >> ${UPGRADE_LOG}
-fi
 function_check tor_daemon_watchdog
 echo $'tor_daemon_watchdog'
 tor_daemon_watchdog
 
-if [ -f /tmp/.upgrading ]; then
-    echo ''
-    echo 'tor_entry_node_watchdog'
-    echo 'tor_entry_node_watchdog' >> ${UPGRADE_LOG}
-fi
 function_check tor_entry_node_watchdog
 echo $'tor_entry_node_watchdog'
 tor_entry_node_watchdog
 
-if [ -f /tmp/.upgrading ]; then
-    echo ''
-    echo 'setup_final'
-    echo 'setup_final' >> ${UPGRADE_LOG}
-fi
 function_check setup_final
 echo $'setup_final'
 setup_final
 
-if [ -f /tmp/.upgrading ]; then
-    echo ''
-    echo 'store_drives_baseline'
-    echo 'store_drives_baseline' >> ${UPGRADE_LOG}
-fi
 function_check store_drives_baseline
 echo $'store_drives_baseline'
 store_drives_baseline
