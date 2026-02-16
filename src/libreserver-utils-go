@@ -131,11 +131,11 @@ function upgrade_golang {
     if [ "$rootdir" ]; then
         prefix="chroot $rootdir"
     fi
-    if [ -f /tmp/.upgrading ]; then
-        echo ''
-        echo 'adding go user'
+    echo ''
+    echo 'adding go user'
+    #if [ -f /tmp/.upgrading ]; then
         echo 'adding go user' >> ${UPGRADE_LOG}
-    fi
+    #fi
     $prefix adduser --disabled-login --gecos 'go' go
 
     GOARCH=
@@ -174,9 +174,9 @@ function upgrade_golang {
     if [ ! $GOARCH ]; then
         echo $'System architecture was not detected when installing Go'
         echo "uname reports: $(uname -m)"
-        if [ -f /tmp/.upgrading ]; then
+        #if [ -f /tmp/.upgrading ]; then
             echo "System architecture was not detected when installing Go: $(uname -m)" >> ${UPGRADE_LOG}
-        fi
+        #fi
         exit 63
     fi
     GO_SOURCE=https://go.dev/dl/go${GO_VERSION}.linux-${GOARCH}.tar.gz
@@ -187,23 +187,23 @@ function upgrade_golang {
     cd "${rootdir}${INSTALL_DIR}" || exit 23
     if [ ! -f "${rootdir}${INSTALL_DIR}/go${GO_VERSION}.linux-${GOARCH}.tar.gz" ]; then
         echo "wget ${GO_SOURCE}"
-        if [ -f /tmp/.upgrading ]; then
+        #if [ -f /tmp/.upgrading ]; then
             echo "wget ${GO_SOURCE}" >> ${UPGRADE_LOG}
-        fi
+        #fi
         wget ${GO_SOURCE}
     fi
     if [ ! -f "${rootdir}${INSTALL_DIR}/go${GO_VERSION}.linux-${GOARCH}.tar.gz" ]; then
-        if [ -f /tmp/.upgrading ]; then
+        #if [ -f /tmp/.upgrading ]; then
             echo "Failed to download golang" >> ${UPGRADE_LOG}
-        fi
+        #fi
         exit 26
     fi
     $prefix tar -C /home/go -xzf "${INSTALL_DIR}/go${GO_VERSION}.linux-${GOARCH}.tar.gz"
     if [ ! -d "${rootdir}/home/go/go/bin" ]; then
         echo 'Go binary not installed'
-        if [ -f /tmp/.upgrading ]; then
+        #if [ -f /tmp/.upgrading ]; then
             echo "Go binary not installed" >> ${UPGRADE_LOG}
-        fi
+        #fi
         exit 76
     fi
     # shellcheck disable=SC2086
@@ -233,17 +233,17 @@ function upgrade_golang {
     $prefix chown -R go:go /home/go
     if [ ! -d "${rootdir}/home/go/go${GO_VERSION}/bin" ]; then
         echo $"golang binaries directory not found ${rootdir}/home/go/go${GO_VERSION}/bin"
-        if [ -f /tmp/.upgrading ]; then
+        #if [ -f /tmp/.upgrading ]; then
             echo "golang binaries directory not found ${rootdir}/home/go/go${GO_VERSION}/bin" >> ${UPGRADE_LOG}
-        fi
+        #fi
         exit 35
     fi
     if ! cp "${rootdir}/home/go/go${GO_VERSION}/bin/"* "${rootdir}/usr/bin"; then
         ls -la "${rootdir}/home/go/go${GO_VERSION}"
         echo $'Copying golang binaries failed'
-        if [ -f /tmp/.upgrading ]; then
+        #if [ -f /tmp/.upgrading ]; then
             echo "Copying golang binaries failed" >> ${UPGRADE_LOG}
-        fi
+        #fi
         exit 24
     fi
 }
