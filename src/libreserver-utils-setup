@@ -1670,8 +1670,8 @@ function setup_utils {
     #function_check install_atheros_wifi
     #install_atheros_wifi
 
-    function_check upgrade_golang
-    upgrade_golang
+    #function_check upgrade_golang
+    #upgrade_golang
 
     function_check admin_user_sudo
     admin_user_sudo
