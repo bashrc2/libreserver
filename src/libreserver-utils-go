@@ -127,6 +127,9 @@ EOF
 
 function upgrade_golang {
     UPGRADE_LOG=/var/log/libreserver_upgrade.log
+    #if [ -f /tmp/.upgrading ]; then
+    echo 'upgrade_golang started' >> ${UPGRADE_LOG}
+    #fi
     prefix=
     if [ "$rootdir" ]; then
         prefix="chroot $rootdir"
@@ -134,7 +137,7 @@ function upgrade_golang {
     echo ''
     echo 'adding go user'
     #if [ -f /tmp/.upgrading ]; then
-        echo 'adding go user' >> ${UPGRADE_LOG}
+    echo 'adding go user' >> ${UPGRADE_LOG}
     #fi
     $prefix adduser --disabled-login --gecos 'go' go
 
@@ -153,6 +156,9 @@ function upgrade_golang {
     fi
     if [ ! $GOARCH ]; then
         echo $'No architecture specified'
+        #if [ -f /tmp/.upgrading ]; then
+        echo 'No architecture specified' >> ${UPGRADE_LOG}
+        #fi
         ARCHITECTURE=$(uname -m)
         if [[ $ARCHITECTURE == "arm"* ]]; then
             GOARCH=armv6l
@@ -175,58 +181,70 @@ function upgrade_golang {
         echo $'System architecture was not detected when installing Go'
         echo "uname reports: $(uname -m)"
         #if [ -f /tmp/.upgrading ]; then
-            echo "System architecture was not detected when installing Go: $(uname -m)" >> ${UPGRADE_LOG}
+        echo "System architecture was not detected when installing Go: $(uname -m)" >> ${UPGRADE_LOG}
         #fi
         exit 63
     fi
     GO_SOURCE=https://go.dev/dl/go${GO_VERSION}.linux-${GOARCH}.tar.gz
 
     if [ ! -d "${rootdir}${INSTALL_DIR}" ]; then
+        echo "Creating install directory ${INSTALL_DIR}"
+        #if [ -f /tmp/.upgrading ]; then
+        echo "Creating install directory ${INSTALL_DIR}" >> ${UPGRADE_LOG}
+        #fi
         chroot "$rootdir" mkdir -p "${INSTALL_DIR}"
     fi
+    echo "Golang downloading to ${rootdir}${INSTALL_DIR}"
+    #if [ -f /tmp/.upgrading ]; then
+    echo "Golang downloading to ${rootdir}${INSTALL_DIR}" >> ${UPGRADE_LOG}
+    #fi
     cd "${rootdir}${INSTALL_DIR}" || exit 23
     if [ ! -f "${rootdir}${INSTALL_DIR}/go${GO_VERSION}.linux-${GOARCH}.tar.gz" ]; then
         echo "wget ${GO_SOURCE}"
         #if [ -f /tmp/.upgrading ]; then
-            echo "wget ${GO_SOURCE}" >> ${UPGRADE_LOG}
+        echo "wget ${GO_SOURCE}" >> ${UPGRADE_LOG}
         #fi
         wget ${GO_SOURCE}
     fi
     if [ ! -f "${rootdir}${INSTALL_DIR}/go${GO_VERSION}.linux-${GOARCH}.tar.gz" ]; then
         #if [ -f /tmp/.upgrading ]; then
-            echo "Failed to download golang" >> ${UPGRADE_LOG}
+        echo "Failed to download golang" >> ${UPGRADE_LOG}
         #fi
         exit 26
     fi
+    echo "Extracting golang archive"
+    #if [ -f /tmp/.upgrading ]; then
+    echo "Extracting golang archive" >> ${UPGRADE_LOG}
+    #fi
     $prefix tar -C /home/go -xzf "${INSTALL_DIR}/go${GO_VERSION}.linux-${GOARCH}.tar.gz"
     if [ ! -d "${rootdir}/home/go/go/bin" ]; then
         echo 'Go binary not installed'
         #if [ -f /tmp/.upgrading ]; then
-            echo "Go binary not installed" >> ${UPGRADE_LOG}
+        echo "Go binary not installed" >> ${UPGRADE_LOG}
         #fi
         exit 76
     fi
     # shellcheck disable=SC2086
     mv ${rootdir}/home/go/go ${rootdir}/home/go/go${GO_VERSION}
     if ! grep -q "export GOROOT=/home/go" "${rootdir}/root/.bashrc"; then
-    echo "export GOROOT=/home/go" >> "${rootdir}/root/.bashrc"
-    echo "export GOPATH=\$GOROOT/go${GO_VERSION}/bin" >> "${rootdir}/root/.bashrc"
-    echo "export PATH=\$PATH:\$GOPATH" >> "${rootdir}/root/.bashrc"
+        echo "export GOROOT=/home/go" >> "${rootdir}/root/.bashrc"
+        echo "export GOPATH=\$GOROOT/go${GO_VERSION}/bin" >> "${rootdir}/root/.bashrc"
+        echo "export PATH=\$PATH:\$GOPATH" >> "${rootdir}/root/.bashrc"
     fi
     if ! grep -q "export GOROOT=/home/go" "${rootdir}/etc/skel/.bashrc"; then
-    echo "export GOROOT=/home/go" >> "${rootdir}/etc/skel/.bashrc"
-    echo "export GOPATH=\$GOROOT/go${GO_VERSION}/bin" >> "${rootdir}/etc/skel/.bashrc"
-    echo "export PATH=\$PATH:\$GOPATH" >> "${rootdir}/etc/skel/.bashrc"
+        echo "export GOROOT=/home/go" >> "${rootdir}/etc/skel/.bashrc"
+        echo "export GOPATH=\$GOROOT/go${GO_VERSION}/bin" >> "${rootdir}/etc/skel/.bashrc"
+        echo "export PATH=\$PATH:\$GOPATH" >> "${rootdir}/etc/skel/.bashrc"
     fi
     if ! grep -q "export GOROOT=/home/go" "${rootdir}/home/$MY_USERNAME/.bashrc"; then
-    echo "export GOROOT=/home/go" >> "${rootdir}/home/$MY_USERNAME/.bashrc"
-    echo "export GOPATH=\$GOROOT/go${GO_VERSION}/bin" >> "${rootdir}/home/$MY_USERNAME/.bashrc"
-    echo "export PATH=\$PATH:\$GOPATH" >> "${rootdir}/home/$MY_USERNAME/.bashrc"
+        echo "export GOROOT=/home/go" >> "${rootdir}/home/$MY_USERNAME/.bashrc"
+        echo "export GOPATH=\$GOROOT/go${GO_VERSION}/bin" >> "${rootdir}/home/$MY_USERNAME/.bashrc"
+        echo "export PATH=\$PATH:\$GOPATH" >> "${rootdir}/home/$MY_USERNAME/.bashrc"
     fi
     if ! grep -q "export GOROOT=/home/go" "${rootdir}/home/go/.bashrc"; then
-    echo "export GOROOT=/home/go" >> "${rootdir}/home/go/.bashrc"
-    echo "export GOPATH=\$GOROOT/go${GO_VERSION}/bin" >> "${rootdir}/home/go/.bashrc"
-    echo "export PATH=\$PATH:\$GOPATH" >> "${rootdir}/home/go/.bashrc"
+        echo "export GOROOT=/home/go" >> "${rootdir}/home/go/.bashrc"
+        echo "export GOPATH=\$GOROOT/go${GO_VERSION}/bin" >> "${rootdir}/home/go/.bashrc"
+        echo "export PATH=\$PATH:\$GOPATH" >> "${rootdir}/home/go/.bashrc"
     fi
 
     $prefix chown -R "$MY_USERNAME":"$MY_USERNAME" "/home/$MY_USERNAME"
@@ -234,7 +252,7 @@ function upgrade_golang {
     if [ ! -d "${rootdir}/home/go/go${GO_VERSION}/bin" ]; then
         echo $"golang binaries directory not found ${rootdir}/home/go/go${GO_VERSION}/bin"
         #if [ -f /tmp/.upgrading ]; then
-            echo "golang binaries directory not found ${rootdir}/home/go/go${GO_VERSION}/bin" >> ${UPGRADE_LOG}
+        echo "golang binaries directory not found ${rootdir}/home/go/go${GO_VERSION}/bin" >> ${UPGRADE_LOG}
         #fi
         exit 35
     fi
@@ -242,7 +260,7 @@ function upgrade_golang {
         ls -la "${rootdir}/home/go/go${GO_VERSION}"
         echo $'Copying golang binaries failed'
         #if [ -f /tmp/.upgrading ]; then
-            echo "Copying golang binaries failed" >> ${UPGRADE_LOG}
+        echo "Copying golang binaries failed" >> ${UPGRADE_LOG}
         #fi
         exit 24
     fi
