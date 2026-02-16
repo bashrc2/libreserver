@@ -863,11 +863,32 @@ function check_number_of_connections {
         fi
     fi
 
+    prevPort6697=0
+    if [ -f /tmp/.connections_6697.txt ]; then
+        prevPort6697=$(cat /tmp/.connections_6697.txt)
+    fi
+    # shellcheck disable=SC2126
+    port6697=$(netstat -anp | grep :6697 | grep ESTABLISHED | wc -l)
+    if [[ "${port6697}" == *' '* ]]; then
+        port6697=0
+    fi
+
+    # shellcheck disable=SC2086
+    if [ ${prevPort6697} -lt ${connectionsThreshold} ]; then
+        if [ ${port6697} -gt ${connectionsThreshold} ]; then
+            echo "${port6697}" > /tmp/.connections_6697.txt
+            translated_max_connections=$(web_admin_translate_text "Number of connections on IRC port is high")
+            ${PROJECT_NAME}-notification -s "${PROJECT_NAME}" -m "$translated_max_connections"
+            return
+        fi
+    fi
+
     echo "${port80}" > /tmp/.connections_80.txt
     echo "${port443}" > /tmp/.connections_443.txt
     echo "${port5222}" > /tmp/.connections_5222.txt
     echo "${port1965}" > /tmp/.connections_1965.txt
     echo "${port6167}" > /tmp/.connections_6167.txt
+    echo "${port6697}" > /tmp/.connections_6697.txt
 }
 
 function web_admin_translate {
