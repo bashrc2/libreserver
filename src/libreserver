@@ -41,6 +41,7 @@ fi
 # check that this is installing on an appropriate
 # debian system. If you try to install on an ubuntu
 # base then that will definitely fail
+UPGRADE_LOG=/var/log/libreserver_upgrade.log
 if [ -f /tmp/.upgrading ]; then
     echo ''
     echo 'Checking if installing on Debian'
