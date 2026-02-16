@@ -28,7 +28,7 @@
 # before getting to the version we want
 GO_INTERMEDIATE_VERSION=1.4.2
 
-GO_VERSION=1.24.3
+GO_VERSION=1.26.0
 
 GO_REPO="https://go.googlesource.com/go"
 GO_PACKAGE_MANAGER_REPO="https://github.com/gpmgo/gopm"
@@ -58,7 +58,7 @@ function select_go_version {
     systemctl set-environment GOPATH="$GOPATH"
 }
 
-function mesh_upgrade_golang_from_source {
+function upgrade_golang_from_source {
     chroot "$rootdir" adduser --disabled-login --gecos 'go' ipfs
 
     git clone "$GO_REPO" "$rootdir/home/go/go${GO_VERSION}"
@@ -125,7 +125,7 @@ EOF
     rm -f "${rootdir}/root/upgrade_golang.sh"
 }
 
-function mesh_upgrade_golang {
+function upgrade_golang {
     prefix=
     if [ "$rootdir" ]; then
         prefix="chroot $rootdir"
@@ -229,7 +229,7 @@ function upgrade_golang {
     fi
 
     rootdir=
-    mesh_upgrade_golang
+    upgrade_golang
 
     # alter the go version used by the forgejo daemon
     if [ -f /etc/systemd/system/forgejo.service ]; then
