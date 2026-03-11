@@ -27,7 +27,7 @@
 PHP_VERSION='8.4'
 
 # default search engine for command line browser
-DEFAULT_SEARCH='https://searx.laquadrature.net'
+DEFAULT_SEARCH='https://duckduckgo.com'
 
 # onion port for the default domain
 DEFAULT_DOMAIN_ONION_PORT=8099
