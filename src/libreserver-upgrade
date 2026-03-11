@@ -346,6 +346,10 @@ if [ -d "${PROJECT_DIR}" ]; then
                 echo "Block web crawlers" >> ${UPGRADE_LOG}
                 block_web_crawlers
                 echo ''
+                echo "Update default web search"
+                echo "Update default web search" >> ${UPGRADE_LOG}
+                update_default_search_engine
+                echo ''
                 echo "Restart web server"
                 echo "Restart web server" >> ${UPGRADE_LOG}
                 systemctl restart nginx
