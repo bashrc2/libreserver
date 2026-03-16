@@ -11,3 +11,5 @@ Reclaim the internet, one server at a time.
 Matrix room: **#epicyon:conduit.libreserver.org**
 
 See [the website](https://libreserver.org) for installation instructions and other information.
+
+<img src="https://gitlab.com/bashrc2/libreserver/-/raw/main/img/noai.gif" width="10%" alt="No AI Allowed"/> <img src="https://gitlab.com/bashrc2/libreserver/-/raw/main/img/hand_coded.gif" width="10%" alt="Hand Coded"/> <img src="https://gitlab.com/bashrc2/libreserver/-/raw/main/img/dontfeedai.gif" width="10%" alt="Don't feed the AI"/> <img src="https://gitlab.com/bashrc2/libreserver/-/raw/main/img/writtenbyhuman.png" width="10%" alt="Written by a human not by an AI"/>
