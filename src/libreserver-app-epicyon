@@ -142,6 +142,7 @@ function epicyon_server_blocklist {
         cp "${blocklisted_addresses_filename_new}" "${blocklisted_addresses_filename}"
         rm "${blocklisted_addresses_filename_new}"
         chown epicyon:epicyon "${blocklisted_addresses_filename}"
+        chmod 700 "${blocklisted_addresses_filename}"
     fi
 }
 
@@ -200,6 +201,8 @@ function remove_user_epicyon {
     $(which python3) epicyon.py --rmaccount "${remove_username}@${epicyon_domain}"
     "${PROJECT_NAME}-pass" -u "$remove_username" --rmapp epicyon
     chown -R epicyon:epicyon "/etc/epicyon"
+    chmod -R 700 /etc/epicyon
+    chmod -R 644 /etc/epicyon/*.py
     systemctl restart epicyon
 }
 
@@ -227,6 +230,8 @@ function add_user_epicyon {
     python3 epicyon.py --addaccount "${new_username}@${epicyon_domain}" --password "$new_user_password" $extraParams
     "${PROJECT_NAME}-pass" -u "$new_username" -a epicyon -p "$new_user_password"
     chown -R epicyon:epicyon "/etc/epicyon"
+    chmod -R 700 /etc/epicyon
+    chmod -R 644 /etc/epicyon/*.py
     systemctl restart epicyon
     echo '0'
 }
@@ -356,6 +361,8 @@ function upgrade_epicyon {
     # update to the next commit
     set_repo_commit "/etc/epicyon" "epicyon commit" "$EPICYON_COMMIT" "$EPICYON_REPO"
     chown -R epicyon:epicyon "/etc/epicyon"
+    chmod -R 700 /etc/epicyon
+    chmod -R 644 /etc/epicyon/*.py
     systemctl restart epicyon
     epicyon_update_domain_name_users
 }
@@ -396,15 +403,17 @@ function restore_local_epicyon {
 
     restore_directory_from_usb $temp_restore_dir epicyon
     if [ -d $temp_restore_dir ]; then
-        if [ -d "$temp_restore_dir$epicyon_dir" ]; then
-            cp -rp "$temp_restore_dir$epicyon_dir"/* "$epicyon_dir"/
+        if [ -d "$temp_restore_dir${epicyon_dir}" ]; then
+            cp -rp "$temp_restore_dir${epicyon_dir}"/* "${epicyon_dir}"/
         else
-            if [ ! -d "$epicyon_dir" ]; then
-                mkdir "$epicyon_dir"
+            if [ ! -d "${epicyon_dir}" ]; then
+                mkdir "${epicyon_dir}"
             fi
-            cp -rp "$temp_restore_dir"/* "$epicyon_dir"/
+            cp -rp "$temp_restore_dir"/* "${epicyon_dir}"/
         fi
-        chown -R epicyon:epicyon "$epicyon_dir"
+        chown -R epicyon:epicyon "${epicyon_dir}"
+        chmod -R 700 "${epicyon_dir}"
+        chmod -R 644 "${epicyon_dir}"/*.py
         rm -rf $temp_restore_dir
     fi
 
@@ -756,7 +765,9 @@ function install_epicyon {
       echo '[Install]';
       echo 'WantedBy=multi-user.target'; } > "/etc/systemd/system/epicyon.service"
     systemctl enable epicyon
-    chown -R epicyon:epicyon "/etc/epicyon"
+    chown -R epicyon:epicyon /etc/epicyon
+    chmod -R 700 /etc/epicyon
+    chmod -R 644 /etc/epicyon/*.py
     systemctl start epicyon
 
     increment_app_install_progress
@@ -793,7 +804,9 @@ function install_epicyon {
     fi
 
     mkdir -p /etc/epicyon/accounts/newsmirror
-    chown -R epicyon:epicyon "/etc/epicyon"
+    chmod -R 700 /etc/epicyon
+    chmod -R 644 /etc/epicyon/*.py
+    chown -R epicyon:epicyon /etc/epicyon
     ln -s /etc/epicyon/accounts/newsmirror "/var/www/${EPICYON_DOMAIN_NAME}/htdocs/newsmirror"
     systemctl restart epicyon
 
