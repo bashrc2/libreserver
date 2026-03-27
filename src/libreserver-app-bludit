@@ -223,6 +223,7 @@ function bludit_install_from_download {
     if [ -d "${bludit_download_path}" ]; then
         mv "${bludit_download_path}" "${bludit_path}"
     fi
+    original_bludit_path=${bludit_path}
     if [ ! -d "${bludit_path}" ]; then
         bludit_path="/var/www/${BLUDIT_DOMAIN_NAME}/bludit-${BLUDIT_VERSION}"
         if [ ! -d "${bludit_path}" ]; then
@@ -234,7 +235,7 @@ function bludit_install_from_download {
         rm -rf "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs_prev"
     fi
     mv "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs" "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs_prev"
-    mv "$bludit_path" "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs"
+    mv "${bludit_path}" "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs"
     if [ ! -d "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs_prev/migrations" ]; then
         cp -r "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs_prev/bl-content"/* "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs/bl-content/"
     else
@@ -242,7 +243,7 @@ function bludit_install_from_download {
     fi
     chmod g+w "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs"
     chown -R www-data:www-data "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs"
-    rm "${bludit_path}".zip
+    rm "${original_bludit_path}".zip
     set_completion_param "bludit version" "$BLUDIT_VERSION"
 }
 
