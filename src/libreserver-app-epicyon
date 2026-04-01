@@ -202,7 +202,7 @@ function remove_user_epicyon {
     "${PROJECT_NAME}-pass" -u "$remove_username" --rmapp epicyon
     chown -R epicyon:epicyon "/etc/epicyon"
     chmod -R 700 /etc/epicyon
-    chmod -R 644 /etc/epicyon/*.py
+    chmod 644 /etc/epicyon/*.py
     systemctl restart epicyon
 }
 
@@ -231,7 +231,7 @@ function add_user_epicyon {
     "${PROJECT_NAME}-pass" -u "$new_username" -a epicyon -p "$new_user_password"
     chown -R epicyon:epicyon "/etc/epicyon"
     chmod -R 700 /etc/epicyon
-    chmod -R 644 /etc/epicyon/*.py
+    chmod 644 /etc/epicyon/*.py
     systemctl restart epicyon
     echo '0'
 }
@@ -362,7 +362,7 @@ function upgrade_epicyon {
     set_repo_commit "/etc/epicyon" "epicyon commit" "$EPICYON_COMMIT" "$EPICYON_REPO"
     chown -R epicyon:epicyon "/etc/epicyon"
     chmod -R 700 /etc/epicyon
-    chmod -R 644 /etc/epicyon/*.py
+    chmod 644 /etc/epicyon/*.py
     systemctl restart epicyon
     epicyon_update_domain_name_users
 }
@@ -413,7 +413,7 @@ function restore_local_epicyon {
         fi
         chown -R epicyon:epicyon "${epicyon_dir}"
         chmod -R 700 "${epicyon_dir}"
-        chmod -R 644 "${epicyon_dir}"/*.py
+        chmod 644 "${epicyon_dir}"/*.py
         rm -rf $temp_restore_dir
     fi
 
@@ -767,7 +767,7 @@ function install_epicyon {
     systemctl enable epicyon
     chown -R epicyon:epicyon /etc/epicyon
     chmod -R 700 /etc/epicyon
-    chmod -R 644 /etc/epicyon/*.py
+    chmod 644 /etc/epicyon/*.py
     systemctl start epicyon
 
     increment_app_install_progress
@@ -805,7 +805,7 @@ function install_epicyon {
 
     mkdir -p /etc/epicyon/accounts/newsmirror
     chmod -R 700 /etc/epicyon
-    chmod -R 644 /etc/epicyon/*.py
+    chmod 644 /etc/epicyon/*.py
     chown -R epicyon:epicyon /etc/epicyon
     ln -s /etc/epicyon/accounts/newsmirror "/var/www/${EPICYON_DOMAIN_NAME}/htdocs/newsmirror"
     systemctl restart epicyon
