@@ -53,7 +53,7 @@ EPICYON_CODE=
 EPICYON_ONION_PORT=9552
 EPICYON_I2P_PORT=9553
 EPICYON_REPO="https://gitlab.com/bashrc2/epicyon"
-EPICYON_COMMIT='300ee918def62575cf46b6a4379454c389781830'
+EPICYON_COMMIT='b66ecea6e0dcd7759b78a2e9736df68fa72d92cb'
 EPICYON_PORT_INTERNAL=7156
 
 # These parameters are used by the FreedomBox mobile app and web UI
@@ -203,6 +203,7 @@ function remove_user_epicyon {
     chown -R epicyon:epicyon "/etc/epicyon"
     chmod -R 700 /etc/epicyon
     chmod 644 /etc/epicyon/*.py
+    chmod +x /etc/epicyon/scripts/*
     systemctl restart epicyon
 }
 
@@ -232,6 +233,7 @@ function add_user_epicyon {
     chown -R epicyon:epicyon "/etc/epicyon"
     chmod -R 700 /etc/epicyon
     chmod 644 /etc/epicyon/*.py
+    chmod +x /etc/epicyon/scripts/*
     systemctl restart epicyon
     echo '0'
 }
@@ -363,6 +365,7 @@ function upgrade_epicyon {
     chown -R epicyon:epicyon "/etc/epicyon"
     chmod -R 700 /etc/epicyon
     chmod 644 /etc/epicyon/*.py
+    chmod +x /etc/epicyon/scripts/*
     systemctl restart epicyon
     epicyon_update_domain_name_users
 }
@@ -414,6 +417,7 @@ function restore_local_epicyon {
         chown -R epicyon:epicyon "${epicyon_dir}"
         chmod -R 700 "${epicyon_dir}"
         chmod 644 "${epicyon_dir}"/*.py
+        chmod +x "${epicyon_dir}"/scripts/*
         rm -rf $temp_restore_dir
     fi
 
@@ -768,6 +772,7 @@ function install_epicyon {
     chown -R epicyon:epicyon /etc/epicyon
     chmod -R 700 /etc/epicyon
     chmod 644 /etc/epicyon/*.py
+    chmod +x /etc/epicyon/scripts/*
     systemctl start epicyon
 
     increment_app_install_progress
@@ -806,6 +811,7 @@ function install_epicyon {
     mkdir -p /etc/epicyon/accounts/newsmirror
     chmod -R 700 /etc/epicyon
     chmod 644 /etc/epicyon/*.py
+    chmod +x /etc/epicyon/scripts/*
     chown -R epicyon:epicyon /etc/epicyon
     ln -s /etc/epicyon/accounts/newsmirror "/var/www/${EPICYON_DOMAIN_NAME}/htdocs/newsmirror"
     systemctl restart epicyon
