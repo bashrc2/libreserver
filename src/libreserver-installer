@@ -3800,6 +3800,8 @@ function update_blocklist {
                 echo -n '' > "${epicyon_blocklisted_addresses_filename}"
             fi
             chown epicyon:epicyon "${epicyon_blocklisted_addresses_filename}"
+            chown -R epicyon:epicyon /etc/epicyon/*
+            chmod 644 /etc/epicyon/*.py
             systemctl restart epicyon
         fi
 

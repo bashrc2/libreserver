@@ -336,6 +336,8 @@ if [ -d /etc/prosody ]; then
     systemctl restart prosody
 fi
 if [ -d /etc/epicyon ]; then
+    chown -R epicyon:epicyon /etc/epicyon/*
+    chmod 644 /etc/epicyon/*.py
     systemctl restart epicyon
 fi
 

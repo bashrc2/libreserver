@@ -159,6 +159,8 @@ function logging_on_epicyon {
     if ! grep -q "\-\-debug" "$daemonFile"; then
         sed -i 's|/etc/epicyon/epicyon.py |/etc/epicyon/epicyon.py --debug |g' "$daemonFile"
         systemctl daemon-reload
+        chown -R epicyon:epicyon /etc/epicyon/*
+        chmod 644 /etc/epicyon/*.py
         systemctl restart epicyon
     fi
 }
@@ -171,6 +173,8 @@ function logging_off_epicyon {
     if grep -q " \-\-debug" "$daemonFile"; then
         sed -i 's| --debug||g' "$daemonFile"
         systemctl daemon-reload
+        chown -R epicyon:epicyon /etc/epicyon/*
+        chmod 644 /etc/epicyon/*.py
         systemctl restart epicyon
     fi
 }
@@ -347,6 +351,8 @@ function upgrade_epicyon {
         if ! grep -q "$epicyonOnionDomain" /etc/systemd/system/epicyon.service; then
             sed -i "s|epicyon.py|epicyon.py --${epicyonOnionDomain}|g" /etc/systemd/system/epicyon.service
             systemctl daemon-reload
+            chown -R epicyon:epicyon /etc/epicyon/*
+            chmod 644 /etc/epicyon/*.py
             systemctl restart epicyon
         fi
     fi

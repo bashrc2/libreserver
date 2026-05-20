@@ -1621,6 +1621,8 @@ function domain_blocking_add {
                     fi
                     if [ -d /etc/epicyon ]; then
                         epicyon_server_blocklist
+                        chown -R epicyon:epicyon /etc/epicyon/*
+                        chmod 644 /etc/epicyon/*.py
                         systemctl restart epicyon
                     fi
                     if [[ "${blocked_domain}" != *'@'* ]]; then
@@ -1678,6 +1680,8 @@ function domain_blocking_remove {
                     fi
                     if [ -d /etc/epicyon ]; then
                         epicyon_server_blocklist
+                        chown -R epicyon:epicyon /etc/epicyon/*
+                        chmod 644 /etc/epicyon/*.py
                         systemctl restart epicyon
                     fi
                     if [[ "${unblocked_domain}" != *'@'* ]]; then
