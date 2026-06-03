@@ -359,6 +359,10 @@ function upgrade_epicyon {
 
     CURR_EPICYON_COMMIT=$(get_completion_param "epicyon commit")
     if [[ "$CURR_EPICYON_COMMIT" == "$EPICYON_COMMIT" ]]; then
+        chown -R epicyon:epicyon "/etc/epicyon"
+        chmod -R 700 /etc/epicyon
+        chmod 644 /etc/epicyon/*.py
+        chmod +x /etc/epicyon/scripts/*
         return
     fi
 
