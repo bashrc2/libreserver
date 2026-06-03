@@ -326,12 +326,7 @@ if [ -d "${rootdir}${epicyon_dir}/website/EN" ]; then
             epicyon_dir="${rootdir}/opt/epicyon"
         fi
         if [ -d "${epicyon_dir}" ]; then
-            if [ ! -d "${dest_dir}/epicyon/img/icons" ]; then
-                mkdir -p "${dest_dir}/epicyon/img/icons"
-            fi
             cp -r "${rootdir}${epicyon_dir}/website/EN"/* "${dest_dir}/epicyon"
-            cp -r "${rootdir}${epicyon_dir}/img"/* "${dest_dir}/epicyon/img/"
-            cp -r "${rootdir}${epicyon_dir}/theme/default/icons/logorss.png" "${dest_dir}/epicyon/img/icons/"
             chown -R www-data:www-data "${dest_dir}"
             chmod -R 755 "${dest_dir}/epicyon"
             echo "Epicyon website copied to https://${PROJECT_NAME}/epicyon"
