@@ -111,7 +111,11 @@ function upgrade_abermush {
     ./installer.sh
 
     chown -R abermush:abermush ${ABERMUSH_DIR}
+	chmod 644 ${ABERMUSH_DIR}/*.py
+	chmod 644 ${ABERMUSH_DIR}/src/*.py
     chown -R abermush:abermush ${ABERMUSH_DIR2}
+	chmod 644 ${ABERMUSH_DIR2}/*.py
+	chmod 644 ${ABERMUSH_DIR2}/src/*.py
     #if [[ "${ONION_ONLY}" == 'no' ]]; then
     #    chown -R abermush:ssl-cert ${ABERMUSH_DIR}
     #else
@@ -451,7 +455,11 @@ function install_abermush {
     increment_app_install_progress
 
     chown -R abermush:abermush ${ABERMUSH_DIR}
+	chmod 644 ${ABERMUSH_DIR}/*.py
+	chmod 644 ${ABERMUSH_DIR}/src/*.py
     chown -R abermush:abermush ${ABERMUSH_DIR2}
+	chmod 644 ${ABERMUSH_DIR2}/*.py
+	chmod 644 ${ABERMUSH_DIR2}/src/*.py
     #if [[ "$ONION_ONLY" == 'no' ]]; then
     #    chown -R abermush:ssl-cert ${ABERMUSH_DIR}
     #else
@@ -515,7 +523,11 @@ function install_abermush {
     #fi
 
     chown -R abermush:abermush ${ABERMUSH_DIR}
+	chmod 644 ${ABERMUSH_DIR}/*.py
+	chmod 644 ${ABERMUSH_DIR}/src/*.py
     chown -R abermush:abermush ${ABERMUSH_DIR2}
+	chmod 644 ${ABERMUSH_DIR2}/*.py
+	chmod 644 ${ABERMUSH_DIR2}/src/*.py
     #if [[ "$ONION_ONLY" == 'no' ]]; then
     #    chown -R abermush:ssl-cert ${ABERMUSH_DIR}
     #else
