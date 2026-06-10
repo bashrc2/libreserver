@@ -766,6 +766,11 @@ function lockdown_permissions {
         chmod -R g=rX /etc/letsencrypt
         chown -R root:ssl-cert /etc/letsencrypt
     fi
+    if [ -d /etc/epicyon ]; then
+	    chown -R epicyon:epicyon /etc/epicyon/*
+        chmod 644 /etc/epicyon/*.py
+		chmod 644 /etc/epicyon/src/*.py
+	fi
     chown -f root:root /etc/motd /etc/issue* 2> /dev/null
     chmod -f 0444 /etc/motd /etc/issue* 2> /dev/null
     chmod -R 644 /etc/torrc.d
