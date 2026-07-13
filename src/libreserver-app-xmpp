@@ -947,8 +947,21 @@ function xmpp_update_certs {
     fi
 }
 
+function limit_xmpp_memory_use {
+	if grep -q "#DefaultMemoryAccounting=" /etc/systemd/system.conf; then
+		sed -i 's|#DefaultMemoryAccounting=.*|DefaultMemoryAccounting=yes|g' /etc/systemd/system.conf
+	fi
+	if ! grep -q "MemoryMax=" /usr/lib/systemd/system/prosody.service; then
+		cp /usr/lib/systemd/system/prosody.service ~/prosody.service.old
+		sed -i '/ExecStart=/a MemoryMax=20%' /usr/lib/systemd/system/prosody.service
+		systemctl daemon-reload
+		systemctl restart prosody
+	fi
+}
+
 function upgrade_xmpp {
     configure_firewall_for_xmpp
+	limit_xmpp_memory_use
 
     if [[ $ONION_ONLY == "no" ]]; then
         # copy dhparams with correct permissions
@@ -2076,6 +2089,10 @@ function install_xmpp {
     prosody_fix_broken_modules
 
     increment_app_install_progress
+
+    systemctl restart prosody
+
+	limit_xmpp_memory_use
 
     systemctl restart prosody
 
