@@ -584,7 +584,8 @@ function install_stunnel {
       echo 'EnvironmentFile=/etc/stunnel/stunnel.conf';
       echo 'ExecStart=/usr/bin/stunnel /etc/stunnel/stunnel.conf';
       echo 'ExecStop=/usr/bin/killall -9 stunnel';
-      echo 'RemainAfterExit=yes'; } > "$prefix/etc/systemd/system/stunnel.service"
+      echo 'RemainAfterExit=yes';
+	  echo 'MemoryMax=20%'; } > "$prefix/etc/systemd/system/stunnel.service"
 
     if [ ! "$prefix" ]; then
         if [ $VPN_TLS_PORT -eq 443 ]; then

@@ -326,6 +326,7 @@ function install_rsync {
       echo 'Restart=always'
       echo 'ProtectSystem=yes';
       echo 'ProtectHome=yes';
+	  echo 'MemoryMax=20%';
       echo '';
       echo '[Install]';
       echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/rsync.service

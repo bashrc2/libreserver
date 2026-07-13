@@ -506,6 +506,7 @@ function install_abermush {
       echo 'ProtectKernelModules=yes';
       echo 'ProtectKernelTunables=yes';
       echo 'NoNewPrivileges=true';
+	  echo 'MemoryMax=20%';
       echo '';
       echo '[Install]';
       echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/abermush.service

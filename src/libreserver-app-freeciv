@@ -225,6 +225,7 @@ function install_freeciv {
       echo 'NoNewPrivileges=true';
       echo 'CapabilityBoundingSet=~CAP_SYS_ADMIN';
       echo 'CPUQuota=30%';
+	  echo 'MemoryMax=20%';
       echo '';
       echo '[Install]';
       echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/freeciv-server.service

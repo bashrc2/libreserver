@@ -202,6 +202,7 @@ function icecast_liquidsoap {
       echo 'PrivateUsers=yes';
       echo 'ProtectKernelModules=yes';
       echo 'ProtectKernelTunables=yes';
+	  echo 'MemoryMax=20%';
       echo '';
       echo '[Install]';
       echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/radio.service

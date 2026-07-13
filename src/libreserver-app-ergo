@@ -573,6 +573,7 @@ function install_ergo {
       echo 'RestrictAddressFamilies=AF_INET';
       echo 'RestrictNamespaces=true';
       echo 'SystemCallArchitectures=native';
+	  echo 'MemoryMax=20%';
       echo '';
       echo '[Install]';
       echo 'WantedBy=multi-user.target'; } > "/etc/systemd/system/ergo.service"
