@@ -1425,6 +1425,18 @@ function configure_journalctl {
     systemctl force-reload systemd-journald
 }
 
+function limit_web_server_memory_use {
+	if grep -q "#DefaultMemoryAccounting=" /etc/systemd/system.conf; then
+		sed -i 's|#DefaultMemoryAccounting=.*|DefaultMemoryAccounting=yes|g' /etc/systemd/system.conf
+	fi
+	if ! grep -q "MemoryMax=" /usr/lib/systemd/system/nginx.service; then
+		cp /usr/lib/systemd/system/nginx.service ~/nginx.service.old
+		sed -i '/ExecStop=/a MemoryMax=20%' /usr/lib/systemd/system/nginx.service
+		systemctl daemon-reload
+		systemctl restart nginx
+	fi
+}
+
 function setup_utils {
     function_check configure_journalctl
     configure_journalctl
@@ -1825,6 +1837,9 @@ function setup_web {
 
     function_check php_disable_functions
     php_disable_functions
+
+	function_check limit_web_server_memory_use
+	limit_web_server_memory_use
 
     mark_completed "${FUNCNAME[0]}"
 }
