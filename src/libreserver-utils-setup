@@ -94,7 +94,7 @@ function configure_cpu_monitor {
       echo 'User=root';
       echo "ExecStart=/usr/local/bin/${PROJECT_NAME}-cpu-monitor";
       echo "ExecReload=/bin/kill \$MAINPID";
-	  echo 'MemoryMax=10%';
+      echo 'MemoryMax=10%';
       echo 'KillMode=process';
       echo 'Restart=always';
       echo '';
@@ -768,10 +768,10 @@ function lockdown_permissions {
         chown -R root:ssl-cert /etc/letsencrypt
     fi
     if [ -d /etc/epicyon ]; then
-	    chown -R epicyon:epicyon /etc/epicyon/*
+        chown -R epicyon:epicyon /etc/epicyon/*
         chmod 644 /etc/epicyon/*.py
-		chmod 644 /etc/epicyon/src/*.py
-	fi
+        chmod 644 /etc/epicyon/src/*.py
+    fi
     chown -f root:root /etc/motd /etc/issue* 2> /dev/null
     chmod -f 0444 /etc/motd /etc/issue* 2> /dev/null
     chmod -R 644 /etc/torrc.d
@@ -1427,39 +1427,51 @@ function configure_journalctl {
 }
 
 function limit_web_server_memory_use {
-	if grep -q "#DefaultMemoryAccounting=" /etc/systemd/system.conf; then
-		sed -i 's|#DefaultMemoryAccounting=.*|DefaultMemoryAccounting=yes|g' /etc/systemd/system.conf
-	fi
-	if ! grep -q "MemoryMax=" /usr/lib/systemd/system/nginx.service; then
-		cp /usr/lib/systemd/system/nginx.service ~/nginx.service.old
-		sed -i '/ExecStop=/a MemoryMax=20%' /usr/lib/systemd/system/nginx.service
-		systemctl daemon-reload
-		systemctl restart nginx
-	fi
+    if grep -q "#DefaultMemoryAccounting=" /etc/systemd/system.conf; then
+        sed -i 's|#DefaultMemoryAccounting=.*|DefaultMemoryAccounting=yes|g' /etc/systemd/system.conf
+    fi
+    if ! grep -q "MemoryMax=" /usr/lib/systemd/system/nginx.service; then
+        cp /usr/lib/systemd/system/nginx.service ~/nginx.service.old
+        sed -i '/ExecStop=/a MemoryMax=20%' /usr/lib/systemd/system/nginx.service
+        systemctl daemon-reload
+        systemctl restart nginx
+    fi
 }
 
 function limit_firewall_memory_use {
-	if grep -q "#DefaultMemoryAccounting=" /etc/systemd/system.conf; then
-		sed -i 's|#DefaultMemoryAccounting=.*|DefaultMemoryAccounting=yes|g' /etc/systemd/system.conf
-	fi
-	if ! grep -q "MemoryMax=" /usr/lib/systemd/system/nftables.service; then
-		cp /usr/lib/systemd/system/nftables.service ~/nftables.service.old
-		sed -i '/ExecStop=/a MemoryMax=20%' /usr/lib/systemd/system/nftables.service
-		systemctl daemon-reload
-		systemctl restart nftables
-	fi
+    if grep -q "#DefaultMemoryAccounting=" /etc/systemd/system.conf; then
+        sed -i 's|#DefaultMemoryAccounting=.*|DefaultMemoryAccounting=yes|g' /etc/systemd/system.conf
+    fi
+    if ! grep -q "MemoryMax=" /usr/lib/systemd/system/nftables.service; then
+        cp /usr/lib/systemd/system/nftables.service ~/nftables.service.old
+        sed -i '/ExecStop=/a MemoryMax=20%' /usr/lib/systemd/system/nftables.service
+        systemctl daemon-reload
+        systemctl restart nftables
+    fi
 }
 
 function limit_i2p_memory_use {
-	if grep -q "#DefaultMemoryAccounting=" /etc/systemd/system.conf; then
-		sed -i 's|#DefaultMemoryAccounting=.*|DefaultMemoryAccounting=yes|g' /etc/systemd/system.conf
-	fi
-	if ! grep -q "MemoryMax=" /usr/lib/systemd/system/i2pd.service; then
-		cp /usr/lib/systemd/system/i2pd.service ~/i2pd.service.old
-		sed -i '/ExecReload=/a MemoryMax=20%' /usr/lib/systemd/system/i2pd.service
-		systemctl daemon-reload
-		systemctl restart i2pd
-	fi
+    if grep -q "#DefaultMemoryAccounting=" /etc/systemd/system.conf; then
+        sed -i 's|#DefaultMemoryAccounting=.*|DefaultMemoryAccounting=yes|g' /etc/systemd/system.conf
+    fi
+    if ! grep -q "MemoryMax=" /usr/lib/systemd/system/i2pd.service; then
+        cp /usr/lib/systemd/system/i2pd.service ~/i2pd.service.old
+        sed -i '/ExecReload=/a MemoryMax=20%' /usr/lib/systemd/system/i2pd.service
+        systemctl daemon-reload
+        systemctl restart i2pd
+    fi
+}
+
+function limit_email_memory_use {
+    if grep -q "#DefaultMemoryAccounting=" /etc/systemd/system.conf; then
+        sed -i 's|#DefaultMemoryAccounting=.*|DefaultMemoryAccounting=yes|g' /etc/systemd/system.conf
+    fi
+    if ! grep -q "MemoryMax=" /usr/lib/systemd/system/exim4.service; then
+        cp /usr/lib/systemd/system/exim4.service ~/exim4.service.old
+        sed -i '/ExecReload=/a MemoryMax=20%' /usr/lib/systemd/system/exim4.service
+        systemctl daemon-reload
+        systemctl restart exim4
+    fi
 }
 
 function setup_utils {
@@ -1751,11 +1763,11 @@ function setup_utils {
     function_check install_i2p
     install_i2p
 
-	function_check limit_firewall_memory_use
-	limit_firewall_memory_use
+    function_check limit_firewall_memory_use
+    limit_firewall_memory_use
 
-	function_check limit_i2p_memory_use
-	limit_i2p_memory_use
+    function_check limit_i2p_memory_use
+    limit_i2p_memory_use
 
     function_check clear_bash_history
     clear_bash_history
@@ -1853,6 +1865,9 @@ function setup_email {
     function_check install_xface_dependencies
     install_xface_dependencies
 
+    function_check limit_email_memory_use
+    limit_email_memory_use
+
     mark_completed "${FUNCNAME[0]}"
 }
 
@@ -1869,8 +1884,8 @@ function setup_web {
     function_check php_disable_functions
     php_disable_functions
 
-	function_check limit_web_server_memory_use
-	limit_web_server_memory_use
+    function_check limit_web_server_memory_use
+    limit_web_server_memory_use
 
     mark_completed "${FUNCNAME[0]}"
 }

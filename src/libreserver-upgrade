@@ -130,6 +130,11 @@ if [ "${DEVELOPMENT_BRANCH}" ]; then
     fi
 fi
 
+echo "Limiting email memory use" >> ${UPGRADE_LOG}
+echo ''
+echo "Limiting email memory use"
+limit_email_memory_use
+
 echo "Limiting web server memory use" >> ${UPGRADE_LOG}
 echo ''
 echo "Limiting web server memory use"
