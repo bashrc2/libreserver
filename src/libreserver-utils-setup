@@ -1438,11 +1438,26 @@ function limit_web_server_memory_use {
 }
 
 function limit_firewall_memory_use {
+	if grep -q "#DefaultMemoryAccounting=" /etc/systemd/system.conf; then
+		sed -i 's|#DefaultMemoryAccounting=.*|DefaultMemoryAccounting=yes|g' /etc/systemd/system.conf
+	fi
 	if ! grep -q "MemoryMax=" /usr/lib/systemd/system/nftables.service; then
 		cp /usr/lib/systemd/system/nftables.service ~/nftables.service.old
 		sed -i '/ExecStop=/a MemoryMax=20%' /usr/lib/systemd/system/nftables.service
 		systemctl daemon-reload
 		systemctl restart nftables
+	fi
+}
+
+function limit_i2p_memory_use {
+	if grep -q "#DefaultMemoryAccounting=" /etc/systemd/system.conf; then
+		sed -i 's|#DefaultMemoryAccounting=.*|DefaultMemoryAccounting=yes|g' /etc/systemd/system.conf
+	fi
+	if ! grep -q "MemoryMax=" /usr/lib/systemd/system/i2pd.service; then
+		cp /usr/lib/systemd/system/i2pd.service ~/i2pd.service.old
+		sed -i '/ExecReload=/a MemoryMax=20%' /usr/lib/systemd/system/i2pd.service
+		systemctl daemon-reload
+		systemctl restart i2pd
 	fi
 }
 
@@ -1735,6 +1750,12 @@ function setup_utils {
     function_check install_i2p
     install_i2p
 
+	function_check limit_firewall_memory_use
+	limit_firewall_memory_use
+
+	function_check limit_i2p_memory_use
+	limit_i2p_memory_use
+
     function_check clear_bash_history
     clear_bash_history
 
@@ -1849,9 +1870,6 @@ function setup_web {
 
 	function_check limit_web_server_memory_use
 	limit_web_server_memory_use
-
-	function_check limit_firewall_memory_use
-	limit_firewall_memory_use
 
     mark_completed "${FUNCNAME[0]}"
 }
