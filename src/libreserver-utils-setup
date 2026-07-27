@@ -94,6 +94,7 @@ function configure_cpu_monitor {
       echo 'User=root';
       echo "ExecStart=/usr/local/bin/${PROJECT_NAME}-cpu-monitor";
       echo "ExecReload=/bin/kill \$MAINPID";
+	  echo 'MemoryMax=10%';
       echo 'KillMode=process';
       echo 'Restart=always';
       echo '';
