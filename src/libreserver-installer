@@ -178,6 +178,10 @@ liquidsoap_script=/etc/liquidsoapuser/radio.liq
 webadmin_ipv4_address=
 webadmin_monitor_ip_ctr=1
 
+# monitoring memory use
+prev_used_memory_percent=0
+memory_log_filename="/var/log/libreserver-memory.log"
+
 function reverse_shell_detect {
     # Because there are many other ways of running a reverse shell
     # this is only a minimum effort based upon things commonly observed
@@ -235,7 +239,7 @@ function check_ssh_sessions {
     ssh_sessions_high_count=$((ssh_sessions_high_count+1))
     # a high count must be observed for a length of time in order to avoid
     # notifying about temporary blips
-    if [ $ssh_sessions_high_count -gt 5 ]; then
+    if [ ${ssh_sessions_high_count} -gt 5 ]; then
         # unusual number of ssh connections
         if [ ! -f ${ssh_sessions_count_filename} ]; then
             echo -n "${ssh_sessions_count}" > ${ssh_sessions_count_filename}
@@ -3802,7 +3806,7 @@ function update_blocklist {
             chown epicyon:epicyon "${epicyon_blocklisted_addresses_filename}"
             chown -R epicyon:epicyon /etc/epicyon/*
             chmod 644 /etc/epicyon/*.py
-			chmod 644 /etc/epicyon/src/*.py
+            chmod 644 /etc/epicyon/src/*.py
             systemctl restart epicyon
         fi
 
@@ -4804,7 +4808,45 @@ function check_nginx_initial_failure {
     fi
 }
 
+function check_memory_use {
+    total_memory=$(free -m | grep "Mem:" | awk -F ' ' '{print $2}')
+    used_memory=$(free -m | grep "Mem:" | awk -F ' ' '{print $3}')
+    used_memory_percent=$((used_memory * 100 / total_memory))
+    if [ ${prev_used_memory_percent} -le 30 ]; then
+        if [ ${used_memory_percent} -gt 30 ]; then
+            { echo '';
+              echo "$(date)";
+              echo "Memory use: ${used_memory_percent}%";
+              echo "$(free)"; } >> ${memory_log_filename}
+        fi
+    fi
+    if [ ${prev_used_memory_percent} -le 50 ]; then
+        if [ ${used_memory_percent} -gt 50 ]; then
+            echo '' >> ${memory_log_filename}
+            date >> ${memory_log_filename}
+            echo "Memory use: ${used_memory_percent}%" >> ${memory_log_filename}
+            free >> ${memory_log_filename}
+            top -b -n 1 | head -n 20 >> ${memory_log_filename}
+            translated_high_mem=$(web_admin_translate_text "High memory use")
+            ${PROJECT_NAME}-notification -s "${PROJECT_NAME}" -m "${translated_high_mem}"
+        fi
+    fi
+    if [ ${prev_used_memory_percent} -le 80 ]; then
+        if [ ${used_memory_percent} -gt 80 ]; then
+            echo '' >> ${memory_log_filename}
+            date >> ${memory_log_filename}
+            echo "Memory use: ${used_memory_percent}%" >> ${memory_log_filename}
+            free >> ${memory_log_filename}
+            top -b -n 1 | head -n 20 >> ${memory_log_filename}
+            translated_high_mem=$(web_admin_translate_text "Very high memory use")
+            ${PROJECT_NAME}-notification -s "${PROJECT_NAME}" -m "${translated_high_mem}"
+        fi
+    fi
+    prev_used_memory_percent=$used_memory_percent
+}
+
 function installer_main_loop {
+    check_memory_use
     check_ssh_sessions
     reverse_shell_detect
     check_number_of_connections
