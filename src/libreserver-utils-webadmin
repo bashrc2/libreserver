@@ -357,6 +357,7 @@ function web_admin_configure_installer_daemon {
       echo 'KillMode=process';
       echo 'Restart=always';
       echo 'RestartSec=2';
+	  echo 'MemoryMax=10%';
       echo '';
       echo '[Install]';
       echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/webadmin.service

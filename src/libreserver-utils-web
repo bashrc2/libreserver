@@ -610,6 +610,7 @@ function install_dynamicdns {
       echo "ExecStart=/usr/sbin/inadyn -C -n -s --loglevel=err --config ${INADYN_CONFIG_FILE}";
       echo 'Restart=on-failure';
       echo 'RestartSec=10';
+	  echo 'MemoryMax=10%';
       echo '';
       echo '[Install]';
       echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/inadyn.service
