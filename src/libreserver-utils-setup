@@ -1437,6 +1437,15 @@ function limit_web_server_memory_use {
 	fi
 }
 
+function limit_firewall_memory_use {
+	if ! grep -q "MemoryMax=" /usr/lib/systemd/system/nftables.service; then
+		cp /usr/lib/systemd/system/nftables.service ~/nftables.service.old
+		sed -i '/ExecStop=/a MemoryMax=20%' /usr/lib/systemd/system/nftables.service
+		systemctl daemon-reload
+		systemctl restart nftables
+	fi
+}
+
 function setup_utils {
     function_check configure_journalctl
     configure_journalctl
@@ -1840,6 +1849,9 @@ function setup_web {
 
 	function_check limit_web_server_memory_use
 	limit_web_server_memory_use
+
+	function_check limit_firewall_memory_use
+	limit_firewall_memory_use
 
     mark_completed "${FUNCNAME[0]}"
 }

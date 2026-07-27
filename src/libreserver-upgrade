@@ -130,10 +130,15 @@ if [ "${DEVELOPMENT_BRANCH}" ]; then
     fi
 fi
 
-echo "Limiting nginx memory use" >> ${UPGRADE_LOG}
+echo "Limiting web server memory use" >> ${UPGRADE_LOG}
 echo ''
-echo "Limiting nginx memory use"
-limit_nginx_memory_use
+echo "Limiting web server memory use"
+limit_web_server_memory_use
+
+echo "Limiting firewall memory use" >> ${UPGRADE_LOG}
+echo ''
+echo "Limiting firewall memory use"
+limit_firewall_memory_use
 
 # upgrading file prevents USB canary or other jobs from activating
 echo "Removing temporary files" >> ${UPGRADE_LOG}
