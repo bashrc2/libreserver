@@ -28,16 +28,19 @@
 UPGRADE_SCRIPT_NAME="${PROJECT_NAME}-upgrade"
 
 function create_upgrade_script {
-    upgrade_command_file=$(which "${PROJECT_NAME}-upgrade")
-    if [ ! -f "/etc/cron.weekly/$UPGRADE_SCRIPT_NAME" ]; then
-        cp "$upgrade_command_file" "/etc/cron.weekly/$UPGRADE_SCRIPT_NAME"
-    else
-        HASH1=$(sha256sum "$upgrade_command_file" | awk -F ' ' '{print $1}')
-        HASH2=$(sha256sum "/etc/cron.weekly/$UPGRADE_SCRIPT_NAME" | awk -F ' ' '{print $1}')
-        if [[ "$HASH1" != "$HASH2" ]]; then
-            cp "$upgrade_command_file" "/etc/cron.weekly/$UPGRADE_SCRIPT_NAME"
-        fi
+    if [ -f "/etc/cron.weekly/$UPGRADE_SCRIPT_NAME" ]; then
+        rm "/etc/cron.weekly/$UPGRADE_SCRIPT_NAME"
     fi
+    # upgrade_command_file=$(which "${PROJECT_NAME}-upgrade")
+    # if [ ! -f "/etc/cron.weekly/$UPGRADE_SCRIPT_NAME" ]; then
+    #     cp "$upgrade_command_file" "/etc/cron.weekly/$UPGRADE_SCRIPT_NAME"
+    # else
+    #     HASH1=$(sha256sum "$upgrade_command_file" | awk -F ' ' '{print $1}')
+    #     HASH2=$(sha256sum "/etc/cron.weekly/$UPGRADE_SCRIPT_NAME" | awk -F ' ' '{print $1}')
+    #     if [[ "$HASH1" != "$HASH2" ]]; then
+    #         cp "$upgrade_command_file" "/etc/cron.weekly/$UPGRADE_SCRIPT_NAME"
+    #     fi
+    # fi
 
     if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
         return
