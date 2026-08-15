@@ -203,7 +203,9 @@ function bludit_install_from_download {
         cp "/repos/${bludit_download_zip}" .
     else
         if [[ "$ONION_ONLY" == 'no' ]]; then
+			firewall_microsoft_undo
             wget "$url"
+			firewall_microsoft
         else
             ${TORSOCKS} wget "$url"
             if [ ! -f "${bludit_downloaded_zip}" ]; then
