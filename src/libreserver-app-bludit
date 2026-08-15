@@ -187,7 +187,7 @@ function bludit_install_from_download {
     fi
     # shellcheck disable=SC2001
     bludit_download_path="/var/www/${BLUDIT_DOMAIN_NAME}"/bludit
-    bludit_path="/var/www/${BLUDIT_DOMAIN_NAME}"/bludit-${BLUDIT_VERSION}
+    bludit_path="/var/www/${BLUDIT_DOMAIN_NAME}"/${BLUDIT_VERSION}
     if [ -d "$bludit_path" ]; then
         rm -rf "$bludit_path"
     fi
@@ -211,7 +211,7 @@ function bludit_install_from_download {
         fi
     fi
     if [ ! -f "${bludit_path}".zip ]; then
-        echo $'Bludit zip file was not downloaded'
+        echo $"Bludit zip file was not downloaded to ${bludit_path}.zip"
         exit 25
     fi
     # shellcheck disable=SC2001,SC2046
