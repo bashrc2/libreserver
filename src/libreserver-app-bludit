@@ -187,7 +187,8 @@ function bludit_install_from_download {
     fi
     # shellcheck disable=SC2001
     bludit_download_path="/var/www/${BLUDIT_DOMAIN_NAME}"/bludit
-    bludit_path="/var/www/${BLUDIT_DOMAIN_NAME}"/${BLUDIT_VERSION}
+    bludit_path="/var/www/${BLUDIT_DOMAIN_NAME}"/bludit-${BLUDIT_VERSION}
+    bludit_downloaded_zip="${bludit_path}.zip"
     if [ -d "$bludit_path" ]; then
         rm -rf "$bludit_path"
     fi
@@ -205,7 +206,7 @@ function bludit_install_from_download {
             wget "$url"
         else
             ${TORSOCKS} wget "$url"
-            if [ ! -f "${bludit_path}".zip ]; then
+            if [ ! -f "${bludit_downloaded_zip}" ]; then
                 wget "$url"
             fi
         fi
@@ -218,13 +219,13 @@ function bludit_install_from_download {
     if [ -d "${bludit_download_path}" ]; then
         rm -rf "${bludit_download_path}"
     fi
-    unzip "${bludit_path}".zip
+    unzip "${bludit_downloaded_zip}"
     if [ -d "${bludit_download_path}" ]; then
         mv "${bludit_download_path}" "${bludit_path}"
     fi
     original_bludit_path=${bludit_path}
     if [ ! -d "${bludit_path}" ]; then
-        echo $"Unable to download or extract bludit from ${url} ${bludit_path}"
+        echo $"Unable to download or extract bludit from ${url} ${bludit_downloaded_zip}"
         exit 26
     fi
     if [ -d "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs_prev" ]; then
