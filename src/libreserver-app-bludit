@@ -186,11 +186,11 @@ function bludit_install_from_download {
         exit 32
     fi
     # shellcheck disable=SC2001
-    bludit_download_path="/var/www/${BLUDIT_DOMAIN_NAME}"/bludit
-    bludit_path="/var/www/${BLUDIT_DOMAIN_NAME}"/bludit-${BLUDIT_VERSION}
+    bludit_path="/var/www/${BLUDIT_DOMAIN_NAME}"/${BLUDIT_VERSION}
+    bludit_path_dir="/var/www/${BLUDIT_DOMAIN_NAME}"/bludit-${BLUDIT_VERSION}
     bludit_downloaded_zip="${bludit_path}.zip"
-    if [ -d "$bludit_path" ]; then
-        rm -rf "$bludit_path"
+    if [ -d "$bludit_path_dir" ]; then
+        rm -rf "$bludit_path_dir"
     fi
     if [ -f "$bludit_path".zip ]; then
         rm "$bludit_path".zip
@@ -203,9 +203,9 @@ function bludit_install_from_download {
         cp "/repos/${bludit_download_zip}" .
     else
         if [[ "$ONION_ONLY" == 'no' ]]; then
-			firewall_microsoft_undo
+            firewall_microsoft_undo
             wget "$url"
-			firewall_microsoft
+            firewall_microsoft
         else
             ${TORSOCKS} wget "$url"
             if [ ! -f "${bludit_downloaded_zip}" ]; then
@@ -218,15 +218,15 @@ function bludit_install_from_download {
         exit 25
     fi
     # shellcheck disable=SC2001,SC2046
-    if [ -d "${bludit_download_path}" ]; then
-        rm -rf "${bludit_download_path}"
+    if [ -d "${bludit_download_dir}" ]; then
+        rm -rf "${bludit_download_dir}"
     fi
     unzip "${bludit_downloaded_zip}"
-    if [ -d "${bludit_download_path}" ]; then
-        mv "${bludit_download_path}" "${bludit_path}"
+    if [ -d "${bludit_download_dir}" ]; then
+        mv "${bludit_download_dir}" "${bludit_path_dir}"
     fi
     original_bludit_path=${bludit_path}
-    if [ ! -d "${bludit_path}" ]; then
+    if [ ! -d "${bludit_path_dir}" ]; then
         echo $"Unable to download or extract bludit from ${url} ${bludit_downloaded_zip}"
         exit 26
     fi
