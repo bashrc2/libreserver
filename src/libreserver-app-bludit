@@ -35,8 +35,7 @@ BLUDIT_CODE=
 BLUDIT_ONION_PORT=9844
 BLUDIT_I2P_PORT=9555
 BLUDIT_VERSION='3.22.0'
-BLUDIT_DOWNLOAD='https://www.bludit.com/releases'
-
+BLUDIT_DOWNLOAD='https://github.com/bludit/bludit/archive/refs/tags'
 BLUDIT_SHORT_DESCRIPTION=$'Markdown blogging'
 BLUDIT_DESCRIPTION=$'Simple Markdown blogging'
 BLUDIT_MOBILE_APP_URL=
@@ -183,12 +182,12 @@ function reconfigure_bludit {
 }
 
 function bludit_install_from_download {
-    if [ ! "$BLUDIT_VERSION" ]; then
+    if [ ! "${BLUDIT_VERSION}" ]; then
         exit 32
     fi
     # shellcheck disable=SC2001
     bludit_download_path="/var/www/${BLUDIT_DOMAIN_NAME}"/bludit
-    bludit_path="/var/www/${BLUDIT_DOMAIN_NAME}"/bludit-$(echo "$BLUDIT_VERSION" | sed 's|\.|-|g')
+    bludit_path="/var/www/${BLUDIT_DOMAIN_NAME}"/bludit-${BLUDIT_VERSION}
     if [ -d "$bludit_path" ]; then
         rm -rf "$bludit_path"
     fi
@@ -196,7 +195,7 @@ function bludit_install_from_download {
         rm "$bludit_path".zip
     fi
     # shellcheck disable=SC2001
-    bludit_download_zip=bludit-$(echo "$BLUDIT_VERSION" | sed 's|\.|-|g').zip
+    bludit_download_zip=bludit-${BLUDIT_VERSION}.zip
     url=${BLUDIT_DOWNLOAD}/${bludit_download_zip}
     cd "/var/www/${BLUDIT_DOMAIN_NAME}" || exit 36
     if [ -f "/repos/${bludit_download_zip}" ]; then
@@ -225,11 +224,8 @@ function bludit_install_from_download {
     fi
     original_bludit_path=${bludit_path}
     if [ ! -d "${bludit_path}" ]; then
-        bludit_path="/var/www/${BLUDIT_DOMAIN_NAME}/bludit-${BLUDIT_VERSION}"
-        if [ ! -d "${bludit_path}" ]; then
-            echo $"Unable to download or extract bludit from ${url} ${bludit_path}"
-            exit 26
-        fi
+        echo $"Unable to download or extract bludit from ${url} ${bludit_path}"
+        exit 26
     fi
     if [ -d "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs_prev" ]; then
         rm -rf "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs_prev"
@@ -244,7 +240,7 @@ function bludit_install_from_download {
     chmod g+w "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs"
     chown -R www-data:www-data "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs"
     rm "${original_bludit_path}".zip
-    set_completion_param "bludit version" "$BLUDIT_VERSION"
+    set_completion_param "bludit version" "${BLUDIT_VERSION}"
 }
 
 function upgrade_bludit {
@@ -256,14 +252,14 @@ function upgrade_bludit {
     convert_blog_to_gemini
     bludit_update_domain_name_users
 
-    if [ ! "$BLUDIT_VERSION" ]; then
+    if [ ! "${BLUDIT_VERSION}" ]; then
         return
     fi
 
     bludit_remove_bad_links
 
     CURR_BLUDIT_VERSION=$(get_completion_param "bludit version")
-    if [[ "$CURR_BLUDIT_VERSION" == "$BLUDIT_VERSION" ]]; then
+    if [[ "$CURR_BLUDIT_VERSION" == "${BLUDIT_VERSION}" ]]; then
         if [ ! ${restoring_bludit} ]; then
             return
         fi
