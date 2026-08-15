@@ -195,7 +195,7 @@ function bludit_install_from_download {
         rm "$bludit_path".zip
     fi
     # shellcheck disable=SC2001
-    bludit_download_zip=bludit-${BLUDIT_VERSION}.zip
+    bludit_download_zip=${BLUDIT_VERSION}.zip
     url=${BLUDIT_DOWNLOAD}/${bludit_download_zip}
     cd "/var/www/${BLUDIT_DOMAIN_NAME}" || exit 36
     if [ -f "/repos/${bludit_download_zip}" ]; then
