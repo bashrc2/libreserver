@@ -234,7 +234,7 @@ function bludit_install_from_download {
         rm -rf "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs_prev"
     fi
     mv "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs" "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs_prev"
-    mv "${bludit_path}" "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs"
+    mv "${bludit_path_dir}" "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs"
     if [ ! -d "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs_prev/migrations" ]; then
         cp -r "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs_prev/bl-content"/* "/var/www/${BLUDIT_DOMAIN_NAME}/htdocs/bl-content/"
     else
