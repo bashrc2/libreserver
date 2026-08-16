@@ -92,8 +92,8 @@ function add_user_profanity {
     { echo "[${new_username}@${HOSTNAME}]";
       echo 'enabled=true';
       echo "jid=${new_username}@${HOSTNAME}";
-      echo "server=$XMPP_ONION_HOSTNAME";
-      echo "pgp.keyid=$MY_GPG_PUBLIC_KEY_ID";
+      echo "server=${XMPP_ONION_HOSTNAME}";
+      echo "pgp.keyid=${MY_GPG_PUBLIC_KEY_ID}";
       echo 'resource=profanity';
       echo "muc.service=conference.${HOSTNAME}";
       echo "muc.nick=${new_username}";
@@ -274,6 +274,14 @@ function install_profanity {
 
     chown -R "${MY_USERNAME}":"${MY_USERNAME}" "/home/${MY_USERNAME}/.local"
     chown -R "${MY_USERNAME}":"${MY_USERNAME}" "/home/${MY_USERNAME}/.config"
+
+    # create configurations for each account
+    for d in /home/*/ ; do
+        ACCT_USERNAME=$(echo "$d" | awk -F '/' '{print $3}')
+        if [[ $(is_valid_user "${ACCT_USERNAME}") == "1" ]]; then
+            add_user_profanity "${ACCT_USERNAME}" ""
+        fi
+    done
 
     APP_INSTALLED=1
 }
