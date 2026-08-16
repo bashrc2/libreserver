@@ -409,8 +409,6 @@ Search|Пошук
 removed|Вилучено
 To get email working you will need to forward some ports. Email using your onion address will work anyway, so long as you are contacting other onion based email addresses.|Щоб отримати роботу електронною поштою, вам доведеться переслати деякі порти. Електронна пошта за допомогою адреси цибулі буде працювати в будь-якому випадку, якщо ви зв'язуєтеся з іншими електронними адресами на основі лука.
 Forward ports 25, 587 and 465 from your internet router|Переадресовувати порти 25, 587 і 465 з вашого інтернет-маршрутизатора
-To access cryptpad you'll need to use a Tor browser. Navigate to the URL and enable javascript for the site under the NoScript icon. The screen will be blank for a few seconds while it's downloading the application into your browser.|Щоб отримати доступ до криптовалюта, потрібно скористатись браузером Tor. Перейдіть до URL-адреси та увімкніть javascript для сайту під значком NoScript. Екран стане пустим протягом декількох секунд під час завантаження програми у ваш браузер.
-Cryptpad is an almost peer-to-peer application. No data is stored on the server, which only does minimal orchestration between the clients. If an adversary subsequently obtains the server they still learn nothing.|Криптад - це практично одноранговий додаток, на якому не зберігається жодних даних, що тільки мінімізує оркестровку між клієнтами. Якщо супротивник згодом отримує сервер, він нічого не навчається.
 Authentication Token|Токен аутентифікації
 This is only needed if you're using FreeDNS. Otherwise you can leave it blank.|Це потрібно лише, якщо ви використовуєте FreeDNS, інакше ви можете залишити його порожнім.
 On the site where you obtained your domain name set up some custom nameservers as follows:|На сайті, де ви отримали своє доменне ім'я, налаштували деякі власні сервери імен наступним чином:
@@ -570,7 +568,6 @@ New shared item|Новий спільний елемент
 New follow request|Новий наступний запит
 Number of connections on HTTP port is high|Кількість з'єднань на HTTP-порту висока
 Number of connections on HTTPS port is high|Кількість з'єднань на HTTPS-порту висока
-Cryptpad allow new signups|Cryptpad дозволяє нові реєстрації
 Name of the Dungeon Master|Ім'я майстра підземелля
 Message Of The Day|Повідомлення дня
 port|мережевий порт

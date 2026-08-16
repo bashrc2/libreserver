@@ -409,8 +409,6 @@ Search|수색
 removed|제거됨
 To get email working you will need to forward some ports. Email using your onion address will work anyway, so long as you are contacting other onion based email addresses.|전자 우편을 작동 시키려면 일부 포트를 전달해야합니다. 양파 주소를 사용하는 전자 메일은 어쨌든 다른 양파 기반 전자 메일 주소로 연락하는 한 작동합니다.
 Forward ports 25, 587 and 465 from your internet router|인터넷 라우터의 포트 25, 587 및 465 전달
-To access cryptpad you'll need to use a Tor browser. Navigate to the URL and enable javascript for the site under the NoScript icon. The screen will be blank for a few seconds while it's downloading the application into your browser.|cryptpad에 액세스하려면 Tor 브라우저를 사용해야하며, NoScript 아이콘 아래에서 URL로 이동하여 javascript를 활성화하십시오. 브라우저에 응용 프로그램을 다운로드하는 동안 화면이 잠시 비어 있습니다.
-Cryptpad is an almost peer-to-peer application. No data is stored on the server, which only does minimal orchestration between the clients. If an adversary subsequently obtains the server they still learn nothing.|Cryptpad는 거의 피어 투 피어 (peer-to-peer) 응용 프로그램으로 클라이언트간에 최소한의 조정 만 수행하는 데이터는 서버에 저장되지 않습니다.
 Authentication Token|인증 토큰
 This is only needed if you're using FreeDNS. Otherwise you can leave it blank.|FreeDNS를 사용하는 경우에만 필요하며 그렇지 않으면 비워 둘 수 있습니다.
 On the site where you obtained your domain name set up some custom nameservers as follows:|도메인 이름을 얻은 사이트에서 다음과 같이 맞춤 네임 서버를 설정하십시오.
@@ -570,7 +568,6 @@ New shared item|새로운 공유 항목
 New follow request|새로운 팔로우 요청
 Number of connections on HTTP port is high|HTTP 포트의 연결 수가 높습니다
 Number of connections on HTTPS port is high|HTTPS 포트의 연결 수가 높습니다
-Cryptpad allow new signups|암호화 패드로 새로운 가입 가능
 Name of the Dungeon Master|던전 마스터의 이름
 Message Of The Day|오늘의 메시지
 port|네트워크 포트

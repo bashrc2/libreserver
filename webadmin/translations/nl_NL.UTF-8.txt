@@ -409,8 +409,6 @@ Search|Zoeken
 removed|verwijderd
 To get email working you will need to forward some ports. Email using your onion address will work anyway, so long as you are contacting other onion based email addresses.|Om e-mail aan het werk te krijgen, moet u enkele poorten doorsturen. E-mail met uw ui-adres werkt sowieso, als u maar contact houdt met andere ui-e-mailadressen.
 Forward ports 25, 587 and 465 from your internet router|Stuur poorten 25, 587 en 465 door vanaf uw internetrouter
-To access cryptpad you'll need to use a Tor browser. Navigate to the URL and enable javascript for the site under the NoScript icon. The screen will be blank for a few seconds while it's downloading the application into your browser.|Om toegang te krijgen tot cryptpad, moet je een Tor-browser gebruiken. Navigeer naar de URL en schakel JavaScript in voor de site onder het pictogram NoScript. Het scherm zal een paar seconden leeg blijven terwijl het de toepassing in je browser downloadt.
-Cryptpad is an almost peer-to-peer application. No data is stored on the server, which only does minimal orchestration between the clients. If an adversary subsequently obtains the server they still learn nothing.|Cryptpad is een bijna peer-to-peer-toepassing.Er worden geen gegevens opgeslagen op de server, die slechts minimale orkestratie tussen de clients uitvoert.Als een tegenstander vervolgens de server verkrijgt, leren ze nog steeds niets.
 Authentication Token|Verificatietoken
 This is only needed if you're using FreeDNS. Otherwise you can leave it blank.|Dit is alleen nodig als u FreeDNS gebruikt, anders kunt u het leeg laten.
 On the site where you obtained your domain name set up some custom nameservers as follows:|Op de site waar u uw domeinnaam hebt verkregen, kunt u enkele aangepaste naamservers instellen:
@@ -570,7 +568,6 @@ New shared item|Nieuw gedeeld item
 New follow request|Nieuw volgverzoek
 Number of connections on HTTP port is high|Aantal verbindingen op HTTP-poort is hoog
 Number of connections on HTTPS port is high|Aantal verbindingen op HTTPS-poort is hoog
-Cryptpad allow new signups|Cryptpad staat nieuwe aanmeldingen toe
 Name of the Dungeon Master|Naam van de kerker-meester
 Message Of The Day|Bericht van de dag
 port|netwerkpoort

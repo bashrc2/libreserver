@@ -409,8 +409,6 @@ Search|サーチ
 removed|削除済み
 To get email working you will need to forward some ports. Email using your onion address will work anyway, so long as you are contacting other onion based email addresses.|電子メールを有効にするには、いくつかのポートを転送する必要があります。タマネギのアドレスを使用している電子メールは、とにかく、タマネギをベースにした他の電子メールアドレスに連絡している限り動作します。
 Forward ports 25, 587 and 465 from your internet router|あなたのインターネットルータからのポート25,587および465を転送します
-To access cryptpad you'll need to use a Tor browser. Navigate to the URL and enable javascript for the site under the NoScript icon. The screen will be blank for a few seconds while it's downloading the application into your browser.|cryptpadにアクセスするには、Torブラウザを使用する必要があります.NoScriptアイコンの下にあるURLに移動し、javascriptを有効にします。ブラウザにアプリケーションをダウンロードしている間、画面は数秒間空白になります。
-Cryptpad is an almost peer-to-peer application. No data is stored on the server, which only does minimal orchestration between the clients. If an adversary subsequently obtains the server they still learn nothing.|Cryptpadはほぼピアツーピアのアプリケーションであり、クライアント間での最小限のオーケストレーションしか行われないデータはサーバーに保存されません。
 Authentication Token|認証トークン
 This is only needed if you're using FreeDNS. Otherwise you can leave it blank.|これは、FreeDNSを使用している場合にのみ必要です。それ以外の場合は空白のままにしておきます。
 On the site where you obtained your domain name set up some custom nameservers as follows:|ドメイン名を取得したサイトで、次のようにカスタムネームサーバーを設定します。
@@ -570,7 +568,6 @@ New shared item|新しい共有アイテム
 New follow request|新しいフォローリクエスト
 Number of connections on HTTP port is high|HTTPポートの接続数が多い
 Number of connections on HTTPS port is high|HTTPSポートの接続数が多い
-Cryptpad allow new signups|Cryptpadは新しいサインアップを許可します
 Name of the Dungeon Master|ダンジョンマスターの名前
 Message Of The Day|今日のメッセージ
 port|ネットワークポート

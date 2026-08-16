@@ -409,8 +409,6 @@ Search|Soek
 removed|verwyder
 To get email working you will need to forward some ports. Email using your onion address will work anyway, so long as you are contacting other onion based email addresses.|Om e-poswerk te kry, sal jy 'n paar hawens moet oordra. E-pos met jou ui-adres sal in elk geval werk, solank jy ander ui-gebaseerde e-posadresse kontak.
 Forward ports 25, 587 and 465 from your internet router|Stuur hawens 25, 587 en 465 van u internet router
-To access cryptpad you'll need to use a Tor browser. Navigate to the URL and enable javascript for the site under the NoScript icon. The screen will be blank for a few seconds while it's downloading the application into your browser.|Om toegang tot die cryptpad te verkry, moet u 'n Tor-blaaier gebruik. Navigeer na die URL en aktiveer javascript vir die webwerf onder die NoScript-ikoon. Die skerm sal vir 'n paar sekondes leeg wees terwyl die program in u blaaier afgelaai word.
-Cryptpad is an almost peer-to-peer application. No data is stored on the server, which only does minimal orchestration between the clients. If an adversary subsequently obtains the server they still learn nothing.|Cryptpad is 'n byna peer-to-peer-toepassing. Geen data word op die bediener gestoor, wat slegs minimale orkestrasie tussen die kliente behels. As 'n teëstander daarna die bediener kry, leer hulle nog niks nie.
 Authentication Token|Verifikasie Token
 This is only needed if you're using FreeDNS. Otherwise you can leave it blank.|Dit is slegs nodig as u FreeDNS gebruik. Anders kan u dit leeg laat.
 On the site where you obtained your domain name set up some custom nameservers as follows:|Op die webwerf waar u u domeinnaam verkry het, stel u 'n paar persoonlike nameervers op soos volg:
@@ -570,7 +568,6 @@ New shared item|Nuwe gedeelde item
 New follow request|Nuwe opvolgversoek
 Number of connections on HTTP port is high|Aantal verbindings op die HTTP-poort is groot
 Number of connections on HTTPS port is high|Aantal verbindings op die HTTPS-poort is groot
-Cryptpad allow new signups|Cryptpad laat nuwe aanmeldings toe
 Name of the Dungeon Master|Naam van die Dungeon Master
 Message Of The Day|Boodskap van die dag
 port|hawe

@@ -409,8 +409,6 @@ Search|खोज
 removed|हटाया
 To get email working you will need to forward some ports. Email using your onion address will work anyway, so long as you are contacting other onion based email addresses.|ईमेल काम करने के लिए आपको कुछ बंदरगाहों को अग्रेषित करने की आवश्यकता होगी। आपके प्याज पते का उपयोग करके ईमेल वैसे भी काम करेगा, जब तक कि आप अन्य प्याज आधारित ईमेल पते से संपर्क कर रहे हों।
 Forward ports 25, 587 and 465 from your internet router|अपने इंटरनेट राउटर से फॉरवर्ड पोर्ट 25, 587 और 465
-To access cryptpad you'll need to use a Tor browser. Navigate to the URL and enable javascript for the site under the NoScript icon. The screen will be blank for a few seconds while it's downloading the application into your browser.|क्रिप्टपैड तक पहुंचने के लिए आपको एक टोर ब्राउजर का उपयोग करना होगा। यूआरएल पर नेविगेट करें और नोस्क्रिप्ट आइकन के तहत साइट के लिए जावास्क्रिप्ट को सक्षम करें। स्क्रीन आपके ब्राउज़र में एप्लिकेशन डाउनलोड करते समय कुछ सेकंड के लिए खाली हो जाएगी।
-Cryptpad is an almost peer-to-peer application. No data is stored on the server, which only does minimal orchestration between the clients. If an adversary subsequently obtains the server they still learn nothing.|क्रिप्टपैड लगभग पीयर-टू-पीयर एप्लिकेशन है। सर्वर पर कोई डेटा संग्रहीत नहीं होता है, जो क्लाइंट के बीच केवल न्यूनतम ऑर्केस्टेशन करता है। यदि कोई विरोधी बाद में सर्वर प्राप्त करता है तो वे अभी भी कुछ भी नहीं सीखते हैं।
 Authentication Token|प्रमाणीकरण टोकन
 This is only needed if you're using FreeDNS. Otherwise you can leave it blank.|यह केवल तभी जरूरी है जब आप फ्रीडीएनएस का उपयोग कर रहे हों। अन्यथा आप इसे खाली छोड़ सकते हैं।
 On the site where you obtained your domain name set up some custom nameservers as follows:|उस साइट पर जहां आपने अपना डोमेन नाम प्राप्त किया है, कुछ कस्टम नेमसर्वर निम्नानुसार सेट करें:
@@ -570,7 +568,6 @@ New shared item|नया साझा आइटम
 New follow request|नए अनुरोध का पालन करें
 Number of connections on HTTP port is high|HTTP पोर्ट पर कनेक्शन की संख्या अधिक है
 Number of connections on HTTPS port is high|HTTPS पोर्ट पर कनेक्शन की संख्या अधिक है
-Cryptpad allow new signups|क्रिप्टपैड नए साइनअप की अनुमति देता है
 Name of the Dungeon Master|कालकोठरी मास्टर का नाम
 Message Of The Day|आज का संदेश
 port|नेटवर्क पोर्ट

@@ -408,8 +408,6 @@ Search|לחפש
 removed|הוסר
 To get email working you will need to forward some ports. Email using your onion address will work anyway, so long as you are contacting other onion based email addresses.|כדי לקבל עבודה דוא"ל תצטרך להעביר כמה יציאות.דוא"ל באמצעות כתובת הבצל שלך יעבוד בכל מקרה, כל עוד אתה יוצר קשר עם בצל אחר כתובות דוא"ל מבוסס.
 Forward ports 25, 587 and 465 from your internet router|העבר יציאות 25, 587 ו - 465 מנתב האינטרנט שלך
-To access cryptpad you'll need to use a Tor browser. Navigate to the URL and enable javascript for the site under the NoScript icon. The screen will be blank for a few seconds while it's downloading the application into your browser.|כדי לגשת ל- cryptpad, יהיה עליך להשתמש בדפדפן Tor.ניווט אל כתובת האתר והפעל JavaScript עבור האתר מתחת לסמל ה- NoScript, המסך יהיה ריק למשך מספר שניות בזמן שהוא מוריד את היישום לדפדפן.
-Cryptpad is an almost peer-to-peer application. No data is stored on the server, which only does minimal orchestration between the clients. If an adversary subsequently obtains the server they still learn nothing.|Cryptpad הוא יישום כמעט עמית-לעמית.לא נתונים מאוחסנים בשרת, אשר עושה רק תזמור מינימלי בין הלקוחות.אם היריב לאחר מכן מקבל את השרת הם עדיין לא ללמוד כלום.
 Authentication Token|אסימון אימות
 This is only needed if you're using FreeDNS. Otherwise you can leave it blank.|פעולה זו נחוצה רק אם אתה משתמש ב- FreeDNS, אחרת אתה יכול להשאיר אותה ריקה.
 On the site where you obtained your domain name set up some custom nameservers as follows:|באתר שבו השגת את שם התחום שלך להגדיר כמה שרתי שמות מותאמים אישית כדלקמן:
@@ -569,7 +567,6 @@ New shared item|פריט משותף חדש
 New follow request|בקשת מעקב חדשה
 Number of connections on HTTP port is high|מספר החיבורים ביציאת HTTP הוא גבוה
 Number of connections on HTTPS port is high|מספר החיבורים ביציאת HTTPS הוא גבוה
-Cryptpad allow new signups|Cryptpad מאפשרת הרשמות חדשות
 Name of the Dungeon Master|שם מאסטר הצינוק
 Message Of The Day|מסר היום
 port|יציאת רשת

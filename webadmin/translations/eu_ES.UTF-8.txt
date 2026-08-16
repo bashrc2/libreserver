@@ -409,8 +409,6 @@ Search|Search
 removed|kendu
 To get email working you will need to forward some ports. Email using your onion address will work anyway, so long as you are contacting other onion based email addresses.|Posta elektronikoa lortzeko, portu batzuk birbidaltzeko aukera izango duzu. Zure kokoiaren helbidea posta elektronikoa erabiliz egingo du lan, hala nola, beste tipula oinarritutako helbide elektronikoekin harremanetan jartzen zaren bitartean.
 Forward ports 25, 587 and 465 from your internet router|Birbidali 25, 587 eta 465 portuetatik zure Interneteko routerretik
-To access cryptpad you'll need to use a Tor browser. Navigate to the URL and enable javascript for the site under the NoScript icon. The screen will be blank for a few seconds while it's downloading the application into your browser.|Kriptografia sartzeko, Tor-eko arakatzailea erabili behar duzu. Nabigatu URL-a eta gaitu Javascript-arekin NoScript ikonoaren azpian. Pantaila zurian geratuko da segundotan aplikazioa zure nabigatzailean deskargatzen duzun bitartean.
-Cryptpad is an almost peer-to-peer application. No data is stored on the server, which only does minimal orchestration between the clients. If an adversary subsequently obtains the server they still learn nothing.|Cryptpad ia pareko aplikazioa da. Ez dago datuik zerbitzarian gordeta, bezeroek gutxieneko orkestrazioa egiten dutelako. Adiskide batek gero zerbitzaria lortzen ez badu ezer ikasten dute.
 Authentication Token|Autentifikazio tokena
 This is only needed if you're using FreeDNS. Otherwise you can leave it blank.|Hori beharrezkoa da FreeDNS erabiltzen ari bazara, bestela hutsik utz dezakezu.
 On the site where you obtained your domain name set up some custom nameservers as follows:|Zure domeinu-izena lortu zenuen tokian honela sortu zen izen pertsonalizatu batzuk:
@@ -570,7 +568,6 @@ New shared item|Partekatutako elementu berria
 New follow request|Jarraitzeko eskaera berria
 Number of connections on HTTP port is high|HTTP portuko konexio kopurua altua da
 Number of connections on HTTPS port is high|HTTPS portuko konexio kopurua altua da
-Cryptpad allow new signups|Cryptpad-ek sinadura berriak ahalbidetzen ditu
 Name of the Dungeon Master|Ziegaren maisuaren izena
 Message Of The Day|Eguneko Mezua
 port|sareko portua

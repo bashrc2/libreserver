@@ -408,8 +408,6 @@ Search|Vyhledávání
 removed|Odstraněno
 To get email working you will need to forward some ports. Email using your onion address will work anyway, so long as you are contacting other onion based email addresses.|Chcete-li získat e-mailovou práci, budete muset předat některé porty. E-mail s vaší cibulí adresou bude fungovat stejně, pokud budete kontaktovat jiné e-mailové adresy založené na cibulích.
 Forward ports 25, 587 and 465 from your internet router|Přední porty 25, 587 a 465 z vašeho internetového směrovače
-To access cryptpad you'll need to use a Tor browser. Navigate to the URL and enable javascript for the site under the NoScript icon. The screen will be blank for a few seconds while it's downloading the application into your browser.|Chcete-li získat přístup k kryptopadu, musíte použít prohlížeč Tor.Přejděte na adresu URL a povolte javascript pro web pod ikonou NoScript. Během stahování aplikace do prohlížeče bude obrazovka několik sekund prázdná.
-Cryptpad is an almost peer-to-peer application. No data is stored on the server, which only does minimal orchestration between the clients. If an adversary subsequently obtains the server they still learn nothing.|Cryptpad je téměř peer-to-peer aplikace. Na serveru nejsou uložena žádná data, která mezi klienty provádí pouze minimální orchestraci.
 Authentication Token|Ověřovací token
 This is only needed if you're using FreeDNS. Otherwise you can leave it blank.|To je zapotřebí pouze v případě, že používáte aplikaci FreeDNS, jinak ji můžete nechat prázdné.
 On the site where you obtained your domain name set up some custom nameservers as follows:|Na webu, kde jste získali název domény, nastavte některé vlastní servery s názvem:
@@ -569,7 +567,6 @@ New shared item|Nová sdílená položka
 New follow request|Nový požadavek na sledování
 Number of connections on HTTP port is high|Počet připojení na portu HTTP je vysoký
 Number of connections on HTTPS port is high|Počet připojení na portu HTTPS je vysoký
-Cryptpad allow new signups|Cryptpad umožňuje nové registrace
 Name of the Dungeon Master|Jméno mistra žaláře
 Message Of The Day|Zpráva dne
 port|síťový port

@@ -409,8 +409,6 @@ Search|Tìm kiếm
 removed|Đã xóa
 To get email working you will need to forward some ports. Email using your onion address will work anyway, so long as you are contacting other onion based email addresses.|Để nhận email hoạt động, bạn cần chuyển tiếp một số cổng. Email sử dụng địa chỉ hành tây của bạn sẽ hoạt động, miễn là bạn đang liên hệ với các địa chỉ email dựa trên hành tây khác.
 Forward ports 25, 587 and 465 from your internet router|Chuyển tiếp cổng 25, 587 và 465 từ bộ định tuyến internet của bạn
-To access cryptpad you'll need to use a Tor browser. Navigate to the URL and enable javascript for the site under the NoScript icon. The screen will be blank for a few seconds while it's downloading the application into your browser.|Để truy cập vào cryptpad, bạn cần sử dụng trình duyệt Tor.Điều hướng đến URL và kích hoạt javascript cho trang web dưới biểu tượng NoScript, màn hình sẽ trống trong vài giây khi tải ứng dụng xuống trình duyệt của bạn.
-Cryptpad is an almost peer-to-peer application. No data is stored on the server, which only does minimal orchestration between the clients. If an adversary subsequently obtains the server they still learn nothing.|Cryptpad là một ứng dụng gần như ngang hàng.Không có dữ liệu nào được lưu trữ trên máy chủ, mà chỉ có sự phối hợp tối thiểu giữa các máy khách, nếu một kẻ thù sau đó có được máy chủ thì họ vẫn không học được gì.
 Authentication Token|Mã xác thực
 This is only needed if you're using FreeDNS. Otherwise you can leave it blank.|Điều này chỉ cần thiết nếu bạn đang sử dụng FreeDNS, nếu không bạn có thể để trống.
 On the site where you obtained your domain name set up some custom nameservers as follows:|Trên trang web nơi bạn có được tên miền của mình, hãy thiết lập một số máy chủ định danh tùy chỉnh như sau:
@@ -570,7 +568,6 @@ New shared item|Mục chia sẻ mới
 New follow request|Yêu cầu theo dõi mới
 Number of connections on HTTP port is high|Số lượng kết nối trên cổng HTTP cao
 Number of connections on HTTPS port is high|Số lượng kết nối trên cổng HTTPS cao
-Cryptpad allow new signups|Cryptpad cho phép đăng ký mới
 Name of the Dungeon Master|Tên của Dungeon Master
 Message Of The Day|Tin nhắn của ngày
 port|cổng thông tin

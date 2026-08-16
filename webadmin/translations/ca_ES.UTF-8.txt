@@ -409,8 +409,6 @@ Search|Cerca
 removed|S'ha eliminat
 To get email working you will need to forward some ports. Email using your onion address will work anyway, so long as you are contacting other onion based email addresses.|Per obtenir treballs per correu electrònic, haureu de reenviar alguns ports. El correu electrònic amb la vostra adreça de ceba funcionarà de totes maneres, sempre que contacteu amb altres adreces electròniques basades en ceba.
 Forward ports 25, 587 and 465 from your internet router|Porteu els ports 25, 587 i 465 des del vostre enrutador d'Internet
-To access cryptpad you'll need to use a Tor browser. Navigate to the URL and enable javascript for the site under the NoScript icon. The screen will be blank for a few seconds while it's downloading the application into your browser.|Per accedir al cryptpad necessitareu utilitzar un navegador Tor. Aneu a l'URL i activeu javascript per al lloc sota la icona de NoScript. La pantalla quedarà en blanc durant uns segons mentre es descarrega l'aplicació al vostre navegador.
-Cryptpad is an almost peer-to-peer application. No data is stored on the server, which only does minimal orchestration between the clients. If an adversary subsequently obtains the server they still learn nothing.|Cryptpad és una aplicació pràcticament igual a igual. No hi ha dades emmagatzemades al servidor, que només fan una mínima orquestració entre els clients. Si un adversari posteriorment obté el servidor, encara no aprenen res.
 Authentication Token|Tòner d'autenticació
 This is only needed if you're using FreeDNS. Otherwise you can leave it blank.|Això només és necessari si esteu utilitzant FreeDNS. En cas contrari, podeu deixar-lo en blanc.
 On the site where you obtained your domain name set up some custom nameservers as follows:|Al lloc on vau obtenir el vostre nom de domini, s'ha configurat alguns servidors de noms personalitzats de la manera següent:
@@ -574,7 +572,6 @@ New shared item|Element compartit nou
 New follow request|Nova sol·licitud de seguiment
 Number of connections on HTTP port is high|El nombre de connexions al port HTTP és alt
 Number of connections on HTTPS port is high|El nombre de connexions al port HTTPS és alt
-Cryptpad allow new signups|Cryptpad permet registrar-se
 Name of the Dungeon Master|Nom del Màster de Dungeon
 Message Of The Day|Missatge del dia
 port|port de xarxa

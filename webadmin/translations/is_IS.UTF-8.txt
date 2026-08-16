@@ -409,8 +409,6 @@ Search|Leita
 removed|Fjarlægt
 To get email working you will need to forward some ports. Email using your onion address will work anyway, so long as you are contacting other onion based email addresses.|Til að fá tölvupóstvinnu þarftu að senda nokkrar hafnir. Tölvupóstur með laukardaginn þinn mun virka engu að síður, svo lengi sem þú ert að hafa samband við aðrar netföng sem eru lauk.
 Forward ports 25, 587 and 465 from your internet router|Forsenda höfn 25, 587 og 465 úr netleiðinni þinni
-To access cryptpad you'll need to use a Tor browser. Navigate to the URL and enable javascript for the site under the NoScript icon. The screen will be blank for a few seconds while it's downloading the application into your browser.|Til að fá aðgang að dulritunarskjá þarftu að nota Tor-vafra. Farðu í slóðina og virkjaðu javascript fyrir síðuna undir NoScript-tákninu. Skjárinn verður tómur í nokkrar sekúndur meðan forritið er hlaðið niður í vafrann þinn.
-Cryptpad is an almost peer-to-peer application. No data is stored on the server, which only does minimal orchestration between the clients. If an adversary subsequently obtains the server they still learn nothing.|Cryptpad er nánast jafningjaforrit. Engin gögn eru geymd á netþjóninum, sem aðeins gerir lágmarkskröfur á milli viðskiptavina. Ef mótherji fær síðan netþjóninn lærir hann enn ekki neitt.
 Authentication Token|Auðkenningarmerki
 This is only needed if you're using FreeDNS. Otherwise you can leave it blank.|Þetta er aðeins nauðsynlegt ef þú notar FreeDNS. Annars geturðu skilið það ógeðt.
 On the site where you obtained your domain name set up some custom nameservers as follows:|Á síðunni þar sem þú fékkst lénið þitt settu upp nokkrar sérsniðnar nameservers sem hér segir:
@@ -570,7 +568,6 @@ New shared item|Ný hluti hlut
 New follow request|Ný fylgja beiðni
 Number of connections on HTTP port is high|Fjöldi tenginga á HTTP tengi er mikill
 Number of connections on HTTPS port is high|Fjöldi tenginga á HTTPS tengi er mikill
-Cryptpad allow new signups|Cryptpad leyfa nýjar skráningar
 Name of the Dungeon Master|Nafn Dungeon Master
 Message Of The Day|Skilaboð dagsins
 port|nethöfn

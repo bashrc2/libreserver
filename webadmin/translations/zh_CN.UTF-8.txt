@@ -409,8 +409,6 @@ Search|搜索
 removed|去除
 To get email working you will need to forward some ports. Email using your onion address will work anyway, so long as you are contacting other onion based email addresses.|要使电子邮件正常工作，您需要转发一些端口。 只要您联系其他基于洋葱的电子邮件地址，使用您的洋葱地址的电子邮件仍然有效。
 Forward ports 25, 587 and 465 from your internet router|从您的互联网路由器转发端口25,587和465
-To access cryptpad you'll need to use a Tor browser. Navigate to the URL and enable javascript for the site under the NoScript icon. The screen will be blank for a few seconds while it's downloading the application into your browser.|要访问cryptpad，您需要使用Tor浏览器。 导航到URL并在NoScript图标下为站点启用javascript。 在将应用程序下载到浏览器中时，屏幕将显示空白几秒钟。
-Cryptpad is an almost peer-to-peer application. No data is stored on the server, which only does minimal orchestration between the clients. If an adversary subsequently obtains the server they still learn nothing.|Cryptpad是一个几乎是点对点的应用程序。 没有数据存储在服务器上，只在客户端之间进行最小的编排。 如果对手随后获得了服务器，他们仍然没有学到任何东西。
 Authentication Token|身份验证令牌
 This is only needed if you're using FreeDNS. Otherwise you can leave it blank.|只有在使用FreeDNS时才需要这样做。 否则你可以留空。
 On the site where you obtained your domain name set up some custom nameservers as follows:|在您获取域名的站点上设置一些自定义名称服务器，如下所示：
@@ -570,7 +568,6 @@ New shared item|新共享项
 New follow request|新的关注请求
 Number of connections on HTTP port is high|HTTP端口上的连接数很高
 Number of connections on HTTPS port is high|HTTPS端口上的连接数很高
-Cryptpad allow new signups|加密板允许新注册
 Name of the Dungeon Master|地牢大师的名字
 Message Of The Day|每日讯息
 port|网络端口

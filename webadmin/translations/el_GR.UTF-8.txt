@@ -409,8 +409,6 @@ Search|Ψάξιμο
 removed|Καταργήθηκε
 To get email working you will need to forward some ports. Email using your onion address will work anyway, so long as you are contacting other onion based email addresses.|Για να πάρετε την εργασία μέσω ηλεκτρονικού ταχυδρομείου, θα χρειαστεί να προωθήσετε μερικές θύρες. Το ηλεκτρονικό ταχυδρομείο με τη διεύθυνση του κρεμμυδιού σας θα λειτουργήσει έτσι κι αλλιώς, εφ '
 Forward ports 25, 587 and 465 from your internet router|Προωθητικές θύρες 25, 587 και 465 από τον δρομολογητή σας στο διαδίκτυο
-To access cryptpad you'll need to use a Tor browser. Navigate to the URL and enable javascript for the site under the NoScript icon. The screen will be blank for a few seconds while it's downloading the application into your browser.|Για να αποκτήσετε πρόσβαση στο cryptpad, θα χρειαστεί να χρησιμοποιήσετε ένα πρόγραμμα περιήγησης Tor. Πλοηγηθείτε στη διεύθυνση URL και ενεργοποιήστε το javascript για τον ιστότοπο με το εικονίδιο NoScript, ενώ η οθόνη θα είναι κενή για λίγα δευτερόλεπτα ενώ θα μεταφορτώσει την εφαρμογή στο πρόγραμμα περιήγησης.
-Cryptpad is an almost peer-to-peer application. No data is stored on the server, which only does minimal orchestration between the clients. If an adversary subsequently obtains the server they still learn nothing.|Το Cryptpad είναι μια εφαρμογή σχεδόν ομότιμης σύνδεσης (peer-to-peer application), δεν αποθηκεύονται δεδομένα στον εξυπηρετητή, ο οποίος κάνει ελάχιστη ενορχήστρωση μεταξύ των πελατών.
 Authentication Token|Token ελέγχου ταυτότητας
 This is only needed if you're using FreeDNS. Otherwise you can leave it blank.|Αυτό είναι απαραίτητο μόνο αν χρησιμοποιείτε το FreeDNS, διαφορετικά μπορείτε να το αφήσετε κενό.
 On the site where you obtained your domain name set up some custom nameservers as follows:|Στον ιστότοπο στον οποίο αποκτήσατε το όνομα τομέα σας δημιουργήσαμε ορισμένους προσαρμοσμένους διακομιστές ονομάτων ως εξής:
@@ -570,7 +568,6 @@ New shared item|Νέο κοινόχρηστο στοιχείο
 New follow request|Νέο αίτημα παρακολούθησης
 Number of connections on HTTP port is high|Ο αριθμός συνδέσεων στη θύρα HTTP είναι υψηλός
 Number of connections on HTTPS port is high|Ο αριθμός συνδέσεων στη θύρα HTTPS είναι υψηλός
-Cryptpad allow new signups|Το Cryptpad επιτρέπει νέες εγγραφές
 Name of the Dungeon Master|Όνομα του Δασκάλου Δάσκαλος
 Message Of The Day|Μήνυμα της ημέρας
 port|θύρα δικτύου

@@ -409,8 +409,6 @@ Search|Sök
 removed|avlägsnas
 To get email working you will need to forward some ports. Email using your onion address will work anyway, so long as you are contacting other onion based email addresses.|För att få e-postarbeten måste du vidarebefordra vissa portar. E-post med din lökadress fungerar ändå, så länge du kontaktar andra lökbaserade e-postadresser.
 Forward ports 25, 587 and 465 from your internet router|Vidarekoppla portar 25, 587 och 465 från din internetrouter
-To access cryptpad you'll need to use a Tor browser. Navigate to the URL and enable javascript for the site under the NoScript icon. The screen will be blank for a few seconds while it's downloading the application into your browser.|För att komma åt krypteringsrutan måste du använda en Tor-webbläsare. Navigera till webbadressen och aktivera javascript för webbplatsen under NoScript-ikonen. Skärmen blir tom i några sekunder medan programmet laddas ned i webbläsaren.
-Cryptpad is an almost peer-to-peer application. No data is stored on the server, which only does minimal orchestration between the clients. If an adversary subsequently obtains the server they still learn nothing.|Cryptpad är en nästan peer-to-peer-applikation. Ingen data lagras på servern, vilket bara gör minimal orkestration mellan klienterna. Om en motståndare därefter får servern lär de fortfarande ingenting.
 Authentication Token|Autentiseringstoken
 This is only needed if you're using FreeDNS. Otherwise you can leave it blank.|Detta behövs bara om du använder FreeDNS. Annars kan du lämna den tom.
 On the site where you obtained your domain name set up some custom nameservers as follows:|På den webbplats där du fått ditt domännamn, ställer du in några anpassade namnvisare enligt följande:
@@ -570,7 +568,6 @@ New shared item|Nytt delat objekt
 New follow request|Ny följningsförfrågan
 Number of connections on HTTP port is high|Antalet anslutningar på HTTP-porten är stort
 Number of connections on HTTPS port is high|Antalet anslutningar på HTTPS-porten är stort
-Cryptpad allow new signups|Cryptpad tillåter nya registreringar
 Name of the Dungeon Master|Dungeon Master-namn
 Message Of The Day|Dagens meddelande
 port|nätverksport

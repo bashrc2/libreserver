@@ -409,8 +409,6 @@ Search|Buscar
 removed|Eliminado
 To get email working you will need to forward some ports. Email using your onion address will work anyway, so long as you are contacting other onion based email addresses.|Para que el correo electrónico funcione, deberá reenviar algunos puertos. El correo electrónico con su dirección de cebolla funcionará de todos modos, siempre y cuando se ponga en contacto con otras direcciones de correo electrónico basadas en cebolla.
 Forward ports 25, 587 and 465 from your internet router|Reenvíe los puertos 25, 587 y 465 desde su enrutador de internet
-To access cryptpad you'll need to use a Tor browser. Navigate to the URL and enable javascript for the site under the NoScript icon. The screen will be blank for a few seconds while it's downloading the application into your browser.|Para acceder a Cryptpad, deberá usar un navegador Tor. Navegue hasta la URL y habilite javascript para el sitio bajo el ícono de NoScript. La pantalla estará en blanco durante unos segundos mientras se descarga la aplicación en su navegador.
-Cryptpad is an almost peer-to-peer application. No data is stored on the server, which only does minimal orchestration between the clients. If an adversary subsequently obtains the server they still learn nothing.|Cryptpad es una aplicación casi peer-to-peer. No se almacenan datos en el servidor, lo que hace solo una orquestación mínima entre los clientes. Si un adversario obtiene posteriormente el servidor, todavía no aprenden nada.
 Authentication Token|Token de Autentificación
 This is only needed if you're using FreeDNS. Otherwise you can leave it blank.|Esto solo es necesario si está utilizando FreeDNS. De lo contrario, puede dejarlo en blanco.
 On the site where you obtained your domain name set up some custom nameservers as follows:|En el sitio donde obtuvo su nombre de dominio, configure algunos servidores de nombres personalizados de la siguiente manera:
@@ -570,7 +568,6 @@ New shared item|Nuevo elemento compartido
 New follow request|Nueva solicitud de seguimiento
 Number of connections on HTTP port is high|El número de conexiones en el puerto HTTP es alto
 Number of connections on HTTPS port is high|El número de conexiones en el puerto HTTPS es alto
-Cryptpad allow new signups|Cryptpad permite nuevos registros
 Name of the Dungeon Master|Nombre del maestro de mazmorra
 Message Of The Day|Mensaje del día
 port|puerto de red

@@ -409,8 +409,6 @@ Search|بحث
 removed|إزالة
 To get email working you will need to forward some ports. Email using your onion address will work anyway, so long as you are contacting other onion based email addresses.|للحصول على عمل البريد الإلكتروني ، ستحتاج إلى إعادة توجيه بعض المنافذ ، وسيعمل البريد الإلكتروني باستخدام عنوان البصل الخاص بك على أي حال ، طالما أنك تتصل بعناوين بريد إلكتروني أخرى قائمة على onion.
 Forward ports 25, 587 and 465 from your internet router|قم بإعادة توجيه المنافذ 25 و 587 و 465 من موجه الإنترنت الخاص بك
-To access cryptpad you'll need to use a Tor browser. Navigate to the URL and enable javascript for the site under the NoScript icon. The screen will be blank for a few seconds while it's downloading the application into your browser.|للوصول إلى cryptpad ، ستحتاج إلى استخدام متصفح تور. انتقل إلى عنوان URL وتمكين جافا سكريبت للموقع تحت رمز NoScript ، وستظل الشاشة فارغة لبضع ثوان أثناء تنزيل التطبيق إلى متصفحك.
-Cryptpad is an almost peer-to-peer application. No data is stored on the server, which only does minimal orchestration between the clients. If an adversary subsequently obtains the server they still learn nothing.|Cryptpad هو تطبيق من نظير إلى نظير تقريبًا ، ولا يتم تخزين أي بيانات على الخادم ، والتي لا تؤدي سوى الحد الأدنى من التنسيق بين العملاء ، فإذا حصل الخصم بعد ذلك على الخادم ، فلا يزالون لا يتعلمون شيئًا.
 Authentication Token|رمز المصادقة
 This is only needed if you're using FreeDNS. Otherwise you can leave it blank.|هذا مطلوب فقط إذا كنت تستخدم FreeDNS ، وإلا يمكنك تركه فارغًا.
 On the site where you obtained your domain name set up some custom nameservers as follows:|على الموقع الذي حصلت فيه على اسم نطاقك ، عيّن بعض خوادم الأسماء المخصصة على النحو التالي:
@@ -570,7 +568,6 @@ New shared item|عنصر مشترك جديد
 New follow request|متابعة طلب جديد
 Number of connections on HTTP port is high|عدد الاتصالات على منفذ HTTP مرتفع
 Number of connections on HTTPS port is high|عدد الاتصالات على منفذ HTTPS مرتفع
-Cryptpad allow new signups|Cryptpad تسمح الاشتراكات الجديدة
 Name of the Dungeon Master|اسم سيد المحصنة
 Message Of The Day|رسالة اليوم
 port|منفذ الشبكة

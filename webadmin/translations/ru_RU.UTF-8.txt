@@ -409,8 +409,6 @@ Search|Поиск
 removed|удален
 To get email working you will need to forward some ports. Email using your onion address will work anyway, so long as you are contacting other onion based email addresses.|Для работы с электронной почтой вам нужно будет перенаправить некоторые порты. Электронная почта с использованием вашего лукового адреса будет работать в любом случае, если вы обратитесь к другим адресам электронной почты на основе лука.
 Forward ports 25, 587 and 465 from your internet router|Переслать порты 25, 587 и 465 с вашего интернет-маршрутизатора
-To access cryptpad you'll need to use a Tor browser. Navigate to the URL and enable javascript for the site under the NoScript icon. The screen will be blank for a few seconds while it's downloading the application into your browser.|Чтобы получить доступ к cryptpad, вам необходимо использовать браузер Tor. Перейдите к URL-адресу и включите javascript для сайта под значком NoScript. Экран будет пустым в течение нескольких секунд, пока он загрузит приложение в ваш браузер.
-Cryptpad is an almost peer-to-peer application. No data is stored on the server, which only does minimal orchestration between the clients. If an adversary subsequently obtains the server they still learn nothing.|Cryptpad - это почти одноранговое приложение. На сервере не хранятся данные, которые только делают минимальную согласованность между клиентами. Если впоследствии игрок получает сервер, они все равно ничего не узнают.
 Authentication Token|Идентификатор аутентификации
 This is only needed if you're using FreeDNS. Otherwise you can leave it blank.|Это необходимо, только если вы используете FreeDNS. В противном случае вы можете оставить его пустым.
 On the site where you obtained your domain name set up some custom nameservers as follows:|На сайте, где вы получили свое доменное имя, настроены некоторые пользовательские серверы имен следующим образом:
@@ -570,7 +568,6 @@ New shared item|Новый общий элемент
 New follow request|Новый последующий запрос
 Number of connections on HTTP port is high|Количество подключений по HTTP-порту велико
 Number of connections on HTTPS port is high|Количество подключений по HTTPS-порту велико
-Cryptpad allow new signups|Cryptpad позволяет новые регистрации
 Name of the Dungeon Master|Имя Мастера Подземелья
 Message Of The Day|Сообщение дня
 port|сетевой порт

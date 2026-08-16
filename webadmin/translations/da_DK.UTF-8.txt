@@ -409,8 +409,6 @@ Search|Søg
 removed|fjernet
 To get email working you will need to forward some ports. Email using your onion address will work anyway, so long as you are contacting other onion based email addresses.|For at få e-mail-arbejde skal du sende nogle porte. E-mail ved hjælp af din løgadresse vil fungere alligevel, så længe du kontakter andre løgbaserede emailadresser.
 Forward ports 25, 587 and 465 from your internet router|Videresend havne 25, 587 og 465 fra din internetrouter
-To access cryptpad you'll need to use a Tor browser. Navigate to the URL and enable javascript for the site under the NoScript icon. The screen will be blank for a few seconds while it's downloading the application into your browser.|For at få adgang til krypteringspuden skal du bruge en Tor-browser. Naviger til webadressen og aktiver javascript for webstedet under NoScript-ikonet. Skærmen bliver tom i nogle sekunder, mens den downloader programmet i din browser.
-Cryptpad is an almost peer-to-peer application. No data is stored on the server, which only does minimal orchestration between the clients. If an adversary subsequently obtains the server they still learn nothing.|Cryptpad er en næsten peer-to-peer-applikation. Der opbevares ingen data på serveren, hvilket kun gør minimal orkestration mellem klienterne. Hvis en modstander senere får serveren, lærer de stadig ingenting.
 Authentication Token|Autentifikationstoken
 This is only needed if you're using FreeDNS. Otherwise you can leave it blank.|Dette er kun nødvendigt, hvis du bruger FreeDNS. Ellers kan du lade det være tomt.
 On the site where you obtained your domain name set up some custom nameservers as follows:|På det websted, hvor du har fået dit domænenavn, oprettes nogle brugerdefinerede navneservere som følger:
@@ -570,7 +568,6 @@ New shared item|Ny delt vare
 New follow request|Ny følgeanmodning
 Number of connections on HTTP port is high|Antallet af forbindelser på HTTP-port er stort
 Number of connections on HTTPS port is high|Antallet af forbindelser på HTTPS-port er stort
-Cryptpad allow new signups|Cryptpad tillader nye tilmeldinger
 Name of the Dungeon Master|Dungeon Master's navn
 Message Of The Day|Dagens meddelelse
 port|netværksport

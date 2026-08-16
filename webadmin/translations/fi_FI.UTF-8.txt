@@ -409,8 +409,6 @@ Search|Hae
 removed|poistettu
 To get email working you will need to forward some ports. Email using your onion address will work anyway, so long as you are contacting other onion based email addresses.|Jotta saisit sähköpostia, sinun on toimitettava joitain portteja. Sähköposti käyttäen sipuliosoitteesi toimii joka tapauksessa, niin kauan kuin otat yhteyttä muihin sipulipohjaisiin sähköpostiosoitteisiin.
 Forward ports 25, 587 and 465 from your internet router|Välitä portit 25, 587 ja 465 Internet-reitittimestasi
-To access cryptpad you'll need to use a Tor browser. Navigate to the URL and enable javascript for the site under the NoScript icon. The screen will be blank for a few seconds while it's downloading the application into your browser.|Jos haluat käyttää salakirjoitinta, sinun on käytettävä Tor-selainta. Siirry URL-osoitteeseen ja salli sivuston javascript NoScript-kuvakkeen alla. Näyttö on tyhjä muutamassa sekunnissa, kun se lataa sovelluksen selaimeesi.
-Cryptpad is an almost peer-to-peer application. No data is stored on the server, which only does minimal orchestration between the clients. If an adversary subsequently obtains the server they still learn nothing.|Cryptpad on lähes peer-to-peer -sovellus, eikä palvelimelle ole tallennettu tietoja, mikä vain minimoi asiakkaiden välisen orkestroinnin. Jos vastapuoli myöhemmin saa palvelimen, he eivät vieläkään saa mitään tietoa.
 Authentication Token|Todennusmerkki
 This is only needed if you're using FreeDNS. Otherwise you can leave it blank.|Tämä on tarpeen vain, jos käytät FreeDNS-ohjelmaa. Muutoin voit jättää sen tyhjäksi.
 On the site where you obtained your domain name set up some custom nameservers as follows:|Verkkotunnuksestasi hankitulla sivustolla perustettiin joitain mukautettuja nimipalvelimia seuraavasti:
@@ -570,7 +568,6 @@ New shared item|Uusi jaettu kohde
 New follow request|Uusi seuraa pyyntö
 Number of connections on HTTP port is high|Yhteyksien määrä HTTP-portissa on suuri
 Number of connections on HTTPS port is high|Yhteyksien määrä HTTPS-portissa on suuri
-Cryptpad allow new signups|Salaustekniikka sallii uusien rekisteröintien
 Name of the Dungeon Master|Dungeon-päällikön nimi
 Message Of The Day|Päivän viesti
 port|verkkoportti

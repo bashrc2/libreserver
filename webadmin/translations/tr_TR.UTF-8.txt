@@ -409,8 +409,6 @@ Search|Arama
 removed|çıkarıldı
 To get email working you will need to forward some ports. Email using your onion address will work anyway, so long as you are contacting other onion based email addresses.|E-posta almak için bazı bağlantı noktalarını yönlendirmeniz gerekir. Soğan adresinizi kullanarak e-posta, başka soğan tabanlı e-posta adresleriyle iletişim kurduğunuz sürece yine de işe yarayacaktır.
 Forward ports 25, 587 and 465 from your internet router|İnternet yönlendiricinizden 25, 587 ve 465 numaralı ileri bağlantı noktaları
-To access cryptpad you'll need to use a Tor browser. Navigate to the URL and enable javascript for the site under the NoScript icon. The screen will be blank for a few seconds while it's downloading the application into your browser.|Cryptpad'e erişmek için bir Tor tarayıcısı kullanmanız gerekecek, URL'ye gidin ve NoScript simgesi altındaki site için javascript'i etkinleştirin.Uygulamayı tarayıcınıza indirirken birkaç saniye boyunca ekran boş olacaktır.
-Cryptpad is an almost peer-to-peer application. No data is stored on the server, which only does minimal orchestration between the clients. If an adversary subsequently obtains the server they still learn nothing.|Cryptpad hemen hemen eşler arası bir uygulamadır.Tüm sunucu üzerinde saklanan, sadece istemciler arasında minimum düzenleme yapan bir veri yok.Sunucu bir sunucuya ulaşırsa, hala bir şey öğrenmezler.
 Authentication Token|Kimlik Doğrulama Jetonu
 This is only needed if you're using FreeDNS. Otherwise you can leave it blank.|Bu sadece FreeDNS kullanıyorsanız gereklidir, aksi takdirde boş bırakabilirsiniz.
 On the site where you obtained your domain name set up some custom nameservers as follows:|Alan adınızı aldığınız sitede, bazı özel ad alıcılar şöyle ayarlanır:
@@ -570,7 +568,6 @@ New shared item|Yeni paylaşılan öğe
 New follow request|Yeni takip isteği
 Number of connections on HTTP port is high|HTTP bağlantı noktasındaki bağlantı sayısı yüksek
 Number of connections on HTTPS port is high|HTTPS bağlantı noktasındaki bağlantı sayısı yüksek
-Cryptpad allow new signups|Cryptpad yeni kayıtlara izin veriyor
 Name of the Dungeon Master|Zindan Efendisinin Adı
 Message Of The Day|Günün mesajı
 port|ağ bağlantı noktası
