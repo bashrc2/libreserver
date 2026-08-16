@@ -156,7 +156,9 @@ function reconfigure_profanity {
 }
 
 function upgrade_profanity {
-    echo -n ''
+    if [ ! -f /usr/bin/profanity ]; then
+        INSTALL_PACKAGES profanity
+    fi
 }
 
 function backup_local_profanity {
