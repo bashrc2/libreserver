@@ -205,6 +205,10 @@ function install_emacs {
       echo "           '(lambda ()";
       echo "              (visual-line-mode 1)))";
       echo '';
+      echo $';; ===== Enable mouse movement in the terminal ==========================';
+      echo " (unless (display-graphic-p)";
+      echo "   (xterm-mouse-mode 1))";
+      echo '';
       echo $';; ===== Enable shift select in org mode ================================';
       echo '';
       echo '(setq org-support-shift-select t)';
