@@ -43,10 +43,21 @@ function create_upgrade_script {
     # fi
 
     if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
-        return
+        if [ -f /etc/apt/apt.conf.d/52unattended-upgrades-local ]; then
+            return
+        fi
     fi
 
-    INSTALL_PACKAGES unattended-upgrades
+    INSTALL_PACKAGES unattended-upgrades apt-listchanges
+    admin_email_address=${MY_EMAIL_ADDRESS}
+    cp /etc/apt/apt.conf.d/50unattended-upgrades /etc/apt/apt.conf.d/52unattended-upgrades-local
+    sed -i 's|//Unattended-Upgrade::Automatic-Reboot-Time.*|Unattended-Upgrade::Automatic-Reboot-Time "02:00";|g' /etc/apt/apt.conf.d/52unattended-upgrades-local
+    sed -i "s|//Unattended-Upgrade::Mail \"\";|Unattended-Upgrade::Mail \"${admin_email_address}\";|g" /etc/apt/apt.conf.d/52unattended-upgrades-local
+    sed -i 's|//Unattended-Upgrade::Automatic-Reboot.*|Unattended-Upgrade::Automatic-Reboot "true";|g' /etc/apt/apt.conf.d/52unattended-upgrades-local
+    sed -i 's|//Unattended-Upgrade::Automatic-Reboot-WithUsers.*|Unattended-Upgrade::Automatic-Reboot-WithUsers "true";|g' /etc/apt/apt.conf.d/52unattended-upgrades-local
+    sed -i 's|// Unattended-Upgrade::OnlyOnACPower.*|Unattended-Upgrade::OnlyOnACPower "true";|g' /etc/apt/apt.conf.d/52unattended-upgrades-local
+    sed -i 's|//      "origin=Debian,codename=${distro_codename}-updates";|      "origin=Debian,codename=${distro_codename}-updates";|g' /etc/apt/apt.conf.d/52unattended-upgrades-local
+    sed -i 's|which=.*|which=both|g' /etc/apt/listchanges.conf
 
     mark_completed "${FUNCNAME[0]}"
 }
