@@ -125,7 +125,7 @@ EOF
     rm -f "${rootdir}/root/upgrade_golang.sh"
 }
 
-function upgrade_golang {
+function upgrade_golang2 {
     UPGRADE_LOG=/var/log/libreserver_upgrade.log
     if [ -f /tmp/.upgrading ]; then
         echo 'upgrade_golang started' >> ${UPGRADE_LOG}
@@ -272,7 +272,7 @@ function upgrade_golang {
     fi
 
     rootdir=
-    upgrade_golang
+    upgrade_golang2
 
     # alter the go version used by the forgejo daemon
     if [ -f /etc/systemd/system/forgejo.service ]; then
