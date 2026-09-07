@@ -1875,7 +1875,9 @@ function run_setup_command {
 
 function check_install_command_state {
     if [ ${install_state} -ne ${INSTALL_STATE_RUNNING_COMMAND} ]; then
-        return
+		if [ ! -f "${setup_file}" ]; then
+			return
+		fi
     fi
     reset_install_state=
     if [ ! -f "${install_state_file}" ]; then
