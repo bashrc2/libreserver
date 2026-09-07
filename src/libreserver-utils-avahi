@@ -152,6 +152,46 @@ function keep_avahi_running {
     cron_add_mins 10 /usr/bin/restartavahi
 }
 
+function configure_avahi {
+    # shellcheck disable=SC2086
+    $CHROOT_PREFIX INSTALL_PACKAGES avahi-utils avahi-dnsconfd
+
+    decarray=( 1 2 3 4 5 6 7 8 9 0 )
+    PEER_ID=${decarray[$RANDOM%10]}${decarray[$RANDOM%10]}${decarray[$RANDOM%10]}${decarray[$RANDOM%10]}${decarray[$RANDOM%10]}${decarray[$RANDOM%10]}${decarray[$RANDOM%10]}${decarray[$RANDOM%10]}
+    sed -i "s|#host-name=.*|host-name=P$PEER_ID|g" $rootdir/etc/avahi/avahi-daemon.conf
+
+    if [ ! -d $rootdir/etc/avahi/services ]; then
+        mkdir -p $rootdir/etc/avahi/services
+    fi
+
+    # remove an avahi service which isn't used
+    if [ -f $rootdir/etc/avahi/services/udisks.service ]; then
+        rm $rootdir/etc/avahi/services/udisks.service
+    fi
+
+    # Add a mesh routing protocol service
+    { echo '<?xml version="1.0" standalone="no"?><!--*-nxml-*-->';
+      echo '<!DOCTYPE service-group SYSTEM "avahi-service.dtd">';
+      echo '<service-group>';
+      echo '  <name replace-wildcards="yes">%h routing</name>';
+      echo '  <service>';
+      echo '    <type>_bmx6._tcp</type>';
+      echo '  </service>';
+      echo '</service-group>'; } > "$rootdir/etc/avahi/services/routing.service"
+
+    # keep the daemon running
+    WATCHDOG_SCRIPT_NAME="keepon"
+    { echo '';
+    echo '# keep avahi daemon running';
+    echo "AVAHI_RUNNING=\$(ps aux | grep avahi-daemon | grep -v grep > /dev/null && echo Running)";
+    echo "if [ ! \$AVAHI_RUNNING ]; then";
+    echo '  systemctl start avahi-daemon';
+    echo "  echo -n \$CURRENT_DATE >> \$LOGFILE";
+    echo "  echo \" Avahi daemon restarted\" >> \$LOGFILE";
+    echo 'fi'; } >> "$rootdir/usr/bin/$WATCHDOG_SCRIPT_NAME"
+    chmod +x "$rootdir/usr/bin/$WATCHDOG_SCRIPT_NAME"
+}
+
 function install_avahi {
     if [ "$INSTALLING_MESH" ]; then
         mesh_avahi
@@ -165,10 +205,7 @@ function install_avahi {
         return
     fi
 
-    if ! "${PROJECT_NAME}-mesh-install" -f avahi; then
-        echo $'Failed to install avahi'
-        exit 68
-    fi
+	configure_avahi
 
     if [ "$DEFAULT_DOMAIN_NAME" ]; then
         sed -i "s|#host-name=.*|host-name=$LOCAL_NAME|g" /etc/avahi/avahi-daemon.conf
