@@ -53,78 +53,6 @@ function create_avahi_service {
       echo '</service-group>'; } >> "/etc/avahi/services/${service_type}.service"
 }
 
-function mesh_avahi {
-    # shellcheck disable=SC2154,SC2086
-    chroot "$rootdir" INSTALL_PACKAGES avahi-utils avahi-dnsconfd
-
-    decarray=( 1 2 3 4 5 6 7 8 9 0 )
-    PEER_ID=${decarray[$RANDOM%10]}${decarray[$RANDOM%10]}${decarray[$RANDOM%10]}${decarray[$RANDOM%10]}${decarray[$RANDOM%10]}${decarray[$RANDOM%10]}${decarray[$RANDOM%10]}${decarray[$RANDOM%10]}
-    sed -i "s|#host-name=.*|host-name=P$PEER_ID|g" "$rootdir/etc/avahi/avahi-daemon.conf"
-    sed -i "s|host-name=.*|host-name=P$PEER_ID|g" "$rootdir/etc/avahi/avahi-daemon.conf"
-    sed -i 's|#domain-name=.*|domain-name=local|g' "$rootdir/etc/avahi/avahi-daemon.conf"
-    sed -i 's|domain-name=.*|domain-name=local|g' "$rootdir/etc/avahi/avahi-daemon.conf"
-    sed -i "s|use-ipv4=.*|use-ipv4=no|g" "$rootdir/etc/avahi/avahi-daemon.conf"
-    sed -i "s|use-ipv6=.*|use-ipv6=yes|g" "$rootdir/etc/avahi/avahi-daemon.conf"
-    sed -i "s|#enable-dbus=.*|enable-dbus=yes|g" "$rootdir/etc/avahi/avahi-daemon.conf"
-    sed -i "s|enable-dbus=.*|enable-dbus=yes|g" "$rootdir/etc/avahi/avahi-daemon.conf"
-
-    # Note: wlan interfaces must be allowed within avahi, otherwise the
-    #       *.local address will not resolve
-
-    sed -i "s|#allow-interfaces|allow-interfaces|g" "$rootdir/etc/avahi/avahi-daemon.conf"
-    network_device_name=$(ls /sys/class/net | grep "en\|eth0" | head -n 1)
-    if [ ! "${network_device_name}" ]; then
-        network_device_name='enp3s0'
-    fi
-    sed -i "s|allow-interfaces=.*|allow-interfaces=wlan0, wlan1, wlan2, wlan3, wlan4, wlan5, ${network_device_name}|g" "$rootdir/etc/avahi/avahi-daemon.conf"
-
-    sed -i "s|#disallow-other-stacks=.*|disallow-other-stacks=yes|g" "$rootdir/etc/avahi/avahi-daemon.conf"
-    sed -i "s|disallow-other-stacks=.*|disallow-other-stacks=yes|g" "$rootdir/etc/avahi/avahi-daemon.conf"
-    sed -i "s|#publish_addresses=.*|publish_addresses=yes|g" "$rootdir/etc/avahi/avahi-daemon.conf"
-    sed -i "s|publish_addresses=.*|publish_addresses=yes|g" "$rootdir/etc/avahi/avahi-daemon.conf"
-    sed -i "s|#publish-hinfo=.*|publish-hinfo=no|g" "$rootdir/etc/avahi/avahi-daemon.conf"
-    sed -i "s|publish-hinfo=.*|publish-hinfo=no|g" "$rootdir/etc/avahi/avahi-daemon.conf"
-    sed -i "s|#publish-workstation=.*|publish-workstation=yes|g" "$rootdir/etc/avahi/avahi-daemon.conf"
-    sed -i "s|publish-workstation=.*|publish-workstation=yes|g" "$rootdir/etc/avahi/avahi-daemon.conf"
-    sed -i "s|#publish-domain=.*|publish-domain=yes|g" "$rootdir/etc/avahi/avahi-daemon.conf"
-    sed -i "s|publish-domain=.*|publish-domain=yes|g" "$rootdir/etc/avahi/avahi-daemon.conf"
-    sed -i "s|#publish-a-on-ipv6=.*|publish-a-on-ipv6=yes|g" "$rootdir/etc/avahi/avahi-daemon.conf"
-    sed -i "s|publish-a-on-ipv6=.*|publish-a-on-ipv6=yes|g" "$rootdir/etc/avahi/avahi-daemon.conf"
-    sed -i "s|#allow-point-to-point=.*|allow-point-to-point=yes|g" "$rootdir/etc/avahi/avahi-daemon.conf"
-    sed -i "s|allow-point-to-point=.*|allow-point-to-point=yes|g" "$rootdir/etc/avahi/avahi-daemon.conf"
-
-    if [ ! -d "$rootdir/etc/avahi/services" ]; then
-        mkdir -p "$rootdir/etc/avahi/services"
-    fi
-
-    # remove an avahi service which isn't used
-    if [ -f "$rootdir/etc/avahi/services/udisks.service" ]; then
-        rm "$rootdir/etc/avahi/services/udisks.service"
-    fi
-
-    # Add a mesh routing protocol service
-    { echo '<?xml version="1.0" standalone="no"?><!--*-nxml-*-->';
-      echo '<!DOCTYPE service-group SYSTEM "avahi-service.dtd">';
-      echo '<service-group>';
-      echo '  <name replace-wildcards="yes">%h routing</name>';
-      echo '  <service>';
-      echo '    <type>_bmx6._tcp</type>';
-      echo '  </service>';
-      echo '</service-group>'; } > "$rootdir/etc/avahi/services/routing.service"
-
-    # keep the daemon running
-    WATCHDOG_SCRIPT_NAME="keepon"
-    { echo '';
-      echo '# keep avahi daemon running';
-      echo "AVAHI_RUNNING=\$(systemctl is-active avahi-daemon >/dev/null 2>&1 && echo Running)";
-      echo "if [ ! \$AVAHI_RUNNING ]; then";
-      echo '  systemctl start avahi-daemon';
-      echo "  echo -n \$CURRENT_DATE >> \$LOGFILE";
-      echo "  echo \" Avahi daemon restarted\" >> \$LOGFILE";
-      echo 'fi'; } >> "$rootdir/usr/bin/$WATCHDOG_SCRIPT_NAME"
-    chmod +x "$rootdir/usr/bin/$WATCHDOG_SCRIPT_NAME"
-}
-
 function keep_avahi_running {
     WATCHDOG_SCRIPT_NAME="keepon"
 
@@ -152,7 +80,11 @@ function keep_avahi_running {
     cron_add_mins 10 /usr/bin/restartavahi
 }
 
-function configure_avahi {
+function install_avahi {
+    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
+        return
+    fi
+
     # shellcheck disable=SC2086
     $CHROOT_PREFIX INSTALL_PACKAGES avahi-utils avahi-dnsconfd
 
@@ -190,22 +122,6 @@ function configure_avahi {
     echo "  echo \" Avahi daemon restarted\" >> \$LOGFILE";
     echo 'fi'; } >> "$rootdir/usr/bin/$WATCHDOG_SCRIPT_NAME"
     chmod +x "$rootdir/usr/bin/$WATCHDOG_SCRIPT_NAME"
-}
-
-function install_avahi {
-    if [ "$INSTALLING_MESH" ]; then
-        mesh_avahi
-        return
-    fi
-    if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
-        return
-    fi
-    # only enable avahi if we're doing mesh networking
-    if [[ $ENABLE_BATMAN != "yes" ]]; then
-        return
-    fi
-
-	configure_avahi
 
     if [ "$DEFAULT_DOMAIN_NAME" ]; then
         sed -i "s|#host-name=.*|host-name=$LOCAL_NAME|g" /etc/avahi/avahi-daemon.conf
