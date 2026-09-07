@@ -4858,6 +4858,12 @@ function installer_main_loop {
 			web_admin_create_installed_apps
 		fi
 	fi
+    users_template_filename="${webadmin_install_dir}/users_template.html"
+	if [ -f ${webadmin_install_dir}/users_template.html ]; then
+		if [ ! -f ${webadmin_install_dir}/users.html ]; then
+			web_admin_create_users
+		fi
+	fi
     wireguard_install_wg_command enable
     change_updates_settings
     update_enable_ssh
