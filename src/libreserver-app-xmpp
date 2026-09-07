@@ -57,7 +57,7 @@ XMPP_ECC_CURVE='secp384r1'
 # separate prosody modules are used so that the latest improvements can be
 # utilised even if the Debian packaged ones are out of date.
 # From https://hg.prosody.im/prosody-modules
-prosody_modules_filename='prosody-modules-20260725.tar.gz'
+prosody_modules_filename='prosody-modules-20250725.tar.gz'
 prosody_modules_hash='0084a3644bb57efb5cdc9465fa52fc5b0901c10e25a5983f735c870baa0ed5dd'
 xmpp_encryption_warning=$"For security reasons, OMEMO or PGP encryption is required for conversations on this server."
 
