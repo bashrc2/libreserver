@@ -1850,7 +1850,7 @@ function install_xmpp {
         groupadd prosody
     fi
 
-    if [ ! -d ${XMPP_DIRECTORY}/http_file shares ]; then
+    if [ ! -d ${XMPP_DIRECTORY}/http_file_shares ]; then
         mkdir -p ${XMPP_DIRECTORY}/http_file_shares
     fi
     if [ ! -d /etc/prosody/conf.d ]; then
