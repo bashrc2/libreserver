@@ -785,8 +785,15 @@ function update_prosody_modules {
         return
     fi
 
+	if [[ "$1" == "initial" ]]; then
+		echo "Checking for ${INSTALL_DIR}/$prosody_modules_filename"
+	fi
     if [ ! -f "${INSTALL_DIR}/$prosody_modules_filename" ]; then
         xmpp_restart=1
+		if [[ "$1" == "initial" ]]; then
+			echo "${INSTALL_DIR}/$prosody_modules_filename does not exist"
+			echo "Checking for /root/${PROJECT_NAME}/image_build/$prosody_modules_filename"
+		fi
 
         # Obtain the modules
         if [ -f "/root/${PROJECT_NAME}/image_build/$prosody_modules_filename" ]; then
@@ -799,6 +806,9 @@ function update_prosody_modules {
             fi
         fi
 
+		if [[ "$1" == "initial" ]]; then
+			echo "Checking for ${INSTALL_DIR}/$prosody_modules_filename"
+		fi
         if [ -f "${INSTALL_DIR}/$prosody_modules_filename" ]; then
             cd "${INSTALL_DIR}" || exit 24
 
@@ -812,6 +822,9 @@ function update_prosody_modules {
                 if [ -d "${INSTALL_DIR}/prosody-modules" ]; then
                     rm -rf "${INSTALL_DIR}/prosody-modules"
                 fi
+				if [[ "$1" == "initial" ]]; then
+					echo "Extracting ${prosody_modules_filename}"
+				fi
                 tar -xzvf $prosody_modules_filename
                 if [ -d "${INSTALL_DIR}/prosody-modules" ]; then
                     systemctl stop prosody
