@@ -1715,18 +1715,22 @@ function setup_utils {
     function_check install_avahi
     install_avahi
 
+	echo "Debug keep_avahi_running"
     function_check keep_avahi_running
     keep_avahi_running
 
+	echo "Debug create_avahi_onion_domains"
     function_check create_avahi_onion_domains
     create_avahi_onion_domains
 
     #function_check install_atheros_wifi
     #install_atheros_wifi
 
+	echo "Debug upgrade_golang"
     function_check upgrade_golang
     upgrade_golang
 
+	echo "Debug admin_user_sudo"
     function_check admin_user_sudo
     admin_user_sudo
 

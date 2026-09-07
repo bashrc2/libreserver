@@ -279,9 +279,6 @@ function set_default_onion_domains {
 }
 
 function create_avahi_onion_domains {
-    if [[ "$SYSTEM_TYPE" == "mesh"* ]]; then
-        return
-    fi
     if [ ! -d /etc/avahi/services ]; then
         return
     fi
