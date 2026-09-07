@@ -1862,7 +1862,7 @@ function install_xmpp {
     chown -R prosody /etc/prosody/conf.d
 
     # install modules
-    update_prosody_modules initial
+    update_prosody_modules
     if [ ! -d ${XMPP_DIRECTORY}/prosody-modules ]; then
         echo $'No prosody modules available'
         exit 82
