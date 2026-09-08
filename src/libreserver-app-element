@@ -283,6 +283,8 @@ function upgrade_element {
         element_domain=$(cat /var/lib/tor/hidden_service_conduit/hostname)
     fi
 
+    sed -i "s|roomDirectory|room_directory|g" "$element_config_file"
+    sed -i "s|settingDefaults|setting_defaults|g" "$element_config_file"    
     sed -i "s|\"m.homeserver\":.*|\"m.homeserver\": {\"base_url\": \"${http_prefix}://${element_domain}\",|g" "$element_config_file"
     chmod -R 755 "/var/www/${ELEMENT_DOMAIN_NAME}"
     systemctl restart nginx
@@ -408,30 +410,42 @@ function install_element {
           echo "    \"disable_guests\": true,";
           echo '    "disable_login_language_selector": false,';
           echo '    "disable_3pid_login": true,';
+          echo '    "force_verification": false,';
           echo "    \"defaultCountryCode\": \"GB\",";
           echo '    "default_federate": true,';
           echo "    \"default_theme\": \"dark\",";
           echo '    "brand": "Element",';
           echo '    "integrations_ui_url": "",';
           echo '    "integrations_rest_url": "",';
-          echo '    "integrations_jitsi_widget_url": "",';
+          echo '    "integrations_widgets_urls": [],';
+          echo '    "default_widget_container_height": 280,';
+          echo '    "default_country_code": "GB",';
+          echo '    "show_labs_settings": false,';
+          echo '    "features": {},';
           echo "    \"bug_report_endpoint_url\": \"\",";
           echo '    "showLabsSettings": false,';
           echo '    "jitsi": {';
           echo "        \"preferredDomain\": \"$ELEMENT_DEFAULT_JITSI\"";
           echo '    },';
-          echo '    "settingDefaults": {';
+          echo '    "setting_defaults": {';
           echo '        "breadcrumbs": true';
           echo '    },';
           echo '    "enable_presence_by_hs_url": {';
+          echo '        "https://matrix.org": false,';
           echo "        \"https://${homeserver_domain_name}\": false";
           echo '    },';
-          echo '    "roomDirectory": {';
+          echo '    "room_directory": {';
           echo '        "servers": [';
           echo "            \"${homeserver_domain_name}\",";
           echo '            "matrix.org"';
           echo '        ]';
-          echo '    }';
+          echo '    },';
+          echo '    "element_call": {';
+          echo '        "brand": "Element Call",';
+          echo '        "disable": true,';
+          echo '        "use_exclusively": false';
+          echo '    },';
+          echo '    "map_style_url": "https://api.maptiler.com/maps/streets/style.json?key=fU3vlMsMn4Jb6dnEIFsx"';
           echo '}'; } > "$element_config_file"
     else
         # NOTE: Don't bother with jitsi on onion. Since it's
@@ -447,25 +461,37 @@ function install_element {
           echo "    \"disable_guests\": true,";
           echo '    "disable_login_language_selector": false,';
           echo '    "disable_3pid_login": true,';
+          echo '    "force_verification": false,';
           echo "    \"defaultCountryCode\": \"GB\",";
           echo '    "default_federate": true,';
           echo "    \"default_theme\": \"dark\",";
           echo '    "brand": "Element",';
           echo '    "integrations_ui_url": "",';
           echo '    "integrations_rest_url": "",';
+          echo '    "integrations_widgets_urls": [],';
+          echo '    "default_widget_container_height": 280,';
+          echo '    "default_country_code": "GB",';
+          echo '    "show_labs_settings": false,';
+          echo '    "features": {},';
           echo "    \"bug_report_endpoint_url\": \"\",";
           echo '    "showLabsSettings": false,';
-          echo '    "settingDefaults": {';
+          echo '    "setting_defaults": {';
           echo '        "breadcrumbs": true';
           echo '    },';
           echo '    "enable_presence_by_hs_url": {';
           echo "        \"http://${MATRIX_ONION_DOMAIN_NAME}\": false";
           echo '    },';
-          echo '    "roomDirectory": {';
+          echo '    "room_directory": {';
           echo '        "servers": [';
           echo "            \"${MATRIX_ONION_DOMAIN_NAME}\"";
           echo '        ]';
-          echo '    }';
+          echo '    },';
+          echo '    "element_call": {';
+          echo '        "brand": "Element Call",';
+          echo '        "disable": true,';
+          echo '        "use_exclusively": false';
+          echo '    },';
+          echo '    "map_style_url": ""';
           echo '}'; } > "$element_config_file"
     fi
 
