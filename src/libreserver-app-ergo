@@ -406,9 +406,6 @@ function restore_remote_ergo {
 function remove_ergo {
     $REMOVE_PACKAGES irssi
 
-    nginx_dissite "$ERGO_DOMAIN_NAME"
-    remove_certs "$ERGO_DOMAIN_NAME"
-
     if [ -f /etc/systemd/system/ergo.service ]; then
         systemctl stop ergo
         systemctl disable ergo
