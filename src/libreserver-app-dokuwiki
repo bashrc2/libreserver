@@ -331,7 +331,9 @@ function install_dokuwiki {
             git pull
         else
             function_check git_clone
+            firewall_microsoft_undo
             git_clone "$DOKUWIKI_REPO" "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs"
+            firewall_microsoft
         fi
 
         cd "/var/www/$DOKUWIKI_DOMAIN_NAME/htdocs" || exit 38
