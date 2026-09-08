@@ -249,6 +249,7 @@ function upgrade_grocy {
     if [ -f grocy.zip ]; then
         rm grocy.zip
     fi
+    firewall_microsoft_undo
     if [[ "$ONION_ONLY" == 'no' ]]; then
         wget ${grocy_latest_url} -O grocy.zip
     else
@@ -257,6 +258,7 @@ function upgrade_grocy {
             wget ${grocy_latest_url} -O grocy.zip
         fi
     fi
+    firewall_microsoft
     if [ ! -f grocy.zip ]; then
         echo $"upgrade grocy zip could not be downloaded from ${grocy_latest_url}"
         rm -rf "/var/www/${GROCY_DOMAIN_NAME}/${GROCY_VERSION}"
@@ -392,6 +394,7 @@ function install_grocy {
     if [ -f grocy.zip ]; then
         rm grocy.zip
     fi
+    firewall_microsoft_undo
     if [[ "$ONION_ONLY" == 'no' ]]; then
         wget ${grocy_latest_url} -O grocy.zip
     else
@@ -400,6 +403,7 @@ function install_grocy {
             wget ${grocy_latest_url} -O grocy.zip
         fi
     fi
+    firewall_microsoft
     if [ ! -f grocy.zip ]; then
         echo $'grocy zip could not be downloaded'
         exit 27
