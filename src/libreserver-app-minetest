@@ -162,7 +162,9 @@ function minetest_build_from_source {
 
     increment_app_install_progress
 
+    firewall_microsoft_undo
     git_clone "$MINETEST_REPO" "$INSTALL_DIR/minetest"
+    firewall_microsoft
     if [ ! -d "$INSTALL_DIR/minetest" ]; then
         echo $'Unable to clone minetest repo'
         exit 77

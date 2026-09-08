@@ -398,7 +398,9 @@ function install_friendica {
             git pull
         else
             function_check git_clone
+            firewall_microsoft_undo
             git_clone "$FRIENDICA_REPO" friendica
+            firewall_microsoft
         fi
 
         git checkout "$FRIENDICA_COMMIT" -b "$FRIENDICA_COMMIT"

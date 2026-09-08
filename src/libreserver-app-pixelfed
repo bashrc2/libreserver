@@ -598,7 +598,9 @@ function install_pixelfed {
             git pull
         else
             function_check git_clone
+            firewall_microsoft_undo
             git_clone "$PIXELFED_REPO" "/var/www/$PIXELFED_DOMAIN_NAME/htdocs"
+            firewall_microsoft
         fi
 
         if [ ! -d "/var/www/$PIXELFED_DOMAIN_NAME/htdocs" ]; then
