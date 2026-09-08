@@ -49,7 +49,7 @@ ELEMENT_SHORT_DESCRIPTION=$'Web based client for Matrix'
 ELEMENT_DESCRIPTION=$'Web based client for Matrix'
 ELEMENT_MOBILE_APP_URL='https://f-droid.org/en/packages/im.vector.app'
 
-ELEMENT_DEFAULT_JITSI="jitsi.riot.im"
+ELEMENT_DEFAULT_JITSI="meet.element.io"
 
 element_variables=(MY_USERNAME
                    ELEMENT_DOMAIN_NAME
@@ -283,6 +283,8 @@ function upgrade_element {
         element_domain=$(cat /var/lib/tor/hidden_service_conduit/hostname)
     fi
 
+    sed -i "s|showLabsSettings|show_labs_settings|g" "$element_config_file"
+    sed -i "s|defaultCountryCode|default_country_code|g" "$element_config_file"
     sed -i "s|roomDirectory|room_directory|g" "$element_config_file"
     sed -i "s|settingDefaults|setting_defaults|g" "$element_config_file"    
     sed -i "s|\"m.homeserver\":.*|\"m.homeserver\": {\"base_url\": \"${http_prefix}://${element_domain}\",|g" "$element_config_file"
