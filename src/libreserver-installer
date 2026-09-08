@@ -1660,14 +1660,18 @@ function web_admin_setup_login {
     fi
 
     if [ ! -f ${webadmin_temp_password_file} ]; then
-        wait_for_enough_entropy
-        if [ -f /usr/share/dict/words ]; then
-            webadmin_password=$(diceware)
-            if [ ! "${webadmin_password}" ]; then
+        if [ -f /root/login.txt ]; then
+            webadmin_password=$(cat /root/login.txt)
+        else
+            wait_for_enough_entropy
+            if [ -f /usr/share/dict/words ]; then
+                webadmin_password=$(diceware)
+                if [ ! "${webadmin_password}" ]; then
+                    webadmin_password="$(openssl rand -base64 32 | tr -dc A-Za-z0-9 | head -c 10 ; echo -n '')"
+                fi
+            else
                 webadmin_password="$(openssl rand -base64 32 | tr -dc A-Za-z0-9 | head -c 10 ; echo -n '')"
             fi
-        else
-            webadmin_password="$(openssl rand -base64 32 | tr -dc A-Za-z0-9 | head -c 10 ; echo -n '')"
         fi
         echo -n "${webadmin_password}" > ${webadmin_temp_password_file}
     else
@@ -1875,9 +1879,9 @@ function run_setup_command {
 
 function check_install_command_state {
     if [ ${install_state} -ne ${INSTALL_STATE_RUNNING_COMMAND} ]; then
-		if [ ! -f "${setup_file}" ]; then
-			return
-		fi
+        if [ ! -f "${setup_file}" ]; then
+            return
+        fi
     fi
     reset_install_state=
     if [ ! -f "${install_state_file}" ]; then
@@ -4855,17 +4859,17 @@ function installer_main_loop {
     check_resolvconf
     reset_shutdown
     appslist_template_filename="${webadmin_install_dir}/apps_template.html"
-	if [ -f ${webadmin_install_dir}/apps_template.html ]; then
-		if [ ! -f ${webadmin_install_dir}/apps.html ]; then
-			web_admin_create_installed_apps
-		fi
-	fi
+    if [ -f ${webadmin_install_dir}/apps_template.html ]; then
+        if [ ! -f ${webadmin_install_dir}/apps.html ]; then
+            web_admin_create_installed_apps
+        fi
+    fi
     users_template_filename="${webadmin_install_dir}/users_template.html"
-	if [ -f ${webadmin_install_dir}/users_template.html ]; then
-		if [ ! -f ${webadmin_install_dir}/users.html ]; then
-			web_admin_create_users
-		fi
-	fi
+    if [ -f ${webadmin_install_dir}/users_template.html ]; then
+        if [ ! -f ${webadmin_install_dir}/users.html ]; then
+            web_admin_create_users
+        fi
+    fi
     wireguard_install_wg_command enable
     change_updates_settings
     update_enable_ssh
