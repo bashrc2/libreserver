@@ -283,6 +283,7 @@ function upgrade_element {
         element_domain=$(cat /var/lib/tor/hidden_service_conduit/hostname)
     fi
 
+    sed -i "s|jitsi.riot.im|meet.element.io|g" "$element_config_file"
     sed -i "s|showLabsSettings|show_labs_settings|g" "$element_config_file"
     sed -i "s|defaultCountryCode|default_country_code|g" "$element_config_file"
     sed -i "s|roomDirectory|room_directory|g" "$element_config_file"
