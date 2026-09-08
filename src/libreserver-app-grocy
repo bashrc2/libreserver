@@ -55,7 +55,7 @@ GROCY_I2P_PORT=9560
 GROCY_REPO="https://github.com/grocy/grocy"
 GROCY_COMMIT='21aa5eab218c8466f90729154cb293fffbe10c21'
 GROCY_VERSION="4.5.0"
-grocy_latest_url='https://github.com/grocy/grocy/releases/download/v${GROCY_VERSION}/grocy_${GROCY_VERSION}.zip'
+grocy_latest_url="https://github.com/grocy/grocy/releases/download/v${GROCY_VERSION}/grocy_${GROCY_VERSION}.zip"
 
 # These parameters are used by the FreedomBox mobile app and web UI
 GROCY_SHORT_DESCRIPTION="Groceries and household management"
