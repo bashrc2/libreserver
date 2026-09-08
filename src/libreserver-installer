@@ -1660,8 +1660,8 @@ function web_admin_setup_login {
     fi
 
     if [ ! -f ${webadmin_temp_password_file} ]; then
-        if [ -f /root/login.txt ]; then
-            webadmin_password=$(cat /root/login.txt)
+        if [ -f ${IMAGE_PASSWORD_FILE} ]; then
+            webadmin_password=$(cat ${IMAGE_PASSWORD_FILE})
         else
             wait_for_enough_entropy
             if [ -f /usr/share/dict/words ]; then
