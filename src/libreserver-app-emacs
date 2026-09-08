@@ -291,7 +291,7 @@ function install_emacs {
       echo '(setq solarized-scale-org-headlines nil)';
       echo '(setq solarized-scale-markdown-headlines t)';
       echo '';
-      echo "(let ((default-directory "~/")) (eshell '(4)))";
+      echo "(let ((default-directory \"~/\")) (eshell '(4)))";
       echo '';
       echo ";;; don't show startup screen";
       echo '(setq inhibit-startup-screen t)';
