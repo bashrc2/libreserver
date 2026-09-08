@@ -222,7 +222,69 @@ function upgrade_distro_grocy {
 
 function upgrade_grocy {
     grocy_remove_bad_links
-    # TODO
+
+    if ! grep -q 'grocy version:' "$COMPLETION_FILE"; then
+        return
+    fi
+
+    CURR_GROCY_VERSION=$(get_completion_param "grocy version")
+    if [ ! "${CURR_GROCY_VERSION}" ]; then
+        echo "Upgrade did not find any grocy version"
+        return
+    fi
+    echo "grocy current version: ${CURR_GROCY_VERSION}"
+    echo "grocy app version: ${GROCY_VERSION}"
+    if [[ "${CURR_GROCY_VERSION}" == "${GROCY_VERSION}" ]]; then
+        return
+    fi
+    read_config_param GROCY_DOMAIN_NAME
+    if [ ! "${GROCY_DOMAIN_NAME}" ]; then
+        echo "Upgrade did not find grocy domain name"
+        return
+    fi
+ 
+    mkdir "/var/www/${GROCY_DOMAIN_NAME}/${GROCY_VERSION}"
+    cd "/var/www/${GROCY_DOMAIN_NAME}/${GROCY_VERSION}" || return
+
+    if [ -f grocy.zip ]; then
+        rm grocy.zip
+    fi
+    if [[ "$ONION_ONLY" == 'no' ]]; then
+        wget ${grocy_latest_url} -O grocy.zip
+    else
+        ${TORSOCKS} wget ${grocy_latest_url} -O grocy.zip
+        if [ ! -f grocy.zip ]; then
+            wget ${grocy_latest_url} -O grocy.zip
+        fi
+    fi
+    if [ ! -f grocy.zip ]; then
+        echo $"upgrade grocy zip could not be downloaded from ${grocy_latest_url}"
+        rm -rf "/var/www/${GROCY_DOMAIN_NAME}/${GROCY_VERSION}"
+        return
+    fi
+
+    unzip grocy.zip
+
+    # did the unzip work?
+    if [ ! -d "/var/www/${GROCY_DOMAIN_NAME}/${GROCY_VERSION}/public" ]; then
+        echo $'upgrade grocy archive did not uncompress'
+        rm -rf "/var/www/${GROCY_DOMAIN_NAME}/${GROCY_VERSION}"
+        return
+    fi
+
+    # copy the config file
+    cp "/var/www/${GROCY_DOMAIN_NAME}/${GROCY_VERSION}/data/config.php" "/var/www/${GROCY_DOMAIN_NAME}/htdocs/data/config.php"
+
+    # switch directories
+    mv "/var/www/${GROCY_DOMAIN_NAME}/htdocs" "/var/www/${GROCY_DOMAIN_NAME}/${CURR_GROCY_VERSION}"
+    mv "/var/www/${GROCY_DOMAIN_NAME}/${GROCY_VERSION}" "/var/www/${GROCY_DOMAIN_NAME}/htdocs"
+
+    # set permissions
+    chmod g+w "/var/www/${GROCY_DOMAIN_NAME}/htdocs"
+    chown -R www-data:www-data "/var/www/${GROCY_DOMAIN_NAME}/htdocs"
+
+    # set the new grocy version
+    sed -i "s|grocy version.*|grocy version:${GROCY_VERSION}|g" "${COMPLETION_FILE}"
 }
 
 function backup_local_grocy {
@@ -543,6 +605,12 @@ function install_grocy {
 
     "${PROJECT_NAME}-pass" -u "$MY_USERNAME" -a grocy -p "$GROCY_ADMIN_PASSWORD"
     set_completion_param "grocy domain" "$GROCY_DOMAIN_NAME"
+
+    if ! grep -q "grocy version:" "${COMPLETION_FILE}"; then
+        echo "grocy version:${GROCY_VERSION}" >> "${COMPLETION_FILE}"
+    else
+        sed -i "s|grocy version.*|grocy version:${GROCY_VERSION}|g" "${COMPLETION_FILE}"
+    fi
 
     APP_INSTALLED=1
 }
