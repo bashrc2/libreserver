@@ -667,6 +667,11 @@ echo ''
 date
 echo ''
 localIP=$(get_local_ipv4_address)
+echo $'In a Firefox based browser go to Settings/Privacy and '
+echo $'Security/Advanced settings then under HTTPS-Only Mode select '
+echo $'"Dont enable HTTPS-Only Mode" and Manage Exceptions, then '
+echo $"add http://${localIP}"
+echo ''
 echo $"Navigate to: http://${localIP}/admin"
 echo ''
 onionDomain=$(cat /var/lib/tor/hidden_service_webadmin/hostname)
