@@ -831,6 +831,11 @@ function lockdown_permissions {
             chmod 755 "$i"
         fi
     done
+
+    # gnupg
+    chown -R root:root /root/.gnupg
+    find /root/.gnupg -type f -exec chmod 600 {} \;
+    find /root/.gnupg -type d -exec chmod 700 {} \;
 }
 
 function disable_core_dumps {

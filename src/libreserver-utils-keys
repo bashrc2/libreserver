@@ -246,12 +246,13 @@ function interactive_key_recovery {
     "${PROJECT_NAME}-recoverkey" -u "$MY_USERNAME" -d simple
     if [ -d "/home/$MY_USERNAME/.gnupg" ]; then
         cp -rf "/home/$MY_USERNAME/.gnupg" /root
-        chmod 700 /root/.gnupg
-        chmod 600 /root/.gnupg/*
         printf '%%Assuan%%\nsocket=/dev/shm/S.dirmngr\n' > /root/.gnupg/S.dirmngr
         if [ -d /root/.gnupg/crls.d ]; then
             chmod +x /root/.gnupg/crls.d
         fi
+        chown -R root:root /root/.gnupg
+        find /root/.gnupg -type f -exec chmod 600 {} \;
+        find /root/.gnupg -type d -exec chmod 700 {} \;
     fi
     rm -f "$data"
 }
