@@ -687,7 +687,7 @@ echo ''
 if [ ! -f /home/admin/.ssh/authorized_keys ]; then
     echo 'SSH access will now be disabled, but if you need it then re-enable '
     echo 'it by supplying a public key from the Settings screen of the '
-    echo 'web interface.'
+    echo "web interface at http://${localIP}/admin"
     echo ''
 fi
 
