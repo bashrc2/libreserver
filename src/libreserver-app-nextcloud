@@ -757,7 +757,7 @@ function install_nextcloud_base {
           echo '    fastcgi_read_timeout 60;';
           echo '    fastcgi_param SCRIPT_FILENAME            $document_root$fastcgi_script_name;';
           echo '    fastcgi_param PATH_INFO                  $path_info;';
-          echo '    fastcgi_param HTTPS                      off;';
+          echo '    fastcgi_param HTTPS                      on;';
           echo '    fastcgi_param modHeadersAvailable        true;';
           echo '    fastcgi_param front_controller_active    true;';
           echo '    fastcgi_intercept_errors on;';
