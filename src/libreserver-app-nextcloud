@@ -1096,7 +1096,15 @@ function install_nextcloud_base {
     chmod 0644 .htaccess
     chmod 0750 data
     chmod 755 /var/www/${NEXTCLOUD_DOMAIN_NAME}
+    if [ ! -d /var/www/${NEXTCLOUD_DOMAIN_NAME}/temp ]; then
+        mkdir /var/www/${NEXTCLOUD_DOMAIN_NAME}/temp
+    fi
     chown -R www-data:www-data "/var/www/${NEXTCLOUD_DOMAIN_NAME}/data"
+    chown -R www-data:www-data "/var/www/${NEXTCLOUD_DOMAIN_NAME}/temp"
+    chmod g+w "/var/www/${NEXTCLOUD_DOMAIN_NAME}/temp"
+    increment_app_install_progress
+    echo $'Setting temporary directory'
+    ${NEXTCLOUD_COMMAND} config:system:set tempdirectory --value="/var/www/${NEXTCLOUD_DOMAIN_NAME}/temp"
     increment_app_install_progress
     echo $'Setting trusted domains'
     ${NEXTCLOUD_COMMAND} config:system:set trusted_domains 1 --value="${NEXTCLOUD_DOMAIN_NAME}"
