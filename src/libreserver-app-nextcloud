@@ -349,14 +349,16 @@ function upgrade_nextcloud_base {
     chown -R www-data:www-data "/var/www/${NEXTCLOUD_DOMAIN_NAME}/data"
     cd "${NEXTCLOUD_WWW}" || exit 23
     chmod +x "${NEXTCLOUD_WWW}/occ"
+    TEMPDIR="$(mktemp -d ${NEXTCLOUD_WWW}/temp.XXXXXX || (echo "Failed to create temp dir. Exiting" >&2 ; return) )"
     ${NEXTCLOUD_COMMAND} maintenance:repair
     ${NEXTCLOUD_COMMAND} upgrade
-
-    cd "${NEXTCLOUD_WWW}" || exit 23
     ${NEXTCLOUD_COMMAND} maintenance:mode --off
     ${NEXTCLOUD_COMMAND} db:add-missing-indices
     ${NEXTCLOUD_COMMAND} -n db:convert-filecache-bigint
     mpd_nextcloud_integration
+    if [ -d "${TEMPDIR}" ]; then
+        rm -rf "${TEMPDIR}"
+    fi
 }
 
 function upgrade_nextcloud {
@@ -1050,8 +1052,12 @@ function install_nextcloud_base {
 
     echo $'Running nextcloud installer'
     chown -R root:root "${NEXTCLOUD_WWW}/config"
+    TEMPDIR="$(mktemp -d ${NEXTCLOUD_WWW}/temp.XXXXXX || (echo "Failed to create temp dir. Exiting" >&2 ; exit 84) )"
     ${NEXTCLOUD_COMMAND_ROOT} maintenance:install --database-name nextcloud --admin-user "${MY_USERNAME}" --admin-pass "${NEXTCLOUD_ADMIN_PASSWORD}" --database mysql --database-user root --database-pass "${MARIADB_PASSWORD}"
     if [ ! -d data ]; then
+        if [ -d "${TEMPDIR}" ]; then
+            rm -rf "${TEMPDIR}"
+        fi
         echo $'Nextcloud data directory was not found. This probably means that the installation failed.'
         echo ''
         echo $'Install command was:'
@@ -1077,6 +1083,9 @@ function install_nextcloud_base {
         echo $'Enabling encryption'
         ${NEXTCLOUD_COMMAND} app:enable encryption
         if ! ${NEXTCLOUD_COMMAND} encryption:enable; then
+            if [ -d "${TEMPDIR}" ]; then
+                rm -rf "${TEMPDIR}"
+            fi
             echo $'Encryption not enabled'
             exit 73
         fi
@@ -1097,6 +1106,9 @@ function install_nextcloud_base {
     ${NEXTCLOUD_COMMAND} maintenance:repair
     #echo $'Turning off maintenance mode'
     #${NEXTCLOUD_COMMAND} maintenance:mode --off
+    if [ -d "${TEMPDIR}" ]; then
+        rm -rf "${TEMPDIR}"
+    fi
 
     increment_app_install_progress
     echo $'Restarting mariadb'
