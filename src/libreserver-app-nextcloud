@@ -694,7 +694,17 @@ function install_nextcloud_base {
     if [[ $ONION_ONLY == "no" ]]; then
         function_check nginx_http_redirect
         nginx_http_redirect "${NEXTCLOUD_DOMAIN_NAME}"
-        { echo 'server {';
+        { echo '# PHP-FPM backend.';
+          echo 'upstream php-handler {';
+          echo "  server unix:/run/php/php${PHP_VERSION}-fpm.sock;";
+          echo '}';
+          echo '';
+          echo 'map $arg_v $asset_immutable {';
+          echo '  "" "";';
+          echo '  default ", immutable";';
+          echo '}';
+          echo '';
+          echo 'server {';
           echo '  listen 443 ssl;';
           echo '  listen [::]:443 ssl;';
           echo "  server_name ${NEXTCLOUD_DOMAIN_NAME};";
@@ -766,9 +776,19 @@ function install_nextcloud_base {
           echo '  }';
           echo '';
           echo '  location /.well-known/acme-challenge { }';
-          echo '}'; } >> "${nextcloud_nginx_site}"
+          echo '}';
+          echo ''; } >> "${nextcloud_nginx_site}"
     else
-        echo -n '' > "${nextcloud_nginx_site}"
+        { echo '# PHP-FPM backend.';
+          echo 'upstream php-handler {';
+          echo "  server unix:/run/php/php${PHP_VERSION}-fpm.sock;";
+          echo '}';
+          echo '';
+          echo 'map $arg_v $asset_immutable {';
+          echo '  "" "";';
+          echo '  default ", immutable";';
+          echo '}';
+          echo ''; } > "${nextcloud_nginx_site}"
     fi
     { echo 'server {';
       echo "    listen 127.0.0.1:${NEXTCLOUD_ONION_PORT} default_server;";
