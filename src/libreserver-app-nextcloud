@@ -797,7 +797,7 @@ function install_nextcloud_base {
     else
         { echo '# PHP-FPM backend.';
           echo 'upstream php-handler {';
-          echo "  server unix:/run/php/php${PHP_VERSION}-fpm.sock;";
+          echo "  server unix:/var/run/php/php${PHP_VERSION}-fpm.sock;";
           echo '}';
           echo '';
           echo 'map $arg_v $asset_immutable {';
