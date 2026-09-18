@@ -504,6 +504,10 @@ function epicyon_update_domain_name_users {
     done
 }
 
+function firewall_epicyon {
+    epicyon_dummy_variable=1
+}
+
 function install_epicyon {
     increment_app_install_progress
     if [ ! "$EPICYON_DOMAIN_NAME" ]; then
@@ -783,7 +787,7 @@ function install_epicyon {
       echo 'RestrictAddressFamilies=AF_INET';
       echo 'RestrictNamespaces=true';
       echo 'SystemCallArchitectures=native';
-	  echo 'MemoryMax=20%';
+      echo 'MemoryMax=20%';
       echo '';
       echo '[Install]';
       echo 'WantedBy=multi-user.target'; } > "/etc/systemd/system/epicyon.service"
@@ -849,6 +853,10 @@ function install_epicyon {
 
     cron_add_mins 1 "/usr/local/bin/${PROJECT_NAME}-notification --epicyon yes"
     epicyon_clear_browser_cache
+
+    increment_app_install_progress
+
+    firewall_epicyon
 
     increment_app_install_progress
 
