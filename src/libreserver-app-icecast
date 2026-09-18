@@ -202,7 +202,7 @@ function icecast_liquidsoap {
       echo 'PrivateUsers=yes';
       echo 'ProtectKernelModules=yes';
       echo 'ProtectKernelTunables=yes';
-	  echo 'MemoryMax=20%';
+      echo 'MemoryMax=20%';
       echo '';
       echo '[Install]';
       echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/radio.service
@@ -645,6 +645,10 @@ function remove_icecast {
     sed -i '/icecast/d' "$COMPLETION_FILE"
 }
 
+function firewall_icecast {
+    icecast_dummy_variable=1
+}
+
 function install_icecast {
     increment_app_install_progress
 
@@ -794,6 +798,10 @@ function install_icecast {
     increment_app_install_progress
 
     icecast_rescan
+
+    increment_app_install_progress
+
+    firewall_icecast
 
     increment_app_install_progress
 
