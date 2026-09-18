@@ -390,7 +390,7 @@ function install_abermush_website {
     add_ddns_domain "${ABERMUSH_DOMAIN_NAME}"
 }
 
-function abermush_firewall {
+function firewall_abermush {
     # firewall_add abermush_telnet ${ABERMUSH_PORT} tcp 5
     firewall_add abermush_ssh ${ABERMUSH_SSH_PORT} tcp 5
 }
@@ -546,7 +546,7 @@ function install_abermush {
     ssh_enable_tty yes
     systemctl restart ssh
 
-    abermush_firewall
+    firewall_abermush
 
     increment_app_install_progress
 
