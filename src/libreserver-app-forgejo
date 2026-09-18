@@ -508,6 +508,10 @@ function remove_forgejo {
     remove_ddns_domain "${FORGEJO_DOMAIN_NAME}"
 }
 
+function firewall_forgejo {
+    forgejo_dummy_variable=1
+}
+
 function install_forgejo {
     if [ ! "${FORGEJO_DOMAIN_NAME}" ]; then
         echo $"Missing forgejo domain name"
@@ -673,7 +677,7 @@ function install_forgejo {
       echo 'ProtectKernelModules=yes';
       echo 'ProtectKernelTunables=yes';
       echo 'NoNewPrivileges=true';
-	  echo 'MemoryMax=20%';
+      echo 'MemoryMax=20%';
       echo '';
       echo '[Install]';
       echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/forgejo.service
@@ -1666,6 +1670,10 @@ function install_forgejo {
     else
         sed -i "s|forgejo version.*|forgejo version:${FORGEJO_VERSION}|g" "${COMPLETION_FILE}"
     fi
+
+    increment_app_install_progress
+
+    firewall_forgejo
 
     APP_INSTALLED=1
 }
