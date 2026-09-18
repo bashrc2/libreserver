@@ -169,7 +169,7 @@ function test_app_functions {
     FILES="/usr/share/${PROJECT_NAME}/apps/${PROJECT_NAME}-app-*"
 
     # check that these functions exist
-    interface_functions=( install remove backup_local restore_local upgrade reconfigure )
+    interface_functions=( install firewall remove backup_local restore_local upgrade reconfigure )
 
     # for all the app scripts
     for filename in $FILES
