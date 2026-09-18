@@ -136,7 +136,7 @@ function check_for_updates {
                --msgbox $"Upgrade script was not found" 6 40
         return
     fi
-
+    
     clear
     /etc/cron.weekly/$UPGRADE_SCRIPT_NAME
     any_key
