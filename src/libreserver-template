@@ -652,13 +652,15 @@ if [ "$snap_packages" ]; then
     echo "    snap remove ${snap_packages}"
 fi
 echo '}'
+echo ''
+echo "function firewall_${app_name} {"
 if [ "$app_port" ]; then
-    echo ''
-    echo "function firewall_${app_name} {"
     echo "    firewall_add ${app_name} ${app_port} tcp 5"
     echo "    firewall_max_connections ${app_port} ${app_firewall_max_connections}"
-    echo '}'
+else
+    echo "    ${app_name}_dummy_variable=1"
 fi
+echo '}'
 echo ''
 echo "function install_${app_name} {"
 echo '    increment_app_install_progress'
@@ -1022,10 +1024,10 @@ echo "    \"\${PROJECT_NAME}-pass\" -u \"\$MY_USERNAME\" -a ${app_name} -p \"\$$
 if [ "$app_webui" ]; then
     echo "    set_completion_param \"${app_name} domain\" \"\$${app_name_upper}_DOMAIN_NAME\""
 fi
-if [ "$app_port" ]; then
-    echo ''
-    echo "    firewall_${app_name}"
-fi
+echo ''
+echo "    firewall_${app_name}"
+echo ''
+echo '    increment_app_install_progress'
 echo ''
 echo '    APP_INSTALLED=1'
 echo '}'
