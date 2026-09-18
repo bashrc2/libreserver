@@ -186,6 +186,10 @@ function remove_profanity {
     fi
 }
 
+function firewall_profanity {
+    profanity_dummy_variable=1
+}
+
 function install_profanity {
     INSTALL_PACKAGES profanity
 
@@ -284,6 +288,8 @@ function install_profanity {
             add_user_profanity "${ACCT_USERNAME}" ""
         fi
     done
+
+    firewall_profanity
 
     APP_INSTALLED=1
 }
