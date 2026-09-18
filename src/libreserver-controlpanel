@@ -128,14 +128,14 @@ function reset_password_tries {
 }
 
 function check_for_updates {
-    if [ -f "/etc/cron.weekly/$UPGRADE_SCRIPT_NAME" ]; then
-        rm "/etc/cron.weekly/$UPGRADE_SCRIPT_NAME"
-    fi
-    # if [ ! -f "/etc/cron.weekly/$UPGRADE_SCRIPT_NAME" ]; then
-    #    dialog --title $"Check for updates" \
-    #           --msgbox $"Upgrade script was not found" 6 40
-    #    return
+    # if [ -f "/etc/cron.weekly/$UPGRADE_SCRIPT_NAME" ]; then
+    #     rm "/etc/cron.weekly/$UPGRADE_SCRIPT_NAME"
     # fi
+    if [ ! -f "/etc/cron.weekly/$UPGRADE_SCRIPT_NAME" ]; then
+        dialog --title $"Check for updates" \
+               --msgbox $"Upgrade script was not found" 6 40
+        return
+    fi
 
     clear
     /etc/cron.weekly/$UPGRADE_SCRIPT_NAME

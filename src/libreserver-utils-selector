@@ -773,6 +773,8 @@ function install_apps {
                         echo $"Upgrading application from interactive: ${a}"
                         "upgrade_${a}"
                         echo $"${a} was upgraded from interactive"
+                        "firewall_${a}"
+                        echo $"firewall was applied for ${a}"
                     else
                         check_other_app_required "${a}"
                         echo $"Installing application from interactive: ${a}"
