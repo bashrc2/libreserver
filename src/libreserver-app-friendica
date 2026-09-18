@@ -327,6 +327,10 @@ function remove_friendica {
     remove_ddns_domain "$FRIENDICA_DOMAIN_NAME"
 }
 
+function firewall_friendica {
+    friendica_dummy_variable=1
+}
+
 function install_friendica {
     if [ ! "$FRIENDICA_DOMAIN_NAME" ]; then
         echo $'No domain name was given for friendica'
@@ -664,6 +668,10 @@ function install_friendica {
     cd "${FRIENDICA_PATH}" || exit 71
     echo "yes" | php ./bin/composer.phar --no-dev i
     chown -R www-data:www-data "$FRIENDICA_PATH"
+
+    increment_app_install_progress
+
+    firewall_friendica
 
     increment_app_install_progress
 
