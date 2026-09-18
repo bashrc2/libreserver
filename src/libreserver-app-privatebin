@@ -250,6 +250,10 @@ function remove_privatebin {
     remove_ddns_domain "${PRIVATEBIN_DOMAIN_NAME}"
 }
 
+function firewall_privatebin {
+    privatebin_dummy_variable=1
+}
+
 function install_privatebin {
     if [ ! "$ONION_ONLY" ]; then
         ONION_ONLY='no'
@@ -499,6 +503,10 @@ function install_privatebin {
 
     # shellcheck disable=SC2086
     systemctl restart php${PHP_VERSION}-fpm
+
+    increment_app_install_progress
+
+    firewall_privatebin
 
     increment_app_install_progress
 
