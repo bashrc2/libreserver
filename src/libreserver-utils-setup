@@ -1918,6 +1918,8 @@ function upgrade_apps {
                 APPS_COMPLETED+=("${app_name}")
                 function_check "upgrade_${app_name}"
                 "upgrade_${app_name}"
+                # ensure that firewall for the app is applied
+                "firewall_${app_name}"
             fi
         fi
     done
