@@ -249,6 +249,10 @@ function remove_enigma {
     remove_ddns_domain "${ENIGMA_DOMAIN_NAME}"
 }
 
+function firewall_enigma {
+    enigma_dummy_variable=1
+}
+
 function install_enigma {
     increment_app_install_progress
     INSTALL_PACKAGES git curl unzip
@@ -396,6 +400,10 @@ function install_enigma {
     chmod -R 755 "/var/www/${ENIGMA_DOMAIN_NAME}"
 
     systemctl restart nginx
+
+    increment_app_install_progress
+
+    firewall_enigma
 
     increment_app_install_progress
 
