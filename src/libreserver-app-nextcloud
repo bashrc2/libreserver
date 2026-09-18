@@ -1150,6 +1150,10 @@ function install_nextcloud_base {
     install_completed nextcloud_main
 }
 
+function firewall_nextcloud {
+    nextcloud_dummy_variable=1
+}
+
 function install_nextcloud {
     if [ ! "$ONION_ONLY" ]; then
         ONION_ONLY='no'
@@ -1162,6 +1166,10 @@ function install_nextcloud {
     mpd_nextcloud_integration
 
     sed -i '/appstore/d' "/var/www/${NEXTCLOUD_DOMAIN_NAME}/htdocs/config/config.php"
+
+    increment_app_install_progress
+
+    firewall_nextcloud
 
     APP_INSTALLED=1
 }
