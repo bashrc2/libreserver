@@ -158,6 +158,10 @@ function remove_emacs {
     fi
 }
 
+function firewall_emacs {
+    emacs_dummy_variable=1
+}
+
 function install_emacs {
     INSTALL_PACKAGES emacs-nox ispell ibritish ifrench ispanish iitalian irussian iswedish inorwegian iirish ingerman iswiss iogerman idutch idanish ibrazilian ibulgarian ipolish iczech iestonian ilithuanian icatalan python3-jedi elpa-flycheck elpa-use-package pylint elpa-php-mode python3-flake8 elpa-diminish elpa-nov elpa-pdf-tools elpa-solarized-theme elpa-yaml-mode
 
@@ -520,6 +524,7 @@ function install_emacs {
             fi
         done
     fi
+    firewall_emacs
 
     APP_INSTALLED=1
 }
