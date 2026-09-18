@@ -342,6 +342,10 @@ function element_add_jitsi {
     fi
 }
 
+function firewall_element {
+    element_dummy_variable=1
+}
+
 function install_element {
     increment_app_install_progress
 
@@ -643,6 +647,10 @@ function install_element {
     fi
 
     element_set_default_homeserver
+
+    increment_app_install_progress
+
+    firewall_element
 
     APP_INSTALLED=1
 }
