@@ -364,6 +364,10 @@ function remove_grocy {
     remove_ddns_domain "$GROCY_DOMAIN_NAME"
 }
 
+function firewall_grocy {
+    grocy_dummy_variable=1
+}
+
 function install_grocy {
     increment_app_install_progress
 
@@ -604,6 +608,10 @@ function install_grocy {
     chmod -R 755 "/var/www/${GROCY_DOMAIN_NAME}"
 
     systemctl restart nginx
+
+    increment_app_install_progress
+
+    firewall_grocy
 
     increment_app_install_progress
 
