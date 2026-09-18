@@ -176,6 +176,10 @@ function remove_micro {
     fi
 }
 
+function firewall_micro {
+    micro_dummy_variable=1
+}
+
 function install_micro {
     INSTALL_PACKAGES micro
     update-alternatives --set editor /usr/bin/micro
@@ -230,6 +234,7 @@ function install_micro {
             fi
         fi
     done
+    firewall_micro
 
     APP_INSTALLED=1
 }

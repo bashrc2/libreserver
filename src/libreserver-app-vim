@@ -169,6 +169,10 @@ function remove_vim {
     fi
 }
 
+function firewall_vim {
+    vim_dummy_variable=1
+}
+
 function install_vim {
     INSTALL_PACKAGES vim
     update-alternatives --set editor /usr/bin/vim.tiny
@@ -222,7 +226,7 @@ function install_vim {
             fi
         fi
     done
-
+    firewall_vim
     APP_INSTALLED=1
 }
 
