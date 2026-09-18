@@ -652,6 +652,13 @@ if [ "$snap_packages" ]; then
     echo "    snap remove ${snap_packages}"
 fi
 echo '}'
+if [ "$app_port" ]; then
+    echo ''
+    echo "function firewall_${app_name} {"
+    echo "    firewall_add ${app_name} ${app_port} tcp 5"
+    echo "    firewall_max_connections ${app_port} ${app_firewall_max_connections}"
+    echo '}'
+fi
 echo ''
 echo "function install_${app_name} {"
 echo '    increment_app_install_progress'
@@ -1017,8 +1024,7 @@ if [ "$app_webui" ]; then
 fi
 if [ "$app_port" ]; then
     echo ''
-    echo "    firewall_add ${app_name} ${app_port} tcp 5"
-    echo "    firewall_max_connections ${app_port} ${app_firewall_max_connections}"
+    echo "    firewall_${app_name}"
 fi
 echo ''
 echo '    APP_INSTALLED=1'

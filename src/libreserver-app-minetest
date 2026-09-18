@@ -204,6 +204,10 @@ function minetest_build_from_source {
     chown Debian-minetest: /usr/lib/minetest/minetestserver
 }
 
+function firewall_minetest {
+    firewall_add minetest ${MINETEST_PORT} udp 5
+}
+
 function install_minetest {
     if [ -f /etc/minetest/minetest.conf ]; then
         remove_minetest
@@ -242,7 +246,7 @@ function install_minetest {
 
     increment_app_install_progress
 
-    firewall_add minetest ${MINETEST_PORT} udp 5
+    firewall_minetest
 
     increment_app_install_progress
 

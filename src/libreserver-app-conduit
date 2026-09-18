@@ -269,17 +269,21 @@ function upgrade_distro_conduit {
     # include anything here needed to upgrade to the target distro
 }
 
+function firewall_conduit {
+    if grep -q "${CONDUIT_HTTP_PORT}" /etc/nftables.conf; then
+        return
+    fi
+    if grep -q "conduit=${CONDUIT_HTTP_PORT}" "${FIREWALL_CONFIG}"; then
+        sed -i "/conduit=${CONDUIT_HTTP_PORT}/d" "${FIREWALL_CONFIG}"
+    fi
+    firewall_add conduit ${CONDUIT_HTTP_PORT} tcp 5
+    firewall_max_connections ${CONDUIT_PORT_INTERNAL} ${CONDUIT_FIREWALL_MAX_CONNECTIONS}
+}
+
 function upgrade_conduit {
     conduit_clear_log_files
 
-    # add firewall entry if needed
-    if ! grep -q "${CONDUIT_HTTP_PORT}" /etc/nftables.conf; then
-        if grep -q "conduit=${CONDUIT_HTTP_PORT}" "${FIREWALL_CONFIG}"; then
-            sed -i "/conduit=${CONDUIT_HTTP_PORT}/d" "${FIREWALL_CONFIG}"
-        fi
-        firewall_add conduit ${CONDUIT_HTTP_PORT} tcp 5
-        firewall_max_connections ${CONDUIT_PORT_INTERNAL} ${CONDUIT_FIREWALL_MAX_CONNECTIONS}
-    fi
+    firewall_conduit
 
     # remove old way of managing retained media
     if [ -f ${CONDUIT_COMPACT_FILENAME} ]; then
@@ -604,7 +608,7 @@ function install_conduit {
       echo 'ProtectKernelModules=yes';
       echo 'ProtectKernelTunables=yes';
       echo 'NoNewPrivileges=true';
-	  echo 'MemoryMax=20%';
+      echo 'MemoryMax=20%';
       echo '';
       echo '[Install]';
       echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/conduit.service

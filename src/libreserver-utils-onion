@@ -516,6 +516,10 @@ function tor_remove_bridge {
     restart_tor_daemon
 }
 
+function firewall_onion {
+    firewall_add tor_bridge "$TOR_BRIDGE_PORT" tcp 5
+}
+
 function tor_create_bridge_relay {
     read_config_param 'TOR_BRIDGE_PORT'
     read_config_param 'TOR_BRIDGE_NICKNAME'
@@ -539,8 +543,7 @@ function tor_create_bridge_relay {
       echo "ContactInfo $MY_EMAIL_ADDRESS";
       echo "Nickname $TOR_BRIDGE_NICKNAME"; } > /etc/torrc.d/bridgerelay
 
-    firewall_add tor_bridge "$TOR_BRIDGE_PORT" tcp 5
-
+    firewall_onion
     restart_tor_daemon
 }
 

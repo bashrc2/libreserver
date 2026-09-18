@@ -610,7 +610,7 @@ function install_dynamicdns {
       echo "ExecStart=/usr/sbin/inadyn -C -n -s --loglevel=err --config ${INADYN_CONFIG_FILE}";
       echo 'Restart=on-failure';
       echo 'RestartSec=10';
-	  echo 'MemoryMax=10%';
+      echo 'MemoryMax=10%';
       echo '';
       echo '[Install]';
       echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/inadyn.service
@@ -972,6 +972,11 @@ function remove_certs {
     fi
 }
 
+function firewall_web {
+    firewall_add HTTP 80 tcp 5
+    firewall_add HTTPS 443 tcp 5
+}
+
 function configure_firewall_for_web_access {
     if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
         return
@@ -983,8 +988,7 @@ function configure_firewall_for_web_access {
     if [[ ${ONION_ONLY} != "no" || ${I2P_ONLY} != "no" ]]; then
         return
     fi
-    firewall_add HTTP 80 tcp 5
-    firewall_add HTTPS 443 tcp 5
+    firewall_web
     mark_completed "${FUNCNAME[0]}"
 }
 

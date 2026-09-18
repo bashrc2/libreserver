@@ -400,15 +400,7 @@ function backup_email {
     echo ''
 }
 
-function configure_firewall_for_email {
-    if [[ "$INSTALLED_WITHIN_DOCKER" == "yes" ]]; then
-        # docker does its own firewalling
-        return
-    fi
-    if [[ "$ONION_ONLY" != "no" ]]; then
-        return
-    fi
-
+function firewall_email {
     firewall_add Email 25 tcp 5
     firewall_max_connections 25 ${EMAIL_FIREWALL_MAX_CONNECTIONS}
     firewall_add Email 587 tcp 5
@@ -417,6 +409,17 @@ function configure_firewall_for_email {
     firewall_max_connections 465 ${EMAIL_FIREWALL_MAX_CONNECTIONS}
     firewall_add Imap 993 tcp 5
     firewall_max_connections 993 ${IMAP_FIREWALL_MAX_CONNECTIONS}
+}
+
+function configure_firewall_for_email {
+    if [[ "$INSTALLED_WITHIN_DOCKER" == "yes" ]]; then
+        # docker does its own firewalling
+        return
+    fi
+    if [[ "$ONION_ONLY" != "no" ]]; then
+        return
+    fi
+    firewall_email
 }
 
 function encrypt_incoming_email {
@@ -1830,9 +1833,9 @@ function configure_gpg {
 
     if [ ! -d /root/.gnupg ]; then
         cp -r "/home/$MY_USERNAME/.gnupg" /root/
-		chown -R root:root /root/.gnupg
-		find /root/.gnupg -type f -exec chmod 600 {} \;
-		find /root/.gnupg -type d -exec chmod 700 {} \;
+        chown -R root:root /root/.gnupg
+        find /root/.gnupg -type f -exec chmod 600 {} \;
+        find /root/.gnupg -type d -exec chmod 700 {} \;
         printf '%%Assuan%%\nsocket=/dev/shm/S.dirmngr\n' > /root/.gnupg/S.dirmngr
         if [ -d /root/.gnupg/crls.d ]; then
             chmod +x /root/.gnupg/crls.d

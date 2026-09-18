@@ -237,6 +237,11 @@ function remove_mumble {
     sed -i '/mumble/d' "$COMPLETION_FILE"
 }
 
+function firewall_mumble {
+    firewall_add Mumble ${MUMBLE_PORT} tcp 5
+    firewall_add Mumble ${MUMBLE_PORT} udp 5
+}
+
 function configure_firewall_for_mumble {
     if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
         return
@@ -244,8 +249,7 @@ function configure_firewall_for_mumble {
     if [[ $ONION_ONLY != "no" ]]; then
         return
     fi
-    firewall_add Mumble ${MUMBLE_PORT} tcp 5
-    firewall_add Mumble ${MUMBLE_PORT} udp 5
+    firewall_mumble
     mark_completed "${FUNCNAME[0]}"
 }
 

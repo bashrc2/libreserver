@@ -321,6 +321,11 @@ function remove_gemini {
     firewall_remove "${GEMINI_PORT}" tcp
 }
 
+function firewall_gemini {
+    firewall_add gemini ${GEMINI_PORT} tcp 5
+    firewall_max_connections ${GEMINI_PORT} 200
+}
+
 function install_gemini {
     increment_app_install_progress
 
@@ -456,7 +461,7 @@ function install_gemini {
       echo 'ProtectKernelModules=yes';
       echo 'ProtectKernelTunables=yes';
       echo 'NoNewPrivileges=true';
-	  echo 'MemoryMax=20%';
+      echo 'MemoryMax=20%';
       echo '';
       echo '[Install]';
       echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/gemini.service
@@ -468,8 +473,7 @@ function install_gemini {
 
     increment_app_install_progress
 
-    firewall_add gemini ${GEMINI_PORT} tcp 5
-    firewall_max_connections ${GEMINI_PORT} 200
+    firewall_gemini
 
     # make an initial example site
     { echo '# LibreServer Gemini Server';

@@ -163,6 +163,10 @@ function remove_freeciv {
     userdel -r freeciv
 }
 
+function firewall_freeciv {
+    firewall_add freeciv ${FREECIV_PORT} tcp 5
+}
+
 function install_freeciv {
     if ! grep -q "freeciv:" /etc/group; then
         groupadd freeciv
@@ -204,7 +208,7 @@ function install_freeciv {
 
     increment_app_install_progress
 
-    firewall_add freeciv ${FREECIV_PORT} tcp 5
+    firewall_freeciv
 
     chown -R freeciv:freeciv "$FREECIV_DIR"
 
@@ -225,7 +229,7 @@ function install_freeciv {
       echo 'NoNewPrivileges=true';
       echo 'CapabilityBoundingSet=~CAP_SYS_ADMIN';
       echo 'CPUQuota=30%';
-	  echo 'MemoryMax=20%';
+      echo 'MemoryMax=20%';
       echo '';
       echo '[Install]';
       echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/freeciv-server.service

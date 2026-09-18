@@ -190,6 +190,10 @@ function remove_flightgear {
     userdel -r fgms
 }
 
+function firewall_flightgear {
+    firewall_add flightgear ${FLIGHTGEAR_PORT} tcp 5
+}
+
 function install_flightgear {
     if [ -d "${INSTALL_DIR}/fgms-src" ]; then
         rm -rf "${INSTALL_DIR}/fgms-src"
@@ -277,7 +281,7 @@ function install_flightgear {
 
     increment_app_install_progress
 
-    firewall_add flightgear ${FLIGHTGEAR_PORT} tcp 5
+    firewall_flightgear
 
     increment_app_install_progress
 
@@ -298,7 +302,7 @@ function install_flightgear {
       echo 'NoNewPrivileges=true';
       echo 'CapabilityBoundingSet=~CAP_SYS_ADMIN';
       echo 'CPUQuota=30%';
-	  echo 'MemoryMax=20%';
+      echo 'MemoryMax=20%';
       echo '';
       echo '[Install]';
       echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/fgms.service

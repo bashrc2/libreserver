@@ -32,6 +32,10 @@ function image_install_mqtt {
     chroot "$rootdir" INSTALL_PACKAGES mosquitto mosquitto-clients
 }
 
+function firewall_mqtt {
+    firewall_add mqtt ${MQTT_PORT} tcp 5
+}
+
 function install_mqtt {
     if [ -d /etc/mosquitto ]; then
         if grep -q ":${MQTT_ONION_PORT}" "/etc/torrc.d/${PROJECT_NAME}"; then
@@ -59,5 +63,5 @@ function install_mqtt {
         restart_tor_daemon
     fi
 
-    firewall_add mqtt ${MQTT_PORT} tcp 5
+    firewall_mqtt
 }

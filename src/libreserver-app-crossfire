@@ -215,6 +215,10 @@ function remove_crossfire {
     firewall_remove ${CROSSFIRE_PORT}
 }
 
+function firewall_crossfire {
+    firewall_add crossfire ${CROSSFIRE_PORT} tcp 5
+}
+
 function install_crossfire {
     if [ -f /etc/crossfire/settings ]; then
         remove_crossfire
@@ -257,7 +261,7 @@ function install_crossfire {
 
     increment_app_install_progress
 
-    firewall_add crossfire ${CROSSFIRE_PORT} tcp 5
+    firewall_crossfire
 
     crossfire_metaserver_filename=/etc/crossfire/metaserver2
     if [[ $ONION_ONLY == "no" ]]; then

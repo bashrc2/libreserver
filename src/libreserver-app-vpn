@@ -160,6 +160,10 @@ function install_interactive_vpn {
     APP_INSTALLED=1
 }
 
+function firewall_vpn {
+    firewall_add VPN-TLS "${VPN_TLS_PORT}" tcp 5
+}
+
 function vpn_change_tls_port {
     EXISTING_VPN_TLS_PORT=443
     if [ -f "${FIREWALL_CONFIG}" ]; then
@@ -201,7 +205,7 @@ function vpn_change_tls_port {
                     else
                         if [[ "$PREVIOUS_VPN_TLS_PORT" != "$VPN_TLS_PORT" ]]; then
                             firewall_remove VPN-TLS "${EXISTING_VPN_TLS_PORT}"
-                            firewall_add VPN-TLS "${VPN_TLS_PORT}" tcp 5
+                            firewall_vpn
                         fi
                         systemctl enable nginx
                         systemctl restart nginx
@@ -585,7 +589,7 @@ function install_stunnel {
       echo 'ExecStart=/usr/bin/stunnel /etc/stunnel/stunnel.conf';
       echo 'ExecStop=/usr/bin/killall -9 stunnel';
       echo 'RemainAfterExit=yes';
-	  echo 'MemoryMax=20%'; } > "$prefix/etc/systemd/system/stunnel.service"
+      echo 'MemoryMax=20%'; } > "$prefix/etc/systemd/system/stunnel.service"
 
     if [ ! "$prefix" ]; then
         if [ $VPN_TLS_PORT -eq 443 ]; then
@@ -727,7 +731,7 @@ function install_vpn {
         firewall_enable_vpn
 
         if [ ${VPN_TLS_PORT} -ne 443 ]; then
-            firewall_add VPN-TLS ${VPN_TLS_PORT} tcp 5
+            firewall_vpn
         fi
 
         systemctl start openvpn

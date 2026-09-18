@@ -28,6 +28,14 @@
 TURN_PORT=3478
 TURN_TLS_PORT=5349
 
+function firewall_turn {
+    firewall_add turn ${TURN_PORT} tcp 5
+    firewall_add turn ${TURN_PORT} udp 5
+    firewall_add turntls ${TURN_TLS_PORT} tcp 5
+    firewall_add turntls ${TURN_TLS_PORT} udp 5
+    firewall_add_range turnrange 49152 65535 udp "turn range" 5
+}
+
 function install_turn {
     # since this depends on udp, it's not going to work through Tor
     if [[ "$ONION_ONLY" != 'no' ]]; then
@@ -46,11 +54,7 @@ function install_turn {
     fi
 
     INSTALL_PACKAGES coturn
-    firewall_add turn ${TURN_PORT} tcp 5
-    firewall_add turn ${TURN_PORT} udp 5
-    firewall_add turntls ${TURN_TLS_PORT} tcp 5
-    firewall_add turntls ${TURN_TLS_PORT} udp 5
-    firewall_add_range turnrange 49152 65535 udp "turn range" 5
+    firewall_turn
 
     curr_ipv4=$(get_external_ipv4_address)
     { echo "listening-port=${TURN_PORT}";

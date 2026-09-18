@@ -423,6 +423,10 @@ function regenerate_ssh_keys {
     mark_completed "${FUNCNAME[0]}"
 }
 
+function firewall_ssh {
+    firewall_add SSH ${SSH_PORT} tcp 5
+}
+
 function configure_firewall_for_ssh {
     if [[ $(is_completed "${FUNCNAME[0]}") == "1" ]]; then
         return
@@ -432,7 +436,7 @@ function configure_firewall_for_ssh {
         return
     fi
 
-    firewall_add SSH ${SSH_PORT} tcp 5
+    firewall_ssh
     mark_completed "${FUNCNAME[0]}"
 }
 
@@ -512,7 +516,7 @@ function notify_logins {
       echo 'KillMode=process';
       echo 'Restart=always';
       echo 'RestartSec=2';
-	  echo 'MemoryMax=10%';
+      echo 'MemoryMax=10%';
       echo '';
       echo '[Install]';
       echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/userlogins.service

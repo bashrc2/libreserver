@@ -269,6 +269,10 @@ function remove_rsync {
     sed -i '/rsync/d' "$COMPLETION_FILE"
 }
 
+function firewall_rsync {
+    firewall_add rsync $RSYNC_PORT tcp 5
+}
+
 function install_rsync {
     INSTALL_PACKAGES rsync
 
@@ -326,7 +330,7 @@ function install_rsync {
       echo 'Restart=always'
       echo 'ProtectSystem=yes';
       echo 'ProtectHome=yes';
-	  echo 'MemoryMax=20%';
+      echo 'MemoryMax=20%';
       echo '';
       echo '[Install]';
       echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/rsync.service
@@ -343,7 +347,7 @@ function install_rsync {
 
     increment_app_install_progress
 
-    firewall_add rsync $RSYNC_PORT tcp 5
+    firewall_rsync
 
     increment_app_install_progress
 

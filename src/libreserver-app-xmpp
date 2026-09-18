@@ -785,15 +785,15 @@ function update_prosody_modules {
         return
     fi
 
-	if [[ "$1" == "initial" ]]; then
-		echo "Checking for ${INSTALL_DIR}/$prosody_modules_filename"
-	fi
+    if [[ "$1" == "initial" ]]; then
+        echo "Checking for ${INSTALL_DIR}/$prosody_modules_filename"
+    fi
     if [ ! -f "${INSTALL_DIR}/$prosody_modules_filename" ]; then
         xmpp_restart=1
-		if [[ "$1" == "initial" ]]; then
-			echo "${INSTALL_DIR}/$prosody_modules_filename does not exist"
-			echo "Checking for /root/${PROJECT_NAME}/image_build/$prosody_modules_filename"
-		fi
+        if [[ "$1" == "initial" ]]; then
+            echo "${INSTALL_DIR}/$prosody_modules_filename does not exist"
+            echo "Checking for /root/${PROJECT_NAME}/image_build/$prosody_modules_filename"
+        fi
 
         # Obtain the modules
         if [ -f "/root/${PROJECT_NAME}/image_build/$prosody_modules_filename" ]; then
@@ -806,9 +806,9 @@ function update_prosody_modules {
             fi
         fi
 
-		if [[ "$1" == "initial" ]]; then
-			echo "Checking for ${INSTALL_DIR}/$prosody_modules_filename"
-		fi
+        if [[ "$1" == "initial" ]]; then
+            echo "Checking for ${INSTALL_DIR}/$prosody_modules_filename"
+        fi
         if [ -f "${INSTALL_DIR}/$prosody_modules_filename" ]; then
             cd "${INSTALL_DIR}" || exit 24
 
@@ -822,9 +822,9 @@ function update_prosody_modules {
                 if [ -d "${INSTALL_DIR}/prosody-modules" ]; then
                     rm -rf "${INSTALL_DIR}/prosody-modules"
                 fi
-				if [[ "$1" == "initial" ]]; then
-					echo "Extracting ${prosody_modules_filename}"
-				fi
+                if [[ "$1" == "initial" ]]; then
+                    echo "Extracting ${prosody_modules_filename}"
+                fi
                 tar -xzvf $prosody_modules_filename
                 if [ -d "${INSTALL_DIR}/prosody-modules" ]; then
                     systemctl stop prosody
@@ -961,20 +961,20 @@ function xmpp_update_certs {
 }
 
 function limit_xmpp_memory_use {
-	if grep -q "#DefaultMemoryAccounting=" /etc/systemd/system.conf; then
-		sed -i 's|#DefaultMemoryAccounting=.*|DefaultMemoryAccounting=yes|g' /etc/systemd/system.conf
-	fi
-	if ! grep -q "MemoryMax=" /usr/lib/systemd/system/prosody.service; then
-		cp /usr/lib/systemd/system/prosody.service ~/prosody.service.old
-		sed -i '/ExecStart=/a MemoryMax=20%' /usr/lib/systemd/system/prosody.service
-		systemctl daemon-reload
-		systemctl restart prosody
-	fi
+    if grep -q "#DefaultMemoryAccounting=" /etc/systemd/system.conf; then
+        sed -i 's|#DefaultMemoryAccounting=.*|DefaultMemoryAccounting=yes|g' /etc/systemd/system.conf
+    fi
+    if ! grep -q "MemoryMax=" /usr/lib/systemd/system/prosody.service; then
+        cp /usr/lib/systemd/system/prosody.service ~/prosody.service.old
+        sed -i '/ExecStart=/a MemoryMax=20%' /usr/lib/systemd/system/prosody.service
+        systemctl daemon-reload
+        systemctl restart prosody
+    fi
 }
 
 function upgrade_xmpp {
     configure_firewall_for_xmpp
-	limit_xmpp_memory_use
+    limit_xmpp_memory_use
 
     if [[ $ONION_ONLY == "no" ]]; then
         # copy dhparams with correct permissions
@@ -1218,6 +1218,20 @@ function restore_remote_xmpp {
     echo -n ''
 }
 
+function firewall_xmpp {
+    firewall_add XMPP 5222 tcp 5
+    firewall_add XMPP 5223 tcp 5
+    firewall_add XMPP 5269 tcp 5
+    firewall_add XMPP 5280 tcp 5
+    firewall_add XMPP 5281 tcp 5
+    # netstat -an | grep :5222 | wc -l
+    firewall_max_connections 5222 $XMPP_FIREWALL_MAX_CONNECTIONS
+    firewall_max_connections 5223 $XMPP_FIREWALL_MAX_CONNECTIONS
+    firewall_max_connections 5269 $XMPP_FIREWALL_MAX_CONNECTIONS_S2S
+    firewall_max_connections 5280 $XMPP_FIREWALL_MAX_CONNECTIONS
+    firewall_max_connections 5281 $XMPP_FIREWALL_MAX_CONNECTIONS
+}
+
 function configure_firewall_for_xmpp {
     if [ ! -d /etc/prosody ]; then
         return
@@ -1238,17 +1252,7 @@ function configure_firewall_for_xmpp {
     if [[ $ONION_ONLY != "no" ]]; then
         return
     fi
-    firewall_add XMPP 5222 tcp 5
-    firewall_add XMPP 5223 tcp 5
-    firewall_add XMPP 5269 tcp 5
-    firewall_add XMPP 5280 tcp 5
-    firewall_add XMPP 5281 tcp 5
-    # netstat -an | grep :5222 | wc -l
-    firewall_max_connections 5222 $XMPP_FIREWALL_MAX_CONNECTIONS
-    firewall_max_connections 5223 $XMPP_FIREWALL_MAX_CONNECTIONS
-    firewall_max_connections 5269 $XMPP_FIREWALL_MAX_CONNECTIONS_S2S
-    firewall_max_connections 5280 $XMPP_FIREWALL_MAX_CONNECTIONS
-    firewall_max_connections 5281 $XMPP_FIREWALL_MAX_CONNECTIONS
+    firewall_xmpp
     mark_completed "${FUNCNAME[0]}"
 }
 
@@ -2105,7 +2109,7 @@ function install_xmpp {
 
     systemctl restart prosody
 
-	limit_xmpp_memory_use
+    limit_xmpp_memory_use
 
     systemctl restart prosody
 

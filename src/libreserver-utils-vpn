@@ -198,6 +198,11 @@ function wireguard_disable {
     wireguard_allow_forwarding 0
 }
 
+function firewall_wireguard {
+    firewall_add wireguard ${WIREGUARD_PORT} udp 5
+    firewall_max_connections ${WIREGUARD_PORT} ${WIREGUARD_MAX_CONNECTIONS}
+}
+
 function wireguard_enable_client {
     # shellcheck disable=SC2119
     wireguard_install_wg_command
@@ -247,8 +252,7 @@ function wireguard_enable_client {
         if grep -q "Endpoint = ${VPN_IP_ADDRESS}" /etc/wireguard/wg0-client.conf; then
             # Configuration hasn't changed
             wg-quick up wg0-client
-            firewall_add wireguard ${WIREGUARD_PORT} udp 5
-            firewall_max_connections ${WIREGUARD_PORT} ${WIREGUARD_MAX_CONNECTIONS}
+            firewall_wireguard
             return
         else
             # Take connection down before changing it
@@ -269,8 +273,7 @@ function wireguard_enable_client {
     chmod 600 /etc/wireguard/wg0-client.conf
 
     wg-quick up wg0-client
-    firewall_add wireguard ${WIREGUARD_PORT} udp 5
-    firewall_max_connections ${WIREGUARD_PORT} $WIREGUARD_MAX_CONNECTIONS
+    firewall_wireguard
 }
 
 function update_wireguard_client {
@@ -350,8 +353,7 @@ function wireguard_enable {
         fi
 
         if [ $vpn_peers_ctr -gt 0 ]; then
-            firewall_add wireguard ${WIREGUARD_PORT} udp 5
-            firewall_max_connections ${WIREGUARD_PORT} $WIREGUARD_MAX_CONNECTIONS
+            firewall_wireguard
             wireguard_allow_forwarding 1
             mv /tmp/wg0.conf /etc/wireguard/wg0.conf
             chmod 600 /etc/wireguard/wg0.conf

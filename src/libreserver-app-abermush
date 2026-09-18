@@ -111,11 +111,11 @@ function upgrade_abermush {
     ./installer.sh
 
     chown -R abermush:abermush ${ABERMUSH_DIR}
-	chmod 644 ${ABERMUSH_DIR}/*.py
-	chmod 644 ${ABERMUSH_DIR}/src/*.py
+    chmod 644 ${ABERMUSH_DIR}/*.py
+    chmod 644 ${ABERMUSH_DIR}/src/*.py
     chown -R abermush:abermush ${ABERMUSH_DIR2}
-	chmod 644 ${ABERMUSH_DIR2}/*.py
-	chmod 644 ${ABERMUSH_DIR2}/src/*.py
+    chmod 644 ${ABERMUSH_DIR2}/*.py
+    chmod 644 ${ABERMUSH_DIR2}/src/*.py
     #if [[ "${ONION_ONLY}" == 'no' ]]; then
     #    chown -R abermush:ssl-cert ${ABERMUSH_DIR}
     #else
@@ -390,6 +390,11 @@ function install_abermush_website {
     add_ddns_domain "${ABERMUSH_DOMAIN_NAME}"
 }
 
+function abermush_firewall {
+    # firewall_add abermush_telnet ${ABERMUSH_PORT} tcp 5
+    firewall_add abermush_ssh ${ABERMUSH_SSH_PORT} tcp 5
+}
+
 function install_abermush {
     increment_app_install_progress
 
@@ -455,11 +460,11 @@ function install_abermush {
     increment_app_install_progress
 
     chown -R abermush:abermush ${ABERMUSH_DIR}
-	chmod 644 ${ABERMUSH_DIR}/*.py
-	chmod 644 ${ABERMUSH_DIR}/src/*.py
+    chmod 644 ${ABERMUSH_DIR}/*.py
+    chmod 644 ${ABERMUSH_DIR}/src/*.py
     chown -R abermush:abermush ${ABERMUSH_DIR2}
-	chmod 644 ${ABERMUSH_DIR2}/*.py
-	chmod 644 ${ABERMUSH_DIR2}/src/*.py
+    chmod 644 ${ABERMUSH_DIR2}/*.py
+    chmod 644 ${ABERMUSH_DIR2}/src/*.py
     #if [[ "$ONION_ONLY" == 'no' ]]; then
     #    chown -R abermush:ssl-cert ${ABERMUSH_DIR}
     #else
@@ -506,7 +511,7 @@ function install_abermush {
       echo 'ProtectKernelModules=yes';
       echo 'ProtectKernelTunables=yes';
       echo 'NoNewPrivileges=true';
-	  echo 'MemoryMax=20%';
+      echo 'MemoryMax=20%';
       echo '';
       echo '[Install]';
       echo 'WantedBy=multi-user.target'; } > /etc/systemd/system/abermush.service
@@ -524,11 +529,11 @@ function install_abermush {
     #fi
 
     chown -R abermush:abermush ${ABERMUSH_DIR}
-	chmod 644 ${ABERMUSH_DIR}/*.py
-	chmod 644 ${ABERMUSH_DIR}/src/*.py
+    chmod 644 ${ABERMUSH_DIR}/*.py
+    chmod 644 ${ABERMUSH_DIR}/src/*.py
     chown -R abermush:abermush ${ABERMUSH_DIR2}
-	chmod 644 ${ABERMUSH_DIR2}/*.py
-	chmod 644 ${ABERMUSH_DIR2}/src/*.py
+    chmod 644 ${ABERMUSH_DIR2}/*.py
+    chmod 644 ${ABERMUSH_DIR2}/src/*.py
     #if [[ "$ONION_ONLY" == 'no' ]]; then
     #    chown -R abermush:ssl-cert ${ABERMUSH_DIR}
     #else
@@ -541,8 +546,7 @@ function install_abermush {
     ssh_enable_tty yes
     systemctl restart ssh
 
-    # firewall_add abermush_telnet ${ABERMUSH_PORT} tcp 5
-    firewall_add abermush_ssh ${ABERMUSH_SSH_PORT} tcp 5
+    abermush_firewall
 
     increment_app_install_progress
 

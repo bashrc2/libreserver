@@ -162,6 +162,10 @@ function remove_poker {
     firewall_remove ${POKER_PORT}
 }
 
+function firewall_poker {
+    firewall_add poker ${POKER_PORT} tcp 5
+}
+
 function install_poker {
     increment_app_install_progress
 
@@ -189,7 +193,7 @@ function install_poker {
 
     increment_app_install_progress
 
-    firewall_add poker ${POKER_PORT} tcp 5
+    firewall_poker
 
     sed -i "s|ServerPassword.*|ServerPassword value=\"\" />|g" $poker_config_filename
     sed -i "s|<ServerPort.*|<ServerPort value=\"${POKER_PORT}\" />|g" $poker_config_filename
