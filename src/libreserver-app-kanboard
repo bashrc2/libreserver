@@ -315,6 +315,10 @@ function remove_kanboard {
     remove_ddns_domain "$KANBOARD_DOMAIN_NAME"
 }
 
+function firewall_kanboard {
+    kanboard_dummy_variable=1
+}
+
 function install_kanboard {
     if [ ! $ONION_ONLY ]; then
         ONION_ONLY='no'
@@ -368,9 +372,9 @@ function install_kanboard {
             git pull
         else
             function_check git_clone
-			firewall_microsoft_undo
+            firewall_microsoft_undo
             git_clone "$KANBOARD_REPO" "/var/www/$KANBOARD_DOMAIN_NAME/htdocs"
-			firewall_microsoft
+            firewall_microsoft
         fi
 
         if [ ! -d "/var/www/$KANBOARD_DOMAIN_NAME/htdocs" ]; then
@@ -679,6 +683,10 @@ function install_kanboard {
     increment_app_install_progress
 
     systemctl restart nginx
+
+    increment_app_install_progress
+
+    firewall_kanboard
 
     increment_app_install_progress
 
