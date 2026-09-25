@@ -335,6 +335,7 @@ function upgrade_ergo {
         return
     fi
 
+    systemctl stop ergo
     cp -r ${ERGO_EXTRACT_DIRECTORY}/* ${ERGO_DIRECTORY}/
     chmod +x ${ERGO_DIRECTORY}/ergo
     
