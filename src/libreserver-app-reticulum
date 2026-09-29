@@ -334,7 +334,7 @@ function run_client_reticulum {
           echo -n 'pip install msgpack --upgrade && ';
           echo "pip install nomadnet==${NOMADNET_VERSION} --upgrade"; } > ${upgrade_reticulum_client}
         chmod +x ${upgrade_reticulum_client}
-        /bin/bash ${upgrade_reticulum_client}
+        pipx ensurepath && /bin/bash ${upgrade_reticulum_client}
         create_reticulum_config ~/.nomadnetwork/config "False" "No"
     fi
 
