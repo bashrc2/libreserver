@@ -316,33 +316,6 @@ function create_reticulum_config {
       echo '    peers = ap6b2z5lltdlqq7osdj2o3qgchjdborbnezh53p3vgrcggsymfta.b32.i2p'; } > "${reticulum_config_filename}"
 }
 
-function run_client_reticulum {
-    upgrade_reticulum_client=~/upgrade-reticulum-client
-    run_reticulum_client=~/run-reticulum-client
-
-    reticulum_upgrade_script_found=
-    if [ -f ${upgrade_reticulum_client} ]; then
-        if grep -q "=${NOMADNET_VERSION} " ${upgrade_reticulum_client}; then
-           reticulum_upgrade_script_found=1
-        fi
-    fi
-
-    clear
-    if [ ! ${reticulum_upgrade_script_found} ]; then
-        { echo 'python3 -m venv ~/nomadnet-env';
-          echo -n 'source ~/nomadnet-env/bin/activate && ';
-          echo -n 'pip install msgpack --upgrade && ';
-          echo "pip install nomadnet==${NOMADNET_VERSION} --upgrade"; } > ${upgrade_reticulum_client}
-        chmod +x ${upgrade_reticulum_client}
-        /bin/bash ${upgrade_reticulum_client}
-        create_reticulum_config ~/.nomadnetwork/config "True" "Yes"
-    fi
-
-    echo "source ~/nomadnet-env/bin/activate && nomadnet && deactivate" > ${run_reticulum_client}
-    chmod +x ${run_reticulum_client}
-    /bin/bash ${run_reticulum_client}
-}
-
 function install_reticulum {
     increment_app_install_progress
 
