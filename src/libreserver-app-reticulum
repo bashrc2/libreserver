@@ -329,13 +329,12 @@ function run_client_reticulum {
 
     clear
     if [ ! ${reticulum_upgrade_script_found} ]; then
-        { echo 'exec $SHELL';
-          echo 'python3 -m venv ~/nomadnet-env';
+        { echo 'python3 -m venv ~/nomadnet-env';
           echo -n 'source ~/nomadnet-env/bin/activate && ';
           echo -n 'pip install msgpack --upgrade && ';
           echo "pip install nomadnet==${NOMADNET_VERSION} --upgrade"; } > ${upgrade_reticulum_client}
         chmod +x ${upgrade_reticulum_client}
-        pipx ensurepath && /bin/bash ${upgrade_reticulum_client}
+        /bin/bash ${upgrade_reticulum_client}
         create_reticulum_config ~/.nomadnetwork/config "False" "No"
     fi
 
