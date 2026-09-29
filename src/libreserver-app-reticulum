@@ -335,7 +335,7 @@ function run_client_reticulum {
           echo "pip install nomadnet==${NOMADNET_VERSION} --upgrade"; } > ${upgrade_reticulum_client}
         chmod +x ${upgrade_reticulum_client}
         /bin/bash ${upgrade_reticulum_client}
-        create_reticulum_config ~/.nomadnetwork/config "False" "No"
+        create_reticulum_config ~/.nomadnetwork/config "True" "Yes"
     fi
 
     echo "source ~/nomadnet-env/bin/activate && nomadnet && deactivate" > ${run_reticulum_client}
