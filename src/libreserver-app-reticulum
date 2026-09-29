@@ -317,7 +317,8 @@ function create_reticulum_config {
 }
 
 function run_client_reticulum {
-    upgrade_reticulum_client=~/run-reticulum-client
+    upgrade_reticulum_client=~/upgrade-reticulum-client
+    run_reticulum_client=~/run-reticulum-client
 
     reticulum_upgrade_script_found=
     if [ -f ${upgrade_reticulum_client} ]; then
