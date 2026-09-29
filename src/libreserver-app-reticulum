@@ -327,9 +327,9 @@ function run_client_reticulum {
         fi
     fi
 
+    clear
     if [ ! ${reticulum_upgrade_script_found} ]; then
-        { echo 'pipx ensurepath';
-          echo 'exec $SHELL';
+        { echo 'exec $SHELL';
           echo 'python3 -m venv ~/nomadnet-env';
           echo -n 'source ~/nomadnet-env/bin/activate && ';
           echo -n 'pip install msgpack --upgrade && ';
