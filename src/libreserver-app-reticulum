@@ -327,7 +327,11 @@ function install_reticulum {
     chmod g+w "/var/www/$RETICULUM_DOMAIN_NAME/htdocs"
     chown -R www-data:www-data "/var/www/$RETICULUM_DOMAIN_NAME/htdocs"
 
+    increment_app_install_progress
+
     INSTALL_PACKAGES python3-pip python3-virtualenv
+
+    increment_app_install_progress
 
     { echo '#!/bin/bash';
       echo "cd /etc/reticulum || exit 1";
@@ -337,16 +341,6 @@ function install_reticulum {
       echo 'deactivate'; } > ${reticulum_upgrade_filename}
     chmod +x ${reticulum_upgrade_filename}
     /bin/bash ${reticulum_upgrade_filename}
-
-    reticulum_filename=/usr/bin/run-reticulum
-    { echo '#!/bin/bash';
-      echo "cd /etc/reticulum || exit 1";
-      echo 'virtualenv -p python3 .venv';
-      echo 'source .venv/bin/activate';
-      echo "/bin/rnsd";
-      echo 'deactivate'; } > ${reticulum_filename}
-    chmod +x ${reticulum_filename}
-    /bin/bash ${reticulum_filename}
 
     increment_app_install_progress
 
@@ -366,7 +360,7 @@ function install_reticulum {
       echo 'User=reticulum';
       echo 'Group=reticulum';
       echo 'WorkingDirectory=/etc/reticulum';
-      echo "ExecStart=${reticulum_filename} --config /etc/reticulum";
+      echo "ExecStart=/etc/reticulum/.venv/bin/python3 .venv/bin/rnsd -v -s";
       echo 'Environment=USER=reticulum';
       echo 'Restart=always';
       echo 'ProtectHome=true';
