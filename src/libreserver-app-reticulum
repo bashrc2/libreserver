@@ -378,7 +378,7 @@ function install_reticulum {
       echo 'LockPersonality=true';
       echo 'RestrictRealtime=true';
       echo 'RestrictSUIDSGID=true';
-      echo 'RestrictAddressFamilies=AF_INET';
+      echo '#RestrictAddressFamilies=AF_INET';
       echo 'RestrictNamespaces=true';
       echo 'SystemCallArchitectures=native';
       echo '';
