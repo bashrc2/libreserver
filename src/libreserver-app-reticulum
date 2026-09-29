@@ -49,6 +49,8 @@ SHOW_URL_PORT=
 # Whether another app is required to be installed before this one
 REQUIRES_APP=
 
+NOMADNET_VERSION="1.2.9"
+
 RETICULUM_DOMAIN_NAME=reticulum.local
 RETICULUM_CODE=
 RETICULUM_ONION_PORT=
@@ -68,6 +70,7 @@ reticulum_variables=(ONION_ONLY
                      RETICULUM_CODE
                      DDNS_PROVIDER
                      MY_USERNAME)
+
 
 function change_default_domain_name_reticulum {
     new_default_domain_name="$1"
@@ -210,9 +213,11 @@ function firewall_reticulum {
 
 function create_reticulum_config {
     reticulum_config_filename="$1"
+    enable_transport="$2"
+    share_instance="$3"
     { echo '[reticulum]';
-      echo 'enable_transport = True';
-      echo 'share_instance = Yes';
+      echo "enable_transport = ${enable_transport}";
+      echo "share_instance = ${share_instance}";
       echo 'instance_name = default';
       echo '# shared_instance_port = 37428';
       echo '# instance_control_port = 37429';
@@ -311,6 +316,33 @@ function create_reticulum_config {
       echo '    peers = ap6b2z5lltdlqq7osdj2o3qgchjdborbnezh53p3vgrcggsymfta.b32.i2p'; } > "${reticulum_config_filename}"
 }
 
+function run_client_reticulum {
+    upgrade_reticulum_client=~/run-reticulum-client
+
+    reticulum_upgrade_script_found=
+    if [ -f ${upgrade_reticulum_client} ]; then
+        if grep -q "=${NOMADNET_VERSION} " ${upgrade_reticulum_client}; then
+           reticulum_upgrade_script_found=1
+        fi
+    fi
+
+    if [ ! ${reticulum_upgrade_script_found} ]; then
+        { echo 'pipx ensurepath';
+          echo 'exec $SHELL';
+          echo 'python3 -m venv ~/nomadnet-env';
+          echo -n 'source ~/nomadnet-env/bin/activate && ';
+          echo -n 'pip install msgpack --upgrade && ';
+          echo "pip install nomadnet==${NOMADNET_VERSION} --upgrade"; } > ${upgrade_reticulum_client}
+        chmod +x ${upgrade_reticulum_client}
+        /bin/bash ${upgrade_reticulum_client}
+        create_reticulum_config ~/.nomadnetwork/config "False" "No"
+    fi
+
+    echo "source ~/nomadnet-env/bin/activate && nomadnet && deactivate" > ${run_reticulum_client}
+    chmod +x ${run_reticulum_client}
+    /bin/bash ${run_reticulum_client}
+}
+
 function install_reticulum {
     increment_app_install_progress
 
@@ -326,7 +358,7 @@ function install_reticulum {
 
     increment_app_install_progress
 
-    INSTALL_PACKAGES python3-pip python3-virtualenv
+    INSTALL_PACKAGES python3-pip python3-virtualenv python3 python3-venv pipx
 
     increment_app_install_progress
 
@@ -343,7 +375,7 @@ function install_reticulum {
 
     adduser --system --home="/etc/reticulum" --group reticulum
 
-    create_reticulum_config /etc/reticulum/config
+    create_reticulum_config /etc/reticulum/config "True" "Yes"
 
     increment_app_install_progress
 
