@@ -1649,6 +1649,10 @@ function firewall_openai {
     block_ips_from_asn AS401864 openai_llc
 }
 
+function firewall_anthropic {
+    block_ips_from_asn AS399358 anthropic
+}
+
 function firewall_unblock_ip {
     blocked_ip="$1"
     block_ip_comment="$2"

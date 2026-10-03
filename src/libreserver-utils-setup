@@ -932,6 +932,9 @@ function setup_firewall {
     function_check firewall_openai
     firewall_openai
 
+    function_check firewall_anthropic
+    firewall_anthropic
+
     function_check firewall_facebook
     firewall_facebook
 
