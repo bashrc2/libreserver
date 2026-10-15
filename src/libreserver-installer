@@ -262,8 +262,9 @@ function check_resolvconf {
     if grep -q 'nameserver' /etc/resolv.conf; then
         return
     fi
-    NAMESERVER1='91.239.100.100'
-    NAMESERVER2='89.233.43.71'
+	# Freifunk Munchen
+    NAMESERVER1='5.1.66.255'
+    NAMESERVER2='185.150.99.255'
     chattr -i /etc/resolv.conf
     { echo "nameserver ${NAMESERVER1}";
       echo "nameserver ${NAMESERVER2}"; } >> /etc/resolv.conf
