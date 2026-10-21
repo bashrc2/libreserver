@@ -87,30 +87,6 @@ function mpd_setting_fileformat {
     fi
 }
 
-function mpd_nextcloud_integration {
-    if [ ! -f /etc/mpd.conf ]; then
-        return
-    fi
-    read_config_param NEXTCLOUD_DOMAIN_NAME
-    read_config_param MY_USERNAME
-    mpd_nextcloud_dir="/var/www/$NEXTCLOUD_DOMAIN_NAME/data/$MY_USERNAME/files"
-    if [ -d "$mpd_nextcloud_dir" ]; then
-        if [ ! -d "${mpd_nextcloud_dir}/Music" ]; then
-            mkdir "${mpd_nextcloud_dir}/Music"
-            chown -R www-data:www-data "${mpd_nextcloud_dir}/Music"
-        fi
-        if ! grep -q "${mpd_nextcloud_dir}/Music" /etc/mpd.conf; then
-            sed -i "s|music_directory.*|music_directory         \"${mpd_nextcloud_dir}/Music\"|g" /etc/mpd.conf
-            systemctl restart mpd
-        fi
-    else
-        if ! grep -q "\"/music\"" /etc/mpd.conf; then
-            sed -i "s|music_directory.*|music_directory         \"/music\"|g" /etc/mpd.conf
-            systemctl restart mpd
-        fi
-    fi
-}
-
 function change_default_domain_name_mpd {
     new_default_domain_name="$1"
     # If anything references DEFAULT_DOMAIN_NAME then change it here
@@ -156,7 +132,7 @@ function reconfigure_mpd {
 }
 
 function upgrade_mpd {
-    mpd_nextcloud_integration
+	echo -n ''
 }
 
 function backup_local_mpd {
@@ -273,8 +249,6 @@ function install_mpd {
     mpd_create_configuration
 
     increment_app_install_progress
-
-    mpd_nextcloud_integration
 
     APP_INSTALLED=1
 }
