@@ -99,7 +99,7 @@ Then clone the LibreServer repository and checkout the trixie development branch
 
   apt install -y git dialog build-essential
   cd
-  git clone https://gitlab.com/bashrc2/libreserver
+  git clone https://gitlab.com/bashrc2/libreserver --depth 1
   cd libreserver
   git checkout trixie
 
